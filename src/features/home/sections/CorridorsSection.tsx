@@ -13,7 +13,7 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
   return (
     <motion.section initial={false} style={{ marginTop: 38 }}>
       <SectionHeader
-        title={ar ? 'مسارات جاهزة الآن' : 'Corridors ready now'}
+        title={ar ? 'مسارات شائعة وأسعار واضحة' : 'Popular routes with clear prices'}
         icon="R"
         action={ar ? 'عرض الرحلات' : 'Browse rides'}
         onAction={() => onNavigate('/find-ride')}
@@ -28,77 +28,62 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
       >
         {corridorCards.map(card => (
           <button
+            className="wasel-home-card wasel-home-corridor-card"
             key={card.key}
             onClick={() => onNavigate(card.path)}
             style={{
-              textAlign: 'left',
-              borderRadius: 26,
+              textAlign: ar ? 'right' : 'left',
+              borderRadius: 18,
               padding: '20px 18px 18px',
               background: card.featured
-                ? 'linear-gradient(180deg, rgba(88,221,255,0.12), rgba(255,255,255,0.03))'
+                ? 'linear-gradient(180deg, rgba(88,221,255,0.1), rgba(255,255,255,0.035))'
                 : glass(0.52),
               border: `1px solid ${card.featured ? 'rgba(88,221,255,0.22)' : C.border}`,
               cursor: 'pointer',
-              boxShadow: card.featured ? '0 18px 36px rgba(0,0,0,0.18)' : 'none',
+              boxShadow: card.featured ? '0 14px 30px rgba(0,0,0,0.16)' : 'none',
             }}
           >
             <div
               style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 10,
+                gap: 8,
+                minHeight: 30,
+                padding: '7px 10px',
+                borderRadius: 999,
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: card.accent,
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+                lineHeight: 1.25,
               }}
             >
-              <div
+              <span
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  height: 30,
-                  padding: '0 10px',
-                  borderRadius: 999,
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  color: card.accent,
-                  fontSize: '0.68rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
+                  width: 7,
+                  height: 7,
+                  borderRadius: '50%',
+                  background: card.accent,
+                  boxShadow: `0 0 12px ${card.accent}55`,
                 }}
-              >
-                <span
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: '50%',
-                    background: card.accent,
-                    boxShadow: `0 0 12px ${card.accent}55`,
-                  }}
-                />
-                {card.featured ? (ar ? 'أفضل الآن' : 'Best now') : card.meta}
-              </div>
+              />
+              {card.featured ? (ar ? 'الأفضل الآن' : 'Best now') : card.meta}
             </div>
             <div
               style={{
                 marginTop: 14,
-                fontSize: '1.05rem',
+                fontSize: '1.06rem',
                 fontWeight: 900,
-                lineHeight: 1.18,
-                letterSpacing: '-0.02em',
+                lineHeight: 1.22,
                 color: C.text,
               }}
             >
               {card.title}
             </div>
-            <div
-              style={{
-                marginTop: 8,
-                color: C.textMuted,
-                lineHeight: 1.65,
-                fontSize: '0.84rem',
-              }}
-            >
+            <div style={{ marginTop: 8, color: C.textMuted, lineHeight: 1.65, fontSize: '0.86rem' }}>
               {card.detail}
             </div>
             {card.insight ? (
@@ -108,7 +93,7 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
                   paddingTop: 14,
                   borderTop: `1px solid ${C.borderFaint}`,
                   color: C.textSub,
-                  fontSize: '0.76rem',
+                  fontSize: '0.78rem',
                   lineHeight: 1.55,
                 }}
               >
@@ -123,11 +108,11 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
                 gap: 6,
                 color: card.accent,
                 fontWeight: 800,
-                fontSize: '0.78rem',
+                fontSize: '0.8rem',
               }}
             >
-              {ar ? 'افتح هذا المسار' : 'Open this corridor'}
-              <ArrowRight size={13} />
+              {ar ? 'افتح المسار' : 'Open route'}
+              <ArrowRight size={13} style={{ transform: ar ? 'scaleX(-1)' : 'none' }} aria-hidden="true" />
             </div>
           </button>
         ))}

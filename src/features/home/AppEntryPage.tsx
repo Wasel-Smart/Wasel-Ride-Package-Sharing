@@ -12,7 +12,7 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react';
-import { useEffect, useMemo, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from 'react';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import {
   getFeaturedCorridors,
@@ -126,6 +126,12 @@ export default function AppEntryPage() {
   const { language, dir } = useLanguage();
   const corridors = useMemo(() => getFeaturedCorridors(3), []);
   const membership = useMemo(() => getMovementMembershipSnapshot(), []);
+  const [routeSearch, setRouteSearch] = useState({
+    from: 'Amman',
+    to: 'Irbid',
+    when: 'Today',
+    seats: '1',
+  });
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -164,15 +170,15 @@ export default function AppEntryPage() {
       ? 'افتح الرحلات الحية'
       : 'Open live rides'
     : ar
-      ? 'ابدأ الآن'
-      : 'Get started';
+      ? 'ابحث عن رحلة'
+      : 'Find a ride';
   const primaryPath = user
     ? membership.dailyRoute
       ? `/app/find-ride?from=${encodeURIComponent(membership.dailyRoute.from)}&to=${encodeURIComponent(
           membership.dailyRoute.to,
         )}&search=1`
       : '/app/find-ride'
-    : '/app/auth?returnTo=/app';
+    : '/app/find-ride';
 
   const spotlightCorridor = membership.dailyRoute ?? corridors[0];
   const corridorCards = spotlightCorridor
@@ -185,46 +191,46 @@ export default function AppEntryPage() {
   const heroCopy = ar
     ? {
         topbarEyebrow: 'طبقة الحركة في الأردن',
-        topbarBody: 'مسار واحد يربط الرحلات والطرود وخط الباص.',
+        topbarBody: 'رحلات مشتركة وطرود وباصات بين مدن الأردن.',
         topbarPill: 'حركة مصممة للأردن',
-        heroBadge: 'مسار واحد، حركات متعددة',
-        heroTitleA: 'مسار واحد،',
-        heroTitleB: 'لكل حركة.',
+        heroBadge: 'رحلات، طرود، وباصات',
+        heroTitleA: 'تنقل بين مدن الأردن',
+        heroTitleB: 'بتكلفة أوضح.',
         heroBody:
-          'افتح نفس الممر ثم قرر: احجز مقعداً، اعرض مقعداً، أرسل طرداً، أو انتقل إلى الباص بدون تبديل المنطق.',
+          'ابحث عن مسار، قارن السعر والوقت، ثم احجز مقعداً أو أرسل طرداً أو اختر الباص من نفس المكان.',
         secondaryCta: 'اطلع على رحلات الباص',
         stats: [
           { value: `${membership.movementCredits}`, label: 'الرصيد', tone: C.cyanSoft },
           { value: `${membership.streakDays}d`, label: 'التتابع', tone: C.green },
           { value: tierLabel(membership.loyaltyTier), label: 'الفئة', tone: C.gold },
         ],
-        mapEyebrow: 'خريطة Mobility OS',
-        mapTitle: 'الذكاء يظهر على المسار نفسه',
+        mapEyebrow: 'شبكة الأردن',
+        mapTitle: 'المسارات النشطة تظهر قبل أن تختار',
         mapBody:
-          'بدلاً من بطاقة شرح ثابتة، يرى المستخدم سطحاً حياً يوضح كيف تتحرك الرحلات والتسليمات عبر الأردن.',
+          'اعرف المسار والسعر ونقطة الالتقاط قبل أن تنتقل إلى الحجز أو إرسال الطرد.',
         corridorLabel: 'ممر اليوم',
         fareLabel: 'السعر المشترك',
         savingsLabel: 'التوفير',
         pickupLabel: 'نقطة الالتقاط',
         groupingLabel: 'التجميع',
         servicesEyebrow: 'الخدمات الأساسية',
-        servicesTitle: 'كل إجراء يجب أن يشعر أنه من نفس المنتج.',
+        servicesTitle: 'اختر ما تريد فعله مباشرة.',
         servicesBody:
-          'الواجهة تبقى متمحورة حول المسار في كل وضع، لذلك يتنقل المستخدم بين الركوب والعرض والطرود والباص بدون فقدان السياق.',
-        proofEyebrow: 'لماذا يهبط هذا بسرعة',
-        proofTitle: 'الصفحة تشرح النظام في مرور واحد.',
+          'ابدأ من المسار نفسه، ثم اختر رحلة مشتركة أو عرض مقعد أو طرد أو باص.',
+        proofEyebrow: 'الثقة والسلامة',
+        proofTitle: 'معلومات مهمة قبل الحجز.',
         proofBody:
-          'الشاشة الأولى تقود بالممر نفسه، ثم تأتي بقية البطاقات لتقوي الفهم بدلاً من منافسة البطل.',
+          'السعر، السائق، نقطة الالتقاط، وخيار الدعم يجب أن تكون واضحة قبل أي التزام.',
         corridorsEyebrow: 'الممرات الحية',
-        corridorsTitle: 'المسارات المحددة تجعل المنتج واقعياً.',
+        corridorsTitle: 'مسارات فعلية يمكن فتحها الآن.',
         corridorsBody:
-          'بعد أن يفهم الزائر الفكرة من الخريطة، يرى كيف يتحول ذلك إلى ممرات فعلية قابلة للفتح مباشرة.',
+          'اعرض أشهر الممرات بين المدن مع السعر المتوقع ونقطة الالتقاط.',
         routeFocus: 'تركيز اليوم',
         routeFocusBody:
           'عندما يعود الناس إلى نفس الممر، تصبح الحركة المشتركة عادة لا تجربة معزولة.',
         finalEyebrow: 'الخطوة التالية',
-        finalTitle: 'ابدأ من المسار ثم دع النمط يتبع.',
-        finalBody: 'هذا هو الفرق بين صفحة تبدو جيدة وصفحة تشرح المنتج فوراً.',
+        finalTitle: 'ابدأ بالمسار، ثم اختر الرحلة المناسبة.',
+        finalBody: 'واصل يجعل قرار التنقل أبسط: وجهة، وقت، سعر، ثم حجز.',
         finalCta: 'افتح واصل',
         openService: 'افتح الخدمة',
         openCorridor: 'استكشف هذا الممر',
@@ -232,7 +238,7 @@ export default function AppEntryPage() {
         serviceCards: [
           {
             title: 'ابحث عن رحلة',
-            detail: 'مقاعد مجمعة ونقاط التقاط أوضح وقرار أسرع قبل الحجز.',
+            detail: 'قارن المقاعد المتاحة والسعر ونقطة الالتقاط قبل الحجز.',
             icon: Users,
             tone: DS.cyan,
             path: '/app/find-ride',
@@ -240,7 +246,7 @@ export default function AppEntryPage() {
           },
           {
             title: 'اعرض رحلة',
-            detail: 'افتح العرض بسرعة واملأ المقاعد مع اقتصاد واضح للمسار.',
+            detail: 'انشر مسارك، حدد المقاعد، وشاهد قيمة الرحلة بوضوح.',
             icon: Truck,
             tone: DS.green,
             path: '/app/offer-ride',
@@ -248,7 +254,7 @@ export default function AppEntryPage() {
           },
           {
             title: 'أرسل طرداً',
-            detail: 'حوّل نفس الممر إلى حركة طرود بدون منتج منفصل.',
+            detail: 'أرسل طرداً على نفس المسارات النشطة بين المدن.',
             icon: Package,
             tone: DS.gold,
             path: '/app/packages',
@@ -256,7 +262,7 @@ export default function AppEntryPage() {
           },
           {
             title: 'احجز باص',
-            detail: 'مغادرات رسمية وخيار هادئ عندما تمتلئ المشاركة.',
+            detail: 'راجع مواعيد الباص عندما تريد خياراً ثابتاً ومجدولاً.',
             icon: Bus,
             tone: DS.cyanDark,
             path: '/app/bus',
@@ -265,69 +271,69 @@ export default function AppEntryPage() {
         ],
         proofCards: [
           {
-            title: 'سطح واحد لا أربع أدوات منفصلة',
+            title: 'سائقون ومستخدمون موثقون',
             detail:
-              'واصل يبقي الركوب والباص والطرود داخل منطق مسار واحد، لذلك يشعر المنتج بالتماسك فوراً.',
+              'إظهار الثقة قبل الحجز يقلل التردد ويجعل مشاركة الرحلة أسهل.',
             icon: Sparkles,
             tone: DS.cyan,
           },
           {
-            title: 'القرار يبدأ من الممر',
+            title: 'السعر واضح قبل الإجراء',
             detail:
-              'الإجابة المهمة تظهر أولاً: أين يتحرك الممر، ما تكلفته، ومدى ثقة المغادرة التالية.',
+              'المستخدم يرى السعر المتوقع وتفاصيل المسار قبل أن يلتزم.',
             icon: Route,
             tone: DS.green,
           },
           {
-            title: 'الثقة عند نقطة الفعل',
-            detail: 'السعر وسلوك المسار والخطوة التالية تبقى مرئية قبل الالتزام، وهذا يقلل التردد.',
+            title: 'دعم للركاب والطرود',
+            detail: 'نفس التجربة تدعم الرحلات والطرود والباص بدون تشتيت المستخدم.',
             icon: ShieldCheck,
             tone: DS.gold,
           },
         ],
       }
     : {
-        topbarEyebrow: 'Jordan mobility layer',
-        topbarBody: 'One route graph for rides, parcels, and bus planning.',
+        topbarEyebrow: 'Jordan mobility',
+        topbarBody: 'Shared rides, parcels, and buses between Jordanian cities.',
         topbarPill: 'Jordan-first mobility',
-        heroBadge: 'One corridor, every mode',
-        heroTitleA: 'One corridor,',
-        heroTitleB: 'every move.',
+        heroBadge: 'Rides, parcels, and buses',
+        heroTitleA: 'Move across Jordan',
+        heroTitleB: 'for less.',
         heroBody:
-          'Open the same route and decide from there: book a seat, offer one, send a parcel, or fall back to the bus without changing mental models.',
+          'Search a route, compare price and timing, then book a shared seat, send a parcel, or choose the bus from one place.',
         secondaryCta: 'See bus departures',
         stats: [
           { value: `${membership.movementCredits}`, label: 'Credits', tone: C.cyanSoft },
           { value: `${membership.streakDays}d`, label: 'Streak', tone: C.green },
           { value: tierLabel(membership.loyaltyTier), label: 'Tier', tone: C.gold },
         ],
-        mapEyebrow: 'Mobility OS field',
-        mapTitle: 'The intelligence should show up on the route itself',
+        mapEyebrow: 'Jordan network',
+        mapTitle: 'See active routes before you choose',
         mapBody:
-          'Instead of a static explanation card, users see a live surface that makes ride and parcel movement across Jordan feel coordinated.',
+          'Check the corridor, price, pickup anchor, and grouping window before moving to a ride, parcel, or bus option.',
         corridorLabel: 'Daily corridor',
         fareLabel: 'Shared fare',
         savingsLabel: 'Savings',
         pickupLabel: 'Pickup anchor',
         groupingLabel: 'Auto-group',
         servicesEyebrow: 'Core services',
-        servicesTitle: 'Every action should feel like the same product.',
+        servicesTitle: 'Pick the job you need done.',
         servicesBody:
-          'The interface stays corridor-first across all four modes, so users can move between rides, supply, parcels, and buses without losing context.',
-        proofEyebrow: 'Why this lands fast',
-        proofTitle: 'The page should explain the system in one pass.',
+          'Start with the route, then choose a shared ride, offered seat, package delivery, or scheduled bus.',
+        proofEyebrow: 'Trust and safety',
+        proofTitle: 'The important details come before booking.',
         proofBody:
-          'The first screen now leads with the live field, and the supporting sections reinforce that logic instead of repeating it.',
+          'Price, driver confidence, pickup point, and support need to be visible before a rider or sender commits.',
         corridorsEyebrow: 'Live corridors',
-        corridorsTitle: 'Specific routes make the product feel real.',
+        corridorsTitle: 'Real routes users can open now.',
         corridorsBody:
-          'Once the map makes the operating model legible, these cards show how that turns into real corridors users can open immediately.',
+          'Show popular intercity corridors with expected fare, pickup context, and availability cues.',
         routeFocus: 'Daily route focus',
         routeFocusBody: 'Shared movement compounds when the same corridor stays easy to reopen.',
         finalEyebrow: 'Fast next step',
-        finalTitle: 'Start with the corridor, then let the mode follow.',
+        finalTitle: 'Start with a route, then pick the best option.',
         finalBody:
-          'That is the difference between a landing page that only looks polished and one that explains the product at a glance.',
+          'Wasel makes the decision simpler: destination, time, price, then booking.',
         finalCta: 'Launch Wasel',
         openService: 'Open service',
         openCorridor: 'Explore this corridor',
@@ -336,7 +342,7 @@ export default function AppEntryPage() {
           {
             title: 'Find a ride',
             detail:
-              'Grouped seats, cleaner pickup decisions, and less back-and-forth before you book.',
+              'Compare available seats, price, and pickup point before you book.',
             icon: Users,
             tone: DS.cyan,
             path: '/app/find-ride',
@@ -345,7 +351,7 @@ export default function AppEntryPage() {
           {
             title: 'Offer a ride',
             detail:
-              'Open supply fast, fill seats clearly, and keep route economics visible from the start.',
+              'Post your route, set seats, and see the trip value clearly.',
             icon: Truck,
             tone: DS.green,
             path: '/app/offer-ride',
@@ -354,7 +360,7 @@ export default function AppEntryPage() {
           {
             title: 'Send a package',
             detail:
-              'Turn the same corridor into parcel movement without adding a second product to learn.',
+              'Send a parcel through the same active routes between cities.',
             icon: Package,
             tone: DS.gold,
             path: '/app/packages',
@@ -363,7 +369,7 @@ export default function AppEntryPage() {
           {
             title: 'Book a bus',
             detail:
-              'Official departures, timing confidence, and a calmer fallback when shared supply is full.',
+              'Check scheduled departures when you need a fixed public option.',
             icon: Bus,
             tone: DS.cyanDark,
             path: '/app/bus',
@@ -372,23 +378,23 @@ export default function AppEntryPage() {
         ],
         proofCards: [
           {
-            title: 'One surface, not four disconnected tools',
+            title: 'Verified drivers and users',
             detail:
-              'Wasel keeps rides, bus departures, and parcels inside one corridor logic, so the product feels coherent immediately.',
+              'Trust should be visible before booking, especially for shared intercity travel.',
             icon: Sparkles,
             tone: DS.cyan,
           },
           {
-            title: 'Route-first decisions',
+            title: 'Clear price before action',
             detail:
-              'The important answer shows up first: where the corridor is moving, what it costs, and how confident the next departure looks.',
+              'Users see the expected fare and route context before they commit.',
             icon: Route,
             tone: DS.green,
           },
           {
-            title: 'Trust at the point of action',
+            title: 'Support for rides and parcels',
             detail:
-              'Pricing, route behavior, and the next step stay visible before the user commits, which lowers hesitation everywhere.',
+              'The same route experience supports riders, senders, and bus fallback without confusion.',
             icon: ShieldCheck,
             tone: DS.gold,
           },
@@ -396,6 +402,37 @@ export default function AppEntryPage() {
       };
 
   const meta = corridorMeta(spotlightCorridor);
+  const trustSignals = ar
+    ? ['سائقون موثقون', 'أسعار واضحة قبل الحجز', 'دعم للركاب والطرود']
+    : ['Verified drivers', 'Clear price before booking', 'Ride and parcel support'];
+  const routeSearchCopy = ar
+    ? {
+        title: 'ابحث عن مسارك الآن',
+        from: 'من',
+        to: 'إلى',
+        when: 'الموعد',
+        seats: 'المقاعد',
+        submit: 'تحقق من الرحلات',
+      }
+    : {
+        title: 'Search a route now',
+        from: 'From',
+        to: 'To',
+        when: 'When',
+        seats: 'Seats',
+        submit: 'Check rides',
+      };
+
+  const handleRouteSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    navigate(
+      `/app/find-ride?from=${encodeURIComponent(routeSearch.from)}&to=${encodeURIComponent(
+        routeSearch.to,
+      )}&when=${encodeURIComponent(routeSearch.when)}&seats=${encodeURIComponent(
+        routeSearch.seats,
+      )}&search=1`,
+    );
+  };
 
   return (
     <div
@@ -417,9 +454,35 @@ export default function AppEntryPage() {
           margin: 0 auto;
           padding: clamp(18px, 4vw, 32px) clamp(16px, 4vw, 24px) clamp(72px, 10vw, 88px);
         }
+        .landing-brand {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          min-width: 0;
+          flex: 1 1 420px;
+        }
+        .landing-brand > div:last-child,
+        .landing-hero-copy,
+        .landing-hero-map-shell,
+        .landing-corridor-shell,
+        .landing-proof-card,
+        .landing-corridor-card,
+        .landing-stat-card,
+        .landing-meta-card {
+          min-width: 0;
+        }
+        .landing-topbar-pill {
+          flex-shrink: 0;
+          max-width: 100%;
+          text-align: center;
+        }
         .landing-section-head > div:first-child {
           min-width: 0;
           max-width: 720px;
+        }
+        .landing-hero-badge,
+        .landing-corridor-focus {
+          max-width: 100%;
         }
         .landing-section-kicker {
           font-size: clamp(0.7rem, 1.6vw, 0.76rem);
@@ -439,6 +502,88 @@ export default function AppEntryPage() {
           color: ${C.muted};
           line-height: 1.72;
           font-size: clamp(0.93rem, 2.2vw, 0.98rem);
+        }
+        .landing-route-search {
+          margin-top: 24px;
+          padding: 16px;
+          border-radius: 22px;
+          background: rgba(255,255,255,0.045);
+          border: 1px solid ${C.border};
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .landing-route-search__title {
+          margin: 0 0 12px;
+          color: ${C.text};
+          font-size: 0.9rem;
+          font-weight: 900;
+        }
+        .landing-route-search__grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr 0.82fr 0.62fr;
+          gap: 10px;
+        }
+        .landing-route-search label {
+          display: grid;
+          gap: 6px;
+          min-width: 0;
+          color: ${C.soft};
+          font-size: 0.68rem;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        .landing-route-search input {
+          width: 100%;
+          min-width: 0;
+          height: 44px;
+          border-radius: 14px;
+          border: 1px solid ${C.borderSoft};
+          background: rgba(3,10,18,0.62);
+          color: ${C.text};
+          padding: 0 12px;
+          font: inherit;
+          font-size: 0.92rem;
+          outline: none;
+        }
+        .landing-route-search input:focus {
+          border-color: rgba(103,232,255,0.64);
+          box-shadow: 0 0 0 3px rgba(88,221,255,0.16);
+        }
+        .landing-route-search__submit {
+          width: 100%;
+          min-height: 48px;
+          margin-top: 12px;
+          border: none;
+          border-radius: 16px;
+          background: ${GRAD};
+          color: ${C.bgDeep};
+          font-weight: 950;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 9px;
+        }
+        .landing-trust-row {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 10px;
+          margin-top: 16px;
+        }
+        .landing-trust-item {
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-height: 42px;
+          padding: 9px 10px;
+          border-radius: 14px;
+          background: rgba(71,214,158,0.08);
+          border: 1px solid rgba(71,214,158,0.16);
+          color: ${C.muted};
+          font-size: 0.78rem;
+          font-weight: 800;
+          line-height: 1.28;
         }
         .landing-service-grid {
           align-items: stretch;
@@ -585,12 +730,49 @@ export default function AppEntryPage() {
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
           }
         }
+        @media (max-width: 920px) {
+          .landing-shell {
+            padding-inline: clamp(14px, 3vw, 20px);
+          }
+          .landing-hero-copy {
+            padding: 28px 26px 24px !important;
+          }
+          .landing-hero-map-shell {
+            padding: 20px !important;
+          }
+          .landing-corridor-shell {
+            padding: 22px 20px 24px !important;
+          }
+          .landing-cta > button,
+          .landing-final-button {
+            width: 100%;
+            justify-content: center;
+          }
+          .landing-corridor-focus,
+          .landing-topbar-pill {
+            width: 100%;
+          }
+          .landing-route-search__grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
         @media (max-width: 720px) {
+          .landing-shell {
+            max-width: 100vw;
+            overflow-x: hidden;
+          }
+          .landing-hero-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 18px !important;
+          }
           .landing-service-grid,
           .landing-proof-grid,
           .landing-corridor-grid,
           .landing-stats-grid,
-          .landing-meta-grid {
+          .landing-meta-grid,
+          .landing-route-search__grid,
+          .landing-trust-row {
             grid-template-columns: 1fr !important;
           }
           .landing-cta,
@@ -599,16 +781,25 @@ export default function AppEntryPage() {
             flex-direction: column !important;
             align-items: stretch !important;
           }
+          .landing-brand {
+            flex: 0 1 auto !important;
+          }
           .landing-hero-copy,
           .landing-hero-map-shell,
           .landing-corridor-shell {
             padding: clamp(18px, 5vw, 22px) !important;
             border-radius: 24px !important;
           }
+          .landing-topbar-pill,
+          .landing-hero-badge {
+            justify-content: center;
+          }
           .landing-hero-title {
-            font-size: clamp(2.35rem, 12vw, 3.6rem) !important;
-            line-height: 0.98 !important;
+            font-size: clamp(2.45rem, 10.5vw, 3.1rem) !important;
+            line-height: 1.02 !important;
             letter-spacing: 0 !important;
+            overflow-wrap: normal !important;
+            word-break: normal !important;
           }
           .landing-hero-map-caption {
             max-width: none !important;
@@ -624,6 +815,14 @@ export default function AppEntryPage() {
             border-radius: 22px;
             padding: 18px;
             gap: 16px;
+          }
+          .landing-proof-card,
+          .landing-corridor-card,
+          .landing-stat-card,
+          .landing-meta-card,
+          .landing-corridor-focus,
+          .landing-final-shell {
+            border-radius: 20px !important;
           }
           .landing-service-card__top {
             align-items: center;
@@ -641,6 +840,30 @@ export default function AppEntryPage() {
           .landing-cta > button {
             width: 100%;
             justify-content: center;
+          }
+          .landing-final-shell {
+            padding: 18px !important;
+          }
+          .landing-final-button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+        @media (max-width: 520px) {
+          .landing-brand {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+          .landing-brand > div:last-child {
+            width: 100%;
+          }
+          .landing-hero-badge {
+            width: 100%;
+          }
+          .landing-topbar-pill {
+            font-size: 0.7rem;
+            letter-spacing: 0.04em;
           }
         }
         @media (max-width: 420px) {
@@ -702,7 +925,7 @@ export default function AppEntryPage() {
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div className="landing-brand">
             <WaselLogo size={44} theme="light" />
             <div>
               <div
@@ -723,6 +946,7 @@ export default function AppEntryPage() {
           </div>
 
           <span
+            className="landing-topbar-pill"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -778,6 +1002,7 @@ export default function AppEntryPage() {
 
             <div style={{ position: 'relative' }}>
               <span
+                className="landing-hero-badge"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -888,48 +1113,90 @@ export default function AppEntryPage() {
                 </button>
               </div>
 
-              <div
-                className="landing-stats-grid"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                  gap: 10,
-                  marginTop: 22,
-                }}
-              >
-                {heroCopy.stats.map(item => (
-                  <div
-                    key={item.label}
-                    style={{
-                      borderRadius: 18,
-                      padding: '12px 14px',
-                      background: 'rgba(255,255,255,0.035)',
-                      border: `1px solid ${C.borderSoft}`,
-                    }}
-                  >
+              <form className="landing-route-search" onSubmit={handleRouteSearch}>
+                <p className="landing-route-search__title">{routeSearchCopy.title}</p>
+                <div className="landing-route-search__grid">
+                  {[
+                    ['from', routeSearchCopy.from],
+                    ['to', routeSearchCopy.to],
+                    ['when', routeSearchCopy.when],
+                    ['seats', routeSearchCopy.seats],
+                  ].map(([key, label]) => (
+                    <label key={key}>
+                      {label}
+                      <input
+                        inputMode={key === 'seats' ? 'numeric' : 'text'}
+                        value={routeSearch[key as keyof typeof routeSearch]}
+                        onChange={event =>
+                          setRouteSearch(current => ({
+                            ...current,
+                            [key]: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                  ))}
+                </div>
+                <button className="landing-route-search__submit" type="submit">
+                  {routeSearchCopy.submit}
+                  <ArrowRight size={16} />
+                </button>
+              </form>
+
+              {user ? (
+                <div
+                  className="landing-stats-grid"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                    gap: 10,
+                    marginTop: 18,
+                  }}
+                >
+                  {heroCopy.stats.map(item => (
                     <div
+                      className="landing-stat-card"
+                      key={item.label}
                       style={{
-                        color: C.soft,
-                        fontSize: '0.68rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
+                        borderRadius: 18,
+                        padding: '12px 14px',
+                        background: 'rgba(255,255,255,0.035)',
+                        border: `1px solid ${C.borderSoft}`,
                       }}
                     >
-                      {item.label}
+                      <div
+                        style={{
+                          color: C.soft,
+                          fontSize: '0.68rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.08em',
+                        }}
+                      >
+                        {item.label}
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 6,
+                          fontSize: '1rem',
+                          fontWeight: 900,
+                          color: item.tone,
+                        }}
+                      >
+                        {item.value}
+                      </div>
                     </div>
-                    <div
-                      style={{
-                        marginTop: 6,
-                        fontSize: '1rem',
-                        fontWeight: 900,
-                        color: item.tone,
-                      }}
-                    >
-                      {item.value}
+                  ))}
+                </div>
+              ) : (
+                <div className="landing-trust-row">
+                  {trustSignals.map(signal => (
+                    <div className="landing-trust-item" key={signal}>
+                      <ShieldCheck size={15} aria-hidden="true" />
+                      <span>{signal}</span>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -1050,6 +1317,7 @@ export default function AppEntryPage() {
                 const Icon = item.icon;
                 return (
                   <div
+                    className="landing-meta-card"
                     key={item.label}
                     style={{
                       borderRadius: 18,
@@ -1213,6 +1481,7 @@ export default function AppEntryPage() {
               const Icon = card.icon;
               return (
                 <div
+                  className="landing-proof-card"
                   key={card.title}
                   style={{
                     borderRadius: 24,
@@ -1320,6 +1589,7 @@ export default function AppEntryPage() {
             </div>
 
             <div
+              className="landing-corridor-focus"
               style={{
                 marginTop: 18,
                 borderRadius: 22,
@@ -1364,6 +1634,7 @@ export default function AppEntryPage() {
             >
               {corridorCards.map((corridor, index) => (
                 <button
+                  className="landing-corridor-card"
                   key={corridor.id}
                   onClick={() =>
                     navigate(
@@ -1517,6 +1788,7 @@ export default function AppEntryPage() {
             </div>
 
             <div
+              className="landing-final-shell"
               style={{
                 marginTop: 18,
                 borderRadius: 24,
@@ -1566,6 +1838,7 @@ export default function AppEntryPage() {
               </div>
 
               <button
+                className="landing-final-button"
                 onClick={() => navigate(primaryPath)}
                 style={{
                   height: 54,

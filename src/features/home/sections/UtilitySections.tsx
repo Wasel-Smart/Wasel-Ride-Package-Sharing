@@ -34,6 +34,7 @@ export function SignedInUtilitySection({
       >
         <div style={{ display: 'grid', gap: 14 }}>
           <div
+            className="wasel-home-card"
             style={{
               borderRadius: 24,
               padding: '20px 20px 18px',
@@ -83,6 +84,7 @@ export function SignedInUtilitySection({
           </div>
 
           <div
+            className="wasel-home-card"
             style={{
               borderRadius: 24,
               padding: '20px 20px 18px',
@@ -123,6 +125,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
   return (
     <motion.section initial={false} style={{ marginTop: 40, marginBottom: 24 }}>
       <div
+        className="wasel-home-card wasel-home-cta-card"
         style={{
           borderRadius: 28,
           padding: '30px 26px',
@@ -141,7 +144,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
             color: C.cyan,
           }}
         >
-          {ar ? 'ابدأ بسرعة' : 'Start fast'}
+          {ar ? 'جاهز للحجز' : 'Ready to book'}
         </div>
         <h2
           style={{
@@ -151,7 +154,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
             letterSpacing: '-0.04em',
           }}
         >
-          {ar ? 'أنشئ حسابك وافتح نفس الشبكة' : 'Create an account and open the same network'}
+          {ar ? 'أنشئ حسابك واحفظ رحلاتك وطرودك' : 'Create an account to save rides, buses, and parcels'}
         </h2>
         <p
           style={{
@@ -163,8 +166,8 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
           }}
         >
           {ar
-            ? 'عند التسجيل ستحتفظ بمساراتك المفضلة، وتبني سجل الثقة، وتدير الحجوزات والطرود من مكان واحد.'
-            : 'When you sign up, you keep favorite corridors, build trust history, and manage rides and parcels in one place.'}
+            ? 'عند التسجيل تستطيع حفظ المسارات المفضلة، متابعة الحجوزات، وإدارة الطرود من مكان واحد.'
+            : 'Sign up to save favorite routes, track bookings, and manage parcels from one place.'}
         </p>
         <div
           style={{
@@ -189,7 +192,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
               boxShadow: '0 14px 30px rgba(37,182,255,0.22)',
             }}
           >
-            {ar ? 'ابدأ الآن' : 'Get started'}
+            {ar ? 'إنشاء حساب' : 'Create account'}
           </button>
           <button
             onClick={() => onNavigate('/find-ride')}
@@ -204,7 +207,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
               cursor: 'pointer',
             }}
           >
-            {ar ? 'تصفح الرحلات' : 'Browse rides'}
+            {ar ? 'ابحث عن رحلة' : 'Find a Ride'}
           </button>
         </div>
       </div>

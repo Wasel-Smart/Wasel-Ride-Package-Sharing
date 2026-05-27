@@ -40,7 +40,7 @@ export default function WaselRoot() {
   const shellCopy = {
     notifications: ar ? 'الإشعارات' : 'Notifications',
     signIn: ar ? 'تسجيل الدخول' : 'Sign in',
-    getStarted: ar ? 'ابدأ الآن' : 'Get started',
+    getStarted: ar ? 'إنشاء حساب' : 'Create account',
     openMenu: ar ? 'افتح القائمة' : 'Open menu',
     mainContent: ar ? 'المحتوى الرئيسي' : 'Main content',
   };
@@ -103,6 +103,25 @@ export default function WaselRoot() {
           .wrl-dropdown-item:hover {
             background: ${C.cardSolid};
             transform: translateY(-1px);
+          }
+          .wrl-main-content {
+            min-width: 0;
+            max-width: 100%;
+            overflow-x: clip;
+          }
+          .wrl-main-content main {
+            min-width: 0;
+            max-width: 100%;
+          }
+          @media (max-width: 899px) {
+            .wrl-header > div {
+              min-height: 64px !important;
+              padding-inline: 12px !important;
+              gap: 10px !important;
+            }
+            .wrl-main-content {
+              padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)) !important;
+            }
           }
         `}</style>
 

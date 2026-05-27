@@ -1,4 +1,4 @@
-import { Component, useEffect, type ReactNode } from 'react';
+import { Component, useEffect, useRef, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
 import { Toaster } from 'sonner';
@@ -6,14 +6,27 @@ import { Toaster } from 'sonner';
 import { WaselStateCard } from './components/system/WaselStateCard';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
-import { LocalAuthProvider } from './contexts/LocalAuth';
+import { LocalAuthProvider, useLocalAuth } from './contexts/LocalAuth';
 
 import { domainEventBus } from './platform/event-bus';
+import { clearBusBookingCache } from './services/bus';
 import { startAvailabilityPolling, warmUpServer } from './services/core';
-import { validateRuntimeConfiguration } from './utils/env';
+import { clearDemandAlertsCache, hydrateDemandAlerts } from './services/demandCapture';
+import { clearGrowthEngineCache } from './services/growthEngine';
+import { hydrateConnectedRides } from './services/journeyLogistics';
+import { clearMembershipCache, loadMembershipSnapshot } from './services/movementMembership';
+import {
+  clearRouteRemindersCache,
+  hydrateRouteReminders,
+} from './services/movementRetention';
+import { clearNotificationCache } from './services/notifications';
+import { clearRideBookingsCache, hydrateRideBookings } from './services/rideLifecycle';
+import { clearSupportTicketCache } from './services/supportInbox';
+import { hasBackendRuntimeConfig, validateRuntimeConfiguration } from './utils/env';
 import { initSentry, logger, trackDomainEvent } from './utils/monitoring';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { initPerformanceMonitoring } from './utils/performance';
+import { clearAllRuntimeState } from './utils/runtimeStore';
 import { waselRouter } from './router';
 
 const CRASH_ACTION_STYLE = {
@@ -107,10 +120,73 @@ function AppProviders({ children }: { children: ReactNode }) {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <LocalAuthProvider>{children}</LocalAuthProvider>
+        <LocalAuthProvider>
+          <AppSessionCoordinator />
+          {children}
+        </LocalAuthProvider>
       </AuthProvider>
     </LanguageProvider>
   );
+}
+
+function clearOperationalSessionState() {
+  clearRideBookingsCache();
+  clearMembershipCache();
+  clearDemandAlertsCache();
+  clearRouteRemindersCache();
+  clearGrowthEngineCache();
+  clearNotificationCache();
+  clearSupportTicketCache();
+  clearBusBookingCache();
+  clearAllRuntimeState();
+}
+
+function AppSessionCoordinator() {
+  const { user } = useLocalAuth();
+  const previousUserIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const previousUserId = previousUserIdRef.current;
+    const currentUserId = user?.id ?? null;
+
+    if (!currentUserId) {
+      clearOperationalSessionState();
+      previousUserIdRef.current = null;
+      return;
+    }
+
+    if (previousUserId && previousUserId !== currentUserId) {
+      clearOperationalSessionState();
+    }
+
+    previousUserIdRef.current = currentUserId;
+
+    let cancelled = false;
+
+    const hydrateSessionState = async () => {
+      await loadMembershipSnapshot(currentUserId);
+
+      const rides = await hydrateConnectedRides(currentUserId);
+      await hydrateRideBookings(currentUserId, rides);
+
+      await Promise.all([
+        hydrateDemandAlerts(currentUserId),
+        hydrateRouteReminders(currentUserId),
+      ]);
+
+      if (cancelled) {
+        return;
+      }
+    };
+
+    void hydrateSessionState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  return null;
 }
 
 /* ---------------------------
@@ -125,6 +201,14 @@ function AppRuntimeCoordinator() {
     let stopPolling: (() => void) | undefined;
     let stopEvents: (() => void) | undefined;
     const validation = validateRuntimeConfiguration();
+    const hasBackendConfig = hasBackendRuntimeConfig();
+    const suppressedLocalRuntimeKeys = hasBackendConfig
+      ? new Set<string>()
+      : new Set([
+          'VITE_SUPABASE_URL',
+          'VITE_SUPABASE_PUBLISHABLE_KEY',
+          'VITE_API_URL',
+        ]);
 
     timeoutId = window.setTimeout(() => {
       try {
@@ -132,6 +216,10 @@ function AppRuntimeCoordinator() {
         initPerformanceMonitoring();
 
         validation.issues.forEach(issue => {
+          if (suppressedLocalRuntimeKeys.has(issue.key)) {
+            return;
+          }
+
           if (issue.severity === 'error') {
             logger.error(issue.message);
           } else {
@@ -139,10 +227,13 @@ function AppRuntimeCoordinator() {
           }
         });
 
-        // warmUpServer guard in core.ts prevents a true double-call;
-        // calling here ensures the coordinator owns the retry lifecycle.
-        void warmUpServer();
-        stopPolling = startAvailabilityPolling();
+        if (hasBackendConfig) {
+          // warmUpServer guard in core.ts prevents a true double-call;
+          // calling here ensures the coordinator owns the retry lifecycle.
+          void warmUpServer();
+          stopPolling = startAvailabilityPolling();
+        }
+
         stopEvents = domainEventBus.subscribeAll(trackDomainEvent);
       } catch (error) {
         console.warn('[Runtime bootstrap failed]', error);

@@ -63,7 +63,7 @@ echo "5. Add authorized origins: https://wasel14.online, https://zexlxabdcsjefpt
 echo "6. Add redirect URI: https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback"
 echo ""
 
-GOOGLE_CLIENT_ID=$(prompt_secret "GOOGLE_CLIENT_ID" "Google OAuth Client ID" "235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com")
+GOOGLE_CLIENT_ID=$(prompt_secret "GOOGLE_CLIENT_ID" "Google OAuth Client ID" "")
 GOOGLE_CLIENT_SECRET=$(prompt_secret "GOOGLE_CLIENT_SECRET" "Google OAuth Client Secret" "")
 
 if [ -n "$GOOGLE_CLIENT_SECRET" ]; then
@@ -120,7 +120,7 @@ echo "   Events: checkout.session.*, customer.subscription.*, invoice.*, payment
 echo "5. Create Wasel Plus product (5 JOD/month) and copy Price ID"
 echo ""
 
-STRIPE_SECRET_KEY=$(prompt_secret "STRIPE_SECRET_KEY" "Stripe Secret Key (sk_live_... or sk_test_...)" "sk_test_51SZmpKENhKSYxMCX03sEOKEiljDGWYTX0ZKTVmqKM0NeNH60jWc6pzyW8vaMHr7ahEKfKRNG24UqNrlsELnEGvHZ004Ec5d33u")
+STRIPE_SECRET_KEY=$(prompt_secret "STRIPE_SECRET_KEY" "Stripe Secret Key (sk_live_... or sk_test_...)" "")
 STRIPE_WEBHOOK_SECRET=$(prompt_secret "STRIPE_WEBHOOK_SECRET" "Stripe Webhook Secret (whsec_...)" "")
 STRIPE_PRICE_ID=$(prompt_secret "STRIPE_PRICE_ID" "Wasel Plus Price ID (price_...)" "")
 
@@ -158,8 +158,8 @@ echo "4. Buy Jordan phone number (+962)"
 echo "5. Create API Key for programmatic access"
 echo ""
 
-TWILIO_ACCOUNT_SID=$(prompt_secret "TWILIO_ACCOUNT_SID" "Twilio Account SID (AC...)" "AC1386e065d313ae43d256ca0394d0b4e6")
-TWILIO_AUTH_TOKEN=$(prompt_secret "TWILIO_AUTH_TOKEN" "Twilio Auth Token" "5005d351cb6bee711cb5127a7d192728")
+TWILIO_ACCOUNT_SID=$(prompt_secret "TWILIO_ACCOUNT_SID" "Twilio Account SID (AC...)" "")
+TWILIO_AUTH_TOKEN=$(prompt_secret "TWILIO_AUTH_TOKEN" "Twilio Auth Token" "")
 TWILIO_MESSAGING_SID=$(prompt_secret "TWILIO_MESSAGING_SID" "Twilio Messaging Service SID (MG...)" "")
 TWILIO_SMS_FROM=$(prompt_secret "TWILIO_SMS_FROM" "Twilio SMS From Number (+962...)" "+962790000000")
 
@@ -175,7 +175,10 @@ if [ -n "$TWILIO_ACCOUNT_SID" ] && [ -n "$TWILIO_AUTH_TOKEN" ]; then
         supabase secrets set TWILIO_SMS_FROM="$TWILIO_SMS_FROM"
     fi
     
-    supabase secrets set TWILIO_WHATSAPP_FROM="whatsapp:+14155238886"
+    TWILIO_WHATSAPP_FROM=$(prompt_secret "TWILIO_WHATSAPP_FROM" "Twilio WhatsApp sender (whatsapp:+...)" "")
+    if [ -n "$TWILIO_WHATSAPP_FROM" ]; then
+        supabase secrets set TWILIO_WHATSAPP_FROM="$TWILIO_WHATSAPP_FROM"
+    fi
     
     echo -e "${GREEN}✓${NC} Twilio configured"
 else

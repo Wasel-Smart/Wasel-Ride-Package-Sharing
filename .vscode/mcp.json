@@ -1,8 +1,17 @@
-{
-  "servers": {
-    "supabase": {
-      "type": "http",
-      "url": "https://mcp.supabase.com/mcp?project_ref=zexlxabdcsjefptmjhuq&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage"
-    }
-  }
+   {
+	"servers": {
+		"supabase": {
+			"type": "http",
+			"url": "https://mcp.supabase.com/mcp?project_ref=zexlxabdcsjefptmjhuq&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage"
+		},
+		"my-mcp-server-1feaf638": {
+			"type": "stdio",
+			"command": "npm",
+			"args": [
+				"run",
+				"deb"
+			]
+		}
+	},
+	"inputs": []
 }

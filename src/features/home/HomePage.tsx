@@ -4,7 +4,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { useLiveUserStats } from '../../services/liveDataService';
-import { getCorridorDemandLeaders } from '../../services/growthEngine';
 import { CurrencyService } from '../../utils/currency';
 import { C, F, POPULAR_ROUTES } from './HomePageShared';
 import {
@@ -34,14 +33,12 @@ export function HomePage() {
     () => [
       {
         icon: Search,
-        kicker: ar ? 'للحجز السريع' : 'For immediate booking',
-        title: ar ? 'ابحث عن رحلة' : 'Find a ride',
+        kicker: ar ? 'للحجز الآن' : 'Book now',
+        title: ar ? 'ابحث عن رحلة' : 'Find Ride',
         desc: ar
-          ? 'ابدأ من المسار وشاهد المقاعد المتاحة والسعر بوضوح قبل الحجز.'
-          : 'Start from the corridor and compare available seats before you commit.',
-        outcome: ar
-          ? 'عرض حي للمقاعد والأسعار على نفس المسار'
-          : 'Live seat supply and price on the same corridor',
+          ? 'احجز مقعداً بين المدن مع سعر واضح وتوفر مباشر قبل التأكيد.'
+          : 'Book city-to-city rides with clear seat pricing and live availability.',
+        outcome: ar ? 'من 2 د.أ للمقعد حسب المسار' : 'From JOD 2 per seat, route dependent',
         color: C.cyan,
         dim: C.cyanDim,
         border: 'rgba(88,221,255,0.24)',
@@ -50,13 +47,11 @@ export function HomePage() {
       {
         icon: Car,
         kicker: ar ? 'للسائقين' : 'For drivers',
-        title: ar ? 'اعرض رحلتك' : 'Offer a ride',
+        title: ar ? 'اعرض رحلة' : 'Offer Ride',
         desc: ar
-          ? 'افتح المقاعد الفارغة وخفف تكلفة المشوار من نفس واجهة الحركة.'
-          : 'Open empty seats and offset trip cost from the same mobility surface.',
-        outcome: ar
-          ? 'إدارة المقاعد والسعر والوضوح من شاشة واحدة'
-          : 'Manage seat supply, pricing, and clarity in one flow',
+          ? 'شارك المقاعد الفارغة واربح من رحلتك مع قواعد حجز واضحة.'
+          : 'Share empty seats and earn from trips you already plan to take.',
+        outcome: ar ? 'تحكم بالمقاعد والسعر والطلبات' : 'Control seats, price, and booking requests',
         color: C.gold,
         dim: C.goldDim,
         border: 'rgba(255,190,92,0.24)',
@@ -65,13 +60,11 @@ export function HomePage() {
       {
         icon: Package,
         kicker: ar ? 'للطرود' : 'For parcels',
-        title: ar ? 'أرسل طرداً' : 'Send a package',
+        title: ar ? 'أرسل طرد' : 'Send Package',
         desc: ar
-          ? 'حرّك الطرد على نفس المسار بدون منتج منفصل أو منطق مختلف.'
-          : 'Move a parcel on the same corridor without a separate product logic.',
-        outcome: ar
-          ? 'تتبع واضح وتسليم ضمن شبكة الرحلات نفسها'
-          : 'Clear tracking inside the same route network',
+          ? 'أرسل الطرود بين المدن عبر الرحلات المتاحة مع تتبع واضح.'
+          : 'Send parcels between cities through available trips with clear tracking.',
+        outcome: ar ? 'سعر حسب الحجم والمسافة' : 'Price depends on size and distance',
         color: '#D9965B',
         dim: 'rgba(217,149,91,0.12)',
         border: 'rgba(217,149,91,0.24)',
@@ -79,14 +72,12 @@ export function HomePage() {
       },
       {
         icon: Bus,
-        kicker: ar ? 'الخيار الاحتياطي' : 'The fallback',
-        title: ar ? 'احجز باص' : 'Book a bus',
+        kicker: ar ? 'مواعيد مجدولة' : 'Scheduled trips',
+        title: ar ? 'احجز باص' : 'Book Bus',
         desc: ar
-          ? 'اختر المغادرة المجدولة عندما لا تكون المشاركة هي الخيار الأنسب.'
-          : 'Use scheduled departures when shared supply is not the right fit.',
-        outcome: ar
-          ? 'استمر في الحركة حتى عندما يضعف العرض المشترك'
-          : 'Keep moving even when shared supply is thin',
+          ? 'تصفح مواعيد الباصات عندما تريد خياراً ثابتاً بين المدن.'
+          : 'Browse scheduled bus departures when you need a fixed option.',
+        outcome: ar ? 'تذاكر واضحة لكل راكب' : 'Clear ticket pricing per passenger',
         color: C.green,
         dim: C.greenDim,
         border: 'rgba(71,214,158,0.24)',
@@ -96,51 +87,29 @@ export function HomePage() {
     [ar],
   );
 
-  const corridorCards = useMemo<CorridorCard[]>(() => {
-    const leaders = getCorridorDemandLeaders().slice(0, 3);
-    if (leaders.length > 0) {
-      return leaders.map((item, index) => ({
-        key: item.corridor,
-        title: item.corridor,
-        detail: item.serviceLabel,
-        meta: `${item.active} ${ar ? 'نشط الآن' : 'active now'}`,
+  const corridorCards = useMemo<CorridorCard[]>(
+    () =>
+      POPULAR_ROUTES.slice(0, 3).map((route, index) => ({
+        key: `${route.from}-${route.to}`,
+        title: ar ? `${route.fromAr} إلى ${route.toAr}` : `${route.from} to ${route.to}`,
+        detail: ar
+          ? `${route.dist} كم · مقعد من ${svc.formatFromJOD(route.priceJod)}`
+          : `${route.dist} km · seat from ${svc.formatFromJOD(route.priceJod)}`,
+        meta: ar ? 'مسار شائع' : 'Popular route',
         insight:
           index === 0
             ? ar
-              ? 'أفضل توازن بين العرض والطلب اليوم'
-              : 'Best balance of supply and demand today'
+              ? 'توفر جيد وسعر واضح للمسار اليوم.'
+              : 'Good availability and clear pricing on this route today.'
             : ar
-              ? 'حركة واضحة على هذا المسار الآن'
-              : 'Visible live movement on this corridor',
+              ? 'جاهز للمقارنة والحجز السريع.'
+              : 'Ready for quick comparison and booking.',
         featured: index === 0,
-        path: (() => {
-          const [from, to] = item.corridor.split(' to ');
-          return `/find-ride?from=${encodeURIComponent(from ?? '')}&to=${encodeURIComponent(to ?? '')}&search=1`;
-        })(),
-        accent: C.cyan,
-      }));
-    }
-
-    return POPULAR_ROUTES.slice(0, 3).map((route, index) => ({
-      key: `${route.from}-${route.to}`,
-      title: ar ? `${route.fromAr} ← ${route.toAr}` : `${route.from} → ${route.to}`,
-      detail: ar
-        ? `${route.dist} كم • ${svc.formatFromJOD(route.priceJod)}`
-        : `${route.dist} km • ${svc.formatFromJOD(route.priceJod)}`,
-      meta: ar ? 'مسار شائع' : 'Popular corridor',
-      insight:
-        index === 0
-          ? ar
-            ? 'خيار متوازن للسعر وطول المسار'
-            : 'Balanced pick for price and distance'
-          : ar
-            ? 'جاهز للمقارنة والبحث الفوري'
-            : 'Ready for quick comparison and search',
-      featured: index === 0,
-      path: `/find-ride?from=${encodeURIComponent(route.from)}&to=${encodeURIComponent(route.to)}`,
-      accent: route.color,
-    }));
-  }, [ar, svc]);
+        path: `/find-ride?from=${encodeURIComponent(route.from)}&to=${encodeURIComponent(route.to)}&search=1`,
+        accent: route.color,
+      })),
+    [ar, svc],
+  );
 
   const trustScore = liveStats
     ? Math.max(78, Math.min(96, Math.round(72 + liveStats.totalTrips / 5 + liveStats.rating * 2)))
@@ -149,11 +118,7 @@ export function HomePage() {
   const primaryTripPath = tripMode === 'round' ? '/find-ride?mode=round' : '/find-ride';
 
   return (
-    <div
-      className="min-h-screen relative"
-      dir={dir}
-      style={{ background: C.bg, color: C.text, fontFamily: F }}
-    >
+    <div className="min-h-screen relative" dir={dir} style={{ background: C.bg, color: C.text, fontFamily: F }}>
       <HomePageStyles />
 
       <div
@@ -162,12 +127,11 @@ export function HomePage() {
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          background:
-            'radial-gradient(circle at 14% 14%, rgba(88,221,255,0.12), transparent 24%), radial-gradient(circle at 84% 20%, rgba(255,190,92,0.08), transparent 18%), radial-gradient(circle at 72% 78%, rgba(71,214,158,0.09), transparent 22%)',
+          background: 'linear-gradient(180deg, rgba(88,221,255,0.08), transparent 260px)',
         }}
       />
 
-      <div className="relative z-10 mx-auto px-4 py-8" style={{ maxWidth: 1140 }}>
+      <div className="wasel-home-shell relative z-10 mx-auto">
         <HomeHeroSection
           ar={ar}
           user={user}
@@ -179,7 +143,6 @@ export function HomePage() {
         />
 
         <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={navigate} />
-
         <CorridorsSection ar={ar} corridorCards={corridorCards} onNavigate={navigate} />
 
         {user ? (

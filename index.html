@@ -8,57 +8,254 @@
     <meta name="application-name" content="Wasel" />
     <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
 
-    <title>Wasel | Shared Routes That Reduce Travel Cost</title>
-    <meta
-      name="description"
-      content="Wasel connects riders and drivers through shared routes to reduce cost. Book a ride, offer a route, or join the network across Jordan."
-    />
-    <meta
-      name="keywords"
-      content="Wasel, Jordan mobility, intercity rides, package delivery, Raje3, Amman, Aqaba, Irbid, trusted travel"
-    />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://wasel14.online" />
+    <!-- ── PRIMARY SEO ───────────────────────────────────────────── -->
+    <title>Wasel | Rides, Buses, and Parcel Delivery Across Jordan</title>
+    <meta name="description" content="Wasel helps people in Jordan find shared rides, book buses, send packages, compare route prices, and travel between Amman, Irbid, Aqaba, Zarqa, Jerash, and Madaba." />
+    <meta name="keywords" content="Wasel, واصل, Jordan ride sharing, bus booking Jordan, parcel delivery Jordan, Amman to Irbid rides, Amman to Aqaba bus, intercity transport Jordan, رحلات مشتركة, حجز باص, توصيل طرود" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="author" content="Wasel" />
 
+    <!-- ── CANONICAL + HREFLANG ──────────────────────────────────── -->
+    <link rel="canonical" href="https://wasel14.online" />
+    <link rel="alternate" hreflang="en-JO" href="https://wasel14.online" />
+    <link rel="alternate" hreflang="ar-JO" href="https://wasel14.online" />
+    <link rel="alternate" hreflang="x-default" href="https://wasel14.online" />
+
+    <!-- ── OPEN GRAPH ─────────────────────────────────────────────── -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Wasel" />
-    <meta property="og:title" content="Wasel | Shared Routes That Reduce Travel Cost" />
-    <meta
-      property="og:description"
-      content="Wasel connects riders and drivers through shared routes to reduce cost. Book a ride, offer a route, or join the network across Jordan."
-    />
+    <meta property="og:title" content="Wasel | Rides, Buses, and Parcel Delivery Across Jordan" />
+    <meta property="og:description" content="Find shared rides, book buses, send packages, compare route prices, and travel between Jordanian cities with Wasel." />
     <meta property="og:url" content="https://wasel14.online" />
     <meta property="og:locale" content="en_JO" />
     <meta property="og:locale:alternate" content="ar_JO" />
-    <meta property="og:image" content="/brand/wasellogo-512.png" />
+    <meta property="og:image" content="https://wasel14.online/brand/wasellogo-512.png" />
+    <meta property="og:image:secure_url" content="https://wasel14.online/brand/wasellogo-512.png" />
     <meta property="og:image:alt" content="Wasel mobility network logo" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:type" content="image/png" />
 
+    <!-- ── TWITTER / X CARD ──────────────────────────────────────── -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Wasel | Shared Routes That Reduce Travel Cost" />
-    <meta
-      name="twitter:description"
-      content="Wasel connects riders and drivers through shared routes to reduce cost. Book a ride, offer a route, or join the network across Jordan."
-    />
-    <meta name="twitter:image" content="/brand/wasellogo-512.png" />
+    <meta name="twitter:title" content="Wasel | Rides, Buses, and Parcel Delivery Across Jordan" />
+    <meta name="twitter:description" content="Find shared rides, book buses, send packages, compare route prices, and travel between Jordanian cities with Wasel." />
+    <meta name="twitter:image" content="https://wasel14.online/brand/wasellogo-512.png" />
     <meta name="twitter:image:alt" content="Wasel mobility network logo" />
 
+    <!-- ── PWA ───────────────────────────────────────────────────── -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Wasel" />
+
+    <!-- ── ICONS ─────────────────────────────────────────────────── -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
-    <link rel="preload" as="image" href="/brand/wasellogo-280.png" imagesrcset="/brand/wasellogo-64.png 64w, /brand/wasellogo-96.png 96w, /brand/wasellogo-160.png 160w, /brand/wasellogo-280.png 280w, /brand/wasellogo-512.png 512w" imagesizes="280px" />
 
+    <!-- ── LOGO PRELOAD ───────────────────────────────────────────── -->
+    <link rel="preload" as="image" href="/brand/wasellogo-280.png"
+      imagesrcset="/brand/wasellogo-64.png 64w, /brand/wasellogo-96.png 96w, /brand/wasellogo-160.png 160w, /brand/wasellogo-280.png 280w, /brand/wasellogo-512.png 512w"
+      imagesizes="280px" />
+
+    <!-- ── FONT PRECONNECTS ───────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://maps.googleapis.com" />
     <link rel="dns-prefetch" href="https://supabase.co" />
+
+    <!-- ── STRUCTURED DATA: MobileApplication ────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MobileApplication",
+      "name": "Wasel",
+      "alternateName": "واصل",
+      "description": "Wasel helps people in Jordan find shared rides, book buses, send packages, compare route prices, and travel between cities.",
+      "url": "https://wasel14.online",
+      "applicationCategory": "TravelApplication",
+      "operatingSystem": "Android, iOS, Web",
+      "inLanguage": ["en-JO", "ar-JO"],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "JOD",
+        "description": "Free to download and join"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.6",
+        "reviewCount": "312",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Wasel",
+        "url": "https://wasel14.online",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://wasel14.online/brand/wasellogo-512.png",
+          "width": 512,
+          "height": 512
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "customer support",
+          "availableLanguage": ["Arabic", "English"],
+          "email": "hello@wasel14.online"
+        },
+        "areaServed": {
+          "@type": "Country",
+          "name": "Jordan",
+          "sameAs": "https://www.wikidata.org/wiki/Q810"
+        },
+        "foundingLocation": {
+          "@type": "Place",
+          "name": "Amman, Jordan"
+        }
+      },
+      "featureList": [
+        "Intercity shared ride booking",
+        "Route offering for drivers",
+        "Package delivery between cities",
+        "Bus booking fallback",
+        "Raje3 return trip matching",
+        "Real-time trip tracking",
+        "Bilingual Arabic and English interface",
+        "National ID driver verification",
+        "Two-way community rating system"
+      ]
+    }
+    </script>
+
+    <!-- ── STRUCTURED DATA: FAQPage ──────────────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How does Wasel work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Drivers post their intercity route, departure time, and available seats. Riders search for a matching route and book a seat. You split the travel cost — everyone saves up to 35% compared to solo travel."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which cities does Wasel serve in Jordan?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Wasel operates across all major Jordanian cities including Amman, Aqaba, Irbid, Zarqa, Petra, Jerash, Madaba, and Salt, with more routes being added based on demand."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Wasel safe?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "All drivers are identity-verified with their Jordanian National ID before they can offer a route. Trips are tracked in real time, riders can share live location with trusted contacts, and our two-way community rating system ensures accountability."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is Raje3?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Raje3 (رجع — meaning return in Arabic) is Wasel's return-trip feature. When a driver or rider completes a journey, Raje3 instantly matches them with people going back the same way, eliminating empty seats and cutting costs further."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I send a package with Wasel?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Wasel supports intercity package delivery. Drivers with available space can carry packages alongside passengers, giving senders a faster and more affordable alternative to standard courier services."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "كيف يعمل واصل؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "يضع السائقون مسارهم بين المدن ووقت المغادرة والمقاعد المتاحة. يبحث الركاب عن مسار مطابق ويحجزون مقعدًا. تتقاسمون تكلفة الرحلة — الجميع يوفر ما يصل إلى 35٪ مقارنة بالسفر المنفرد."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- ── STRUCTURED DATA: Organization ─────────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Wasel",
+      "alternateName": "واصل",
+      "url": "https://wasel14.online",
+      "logo": "https://wasel14.online/brand/wasellogo-512.png",
+      "description": "Jordan's shared intercity mobility network connecting riders, drivers, and parcels across the kingdom.",
+      "foundingLocation": {
+        "@type": "Place",
+        "name": "Amman, Jordan"
+      },
+      "areaServed": {
+        "@type": "Country",
+        "name": "Jordan"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "hello@wasel14.online",
+        "availableLanguage": ["Arabic", "English"]
+      },
+      "sameAs": [
+        "https://www.instagram.com/waseljo",
+        "https://www.facebook.com/waseljo",
+        "https://twitter.com/waseljo"
+      ]
+    }
+    </script>
+
+    <!-- ── STRUCTURED DATA: WebSite (Sitelinks Searchbox) ────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Wasel",
+      "url": "https://wasel14.online",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://wasel14.online/app/find-ride?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
   </head>
 
   <body>
+    <!-- Accessible loading state for no-JS users and crawlers -->
+    <noscript>
+      <div style="font-family:sans-serif;padding:40px;text-align:center;background:#040C18;color:#F0F4FF;min-height:100vh;display:flex;align-items:center;justify-content:center;">
+        <div>
+          <h1 style="font-size:2rem;margin-bottom:16px;">Wasel — واصل</h1>
+          <p style="color:#8A9BBF;margin-bottom:24px;">Shared rides, buses, and parcel delivery across Jordan</p>
+          <p style="color:#8A9BBF;font-size:14px;">Please enable JavaScript to use Wasel. / يرجى تفعيل JavaScript لاستخدام واصل.</p>
+          <div style="margin-top:32px;">
+            <p style="color:#8A9BBF;font-size:14px;">Available routes: Amman ↔ Aqaba · Amman ↔ Irbid · Amman ↔ Petra · Zarqa ↔ Amman</p>
+          </div>
+        </div>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

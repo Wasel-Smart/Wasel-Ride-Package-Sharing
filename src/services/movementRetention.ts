@@ -8,7 +8,7 @@
  *  - Writes go to Supabase first. Failures are surfaced, not swallowed.
  */
 
-import { supabase } from '../utils/supabase/client';
+import { unsafeSupabase } from '../utils/supabase/client';
 import { logger } from '../utils/monitoring';
 import { notificationsAPI } from './notifications.js';
 import { getDemandAlerts } from './demandCapture';
@@ -123,7 +123,7 @@ function rowToReminder(row: Record<string, unknown>): RouteReminder {
  */
 export async function hydrateRouteReminders(userId: string): Promise<RouteReminder[]> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await unsafeSupabase
       .from('route_reminders')
       .select('*')
       .eq('user_id', userId)
@@ -183,7 +183,7 @@ export async function upsertRouteReminder(
   };
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await unsafeSupabase
       .from('route_reminders')
       .upsert(payload, { onConflict: 'user_id,corridor_id' })
       .select()
@@ -305,7 +305,7 @@ export async function syncRouteReminders(
 
     try {
       // Update Supabase
-      const { error } = await supabase
+      const { error } = await unsafeSupabase
         .from('route_reminders')
         .update({
           last_sent_at: now.toISOString(),

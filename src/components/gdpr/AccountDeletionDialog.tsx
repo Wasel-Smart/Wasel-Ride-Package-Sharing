@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { supabase } from '@/utils/supabase/client';
+import { supabase, unsafeSupabase } from '@/utils/supabase/client';
 import { toast } from 'sonner';
 
 export function AccountDeletionDialog() {
@@ -30,7 +30,7 @@ export function AccountDeletionDialog() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase.rpc('request_account_deletion', {
+      const { error } = await unsafeSupabase.rpc('request_account_deletion', {
         p_user_id: user.id,
       });
 

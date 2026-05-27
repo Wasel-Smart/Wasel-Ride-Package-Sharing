@@ -17,6 +17,7 @@ import {
   verifyBackendConnection,
   startHealthCheckMonitoring,
 } from './utils/healthCheck';
+import { hasBackendRuntimeConfig } from './utils/env';
 
 import { sanitizeLogMessage } from './utils/sanitization';
 import { circuitBreakers } from './utils/circuitBreaker';
@@ -169,6 +170,13 @@ function initializeSecurity(): void {
  * Fire-and-forget, never blocks render.
  */
 async function initializeBackendHealth(): Promise<void> {
+  if (!hasBackendRuntimeConfig()) {
+    logger.info(
+      '[Wasel] Backend health checks skipped because runtime API credentials are not configured.'
+    );
+    return;
+  }
+
   try {
     const result =
       await verifyBackendConnection();

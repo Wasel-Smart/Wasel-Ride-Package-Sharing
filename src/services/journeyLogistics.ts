@@ -1,11 +1,12 @@
 import { API_URL, fetchWithRetry, getAuthDetails } from './core';
 import {
   createDirectPackage,
+  getDirectDriverTrips,
   getDirectPackageByTrackingId,
   updateDirectPackageStatus,
 } from './directSupabase';
 import { trackGrowthEvent } from './growthEngine';
-import { tripsAPI } from './trips';
+import { tripsAPI, type TripSearchResult } from './trips';
 import { readRuntimeState, writeRuntimeState } from '../utils/runtimeStore';
 
 export interface PostedRide {
@@ -67,6 +68,17 @@ function readList<T>(key: string): T[] {
 
 function writeList<T>(key: string, list: T[]): void {
   writeRuntimeState(key, list);
+}
+
+function listsEqual<T>(left: T[], right: T[]): boolean {
+  if (left === right) return true;
+  if (left.length !== right.length) return false;
+
+  try {
+    return JSON.stringify(left) === JSON.stringify(right);
+  } catch {
+    return false;
+  }
 }
 
 function makeId(prefix: string): string {
@@ -162,6 +174,28 @@ function normalizeServerRide(raw: Record<string, unknown>, fallback: PostedRide)
       raw.status === 'cancelled' || raw.status === 'completed'
         ? raw.status
         : (fallback.status ?? 'active'),
+  };
+}
+
+function buildFallbackRideFromTripResult(ride: TripSearchResult): PostedRide {
+  return {
+    id: String(ride.id),
+    ownerId: ride.driver.id || undefined,
+    from: ride.from,
+    to: ride.to,
+    date: ride.date,
+    time: ride.time,
+    seats: Math.max(1, Number(ride.seats) || 1),
+    price: Math.max(0, Number(ride.price) || 0),
+    gender: 'mixed',
+    prayer: false,
+    carModel: `${ride.driver.name} vehicle`,
+    note: '',
+    acceptsPackages: false,
+    packageCapacity: 'medium',
+    packageNote: '',
+    createdAt: new Date(`${ride.date}T${ride.time || '00:00'}:00`).toISOString(),
+    status: 'active',
   };
 }
 
@@ -381,9 +415,28 @@ function saveRides(...lists: PostedRide[][]): PostedRide[] {
 }
 
 export function getConnectedRides(): PostedRide[] {
-  const rides = mergeRides(readList<PostedRide>(RIDES_KEY));
-  writeList(RIDES_KEY, rides);
+  const stored = readList<PostedRide>(RIDES_KEY);
+  const rides = mergeRides(stored);
+  if (!listsEqual(stored, rides)) {
+    writeList(RIDES_KEY, rides);
+  }
   return rides;
+}
+
+export async function hydrateConnectedRides(userId: string): Promise<PostedRide[]> {
+  if (!userId) {
+    return getConnectedRides();
+  }
+
+  try {
+    const remote = await getDirectDriverTrips(userId);
+    const normalized = remote.map(ride =>
+      normalizeServerRide(ride as unknown as Record<string, unknown>, buildFallbackRideFromTripResult(ride)),
+    );
+    return saveRides(normalized, getConnectedRides());
+  } catch {
+    return getConnectedRides();
+  }
 }
 
 export async function createConnectedRide(
@@ -432,8 +485,11 @@ export async function createConnectedRide(
 }
 
 export function getConnectedPackages(): PackageRequest[] {
-  const packages = mergePackages(readList<PackageRequest>(PACKAGES_KEY));
-  writeList(PACKAGES_KEY, packages);
+  const stored = readList<PackageRequest>(PACKAGES_KEY);
+  const packages = mergePackages(stored);
+  if (!listsEqual(stored, packages)) {
+    writeList(PACKAGES_KEY, packages);
+  }
   return packages;
 }
 
@@ -544,7 +600,7 @@ export async function createConnectedPackage(input: {
       recipientPhone: pkg.recipientPhone,
     });
 
-    const created = normalizeServerPackage(createdDirect as Record<string, unknown>, {
+    const created = normalizeServerPackage(createdDirect, {
       ...pkg,
       from: String(createdDirect.origin_name ?? pkg.from),
       to: String(createdDirect.destination_name ?? pkg.to),
@@ -634,7 +690,7 @@ export async function getPackageByTrackingId(trackingId: string): Promise<Packag
         {},
       ),
     };
-    const normalizedPkg = normalizeServerPackage(server as Record<string, unknown>, fallback);
+    const normalizedPkg = normalizeServerPackage(server, fallback);
     savePackages([normalizedPkg], getConnectedPackages());
     return normalizedPkg;
   } catch {

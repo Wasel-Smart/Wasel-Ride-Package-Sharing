@@ -1,4 +1,4 @@
-import { supabase } from '@/utils/supabase/client';
+import { supabase, unsafeSupabase } from '@/utils/supabase/client';
 
 type DriverReviewRow = {
   rating: number | null;
@@ -41,9 +41,9 @@ class RatingsService {
       throw new Error('Rating must be between 1 and 5');
     }
 
-    const { data: booking, error: bookingError } = await supabase
+    const { data: booking, error: bookingError } = await unsafeSupabase
       .from('bookings')
-      .select('user_id, status')
+      .select('passenger_id, status')
       .eq('id', submission.bookingId)
       .single();
 
@@ -51,7 +51,7 @@ class RatingsService {
       throw new Error('Booking not found');
     }
 
-    if (booking.user_id !== user.id) {
+    if (booking.passenger_id !== user.id) {
       throw new Error('Unauthorized');
     }
 
@@ -59,7 +59,7 @@ class RatingsService {
       throw new Error('Can only rate completed trips');
     }
 
-    const { data: existingRating } = await supabase
+    const { data: existingRating } = await unsafeSupabase
       .from('ratings')
       .select('id')
       .eq('booking_id', submission.bookingId)
@@ -70,7 +70,7 @@ class RatingsService {
       throw new Error('You have already rated this trip');
     }
 
-    const { error: insertError } = await supabase.from('ratings').insert({
+    const { error: insertError } = await unsafeSupabase.from('ratings').insert({
       booking_id: submission.bookingId,
       trip_id: submission.tripId,
       rider_id: user.id,
@@ -84,21 +84,23 @@ class RatingsService {
       throw insertError;
     }
 
-    await supabase.from('notifications').insert({
+    await unsafeSupabase.from('notifications').insert({
       user_id: submission.driverId,
       type: 'rating_received',
       title: 'New Rating',
-      body: `You received a ${submission.rating}-star rating`,
-      data: {
+      message: `You received a ${submission.rating}-star rating`,
+      metadata: {
         bookingId: submission.bookingId,
         tripId: submission.tripId,
         rating: submission.rating,
       },
+      related_booking_id: submission.bookingId,
+      related_trip_id: submission.tripId,
     });
   }
 
   async getDriverRating(driverId: string): Promise<DriverRating> {
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await unsafeSupabase
       .from('profiles')
       .select('average_rating, total_ratings')
       .eq('id', driverId)
@@ -108,7 +110,7 @@ class RatingsService {
       throw profileError;
     }
 
-    const { data: recentReviews, error: reviewsError } = await supabase
+    const { data: recentReviews, error: reviewsError } = await unsafeSupabase
       .from('ratings')
       .select('rating, review, tags, created_at')
       .eq('driver_id', driverId)
@@ -146,9 +148,9 @@ class RatingsService {
       return { canRate: false, reason: 'Not authenticated' };
     }
 
-    const { data: booking, error } = await supabase
+    const { data: booking, error } = await unsafeSupabase
       .from('bookings')
-      .select('user_id, status')
+      .select('passenger_id, status')
       .eq('id', bookingId)
       .single();
 
@@ -156,7 +158,7 @@ class RatingsService {
       return { canRate: false, reason: 'Booking not found' };
     }
 
-    if (booking.user_id !== user.id) {
+    if (booking.passenger_id !== user.id) {
       return { canRate: false, reason: 'Not your booking' };
     }
 
@@ -164,7 +166,7 @@ class RatingsService {
       return { canRate: false, reason: 'Trip not completed' };
     }
 
-    const { data: existingRating } = await supabase
+    const { data: existingRating } = await unsafeSupabase
       .from('ratings')
       .select('id')
       .eq('booking_id', bookingId)

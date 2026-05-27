@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   Calendar,
@@ -87,7 +88,7 @@ export function FindRideTripDetailModal({
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 30 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          onClick={event => event.stopPropagation()}
+          onClick={(event: MouseEvent<HTMLDivElement>) => event.stopPropagation()}
           style={{
             background: DS.card,
             border: `1px solid ${DS.border}`,

@@ -124,21 +124,13 @@ function resolveAppUrl(envSource: EnvSource = readEnvSource()): string {
 // VITE_SUPABASE_PUBLISHABLE_KEY. Any deployments that relied on the typo variant
 // must migrate to the correct name.
 function resolveSupabaseUrl(envSource: EnvSource = readEnvSource()): string {
-  return getFirstConfiguredValue(
-    envSource.VITE_SUPABASE_URL,
-    envSource.VITE_SUPABASE_PROJECT_URL,
-    envSource.VITE_PUBLIC_SUPABASE_URL,
-    resolvedPublicSupabaseUrl,
-  );
+  void envSource;
+  return resolvedPublicSupabaseUrl;
 }
 
 function resolveSupabasePublicKey(envSource: EnvSource = readEnvSource()): string {
-  return getFirstConfiguredValue(
-    envSource.VITE_SUPABASE_PUBLISHABLE_KEY,
-    envSource.VITE_SUPABASE_ANON_KEY,
-    envSource.VITE_PUBLIC_SUPABASE_ANON_KEY,
-    resolvedPublicSupabaseKey,
-  );
+  void envSource;
+  return resolvedPublicSupabaseKey;
 }
 
 function resolveEdgeFunctionName(envSource: EnvSource = readEnvSource()): string {
@@ -167,6 +159,14 @@ function resolveApiUrl(envSource: EnvSource = readEnvSource()): string {
   }
 
   return `${functionsBaseUrl}/${resolveEdgeFunctionName(envSource)}`;
+}
+
+export function hasBackendRuntimeConfig(envSource: EnvSource = readEnvSource()): boolean {
+  const apiUrl = resolveApiUrl(envSource);
+  const supabaseUrl = resolvedPublicSupabaseUrl;
+  const supabasePublicKey = resolvedPublicSupabaseKey;
+
+  return Boolean(apiUrl) || (Boolean(supabaseUrl) && Boolean(supabasePublicKey));
 }
 
 function getSupabaseProjectRefFromUrl(value: string): string | null {
@@ -224,7 +224,7 @@ export function getRuntimeConfigIssues(
   const mode = envSource.MODE || envSource.VITE_MODE || envSource.NODE_ENV || 'development';
   const isProd = mode === 'production';
   const isBuildTime = typeof window === 'undefined';
-  const hasApiTransport = Boolean(apiUrl) || (Boolean(supabaseUrl) && Boolean(supabasePublicKey));
+  const hasApiTransport = hasBackendRuntimeConfig(envSource);
 
   if (!appUrl) {
     issues.push({

@@ -650,7 +650,8 @@ export function MobilityOSLandingMap({
     utilization,
   ]);
 
-  const resolvedHeight = preferredHeight ?? (size.width < 480 ? 460 : 520);
+  const resolvedHeight =
+    preferredHeight ?? (size.width < 420 ? 340 : size.width < 640 ? 400 : 520);
 
   return (
     <div
@@ -659,7 +660,7 @@ export function MobilityOSLandingMap({
         position: 'relative',
         width: '100%',
         minHeight: resolvedHeight,
-        borderRadius: 34,
+        borderRadius: size.width < 540 ? 24 : 34,
         overflow: 'hidden',
         background: 'linear-gradient(180deg, rgba(12, 23, 35, 0.94), rgba(5, 12, 19, 0.98))',
         border: '1px solid rgba(112, 255, 236, 0.12)',
@@ -670,20 +671,21 @@ export function MobilityOSLandingMap({
         <div
           style={{
             position: 'absolute',
-            top: 18,
-            right: 18,
+            top: size.width < 540 ? 12 : 18,
+            right: size.width < 540 ? 12 : 18,
             zIndex: 2,
             display: 'grid',
-            gap: 10,
+            gap: size.width < 540 ? 8 : 10,
             minWidth: size.width < 540 ? 0 : 196,
+            maxWidth: size.width < 540 ? Math.max(148, size.width * 0.5) : undefined,
             pointerEvents: 'none',
           }}
         >
           {(focusLabel || runtimeMode) && (
             <div
               style={{
-                borderRadius: 18,
-                padding: '10px 12px',
+                borderRadius: size.width < 540 ? 14 : 18,
+                padding: size.width < 540 ? '8px 10px' : '10px 12px',
                 background: 'rgba(5,16,26,0.76)',
                 border: `1px solid ${withAlpha(runtimeMode === 'fallback' ? '#ffbe5c' : FLOW, 0.26)}`,
                 boxShadow: '0 14px 34px rgba(0,0,0,0.24)',
@@ -693,7 +695,7 @@ export function MobilityOSLandingMap({
               <div
                 style={{
                   color: withAlpha(runtimeMode === 'fallback' ? '#ffd38c' : '#aefdf5', 0.96),
-                  fontSize: '0.66rem',
+                  fontSize: size.width < 540 ? '0.58rem' : '0.66rem',
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
                   fontWeight: 800,
@@ -705,7 +707,7 @@ export function MobilityOSLandingMap({
                 style={{
                   marginTop: 6,
                   color: 'rgba(236,247,255,0.96)',
-                  fontSize: '0.92rem',
+                  fontSize: size.width < 540 ? '0.82rem' : '0.92rem',
                   fontWeight: 800,
                   lineHeight: 1.35,
                 }}
@@ -743,7 +745,8 @@ export function MobilityOSLandingMap({
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                gridTemplateColumns:
+                  size.width < 440 ? 'minmax(0, 1fr)' : 'repeat(2, minmax(0, 1fr))',
                 gap: 8,
               }}
             >
@@ -813,7 +816,7 @@ export function MobilityOSLandingMap({
         style={{
           position: 'absolute',
           inset: 14,
-          borderRadius: 28,
+          borderRadius: size.width < 540 ? 20 : 28,
           border: '1px solid rgba(97, 241, 222, 0.12)',
           pointerEvents: 'none',
           zIndex: 1,

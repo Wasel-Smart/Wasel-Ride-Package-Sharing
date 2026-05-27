@@ -1,4 +1,4 @@
-import { getEnv } from './env';
+import { getEnv, hasBackendRuntimeConfig } from './env';
 import { supabase, isSupabaseConfigured } from './supabase/client';
 import { publicAnonKey } from './supabase/info';
 
@@ -149,6 +149,13 @@ export async function performHealthCheck(force = false): Promise<HealthCheckResu
 
 /** Verify backend connection on startup. */
 export async function verifyBackendConnection(): Promise<{ connected: boolean; message: string }> {
+  if (!hasBackendRuntimeConfig()) {
+    return {
+      connected: false,
+      message: 'Backend checks skipped because runtime API credentials are not configured.',
+    };
+  }
+
   try {
     const health = await performHealthCheck(true);
 
@@ -179,6 +186,10 @@ export function getLastHealthCheck(): HealthCheckResult | null {
 
 /** Start periodic health checks. Returns a cleanup function. */
 export function startHealthCheckMonitoring(intervalMs = 60_000): () => void {
+  if (!hasBackendRuntimeConfig()) {
+    return () => undefined;
+  }
+
   void performHealthCheck(true);
   const id = setInterval(() => void performHealthCheck(false), intervalMs);
   return () => clearInterval(id);

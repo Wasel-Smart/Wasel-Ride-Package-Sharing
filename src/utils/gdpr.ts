@@ -4,7 +4,7 @@
  */
 
 import { logger } from './monitoring';
-import { supabase } from './supabase/client';
+import { supabase, unsafeSupabase } from './supabase/client';
 import { sanitizeLogMessage } from './sanitization';
 
 export interface ConsentRecord {
@@ -42,7 +42,7 @@ class GDPRCompliance {
         throw new Error('Supabase not initialized');
       }
 
-      const { error } = await supabase.from('user_consents').insert({
+      const { error } = await unsafeSupabase.from('user_consents').insert({
         user_id: consent.userId,
         consent_type: consent.consentType,
         granted: consent.granted,
@@ -73,7 +73,7 @@ class GDPRCompliance {
         return false;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await unsafeSupabase
         .from('user_consents')
         .select('granted')
         .eq('user_id', userId)
@@ -106,7 +106,7 @@ class GDPRCompliance {
       };
 
       // Store request
-      const { error } = await supabase.from('data_export_requests').insert({
+      const { error } = await unsafeSupabase.from('data_export_requests').insert({
         user_id: userId,
         requested_at: new Date(request.requestedAt).toISOString(),
         status: 'pending',
@@ -139,11 +139,11 @@ class GDPRCompliance {
 
       // Collect all user data
       const [profile, bookings, packages, transactions, consents] = await Promise.all([
-        supabase.from('users').select('*').eq('id', userId).single(),
-        supabase.from('ride_bookings').select('*').eq('passenger_id', userId),
-        supabase.from('packages').select('*').eq('sender_id', userId),
-        supabase.from('wallet_transactions').select('*').eq('user_id', userId),
-        supabase.from('user_consents').select('*').eq('user_id', userId),
+        unsafeSupabase.from('users').select('*').eq('id', userId).single(),
+        unsafeSupabase.from('ride_bookings').select('*').eq('passenger_id', userId),
+        unsafeSupabase.from('packages').select('*').eq('sender_id', userId),
+        unsafeSupabase.from('wallet_transactions').select('*').eq('user_id', userId),
+        unsafeSupabase.from('user_consents').select('*').eq('user_id', userId),
       ]);
 
       const exportData = {
@@ -164,7 +164,7 @@ class GDPRCompliance {
       const dataUrl = `data:application/json;base64,${btoa(jsonData)}`;
 
       // Update request with download URL
-      await supabase
+      await unsafeSupabase
         .from('data_export_requests')
         .update({
           status: 'completed',
@@ -204,7 +204,7 @@ class GDPRCompliance {
       };
 
       // Store request
-      const { error } = await supabase.from('data_deletion_requests').insert({
+      const { error } = await unsafeSupabase.from('data_deletion_requests').insert({
         user_id: userId,
         requested_at: new Date(request.requestedAt).toISOString(),
         scheduled_for: new Date(scheduledFor).toISOString(),
@@ -235,7 +235,7 @@ class GDPRCompliance {
         throw new Error('Supabase not initialized');
       }
 
-      const { error } = await supabase
+      const { error } = await unsafeSupabase
         .from('data_deletion_requests')
         .update({ status: 'cancelled' })
         .eq('user_id', userId)
@@ -260,7 +260,7 @@ class GDPRCompliance {
       }
 
       // Find pending deletions that are due
-      const { data: requests, error } = await supabase
+      const { data: requests, error } = await unsafeSupabase
         .from('data_deletion_requests')
         .select('user_id')
         .eq('status', 'pending')
@@ -278,7 +278,7 @@ class GDPRCompliance {
           await this.deleteUserData(request.user_id);
 
           // Mark as completed
-          await supabase
+          await unsafeSupabase
             .from('data_deletion_requests')
             .update({
               status: 'completed',
@@ -309,16 +309,16 @@ class GDPRCompliance {
 
     // Soft delete user data
     await Promise.all([
-      supabase.from('users').update({ deleted_at: new Date().toISOString() }).eq('id', userId),
-      supabase
+      unsafeSupabase.from('users').update({ deleted_at: new Date().toISOString() }).eq('id', userId),
+      unsafeSupabase
         .from('ride_bookings')
         .update({ deleted_at: new Date().toISOString() })
         .eq('passenger_id', userId),
-      supabase
+      unsafeSupabase
         .from('packages')
         .update({ deleted_at: new Date().toISOString() })
         .eq('sender_id', userId),
-      supabase
+      unsafeSupabase
         .from('wallet_transactions')
         .update({ deleted_at: new Date().toISOString() })
         .eq('user_id', userId),
@@ -339,7 +339,7 @@ class GDPRCompliance {
     const anonymousEmail = `deleted-${userId.slice(0, 8)}@wasel.local`;
     const anonymousName = 'Deleted User';
 
-    await supabase
+    await unsafeSupabase
       .from('users')
       .update({
         email: anonymousEmail,

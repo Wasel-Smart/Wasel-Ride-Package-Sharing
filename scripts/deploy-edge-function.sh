@@ -17,6 +17,16 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
+require_env() {
+    local name="$1"
+    local value="${!name}"
+
+    if [ -z "$value" ]; then
+        echo -e "${RED}Missing required environment variable: $name${NC}"
+        exit 1
+    fi
+}
+
 # Check if supabase CLI is installed
 if ! command -v supabase &> /dev/null; then
     echo -e "${RED}❌ Supabase CLI not found${NC}"
@@ -53,27 +63,47 @@ echo -e "${GREEN}✓${NC} Edge function deployed"
 echo ""
 echo "Setting edge function secrets..."
 
+require_env "SUPABASE_SERVICE_ROLE_KEY"
+require_env "STRIPE_SECRET_KEY"
+require_env "TWILIO_ACCOUNT_SID"
+require_env "TWILIO_AUTH_TOKEN"
+
 # Core Supabase secrets
 supabase secrets set SUPABASE_URL="https://zexlxabdcsjefptmjhuq.supabase.co"
-supabase secrets set SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0"
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3NTcyNiwiZXhwIjoyMDkzMzUxNzI2fQ.YT92TwRlZDMvyu11sTzuB2mhlSIHVplxT5EybXio30U"
+if [ -n "$SUPABASE_ANON_KEY" ]; then
+    supabase secrets set SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+fi
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY"
 
 # App configuration
 supabase secrets set APP_BASE_URL="https://wasel14.online"
 
-# Google OAuth
-supabase secrets set SUPABASE_AUTH_GOOGLE_CLIENT_ID="235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com"
+if [ -n "$SUPABASE_AUTH_GOOGLE_CLIENT_ID" ]; then
+    supabase secrets set SUPABASE_AUTH_GOOGLE_CLIENT_ID="$SUPABASE_AUTH_GOOGLE_CLIENT_ID"
+fi
 
 # Stripe
-supabase secrets set STRIPE_SECRET_KEY="sk_test_51SZmpKENhKSYxMCX03sEOKEiljDGWYTX0ZKTVmqKM0NeNH60jWc6pzyW8vaMHr7ahEKfKRNG24UqNrlsELnEGvHZ004Ec5d33u"
+supabase secrets set STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY"
 supabase secrets set STRIPE_API_VERSION="2024-11-20.acacia"
 
 # Twilio
-supabase secrets set TWILIO_ACCOUNT_SID="AC1386e065d313ae43d256ca0394d0b4e6"
-supabase secrets set TWILIO_AUTH_TOKEN="5005d351cb6bee711cb5127a7d192728"
-supabase secrets set TWILIO_API_KEY_SID="SK4519926e3b0a4186bee07283ab57b018"
-supabase secrets set TWILIO_API_KEY_SECRET="LCnyYDzwgp4n9qqg7hx2nf0HRvOLnRQU"
-supabase secrets set TWILIO_SMS_FROM="+962790000000"
+supabase secrets set TWILIO_ACCOUNT_SID="$TWILIO_ACCOUNT_SID"
+supabase secrets set TWILIO_AUTH_TOKEN="$TWILIO_AUTH_TOKEN"
+if [ -n "$TWILIO_API_KEY_SID" ]; then
+    supabase secrets set TWILIO_API_KEY_SID="$TWILIO_API_KEY_SID"
+fi
+if [ -n "$TWILIO_API_KEY_SECRET" ]; then
+    supabase secrets set TWILIO_API_KEY_SECRET="$TWILIO_API_KEY_SECRET"
+fi
+if [ -n "$TWILIO_MESSAGING_SERVICE_SID" ]; then
+    supabase secrets set TWILIO_MESSAGING_SERVICE_SID="$TWILIO_MESSAGING_SERVICE_SID"
+fi
+if [ -n "$TWILIO_SMS_FROM" ]; then
+    supabase secrets set TWILIO_SMS_FROM="$TWILIO_SMS_FROM"
+fi
+if [ -n "$TWILIO_WHATSAPP_FROM" ]; then
+    supabase secrets set TWILIO_WHATSAPP_FROM="$TWILIO_WHATSAPP_FROM"
+fi
 
 # Communications worker
 WORKER_SECRET=$(openssl rand -base64 32)

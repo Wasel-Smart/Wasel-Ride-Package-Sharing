@@ -14,7 +14,7 @@
  *  - Call clearMembershipCache() on sign-out.
  */
 
-import { supabase } from '../utils/supabase/client';
+import { unsafeSupabase } from '../utils/supabase/client';
 import {
   DEFAULT_CORRIDOR_ID,
   getCorridorOpportunityById,
@@ -131,7 +131,7 @@ function rowToSnapshot(row: Record<string, unknown>): MovementMembershipSnapshot
  */
 export async function loadMembershipSnapshot(userId: string): Promise<MovementMembershipSnapshot> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await unsafeSupabase
       .from('user_membership')
       .select('*')
       .eq('user_id', userId)
@@ -153,7 +153,7 @@ export async function loadMembershipSnapshot(userId: string): Promise<MovementMe
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-      const { data: created } = await supabase
+      const { data: created } = await unsafeSupabase
         .from('user_membership')
         .insert(defaultRow)
         .select()
@@ -214,7 +214,7 @@ export async function recordMovementActivity(
   const { streakDays, lastActivityDate } = computeStreak(current.lastActivityDate, current.streakDays);
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await unsafeSupabase
       .from('user_membership')
       .upsert({
         user_id: userId,
@@ -254,7 +254,7 @@ export async function recordMovementActivity(
  */
 export async function activateWaselPlus(userId: string): Promise<MovementMembershipSnapshot> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await unsafeSupabase
       .from('user_membership')
       .upsert({
         user_id: userId,
@@ -288,7 +288,7 @@ export async function setWaselPlusActive(
   const current = await loadMembershipSnapshot(userId);
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await unsafeSupabase
       .from('user_membership')
       .upsert(
         {
@@ -323,7 +323,7 @@ export async function startCommuterPass(userId: string, routeId: string): Promis
   const { streakDays, lastActivityDate } = computeStreak(current.lastActivityDate, current.streakDays);
 
   try {
-    const { data, error } = await supabase
+    const { data, error } = await unsafeSupabase
       .from('user_membership')
       .upsert({
         user_id: userId,

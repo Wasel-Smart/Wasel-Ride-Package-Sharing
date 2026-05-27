@@ -1,4 +1,4 @@
-import { supabase } from '@/utils/supabase/client';
+import { supabase, unsafeSupabase } from '@/utils/supabase/client';
 import { sanitizeLogMessage } from '@/utils/sanitization';
 
 export interface UserProfile {
@@ -61,7 +61,7 @@ export async function getUserProfile(): Promise<{ data: UserProfile | null; erro
       return { data: null, error: 'Not authenticated' };
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await unsafeSupabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
@@ -73,7 +73,7 @@ export async function getUserProfile(): Promise<{ data: UserProfile | null; erro
     }
 
     if (data && user.email && data.email !== user.email) {
-      await supabase
+      await unsafeSupabase
         .from('profiles')
         .update({ email: user.email })
         .eq('id', user.id);
@@ -118,7 +118,7 @@ export async function updateUserProfile(
       updates.phone_number = normalized;
     }
 
-    const { error } = await supabase
+    const { error } = await unsafeSupabase
       .from('profiles')
       .update({
         ...updates,
@@ -165,7 +165,7 @@ export async function updatePhoneNumber(
       normalized = '+962' + normalized;
     }
 
-    const { data: existing } = await supabase
+    const { data: existing } = await unsafeSupabase
       .from('profiles')
       .select('id')
       .eq('phone_number', normalized)
@@ -176,7 +176,7 @@ export async function updatePhoneNumber(
       return { success: false, error: 'This phone number is already registered' };
     }
 
-    const { error } = await supabase
+    const { error } = await unsafeSupabase
       .from('profiles')
       .update({
         phone_number: normalized,
@@ -224,7 +224,7 @@ export async function updateEmail(
       return { success: false, error: updateError.message };
     }
 
-    const { error: profileError } = await supabase
+    const { error: profileError } = await unsafeSupabase
       .from('profiles')
       .update({
         email: newEmail,
@@ -262,7 +262,7 @@ export async function uploadAvatar(
     const fileName = `${user.id}-${Date.now()}.${fileExt}`;
     const filePath = `avatars/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await unsafeSupabase.storage
       .from('profiles')
       .upload(filePath, file, {
         contentType: file.type,
@@ -274,11 +274,11 @@ export async function uploadAvatar(
       return { success: false, url: null, error: uploadError.message };
     }
 
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = unsafeSupabase.storage
       .from('profiles')
       .getPublicUrl(filePath);
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await unsafeSupabase
       .from('profiles')
       .update({
         avatar_url: publicUrl,
@@ -311,7 +311,7 @@ export async function submitDriverVerification(
       return { success: false, error: 'Not authenticated' };
     }
 
-    const { error } = await supabase
+    const { error } = await unsafeSupabase
       .from('profiles')
       .update({
         national_id: data.national_id,
