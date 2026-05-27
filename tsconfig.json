@@ -1,44 +1,52 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
-
     "jsx": "react-jsx",
-
     "strict": true,
-
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
     "noEmit": true,
     "isolatedModules": true,
-
+    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-
     "forceConsistentCasingInFileNames": true,
-
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     },
-
-    "types": ["vite/client"],
-
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitReturns": true,
-
+    "types": [
+      "vite/client"
+    ],
     "useDefineForClassFields": true,
-
     "allowJs": false,
     "checkJs": false
   },
-
-  "include": ["src", "vite.config.ts", "vitest.config.ts", "playwright.config.ts"],
-
-  "exclude": ["node_modules", "dist", "build", "coverage"]
+  "include": [
+    "src",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }
