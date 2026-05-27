@@ -48,49 +48,63 @@ export function OfferRidePage() {
   const [draftMessage, setDraftMessage] = useState<string | null>('Draft saved on this device.');
 
   const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(2, 5), []);
+
   const offerGate = evaluateTrustCapability(user, 'offer_ride');
   const packageGate = evaluateTrustCapability(user, 'carry_packages');
   const driverReadiness = getDriverReadinessSummary(user);
+
   const driverPlan = useMemo(
     () => buildDriverRoutePlan(form.from, form.to, form.seats),
     [form.from, form.to, form.seats],
   );
+
   const routeIntelligence = useLiveRouteIntelligence({ from: form.from, to: form.to });
   const selectedSignal = routeIntelligence.selectedSignal;
-  const corridorCount = getConnectedRides().filter(
-    ride => ride.from === form.from && ride.to === form.to,
-  ).length;
-  const recentPostedRides = getConnectedRides()
-    .filter(ride => ride.from === form.from && ride.to === form.to)
-    .slice(0, 3);
-  const incomingRequests = user
-    ? getBookingsForDriver(user.id, getConnectedRides())
-        .filter(booking => {
-          const liveBooking = rideBookings.find(item => item.id === booking.id);
-          return (liveBooking ?? booking).status === 'pending_driver';
-        })
-        .slice(0, 4)
-    : [];
 
+  const corridorCount = useMemo(() => {
+    return getConnectedRides().filter(
+      ride => ride.from === form.from && ride.to === form.to,
+    ).length;
+  }, [form.from, form.to]);
+
+  const recentPostedRides = useMemo(() => {
+    return getConnectedRides()
+      .filter(ride => ride.from === form.from && ride.to === form.to)
+      .slice(0, 3);
+  }, [form.from, form.to]);
+
+  const incomingRequests = useMemo(() => {
+    if (!user?.id) return [];
+    return getBookingsForDriver(user.id, getConnectedRides())
+      .filter(booking => {
+        const liveBooking = rideBookings.find(item => item.id === booking.id);
+        return (liveBooking ?? booking).status === 'pending_driver';
+      })
+      .slice(0, 4);
+  }, [user?.id, rideBookings]);
+
+  // Effects
   useEffect(() => {
     setNetworkStats(getConnectedStats());
   }, [submitted]);
 
   useEffect(() => {
     if (!user?.id) return;
-    return subscribeToRideBookingRealtime({
+    const unsubscribe = subscribeToRideBookingRealtime({
       userId: user.id,
       rides: getConnectedRides(),
       onBookingsChange: setRideBookings,
     });
+    return unsubscribe;
   }, [user?.id]);
 
   useEffect(() => {
     safeStorageSetItem('sessionStorage', OFFER_RIDE_DRAFT_KEY, JSON.stringify(form));
   }, [form]);
 
+  // Handlers
   const updateForm = (key: string, value: string | number | boolean) => {
-    setForm(previous => ({ ...previous, [key]: value }));
+    setForm(prev => ({ ...prev, [key]: value }));
   };
 
   const moveToStep = (targetStep: number) => {
@@ -147,7 +161,6 @@ export function OfferRidePage() {
 
       setSubmitted(true);
       setDraftMessage('Ride posted. Draft cleared.');
-      setNetworkStats(getConnectedStats());
       safeStorageRemoveItem('sessionStorage', OFFER_RIDE_DRAFT_KEY);
 
       notificationsAPI
@@ -160,11 +173,12 @@ export function OfferRidePage() {
           priority: 'high',
           action_url: '/app/offer-ride',
         })
-        .catch(() => {});
+        .catch(console.error);
 
       if (permission === 'default') {
-        requestPermission().catch(() => {});
+        requestPermission().catch(console.error);
       }
+
       notifyTripConfirmed('Wasel Network', `${createdRide.from} to ${createdRide.to}`);
       void recordMovementActivity(user.id, 'route_published', driverPlan?.corridor.id);
     } catch (error) {
@@ -176,32 +190,35 @@ export function OfferRidePage() {
     }
   };
 
-  const quickMetrics = [
-    {
-      label: 'Seat',
-      value: driverPlan ? `${driverPlan.recommendedSeatPriceJod} JOD` : '--',
-      color: DS.cyan,
-    },
-    {
-      label: 'Full trip',
-      value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD` : '--',
-      color: DS.green,
-    },
-    {
-      label: 'Package',
-      value: driverPlan ? `${driverPlan.packageBonusJod} JOD` : '--',
-      color: DS.gold,
-    },
-    {
-      label: 'Demand',
-      value: selectedSignal
-        ? `${selectedSignal.forecastDemandScore}/100`
-        : driverPlan
-          ? `${driverPlan.corridor.predictedDemandScore}/100`
-          : `${networkStats.ridesPosted}`,
-      color: DS.blue,
-    },
-  ];
+  const quickMetrics = useMemo(
+    () => [
+      {
+        label: 'Seat',
+        value: driverPlan ? `${driverPlan.recommendedSeatPriceJod} JOD` : '--',
+        color: DS.cyan,
+      },
+      {
+        label: 'Full trip',
+        value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD` : '--',
+        color: DS.green,
+      },
+      {
+        label: 'Package',
+        value: driverPlan ? `${driverPlan.packageBonusJod} JOD` : '--',
+        color: DS.gold,
+      },
+      {
+        label: 'Demand',
+        value: selectedSignal
+          ? `${selectedSignal.forecastDemandScore}/100`
+          : driverPlan
+            ? `${driverPlan.corridor.predictedDemandScore}/100`
+            : `${networkStats.ridesPosted}`,
+        color: DS.blue,
+      },
+    ],
+    [driverPlan, selectedSignal, networkStats],
+  );
 
   return (
     <Protected>
@@ -301,6 +318,7 @@ export function OfferRidePage() {
                   <strong style={{ color: '#fff' }}>{form.to}</strong> is now open across the
                   movement network.
                 </p>
+
                 <div
                   style={{
                     display: 'grid',
@@ -357,6 +375,7 @@ export function OfferRidePage() {
                     </div>
                   ))}
                 </div>
+
                 <button
                   onClick={() => {
                     setSubmitted(false);
@@ -397,7 +416,9 @@ export function OfferRidePage() {
             )}
           </div>
 
+          {/* Sidebar */}
           <div style={{ display: 'grid', gap: 14 }}>
+            {/* Launch Route Card */}
             <div
               style={{
                 background:
@@ -434,6 +455,7 @@ export function OfferRidePage() {
                   driverPlan?.waselBrainNote ??
                   'Choose the route, keep the price sharp, and open supply fast.'}
               </div>
+
               <div
                 style={{
                   display: 'grid',
@@ -465,6 +487,7 @@ export function OfferRidePage() {
               </div>
             </div>
 
+            {/* Corridor Pulse */}
             <div
               style={{
                 background: DS.card,
@@ -490,9 +513,9 @@ export function OfferRidePage() {
                     : driverPlan
                       ? `${driverPlan.emptySeatCostJod} JOD lost per empty seat`
                       : 'Route intelligence appears after lane selection',
-                ].map(line => (
+                ].map((line, idx) => (
                   <div
-                    key={line}
+                    key={idx}
                     style={{
                       borderRadius: r(14),
                       border: `1px solid ${DS.border}`,
@@ -509,6 +532,7 @@ export function OfferRidePage() {
               </div>
             </div>
 
+            {/* Add-on Demand */}
             <div
               style={{
                 background: DS.card,
@@ -550,6 +574,7 @@ export function OfferRidePage() {
               </div>
             </div>
 
+            {/* Quick Actions */}
             <div
               style={{
                 background: DS.card,
@@ -561,7 +586,7 @@ export function OfferRidePage() {
               <div style={{ color: '#fff', fontWeight: 900, marginBottom: 12 }}>Quick actions</div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {driverReadiness.steps
-                  .filter(step => !step.complete)
+                  .filter(s => !s.complete)
                   .slice(0, 2)
                   .map(step => (
                     <div
@@ -589,6 +614,7 @@ export function OfferRidePage() {
                     </div>
                   ))}
               </div>
+
               <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
                 <button
                   onClick={() => nav('/app/driver')}
