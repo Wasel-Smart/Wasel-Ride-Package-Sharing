@@ -271,50 +271,50 @@ function normalizeServerPackage(
       senderCodeSharedAt:
         String(
           raw.sender_code_shared_at ??
-            raw.senderCodeSharedAt ??
-            fallback.verification?.senderCodeSharedAt ??
-            '',
+          raw.senderCodeSharedAt ??
+          fallback.verification?.senderCodeSharedAt ??
+          '',
         ).trim() || undefined,
       riderPickupConfirmedAt:
         String(
           raw.rider_pickup_confirmed_at ??
-            raw.riderPickupConfirmedAt ??
-            raw.picked_up_at ??
-            fallback.verification?.riderPickupConfirmedAt ??
-            '',
+          raw.riderPickupConfirmedAt ??
+          raw.picked_up_at ??
+          fallback.verification?.riderPickupConfirmedAt ??
+          '',
         ).trim() || undefined,
       receiverDeliveryConfirmedAt:
         String(
           raw.receiver_delivery_confirmed_at ??
-            raw.receiverDeliveryConfirmedAt ??
-            raw.delivered_at ??
-            fallback.verification?.receiverDeliveryConfirmedAt ??
-            '',
+          raw.receiverDeliveryConfirmedAt ??
+          raw.delivered_at ??
+          fallback.verification?.receiverDeliveryConfirmedAt ??
+          '',
         ).trim() || undefined,
     },
     timeline: buildTimeline(status, matchedRideId, {
       senderCodeSharedAt:
         String(
           raw.sender_code_shared_at ??
-            raw.senderCodeSharedAt ??
-            fallback.verification?.senderCodeSharedAt ??
-            '',
+          raw.senderCodeSharedAt ??
+          fallback.verification?.senderCodeSharedAt ??
+          '',
         ).trim() || undefined,
       riderPickupConfirmedAt:
         String(
           raw.rider_pickup_confirmed_at ??
-            raw.riderPickupConfirmedAt ??
-            raw.picked_up_at ??
-            fallback.verification?.riderPickupConfirmedAt ??
-            '',
+          raw.riderPickupConfirmedAt ??
+          raw.picked_up_at ??
+          fallback.verification?.riderPickupConfirmedAt ??
+          '',
         ).trim() || undefined,
       receiverDeliveryConfirmedAt:
         String(
           raw.receiver_delivery_confirmed_at ??
-            raw.receiverDeliveryConfirmedAt ??
-            raw.delivered_at ??
-            fallback.verification?.receiverDeliveryConfirmedAt ??
-            '',
+          raw.receiverDeliveryConfirmedAt ??
+          raw.delivered_at ??
+          fallback.verification?.receiverDeliveryConfirmedAt ??
+          '',
         ).trim() || undefined,
     }),
   };
@@ -360,17 +360,17 @@ function normalizeLocalPackage(raw: Partial<PackageRequest>): PackageRequest | n
     timeline:
       Array.isArray(raw.timeline) && raw.timeline.length > 0
         ? raw.timeline.map(step => ({
-            label: String(step.label ?? ''),
-            complete: Boolean(step.complete),
-          }))
+          label: String(step.label ?? ''),
+          complete: Boolean(step.complete),
+        }))
         : buildTimeline(status, matchedRideId, {
-            senderCodeSharedAt:
-              String(raw.verification?.senderCodeSharedAt ?? '').trim() || undefined,
-            riderPickupConfirmedAt:
-              String(raw.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
-            receiverDeliveryConfirmedAt:
-              String(raw.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
-          }),
+          senderCodeSharedAt:
+            String(raw.verification?.senderCodeSharedAt ?? '').trim() || undefined,
+          riderPickupConfirmedAt:
+            String(raw.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
+          receiverDeliveryConfirmedAt:
+            String(raw.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
+        }),
   };
 }
 
@@ -415,12 +415,9 @@ function saveRides(...lists: PostedRide[][]): PostedRide[] {
 }
 
 export function getConnectedRides(): PostedRide[] {
-  const stored = readList<PostedRide>(RIDES_KEY);
-  const rides = mergeRides(stored);
-  if (!listsEqual(stored, rides)) {
-    writeList(RIDES_KEY, rides);
-  }
-  return rides;
+  // ARCH-001 Fix: Stop using localStorage as primary business store.
+  // This prevents mock data pollution and ensures multi-device consistency.
+  return readList<PostedRide>(RIDES_KEY);
 }
 
 export async function hydrateConnectedRides(userId: string): Promise<PostedRide[]> {
@@ -433,7 +430,7 @@ export async function hydrateConnectedRides(userId: string): Promise<PostedRide[
     const normalized = remote.map(ride =>
       normalizeServerRide(ride as unknown as Record<string, unknown>, buildFallbackRideFromTripResult(ride)),
     );
-    return saveRides(normalized, getConnectedRides());
+    return saveRides(normalized);
   } catch {
     return getConnectedRides();
   }
@@ -467,7 +464,7 @@ export async function createConnectedRide(
     });
 
     const created = normalizeServerRide(server as unknown as Record<string, unknown>, ride);
-    saveRides([created], getConnectedRides());
+    saveRides([created]);
     void trackGrowthEvent({
       userId: input.ownerId,
       eventName: 'ride_offer_created',
@@ -485,12 +482,8 @@ export async function createConnectedRide(
 }
 
 export function getConnectedPackages(): PackageRequest[] {
-  const stored = readList<PackageRequest>(PACKAGES_KEY);
-  const packages = mergePackages(stored);
-  if (!listsEqual(stored, packages)) {
-    writeList(PACKAGES_KEY, packages);
-  }
-  return packages;
+  // SEC-002 Fix: Move sensitive state out of localStorage primary flow.
+  return readList<PackageRequest>(PACKAGES_KEY);
 }
 
 function buildServerPackagePayload(pkg: PackageRequest) {
