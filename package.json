@@ -110,7 +110,7 @@
   "scripts": {
     "dev": "vite",
     "prepare": "node scripts/setup-git-hooks.mjs",
-    "build": "tsc --noEmit && vite build && npm run sync:build-output",
+    "build": "npm run check:browser-crypto && tsc --noEmit && vite build && npm run sync:build-output",
     "build:optimized": "tsc --noEmit && vite build && npm run sync:build-output && node scripts/optimize-bundle.mjs",
     "preview": "vite preview",
     "sync:build-output": "node scripts/sync-build-output.mjs",
@@ -177,6 +177,8 @@
     "verify:gaps": "node scripts/verify-gaps-fixed.mjs",
     "backup:db": "node scripts/backup-database.mjs --type=full",
     "backup:schema": "node scripts/backup-database.mjs --type=schema",
-    "backup:data": "node scripts/backup-database.mjs --type=data"
+    "backup:data": "node scripts/backup-database.mjs --type=data",
+    "production:deploy:confirmed": "npm run production:validate -- --confirm && npm run build && vercel --prod",
+    "check:browser-crypto": "node scripts/check-browser-crypto-usage.mjs"
   }
 }
