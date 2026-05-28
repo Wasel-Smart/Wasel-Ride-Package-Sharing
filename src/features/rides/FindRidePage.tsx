@@ -9,8 +9,6 @@ import {
   Filter,
   MapPin,
   Network,
-  Package,
-  RefreshCw,        // ← Added missing import
   Search,
   Shield,
   Sparkles,
