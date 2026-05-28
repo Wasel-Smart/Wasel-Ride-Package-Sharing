@@ -2,6 +2,7 @@ import { Component, useEffect, useRef, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
 import { Toaster } from 'sonner';
+import { Analytics } from '@vercel/analytics/react';
 
 import { WaselStateCard } from './components/system/WaselStateCard';
 import { AuthProvider } from './contexts/AuthContext';
@@ -291,6 +292,7 @@ export default function App() {
             },
           }}
         />
+        <Analytics />
       </QueryClientProvider>
     </AppErrorBoundary>
   );
