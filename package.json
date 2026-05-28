@@ -57,6 +57,7 @@
     "@types/leaflet": "^1.9.21",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
+    "@vercel/analytics": "^2.0.1",
     "@vitejs/plugin-react": "^4.2.0",
     "@vitest/coverage-v8": "^4.1.6",
     "class-variance-authority": "^0.7.1",
