@@ -79,7 +79,7 @@ class AppErrorBoundary extends Component<
     return { hasError: true, error: message };
   }
 
-  render() {
+  override render() {
     if (!this.state.hasError) return this.props.children;
 
     return (
