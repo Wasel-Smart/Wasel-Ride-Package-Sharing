@@ -3,6 +3,7 @@ import { Component, useEffect, useRef, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { Analytics } from '@vercel/analytics/react';
 
 import { WaselStateCard } from './components/system/WaselStateCard';
 
@@ -261,6 +262,7 @@ export default function App() {
           richColors
           closeButton
         />
+        <Analytics />
       </QueryClientProvider>
     </AppErrorBoundary>
   );
