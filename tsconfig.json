@@ -1,52 +1,53 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+
     "module": "ESNext",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
+
     "strict": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
+
     "noEmit": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
+
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
+
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     },
-    "types": [
-      "vite/client"
-    ],
+
+    "types": ["node"],
+
     "useDefineForClassFields": true,
     "allowJs": false,
     "checkJs": false
   },
+
   "include": [
     "src",
     "vite.config.ts",
     "vitest.config.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "src/vite-env.d.ts",
+    "**/*.d.ts"
   ],
+
   "exclude": [
     "node_modules",
     "dist",
     "build",
-    "coverage",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "coverage"
   ]
 }

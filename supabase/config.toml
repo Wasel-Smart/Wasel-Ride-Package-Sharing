@@ -1,6 +1,6 @@
 # For detailed configuration reference documentation, visit:
 # https://supabase.com/docs/guides/local-development/cli/config
-project_id = "wasel"
+project_id = "zexlxabdcsjefptmjhuq"
 
 [api]
 enabled = true
@@ -69,13 +69,18 @@ max_frequency = "1s"
 otp_length = 6
 otp_expiry = 3600
 
-# OAuth Providers - Google and Facebook
+# OAuth Providers - Google
+# Client ID: https://supabase.com/dashboard/project/zexlxabdcsjefptmjhuq/auth/oauth-apps
+# Google Cloud Console: https://console.cloud.google.com/auth/overview?project=wasel14
 [auth.external.google]
 enabled = true
-client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+client_id = "235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com"
 secret = "env(SUPABASE_AUTH_GOOGLE_CLIENT_SECRET)"
 redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
 skip_nonce_check = false
+
+# Allowed alternate OAuth client (web app)
+# client_id_alt = "235290462223-slmuhn0n9nvmalq3tfdt7cl5de55fcnp.apps.googleusercontent.com"
 
 [auth.external.facebook]
 enabled = true

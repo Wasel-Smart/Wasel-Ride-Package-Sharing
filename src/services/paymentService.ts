@@ -3,6 +3,7 @@
  * Stripe + CliQ integration with webhook verification and retry logic
  */
 
+import { requestEdgeJson } from './backendWorkflow';
 import { logger } from '../utils/monitoring';
 import { withRateLimit, paymentLimiter } from '../utils/rateLimit';
 
@@ -34,9 +35,9 @@ class PaymentService {
 
   constructor() {
     this.cliqConfig = {
-      merchantId: import.meta.env.CLIQ_MERCHANT_ID || '',
-      apiKey: import.meta.env.CLIQ_API_KEY || '',
-      checkoutUrl: import.meta.env.CLIQ_CHECKOUT_URL_TEMPLATE || '',
+      merchantId: '',
+      apiKey: '',
+      checkoutUrl: '',
     };
   }
 
@@ -92,20 +93,28 @@ class PaymentService {
 
   async createCliqCheckout(
     amount: number,
-    transactionId: string,
+    userId: string,
     returnUrl: string,
   ): Promise<{ checkoutUrl: string }> {
-    if (!this.cliqConfig.checkoutUrl) {
-      throw new Error('CliQ checkout not configured');
+    const response = await requestEdgeJson<{
+      payment?: { checkoutUrl?: string; transactionId?: string };
+    }>({
+      path: `/wallet/${encodeURIComponent(userId)}/top-up`,
+      method: 'POST',
+      authMode: 'required',
+      operation: 'CliQ checkout creation',
+      body: { amount, paymentMethod: 'cliq', returnUrl },
+    });
+
+    const checkoutUrl = response.payment?.checkoutUrl;
+    if (!checkoutUrl) {
+      throw new Error('CliQ checkout did not return a checkout URL');
     }
 
-    const checkoutUrl = this.cliqConfig.checkoutUrl
-      .replace('{transactionId}', transactionId)
-      .replace('{amount}', amount.toString())
-      .replace('{currency}', 'JOD')
-      .replace('{returnUrl}', encodeURIComponent(returnUrl));
-
-    logger.info('CliQ checkout created', { transactionId, amount });
+    logger.info('CliQ checkout created', {
+      transactionId: response.payment?.transactionId,
+      amount,
+    });
     return { checkoutUrl };
   }
 

@@ -1116,12 +1116,12 @@ export default function AppEntryPage() {
               <form className="landing-route-search" onSubmit={handleRouteSearch}>
                 <p className="landing-route-search__title">{routeSearchCopy.title}</p>
                 <div className="landing-route-search__grid">
-                  {[
+                  {([
                     ['from', routeSearchCopy.from],
                     ['to', routeSearchCopy.to],
                     ['when', routeSearchCopy.when],
                     ['seats', routeSearchCopy.seats],
-                  ].map(([key, label]) => (
+                  ] as const).map(([key, label]) => (
                     <label key={key}>
                       {label}
                       <input

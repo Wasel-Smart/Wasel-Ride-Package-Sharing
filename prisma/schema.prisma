@@ -10,4 +10,105 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String    @id @default(uuid()) @db.Uuid
+  auth_user_id       String?   @unique @db.Uuid
+  email              String?   @unique
+  full_name          String?
+  phone_number       String?
+  role               String    @default("rider")
+  verification_level String    @default("level_0")
+  wallet_status      String    @default("active")
+  wallet_balance     Decimal   @default(0) @db.Decimal(12, 3)
+  rating             Decimal   @default(5) @db.Decimal(3, 2)
+  trip_count         Int       @default(0)
+  verified           Boolean   @default(false)
+  sanad_verified     Boolean   @default(false)
+  email_verified     Boolean   @default(false)
+  phone_verified     Boolean   @default(false)
+  two_factor_enabled Boolean   @default(false)
+  avatar_url         String?
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  drivers            Driver[]
+  wallets            Wallet[]
+  bookings           Booking[]
+
+  @@map("users")
+}
+
+model Driver {
+  driver_id  String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  trips      Trip[]
+
+  @@map("drivers")
+}
+
+model Trip {
+  trip_id                 String    @id @default(uuid()) @db.Uuid
+  driver_id               String    @db.Uuid
+  origin_city             String
+  destination_city        String
+  departure_time          DateTime  @db.Timestamptz(6)
+  available_seats         Int       @default(1)
+  price_per_seat          Decimal   @default(0) @db.Decimal(12, 3)
+  trip_status             String    @default("open")
+  allow_packages          Boolean   @default(false)
+  package_capacity        String?
+  package_slots_remaining String?
+  vehicle_make            String?
+  vehicle_model           String?
+  notes                   String?
+  deleted_at              DateTime? @db.Timestamptz(6)
+  created_at              DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  driver                  Driver    @relation(fields: [driver_id], references: [driver_id], onDelete: Cascade)
+  bookings                Booking[]
+
+  @@index([origin_city, destination_city, departure_time])
+  @@map("trips")
+}
+
+model Booking {
+  booking_id         String    @id @default(uuid()) @db.Uuid
+  trip_id            String    @db.Uuid
+  passenger_id       String    @db.Uuid
+  seats_requested    Int       @default(1)
+  seat_number        Int?
+  pickup_location    String?
+  dropoff_location   String?
+  price_per_seat     Decimal   @default(0) @db.Decimal(12, 3)
+  total_price        Decimal   @default(0) @db.Decimal(12, 3)
+  amount             Decimal   @default(0) @db.Decimal(12, 3)
+  booking_status     String    @default("pending")
+  status             String    @default("pending")
+  confirmed_by_driver Boolean  @default(false)
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  trip               Trip      @relation(fields: [trip_id], references: [trip_id], onDelete: Cascade)
+  passenger          User      @relation(fields: [passenger_id], references: [id], onDelete: Cascade)
+
+  @@index([passenger_id, created_at])
+  @@index([trip_id, booking_status])
+  @@map("bookings")
+}
+
+model Wallet {
+  wallet_id     String   @id @default(uuid()) @db.Uuid
+  user_id       String   @db.Uuid
+  balance       Decimal  @default(0) @db.Decimal(12, 3)
+  currency_code String   @default("JOD")
+  wallet_status String   @default("active")
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("wallets")
 }
