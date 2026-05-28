@@ -80,7 +80,7 @@ const allViteVars = {
   'VITE_ALLOW_DIRECT_SUPABASE_FALLBACK': existingVars['VITE_ALLOW_DIRECT_SUPABASE_FALLBACK'] || 'false',
   
   // Payments
-  'VITE_STRIPE_PUBLISHABLE_KEY': existingVars['VITE_STRIPE_PUBLISHABLE_KEY'] || 'pk_live_...',
+  'VITE_STRIPE_PUBLISHABLE_KEY': existingVars['VITE_STRIPE_PUBLISHABLE_KEY'] || 'pk_test_REPLACE_ME',
   
   // Monitoring & Analytics
   'VITE_SENTRY_DSN': existingVars['VITE_SENTRY_DSN'] || 'https://your-dsn@sentry.io/project-id',

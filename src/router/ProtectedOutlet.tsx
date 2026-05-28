@@ -1,33 +1,50 @@
-import { Outlet } from 'react-router';
+import {
+  Navigate,
+  Outlet,
+  useLocation,
+} from 'react-router';
+
+import { WaselStateCard } from '../components/system/WaselStateCard';
 import { ProtectedPagePreview } from '../components/system/ProtectedPagePreview';
 import { useLocalAuth } from '../contexts/LocalAuth';
 
 function LoadingState() {
   return (
-    <div
-      style={{
-        display: 'flex',
-        minHeight: '60vh',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#CBD5E1',
-        fontFamily: "-apple-system,'Inter',sans-serif",
-      }}
-    >
-      Restoring your Wasel session...
-    </div>
+    <WaselStateCard
+      eyebrow="Loading"
+      title="Restoring your session"
+      description="Checking your secure Wasel session and restoring account access."
+      loading
+      minHeight="60vh"
+    />
   );
 }
 
 export default function ProtectedOutlet() {
-  const { user, loading } = useLocalAuth();
+  const {
+    user,
+    loading,
+  } = useLocalAuth();
+
+  const location =
+    useLocation();
 
   if (loading) {
     return <LoadingState />;
   }
 
   if (!user) {
-    return <ProtectedPagePreview />;
+    return (
+      <Navigate
+        to="/app/auth"
+        replace
+        state={{
+          returnTo:
+            location.pathname +
+            location.search,
+        }}
+      />
+    );
   }
 
   return <Outlet />;

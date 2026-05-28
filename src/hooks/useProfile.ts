@@ -6,15 +6,15 @@
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  DriverVerificationData,
-  UpdateProfileData,
   getUserProfile,
   submitDriverVerification,
   updateEmail,
   updatePhoneNumber,
   updateUserProfile,
   uploadAvatar,
-  UserProfile,
+  type DriverVerificationData,
+  type UpdateProfileData,
+  type UserProfile,
 } from '@/services/userProfile';
 import { sanitizeLogMessage } from '@/utils/sanitization';
 

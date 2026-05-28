@@ -1,22 +1,19 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
-import path from 'path';
+import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss({
-      // Optimize and minify the output CSS
-      optimize: true,
-    }),
+    tailwindcss()
   ],
 
   resolve: {
-    extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': fileURLToPath(new URL('./src', import.meta.url))
     },
+    extensions: ['.tsx', '.ts', '.jsx', '.js', '.json']
   },
 
   build: {
@@ -25,75 +22,86 @@ export default defineConfig({
     sourcemap: false,
     minify: 'esbuild',
     chunkSizeWarningLimit: 1000,
+
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) return;
 
-          // React core — must be its own chunk for maximum cache hits
           if (
-            id.includes('/node_modules/react/') ||
-            id.includes('/node_modules/react-dom/') ||
-            id.includes('/node_modules/react-router/') ||
-            id.includes('/node_modules/scheduler/')
-          ) return 'react-core';
+            id.includes('react') ||
+            id.includes('react-dom') ||
+            id.includes('scheduler')
+          ) {
+            return 'react-core';
+          }
 
-          // Animation (motion v12 + framer-motion v12 share the same package set)
+          if (id.includes('react-router')) {
+            return 'router';
+          }
+
           if (
-            id.includes('/node_modules/motion/') ||
-            id.includes('/node_modules/framer-motion/')
-          ) return 'motion';
+            id.includes('framer-motion') ||
+            id.includes('motion')
+          ) {
+            return 'motion';
+          }
 
-          // UI primitives
           if (
-            id.includes('/node_modules/@radix-ui/') ||
-            id.includes('/node_modules/lucide-react/') ||
-            id.includes('/node_modules/sonner/') ||
-            id.includes('/node_modules/vaul/') ||
-            id.includes('/node_modules/cmdk/') ||
-            id.includes('/node_modules/embla-carousel')
-          ) return 'ui-primitives';
+            id.includes('@radix-ui') ||
+            id.includes('lucide-react') ||
+            id.includes('sonner') ||
+            id.includes('vaul') ||
+            id.includes('cmdk') ||
+            id.includes('embla-carousel')
+          ) {
+            return 'ui';
+          }
 
-          // Data / backend
           if (
-            id.includes('/node_modules/@supabase/') ||
-            id.includes('/node_modules/@tanstack/')
-          ) return 'data-layer';
+            id.includes('@supabase') ||
+            id.includes('@tanstack')
+          ) {
+            return 'data';
+          }
 
-          // Maps
-          if (id.includes('/node_modules/leaflet/')) return 'maps';
+          if (id.includes('leaflet')) {
+            return 'maps';
+          }
 
-          // Charts
-          if (id.includes('/node_modules/recharts/')) return 'charts';
+          if (id.includes('recharts')) {
+            return 'charts';
+          }
 
-          // Forms
           if (
-            id.includes('/node_modules/react-hook-form/') ||
-            id.includes('/node_modules/react-day-picker/')
-          ) return 'forms';
+            id.includes('react-hook-form') ||
+            id.includes('react-day-picker')
+          ) {
+            return 'forms';
+          }
 
-          // Monitoring
-          if (id.includes('/node_modules/@sentry/')) return 'monitoring';
+          if (id.includes('@sentry')) {
+            return 'monitoring';
+          }
 
-          // Payments
-          if (id.includes('/node_modules/@stripe/')) return 'payments';
-
-          return undefined;
-        },
-      },
-    },
+          if (id.includes('@stripe')) {
+            return 'payments';
+          }
+        }
+      }
+    }
   },
 
   server: {
     port: 5173,
     strictPort: false,
     open: true,
-    host: '127.0.0.1',
+    host: true
   },
 
   preview: {
     port: 4173,
-    host: true,
+    host: true
   },
 
   optimizeDeps: {
@@ -103,7 +111,7 @@ export default defineConfig({
       'react-router',
       '@supabase/supabase-js',
       '@tanstack/react-query',
-      'lucide-react',
-    ],
-  },
+      'lucide-react'
+    ]
+  }
 });
