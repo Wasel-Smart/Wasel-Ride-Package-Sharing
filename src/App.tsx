@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { QueryClient } from '@tanstack/react-query';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AppShell } from './components/app/AppShell';
@@ -19,6 +20,7 @@ function AppContent() {
           queryClient={queryClient}
           router={waselRouter}
         />
+        <SpeedInsights />
       </LanguageProvider>
     </ThemeProvider>
   );
