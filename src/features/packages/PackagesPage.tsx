@@ -1,3 +1,4 @@
+﻿import { sanitizeForHTML } from '../../utils/inputSanitization';
 import { useEffect, useMemo, useState } from 'react';
 import { Brain, Boxes, Network } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
@@ -215,7 +216,7 @@ export function PackagesPage() {
         <SectionHead
           emoji="Goods"
           title="Send a Package"
-          titleAr="أرسل طرداً"
+          titleAr="Ø£Ø±Ø³Ù„ Ø·Ø±Ø¯Ø§Ù‹"
           sub="Send, track, or return a package."
           color={DS.gold}
           action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
@@ -597,3 +598,4 @@ export function PackagesPage() {
 }
 
 export default PackagesPage;
+

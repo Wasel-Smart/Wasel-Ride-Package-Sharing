@@ -1,4 +1,5 @@
-// ─── Package & notification operations ───────────────────────────────────────
+﻿import { sanitizeForHTML } from '../../utils/inputSanitization';
+// â”€â”€â”€ Package & notification operations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 import { getDb, packageSizeFromWeight } from './helpers';
 import { buildUserContext } from './userContext.ts';
@@ -10,7 +11,7 @@ import type {
   RawPackage,
 } from './types';
 
-// ── Packages ──────────────────────────────────────────────────────────────────
+// â”€â”€ Packages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function createDirectPackage(input: {
   userId: string;
@@ -77,7 +78,7 @@ export async function updateDirectPackageStatus(
   return (data as RawPackage | null) ?? null;
 }
 
-// ── Notifications ─────────────────────────────────────────────────────────────
+// â”€â”€ Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export async function getDirectNotifications(userId: string) {
   const context = await buildUserContext(userId);
@@ -205,3 +206,4 @@ export async function getDirectCommunicationDeliveries(userId: string) {
   if (error) throw error;
   return Array.isArray(data) ? (data as RawCommunicationDelivery[]) : [];
 }
+

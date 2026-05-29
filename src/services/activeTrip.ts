@@ -1,19 +1,20 @@
+﻿import { sanitizeForLog } from '../utils/inputSanitization';
 /**
- * activeTrip.ts — Service layer for Wasel Active Trip management
+ * activeTrip.ts â€” Service layer for Wasel Active Trip management
  *
  * Provides typed CRUD operations against the server-side
  * `active_trip:{userId}` KV record so the Dashboard banner
  * and LiveTripTracking can share real-time state.
  *
- * ✅ All methods are typed with ActiveTrip interface
- * ✅ Uses fetchWithRetry with abort/timeout support
- * ✅ Structured error logging with method context
+ * âœ… All methods are typed with ActiveTrip interface
+ * âœ… Uses fetchWithRetry with abort/timeout support
+ * âœ… Structured error logging with method context
  */
 
 import { API_URL, fetchWithRetry, getAuthDetails } from './core';
 import { sanitizeLogMessage } from '../utils/sanitization';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type TripStatus =
   | 'en_route_to_pickup'
@@ -59,7 +60,7 @@ export interface ActiveTrip {
   updatedAt?: string;
 }
 
-// ── API Methods ───────────────────────────────────────────────────────────────
+// â”€â”€ API Methods â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function authHeaders(): Promise<Record<string, string>> {
   const { token } = await getAuthDetails();
@@ -164,3 +165,4 @@ export const activeTripAPI = {
     }
   },
 };
+

@@ -1,3 +1,4 @@
+﻿import { sanitizeForHTML } from '../utils/inputSanitization';
 /**
  * Wallet API Service
  * Uses the shared edge-function base when available and falls back to direct
@@ -1429,3 +1430,4 @@ export const walletApi = {
     return getTrustScoreDirect(userId);
   },
 };
+

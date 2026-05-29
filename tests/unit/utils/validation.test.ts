@@ -1,5 +1,5 @@
-/**
- * Unit tests — src/utils/validation.ts
+﻿/**
+ * Unit tests â€” src/utils/validation.ts
  * Covers all Zod schemas: auth, rides, packages, wallet, profile.
  */
 import { describe, it, expect } from 'vitest';
@@ -16,7 +16,7 @@ import {
   transferSchema,
 } from '@/utils/validation';
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
+// â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('signInSchema', () => {
   it('accepts valid credentials', () => {
@@ -59,7 +59,7 @@ describe('signUpSchema', () => {
     const result = signUpSchema.safeParse({ ...valid, confirmPassword: 'Different1!' });
     expect(result.success).toBe(false);
     if (!result.success) {
-      const paths = result.error.issues.map(i => i.path.join('.'));
+      const paths = result.error.issues.map((i: any) => i.path.join('.'));
       expect(paths).toContain('confirmPassword');
     }
   });
@@ -87,7 +87,7 @@ describe('resetPasswordSchema', () => {
   });
 });
 
-// ── Rides ─────────────────────────────────────────────────────────────────────
+// â”€â”€ Rides â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('offerRideSchema', () => {
   const valid = {
@@ -115,7 +115,7 @@ describe('offerRideSchema', () => {
     expect(offerRideSchema.safeParse({ ...valid, pricePerSeat: -5 }).success).toBe(false);
   });
 
-  it('rejects seats outside 1–7 range', () => {
+  it('rejects seats outside 1â€“7 range', () => {
     expect(offerRideSchema.safeParse({ ...valid, seats: 0 }).success).toBe(false);
     expect(offerRideSchema.safeParse({ ...valid, seats: 8 }).success).toBe(false);
   });
@@ -142,7 +142,7 @@ describe('findRideSchema', () => {
   });
 });
 
-// ── Packages ──────────────────────────────────────────────────────────────────
+// â”€â”€ Packages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('sendPackageSchema', () => {
   const valid = {
@@ -170,7 +170,7 @@ describe('sendPackageSchema', () => {
   });
 });
 
-// ── Wallet ────────────────────────────────────────────────────────────────────
+// â”€â”€ Wallet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('topUpSchema', () => {
   it('accepts a valid top-up', () => {
@@ -203,7 +203,7 @@ describe('transferSchema', () => {
   });
 });
 
-// ── Profile ───────────────────────────────────────────────────────────────────
+// â”€â”€ Profile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('updateProfileSchema', () => {
   it('accepts valid profile update', () => {
@@ -235,3 +235,4 @@ describe('changePasswordSchema', () => {
     expect(changePasswordSchema.safeParse({ ...valid, newPassword: 'alllowercase!!', confirmNewPassword: 'alllowercase!!' }).success).toBe(false);
   });
 });
+

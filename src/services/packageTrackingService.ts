@@ -1,3 +1,4 @@
+﻿import { sanitizeTrackingId, sanitizeForLog } from '../utils/inputSanitization';
 import { mapLegacyPackageStatusToLifecycle } from '../domain/packages/lifecycle';
 import { createDomainEvent, domainEventBus } from '../platform/event-bus';
 import {
@@ -498,3 +499,4 @@ export function getCanonicalPackageLifecycle(
 ): PackageTracking['lifecycleStatus'] {
   return mapLegacyPackageStatusToLifecycle(status);
 }
+
