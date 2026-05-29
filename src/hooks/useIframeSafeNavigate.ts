@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useNavigate as useRouterNavigate,
   type NavigateFunction,
   type NavigateOptions,
@@ -36,14 +37,17 @@ function normalizeTo(to: To): To {
 export function useIframeSafeNavigate(): NavigateFunction {
   const navigate = useRouterNavigate();
 
-  return ((to: To | number, options?: NavigateOptions) => {
-    if (typeof to === 'number') {
-      navigate(to);
-      return;
-    }
+  return useCallback(
+    ((to: To | number, options?: NavigateOptions) => {
+      if (typeof to === 'number') {
+        navigate(to);
+        return;
+      }
 
-    navigate(normalizeTo(to), options);
-  }) as NavigateFunction;
+      navigate(normalizeTo(to), options);
+    }) as NavigateFunction,
+    [navigate],
+  );
 }
 
 export { useIframeSafeNavigate as useNavigate };
