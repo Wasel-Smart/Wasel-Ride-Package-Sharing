@@ -115,6 +115,14 @@ export const waselRouter = createBrowserRouter([
     path: '/auth',
   },
   {
+    Component: () => <Navigate replace to={APP_ROUTES.findRide.full} />,
+    path: '/find-ride',
+  },
+  {
+    Component: () => <Navigate replace to={APP_ROUTES.offerRide.full} />,
+    path: '/offer-ride',
+  },
+  {
     Component: () => <Navigate replace to={APP_ROUTES.offerRide.full} />,
     path: '/create-ride',
   },
