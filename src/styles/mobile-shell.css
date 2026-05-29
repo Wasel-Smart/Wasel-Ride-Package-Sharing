@@ -6,7 +6,7 @@
 
 /* ── Mobile breakpoint ───────────────────────────────────────── */
 @media (max-width: 899px) {
-  main.wasel-app-main { padding-bottom: 88px !important; }
+  main.wasel-app-main { padding-bottom: 78px !important; }
 }
 
 /* ── Mobile shell tokens ─────────────────────────────────────── */
@@ -43,11 +43,11 @@
   --m-shadow-float:  var(--wasel-shadow-lg);
 
   /* Mobile radius */
-  --m-radius-card:   20px;
-  --m-radius-input:  16px;
+  --m-radius-card:   16px;
+  --m-radius-input:  14px;
   --m-radius-pill:   9999px;
-  --m-radius-btn:    14px;
-  --m-radius-sheet:  24px;
+  --m-radius-btn:    12px;
+  --m-radius-sheet:  18px;
 
   /* Bottom nav height */
   --m-nav-height:    58px;
@@ -96,9 +96,9 @@
 .m-search-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-height: 54px;
-  padding: 13px 16px;
+  gap: 10px;
+  min-height: 48px;
+  padding: 10px 12px;
   border-radius: var(--m-radius-input);
   background: var(--m-surface-field);
   border: 1.5px solid var(--m-border);
@@ -116,12 +116,12 @@
 .m-ride-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 15px 16px;
-  border-radius: 18px;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
   background: var(--m-surface-card);
   border: 1px solid var(--m-border);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
 }
 .m-ride-row:hover {
