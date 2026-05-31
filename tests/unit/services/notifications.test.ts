@@ -1,5 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
+import { describe, expect, it, vi } from 'vitest';
 const mockFetchWithRetry = vi.fn();
 const mockGetAuthDetails = vi.fn();
 const mockGetCommunicationPreferences = vi.fn();
@@ -97,7 +96,7 @@ describe('notificationsAPI', () => {
     const result = await notificationsAPI.getNotifications();
 
     expect(result.notifications).toHaveLength(1);
-    expect(result.notifications[0].title).toBe('Saved');
+    expect(result.notifications[0]!.title).toBe('Saved');
   });
 
   it('persists server push notifications to the local queue for continuity', async () => {

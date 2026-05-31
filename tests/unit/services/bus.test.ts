@@ -72,7 +72,7 @@ describe('bus service', () => {
 
     expect(mockSearchTrips).toHaveBeenCalledWith('Amman', 'Irbid', '2026-04-02', 2);
     expect(routes).toHaveLength(1);
-    expect(routes[0].id).toBe('bus-2');
+    expect(routes[0]!.id).toBe('bus-2');
   });
 
   it('falls back to the official Jordan schedule network when no live bus inventory is returned', async () => {
@@ -81,10 +81,10 @@ describe('bus service', () => {
     const routes = await fetchBusRoutes({ from: 'Amman', to: 'Petra', date: '2026-04-02', seats: 1 });
 
     expect(routes.length).toBeGreaterThan(0);
-    expect(routes[0].from).toBe('Amman');
-    expect(routes[0].to).toBe('Petra');
-    expect(routes[0].dataSource).toBe('official');
-    expect(routes[0].departureTimes?.length).toBeGreaterThan(0);
+    expect(routes[0]!.from).toBe('Amman');
+    expect(routes[0]!.to).toBe('Petra');
+    expect(routes[0]!.dataSource).toBe('official');
+    expect(routes[0]!.departureTimes?.length).toBeGreaterThan(0);
   });
 
   it('returns the wider official network when an exact official route is missing', () => {

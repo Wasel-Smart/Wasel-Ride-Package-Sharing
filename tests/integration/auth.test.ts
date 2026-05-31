@@ -3,7 +3,6 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { authAPI } from '@/services/auth';
 
 describe('Authentication Flow Integration', () => {
   beforeEach(() => {

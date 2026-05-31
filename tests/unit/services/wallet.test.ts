@@ -226,7 +226,7 @@ describe('walletApi', () => {
       p_amount: 20,
       p_payment_method: 'wallet',
     });
-    expect(result.success).toBe(true);
+    expect((result as { success: boolean }).success).toBe(true);
   });
 
   it('fails closed for wallet top-ups when the secure checkout backend is unavailable', async () => {
@@ -260,7 +260,7 @@ describe('walletApi', () => {
       }),
       undefined,
     );
-    const headers = mockFetchWithRetry.mock.calls[0][1].headers as Headers;
+    const headers = mockFetchWithRetry.mock.calls[0]![1]!.headers as Headers;
     expect(headers.get('Authorization')).toBe('Bearer token-123');
     expect(headers.get('apikey')).toBe('anon-key');
     expect(mockRpc).not.toHaveBeenCalled();
@@ -297,7 +297,7 @@ describe('walletApi', () => {
       }),
       undefined,
     );
-    const headers = mockFetchWithRetry.mock.calls[0][1].headers as Headers;
+    const headers = mockFetchWithRetry.mock.calls[0]![1]!.headers as Headers;
     expect(headers.get('Authorization')).toBe('Bearer token-123');
     expect(headers.get('apikey')).toBe('anon-key');
   });

@@ -27,7 +27,7 @@ function buildSnapshotFixture(): MobilitySystemSnapshot {
 describe('Mobility OS snapshot helpers', () => {
   it('computes revenue run rate from booked inventory only', () => {
     const pricing = new PricingEngine();
-    const corridor = buildSeedCorridors()[0];
+    const corridor = buildSeedCorridors()[0]!;
     const projection = pricing.project({
       ...corridor,
       seats_booked: 0,
@@ -43,7 +43,7 @@ describe('Mobility OS snapshot helpers', () => {
   it('projects CorridorUpdated events directly into the snapshot', () => {
     const snapshot = buildSnapshotFixture();
     const nextProjection: CorridorProjection = {
-      ...snapshot.corridors[1],
+      ...snapshot.corridors[1]!,
       seats_available: 30,
       utilization: 0.22,
       demand_pressure: 1.92,
@@ -52,8 +52,8 @@ describe('Mobility OS snapshot helpers', () => {
       seat_price_direction: 'up',
       cargo_price_direction: 'up',
       corridor: {
-        ...snapshot.corridors[1].corridor,
-        seats_booked: snapshot.corridors[1].corridor.seats_total - 30,
+        ...snapshot.corridors[1]!.corridor,
+        seats_booked: snapshot.corridors[1]!.corridor.seats_total - 30,
         updated_at: '2026-05-03T09:00:00.000Z',
       },
     };

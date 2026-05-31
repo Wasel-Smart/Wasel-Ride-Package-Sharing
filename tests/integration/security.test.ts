@@ -3,9 +3,9 @@
  * Tests for CSRF protection, secure storage, and API security
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { getCSRFToken, addCSRFHeader, validateCSRFToken, clearCSRFToken } from '@/utils/csrf';
-import { secureStorage, encryptData, decryptData } from '@/utils/encryption';
+import { secureStorage } from '@/utils/encryption';
 import { validateApiUrl } from '@/utils/sanitization';
 
 describe('CSRF Protection Integration', () => {
