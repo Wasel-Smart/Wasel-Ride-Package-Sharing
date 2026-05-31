@@ -34,7 +34,6 @@
                             "noUncheckedIndexedAccess":  true,
                             "skipLibCheck":  true,
                             "baseUrl":  ".",
-                            "ignoreDeprecations":  true,
                             "paths":  {
                                           "@/*":  [
                                                       "src/*"
