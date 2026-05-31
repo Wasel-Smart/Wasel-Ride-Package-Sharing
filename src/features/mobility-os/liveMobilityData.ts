@@ -1,5 +1,4 @@
-﻿import { sanitizeForLog } from '../../utils/inputSanitization';
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../services/core';
 
 const DEBOUNCE_MS = 2000;
@@ -131,140 +130,138 @@ const ROUTE_CITY_PAIRS = [
     from: 'amman',
     to: 'aqaba',
     label: 'Amman -> Aqaba',
-    labelAr: 'Ø¹Ù…Ù‘Ø§Ù† â† Ø§Ù„Ø¹Ù‚Ø¨Ø©',
+    labelAr: 'عمان ← الإقبة',
   },
   {
     routeId: 'amman-irbid',
     from: 'amman',
     to: 'irbid',
     label: 'Amman -> Irbid',
-    labelAr: 'Ø¹Ù…Ù‘Ø§Ù† â† Ø¥Ø±Ø¨Ø¯',
+    labelAr: 'عمان ← إربد',
   },
   {
     routeId: 'amman-zarqa',
     from: 'amman',
     to: 'zarqa',
     label: 'Amman -> Zarqa',
-    labelAr: 'Ø¹Ù…Ù‘Ø§Ù† â† Ø§Ù„Ø²Ø±Ù‚Ø§Ø¡',
+    labelAr: 'عمان ← الزرقاء',
   },
   {
     routeId: 'zarqa-mafraq',
     from: 'zarqa',
     to: 'mafraq',
     label: 'Zarqa -> Mafraq',
-    labelAr: 'Ø§Ù„Ø²Ø±Ù‚Ø§Ø¡ â† Ø§Ù„Ù…ÙØ±Ù‚',
+    labelAr: 'الزرقاء ← المفرق',
   },
   {
     routeId: 'amman-jerash',
     from: 'amman',
     to: 'jerash',
     label: 'Amman -> Jerash',
-    labelAr: 'Ø¹Ù…Ù‘Ø§Ù† â† Ø¬Ø±Ø´',
+    labelAr: 'عمان ← جرش',
   },
   {
     routeId: 'irbid-ajloun',
     from: 'irbid',
     to: 'ajloun',
     label: 'Irbid -> Ajloun',
-    labelAr: 'Ø¥Ø±Ø¨Ø¯ â† Ø¹Ø¬Ù„ÙˆÙ†',
+    labelAr: 'إربد ← إجلون',
   },
   {
     routeId: 'amman-madaba',
     from: 'amman',
     to: 'madaba',
     label: 'Amman -> Madaba',
-    labelAr: 'Ø¹Ù…Ù‘Ø§Ù† â† Ù…Ø§Ø¯Ø¨Ø§',
+    labelAr: 'عمان ← مادبا',
   },
   {
     routeId: 'madaba-karak',
     from: 'madaba',
     to: 'karak',
     label: 'Madaba -> Karak',
-    labelAr: 'Ù…Ø§Ø¯Ø¨Ø§ â† Ø§Ù„ÙƒØ±Ùƒ',
+    labelAr: 'مادبا ← الكرك',
   },
   {
     routeId: 'karak-tafila',
     from: 'karak',
     to: 'tafila',
     label: 'Karak -> Tafila',
-    labelAr: 'Ø§Ù„ÙƒØ±Ùƒ â† Ø§Ù„Ø·ÙÙŠÙ„Ø©',
+    labelAr: 'الكرك ← الطفيلة',
   },
   {
     routeId: 'tafila-maan',
     from: 'tafila',
     to: 'maan',
     label: "Tafila -> Ma'an",
-    labelAr: 'Ø§Ù„Ø·ÙÙŠÙ„Ø© â† Ù…Ø¹Ø§Ù†',
+    labelAr: 'الطفيلة ← معان',
   },
   {
     routeId: 'maan-aqaba',
     from: 'maan',
     to: 'aqaba',
     label: "Ma'an -> Aqaba",
-    labelAr: 'Ù…Ø¹Ø§Ù† â† Ø§Ù„Ø¹Ù‚Ø¨Ø©',
+    labelAr: 'معان ← الإقبة',
   },
   {
     routeId: 'irbid-zarqa',
     from: 'irbid',
     to: 'zarqa',
     label: 'Irbid -> Zarqa',
-    labelAr: 'Ø¥Ø±Ø¨Ø¯ â† Ø§Ù„Ø²Ø±Ù‚Ø§Ø¡',
+    labelAr: 'إربد ← الزرقاء',
   },
   {
     routeId: 'amman-salt',
     from: 'amman',
     to: 'salt',
     label: 'Amman -> Salt',
-    labelAr: 'Ø¹Ù…Ù‘Ø§Ù† â† Ø§Ù„Ø³Ù„Ø·',
+    labelAr: 'عمان ← السلط',
   },
   {
     routeId: 'salt-jerash',
     from: 'salt',
     to: 'jerash',
     label: 'Salt -> Jerash',
-    labelAr: 'Ø§Ù„Ø³Ù„Ø· â† Ø¬Ø±Ø´',
+    labelAr: 'السلط ← جرش',
   },
   {
     routeId: 'ajloun-jerash',
     from: 'ajloun',
     to: 'jerash',
     label: 'Ajloun -> Jerash',
-    labelAr: 'Ø¹Ø¬Ù„ÙˆÙ† â† Ø¬Ø±Ø´',
+    labelAr: 'إجلون ← جرش',
   },
 ] as const;
 
 const CITY_ALIASES: Record<string, string> = {
   amman: 'amman',
   'amman governorate': 'amman',
-  Ø¹Ù…Ø§Ù†: 'amman',
-  Ø¹Ù…Ù‘Ø§Ù†: 'amman',
+  عمان: 'amman',
   aqaba: 'aqaba',
-  Ø§Ù„Ø¹Ù‚Ø¨Ø©: 'aqaba',
+  الإقبة: 'aqaba',
   irbid: 'irbid',
-  Ø§Ø±Ø¨Ø¯: 'irbid',
-  Ø¥Ø±Ø¨Ø¯: 'irbid',
+  إربد: 'irbid',
   zarqa: 'zarqa',
-  Ø§Ù„Ø²Ø±Ù‚Ø§Ø¡: 'zarqa',
+  الزرقاء: 'zarqa',
   mafraq: 'mafraq',
-  Ø§Ù„Ù…ÙØ±Ù‚: 'mafraq',
+  المفرق: 'mafraq',
   jerash: 'jerash',
   jarash: 'jerash',
-  Ø¬Ø±Ø´: 'jerash',
+  جرش: 'jerash',
   ajloun: 'ajloun',
   ajlun: 'ajloun',
-  Ø¹Ø¬Ù„ÙˆÙ†: 'ajloun',
+  إجلون: 'ajloun',
   madaba: 'madaba',
-  Ù…Ø§Ø¯Ø¨Ø§: 'madaba',
+  مادبا: 'madaba',
   karak: 'karak',
-  Ø§Ù„ÙƒØ±Ùƒ: 'karak',
+  الكرك: 'karak',
   tafila: 'tafila',
   tafilah: 'tafila',
-  Ø§Ù„Ø·ÙÙŠÙ„Ø©: 'tafila',
+  الطفيلة: 'tafila',
   maan: 'maan',
   "ma'an": 'maan',
-  Ù…Ø¹Ø§Ù†: 'maan',
+  معان: 'maan',
   salt: 'salt',
-  Ø§Ù„Ø³Ù„Ø·: 'salt',
+  السلط: 'salt',
 };
 
 const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
@@ -440,9 +437,9 @@ function estimateSpeed(congestion: number): number {
 
 function buildDispatch(topRoute: string, ar: boolean): string {
   const route = ROUTE_CITY_PAIRS.find(item => item.routeId === topRoute);
-  if (!route) return ar ? 'Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„ØªÙˆØ²ÙŠØ¹ Ø§Ù„ØªØ´ØºÙŠÙ„ÙŠ' : 'Review operational distribution';
-  const target = ar ? route.labelAr.split(' â† ')[0] : route.label.split(' -> ')[1];
-  return ar ? `Ø¥Ø¹Ø§Ø¯Ø© ØªÙˆØ¬ÙŠÙ‡ Ø§Ù„Ø¹Ø±Ø¶ Ø¨Ø§ØªØ¬Ø§Ù‡ ${target}` : `Reposition supply toward ${target}`;
+  if (!route) return ar ? 'مراجعة التوزيع التشغيلي' : 'Review operational distribution';
+  const target = ar ? route.labelAr.split(' ← ')[0] : route.label.split(' -> ')[1];
+  return ar ? `اعادة توجيه العرض باتجاه ${target}` : `Reposition supply toward ${target}`;
 }
 
 async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot | null> {
@@ -716,10 +713,10 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
       congestionLevel,
       topCorridor: topRoute ? routeLabel(topRoute.routeId, ar) : '',
       recommendedPath: topRoute ? routeLabel(topRoute.routeId, ar) : '',
-      dispatchAction: topRoute
+dispatchAction: topRoute
         ? buildDispatch(topRoute.routeId, ar)
         : ar
-          ? 'Ù…Ø±Ø§Ø¬Ø¹Ø© Ø§Ù„ØªÙˆØ²ÙŠØ¹ Ø§Ù„ØªØ´ØºÙŠÙ„ÙŠ'
+          ? 'مراجعة التوزيع التشغيلي'
           : 'Review operational distribution',
     },
   };
