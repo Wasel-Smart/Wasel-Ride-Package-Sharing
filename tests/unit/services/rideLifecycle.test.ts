@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+
 import {
   createRideBooking,
   getBookingsForDriver,
@@ -95,9 +95,9 @@ describe('rideLifecycle', () => {
     expect(updated?.supportThreadOpen).toBe(true);
 
     const synced = syncRideBookingCompletion(new Date('2021-05-10T09:00:00Z').getTime());
-    expect(synced[0].status).toBe('completed');
-    expect(synced[0].lifecycleStatus).toBe('completed');
-    expect(synced[0].paymentStatus).toBe('captured');
+    expect(synced[0]!.status).toBe('completed');
+    expect(synced[0]!.lifecycleStatus).toBe('completed');
+    expect(synced[0]!.paymentStatus).toBe('captured');
     expect(getRideBookings()).toHaveLength(1);
   });
 });

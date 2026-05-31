@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-
 const mockCreateTrip = vi.fn();
 const mockFetchWithRetry = vi.fn();
 const mockGetAuthDetails = vi.fn();
@@ -180,17 +179,17 @@ describe('journeyLogistics', () => {
 
     const codeShared = updatePackageVerification(created.trackingId, 'share_code');
     expect(codeShared?.verification.senderCodeSharedAt).toBeTruthy();
-    expect(codeShared?.timeline[2].complete).toBe(true);
+    expect(codeShared?.timeline[2]!.complete).toBe(true);
 
     const pickedUp = updatePackageVerification(created.trackingId, 'confirm_pickup');
     expect(pickedUp?.status).toBe('in_transit');
     expect(pickedUp?.verification.riderPickupConfirmedAt).toBeTruthy();
-    expect(pickedUp?.timeline[3].complete).toBe(true);
+    expect(pickedUp?.timeline[3]!.complete).toBe(true);
 
     const delivered = updatePackageVerification(created.trackingId, 'confirm_delivery');
     expect(delivered?.status).toBe('delivered');
     expect(delivered?.verification.receiverDeliveryConfirmedAt).toBeTruthy();
-    expect(delivered?.timeline[4].complete).toBe(true);
+    expect(delivered?.timeline[4]!.complete).toBe(true);
   });
 
   it('falls back to local package tracking when auth or server is unavailable', async () => {
@@ -205,7 +204,7 @@ describe('journeyLogistics', () => {
 
     expect(created.trackingId).toMatch(/^PKG-/);
     expect(getConnectedPackages()).toHaveLength(1);
-    expect(['searching', 'matched']).toContain(getConnectedPackages()[0].status);
+    expect(['searching', 'matched']).toContain(getConnectedPackages()[0]!.status);
   });
 
   it('rejects packages when sender and receiver cities are the same', async () => {

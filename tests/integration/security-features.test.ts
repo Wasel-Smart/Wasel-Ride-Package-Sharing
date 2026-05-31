@@ -2,8 +2,7 @@
  * Security Integration Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { CSRF } from '@/utils/csrf';
+import { describe, it, expect, beforeEach } from 'vitest';import { CSRF } from '@/utils/csrf';
 import { sessionManager } from '@/utils/sessionManager';
 import { circuitBreakers, CircuitState } from '@/utils/circuitBreaker';
 

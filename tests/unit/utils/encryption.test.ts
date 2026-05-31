@@ -2,7 +2,7 @@
  * Encryption Utilities Test Suite
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { generateSecureId, hashData } from '@/utils/encryption';
 
 describe('Secure ID Generation', () => {
