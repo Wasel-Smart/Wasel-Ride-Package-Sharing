@@ -156,7 +156,7 @@ describe('Circuit Breaker', () => {
 
 describe('API Integration', () => {
   it('should add CSRF token to POST requests', () => {
-    const token = CSRF.generateToken();
+    CSRF.generateToken();
     const headers = CSRF.addHeader({ 'Content-Type': 'application/json' });
     
     expect(headers).toHaveProperty('X-CSRF-Token');

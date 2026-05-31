@@ -139,7 +139,7 @@ describe('calculateLiquidityHealth', () => {
   it('gives a higher score when supply matches demand closely', () => {
     const balanced = calculateLiquidityHealth({ activeTrips: 10, pendingRequests: 10, averageMatchTime: 5 });
     const unbalanced = calculateLiquidityHealth({ activeTrips: 1, pendingRequests: 100, averageMatchTime: 60 });
-    expect(balanced).toBeGreaterThan(unbalanced);
+    expect(balanced as number).toBeGreaterThan(unbalanced as number);
   });
 });
 

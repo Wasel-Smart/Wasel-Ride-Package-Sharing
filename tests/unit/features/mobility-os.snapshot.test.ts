@@ -73,8 +73,8 @@ describe('Mobility OS snapshot helpers', () => {
 
     const projected = applyMobilityEventToSnapshot(snapshot, event);
 
-    expect(projected.corridors[0].corridor.id).toBe(nextProjection.corridor.id);
-    expect(projected.corridors[0].dynamic_seat_price).toBe(14.2);
+    expect(projected.corridors[0]!.corridor.id).toBe(nextProjection.corridor.id);
+    expect(projected.corridors[0]!.dynamic_seat_price).toBe(14.2);
     expect('recent_events' in projected).toBe(false);
     expect(projected.updated_at).toBe('2026-05-03T09:00:00.000Z');
   });
