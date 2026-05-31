@@ -1,5 +1,5 @@
 ﻿import { logger } from '../utils/monitoring';
-import { WaselError, handleError, getUserMessage, isRetryableError } from '../utils/errors';
+import { handleError, getUserMessage, isRetryableError } from '../utils/errors';
 import { withRetry, RetryPresets } from '../utils/retry';
 
 export interface ErrorHandlingOptions<T> {

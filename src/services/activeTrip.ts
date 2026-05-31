@@ -1,5 +1,4 @@
-﻿import { sanitizeForLog } from '../utils/inputSanitization';
-/**
+﻿/**
  * activeTrip.ts â€” Service layer for Wasel Active Trip management
  *
  * Provides typed CRUD operations against the server-side

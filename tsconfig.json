@@ -1,62 +1,47 @@
 ﻿{
-    "compilerOptions":  {
-                            "target":  "ES2020",
-                            "useDefineForClassFields":  true,
-                            "lib":  [
-                                        "ES2020",
-                                        "DOM",
-                                        "DOM.Iterable"
-                                    ],
-                            "module":  "ESNext",
-                            "moduleResolution":  "bundler",
-                            "allowImportingTsExtensions":  true,
-                            "resolveJsonModule":  true,
-                            "isolatedModules":  true,
-                            "noEmit":  true,
-                            "jsx":  "react-jsx",
-                            "jsxImportSource":  "react",
-                            "allowJs":  true,
-                            "checkJs":  true,
-                            "esModuleInterop":  true,
-                            "allowSyntheticDefaultImports":  true,
-                            "forceConsistentCasingInFileNames":  true,
-                            "strict":  true,
-                            "noUnusedLocals":  true,
-                            "noUnusedParameters":  true,
-                            "noFallthroughCasesInSwitch":  true,
-                            "strictNullChecks":  true,
-                            "strictFunctionTypes":  true,
-                            "strictBindCallApply":  true,
-                            "strictPropertyInitialization":  true,
-                            "noImplicitAny":  true,
-                            "noImplicitThis":  true,
-                            "alwaysStrict":  true,
-                            "noUncheckedIndexedAccess":  true,
-                            "skipLibCheck":  true,
-                            "baseUrl":  ".",
-                            "ignoreDeprecations":  "5.0",
-                            "paths":  {
-                                          "@/*":  [
-                                                      "src/*"
-                                                  ]
-                                      }
-                        },
-    "include":  [
-                    "src/**/*",
-                    "src/**/*.d.ts",
-                    "vite.config.ts",
-                    "vitest.config.ts",
-                    "playwright.config.ts",
-                    "tests/**/*"
-                ],
-    "exclude":  [
-                    "node_modules",
-                    "build",
-                    "dist",
-                    "with-supabase-app",
-                    "src/features/testing",
-                    "src/cypress",
-                    "src/supabase/functions",
-                    "src/tests"
-                ]
+    "compilerOptions": {
+        "target": "ES2020",
+        "useDefineForClassFields": true,
+        "lib": [
+            "ES2020",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react-jsx",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true,
+        "skipLibCheck": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "src/*"
+            ]
+        }
+    },
+    "include": [
+        "src",
+        "tests",
+        "vite.config.ts",
+        "vitest.config.ts",
+        "playwright.config.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "with-supabase-app",
+        "src/features/testing",
+        "src/cypress",
+        "src/supabase/functions"
+    ]
 }
