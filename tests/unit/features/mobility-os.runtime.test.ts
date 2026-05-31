@@ -4,7 +4,7 @@ import { buildSeedCorridors, MobilityOSRuntime, PricingEngine } from '../../../s
 describe('Mobility OS runtime', () => {
   it('implements the mandatory pricing equations exactly', () => {
     const pricing = new PricingEngine();
-    const corridor = buildSeedCorridors()[0];
+    const corridor = buildSeedCorridors()[0]!;
 
     const seatsAvailable = pricing.getSeatAvailability(corridor);
     const cargoAvailable = pricing.getCargoAvailability(corridor);
@@ -24,7 +24,7 @@ describe('Mobility OS runtime', () => {
 
   it('processes a booking through the required event chain', () => {
     const runtime = new MobilityOSRuntime({
-      seedCorridors: [buildSeedCorridors()[0]],
+      seedCorridors: [buildSeedCorridors()[0]!],
     });
 
     const bookingId = runtime.createBooking({
@@ -54,7 +54,7 @@ describe('Mobility OS runtime', () => {
 
   it('fails closed when capacity does not exist', () => {
     const runtime = new MobilityOSRuntime({
-      seedCorridors: [buildSeedCorridors()[0]],
+      seedCorridors: [buildSeedCorridors()[0]!],
     });
 
     expect(() =>
