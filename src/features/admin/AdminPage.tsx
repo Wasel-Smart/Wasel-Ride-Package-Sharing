@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { KVStoreAdmin } from '../../components/admin/KVStoreAdmin';
+import { useAuth } from '../../contexts/AuthContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { driverApprovalAdminAPI, type PendingDriverApproval } from '../../services/driverApprovalAdmin';
 import { PageShell, Protected } from '../shared/pageShared';
+import { getConfig } from '../../utils/env';
 
 function formatTimestamp(value: string | null) {
   if (!value) {
@@ -15,6 +17,10 @@ function formatTimestamp(value: string | null) {
 
 export default function AdminPage() {
   const { user, refreshAuthState } = useLocalAuth();
+  const { profile, refreshProfile, isBackendConnected } = useAuth();
+  const { enableLocalAuth } = getConfig();
+  const authoritativeRole = isBackendConnected ? profile?.role : enableLocalAuth ? user?.role : null;
+  const isAdmin = authoritativeRole === 'admin';
   const [pendingDrivers, setPendingDrivers] = useState<PendingDriverApproval[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +28,7 @@ export default function AdminPage() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.role !== 'admin') {
+    if (!isAdmin) {
       setLoading(false);
       return;
     }
@@ -53,10 +59,10 @@ export default function AdminPage() {
     return () => {
       cancelled = true;
     };
-  }, [user?.role]);
+  }, [isAdmin]);
 
   const handleRefresh = async () => {
-    if (user?.role !== 'admin') {
+    if (!isAdmin) {
       return;
     }
 
@@ -80,7 +86,7 @@ export default function AdminPage() {
       await driverApprovalAdminAPI.approve(driver.driverId);
       setPendingDrivers((current) => current.filter((entry) => entry.driverId !== driver.driverId));
       setStatusMessage(`${driver.fullName} is now approved.`);
-      await refreshAuthState();
+      await Promise.all([refreshAuthState(), refreshProfile()]);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : 'Failed to approve driver.');
     } finally {
@@ -99,9 +105,9 @@ export default function AdminPage() {
             </p>
           </div>
 
-          {user?.role !== 'admin' ? (
+          {!isAdmin ? (
             <div className="rounded-3xl border border-amber-400/25 bg-amber-400/10 p-6 text-sm text-amber-50">
-              This page is restricted to admin accounts.
+              This page is restricted to server-authorized admin accounts.
             </div>
           ) : (
             <>

@@ -102,3 +102,143 @@ paths:
           description: Rate limited
         '500':
           description: Internal platform error
+  /wallet:
+    get:
+      tags:
+        - wallet
+      operationId: getWallet
+      summary: Read the authenticated wallet snapshot used by the web app.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet/payment-methods:
+    post:
+      tags:
+        - wallet
+      operationId: manageWalletPaymentMethods
+      summary: Add, remove, or set default wallet payment methods.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet/set-pin:
+    post:
+      tags:
+        - wallet
+      operationId: setWalletPin
+      summary: Set the wallet PIN.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet/settings:
+    post:
+      tags:
+        - wallet
+      operationId: updateWalletSettings
+      summary: Update wallet settings such as auto top-up.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet/transfer:
+    post:
+      tags:
+        - wallet
+      operationId: transferWalletFunds
+      summary: Transfer wallet funds after step-up verification.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet/verify-pin:
+    post:
+      tags:
+        - wallet
+      operationId: verifyWalletPin
+      summary: Verify wallet PIN and OTP for step-up actions.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet/withdraw:
+    post:
+      tags:
+        - wallet
+      operationId: withdrawWalletFunds
+      summary: Request wallet withdrawal after step-up verification.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error

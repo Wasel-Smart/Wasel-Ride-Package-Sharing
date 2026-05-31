@@ -358,6 +358,16 @@ export const migrationCatalog = [
     category: 'runtime-contract',
     naming: 'canonical',
   },
+  {
+    sequence: 39,
+    path: 'src/supabase/migrations/20260531070000_harden_public_security_definer_boundaries.sql',
+    description:
+      'Move privileged security-definer implementations into the private schema and keep only invoker-compatible public wrappers',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'security',
+    naming: 'canonical',
+  },
 ];
 
 export const operationalSeedFiles = [

@@ -1,0 +1,103 @@
+openapi: 3.1.0
+info:
+  title: Wasel Safety Service API
+  version: v1
+  description: Generated OpenAPI contract for the safety bounded domain.
+servers:
+  - url: https://api.wasel.app
+    description: Production
+  - url: https://staging-api.wasel.app
+    description: Staging
+tags:
+  - name: safety
+    description: safety-platform
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    requestSignature:
+      type: apiKey
+      in: header
+      name: X-Wasel-Signature
+paths:
+  /safety/incident:
+    post:
+      tags:
+        - safety
+      operationId: createSafetyIncident
+      summary: Create a safety incident report.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /safety/settings:
+    get:
+      tags:
+        - safety
+      operationId: getSafetySettings
+      summary: Read the authenticated safety dashboard/settings.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+    put:
+      tags:
+        - safety
+      operationId: updateSafetySettings
+      summary: Update safety settings.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /safety/sos:
+    post:
+      tags:
+        - safety
+      operationId: createSosAlert
+      summary: Create a safety SOS alert.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error

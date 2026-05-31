@@ -70,6 +70,7 @@ Historical files that predate the current standards remain frozen and explicitly
 | 36 | `20241201000001_payments_wallet_tables.sql` | schema | Legacy wallet, payment intent, and escrow tables retained for auditability | Applied |
 | 37 | `20241201000002_bus_services_tables.sql` | schema | Legacy bus operations schema retained while canonical runtime contracts evolve | Applied |
 | 38 | `20260324005540_kv_store.sql` | runtime-contract | Production KV store for feature flags and app configuration | Applied |
+| 39 | `20260531070000_harden_public_security_definer_boundaries.sql` | security | Move privileged security-definer implementations into the private schema and keep only invoker-compatible public wrappers | Ready |
 
 ## Rollout Sequence
 
@@ -102,6 +103,7 @@ Apply the rollout set in this exact order for production cutover projects:
 23. `20260422120000_safety_and_user_settings.sql`
 24. `20260424140000_harden_user_owned_rpc_boundaries.sql`
 25. `20260424153000_database_governance_and_rls_hardening.sql`
+26. `20260531070000_harden_public_security_definer_boundaries.sql`
 
 ### Operational seeds
 
@@ -111,6 +113,7 @@ Apply the rollout set in this exact order for production cutover projects:
 4. `db/seeds/pricing.seed.sql`
 5. `db/seeds/core.seed.sql`
 6. `db/seeds/automation.seed.sql`
+7. `db/seeds/rolling_trips.seed.sql`
 
 ### Smoke checks
 

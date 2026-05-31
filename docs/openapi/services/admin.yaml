@@ -1,0 +1,64 @@
+openapi: 3.1.0
+info:
+  title: Wasel Admin Service API
+  version: v1
+  description: Generated OpenAPI contract for the admin bounded domain.
+servers:
+  - url: https://api.wasel.app
+    description: Production
+  - url: https://staging-api.wasel.app
+    description: Staging
+tags:
+  - name: admin
+    description: operations-platform
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    requestSignature:
+      type: apiKey
+      in: header
+      name: X-Wasel-Signature
+paths:
+  /admin/drivers/{driverId}/approve:
+    post:
+      tags:
+        - admin
+      operationId: approveDriver
+      summary: Approve a driver after admin authorization and readiness checks.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /admin/drivers/pending:
+    get:
+      tags:
+        - admin
+      operationId: listPendingDrivers
+      summary: List pending driver approvals for admin users.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error

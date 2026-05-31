@@ -19,6 +19,16 @@ tags:
     description: communications-platform
   - name: analytics
     description: insights-platform
+  - name: profile
+    description: identity-platform
+  - name: payments
+    description: payments-platform
+  - name: admin
+    description: operations-platform
+  - name: safety
+    description: safety-platform
+  - name: user-settings
+    description: identity-platform
 components:
   securitySchemes:
     bearerAuth:
@@ -30,6 +40,283 @@ components:
       in: header
       name: X-Wasel-Signature
 paths:
+  /admin/drivers/{driverId}/approve:
+    post:
+      tags:
+        - admin
+      operationId: approveDriver
+      summary: Approve a driver after admin authorization and readiness checks.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /admin/drivers/pending:
+    get:
+      tags:
+        - admin
+      operationId: listPendingDrivers
+      summary: List pending driver approvals for admin users.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /payments/confirm:
+    post:
+      tags:
+        - payments
+      operationId: confirmPaymentIntentRuntime
+      summary: Confirm a payment intent and return settlement state.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /payments/create-intent:
+    post:
+      tags:
+        - payments
+      operationId: createPaymentIntentRuntime
+      summary: Create a payment intent for card, wallet, or subscription flows.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /payments/status:
+    post:
+      tags:
+        - payments
+      operationId: getPaymentIntentRuntimeStatus
+      summary: Read payment intent status after webhook processing.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /profile:
+    post:
+      tags:
+        - profile
+      operationId: createProfile
+      summary: Create the authenticated user profile.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /profile/{userId}:
+    get:
+      tags:
+        - profile
+      operationId: getProfileByUserId
+      summary: Read a profile by authenticated user id.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+    patch:
+      tags:
+        - profile
+      operationId: updateProfile
+      summary: Update the authenticated user profile.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /safety/incident:
+    post:
+      tags:
+        - safety
+      operationId: createSafetyIncident
+      summary: Create a safety incident report.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /safety/settings:
+    get:
+      tags:
+        - safety
+      operationId: getSafetySettings
+      summary: Read the authenticated safety dashboard/settings.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+    put:
+      tags:
+        - safety
+      operationId: updateSafetySettings
+      summary: Update safety settings.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /safety/sos:
+    post:
+      tags:
+        - safety
+      operationId: createSosAlert
+      summary: Create a safety SOS alert.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /user-settings:
+    get:
+      tags:
+        - user-settings
+      operationId: getUserSettings
+      summary: Read user settings and preferences.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+    put:
+      tags:
+        - user-settings
+      operationId: updateUserSettings
+      summary: Update user settings and preferences.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
   /v1/analytics/dashboard:
     get:
       tags:
@@ -342,6 +629,146 @@ paths:
         - wallet
       operationId: sendMoney
       summary: Execute a peer-to-peer transfer after step-up verification.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet:
+    get:
+      tags:
+        - wallet
+      operationId: getWallet
+      summary: Read the authenticated wallet snapshot used by the web app.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet/payment-methods:
+    post:
+      tags:
+        - wallet
+      operationId: manageWalletPaymentMethods
+      summary: Add, remove, or set default wallet payment methods.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet/set-pin:
+    post:
+      tags:
+        - wallet
+      operationId: setWalletPin
+      summary: Set the wallet PIN.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet/settings:
+    post:
+      tags:
+        - wallet
+      operationId: updateWalletSettings
+      summary: Update wallet settings such as auto top-up.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet/transfer:
+    post:
+      tags:
+        - wallet
+      operationId: transferWalletFunds
+      summary: Transfer wallet funds after step-up verification.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet/verify-pin:
+    post:
+      tags:
+        - wallet
+      operationId: verifyWalletPin
+      summary: Verify wallet PIN and OTP for step-up actions.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /wallet/withdraw:
+    post:
+      tags:
+        - wallet
+      operationId: withdrawWalletFunds
+      summary: Request wallet withdrawal after step-up verification.
         security:
           - bearerAuth: []
           - requestSignature: []
