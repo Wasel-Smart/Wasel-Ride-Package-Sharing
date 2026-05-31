@@ -71,7 +71,7 @@ describe('notificationCenterModel', () => {
     });
 
     expect(sections.map((section) => section.key)).toEqual(['today', 'week', 'earlier']);
-    expect(sections[0].items[0].id).toBe('today');
+    expect(sections[0]!.items[0]!.id).toBe('today');
   });
 
   it('summarizes visible, unread, urgent, and archived counts', () => {

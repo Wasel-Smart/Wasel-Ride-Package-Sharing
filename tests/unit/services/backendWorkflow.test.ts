@@ -62,9 +62,10 @@ describe('backendWorkflow', () => {
       undefined,
     );
 
-    const headers = mockFetchWithRetry.mock.calls[0][1].headers as Headers;
-    expect(headers.get('Authorization')).toBe('Bearer token-123');
-    expect(headers.get('apikey')).toBe('anon-key');
+    const headers = (mockFetchWithRetry.mock.calls[0] as unknown[])[1] as { headers: Headers };
+    const hdr = headers.headers;
+    expect(hdr.get('Authorization')).toBe('Bearer token-123');
+    expect(hdr.get('apikey')).toBe('anon-key');
   });
 
   it('uses the apikey header for public edge requests', async () => {

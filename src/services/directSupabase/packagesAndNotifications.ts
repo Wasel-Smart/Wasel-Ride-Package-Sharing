@@ -1,8 +1,8 @@
 ﻿
 // â”€â”€â”€ Package & notification operations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-import { getDb, packageSizeFromWeight } from './helpers';
-import { buildUserContext } from './userContext.ts';
+import { getDb, packageSizeFromWeight } from './helpers.js';
+import { buildUserContext } from './userContext';
 import { sanitizeHtml } from '../../utils/sanitization';
 import type {
   RawCommunicationDelivery,

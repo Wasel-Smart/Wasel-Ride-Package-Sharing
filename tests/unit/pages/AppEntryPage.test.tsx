@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { render, screen } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -27,7 +28,7 @@ vi.mock('@/components/wasel-ds/WaselLogo', () => ({
 
 import AppEntryPage from '@/features/home/AppEntryPage';
 
-function renderWithProviders(ui: JSX.Element) {
+function renderWithProviders(ui: ReactElement) {
   return render(<LanguageProvider>{ui}</LanguageProvider>);
 }
 
@@ -54,7 +55,7 @@ describe('AppEntryPage', () => {
 
     renderWithProviders(<AppEntryPage />);
 
-    screen.getAllByRole('button', { name: /Open the network/i })[0].click();
+    screen.getAllByRole('button', { name: /Open the network/i })[0]!.click();
 
     expect(mockNavigate).toHaveBeenCalledWith('/app');
   });

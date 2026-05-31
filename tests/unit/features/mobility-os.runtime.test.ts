@@ -36,7 +36,7 @@ describe('Mobility OS runtime', () => {
 
     const snapshot = runtime.getSnapshot();
     const internalSnapshot = runtime.getInternalSnapshot();
-    const corridor = snapshot.corridors[0];
+    const corridor = snapshot.corridors[0]!;
     const eventTypes = internalSnapshot.recent_events.map((event) => event.type);
 
     expect(bookingId).toMatch(/^booking-/);

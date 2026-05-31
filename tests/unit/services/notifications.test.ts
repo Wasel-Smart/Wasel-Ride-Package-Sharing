@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockFetchWithRetry = vi.fn();
 const mockGetAuthDetails = vi.fn();
 const mockGetCommunicationPreferences = vi.fn();

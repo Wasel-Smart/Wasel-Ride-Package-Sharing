@@ -22,10 +22,9 @@
         "noFallthroughCasesInSwitch": true,
         "noUncheckedIndexedAccess": true,
         "skipLibCheck": true,
-        "baseUrl": ".",
         "paths": {
             "@/*": [
-                "src/*"
+                "./src/*"
             ]
         }
     },
@@ -39,9 +38,11 @@
     "exclude": [
         "node_modules",
         "dist",
+        "build",
         "with-supabase-app",
         "src/features/testing",
         "src/cypress",
-        "src/supabase/functions"
+        "src/supabase/functions",
+        "src/tests"
     ]
 }

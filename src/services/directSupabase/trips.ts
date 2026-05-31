@@ -12,14 +12,14 @@ import {
   ensureBookingEligibility,
   getWalletByCanonicalUserId,
   toNumber,
-} from './helpers';
+} from './helpers.js';
 import {
   buildUserContext,
   ensureDriverForUser,
   getLatestVerificationRecord,
-} from './userContext.ts';
-import { recordDirectGrowthEvent } from './growth';
-import { processReferralConversionForPassenger } from './referrals';
+} from './userContext';
+import { recordDirectGrowthEvent } from './growth.js';
+import { processReferralConversionForPassenger } from './referrals.js';
 import type {
   DriverRow,
   RawBooking,
