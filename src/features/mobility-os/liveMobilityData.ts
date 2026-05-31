@@ -287,7 +287,7 @@ function normalizeCity(value: string | null | undefined): string | null {
     .trim()
     .toLowerCase();
   if (!raw) return null;
-  const normalized = raw.replace(/[â€™']/g, '').replace(/\s+/g, ' ').replace(/-/g, ' ');
+  const normalized = raw.replace(/['']/g, '').replace(/\s+/g, ' ').replace(/-/g, ' ').trim();
   return CITY_ALIASES[normalized] ?? null;
 }
 

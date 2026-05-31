@@ -76,7 +76,7 @@ describe('backendWorkflow', () => {
       operation: 'Probe backend health',
     });
 
-    const headers = mockFetchWithRetry.mock.calls[0][1].headers as Headers;
+    const headers = mockFetchWithRetry.mock.calls[0]![1]!.headers as Headers;
     expect(headers.get('apikey')).toBe('anon-key');
     expect(headers.get('Authorization')).toBeNull();
   });
