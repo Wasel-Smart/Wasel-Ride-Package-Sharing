@@ -444,15 +444,24 @@ export async function getAuthDetails(): Promise<AuthDetails> {
     throw new Error('Supabase client is not initialised');
   }
 
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
-  if (error) {
-    throw error;
+  const sessionResult = await supabase.auth.getSession();
+  let session = sessionResult.data.session;
+
+  if (sessionResult.error) {
+    throw sessionResult.error;
   }
-  if (!session) {
-    throw new Error('Not authenticated');
+
+  if (!session?.access_token) {
+    const refreshResult = await supabase.auth.refreshSession();
+    session = refreshResult.data.session;
+
+    if (refreshResult.error) {
+      throw refreshResult.error;
+    }
+  }
+
+  if (!session?.access_token || !session.user?.id) {
+    throw new Error('Your session has expired. Please sign in again.');
   }
 
   return {
