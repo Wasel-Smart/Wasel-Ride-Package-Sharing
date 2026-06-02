@@ -35,6 +35,10 @@ const PLACEHOLDER_PATTERNS = [
   /\.\.\./,           // pk_live_51...
 ];
 
+const KNOWN_INVALID_PUBLIC_KEYS = new Set([
+  'sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE',
+]);
+
 function isPlaceholder(value) {
   return PLACEHOLDER_PATTERNS.some(re => re.test(value));
 }
@@ -82,6 +86,10 @@ if (!supabasePublicKey) {
       0,
       40,
     )}"`,
+  );
+} else if (KNOWN_INVALID_PUBLIC_KEYS.has(supabasePublicKey)) {
+  errors.push(
+    'Supabase public key is known invalid for project zexlxabdcsjefptmjhuq. Use the current anon key from Supabase.',
   );
 }
 

@@ -27,6 +27,10 @@ describe('supabase public config', () => {
   it('prefers explicit env values when they are present', async () => {
     vi.stubEnv('VITE_SUPABASE_URL', 'https://custom-project.supabase.co');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'custom-anon-key');
+    vi.stubEnv('VITE_SUPABASE_PUBLISHABLE_KEY', '');
+    vi.stubEnv('VITE_SUPABASE_PROJECT_URL', '');
+    vi.stubEnv('VITE_PUBLIC_SUPABASE_URL', '');
+    vi.stubEnv('VITE_PUBLIC_SUPABASE_ANON_KEY', '');
 
     const info = await importInfo();
 
@@ -37,7 +41,11 @@ describe('supabase public config', () => {
 
   it('rejects malformed Supabase urls even when a key is present', async () => {
     vi.stubEnv('VITE_SUPABASE_URL', 'not-a-url');
+    vi.stubEnv('VITE_SUPABASE_PROJECT_URL', 'not-a-url');
+    vi.stubEnv('VITE_PUBLIC_SUPABASE_URL', 'not-a-url');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'custom-anon-key');
+    vi.stubEnv('VITE_SUPABASE_PUBLISHABLE_KEY', '');
+    vi.stubEnv('VITE_PUBLIC_SUPABASE_ANON_KEY', '');
 
     const info = await importInfo();
 
@@ -62,6 +70,10 @@ describe('supabase public config', () => {
     vi.stubEnv('VITE_E2E_LOCAL_AUTH', 'true');
     vi.stubEnv('VITE_SUPABASE_URL', 'https://custom-project.supabase.co');
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'custom-anon-key');
+    vi.stubEnv('VITE_SUPABASE_PUBLISHABLE_KEY', '');
+    vi.stubEnv('VITE_SUPABASE_PROJECT_URL', '');
+    vi.stubEnv('VITE_PUBLIC_SUPABASE_URL', '');
+    vi.stubEnv('VITE_PUBLIC_SUPABASE_ANON_KEY', '');
 
     const info = await importInfo();
 

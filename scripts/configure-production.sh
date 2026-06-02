@@ -66,7 +66,8 @@ set_env "NODE_ENV" "production"
 echo ""
 echo "2. Supabase Configuration"
 set_env "VITE_SUPABASE_URL" "https://zexlxabdcsjefptmjhuq.supabase.co"
-set_env "VITE_SUPABASE_PUBLISHABLE_KEY" "sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE"
+set_env "VITE_SUPABASE_ANON_KEY" ""
+set_env "VITE_SUPABASE_PUBLISHABLE_KEY" "sb_publishable_t2cOnKt1HH-l2KmvJIAwcg_8fpCWdN0"
 set_env "VITE_EDGE_FUNCTION_NAME" "make-server-0b1f4071"
 set_env "VITE_API_URL" "https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071"
 
@@ -142,8 +143,8 @@ NODE_ENV=production
 
 # Supabase
 VITE_SUPABASE_URL=https://zexlxabdcsjefptmjhuq.supabase.co
-VITE_SUPABASE_ANON_KEY=<YOUR_SUPABASE_ANON_KEY>
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE
+VITE_SUPABASE_ANON_KEY=
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_t2cOnKt1HH-l2KmvJIAwcg_8fpCWdN0
 VITE_EDGE_FUNCTION_NAME=make-server-0b1f4071
 VITE_API_URL=https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071
 

@@ -44,8 +44,8 @@ if (fs.existsSync(envPath)) {
 const allViteVars = {
   // CRITICAL - Required for build
   'VITE_SUPABASE_URL': existingVars['VITE_SUPABASE_URL'] || 'https://zexlxabdcsjefptmjhuq.supabase.co',
-  'VITE_SUPABASE_ANON_KEY': existingVars['VITE_SUPABASE_ANON_KEY'] || '<YOUR_SUPABASE_ANON_KEY>',
-  'VITE_SUPABASE_PUBLISHABLE_KEY': existingVars['VITE_SUPABASE_PUBLISHABLE_KEY'] || 'sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE',
+  'VITE_SUPABASE_ANON_KEY': existingVars['VITE_SUPABASE_ANON_KEY'] || '',
+  'VITE_SUPABASE_PUBLISHABLE_KEY': existingVars['VITE_SUPABASE_PUBLISHABLE_KEY'] || 'sb_publishable_t2cOnKt1HH-l2KmvJIAwcg_8fpCWdN0',
   
   // App Configuration
   'VITE_APP_URL': existingVars['VITE_APP_URL'] || 'https://your-app.vercel.app',
