@@ -457,6 +457,8 @@ ${legacyNamingFiles}
 
 ## Migration Inventory
 
+The status column is repository rollout status, not a claim about any individual Supabase project. \`Applied\` entries are historical baseline files; \`Ready\` entries are the canonical production rollout set and must be applied to each target project in the sequence below. Confirm target application with \`npm run verify:supabase-rollout\` and the rollout logs before cutover.
+
 ${renderMigrationTable(migrationCatalog)}
 
 ## Rollout Sequence

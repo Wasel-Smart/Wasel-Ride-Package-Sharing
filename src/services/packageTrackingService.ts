@@ -3,12 +3,13 @@
  * Secure package delivery system with QR codes and escrow payments
  * Links packages to rides with full transparency for sender
  *
- * Persistence: packages + escrows are stored in localStorage so they
- * survive page refreshes and reconnects.
+ * Persistence: browser local persistence is a development/test fallback only.
+ * Production package and escrow flows must use the secure backend contract.
  */
 
 import { generateId } from '../utils/api';
 import { ValidationError } from '../utils/errors';
+import { allowLocalPersistenceFallback, requireLocalPersistenceFallback } from './runtimePolicy';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -121,9 +122,23 @@ const PACKAGES_STORAGE_KEY = 'wasel-packages';
 const ESCROWS_STORAGE_KEY  = 'wasel-package-escrows';
 const TIMELINE_STORAGE_KEY = 'wasel-package-timeline';
 
+
+function purgeLocalPackageFallback(): void {
+  if (typeof window === 'undefined') {return;}
+  try {
+    window.localStorage.removeItem(PACKAGES_STORAGE_KEY);
+    window.localStorage.removeItem(ESCROWS_STORAGE_KEY);
+    window.localStorage.removeItem(TIMELINE_STORAGE_KEY);
+  } catch { /* storage unavailable */ }
+}
+
 function loadMap<T>(key: string): Map<string, T> {
   try {
     if (typeof window === 'undefined') {return new Map();}
+    if (!allowLocalPersistenceFallback()) {
+      purgeLocalPackageFallback();
+      return new Map();
+    }
     const raw = window.localStorage.getItem(key);
     if (!raw) {return new Map();}
     const entries: [string, T][] = JSON.parse(raw);
@@ -134,6 +149,7 @@ function loadMap<T>(key: string): Map<string, T> {
 }
 
 function saveMap<T>(key: string, map: Map<string, T>): void {
+  requireLocalPersistenceFallback('package-tracking.local-persistence');
   try {
     if (typeof window === 'undefined') {return;}
     window.localStorage.setItem(key, JSON.stringify(Array.from(map.entries())));

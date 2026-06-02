@@ -28,14 +28,16 @@ supabase link --project-ref YOUR_PROJECT_REF
 ### 1.2 Apply Migrations
 
 ```bash
-# Apply all migrations in order
-supabase db push
+# Verify the canonical migration registry before rollout
+npm run verify:supabase-rollout
 
-# Or manually apply each migration
-psql $DATABASE_URL -f supabase/migrations/20250101000000_complete_schema.sql
-psql $DATABASE_URL -f supabase/migrations/20250418000001_resilient_core.sql
-psql $DATABASE_URL -f supabase/migrations/20250420000000_phone_verification.sql
+# Apply the canonical migrations from src/supabase/migrations in registry order.
+# The root supabase/migrations directory is intentionally kept SQL-free to
+# prevent accidental deployment of archived legacy snapshots.
+node scripts/apply-supabase-rollout.mjs
 ```
+
+The canonical inventory is `src/supabase/migrations/MIGRATIONS_README.md`; historical root-level snapshots live under `supabase/archive/migrations/` for reference only.
 
 ### 1.3 Seed Database
 
@@ -380,7 +382,7 @@ If critical issues occur:
 vercel rollback
 
 # 2. Revert database migration (if needed)
-psql $DATABASE_URL -f supabase/migrations/rollback.sql
+# Use the approved rollback playbook for the specific canonical migration being reverted.
 
 # 3. Notify users via status page
 ```

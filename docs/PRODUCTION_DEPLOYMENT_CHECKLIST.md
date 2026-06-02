@@ -9,7 +9,7 @@
 ## ✅ CRITICAL GAPS RESOLVED
 
 ### 1. Database Schema ✅ COMPLETE
-- [x] Created complete schema migration (`20250101000000_complete_schema.sql`)
+- [x] Canonical schema migrations registered under `src/supabase/migrations/`
 - [x] All 15+ tables created with proper constraints
 - [x] RLS policies implemented for all tables
 - [x] Indexes added for performance
@@ -241,9 +241,9 @@ npm run size
 ### 2. Database Migration
 ```bash
 # Connect to production Supabase
-# Run migrations in order:
-# 1. 20250418000001_resilient_core.sql
-# 2. 20250101000000_complete_schema.sql
+# Verify and apply canonical migrations in registry order:
+npm run verify:supabase-rollout
+node scripts/apply-supabase-rollout.mjs
 
 # Run seed data (cities and routes only)
 # Execute: db/seeds/complete.seed.sql (cities and routes sections)

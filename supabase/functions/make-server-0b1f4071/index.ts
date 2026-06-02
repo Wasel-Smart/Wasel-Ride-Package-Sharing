@@ -409,6 +409,22 @@ async function requireAdminAccess(auth: AuthenticatedRequest) {
   return null;
 }
 
+
+async function handleAdminCapabilities(auth: AuthenticatedRequest) {
+  const adminError = await requireAdminAccess(auth);
+  if (adminError) {
+    return adminError;
+  }
+
+  return jsonResponse({
+    admin: true,
+    capabilities: {
+      driverApprovals: true,
+      kvStore: true,
+    },
+  });
+}
+
 function verificationRank(level: unknown): number {
   switch (String(level ?? '').trim()) {
     case 'level_3':
@@ -2162,6 +2178,10 @@ serve(async (req) => {
       }
 
       return jsonResponse(data);
+    }
+
+    if (routeMatches(path, '/admin/capabilities') && req.method === 'GET') {
+      return handleAdminCapabilities(auth);
     }
 
     if (routeMatches(path, '/admin/drivers/pending') && req.method === 'GET') {

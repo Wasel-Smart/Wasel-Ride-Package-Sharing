@@ -80,7 +80,6 @@ const appChildren: RouteObject[] = [
   { Component: () => <Navigate replace to={APP_ROUTES.servicesCorporate.full} />, path: 'services' },
   { lazy: loadCorporateServicesPage, path: APP_ROUTES.servicesCorporate.child },
   { lazy: loadSchoolServicesPage, path: APP_ROUTES.servicesSchool.child },
-  { lazy: loadAdminPage, path: APP_ROUTES.admin.child },
   { Component: PrivacyPage, path: APP_ROUTES.privacy.child },
   { Component: TermsPage, path: APP_ROUTES.terms.child },
   { Component: () => <Navigate replace to={APP_ROUTES.root.full} />, path: APP_ROUTES.dashboard.child },
@@ -96,6 +95,12 @@ if (featureFlags.core.bus === true) {
   const mobilityOsIndex = appChildren.findIndex((route) => route.path === APP_ROUTES.mobilityOs.child);
   const insertIndex = mobilityOsIndex >= 0 ? mobilityOsIndex : appChildren.length;
   appChildren.splice(insertIndex, 0, { lazy: loadBusPage, path: APP_ROUTES.bus.child });
+}
+
+if (featureFlags.core.admin === true) {
+  const privacyIndex = appChildren.findIndex((route) => route.path === APP_ROUTES.privacy.child);
+  const insertIndex = privacyIndex >= 0 ? privacyIndex : appChildren.length;
+  appChildren.splice(insertIndex, 0, { lazy: loadAdminPage, path: APP_ROUTES.admin.child });
 }
 
 export const waselRouter = createBrowserRouter([
@@ -191,7 +196,11 @@ export const waselRouter = createBrowserRouter([
     path: '/services/school',
   },
   {
-    Component: () => <Navigate replace to={APP_ROUTES.admin.full} />,
+    Component: () => (
+      featureFlags.core.admin === true
+        ? <Navigate replace to={APP_ROUTES.admin.full} />
+        : <NotFoundPage />
+    ),
     path: '/admin',
   },
   {

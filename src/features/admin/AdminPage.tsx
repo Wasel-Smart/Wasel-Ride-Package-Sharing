@@ -20,26 +20,37 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [approvingDriverId, setApprovingDriverId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [adminCapabilitiesVerified, setAdminCapabilitiesVerified] = useState(false);
 
   useEffect(() => {
-    if (user?.role !== 'admin') {
+    if (!user) {
+      setAdminCapabilitiesVerified(false);
       setLoading(false);
       return;
     }
 
     let cancelled = false;
 
-    const loadPendingDrivers = async () => {
+    const loadAdminSurface = async () => {
       try {
         setLoading(true);
         setError(null);
+        setAdminCapabilitiesVerified(false);
+
+        const capabilities = await driverApprovalAdminAPI.getCapabilities();
+        if (!capabilities.admin || !capabilities.capabilities.driverApprovals) {
+          throw new Error('Admin access is required.');
+        }
+
         const rows = await driverApprovalAdminAPI.listPending();
         if (!cancelled) {
+          setAdminCapabilitiesVerified(true);
           setPendingDrivers(rows);
         }
       } catch (nextError) {
         if (!cancelled) {
-          setError(nextError instanceof Error ? nextError.message : 'Failed to load pending drivers.');
+          setPendingDrivers([]);
+          setError(nextError instanceof Error ? nextError.message : 'Failed to verify admin access.');
         }
       } finally {
         if (!cancelled) {
@@ -48,15 +59,15 @@ export default function AdminPage() {
       }
     };
 
-    void loadPendingDrivers();
+    void loadAdminSurface();
 
     return () => {
       cancelled = true;
     };
-  }, [user?.role]);
+  }, [user]);
 
   const handleRefresh = async () => {
-    if (user?.role !== 'admin') {
+    if (!adminCapabilitiesVerified) {
       return;
     }
 
@@ -99,9 +110,11 @@ export default function AdminPage() {
             </p>
           </div>
 
-          {user?.role !== 'admin' ? (
+          {!adminCapabilitiesVerified ? (
             <div className="rounded-3xl border border-amber-400/25 bg-amber-400/10 p-6 text-sm text-amber-50">
-              This page is restricted to admin accounts.
+              {loading
+                ? 'Verifying admin access with the secure backend...'
+                : (error ?? 'This page is restricted to admin accounts.')}
             </div>
           ) : (
             <>
