@@ -34,13 +34,18 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
+function isJwtLikeToken(token: string | undefined): token is string {
+  return Boolean(token && token.split('.').length === 3);
+}
+
 function getBearerToken() {
-  return (
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ||
-    Deno.env.get('SUPABASE_ANON_KEY') ||
-    Deno.env.get('ANON_KEY') ||
-    ''
-  );
+  const candidates = [
+    Deno.env.get('SUPABASE_ANON_KEY'),
+    Deno.env.get('ANON_KEY'),
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+  ];
+
+  return candidates.find(isJwtLikeToken) ?? '';
 }
 
 function buildForwardUrl(requestUrl: URL, route: ProviderRoute) {
