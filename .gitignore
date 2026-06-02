@@ -50,6 +50,10 @@ review-screenshots/
 .codex_tmp/
 .codex/
 .kilo/
+deno.lock
+Supabase+TIA+250314.pdf
+u4fphus5luuzlavxipwmexiwwwu2qg.html
+Wasel-Ride-Package-Sharing/
 
 # Security: never commit backup codes, key exports, or credential docs
 Backup-codes-*.txt
