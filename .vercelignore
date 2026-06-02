@@ -3,7 +3,7 @@
 
 # Files not needed for the Vercel web build
 tests/
-supabase/
+/supabase/
 playwright.config.ts
 vitest.config.ts
 
