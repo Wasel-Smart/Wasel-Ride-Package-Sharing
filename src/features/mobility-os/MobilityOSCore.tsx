@@ -1,5 +1,4 @@
-import { type CSSProperties, useEffect, useMemo, useState } from 'react';
-import type { JSX } from 'react';
+import { type CSSProperties, type JSX, useEffect, useMemo, useState } from 'react';
 import {
   Activity,
   Gauge,

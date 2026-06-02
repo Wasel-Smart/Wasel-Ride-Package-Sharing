@@ -13,6 +13,17 @@ interface FeedbackOptions {
   duration?: number;
 }
 
+function scheduleIdleWork(callback: () => void, timeout = 2000): void {
+  if (typeof window === 'undefined') return;
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(callback, { timeout });
+    return;
+  }
+
+  globalThis.setTimeout(callback, 1);
+}
+
 class InstantFeedbackEngine {
   private supportsHaptics: boolean = false;
   private audioContext: AudioContext | null = null;
@@ -22,12 +33,9 @@ class InstantFeedbackEngine {
     // DEFER INITIALIZATION to avoid blocking FID
     if (typeof window !== 'undefined') {
       // Use requestIdleCallback to initialize non-critical features
-      requestIdleCallback(
-        () => {
-          this.lazyInit();
-        },
-        { timeout: 2000 },
-      );
+      scheduleIdleWork(() => {
+        this.lazyInit();
+      });
     }
   }
 

@@ -11,6 +11,8 @@ import { domainEventBus } from './platform/event-bus';
 import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
+import { initSentry, logger, trackDomainEvent } from './utils/monitoring';
+import { startAvailabilityPolling, warmUpServer } from './services/core';
 
 /* ---------------------------
    ERROR BOUNDARY
@@ -89,27 +91,25 @@ function AppRuntimeCoordinator() {
         setTimeout(async () => {
           if (cancelled) return;
 
-          const monitoring = await import('./utils/monitoring');
           const performance = await import('./utils/performance');
-          const core = await import('./services/core');
 
-          monitoring.initSentry();
+          initSentry();
           performance.initPerformanceMonitoring();
 
           validation.issues.forEach((issue) => {
             if (issue.severity === 'error') {
-              monitoring.logger.error(issue.message);
+              logger.error(issue.message);
             } else {
-              monitoring.logger.warning(issue.message);
+              logger.warning(issue.message);
             }
           });
 
-          core.warmUpServer();
+          warmUpServer();
 
-          const stopPolling = core.startAvailabilityPolling();
+          const stopPolling = startAvailabilityPolling();
 
           const stopEvents = domainEventBus.subscribeAll((event) => {
-            monitoring.trackDomainEvent(event);
+            trackDomainEvent(event);
           });
 
           return () => {

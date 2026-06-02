@@ -3,8 +3,7 @@
  * Catches React component errors and provides fallback UI
  */
 
-import { Component, type ErrorInfo, type ReactNode } from 'react';
-import type { JSX } from 'react';
+import { Component, type ErrorInfo, type JSX, type ReactNode } from 'react';
 import { logger } from '@/utils/monitoring';
 
 interface Props {

@@ -1,5 +1,4 @@
-import { Outlet } from 'react-router';
-import { ProtectedPagePreview } from '../components/system/ProtectedPagePreview';
+import { Navigate, Outlet, useLocation } from 'react-router';
 import { useLocalAuth } from '../contexts/LocalAuth';
 
 function LoadingState() {
@@ -21,13 +20,15 @@ function LoadingState() {
 
 export default function ProtectedOutlet() {
   const { user, loading } = useLocalAuth();
+  const location = useLocation();
 
   if (loading) {
     return <LoadingState />;
   }
 
   if (!user) {
-    return <ProtectedPagePreview />;
+    const returnTo = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to={`/app/auth?returnTo=${encodeURIComponent(returnTo)}`} replace />;
   }
 
   return <Outlet />;

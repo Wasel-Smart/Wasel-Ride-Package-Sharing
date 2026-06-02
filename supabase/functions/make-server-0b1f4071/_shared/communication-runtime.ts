@@ -28,6 +28,14 @@ export type DeliveryProcessorEnv = {
   maxDeliveryAttempts?: number;
 };
 
+function resolveProviderWebhookBaseUrl(functionBaseUrl?: string): string | undefined {
+  if (!functionBaseUrl) return undefined;
+  const normalized = functionBaseUrl.replace(/\/$/, '');
+  return normalized.includes('/functions/v1/make-server-0b1f4071')
+    ? normalized.replace('/functions/v1/make-server-0b1f4071', '/functions/v1/provider-webhooks')
+    : normalized;
+}
+
 export function determineProviderName(channel: string): string {
   if (channel === 'email') return 'email_provider';
   if (channel === 'sms' || channel === 'whatsapp') return 'twilio';
@@ -210,10 +218,11 @@ export function buildTwilioRequest(
     throw new Error('TWILIO_MESSAGING_SERVICE_SID or TWILIO_SMS_FROM is required');
   }
 
-  if (env.communicationWebhookToken && env.functionBaseUrl) {
+  const providerWebhookBaseUrl = resolveProviderWebhookBaseUrl(env.functionBaseUrl);
+  if (env.communicationWebhookToken && providerWebhookBaseUrl) {
     params.set(
       'StatusCallback',
-      `${env.functionBaseUrl.replace(/\/$/, '')}/communications/webhooks/twilio?token=${encodeURIComponent(env.communicationWebhookToken)}`,
+      `${providerWebhookBaseUrl}/twilio?token=${encodeURIComponent(env.communicationWebhookToken)}`,
     );
   }
 

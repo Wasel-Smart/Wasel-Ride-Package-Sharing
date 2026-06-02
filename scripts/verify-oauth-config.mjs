@@ -50,7 +50,7 @@ function checkEnvFile() {
   const envContent = readFileSync(envPath, 'utf-8');
   const envVars = {};
   
-  envContent.split('\n').forEach(line => {
+  envContent.split(/\r?\n/).forEach(line => {
     const match = line.match(/^([^=]+)=(.*)$/);
     if (match) {
       envVars[match[1].trim()] = match[2].trim();

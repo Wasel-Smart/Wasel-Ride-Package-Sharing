@@ -37,7 +37,7 @@
     "@sentry/react": "^8.0.0",
     "@stripe/stripe-js": "^4.0.0",
     "@supabase/ssr": "^0.10.3",
-    "@supabase/supabase-js": "^2.105.4",
+    "@supabase/supabase-js": "^2.106.2",
     "@tanstack/react-query": "^5.95.2",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
@@ -62,7 +62,6 @@
     "tailwind-merge": "^3.5.0",
     "tw-animate-css": "^1.3.8",
     "vaul": "^1.1.2",
-    "vercel": "^44.7.3",
     "web-vitals": "^5.2.0",
     "zod": "^3.23.8"
   },
@@ -91,6 +90,7 @@
     "terser": "^5.44.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.26.1",
+    "vercel": "^54.7.1",
     "vite": "^6.4.1",
     "vitest": "^4.1.2",
     "yaml": "^2.8.3"
@@ -101,7 +101,6 @@
     "undici": "7.25.0",
     "path-to-regexp": "8.4.2",
     "srvx": "0.11.13",
-    "ajv": "8.17.1",
     "minimatch": "10.2.3",
     "smol-toml": "1.6.1",
     "@eslint/eslintrc": "3.3.1",

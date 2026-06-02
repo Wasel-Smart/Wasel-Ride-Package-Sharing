@@ -16,6 +16,17 @@ export interface HealthCheckResult {
 let lastHealthCheck: HealthCheckResult | null = null;
 let healthCheckInProgress = false;
 
+function isLocalHttpOrigin(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    const { hostname, protocol } = new URL(window.location.origin);
+    return protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1');
+  } catch {
+    return false;
+  }
+}
+
 /** Verify Supabase auth service is reachable. */
 async function checkSupabaseHealth(): Promise<boolean> {
   if (!isSupabaseConfigured || !supabase) return false;
@@ -33,6 +44,10 @@ async function checkSupabaseHealth(): Promise<boolean> {
  * Sends the anon key so the function can respond with 200/404 instead of 401.
  */
 async function checkEdgeFunctionHealth(): Promise<boolean> {
+  if (isLocalHttpOrigin()) {
+    return checkSupabaseHealth();
+  }
+
   const edgeFunctionName = getEnv('VITE_EDGE_FUNCTION_NAME', 'make-server-0b1f4071');
   const supabaseUrl = getEnv('VITE_SUPABASE_URL');
 
@@ -42,6 +57,7 @@ async function checkEdgeFunctionHealth(): Promise<boolean> {
     const headers: HeadersInit = { 'Content-Type': 'application/json' };
     if (publicAnonKey) {
       (headers as Record<string, string>)['apikey'] = publicAnonKey;
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${publicAnonKey}`;
     }
 
     const response = await fetch(
@@ -70,7 +86,8 @@ async function checkDatabaseHealth(): Promise<boolean> {
 
   try {
     // `pg_catalog.version()` is always accessible to the anon role.
-    const { error } = await (supabase.rpc as Function)('version');
+    const rpc = supabase.rpc as (fn: string) => Promise<{ error: { code?: string } | null }>;
+    const { error } = await rpc('version');
     // `error.code === 'PGRST202'` means the RPC doesn't exist in the
     // public schema — the database is still reachable, treat as healthy.
     if (!error || error.code === 'PGRST202') return true;

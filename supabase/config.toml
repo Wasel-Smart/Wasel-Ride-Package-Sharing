@@ -84,4 +84,10 @@ secret = "env(SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET)"
 redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
 
 [functions.make-server-0b1f4071]
+verify_jwt = true
+
+[functions.provider-webhooks]
+verify_jwt = false
+
+[functions.webhook]
 verify_jwt = false

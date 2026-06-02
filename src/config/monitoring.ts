@@ -463,6 +463,16 @@ export const dashboards: DashboardConfig[] = [
 // Monitoring Initialization
 // ============================================================================
 
+function isConfiguredSentryDsn(dsn: unknown): dsn is string {
+  return (
+    typeof dsn === 'string' &&
+    dsn.trim().length > 0 &&
+    !dsn.includes('your-dsn') &&
+    !dsn.includes('project-id') &&
+    !dsn.includes('<sentry-dsn>')
+  );
+}
+
 export function initializeMonitoring() {
   if (typeof window === 'undefined') {
     return;
@@ -470,7 +480,7 @@ export function initializeMonitoring() {
 
   // Initialize Sentry
   const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
-  if (sentryDsn) {
+  if (isConfiguredSentryDsn(sentryDsn)) {
     import('@sentry/react').then((Sentry) => {
       Sentry.init({
         dsn: sentryDsn,

@@ -49,7 +49,7 @@ const RUNTIME_ADMIN_ENABLED = isRuntimeAdminEnabled(Deno.env.get('ENABLE_RUNTIME
 const SERVICE_NAME = 'make-server-0b1f4071';
 
 const responseBaseHeaders = {
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-communication-worker-secret, stripe-signature',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-csrf-token, x-communication-worker-secret, stripe-signature',
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
   'Cache-Control': 'no-store',
   'Referrer-Policy': 'no-referrer',
@@ -286,10 +286,11 @@ function buildResponseHeaders(request: Request, extra?: HeadersInit) {
   return headers;
 }
 
-function finalizeResponse(request: Request, response: Response): Response {
-  return new Response(response.body, {
-    status: response.status,
-    headers: buildResponseHeaders(request, response.headers),
+function finalizeResponse(request: Request, response: Response | undefined): Response {
+  const resolvedResponse = response ?? json({ error: 'Route not found' }, 404);
+  return new Response(resolvedResponse.body, {
+    status: resolvedResponse.status,
+    headers: buildResponseHeaders(request, resolvedResponse.headers),
   });
 }
 
@@ -502,16 +503,19 @@ async function ensureCanonicalUserForAuth(
     .single();
   if (error) throw error;
 
-  await admin
-    .from('wallets')
-    .insert({
-      user_id: data.id,
-      balance: 0,
-      pending_balance: 0,
-      wallet_status: 'active',
-      currency_code: 'JOD',
-    })
-    .catch(() => undefined);
+  try {
+    await admin
+      .from('wallets')
+      .insert({
+        user_id: data.id,
+        balance: 0,
+        pending_balance: 0,
+        wallet_status: 'active',
+        currency_code: 'JOD',
+      });
+  } catch {
+    // Wallet creation is best-effort; profile creation remains valid without it.
+  }
 
   return data;
 }
@@ -572,14 +576,18 @@ async function buildProfilePayload(admin: ReturnType<typeof getAdminClient>, use
     getVerificationForUser(admin, String(user.id)).catch(() => null),
     getDriverForUser(admin, String(user.id)).catch(() => null),
   ]);
-  const tripCount = driver?.driver_id
-    ? await admin
+  let tripCount = 0;
+  if (driver?.driver_id) {
+    try {
+      const { count } = await admin
         .from('trips')
         .select('trip_id', { count: 'exact', head: true })
-        .eq('driver_id', driver.driver_id)
-        .then(({ count }: { count: number | null }) => count ?? 0)
-        .catch(() => 0)
-    : 0;
+        .eq('driver_id', driver.driver_id);
+      tripCount = count ?? 0;
+    } catch {
+      tripCount = 0;
+    }
+  }
   const verified =
     verification?.sanad_status === 'verified' ||
     user.sanad_verified_status === 'verified' ||
@@ -685,7 +693,11 @@ async function handleProfileRequest(request: Request, path: string) {
 
   const profileRoute = parseEntityRoute(path, 'profile');
   const body = request.method === 'GET' ? {} : await request.json().catch(() => ({}));
-  const user = await ensureCanonicalUserForAuth(auth.admin, auth.authUser, body);
+  const user = await ensureCanonicalUserForAuth(
+    auth.admin,
+    auth.authUser as unknown as Record<string, unknown>,
+    body,
+  );
   const requestedUserId = profileRoute?.id ?? String(user.id);
 
   if (requestedUserId !== String(user.id) && requestedUserId !== String(user.auth_user_id)) {
@@ -1042,13 +1054,17 @@ async function handleMobilityOSRequest(request: Request, path: string) {
       })
       .eq('id', corridorId);
 
-    await auth.admin.from('mobility_event_outbox').insert({
-      aggregate_type: 'mobility_corridor',
-      aggregate_id: corridorId,
-      event_type: 'BookingCreated',
-      trace_id: traceId,
-      payload: { booking_id: booking.booking_id, corridor_id: corridorId, type, quantity, timestamp },
-    }).catch(() => undefined);
+    try {
+      await auth.admin.from('mobility_event_outbox').insert({
+        aggregate_type: 'mobility_corridor',
+        aggregate_id: corridorId,
+        event_type: 'BookingCreated',
+        trace_id: traceId,
+        payload: { booking_id: booking.booking_id, corridor_id: corridorId, type, quantity, timestamp },
+      });
+    } catch {
+      // Outbox write should not fail an already accepted booking.
+    }
 
     return json({ booking_id: booking.booking_id, status: 'accepted', trace_id: traceId }, 201);
   }
@@ -2123,7 +2139,7 @@ async function handleTwoFactorVerify(request: Request) {
 
   const normalizedCodeHash = result.usedBackupCode ? await hashBackupCode(code) : null;
   const nextBackupCodes = result.usedBackupCode
-    ? (userRow.two_factor_backup_codes ?? []).filter((hashed) => hashed !== normalizedCodeHash)
+    ? (userRow.two_factor_backup_codes ?? []).filter((hashed: string) => hashed !== normalizedCodeHash)
     : userRow.two_factor_backup_codes;
 
   const { error: updateError } = await auth.admin
@@ -3346,7 +3362,7 @@ async function handleTwilioWebhook(request: Request) {
 }
 
 Deno.serve(async (request) => {
-  let response: Response;
+  let response: Response | undefined;
 
   if (!isOriginAllowed(request)) {
     response = json({ error: 'Origin not allowed' }, 403);
@@ -3525,5 +3541,5 @@ Deno.serve(async (request) => {
     );
   }
 
-  return finalizeResponse(request, response);
+  return finalizeResponse(request, response ?? json({ error: 'Route not found' }, 404));
 });

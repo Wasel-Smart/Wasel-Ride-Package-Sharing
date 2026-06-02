@@ -33,6 +33,7 @@ export default defineConfig({
     target: 'es2018',
     cssTarget: 'chrome80',
     sourcemap: false,
+    chunkSizeWarningLimit: 1500,
   },
 
   server: {

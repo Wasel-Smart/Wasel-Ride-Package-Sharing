@@ -5,6 +5,16 @@ import { sanitizeLogMessage } from './sanitization';
 
 let sentryInitialized = false;
 
+function isConfiguredSentryDsn(dsn: unknown): dsn is string {
+  return (
+    typeof dsn === 'string' &&
+    dsn.trim().length > 0 &&
+    !dsn.includes('your-dsn') &&
+    !dsn.includes('project-id') &&
+    !dsn.includes('<sentry-dsn>')
+  );
+}
+
 function writeConsole(
   level: 'info' | 'warning' | 'error',
   message: string,
@@ -38,7 +48,7 @@ export function initSentry(): void {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   const environment = import.meta.env.MODE;
 
-  if (!dsn) {
+  if (!isConfiguredSentryDsn(dsn)) {
     writeConsole('warning', 'Sentry DSN is not configured; remote error capture is disabled.');
     return;
   }
