@@ -158,7 +158,15 @@ body {
 
 @supports (-webkit-touch-callout: none) {
   :root {
-    --app-min-height: -webkit-fill-available;
+    --app-min-height: 100svh;
+  }
+
+  html,
+  body {
+    height: auto;
+    min-height: 100%;
+    overflow-y: auto;
+    scroll-behavior: auto;
   }
 }
 

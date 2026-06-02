@@ -21,6 +21,11 @@ coverage/
 dist/
 build/
 .vercel/
+.codex/
+.kilo/
+.agents/
+actions-runner/
+Wasel-Ride-Package-Sharing/
 *.tgz
 *.zip
 *.pdf

@@ -16,6 +16,10 @@ export interface HealthCheckResult {
 let lastHealthCheck: HealthCheckResult | null = null;
 let healthCheckInProgress = false;
 
+function isJwtLikeToken(token: string | null | undefined): token is string {
+  return Boolean(token && token.split('.').length === 3);
+}
+
 function isLocalHttpOrigin(): boolean {
   if (typeof window === 'undefined') return false;
 
@@ -44,7 +48,7 @@ async function checkSupabaseHealth(): Promise<boolean> {
  * Sends the anon key so the function can respond with 200/404 instead of 401.
  */
 async function checkEdgeFunctionHealth(): Promise<boolean> {
-  if (isLocalHttpOrigin()) {
+  if (isLocalHttpOrigin() || !isJwtLikeToken(publicAnonKey)) {
     return checkSupabaseHealth();
   }
 

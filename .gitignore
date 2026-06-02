@@ -94,4 +94,5 @@ vitest.config.mjs
 _REMOVED/
 
 .vercel
+supabase/.temp/
 .env*.local
