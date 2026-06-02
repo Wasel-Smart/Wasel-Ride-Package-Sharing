@@ -1,3 +1,5 @@
+import type { AuthChangeEvent } from '@supabase/supabase-js';
+
 import { API_URL, fetchWithRetry, getAuthDetails, supabase } from './core';
 import {
   getSecureBackendFallbackError,
@@ -11,6 +13,10 @@ import {
   updateDirectProfile,
 } from './directSupabase';
 import { getAuthCallbackUrl, getConfig } from '../utils/env';
+
+export interface AuthRecoverySubscription {
+  unsubscribe: () => void;
+}
 
 function getDirectFallbackError(operation: string): Error {
   return getSecureBackendFallbackError(operation);
@@ -339,3 +345,43 @@ export const authAPI = {
     }
   },
 };
+
+export function subscribeToPasswordRecovery(onRecovery: () => void): AuthRecoverySubscription {
+  const client = requireSupabase();
+  const {
+    data: { subscription },
+  } = client.auth.onAuthStateChange((event: AuthChangeEvent) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      onRecovery();
+    }
+  });
+
+  return subscription;
+}
+
+export async function completeAuthCallbackSession(): Promise<void> {
+  const client = requireSupabase();
+  const {
+    data: { session },
+    error,
+  } = await client.auth.getSession();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!session) {
+    throw new Error('Authentication session could not be established.');
+  }
+}
+
+export async function updateRecoveredPassword(password: string): Promise<void> {
+  const client = requireSupabase();
+  const { error } = await client.auth.updateUser({ password });
+
+  if (error) {
+    throw error;
+  }
+
+  await client.auth.signOut().catch(() => undefined);
+}

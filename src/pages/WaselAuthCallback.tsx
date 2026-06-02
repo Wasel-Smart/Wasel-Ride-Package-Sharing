@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { AuthChangeEvent } from '@supabase/supabase-js';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { supabase } from '../utils/supabase/client';
 import { normalizeReturnToPath } from '../utils/env';
+import {
+  completeAuthCallbackSession,
+  subscribeToPasswordRecovery,
+  updateRecoveredPassword,
+  type AuthRecoverySubscription,
+} from '../services/auth';
 
 type CallbackState = 'loading' | 'closing' | 'redirecting' | 'recovery' | 'error';
 
@@ -57,15 +61,9 @@ export default function WaselAuthCallback() {
   useEffect(() => {
     let active = true;
     let isRecoveryFlow = callbackType === 'recovery';
+    let subscription: AuthRecoverySubscription | undefined;
 
     const finishAuth = async () => {
-      if (!supabase) {
-        if (!active) return;
-        setState('error');
-        setMessage('Backend is not configured for social sign-in.');
-        return;
-      }
-
       if (callbackError) {
         if (!active) return;
         setState('error');
@@ -73,17 +71,12 @@ export default function WaselAuthCallback() {
         return;
       }
 
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
+      subscription = subscribeToPasswordRecovery(() => {
         if (!active) return;
-
-        if (event === 'PASSWORD_RECOVERY') {
-          isRecoveryFlow = true;
-          setState('recovery');
-          setMessage('Set a new password to finish recovering your account.');
-          setFormError('');
-        }
+        isRecoveryFlow = true;
+        setState('recovery');
+        setMessage('Set a new password to finish recovering your account.');
+        setFormError('');
       });
 
       try {
@@ -96,17 +89,7 @@ export default function WaselAuthCallback() {
           return;
         }
 
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
-        if (error) {
-          throw error;
-        }
-
-        if (!session) {
-          throw new Error('Authentication session could not be established.');
-        }
+        await completeAuthCallbackSession();
 
         if (window.opener && !window.opener.closed) {
           setState('closing');
@@ -124,7 +107,7 @@ export default function WaselAuthCallback() {
         setState('error');
         setMessage(error instanceof Error ? error.message : 'Unable to complete sign-in.');
       } finally {
-        subscription.unsubscribe();
+        subscription?.unsubscribe();
       }
     };
 
@@ -136,11 +119,6 @@ export default function WaselAuthCallback() {
   }, [callbackError, callbackType, navigate, returnTo]);
 
   const handlePasswordUpdate = async () => {
-    if (!supabase) {
-      setFormError('Backend is not configured for password recovery.');
-      return;
-    }
-
     if (!meetsPasswordPolicy(password)) {
       setFormError(PASSWORD_POLICY_MESSAGE);
       return;
@@ -154,14 +132,13 @@ export default function WaselAuthCallback() {
     setFormError('');
     setSavingPassword(true);
 
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) {
+    try {
+      await updateRecoveredPassword(password);
+    } catch (error) {
       setSavingPassword(false);
-      setFormError(error.message || 'Unable to update your password.');
+      setFormError(error instanceof Error ? error.message : 'Unable to update your password.');
       return;
     }
-
-    await supabase.auth.signOut().catch(() => undefined);
 
     setState('redirecting');
     setMessage('Password updated. Redirecting to sign in...');

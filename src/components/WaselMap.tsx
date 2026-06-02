@@ -35,6 +35,7 @@ import {
   Mountain,
 } from 'lucide-react';
 import { WaselLogo } from './wasel-ds/WaselLogo';
+import { fetchDrivingRoute, fetchNearbyMosques } from '@/services/mapData';
 
 /* ─── Inject Leaflet CSS (once, dynamically) ─────────────────────────── */
 function ensureLeafletCSS() {
@@ -814,19 +815,9 @@ function WaselMapFull(props: WaselMapProps) {
     let mosquesToShow = FALLBACK_MOSQUES;
 
     try {
-      const query = `[out:json][timeout:10];node["amenity"="place_of_worship"]["religion"="muslim"](around:8000,${lat},${lng});out 20;`;
-      const res = await fetch(
-        `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
-      );
-      if (res.ok) {
-        const data = await res.json();
-        if (data.elements?.length > 0) {
-          mosquesToShow = data.elements.map((el: any) => ({
-            lat: el.lat,
-            lng: el.lon,
-            name: el.tags?.name || el.tags?.['name:ar'] || 'Mosque | مسجد',
-          }));
-        }
+      const nearbyMosques = await fetchNearbyMosques({ lat, lng });
+      if (nearbyMosques.length > 0) {
+        mosquesToShow = nearbyMosques;
       }
     } catch {
       // Use fallback silently
@@ -925,18 +916,7 @@ function WaselMapFull(props: WaselMapProps) {
       // Try OSRM for road-following route
       let latlngs: [number, number][] = route.map(p => [p.lat, p.lng]);
       try {
-        const coords = route.map(p => `${p.lng},${p.lat}`).join(';');
-        const res = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,
-          { signal: AbortSignal.timeout(5000) },
-        );
-        if (res.ok) {
-          const data = await res.json();
-          const coords2 = data.routes?.[0]?.geometry?.coordinates;
-          if (coords2?.length) {
-            latlngs = coords2.map(([lng, lat]: [number, number]) => [lat, lng]);
-          }
-        }
+        latlngs = await fetchDrivingRoute(route);
       } catch {
         // Use straight-line polyline fallback
       }

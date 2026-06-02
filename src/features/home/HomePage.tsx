@@ -34,8 +34,8 @@ export function HomePage() {
     () => [
       {
         icon: Search,
-        kicker: ar ? 'للحجز السريع' : 'For immediate booking',
-        title: ar ? 'ابحث عن رحلة' : 'Find a ride',
+        kicker: ar ? 'للحجز السريع' : 'Primary action',
+        title: ar ? 'ابحث عن رحلة' : 'Book travel',
         desc: ar
           ? 'ابدأ من المسار وشاهد المقاعد المتاحة والسعر بوضوح قبل الحجز.'
           : 'Start from the corridor and compare available seats before you commit.',
@@ -49,11 +49,11 @@ export function HomePage() {
       },
       {
         icon: Car,
-        kicker: ar ? 'للسائقين' : 'For drivers',
-        title: ar ? 'اعرض رحلتك' : 'Offer a ride',
+        kicker: ar ? 'للسائقين' : 'Guided workflow',
+        title: ar ? 'اعرض رحلتك' : 'Request approval',
         desc: ar
           ? 'افتح المقاعد الفارغة وخفف تكلفة المشوار من نفس واجهة الحركة.'
-          : 'Open empty seats and offset trip cost from the same mobility surface.',
+          : 'Open empty seats and offset trip cost from the same managed travel flow.',
         outcome: ar
           ? 'إدارة المقاعد والسعر والوضوح من شاشة واحدة'
           : 'Manage seat supply, pricing, and clarity in one flow',
@@ -64,8 +64,8 @@ export function HomePage() {
       },
       {
         icon: Package,
-        kicker: ar ? 'للطرود' : 'For parcels',
-        title: ar ? 'أرسل طرداً' : 'Send a package',
+        kicker: ar ? 'للطرود' : 'Manager workflow',
+        title: ar ? 'أرسل طرداً' : 'Approve travel',
         desc: ar
           ? 'حرّك الطرد على نفس المسار بدون منتج منفصل أو منطق مختلف.'
           : 'Move a parcel on the same corridor without a separate product logic.',
@@ -79,8 +79,8 @@ export function HomePage() {
       },
       {
         icon: Bus,
-        kicker: ar ? 'الخيار الاحتياطي' : 'The fallback',
-        title: ar ? 'احجز باص' : 'Book a bus',
+        kicker: ar ? 'الخيار الاحتياطي' : 'Operations workflow',
+        title: ar ? 'احجز باص' : 'Manage movement',
         desc: ar
           ? 'اختر المغادرة المجدولة عندما لا تكون المشاركة هي الخيار الأنسب.'
           : 'Use scheduled departures when shared supply is not the right fit.',

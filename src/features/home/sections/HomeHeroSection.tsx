@@ -72,12 +72,12 @@ function TripModeCard({
               color: C.textDim,
             }}
           >
-            {ar ? 'نوع الرحلة' : 'Trip mode'}
+            {ar ? 'نوع الرحلة' : '30-second guided start'}
           </div>
           <div style={{ marginTop: 6, fontSize: '0.86rem', color: C.textMuted, lineHeight: 1.55 }}>
             {ar
               ? 'اختر طريقة البحث ثم افتح المسار المناسب فوراً.'
-              : 'Choose the search mode, then jump directly into the corridor.'}
+              : 'Pick one decision, then Wasel opens the right flow with route context already attached.'}
           </div>
         </div>
         <div
@@ -157,24 +157,24 @@ function TripModeCard({
             boxShadow: '0 14px 30px rgba(37,182,255,0.22)',
           }}
         >
-          {ar ? 'ابدأ البحث' : 'Start search'}
+          {ar ? 'ابدأ البحث' : 'Book employee travel'}
           <ArrowRight size={16} />
         </button>
-        <button
-          onClick={() => onNavigate('/offer-ride')}
+        <span
           style={{
             height: 50,
             padding: '0 18px',
             borderRadius: 14,
             border: '1px solid rgba(255,255,255,0.12)',
             background: 'rgba(255,255,255,0.03)',
-            color: C.text,
+            color: C.textMuted,
             fontWeight: 800,
-            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
           }}
         >
-          {ar ? 'اعرض مقعداً' : 'Offer a seat'}
-        </button>
+          {ar ? 'اعرض مقعداً' : 'Need supply? Open Manage after booking'}
+        </span>
       </div>
     </div>
   );
@@ -239,7 +239,7 @@ export function HomeHeroSection({
               }}
             >
               <Shield size={12} color={C.cyan} />
-              {ar ? 'منطق واحد للحركة' : 'One route logic'}
+              {ar ? 'منطق واحد للحركة' : 'Employee travel automation'}
             </div>
             <WaselLogo size={34} theme="light" variant="full" />
           </div>
@@ -258,7 +258,7 @@ export function HomeHeroSection({
         >
           {ar
             ? `اختر المسار ثم تحرك${firstName ? `، ${firstName}` : ''}`
-            : `Pick the corridor, then move${firstName ? `, ${firstName}` : ''}`}
+            : `Reduce transport cost and automate employee travel${firstName ? `, ${firstName}` : ''}`}
         </h1>
 
         <p
@@ -272,8 +272,50 @@ export function HomeHeroSection({
         >
           {ar
             ? 'سواء أردت مقعداً أو أردت عرض مقعد أو إرسال طرد أو التحول إلى الباص، تبدأ كل خطوة من نفس منطق المسار حتى تبقى التجربة أوضح وأسرع.'
-            : 'Whether you need a seat, want to offer one, need to send a parcel, or need the bus fallback, every move starts from the same corridor logic so the product stays clear and fast.'}
+            : 'Wasel turns daily commute demand into guided booking, request approval, driver supply, and live trip management so teams spend less time coordinating rides.'}
         </p>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(128px, 1fr))',
+            gap: 10,
+            marginTop: 18,
+          }}
+        >
+          {[
+            { label: 'Book', detail: 'Choose route and seats' },
+            { label: 'Request', detail: 'Send approval context' },
+            { label: 'Approve', detail: 'Clear pending travel' },
+            { label: 'Manage', detail: 'Track live movement' },
+          ].map((step, index) => (
+            <div
+              key={step.label}
+              style={{
+                borderRadius: 16,
+                border: `1px solid ${index === 0 ? 'rgba(88,221,255,0.28)' : C.borderFaint}`,
+                background: index === 0 ? 'rgba(88,221,255,0.08)' : 'rgba(255,255,255,0.025)',
+                padding: '12px 12px 11px',
+                minHeight: 88,
+              }}
+            >
+              <div
+                style={{
+                  color: index === 0 ? C.cyan : C.text,
+                  fontSize: '0.9rem',
+                  fontWeight: 900,
+                }}
+              >
+                {step.label}
+              </div>
+              <div
+                style={{ marginTop: 6, color: C.textDim, fontSize: '0.74rem', lineHeight: 1.45 }}
+              >
+                {step.detail}
+              </div>
+            </div>
+          ))}
+        </div>
 
         <div
           style={{
@@ -284,9 +326,9 @@ export function HomeHeroSection({
           }}
         >
           {[
-            ar ? 'ثقة واضحة قبل الحجز' : 'Trust visible before booking',
-            ar ? 'تسعير أوضح على مستوى المسار' : 'Corridor-level pricing clarity',
-            ar ? 'الرحلات والطرود والباص في شبكة واحدة' : 'Rides, parcels, and bus in one network',
+            ar ? 'ثقة واضحة قبل الحجز' : 'Lower recurring commute cost',
+            ar ? 'تسعير أوضح على مستوى المسار' : 'Automated request and approval context',
+            ar ? 'الرحلات والطرود والباص في شبكة واحدة' : 'Managed travel from booking to arrival',
           ].map(item => (
             <div
               key={item}
