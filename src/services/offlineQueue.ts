@@ -2,13 +2,15 @@
  * Offline Request Queue Service
  * 
  * Features:
- * - Persistent offline request queuing
+ * - Policy-gated offline request queuing
  * - Request deduplication
  * - Exponential backoff retry strategy
  * - Intelligent cache invalidation
  * - Connection state tracking
  * - Request prioritization
  */
+
+import { allowLocalPersistenceFallback } from './runtimePolicy';
 
 export type QueuedRequestPriority = 'critical' | 'high' | 'normal' | 'low';
 
@@ -284,6 +286,10 @@ class OfflineQueueManager {
    */
   private loadFromStorage(): void {
     if (typeof localStorage === 'undefined') {return;}
+    if (!allowLocalPersistenceFallback()) {
+      localStorage.removeItem(STORAGE_KEY);
+      return;
+    }
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
@@ -299,7 +305,7 @@ class OfflineQueueManager {
    * Save queue to localStorage
    */
   private saveToStorage(): void {
-    if (typeof localStorage === 'undefined') {return;}
+    if (typeof localStorage === 'undefined' || !allowLocalPersistenceFallback()) {return;}
     try {
       const requests = Array.from(this.queue.values());
       localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));

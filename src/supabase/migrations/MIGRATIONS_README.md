@@ -30,6 +30,8 @@ Historical files that predate the current standards remain frozen and explicitly
 
 ## Migration Inventory
 
+The status column is repository rollout status, not a claim about any individual Supabase project. `Applied` entries are historical baseline files; `Ready` entries are the canonical production rollout set and must be applied to each target project in the sequence below. Confirm target application with `npm run verify:supabase-rollout` and the rollout logs before cutover.
+
 | # | File | Category | Description | Status |
 |---|------|----------|-------------|--------|
 | 01 | `20260210_complete_schema.sql` | schema | Initial complete schema for core tables | Applied |
@@ -111,6 +113,7 @@ Apply the rollout set in this exact order for production cutover projects:
 4. `db/seeds/pricing.seed.sql`
 5. `db/seeds/core.seed.sql`
 6. `db/seeds/automation.seed.sql`
+7. `db/seeds/rolling_trips.seed.sql`
 
 ### Smoke checks
 

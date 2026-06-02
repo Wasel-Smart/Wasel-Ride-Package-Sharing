@@ -1,5 +1,13 @@
 import { API_URL, fetchWithRetry, getAuthDetails } from './core';
 
+export type AdminCapabilities = {
+  admin: boolean;
+  capabilities: {
+    driverApprovals: boolean;
+    kvStore: boolean;
+  };
+};
+
 export type PendingDriverApproval = {
   driverId: string;
   userId: string;
@@ -30,6 +38,33 @@ async function authHeaders() {
 }
 
 export const driverApprovalAdminAPI = {
+  async getCapabilities(): Promise<AdminCapabilities> {
+    requireAdminApi();
+    const response = await fetchWithRetry(`${API_URL}/admin/capabilities`, {
+      headers: await authHeaders(),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Failed to verify admin access.' }));
+      throw new Error(String(error.error ?? 'Failed to verify admin access.'));
+    }
+
+    const payload = await response.json().catch(() => null);
+    if (!payload || typeof payload !== 'object') {
+      throw new Error('Admin capability response was missing.');
+    }
+
+    const capabilities =
+      (payload as { capabilities?: Partial<AdminCapabilities['capabilities']> }).capabilities ?? {};
+    return {
+      admin: Boolean((payload as { admin?: boolean }).admin),
+      capabilities: {
+        driverApprovals: capabilities.driverApprovals === true,
+        kvStore: capabilities.kvStore === true,
+      },
+    };
+  },
+
   async listPending(): Promise<PendingDriverApproval[]> {
     requireAdminApi();
     const response = await fetchWithRetry(`${API_URL}/admin/drivers/pending`, {

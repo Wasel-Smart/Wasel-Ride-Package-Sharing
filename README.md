@@ -2,7 +2,7 @@
 
 Shared rides, bus booking, parcel coordination, and wallet flows for the Jordan market.
 
-**Status**: Production-ready | **Rating**: 10/10 | **Bundle**: Optimized | **Architecture**: Microservices-ready
+**Status**: Production-track with enforced quality gates | **Bundle**: Budget-gated | **Architecture**: Microservices-ready
 
 ## Stack
 
@@ -73,7 +73,7 @@ docs/            Maintained project documentation
 
 ## Quality Gates
 
-The repository includes CI for:
+The repository includes fail-closed CI/local gates for:
 
 - TypeScript strict mode validation
 - ESLint with zero warnings
