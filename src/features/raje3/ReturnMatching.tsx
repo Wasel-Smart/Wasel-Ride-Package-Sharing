@@ -127,7 +127,7 @@ export function ReturnMatching() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'var(--app-min-height)',
         background: D.bg,
         fontFamily: D.F,
         color: D.text,

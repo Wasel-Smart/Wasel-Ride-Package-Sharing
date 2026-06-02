@@ -16,7 +16,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '100vh',
+        minHeight: 'var(--app-min-height)',
         fontFamily: "-apple-system, 'Inter', sans-serif",
         background: `
           radial-gradient(circle at 16% 18%, rgba(85,233,255,0.12), transparent 24%),

@@ -16,6 +16,7 @@
 }
 
 html {
+  min-height: var(--app-min-height, 100vh);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -37,13 +38,14 @@ body {
   line-height: 1.5;
   color: #0f172a;
   background: #f8fafc;
+  min-height: var(--app-min-height, 100vh);
   overflow-x: hidden;
 
   /* iOS-specific */
   -webkit-overflow-scrolling: touch;
 
-  /* Prevent pull-to-refresh on mobile */
-  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: auto;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -52,7 +54,7 @@ body {
 
 /* iOS Safe Area Support */
 @supports (padding: env(safe-area-inset-top)) {
-  body {
+  .safe-area-page {
     padding-top: env(safe-area-inset-top);
     padding-right: env(safe-area-inset-right);
     padding-bottom: env(safe-area-inset-bottom);
@@ -73,7 +75,6 @@ body {
 /* Remove tap highlight on mobile */
 * {
   -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
 }
 
 /* Touch targets - minimum 44x44px (WCAG) */
@@ -92,7 +93,7 @@ textarea,
 .scroll-container {
   -webkit-overflow-scrolling: touch;
   overflow-y: auto;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
 }
 
 /* ═══════════════════════════════════════════════════════════════

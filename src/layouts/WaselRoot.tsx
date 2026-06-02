@@ -76,7 +76,7 @@ export default function WaselRoot() {
 
       <div
         style={{
-          minHeight: '100vh',
+          minHeight: 'var(--app-min-height)',
           background: C.bg,
           fontFamily: ar ? FA : F,
           direction: ar ? 'rtl' : 'ltr',

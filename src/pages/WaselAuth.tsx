@@ -486,7 +486,7 @@ export default function WaselAuth() {
     <div
       className="auth-grid"
       style={{
-        minHeight: '100vh',
+        minHeight: 'var(--app-min-height)',
         background: C.bg,
         color: C.text,
         fontFamily: F,

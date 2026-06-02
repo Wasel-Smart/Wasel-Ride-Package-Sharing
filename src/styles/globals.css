@@ -15,6 +15,9 @@
 
 /* ── Wasel Brand Color Palette (universal) ────────────────────────────────── */
 :root {
+  --app-min-height: 100vh;
+  --app-visual-height: 100vh;
+
   /* Brand primaries — never change */
   --wasel-cyan: #58ddff;
   --wasel-gold: #ffbe5c;
@@ -134,13 +137,32 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+html,
+body {
+  min-height: var(--app-min-height);
+}
+
 /* ── Overscroll behaviour — prevent elastic bounce hijacking scroll ───────── */
 html {
-  overscroll-behavior: none;
+  overscroll-behavior-x: none;
 }
 
 body {
-  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: auto;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-min-height: 100dvh;
+    --app-visual-height: 100dvh;
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  :root {
+    --app-min-height: -webkit-fill-available;
+  }
 }
 
 /* ── W Double me — 8pt Spacing + Typography System ────────────────────── */
@@ -455,7 +477,7 @@ input[type='submit'] {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 200, 232, 0.2) transparent;
 }
@@ -2102,7 +2124,7 @@ nav,
 .scrollbar-thin,
 .overflow-y-auto,
 .overflow-y-scroll {
-  overscroll-behavior-y: contain;
+  overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: auto;
 }

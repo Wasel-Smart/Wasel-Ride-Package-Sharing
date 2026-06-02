@@ -104,7 +104,7 @@ export function PageShell({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'var(--app-min-height)',
         background: DS.bg,
         fontFamily: DS.F,
         direction: ar ? 'rtl' : 'ltr',

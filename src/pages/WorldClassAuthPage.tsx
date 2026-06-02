@@ -130,7 +130,7 @@ export function WorldClassAuthPage() {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: 'var(--app-min-height)',
       background: 'linear-gradient(135deg, #0B1D2D 0%, #051218 100%)',
       color: '#fff',
       display: 'flex',

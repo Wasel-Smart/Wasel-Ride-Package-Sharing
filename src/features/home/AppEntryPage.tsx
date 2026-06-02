@@ -87,7 +87,7 @@ export default function AppEntryPage() {
 
     if (root) {
       root.style.height = 'auto';
-      root.style.minHeight = '100vh';
+      root.style.minHeight = 'var(--app-min-height)';
     }
 
     return () => {
@@ -344,7 +344,7 @@ export default function AppEntryPage() {
     <div
       dir={dir}
       style={{
-        minHeight: '100vh',
+        minHeight: 'var(--app-min-height)',
         background: C.bg,
         color: C.text,
         fontFamily: FONT,

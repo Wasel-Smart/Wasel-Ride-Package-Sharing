@@ -62,7 +62,7 @@
     "tailwind-merge": "^3.5.0",
     "tw-animate-css": "^1.3.8",
     "vaul": "^1.1.2",
-    "vercel": "^48.8.1",
+    "vercel": "^44.7.3",
     "web-vitals": "^5.2.0",
     "zod": "^3.23.8"
   },
@@ -76,6 +76,7 @@
     "@types/node": "^20.10.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-legacy": "^6.1.1",
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/coverage-v8": "^4.1.2",
     "axe-core": "^4.11.1",
@@ -87,6 +88,7 @@
     "prettier": "^3.5.3",
     "supabase": "^2.98.2",
     "tailwindcss": "^4.1.12",
+    "terser": "^5.44.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.26.1",
     "vite": "^6.4.1",
@@ -105,6 +107,20 @@
     "@eslint/eslintrc": "3.3.1",
     "@vercel/node": "latest",
     "@vercel/static-config": "latest"
+  },
+  "browserslist": {
+    "production": [
+      "defaults",
+      "iOS >= 12",
+      "Safari >= 12",
+      "Chrome >= 90",
+      "Android >= 8"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "scripts": {
     "dev": "node scripts/dev-server.mjs",

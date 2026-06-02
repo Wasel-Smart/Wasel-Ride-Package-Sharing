@@ -7,18 +7,18 @@ export function usePerformanceOptimization() {
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
-      * {
+      .scroll-container {
         -webkit-overflow-scrolling: touch;
         scroll-behavior: smooth;
       }
       
       body {
-        overscroll-behavior-y: contain;
+        overscroll-behavior-x: none;
+        overscroll-behavior-y: auto;
       }
       
       .scroll-container {
         will-change: scroll-position;
-        transform: translateZ(0);
       }
       
       .animate-item {
@@ -45,7 +45,6 @@ export function usePerformanceOptimization() {
     if (!element) return;
 
     element.style.willChange = 'scroll-position';
-    element.style.transform = 'translateZ(0)';
     
     const handleScroll = () => {
       if (scrollTimeout.current) {

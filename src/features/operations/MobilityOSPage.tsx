@@ -431,7 +431,7 @@ export default function MobilityOSPage() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'var(--app-min-height)',
         background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, rgba(240,168,48,0.16), transparent 22%), ${C.bg}`,
         color: C.text,
         fontFamily: F,

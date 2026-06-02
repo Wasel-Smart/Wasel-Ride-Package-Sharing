@@ -365,7 +365,7 @@ export function validateRuntimeConfiguration(envSource: EnvSource = readEnvSourc
 }
 
 export function getConfig() {
-  const appUrl = resolveAppUrl() || getEnv('VITE_PRODUCTION_APP_URL') || 'http://localhost:3000';
+  const appUrl = resolveAppUrl() || getEnv('VITE_PRODUCTION_APP_URL') || 'https://wasel14.online';
   const supportWhatsAppNumber = getEnv('VITE_SUPPORT_WHATSAPP_NUMBER')
     .replace(/[^\d+]/g, '')
     .trim();
@@ -420,7 +420,7 @@ export function normalizeReturnToPath(
 
 export function getAuthCallbackUrl(origin?: string, params?: AuthCallbackParams): string {
   const { appUrl, authCallbackPath } = getConfig();
-  const base = (origin || appUrl || 'http://localhost:3000').replace(/\/$/, '');
+  const base = (origin || appUrl || 'https://wasel14.online').replace(/\/$/, '');
   const url = new URL(`${base}${authCallbackPath}`);
 
   Object.entries(params ?? {}).forEach(([key, value]) => {

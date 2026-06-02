@@ -49,49 +49,21 @@ export const PERFORMANCE_CONFIG = {
 
 // Apply global performance optimizations
 export function applyGlobalOptimizations() {
-  // Passive event listeners
-  const passiveSupported = (() => {
-    let supported = false;
-    try {
-      const noop = () => undefined;
-      const options = {} as AddEventListenerOptions;
-      Object.defineProperty(options, 'passive', {
-        get() {
-          supported = true;
-          return false;
-        },
-      });
-      window.addEventListener('test-passive', noop, options);
-      window.removeEventListener('test-passive', noop, options);
-    } catch (err) {
-      supported = false;
-    }
-    return supported;
-  })();
-
-  if (passiveSupported) {
-    ['touchstart', 'touchmove', 'wheel', 'mousewheel'].forEach((event) => {
-      document.addEventListener(event, () => {}, { passive: true } as AddEventListenerOptions);
-    });
-  }
-
-  // Prevent layout thrashing
+  // Prevent layout thrashing without altering native scroll/touch semantics.
   const style = document.createElement('style');
   style.textContent = `
-    * {
+    button, a, input, textarea, select, [role="button"] {
       -webkit-overflow-scrolling: touch;
       -webkit-tap-highlight-color: transparent;
     }
     
     body {
-      overscroll-behavior-y: contain;
-      scroll-behavior: smooth;
+      overscroll-behavior-x: none;
+      overscroll-behavior-y: auto;
     }
     
     .scroll-container {
       will-change: scroll-position;
-      transform: translateZ(0);
-      -webkit-transform: translateZ(0);
     }
     
     .animate-item {
@@ -100,6 +72,7 @@ export function applyGlobalOptimizations() {
     
     img {
       content-visibility: auto;
+      contain-intrinsic-size: 300px 200px;
     }
     
     @media (prefers-reduced-motion: reduce) {

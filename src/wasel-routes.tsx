@@ -147,7 +147,7 @@ function RouteErrorFallback() {
       description={message}
       icon={AlertTriangle}
       tone="danger"
-      minHeight="100vh"
+      minHeight="var(--app-min-height)"
       actions={
         <>
           <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">

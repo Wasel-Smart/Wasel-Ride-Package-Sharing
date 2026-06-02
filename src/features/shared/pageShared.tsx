@@ -122,7 +122,7 @@ export function PageShell({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'var(--app-min-height)',
         background: `radial-gradient(circle at 12% 10%, rgba(0,200,232,0.12), transparent 24%), radial-gradient(circle at 88% 6%, rgba(240,168,48,0.10), transparent 22%), radial-gradient(circle at 80% 86%, rgba(0,200,117,0.08), transparent 24%), ${DS.bg}`,
         fontFamily: DS.F,
         direction: ar ? 'rtl' : 'ltr',

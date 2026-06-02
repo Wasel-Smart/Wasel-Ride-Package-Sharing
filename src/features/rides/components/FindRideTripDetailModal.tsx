@@ -80,6 +80,7 @@ export function FindRideTripDetailModal({
           alignItems: 'center',
           justifyContent: 'center',
           padding: 16,
+          touchAction: 'pan-y',
         }}
       >
         <motion.div
@@ -94,8 +95,9 @@ export function FindRideTripDetailModal({
             borderRadius: r(24),
             width: '100%',
             maxWidth: 580,
-            maxHeight: '90vh',
+            maxHeight: 'min(90dvh, 90vh)',
             overflowY: 'auto',
+            WebkitOverflowScrolling: 'touch',
           }}
         >
           <div
