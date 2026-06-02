@@ -140,8 +140,9 @@ export const secureStorage = {
     localStorage.removeItem(`secure_${key}`);
   },
 
-   clear(): void {
-    const keys = Object.keys(localStorage);
+  clear(): void {
+    const keys = Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index))
+      .filter((key): key is string => Boolean(key));
     const secureKeys = keys.filter(key => key.startsWith('secure_'));
     secureKeys.forEach(key => {
       localStorage.removeItem(key);

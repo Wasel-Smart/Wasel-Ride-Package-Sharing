@@ -21,7 +21,11 @@ const emailField = z
 const passwordField = z
   .string({ required_error: 'Password is required' })
   .min(8, 'Password must be at least 8 characters')
-  .max(128, 'Password is too long');
+  .max(128, 'Password is too long')
+  .regex(/[a-z]/, 'Password must contain a lowercase letter')
+  .regex(/[A-Z]/, 'Password must contain an uppercase letter')
+  .regex(/[0-9]/, 'Password must contain a number')
+  .regex(/[^A-Za-z0-9]/, 'Password must contain a special character');
 
 const phoneField = z
   .string()
@@ -147,10 +151,7 @@ export type UpdateProfileFields = z.infer<typeof updateProfileSchema>;
 export const changePasswordSchema = z
   .object({
     currentPassword: passwordField,
-    newPassword: passwordField.refine(
-      pw => /[A-Z]/.test(pw) && /[0-9]/.test(pw),
-      'New password must contain at least one uppercase letter and one number',
-    ),
+    newPassword: passwordField,
     confirmNewPassword: z.string(),
   })
   .refine(data => data.newPassword === data.confirmNewPassword, {

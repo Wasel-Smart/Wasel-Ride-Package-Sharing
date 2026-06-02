@@ -35,6 +35,15 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthOperationError }>;
   signInWithGoogle: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
   signInWithFacebook: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
+  startPhoneOtp: (
+    phone: string,
+    channel: 'sms' | 'whatsapp',
+  ) => Promise<{ error: AuthOperationError }>;
+  verifyPhoneOtp: (
+    phone: string,
+    token: string,
+    returnTo?: string,
+  ) => Promise<{ error: AuthOperationError }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: AuthOperationError }>;
   refreshProfile: () => Promise<void>;
@@ -52,6 +61,8 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => ({ error: null }),
   signInWithGoogle: async () => ({ error: null }),
   signInWithFacebook: async () => ({ error: null }),
+  startPhoneOtp: async () => ({ error: null }),
+  verifyPhoneOtp: async () => ({ error: null }),
   signOut: async () => {},
   updateProfile: async () => ({ error: null }),
   refreshProfile: async () => {},
@@ -303,7 +314,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       try {
         const result = await signInWithOAuthProvider(supabase, 'google', returnTo);
-        
+
         if (result.error) {
           // Parse and handle OAuth-specific errors
           const oauthError = parseOAuthError(result.error, 'google');
@@ -311,7 +322,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             console.error('[OAuth Google]', oauthError);
           }
         }
-        
+
         return result;
       } catch (error: unknown) {
         if (import.meta.env?.DEV) {
@@ -331,7 +342,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       try {
         const result = await signInWithOAuthProvider(supabase, 'facebook', returnTo);
-        
+
         if (result.error) {
           // Parse and handle OAuth-specific errors
           const oauthError = parseOAuthError(result.error, 'facebook');
@@ -339,7 +350,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             console.error('[OAuth Facebook]', oauthError);
           }
         }
-        
+
         return result;
       } catch (error: unknown) {
         if (import.meta.env?.DEV) {
@@ -349,6 +360,71 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     },
     [],
+  );
+
+  const startPhoneOtp = useCallback(
+    async (phone: string, channel: 'sms' | 'whatsapp'): Promise<{ error: AuthOperationError }> => {
+      if (!supabase) {
+        return { error: new Error('Backend not configured') };
+      }
+
+      setBusy(true);
+      try {
+        const { error } = await supabase.auth.signInWithOtp({
+          phone,
+          options: {
+            channel,
+            shouldCreateUser: true,
+          },
+        });
+
+        return { error: error ?? null };
+      } catch (error: unknown) {
+        return { error: normalizeOperationError(error, 'Phone code request failed') };
+      } finally {
+        setBusy(false);
+      }
+    },
+    [],
+  );
+
+  const verifyPhoneOtp = useCallback(
+    async (
+      phone: string,
+      token: string,
+      _returnTo?: string,
+    ): Promise<{ error: AuthOperationError }> => {
+      if (!supabase) {
+        return { error: new Error('Backend not configured') };
+      }
+
+      setBusy(true);
+      try {
+        const { data, error } = await supabase.auth.verifyOtp({
+          phone,
+          token,
+          type: 'sms',
+        });
+
+        if (error) {
+          return { error };
+        }
+
+        const authUser = data.user ?? data.session?.user ?? null;
+        if (authUser && data.session) {
+          setSession(data.session);
+          setUser(authUser);
+          await fetchProfile(true, authUser);
+        }
+
+        return { error: null };
+      } catch (error: unknown) {
+        return { error: normalizeOperationError(error, 'Phone code verification failed') };
+      } finally {
+        setBusy(false);
+      }
+    },
+    [fetchProfile],
   );
 
   const signOut = useCallback(async () => {
@@ -448,6 +524,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signIn,
       signInWithGoogle,
       signInWithFacebook,
+      startPhoneOtp,
+      verifyPhoneOtp,
       signOut,
       updateProfile,
       refreshProfile,
@@ -468,8 +546,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signInWithGoogle,
       signOut,
       signUp,
+      startPhoneOtp,
       updateProfile,
       user,
+      verifyPhoneOtp,
     ],
   );
 

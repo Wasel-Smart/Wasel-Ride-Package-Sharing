@@ -22,13 +22,14 @@ import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { checkRateLimit, validateEmail } from '../utils/security';
 import { useAuth } from '../contexts/AuthContext';
-import { getConfig, getWhatsAppSupportUrl, normalizeReturnToPath } from '../utils/env';
+import { normalizeReturnToPath } from '../utils/env';
 import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
 
 import { C, R, TYPE, F, SPACE } from '../utils/wasel-ds';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = 'signin' | 'signup';
+type PhoneOtpChannel = 'sms' | 'whatsapp';
 
 // ─── Feature list for the brand panel ────────────────────────────────────────
 const BRAND_FEATURES = [
@@ -45,6 +46,29 @@ const BRAND_METRICS = [
 ] as const;
 
 const BRAND_PILLS = ['Verified', 'Fast', 'Clear'] as const;
+const PASSWORD_POLICY_MESSAGE =
+  'Password must include lowercase, uppercase, number, and special character.';
+
+function meetsPasswordPolicy(value: string) {
+  return (
+    value.length >= 8 &&
+    /[a-z]/.test(value) &&
+    /[A-Z]/.test(value) &&
+    /\d/.test(value) &&
+    /[^A-Za-z0-9]/.test(value)
+  );
+}
+
+function normalizePhoneForOtp(value: string) {
+  const compact = value.replace(/[\s().-]/g, '');
+  if (compact.startsWith('00')) return `+${compact.slice(2)}`;
+  if (compact.startsWith('0')) return `+962${compact.slice(1)}`;
+  return compact;
+}
+
+function isValidOtpPhone(value: string) {
+  return /^\+[1-9]\d{7,14}$/.test(value);
+}
 
 // ─── Brand panel (left column) ────────────────────────────────────────────────
 function BrandPanel() {
@@ -324,12 +348,15 @@ export default function WaselAuth() {
   const [notice, setNotice] = useState(
     passwordResetCompleted ? 'Password updated. Sign in with your new password.' : '',
   );
+  const [phoneOtpChannel, setPhoneOtpChannel] = useState<PhoneOtpChannel | null>(null);
+  const [phoneOtpCode, setPhoneOtpCode] = useState('');
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
 
   const { signIn, register, loading, user } = useLocalAuth();
-  const { resetPassword, signInWithGoogle, signInWithFacebook } = useAuth();
+  const { resetPassword, signInWithGoogle, signInWithFacebook, startPhoneOtp, verifyPhoneOtp } =
+    useAuth();
   const nav = useIframeSafeNavigate();
   const mountedRef = useRef(true);
-  const { supportWhatsAppNumber } = getConfig();
 
   const safeReturnTo = normalizeReturnToPath(params.get('returnTo'));
 
@@ -355,6 +382,9 @@ export default function WaselAuth() {
     setTab(next);
     setError('');
     setSuccess(false);
+    setPhoneOtpChannel(null);
+    setPhoneOtpSent(false);
+    setPhoneOtpCode('');
     if (!passwordResetCompleted) {
       setNotice('');
     }
@@ -406,8 +436,8 @@ export default function WaselAuth() {
       setError('Please enter a valid email address.');
       return;
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long.');
+    if (!meetsPasswordPolicy(password)) {
+      setError(PASSWORD_POLICY_MESSAGE);
       return;
     }
     if (!checkRateLimit(`signup:${email}`, { maxRequests: 3, windowMs: 60_000 })) {
@@ -451,7 +481,7 @@ export default function WaselAuth() {
   const handleGoogleSignIn = async () => {
     setError('');
     const { error: oauthError } = await signInWithGoogle(safeReturnTo);
-    
+
     if (oauthError) {
       setError(friendlyAuthError(oauthError, 'Google sign in failed. Please try again.'));
     }
@@ -460,26 +490,65 @@ export default function WaselAuth() {
   const handleFacebookSignIn = async () => {
     setError('');
     const { error: oauthError } = await signInWithFacebook(safeReturnTo);
-    
+
     if (oauthError) {
       setError(friendlyAuthError(oauthError, 'Facebook sign in failed. Please try again.'));
     }
   };
 
-  const handleWhatsAppHelp = () => {
-    if (!supportWhatsAppNumber) {
-      setError('WhatsApp support is not configured yet.');
+  const handleStartPhoneOtp = async (channel: PhoneOtpChannel) => {
+    setError('');
+    setNotice('');
+
+    const normalizedPhone = normalizePhoneForOtp(phone);
+    if (!isValidOtpPhone(normalizedPhone)) {
+      setError('Enter a valid phone number in international format, for example +962791234567.');
       return;
     }
-    window.open(getWhatsAppSupportUrl('Hi Wasel'), '_blank', 'noopener,noreferrer');
+
+    const { error: otpError } = await startPhoneOtp(normalizedPhone, channel);
+    if (otpError) {
+      setError(
+        friendlyAuthError(
+          otpError,
+          `${channel === 'sms' ? 'SMS' : 'WhatsApp'} code failed. Please try again.`,
+        ),
+      );
+      return;
+    }
+
+    setPhone(normalizedPhone);
+    setPhoneOtpChannel(channel);
+    setPhoneOtpSent(true);
+    setNotice(`Code sent by ${channel === 'sms' ? 'SMS' : 'WhatsApp'}. Enter it below to finish.`);
+  };
+
+  const handleVerifyPhoneOtp = async () => {
+    setError('');
+
+    const normalizedPhone = normalizePhoneForOtp(phone);
+    const token = phoneOtpCode.replace(/\D/g, '');
+    if (!isValidOtpPhone(normalizedPhone)) {
+      setError('Enter a valid phone number in international format, for example +962791234567.');
+      return;
+    }
+    if (token.length < 6) {
+      setError('Enter the 6 digit verification code.');
+      return;
+    }
+
+    const { error: verifyError } = await verifyPhoneOtp(normalizedPhone, token, safeReturnTo);
+    if (verifyError) {
+      setError(friendlyAuthError(verifyError, 'Phone verification failed. Please try again.'));
+      return;
+    }
+
+    pushSuccessRedirect();
   };
 
   const socialButtons = [
     { label: 'Google', color: '#4285F4', onClick: handleGoogleSignIn },
     { label: 'Facebook', color: '#1877F2', onClick: handleFacebookSignIn },
-    ...(supportWhatsAppNumber
-      ? [{ label: 'WhatsApp', color: '#25D366', onClick: handleWhatsAppHelp }]
-      : []),
   ] as const;
 
   return (
@@ -685,7 +754,11 @@ export default function WaselAuth() {
                 <WaselInput
                   id="auth-password"
                   label="Password"
-                  description={tab === 'signin' ? 'Your account password' : 'Minimum 8 characters'}
+                  description={
+                    tab === 'signin'
+                      ? 'Your account password'
+                      : 'Lowercase, uppercase, number, and special character'
+                  }
                   type="password"
                   value={password}
                   onChange={setPassword}
@@ -785,6 +858,116 @@ export default function WaselAuth() {
                       {social.label}
                     </motion.button>
                   ))}
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: SPACE[3],
+                    padding: SPACE[4],
+                    borderRadius: R.lg,
+                    border: `1px solid ${C.border}`,
+                    background: `${C.text}06`,
+                  }}
+                >
+                  <WaselInput
+                    id="phone-otp"
+                    label="Phone sign in"
+                    description="SMS or WhatsApp one-time code"
+                    type="tel"
+                    value={phone}
+                    onChange={value => {
+                      setPhone(value);
+                      setPhoneOtpSent(false);
+                      setPhoneOtpCode('');
+                    }}
+                    placeholder="+962 79 123 4567"
+                    icon={<Phone size={16} />}
+                  />
+
+                  {phoneOtpSent && (
+                    <WaselInput
+                      id="phone-otp-code"
+                      label="Verification code"
+                      description={`Sent by ${phoneOtpChannel === 'whatsapp' ? 'WhatsApp' : 'SMS'}`}
+                      type="text"
+                      value={phoneOtpCode}
+                      onChange={setPhoneOtpCode}
+                      placeholder="123456"
+                      icon={<Shield size={16} />}
+                    />
+                  )}
+
+                  <div style={{ display: 'flex', gap: SPACE[2], flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      disabled={loading || success}
+                      onClick={() => {
+                        void handleStartPhoneOtp('sms');
+                      }}
+                      style={{
+                        flex: '1 1 110px',
+                        minHeight: 42,
+                        borderRadius: R.lg,
+                        border: `1px solid ${C.cyan}30`,
+                        background: `${C.cyan}0C`,
+                        color: C.cyan,
+                        fontWeight: TYPE.weight.black,
+                        fontSize: TYPE.size.sm,
+                        fontFamily: F,
+                        cursor: loading || success ? 'not-allowed' : 'pointer',
+                        opacity: loading || success ? 0.55 : 1,
+                      }}
+                    >
+                      Send SMS
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading || success}
+                      onClick={() => {
+                        void handleStartPhoneOtp('whatsapp');
+                      }}
+                      style={{
+                        flex: '1 1 110px',
+                        minHeight: 42,
+                        borderRadius: R.lg,
+                        border: '1px solid rgba(37, 211, 102, 0.3)',
+                        background: 'rgba(37, 211, 102, 0.06)',
+                        color: '#25D366',
+                        fontWeight: TYPE.weight.black,
+                        fontSize: TYPE.size.sm,
+                        fontFamily: F,
+                        cursor: loading || success ? 'not-allowed' : 'pointer',
+                        opacity: loading || success ? 0.55 : 1,
+                      }}
+                    >
+                      Send WhatsApp
+                    </button>
+                    {phoneOtpSent && (
+                      <button
+                        type="button"
+                        disabled={loading || success}
+                        onClick={() => {
+                          void handleVerifyPhoneOtp();
+                        }}
+                        style={{
+                          flex: '1 1 100%',
+                          minHeight: 42,
+                          borderRadius: R.lg,
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)',
+                          color: C.bg,
+                          fontWeight: TYPE.weight.black,
+                          fontSize: TYPE.size.sm,
+                          fontFamily: F,
+                          cursor: loading || success ? 'not-allowed' : 'pointer',
+                          opacity: loading || success ? 0.55 : 1,
+                        }}
+                      >
+                        Verify phone code
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </motion.div>

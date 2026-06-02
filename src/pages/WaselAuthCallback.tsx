@@ -6,6 +6,19 @@ import { normalizeReturnToPath } from '../utils/env';
 
 type CallbackState = 'loading' | 'closing' | 'redirecting' | 'recovery' | 'error';
 
+const PASSWORD_POLICY_MESSAGE =
+  'Password must include lowercase, uppercase, number, and special character.';
+
+function meetsPasswordPolicy(value: string) {
+  return (
+    value.length >= 8 &&
+    /[a-z]/.test(value) &&
+    /[A-Z]/.test(value) &&
+    /\d/.test(value) &&
+    /[^A-Za-z0-9]/.test(value)
+  );
+}
+
 function readCallbackParam(key: string): string {
   if (typeof window === 'undefined') {
     return '';
@@ -128,8 +141,8 @@ export default function WaselAuthCallback() {
       return;
     }
 
-    if (password.length < 8) {
-      setFormError('Password must be at least 8 characters long.');
+    if (!meetsPasswordPolicy(password)) {
+      setFormError(PASSWORD_POLICY_MESSAGE);
       return;
     }
 
