@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { requestEdgeJson, runBackendWorkflow } from '../../services/backendWorkflow';
-import { supabase } from '../../services/core';
 import type { BookingRequest, MobilitySystemSnapshot } from './model';
+import { subscribeToMobilityCorridorChanges } from './mobilityRealtime';
 import { mobilityOSRuntime } from './runtime';
 
 type ServerBookingResponse = {
@@ -103,26 +103,16 @@ export function useMobilityOSServerState() {
     activeRef.current = true;
     void loadSnapshot();
 
-    if (!supabase) {
-      return () => {
-        activeRef.current = false;
-        clearReconcileTimer();
-      };
-    }
-
-    const channel = supabase
-      .channel('mobility-os-server-state')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'mobility_corridors' }, () => {
-        setSource('server');
-        clearReconcileTimer();
-        void loadSnapshot();
-      })
-      .subscribe();
+    const unsubscribe = subscribeToMobilityCorridorChanges(() => {
+      setSource('server');
+      clearReconcileTimer();
+      void loadSnapshot();
+    });
 
     return () => {
       activeRef.current = false;
       clearReconcileTimer();
-      void supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [clearReconcileTimer, loadSnapshot]);
 

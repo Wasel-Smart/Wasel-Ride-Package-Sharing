@@ -1,62 +1,19 @@
-import { Component, useEffect, type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useEffect, type ReactNode } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
 import { Toaster } from 'sonner';
 
+import { AppErrorBoundary } from './components/system/AppErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { LocalAuthProvider } from './contexts/LocalAuth';
 
 import { domainEventBus } from './platform/event-bus';
+import { queryClient } from './lib/queryClient';
 import { validateRuntimeConfiguration } from './utils/env';
-import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
 import { initSentry, logger, trackDomainEvent } from './utils/monitoring';
 import { startAvailabilityPolling, warmUpServer } from './services/core';
-
-/* ---------------------------
-   ERROR BOUNDARY
-----------------------------*/
-class AppErrorBoundary extends Component<
-  { children: ReactNode },
-  { hasError: boolean; error: string }
-> {
-  constructor(props: { children: ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: '' };
-  }
-
-  static getDerivedStateFromError(error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-
-    const ignored = [
-      'IframeMessageAbortError',
-      'message port was destroyed',
-      'Message aborted',
-      'setupMessageChannel',
-    ];
-
-    if (ignored.some((p) => message.includes(p))) {
-      return { hasError: false, error: '' };
-    }
-
-    return { hasError: true, error: message };
-  }
-
-  render() {
-    if (!this.state.hasError) return this.props.children;
-
-    return (
-      <div style={{ padding: 40, color: 'white', background: '#0A0F1A' }}>
-        <h2>App Error</h2>
-        <p>{this.state.error}</p>
-        <button onClick={() => window.location.reload()}>
-          Reload
-        </button>
-      </div>
-    );
-  }
-}
 
 /* ---------------------------
    PROVIDERS WRAPPER
@@ -77,6 +34,8 @@ function AppProviders({ children }: { children: ReactNode }) {
 function AppRuntimeCoordinator() {
   useEffect(() => {
     let cancelled = false;
+    let stopPolling: (() => void) | undefined;
+    let stopEvents: (() => void) | undefined;
 
     const run = async () => {
       try {
@@ -88,7 +47,7 @@ function AppRuntimeCoordinator() {
         }
 
         // DEFER EVERYTHING HEAVY
-        setTimeout(async () => {
+        const timeoutId = setTimeout(async () => {
           if (cancelled) return;
 
           const performance = await import('./utils/performance');
@@ -106,38 +65,36 @@ function AppRuntimeCoordinator() {
 
           warmUpServer();
 
-          const stopPolling = startAvailabilityPolling();
+          stopPolling = startAvailabilityPolling();
 
-          const stopEvents = domainEventBus.subscribeAll((event) => {
+          stopEvents = domainEventBus.subscribeAll((event) => {
             trackDomainEvent(event);
           });
-
-          return () => {
-            stopPolling?.();
-            stopEvents?.();
-          };
         }, 1500);
+
+        return () => clearTimeout(timeoutId);
       } catch (e) {
-        console.warn('[Runtime bootstrap failed]', e);
+        logger.warning('[Runtime bootstrap failed]', {
+          message: e instanceof Error ? e.message : String(e),
+        });
       }
     };
 
-    run();
+    let cleanupTimer: (() => void) | undefined;
+    run().then(cleanup => {
+      cleanupTimer = cleanup;
+    });
 
     return () => {
       cancelled = true;
+      cleanupTimer?.();
+      stopPolling?.();
+      stopEvents?.();
     };
   }, []);
 
   return null;
 }
-
-/* ---------------------------
-   QUERY CLIENT (stable instance)
-----------------------------*/
-const queryClient = new QueryClient({
-  defaultOptions: DEFAULT_QUERY_OPTIONS,
-});
 
 /* ---------------------------
    ROUTER (isolated from providers)
@@ -162,10 +119,10 @@ export default function App() {
           position="bottom-center"
           toastOptions={{
             style: {
-              background: '#0A1628',
-              border: '1px solid rgba(0,200,232,0.25)',
-              color: '#EFF6FF',
-              fontFamily: "-apple-system, 'Inter', sans-serif",
+              background: 'var(--wasel-surface-2)',
+              border: '1px solid var(--border)',
+              color: 'var(--foreground)',
+              fontFamily: 'var(--wasel-font-sans, Inter, system-ui, sans-serif)',
             },
           }}
         />

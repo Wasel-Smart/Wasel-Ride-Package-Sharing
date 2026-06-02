@@ -1,5 +1,16 @@
 ﻿import { useEffect, useRef, useState } from 'react';
-import { supabase } from '../../services/core';
+import {
+  fetchMobilityLiveRows,
+  subscribeToMobilityLiveRows,
+  type MobilityBookingRow,
+  type MobilityPackageRow,
+  type MobilityPresenceRow,
+  type MobilityTripRow,
+} from '../../services/mobilityLiveData';
+import {
+  fetchGoogleTrafficSnapshot,
+  type GoogleTrafficSnapshot,
+} from '../../services/googleRoutesTraffic';
 
 const DEBOUNCE_MS = 2000;
 
@@ -61,48 +72,10 @@ export type LiveMobilitySnapshot = {
   updatedAt: string;
 };
 
-type TripRow = {
-  trip_id: string | null;
-  origin_city: string | null;
-  destination_city: string | null;
-  available_seats: number | null;
-  total_seats: number | null;
-  package_capacity: number | null;
-  package_slots_remaining: number | null;
-  departure_time: string | null;
-  trip_status: string | null;
-  allow_packages: boolean | null;
-};
-
-type BookingRow = {
-  trip_id: string;
-  seats_requested: number | null;
-  booking_status: string | null;
-  status: string | null;
-};
-
-type PackageRow = {
-  trip_id: string | null;
-  origin_name: string | null;
-  origin_location: string | null;
-  destination_name: string | null;
-  destination_location: string | null;
-  package_status: string | null;
-  status: string | null;
-};
-
-type PresenceRow = {
-  trip_id: string;
-  active_passengers: number;
-  active_packages: number;
-  last_location?: {
-    lat?: number;
-    lng?: number;
-    lon?: number;
-    city?: string;
-  } | null;
-  last_heartbeat_at: string;
-};
+type TripRow = MobilityTripRow;
+type BookingRow = MobilityBookingRow;
+type PackageRow = MobilityPackageRow;
+type PresenceRow = MobilityPresenceRow;
 
 type CorridorAggregate = {
   routeId: string;
@@ -118,11 +91,7 @@ type CorridorAggregate = {
   activePackages: number;
 };
 
-type TrafficSnapshot = {
-  speedKph: number;
-  congestion: number;
-  updatedAt: string;
-};
+type TrafficSnapshot = GoogleTrafficSnapshot;
 
 const ROUTE_CITY_PAIRS = [
   {
@@ -264,24 +233,6 @@ const CITY_ALIASES: Record<string, string> = {
   السلط: 'salt',
 };
 
-const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
-  amman: { lat: 31.9454, lng: 35.9284 },
-  aqaba: { lat: 29.532, lng: 35.0063 },
-  irbid: { lat: 32.5556, lng: 35.85 },
-  zarqa: { lat: 32.0728, lng: 36.088 },
-  mafraq: { lat: 32.3406, lng: 36.208 },
-  jerash: { lat: 32.2803, lng: 35.8993 },
-  ajloun: { lat: 32.3326, lng: 35.7519 },
-  madaba: { lat: 31.7197, lng: 35.7936 },
-  karak: { lat: 31.1853, lng: 35.7048 },
-  tafila: { lat: 30.8375, lng: 35.6042 },
-  maan: { lat: 30.1962, lng: 35.736 },
-  salt: { lat: 32.0392, lng: 35.7272 },
-};
-
-const TRAFFIC_CACHE_TTL_MS = 2 * 60 * 1000;
-const trafficCache = new Map<string, { expiresAt: number; snapshot: TrafficSnapshot }>();
-
 function normalizeCity(value: string | null | undefined): string | null {
   const raw = String(value ?? '')
     .trim()
@@ -334,89 +285,6 @@ function isFreshHeartbeat(timestamp: string | null | undefined): boolean {
   return Date.now() - heartbeatAt <= 5 * 60 * 1000;
 }
 
-function getGoogleMapsApiKey(): string | null {
-  const key = String(import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '').trim();
-  // Don't use hardcoded placeholder values
-  if (!key || key.length < 10) return null;
-  return key;
-}
-
-function parseGoogleDurationSeconds(value: string | null | undefined): number | null {
-  if (!value) return null;
-  const match = /^([0-9]+(?:\.[0-9]+)?)s$/.exec(value.trim());
-  if (!match) return null;
-  const seconds = Number(match[1]);
-  return Number.isFinite(seconds) ? seconds : null;
-}
-
-async function fetchTrafficSnapshot(
-  routeId: string,
-  from: string,
-  to: string,
-): Promise<TrafficSnapshot | null> {
-  const apiKey = getGoogleMapsApiKey();
-  if (!apiKey) return null;
-
-  const origin = CITY_COORDS[from];
-  const destination = CITY_COORDS[to];
-  if (!origin || !destination) return null;
-
-  const cached = trafficCache.get(routeId);
-  if (cached && cached.expiresAt > Date.now()) {
-    return cached.snapshot;
-  }
-
-  try {
-    const response = await fetch('https://routes.googleapis.com/directions/v2:computeRoutes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'routes.duration,routes.staticDuration,routes.distanceMeters',
-      },
-      body: JSON.stringify({
-        origin: { location: { latLng: { latitude: origin.lat, longitude: origin.lng } } },
-        destination: {
-          location: { latLng: { latitude: destination.lat, longitude: destination.lng } },
-        },
-        travelMode: 'DRIVE',
-        routingPreference: 'TRAFFIC_AWARE',
-        departureTime: new Date().toISOString(),
-      }),
-    });
-
-    if (!response.ok) return null;
-    const json = await response.json();
-    const route = Array.isArray(json?.routes) ? json.routes[0] : null;
-    const durationSeconds = parseGoogleDurationSeconds(route?.duration);
-    const staticDurationSeconds = parseGoogleDurationSeconds(route?.staticDuration);
-    const distanceMeters = Number(route?.distanceMeters ?? 0);
-
-    if (!durationSeconds || distanceMeters <= 0) return null;
-
-    const speedKph = Math.max(18, Math.round((distanceMeters / durationSeconds) * 3.6));
-    const trafficRatio =
-      staticDurationSeconds && staticDurationSeconds > 0
-        ? durationSeconds / staticDurationSeconds
-        : 1;
-    const congestion = Math.max(0.05, Math.min(0.98, (trafficRatio - 1) / 0.65));
-    const snapshot = {
-      speedKph,
-      congestion,
-      updatedAt: new Date().toISOString(),
-    };
-
-    trafficCache.set(routeId, {
-      expiresAt: Date.now() + TRAFFIC_CACHE_TTL_MS,
-      snapshot,
-    });
-
-    return snapshot;
-  } catch {
-    return null;
-  }
-}
-
 function estimateCongestion(
   activeTrips: number,
   seatsFilled: number,
@@ -443,39 +311,15 @@ function buildDispatch(topRoute: string, ar: boolean): string {
 }
 
 async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot | null> {
-  if (!supabase) return null;
+  const rows = await fetchMobilityLiveRows();
+  if (!rows) return null;
 
-  const [{ data: trips }, { data: bookings }, { data: packages }, { data: tripPresence }] =
-    await Promise.all([
-      supabase
-        .from('trips')
-        .select(
-          'trip_id, origin_city, destination_city, available_seats, total_seats, package_capacity, package_slots_remaining, departure_time, trip_status, allow_packages',
-        )
-        .is('deleted_at', null)
-        .in('trip_status', ['open', 'booked', 'in_progress']),
-      supabase
-        .from('bookings')
-        .select('trip_id, seats_requested, booking_status, status')
-        .in('booking_status', ['confirmed', 'pending_driver'])
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('packages')
-        .select(
-          'trip_id, origin_name, origin_location, destination_name, destination_location, package_status, status',
-        )
-        .in('package_status', ['created', 'assigned', 'in_transit']),
-      supabase
-        .from('trip_presence')
-        .select('trip_id, active_passengers, active_packages, last_location, last_heartbeat_at'),
-    ]);
-
-  const tripRows = (Array.isArray(trips) ? trips : []) as TripRow[];
+  const tripRows = rows.trips;
   if (tripRows.length === 0) return null;
 
-  const bookingRows = (Array.isArray(bookings) ? bookings : []) as BookingRow[];
-  const packageRows = (Array.isArray(packages) ? packages : []) as PackageRow[];
-  const presenceRows = (Array.isArray(tripPresence) ? tripPresence : []) as PresenceRow[];
+  const bookingRows = rows.bookings;
+  const packageRows = rows.packages;
+  const presenceRows = rows.tripPresence;
 
   const bookingsByTrip = new Map<string, BookingRow[]>();
   bookingRows.forEach(row => {
@@ -566,7 +410,7 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
 
   const trafficEntries = await Promise.all(
     Array.from(corridorMap.values()).map(async corridor => {
-      const snapshot = await fetchTrafficSnapshot(corridor.routeId, corridor.from, corridor.to);
+      const snapshot = await fetchGoogleTrafficSnapshot(corridor.routeId, corridor.from, corridor.to);
       return [corridor.routeId, snapshot] as const;
     }),
   );
@@ -726,14 +570,9 @@ export function useMobilityOSLiveData(ar: boolean) {
   const [snapshot, setSnapshot] = useState<LiveMobilitySnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const channelRef = useRef<any>(null);
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
-
     let cancelled = false;
 
     const refresh = async () => {
@@ -759,74 +598,17 @@ export function useMobilityOSLiveData(ar: boolean) {
       }, DEBOUNCE_MS);
     };
 
-    // Create a single channel with filtered events to reduce noise
-    const channel = supabase
-      .channel(`mobility-os-live-${ar ? 'ar' : 'en'}`, {
-        config: { broadcast: { self: false } },
-      })
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'trips',
-          filter: 'deleted_at=is.null', // Only care about active trips
-        },
-        () => {
-          scheduleRefresh();
-        },
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'bookings',
-          filter: 'booking_status!=cs.cancelled', // Only non-cancelled bookings
-        },
-        () => {
-          scheduleRefresh();
-        },
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'packages',
-          filter: 'package_status!=cs.delivered', // Only active packages
-        },
-        () => {
-          scheduleRefresh();
-        },
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'trip_presence',
-        },
-        () => {
-          scheduleRefresh();
-        },
-      )
-      .subscribe((status: string) => {
-        if (status === 'SUBSCRIPTION_ERROR') {
-          console.error('MobilityOS realtime subscription error');
-        }
-      });
-
-    channelRef.current = channel;
+    unsubscribeRef.current = subscribeToMobilityLiveRows(ar ? 'ar' : 'en', scheduleRefresh, () => {
+      console.error('MobilityOS realtime subscription error');
+    });
 
     return () => {
       cancelled = true;
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
-      if (channelRef.current) {
-        void supabase.removeChannel(channelRef.current);
-      }
+      unsubscribeRef.current?.();
+      unsubscribeRef.current = null;
     };
   }, [ar]);
 

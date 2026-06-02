@@ -623,7 +623,7 @@ export function MobilityOSLandingMap({
         const liveTextY = height * 0.86;
         ctx.fillStyle = 'rgba(211,245,247,0.7)';
         ctx.font = '600 10px Inter, system-ui, sans-serif';
-        ctx.fillText('Mobility OS live field', liveTextX, liveTextY);
+        ctx.fillText('Live travel control field', liveTextX, liveTextY);
         ctx.fillStyle = 'rgba(255,255,255,0.86)';
         ctx.font = '700 11px Inter, system-ui, sans-serif';
         ctx.fillText('Mercator projection + weighted corridor arcs', liveTextX, liveTextY + 18);
@@ -636,7 +636,19 @@ export function MobilityOSLandingMap({
     return () => {
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     };
-  }, [demandPressure, focusOrigin, focusRouteId, focusDestination, focusLabel, minimalText, preferredHeight, routes, runtimeMode, size, utilization]);
+  }, [
+    demandPressure,
+    focusOrigin,
+    focusRouteId,
+    focusDestination,
+    focusLabel,
+    minimalText,
+    preferredHeight,
+    routes,
+    runtimeMode,
+    size,
+    utilization,
+  ]);
 
   const resolvedHeight = preferredHeight ?? (size.width < 480 ? 460 : 520);
 

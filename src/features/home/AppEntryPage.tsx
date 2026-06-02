@@ -105,10 +105,10 @@ export default function AppEntryPage() {
   const primaryLabel = user
     ? ar
       ? 'افتح الرحلات الحية'
-      : 'Open live rides'
+      : 'Book employee travel'
     : ar
       ? 'ابدأ الآن'
-      : 'Get started';
+      : 'Start guided booking';
   const primaryPath = user
     ? membership.dailyRoute
       ? `/app/find-ride?from=${encodeURIComponent(membership.dailyRoute.from)}&to=${encodeURIComponent(
@@ -230,37 +230,37 @@ export default function AppEntryPage() {
         ],
       }
     : {
-        topbarEyebrow: 'Jordan mobility layer',
-        topbarBody: 'One route graph for rides, parcels, and bus planning.',
-        topbarPill: 'Jordan-first mobility',
-        heroBadge: 'One corridor, every mode',
-        heroTitleA: 'One corridor,',
-        heroTitleB: 'every move.',
+        topbarEyebrow: 'Employee travel control',
+        topbarBody: 'Lower commute cost with booking, approval, and live management in one flow.',
+        topbarPill: 'Built for Jordan teams',
+        heroBadge: 'Book, request, approve, manage',
+        heroTitleA: 'Reduce transport cost.',
+        heroTitleB: 'Automate employee travel.',
         heroBody:
-          'Open the same route and decide from there: book a seat, offer one, send a parcel, or fall back to the bus without changing mental models.',
-        secondaryCta: 'See bus departures',
+          'Wasel guides employees and operators from the first route decision to approval, booking, and live trip management without manual coordination.',
+        secondaryCta: '30-second guided flow',
         stats: [
           { value: `${membership.movementCredits}`, label: 'Credits', tone: C.cyanSoft },
           { value: `${membership.streakDays}d`, label: 'Streak', tone: C.green },
           { value: tierLabel(membership.loyaltyTier), label: 'Tier', tone: C.gold },
         ],
-        mapEyebrow: 'Mobility OS field',
-        mapTitle: 'The intelligence should show up on the route itself',
+        mapEyebrow: 'Travel automation field',
+        mapTitle: 'Cost, approval, and movement stay on the route itself',
         mapBody:
-          'Instead of a static explanation card, users see a live surface that makes ride and parcel movement across Jordan feel coordinated.',
+          'The live surface shows where employees are moving, what the shared fare saves, and which action should happen next.',
         corridorLabel: 'Daily corridor',
         fareLabel: 'Shared fare',
         savingsLabel: 'Savings',
         pickupLabel: 'Pickup anchor',
         groupingLabel: 'Auto-group',
         servicesEyebrow: 'Core services',
-        servicesTitle: 'Every action should feel like the same product.',
+        servicesTitle: 'One primary action per screen, matched to the user job.',
         servicesBody:
-          'The interface stays corridor-first across all four modes, so users can move between rides, supply, parcels, and buses without losing context.',
+          'Employees book or request. Approvers clear pending travel. Operators manage supply and live movement. Each flow has one dominant next step.',
         proofEyebrow: 'Why this lands fast',
-        proofTitle: 'The page should explain the system in one pass.',
+        proofTitle: 'Onboarding should reach the first useful action in under 30 seconds.',
         proofBody:
-          'The first screen now leads with the live field, and the supporting sections reinforce that logic instead of repeating it.',
+          'The first screen now leads with the outcome, exposes the guided flow, and removes extra hero choices that slow the first decision.',
         corridorsEyebrow: 'Live corridors',
         corridorsTitle: 'Specific routes make the product feel real.',
         corridorsBody:
@@ -271,42 +271,42 @@ export default function AppEntryPage() {
         finalTitle: 'Start with the corridor, then let the mode follow.',
         finalBody:
           'That is the difference between a landing page that only looks polished and one that explains the product at a glance.',
-        finalCta: 'Launch Wasel',
+        finalCta: 'Start guided booking',
         openService: 'Open service',
         openCorridor: 'Explore this corridor',
         belowSolo: 'below solo reference',
         serviceCards: [
           {
-            title: 'Find a ride',
+            title: 'Book travel',
             detail:
-              'Grouped seats, cleaner pickup decisions, and less back-and-forth before you book.',
+              'Grouped seats, cleaner pickup decisions, and lower recurring commute cost before employees book.',
             icon: Users,
             tone: DS.cyan,
             path: '/app/find-ride',
             signal: 'Live seat waves',
           },
           {
-            title: 'Offer a ride',
+            title: 'Request approval',
             detail:
-              'Open supply fast, fill seats clearly, and keep route economics visible from the start.',
+              'Send route, fare, timing, and policy context forward without a separate coordination step.',
             icon: Truck,
             tone: DS.green,
             path: '/app/offer-ride',
             signal: 'Driver-side clarity',
           },
           {
-            title: 'Send a package',
+            title: 'Approve travel',
             detail:
-              'Turn the same corridor into parcel movement without adding a second product to learn.',
+              'Clear pending employee movement with the cost and corridor context already visible.',
             icon: Package,
             tone: DS.gold,
             path: '/app/packages',
             signal: 'Route-linked parcels',
           },
           {
-            title: 'Book a bus',
+            title: 'Manage movement',
             detail:
-              'Official departures, timing confidence, and a calmer fallback when shared supply is full.',
+              'Track live trips, supply, bus fallback, and operational exceptions from the same route graph.',
             icon: Bus,
             tone: DS.cyanDark,
             path: '/app/bus',
@@ -611,23 +611,66 @@ export default function AppEntryPage() {
                   <ArrowRight size={17} />
                 </button>
 
-                <button
-                  onClick={() => navigate('/app/bus')}
+                <span
                   style={{
-                    height: 56,
-                    padding: '0 20px',
+                    minHeight: 56,
+                    padding: '0 18px',
                     borderRadius: 18,
                     background: 'rgba(255,255,255,0.03)',
                     border: `1px solid ${C.border}`,
-                    color: C.text,
+                    color: C.soft,
                     fontWeight: 800,
-                    fontSize: '0.92rem',
-                    cursor: 'pointer',
+                    fontSize: '0.88rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
                     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
                   }}
                 >
                   {heroCopy.secondaryCta}
-                </button>
+                </span>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                  gap: 10,
+                  marginTop: 18,
+                  maxWidth: 620,
+                }}
+              >
+                {[
+                  { label: 'Book', detail: 'Pick route and seats' },
+                  { label: 'Request', detail: 'Send approval context' },
+                  { label: 'Approve', detail: 'Clear pending travel' },
+                  { label: 'Manage', detail: 'Track trips and supply' },
+                ].map((step, index) => (
+                  <div
+                    key={step.label}
+                    style={{
+                      minHeight: 86,
+                      borderRadius: 18,
+                      padding: '12px 13px',
+                      background: index === 0 ? 'rgba(88,221,255,0.1)' : 'rgba(255,255,255,0.035)',
+                      border: `1px solid ${index === 0 ? 'rgba(88,221,255,0.26)' : C.borderSoft}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: index === 0 ? C.cyanSoft : C.text,
+                        fontSize: '0.86rem',
+                        fontWeight: 900,
+                      }}
+                    >
+                      {step.label}
+                    </div>
+                    <div
+                      style={{ marginTop: 6, color: C.soft, fontSize: '0.74rem', lineHeight: 1.45 }}
+                    >
+                      {step.detail}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div
