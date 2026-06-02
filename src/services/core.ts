@@ -27,6 +27,10 @@ export const API_URL = configuredApiUrl
     ? `${resolvedFunctionsBaseUrl.replace(/\/$/, '')}/${resolvedFunctionName}`
     : '';
 
+function isJwtLikeToken(token: string | null | undefined): token is string {
+  return Boolean(token && token.split('.').length === 3);
+}
+
 export type BackendStatus = 'unknown' | 'healthy' | 'degraded' | 'offline';
 
 export interface AvailabilitySnapshot {
@@ -53,7 +57,7 @@ export function createEdgeHeaders(headers?: HeadersInit, userToken?: string, inc
 
   if (userToken) {
     finalHeaders.set('Authorization', `Bearer ${userToken}`);
-  } else if (publicAnonKey && !finalHeaders.has('Authorization')) {
+  } else if (isJwtLikeToken(publicAnonKey) && !finalHeaders.has('Authorization')) {
     finalHeaders.set('Authorization', `Bearer ${publicAnonKey}`);
   }
 
@@ -202,7 +206,7 @@ export async function probeBackendHealth(timeout = 8_000): Promise<AvailabilityS
     return buildAvailabilitySnapshot();
   }
 
-  if (!API_URL || !publicAnonKey || shouldPreferDirectSupabaseHealth()) {
+  if (!API_URL || !publicAnonKey || !isJwtLikeToken(publicAnonKey) || shouldPreferDirectSupabaseHealth()) {
     await markSupabaseHealth();
     return buildAvailabilitySnapshot();
   }
@@ -236,7 +240,7 @@ export async function warmUpServer(): Promise<void> {
     return;
   }
 
-  if (!API_URL || !publicAnonKey || shouldPreferDirectSupabaseHealth()) {
+  if (!API_URL || !publicAnonKey || !isJwtLikeToken(publicAnonKey) || shouldPreferDirectSupabaseHealth()) {
     serverWarm = await markSupabaseHealth();
     return;
   }
