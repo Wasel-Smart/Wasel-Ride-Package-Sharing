@@ -12,7 +12,7 @@ const ALLOW_CHECKED_IN_PUBLIC_FALLBACK = !FORCE_LOCAL_E2E_AUTH;
 
 const CHECKED_IN_PUBLIC_SUPABASE_URL = 'https://zexlxabdcsjefptmjhuq.supabase.co';
 const CHECKED_IN_PUBLIC_SUPABASE_PUBLISHABLE_KEY =
-  'sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE';
+  'sb_publishable_t2cOnKt1HH-l2KmvJIAwcg_8fpCWdN0';
 const CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY = '';
 
 const PLACEHOLDER_MARKERS = [
@@ -23,6 +23,29 @@ const PLACEHOLDER_MARKERS = [
   'replace_with',
   'example.com',
 ];
+
+type EnvCandidate = {
+  value: string | undefined;
+  explicit: boolean;
+};
+
+function getProcessEnvValue(key: string): EnvCandidate | null {
+  const processEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process
+    ?.env;
+
+  if (!processEnv || !Object.prototype.hasOwnProperty.call(processEnv, key)) {
+    return null;
+  }
+
+  return { value: processEnv[key], explicit: true };
+}
+
+function getEnvCandidate(key: string): EnvCandidate {
+  return getProcessEnvValue(key) ?? {
+    value: (import.meta.env as Record<string, string | undefined>)[key],
+    explicit: false,
+  };
+}
 
 function isConfiguredValue(value: string | undefined): value is string {
   if (!value) return false;
@@ -77,17 +100,43 @@ function getProjectRefFromUrl(value: string): string {
   return value.replace(/^https?:\/\//, '').replace(/\/$/, '').replace(/\.supabase\.co$/, '');
 }
 
-function pickConfiguredUrl(...candidates: Array<string | undefined>): string {
+function pickConfiguredUrl(
+  envCandidates: EnvCandidate[],
+  fallbackCandidates: Array<string | undefined>,
+): string {
+  const explicitCandidates = envCandidates.filter(candidate => candidate.explicit);
+  const candidates = explicitCandidates.length > 0 ? explicitCandidates : envCandidates;
+  const configuredUrl = candidates.find(
+    candidate => isConfiguredValue(candidate.value) && isValidPublicSupabaseUrl(candidate.value),
+  )?.value;
+
+  if (configuredUrl) return configuredUrl;
+  if (candidates.some(candidate => isConfiguredValue(candidate.value))) return '';
+  if (explicitCandidates.length > 0) return '';
+
   return (
-    candidates.find(
+    fallbackCandidates.find(
       candidate => isConfiguredValue(candidate) && isValidPublicSupabaseUrl(candidate),
     ) ?? ''
   );
 }
 
-function pickConfiguredKey(url: string, ...candidates: Array<string | undefined>): string {
-  const configured = candidates.filter((candidate): candidate is string => isConfiguredValue(candidate));
-  if (configured.length === 0) return '';
+function pickConfiguredKey(
+  url: string,
+  envCandidates: EnvCandidate[],
+  fallbackCandidates: Array<string | undefined>,
+): string {
+  const explicitCandidates = envCandidates.filter(candidate => candidate.explicit);
+  const candidates = explicitCandidates.length > 0 ? explicitCandidates : envCandidates;
+  const configured = candidates
+    .map(candidate => candidate.value)
+    .filter((candidate): candidate is string => isConfiguredValue(candidate));
+
+  const configuredFallbacks = explicitCandidates.length > 0
+    ? []
+    : fallbackCandidates.filter((candidate): candidate is string => isConfiguredValue(candidate));
+
+  if (configured.length === 0) return configuredFallbacks[0] ?? '';
 
   const urlProjectRef = url ? getProjectRefFromUrl(url) : '';
   if (!urlProjectRef) return configured[0] ?? '';
@@ -98,24 +147,28 @@ function pickConfiguredKey(url: string, ...candidates: Array<string | undefined>
   const opaqueCandidate = configured.find(candidate => !getProjectRefFromJwt(candidate));
   if (opaqueCandidate) return opaqueCandidate;
 
-  return configured[0] ?? '';
+  return configured[0] ?? configuredFallbacks[0] ?? '';
 }
 
 export const publicSupabaseUrl = pickConfiguredUrl(
-  import.meta.env.VITE_SUPABASE_URL as string | undefined,
-  import.meta.env.VITE_SUPABASE_PROJECT_URL as string | undefined,
-  import.meta.env.VITE_PUBLIC_SUPABASE_URL as string | undefined,
-  ...(ALLOW_CHECKED_IN_PUBLIC_FALLBACK ? [CHECKED_IN_PUBLIC_SUPABASE_URL] : []),
+  [
+    getEnvCandidate('VITE_SUPABASE_URL'),
+    getEnvCandidate('VITE_SUPABASE_PROJECT_URL'),
+    getEnvCandidate('VITE_PUBLIC_SUPABASE_URL'),
+  ],
+  ALLOW_CHECKED_IN_PUBLIC_FALLBACK ? [CHECKED_IN_PUBLIC_SUPABASE_URL] : [],
 );
 
 export const publicAnonKey = pickConfiguredKey(
   publicSupabaseUrl,
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined,
-  import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
-  import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY as string | undefined,
-  ...(ALLOW_CHECKED_IN_PUBLIC_FALLBACK
+  [
+    getEnvCandidate('VITE_SUPABASE_PUBLISHABLE_KEY'),
+    getEnvCandidate('VITE_SUPABASE_ANON_KEY'),
+    getEnvCandidate('VITE_PUBLIC_SUPABASE_ANON_KEY'),
+  ],
+  ALLOW_CHECKED_IN_PUBLIC_FALLBACK
     ? [CHECKED_IN_PUBLIC_SUPABASE_PUBLISHABLE_KEY, CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY]
-    : []),
+    : [],
 );
 
 export const projectId: string = publicSupabaseUrl ? getProjectRefFromUrl(publicSupabaseUrl) : '';

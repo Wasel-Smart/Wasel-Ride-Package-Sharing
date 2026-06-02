@@ -20,7 +20,9 @@ node_modules/
 coverage/
 dist/
 build/
-.vercel/
+.vercel/*
+!.vercel/output/
+!.vercel/output/**
 .codex/
 .kilo/
 .agents/
