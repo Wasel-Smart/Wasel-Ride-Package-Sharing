@@ -225,7 +225,9 @@ export async function runBackendWorkflow<T>({
     }
 
     if (fallback && !fallbackAllowed) {
-      throw getFallbackDeniedError(operation);
+      throw fallbackPolicy === 'writes-if-enabled'
+        ? getSecureBackendFallbackError(operation)
+        : getFallbackDeniedError(operation);
     }
 
     throw new BackendRequestError(
@@ -242,7 +244,9 @@ export async function runBackendWorkflow<T>({
     }
 
     if (fallback && !fallbackAllowed && isRecoverableError(error)) {
-      throw getFallbackDeniedError(operation);
+      throw fallbackPolicy === 'writes-if-enabled'
+        ? getSecureBackendFallbackError(operation)
+        : getFallbackDeniedError(operation);
     }
 
     throw error;
