@@ -23,8 +23,8 @@ const SUPABASE_URL_KEYS = [
 ];
 
 const SUPABASE_PUBLIC_KEY_KEYS = [
-  'VITE_SUPABASE_ANON_KEY',
   'VITE_SUPABASE_PUBLISHABLE_KEY',
+  'VITE_SUPABASE_ANON_KEY',
   'VITE_PUBLIC_SUPABASE_ANON_KEY',
 ];
 
@@ -132,7 +132,7 @@ if (!supabaseUrl) {
 if (!supabasePublicKey) {
   missingVars.push(`one of: ${SUPABASE_PUBLIC_KEY_KEYS.join(', ')}`);
 } else if (isPlaceholder(supabasePublicKey)) {
-  missingVars.push(`VITE_SUPABASE_ANON_KEY still holds a placeholder value`);
+  missingVars.push(`VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY still holds a placeholder value`);
 }
 
 // Cross-check: URL and anon key must reference the same project

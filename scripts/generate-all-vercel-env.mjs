@@ -43,9 +43,9 @@ if (fs.existsSync(envPath)) {
 // All VITE_* environment variables with defaults
 const allViteVars = {
   // CRITICAL - Required for build
-  'VITE_SUPABASE_URL': existingVars['VITE_SUPABASE_URL'] || 'https://your-project.supabase.co',
-  'VITE_SUPABASE_ANON_KEY': existingVars['VITE_SUPABASE_ANON_KEY'] || 'your-anon-key',
-  'VITE_SUPABASE_PUBLISHABLE_KEY': existingVars['VITE_SUPABASE_PUBLISHABLE_KEY'] || existingVars['VITE_SUPABASE_ANON_KEY'] || 'your-publishable-key-or-anon-key',
+  'VITE_SUPABASE_URL': existingVars['VITE_SUPABASE_URL'] || 'https://zexlxabdcsjefptmjhuq.supabase.co',
+  'VITE_SUPABASE_ANON_KEY': existingVars['VITE_SUPABASE_ANON_KEY'] || '<YOUR_SUPABASE_ANON_KEY>',
+  'VITE_SUPABASE_PUBLISHABLE_KEY': existingVars['VITE_SUPABASE_PUBLISHABLE_KEY'] || 'sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE',
   
   // App Configuration
   'VITE_APP_URL': existingVars['VITE_APP_URL'] || 'https://your-app.vercel.app',
@@ -57,11 +57,11 @@ const allViteVars = {
   'VITE_API_URL': existingVars['VITE_API_URL'] || '',
   
   // Maps
-  'VITE_GOOGLE_MAPS_API_KEY': existingVars['VITE_GOOGLE_MAPS_API_KEY'] || 'your-google-maps-api-key',
+  'VITE_GOOGLE_MAPS_API_KEY': existingVars['VITE_GOOGLE_MAPS_API_KEY'] || '<YOUR_GOOGLE_MAPS_API_KEY>',
   
   // OAuth
-  'VITE_GOOGLE_CLIENT_ID': existingVars['VITE_GOOGLE_CLIENT_ID'] || 'your-google-client-id.apps.googleusercontent.com',
-  'VITE_FACEBOOK_APP_ID': existingVars['VITE_FACEBOOK_APP_ID'] || 'your-facebook-app-id',
+  'VITE_GOOGLE_CLIENT_ID': existingVars['VITE_GOOGLE_CLIENT_ID'] || '235290462223-slmuhn0n9nvmalq3tfdt7cl5de55fcnp.apps.googleusercontent.com',
+  'VITE_FACEBOOK_APP_ID': existingVars['VITE_FACEBOOK_APP_ID'] || '<YOUR_FACEBOOK_APP_ID>',
   'VITE_AUTH_CALLBACK_PATH': existingVars['VITE_AUTH_CALLBACK_PATH'] || '/app/auth/callback',
   
   // Support Contact
@@ -80,7 +80,7 @@ const allViteVars = {
   'VITE_ALLOW_DIRECT_SUPABASE_FALLBACK': existingVars['VITE_ALLOW_DIRECT_SUPABASE_FALLBACK'] || 'false',
   
   // Payments
-  'VITE_STRIPE_PUBLISHABLE_KEY': existingVars['VITE_STRIPE_PUBLISHABLE_KEY'] || 'pk_live_...',
+  'VITE_STRIPE_PUBLISHABLE_KEY': existingVars['VITE_STRIPE_PUBLISHABLE_KEY'] || 'pk_live_51Spp9LFB0YHYiEoFRyXYWELezns1SrbtXpXo7SpZh1tqs2ukNX3V0nDPlsBOvjbLYAPlRMacHYiquSYlkmFqcWxt00M1YcJqUY',
   
   // Monitoring & Analytics
   'VITE_SENTRY_DSN': existingVars['VITE_SENTRY_DSN'] || 'https://your-dsn@sentry.io/project-id',
@@ -90,7 +90,7 @@ const allViteVars = {
 
 // Categorize variables
 const categories = {
-  critical: ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'],
+  critical: ['VITE_SUPABASE_URL', 'VITE_SUPABASE_PUBLISHABLE_KEY'],
   recommended: ['VITE_APP_URL', 'VITE_APP_NAME', 'VITE_GOOGLE_MAPS_API_KEY', 'VITE_STRIPE_PUBLISHABLE_KEY'],
   oauth: ['VITE_GOOGLE_CLIENT_ID', 'VITE_FACEBOOK_APP_ID', 'VITE_AUTH_CALLBACK_PATH'],
   support: ['VITE_SUPPORT_EMAIL', 'VITE_SUPPORT_PHONE_NUMBER', 'VITE_SUPPORT_WHATSAPP_NUMBER', 'VITE_SUPPORT_SMS_NUMBER'],
@@ -186,7 +186,7 @@ console.log('5. Click "Save"');
 console.log('6. After adding all variables, redeploy your project');
 console.log('\n💾 Variables also saved to: vercel-env-variables.txt');
 console.log('\n⚠️  IMPORTANT: Update placeholder values with your actual credentials!');
-console.log('   - Replace "your-project" with your actual Supabase project ID');
-console.log('   - Replace "your-anon-key" with your actual Supabase anon key');
+console.log('   - Confirm VITE_SUPABASE_URL points to zexlxabdcsjefptmjhuq');
+console.log('   - Set VITE_SUPABASE_ANON_KEY only after copying it from Supabase');
 console.log('   - Replace "your-app.vercel.app" with your actual Vercel domain');
 console.log('   - Update all other placeholder values\n');

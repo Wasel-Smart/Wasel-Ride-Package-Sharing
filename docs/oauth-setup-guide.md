@@ -53,12 +53,12 @@ This guide walks you through configuring Google and Facebook OAuth for Wasel aut
      http://localhost:5173
      http://localhost:4173
      https://wasel14.online
-     https://djccmatubyyudeosrngm.supabase.co
+     https://zexlxabdcsjefptmjhuq.supabase.co
      ```
    - **Authorized redirect URIs**:
      ```
      http://localhost:54321/auth/v1/callback
-     https://djccmatubyyudeosrngm.supabase.co/auth/v1/callback
+     https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback
      ```
 5. Click **Create**
 6. Copy **Client ID** and **Client Secret**
@@ -99,7 +99,7 @@ SUPABASE_AUTH_GOOGLE_CLIENT_SECRET=your-client-secret
 2. Add **Valid OAuth Redirect URIs**:
    ```
    http://localhost:54321/auth/v1/callback
-   https://djccmatubyyudeosrngm.supabase.co/auth/v1/callback
+   https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback
    ```
 3. Save changes
 
@@ -113,7 +113,7 @@ SUPABASE_AUTH_GOOGLE_CLIENT_SECRET=your-client-secret
 
 Add to `.env`:
 ```bash
-VITE_FACEBOOK_APP_ID=your-facebook-app-id
+VITE_FACEBOOK_APP_ID=<YOUR_FACEBOOK_APP_ID>
 SUPABASE_AUTH_FACEBOOK_CLIENT_ID=your-facebook-app-id
 SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET=your-facebook-app-secret
 ```
@@ -131,7 +131,7 @@ SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET=your-facebook-app-secret
 ### Option 1: Supabase Dashboard (Recommended for Production)
 
 1. Go to [Supabase Dashboard](https://app.supabase.com/)
-2. Select your project: `djccmatubyyudeosrngm`
+2. Select your project: `zexlxabdcsjefptmjhuq`
 3. Navigate to **Authentication** > **Providers**
 
 #### Enable Google:
@@ -182,9 +182,9 @@ npm run supabase:start
 
 ```bash
 # Supabase
-VITE_SUPABASE_URL=https://djccmatubyyudeosrngm.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+VITE_SUPABASE_URL=https://zexlxabdcsjefptmjhuq.supabase.co
+VITE_SUPABASE_ANON_KEY=<YOUR_SUPABASE_ANON_KEY>
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE
 
 # Google OAuth
 VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
@@ -192,7 +192,7 @@ SUPABASE_AUTH_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 SUPABASE_AUTH_GOOGLE_CLIENT_SECRET=your-client-secret
 
 # Facebook OAuth
-VITE_FACEBOOK_APP_ID=your-facebook-app-id
+VITE_FACEBOOK_APP_ID=<YOUR_FACEBOOK_APP_ID>
 SUPABASE_AUTH_FACEBOOK_CLIENT_ID=your-facebook-app-id
 SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET=your-facebook-app-secret
 
@@ -225,14 +225,14 @@ VITE_AUTH_CALLBACK_PATH=/app/auth/callback
 Add production URLs to **Authorized redirect URIs**:
 ```
 https://wasel14.online/app/auth/callback
-https://djccmatubyyudeosrngm.supabase.co/auth/v1/callback
+https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback
 ```
 
 #### Facebook App Settings:
 Add production URLs to **Valid OAuth Redirect URIs**:
 ```
 https://wasel14.online/app/auth/callback
-https://djccmatubyyudeosrngm.supabase.co/auth/v1/callback
+https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback
 ```
 
 ### Update Supabase Site URL
@@ -249,7 +249,7 @@ https://djccmatubyyudeosrngm.supabase.co/auth/v1/callback
 
 ```bash
 VITE_APP_URL=https://wasel14.online
-VITE_SUPABASE_URL=https://djccmatubyyudeosrngm.supabase.co
+VITE_SUPABASE_URL=https://zexlxabdcsjefptmjhuq.supabase.co
 # ... rest of production credentials
 ```
 
@@ -348,3 +348,4 @@ For issues or questions:
 
 **Last Updated**: 2025-01-15
 **Version**: 1.0.0
+

@@ -66,8 +66,7 @@ set_env "NODE_ENV" "production"
 echo ""
 echo "2. Supabase Configuration"
 set_env "VITE_SUPABASE_URL" "https://zexlxabdcsjefptmjhuq.supabase.co"
-set_env "VITE_SUPABASE_ANON_KEY" "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0"
-set_env "VITE_SUPABASE_PUBLISHABLE_KEY" "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0"
+set_env "VITE_SUPABASE_PUBLISHABLE_KEY" "sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE"
 set_env "VITE_EDGE_FUNCTION_NAME" "make-server-0b1f4071"
 set_env "VITE_API_URL" "https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071"
 
@@ -111,10 +110,10 @@ echo "7. Google Services"
 set_env "VITE_GOOGLE_MAPS_API_KEY" "AIzaSyBWqXeMJ-oPSDpqeR548hw3QUU0EaxE85s"
 set_env "VITE_GOOGLE_CLIENT_ID" "235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com"
 
-# Stripe (using test keys - replace with live keys)
+# Stripe
 echo ""
 echo "8. Stripe Configuration"
-set_env "VITE_STRIPE_PUBLISHABLE_KEY" "pk_test_51SZmpKENhKSYxMCXJ2TgwgNMNjUjHk5CwPQ31zWTEsokWdkD7GgaVhgU3ZPD7ti5gd6NWBvwdWcH3R0hXQCOG3QI00lTUi6x7v"
+set_env "VITE_STRIPE_PUBLISHABLE_KEY" "pk_live_51Spp9LFB0YHYiEoFRyXYWELezns1SrbtXpXo7SpZh1tqs2ukNX3V0nDPlsBOvjbLYAPlRMacHYiquSYlkmFqcWxt00M1YcJqUY"
 
 # Analytics & Monitoring
 echo ""
@@ -143,8 +142,8 @@ NODE_ENV=production
 
 # Supabase
 VITE_SUPABASE_URL=https://zexlxabdcsjefptmjhuq.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0
+VITE_SUPABASE_ANON_KEY=<YOUR_SUPABASE_ANON_KEY>
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE
 VITE_EDGE_FUNCTION_NAME=make-server-0b1f4071
 VITE_API_URL=https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071
 
@@ -161,7 +160,7 @@ VITE_GOOGLE_MAPS_API_KEY=AIzaSyBWqXeMJ-oPSDpqeR548hw3QUU0EaxE85s
 VITE_GOOGLE_CLIENT_ID=235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com
 
 # Stripe
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_51SZmpKENhKSYxMCXJ2TgwgNMNjUjHk5CwPQ31zWTEsokWdkD7GgaVhgU3ZPD7ti5gd6NWBvwdWcH3R0hXQCOG3QI00lTUi6x7v
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_51Spp9LFB0YHYiEoFRyXYWELezns1SrbtXpXo7SpZh1tqs2ukNX3V0nDPlsBOvjbLYAPlRMacHYiquSYlkmFqcWxt00M1YcJqUY
 
 # Support
 VITE_SUPPORT_EMAIL=support@wasel14.online
@@ -239,3 +238,4 @@ echo "  • Vercel Dashboard → Environment Variables"
 echo "    - Add VITE_SENTRY_DSN (if using Sentry)"
 echo "    - Add VITE_FACEBOOK_APP_ID (if using Facebook)"
 echo ""
+

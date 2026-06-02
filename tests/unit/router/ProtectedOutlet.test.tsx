@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mockNavigate = vi.fn();
@@ -20,18 +20,21 @@ vi.mock('@/contexts/LanguageContext', () => ({
 
 import ProtectedOutlet from '@/router/ProtectedOutlet';
 
-function renderProtectedRoute(
-  initialEntry = '/app/profile?tab=security#alerts',
-) {
+function renderProtectedRoute(initialEntry = '/app/profile?tab=security#alerts') {
+  function LocationProbe() {
+    const location = useLocation();
+    return (
+      <div data-testid="location">{`${location.pathname}${location.search}${location.hash}`}</div>
+    );
+  }
+
   return render(
     <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route element={<ProtectedOutlet />}>
-          <Route
-            path="/app/profile"
-            element={<div>Protected content</div>}
-          />
+          <Route path="/app/profile" element={<div>Protected content</div>} />
         </Route>
+        <Route path="/app/auth" element={<LocationProbe />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -50,14 +53,12 @@ describe('ProtectedOutlet', () => {
 
     renderProtectedRoute();
 
-    expect(
-      screen.getByText('Restoring your Wasel session...'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Restoring your Wasel session...')).toBeInTheDocument();
 
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('renders the sign-in preview page for unauthenticated users', () => {
+  it('redirects unauthenticated users to sign in with the original route preserved', () => {
     mockUseLocalAuth.mockReturnValue({
       user: null,
       loading: false,
@@ -65,9 +66,9 @@ describe('ProtectedOutlet', () => {
 
     renderProtectedRoute();
 
-    // ProtectedPagePreview renders a Sign in button for guests
-    expect(screen.getByText('Sign in')).toBeInTheDocument();
-    // The outlet child should not be rendered
+    expect(screen.getByTestId('location')).toHaveTextContent(
+      '/app/auth?returnTo=%2Fapp%2Fprofile%3Ftab%3Dsecurity%23alerts',
+    );
     expect(screen.queryByText('Protected content')).not.toBeInTheDocument();
   });
 
@@ -79,9 +80,7 @@ describe('ProtectedOutlet', () => {
 
     renderProtectedRoute();
 
-    expect(
-      screen.getByText('Protected content'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Protected content')).toBeInTheDocument();
 
     expect(mockNavigate).not.toHaveBeenCalled();
   });

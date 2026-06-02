@@ -9,6 +9,11 @@ import {
 } from '../platform/geo-stream';
 import { generateId } from '../utils/api';
 import { sanitizeEventPayload } from '../utils/sanitization';
+import {
+  createDirectPackage,
+  getDirectPackageByTrackingId,
+  updateDirectPackageStatus,
+} from './directSupabase';
 
 export type PackageStatus =
   | 'created'
@@ -114,6 +119,33 @@ function calculateBasePrice(size: 'small' | 'medium' | 'large'): number {
   }
 }
 
+const PACKAGE_CACHE_KEY = 'wasel-package-tracking-cache';
+
+function serializePackage(pkg: PackageTracking) {
+  return {
+    ...pkg,
+    createdAt: pkg.createdAt.toISOString(),
+    pickedUpAt: pkg.pickedUpAt?.toISOString(),
+    inTransitAt: pkg.inTransitAt?.toISOString(),
+    deliveredAt: pkg.deliveredAt?.toISOString(),
+    lastUpdated: pkg.lastUpdated.toISOString(),
+  };
+}
+
+function deserializePackage(raw: Record<string, unknown>): PackageTracking {
+  return {
+    ...(raw as Omit<
+      PackageTracking,
+      'createdAt' | 'pickedUpAt' | 'inTransitAt' | 'deliveredAt' | 'lastUpdated'
+    >),
+    createdAt: new Date(String(raw.createdAt ?? new Date().toISOString())),
+    pickedUpAt: raw.pickedUpAt ? new Date(String(raw.pickedUpAt)) : undefined,
+    inTransitAt: raw.inTransitAt ? new Date(String(raw.inTransitAt)) : undefined,
+    deliveredAt: raw.deliveredAt ? new Date(String(raw.deliveredAt)) : undefined,
+    lastUpdated: new Date(String(raw.lastUpdated ?? new Date().toISOString())),
+  };
+}
+
 export class PackageTrackingService {
   private static instance: PackageTrackingService;
 
@@ -121,6 +153,10 @@ export class PackageTrackingService {
   private escrows = new Map<string, PackagePaymentEscrow>();
   private locationStreams = new Map<string, GeoStreamState>();
   private statusHistory = new Map<string, PackageStatusUpdate[]>();
+
+  private constructor() {
+    this.restoreCache();
+  }
 
   static getInstance(): PackageTrackingService {
     if (!PackageTrackingService.instance) {
@@ -190,6 +226,16 @@ export class PackageTrackingService {
       ),
     );
 
+    this.persistCache();
+    void createDirectPackage({
+      userId: params.senderId,
+      trackingNumber: trackingCode,
+      from: params.from,
+      to: params.to,
+      weightKg: params.size === 'large' ? 8 : params.size === 'medium' ? 3 : 0.5,
+      description: params.description ?? '',
+    }).catch(() => undefined);
+
     return pkg;
   }
 
@@ -236,6 +282,9 @@ export class PackageTrackingService {
       ),
     );
 
+    this.persistCache();
+    void updateDirectPackageStatus(pkg.trackingCode, 'matched').catch(() => undefined);
+
     return pkg;
   }
 
@@ -261,6 +310,7 @@ export class PackageTrackingService {
 
     this.packages.set(packageId, pkg);
     this.escrows.set(packageId, escrow);
+    this.persistCache();
 
     domainEventBus.publish(
       createDomainEvent(
@@ -313,6 +363,9 @@ export class PackageTrackingService {
         'packageTrackingService',
       ),
     );
+
+    this.persistCache();
+    void updateDirectPackageStatus(pkg.trackingCode, 'in_transit').catch(() => undefined);
 
     return true;
   }
@@ -367,6 +420,9 @@ export class PackageTrackingService {
         'packageTrackingService',
       ),
     );
+
+    this.persistCache();
+    void updateDirectPackageStatus(pkg.trackingCode, 'in_transit').catch(() => undefined);
   }
 
   async verifyDelivery(
@@ -433,6 +489,9 @@ export class PackageTrackingService {
       ),
     );
 
+    this.persistCache();
+    void updateDirectPackageStatus(pkg.trackingCode, 'delivered').catch(() => undefined);
+
     return {
       verified: true,
       paymentReleased: pkg.paymentStatus === 'released',
@@ -444,7 +503,65 @@ export class PackageTrackingService {
   }
 
   getPackageByTrackingCode(trackingCode: string): PackageTracking | undefined {
-    return Array.from(this.packages.values()).find(pkg => pkg.trackingCode === trackingCode);
+    const cached = Array.from(this.packages.values()).find(pkg => pkg.trackingCode === trackingCode);
+    if (cached) {
+      return cached;
+    }
+
+    void getDirectPackageByTrackingId(trackingCode)
+      .then(remote => {
+        if (!remote) return;
+        const now = new Date();
+        const rawStatus = String(remote.package_status ?? remote.status ?? 'created');
+        const status: PackageStatus =
+          rawStatus === 'matched' ||
+          rawStatus === 'pickup_scheduled' ||
+          rawStatus === 'picked_up' ||
+          rawStatus === 'in_transit' ||
+          rawStatus === 'near_destination' ||
+          rawStatus === 'delivered' ||
+          rawStatus === 'cancelled' ||
+          rawStatus === 'disputed'
+            ? rawStatus
+            : rawStatus === 'assigned'
+              ? 'matched'
+              : 'created';
+        const lifecycleStatus = getCanonicalPackageLifecycle(status);
+        const hydrated: PackageTracking = {
+          id: String(remote.package_id ?? remote.id ?? remote.tracking_number ?? trackingCode),
+          trackingCode: String(remote.tracking_number ?? remote.package_code ?? trackingCode),
+          qrCodeUrl: generateQRCodeUrl(String(remote.tracking_number ?? remote.package_code ?? trackingCode)),
+          senderId: String(remote.sender_id ?? ''),
+          from: String(remote.origin_name ?? remote.origin_location ?? ''),
+          to: String(remote.destination_name ?? remote.destination_location ?? ''),
+          size:
+            remote.size === 'large' || remote.size === 'medium' || remote.size === 'small'
+              ? remote.size
+              : 'small',
+          weight: Number(remote.weight_kg ?? 0),
+          value: 0,
+          insurance: false,
+          description: remote.description ?? undefined,
+          price: 0,
+          insuranceCost: 0,
+          totalCost: 0,
+          paymentStatus: 'pending',
+          status,
+          lifecycleStatus,
+          createdAt: remote.created_at ? new Date(remote.created_at) : now,
+          pickupVerificationCode: generateVerificationCode(),
+          deliveryVerificationCode: generateVerificationCode(),
+          pickupVerified: false,
+          deliveryVerified: false,
+          senderCanContactDriver: false,
+          lastUpdated: now,
+        };
+        this.packages.set(hydrated.id, hydrated);
+        this.persistCache();
+      })
+      .catch(() => undefined);
+
+    return undefined;
   }
 
   getSenderPackages(senderId: string): PackageTracking[] {
@@ -468,6 +585,7 @@ export class PackageTrackingService {
     this.escrows.clear();
     this.locationStreams.clear();
     this.statusHistory.clear();
+    this.persistCache();
   }
 
   private requirePackage(packageId: string): PackageTracking {
@@ -489,6 +607,44 @@ export class PackageTrackingService {
       escrow.releaseConditions.photoProvided &&
       escrow.releaseConditions.noDisputes
     );
+  }
+
+  private restoreCache(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      const raw = window.localStorage.getItem(PACKAGE_CACHE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(parsed)) return;
+
+      parsed.forEach(item => {
+        const pkg = deserializePackage(item as Record<string, unknown>);
+        this.packages.set(pkg.id, pkg);
+        this.locationStreams.set(pkg.id, {
+          lastAcceptedAt: null,
+          lastPoint: pkg.currentLocation ?? null,
+        });
+      });
+    } catch {
+      // Ignore corrupt browser cache.
+    }
+  }
+
+  private persistCache(): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(
+        PACKAGE_CACHE_KEY,
+        JSON.stringify(Array.from(this.packages.values()).map(serializePackage).slice(0, 100)),
+      );
+    } catch {
+      // Ignore storage quota and privacy-mode errors.
+    }
   }
 }
 

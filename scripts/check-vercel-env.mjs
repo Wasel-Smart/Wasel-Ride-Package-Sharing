@@ -12,7 +12,6 @@
 
 const REQUIRED_VARS = [
   'VITE_SUPABASE_URL',
-  'VITE_SUPABASE_ANON_KEY',
   'VITE_APP_URL',
   'VITE_APP_NAME',
   'VITE_EDGE_FUNCTION_NAME',
@@ -71,6 +70,19 @@ for (const key of REQUIRED_VARS) {
   } else if (isPlaceholder(value)) {
     errors.push(`${key} still holds a placeholder value: "${value.slice(0, 40)}"`);
   }
+}
+
+const supabasePublicKey =
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_ANON_KEY ?? '';
+if (!supabasePublicKey) {
+  errors.push('VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY is not set');
+} else if (isPlaceholder(supabasePublicKey)) {
+  errors.push(
+    `VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY still holds a placeholder value: "${supabasePublicKey.slice(
+      0,
+      40,
+    )}"`,
+  );
 }
 
 // ── Supabase URL ↔ anon-key project-ref cross-check ─────────────────────────

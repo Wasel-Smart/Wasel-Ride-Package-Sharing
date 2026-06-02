@@ -8,6 +8,7 @@ const envContents = await readFile(envPath, 'utf8');
 const requiredKeys = [
   'VITE_SUPABASE_URL',
   'VITE_SUPABASE_ANON_KEY',
+  'VITE_SUPABASE_PUBLISHABLE_KEY',
   'VITE_EDGE_FUNCTION_NAME',
   'VITE_SUPPORT_WHATSAPP_NUMBER',
   'VITE_SUPPORT_EMAIL',

@@ -4,7 +4,7 @@ Quick reference checklist to ensure Google and Facebook OAuth are properly confi
 
 ## ✅ Pre-Setup Requirements
 
-- [ ] Active Supabase project: `djccmatubyyudeosrngm`
+- [ ] Active Supabase project: `zexlxabdcsjefptmjhuq`
 - [ ] Google Cloud Console access
 - [ ] Facebook Developer account
 - [ ] Domain access (for production): `wasel14.online`
@@ -99,9 +99,9 @@ Quick reference checklist to ensure Google and Facebook OAuth are properly confi
 ### Redirect URLs (Production)
 
 - [ ] `https://wasel14.online` added to Google authorized origins
-- [ ] `https://djccmatubyyudeosrngm.supabase.co/auth/v1/callback` added to Google
+- [ ] `https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback` added to Google
 - [ ] `https://wasel14.online/app/auth/callback` added to Google
-- [ ] `https://djccmatubyyudeosrngm.supabase.co/auth/v1/callback` added to Facebook
+- [ ] `https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback` added to Facebook
 - [ ] `https://wasel14.online/app/auth/callback` added to Facebook
 
 ### Supabase Dashboard
@@ -175,7 +175,7 @@ npm run verify
 ### "redirect_uri_mismatch"
 - **Fix**: Ensure exact redirect URI is added to OAuth provider console
 - **Check**: `http://localhost:54321/auth/v1/callback` for local
-- **Check**: `https://djccmatubyyudeosrngm.supabase.co/auth/v1/callback` for production
+- **Check**: `https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback` for production
 
 ### "invalid_client"
 - **Fix**: Verify Client ID and Secret match in `.env` and provider console
@@ -226,3 +226,4 @@ Your OAuth setup is 10/10 when:
 **Last Updated**: 2025-01-15  
 **Maintained By**: Wasel Engineering Team  
 **Support**: support@wasel14.online
+

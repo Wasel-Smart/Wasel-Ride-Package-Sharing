@@ -53,6 +53,8 @@ export function createEdgeHeaders(headers?: HeadersInit, userToken?: string, inc
 
   if (userToken) {
     finalHeaders.set('Authorization', `Bearer ${userToken}`);
+  } else if (publicAnonKey && !finalHeaders.has('Authorization')) {
+    finalHeaders.set('Authorization', `Bearer ${publicAnonKey}`);
   }
 
   return finalHeaders;

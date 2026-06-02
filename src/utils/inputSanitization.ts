@@ -10,7 +10,12 @@ export function sanitizeForLog(input: unknown): string {
   
   const str = String(input);
   // Remove newlines and control characters to prevent log injection
-  return str.replace(/[\r\n\t\x00-\x1F\x7F]/g, '');
+  return Array.from(str)
+    .filter(char => {
+      const code = char.charCodeAt(0);
+      return code > 31 && code !== 127;
+    })
+    .join('');
 }
 
 export function sanitizeForHTML(input: unknown): string {
@@ -33,12 +38,12 @@ export function sanitizeForHTML(input: unknown): string {
 
 export function sanitizeTrackingId(trackingId: string): string {
   // Only allow alphanumeric, hyphens, and underscores
-  return trackingId.replace(/[^a-zA-Z0-9\-_]/g, '');
+  return trackingId.replace(/[^a-zA-Z0-9_-]/g, '');
 }
 
 export function sanitizeNumericString(input: string): string {
   // Only allow digits, decimal point, and minus sign
-  return input.replace(/[^0-9.\-]/g, '');
+  return input.replace(/[^0-9.-]/g, '');
 }
 
 export function isValidURL(url: string, allowedDomains: string[]): boolean {
