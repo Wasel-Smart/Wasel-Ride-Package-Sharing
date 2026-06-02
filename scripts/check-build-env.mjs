@@ -97,6 +97,10 @@ const PLACEHOLDER_PATTERNS = [
   /\.\.\./,
 ];
 
+const BLOCKED_PUBLIC_SUPABASE_KEYS = new Set([
+  'sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE',
+]);
+
 function isPlaceholder(value) {
   return PLACEHOLDER_PATTERNS.some(re => re.test(value));
 }
@@ -133,6 +137,8 @@ if (!supabasePublicKey) {
   missingVars.push(`one of: ${SUPABASE_PUBLIC_KEY_KEYS.join(', ')}`);
 } else if (isPlaceholder(supabasePublicKey)) {
   missingVars.push(`VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY still holds a placeholder value`);
+} else if (BLOCKED_PUBLIC_SUPABASE_KEYS.has(supabasePublicKey)) {
+  missingVars.push(`VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY is a revoked Supabase key`);
 }
 
 // Cross-check: URL and anon key must reference the same project

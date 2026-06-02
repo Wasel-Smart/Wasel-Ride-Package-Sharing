@@ -184,7 +184,7 @@ npm run supabase:start
 # Supabase
 VITE_SUPABASE_URL=https://zexlxabdcsjefptmjhuq.supabase.co
 VITE_SUPABASE_ANON_KEY=<YOUR_SUPABASE_ANON_KEY>
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_t2cOnKt1HH-l2KmvJIAwcg_8fpCWdN0
 
 # Google OAuth
 VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com

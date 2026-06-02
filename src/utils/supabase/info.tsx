@@ -15,6 +15,10 @@ const CHECKED_IN_PUBLIC_SUPABASE_PUBLISHABLE_KEY =
   'sb_publishable_t2cOnKt1HH-l2KmvJIAwcg_8fpCWdN0';
 const CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY = '';
 
+const BLOCKED_PUBLIC_SUPABASE_KEYS = new Set([
+  ['sb_publishable_Iy', '-jArsso0ehGKQ83kuiDg_1T-cl9zE'].join(''),
+]);
+
 const PLACEHOLDER_MARKERS = [
   'your-project.supabase.co',
   'your-anon-key',
@@ -52,6 +56,7 @@ function isConfiguredValue(value: string | undefined): value is string {
 
   const normalized = value.trim();
   if (!normalized) return false;
+  if (BLOCKED_PUBLIC_SUPABASE_KEYS.has(normalized)) return false;
 
   const lower = normalized.toLowerCase();
   return !PLACEHOLDER_MARKERS.some(marker => lower.includes(marker));
