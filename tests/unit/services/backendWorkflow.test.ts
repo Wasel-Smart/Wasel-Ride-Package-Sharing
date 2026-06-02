@@ -82,6 +82,31 @@ describe('backendWorkflow', () => {
     expect(headers.get('Authorization')).toBeNull();
   });
 
+  it('fails closed before calling the edge function when required auth has no token', async () => {
+    mockGetAuthDetails.mockResolvedValue({ token: '', userId: 'user-123' });
+
+    await expect(requestEdgeJson({
+      path: '/trust/phone/start',
+      method: 'POST',
+      authMode: 'required',
+      operation: 'Phone verification start',
+    })).rejects.toThrow('Your session has expired');
+
+    expect(mockFetchWithRetry).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when a required context is provided without a token', async () => {
+    await expect(requestEdgeJson({
+      path: '/trust/driver-documents/submit',
+      method: 'POST',
+      authMode: 'required',
+      context: { userId: 'user-123' },
+      operation: 'Driver document submission',
+    })).rejects.toThrow('Your session has expired');
+
+    expect(mockFetchWithRetry).not.toHaveBeenCalled();
+  });
+
   it('falls back when the edge request fails with a recoverable backend error', async () => {
     const fallback = vi.fn(async () => ({ source: 'fallback' }));
 

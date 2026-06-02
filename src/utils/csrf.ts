@@ -113,7 +113,8 @@ function constantTimeCompare(a: string, b: string): boolean {
 /**
  * Add CSRF token to request headers
  */
-export function addCSRFHeader(headers: HeadersInit = {}): HeadersInit {
+export function addCSRFHeader(headers: HeadersInit = {}): Headers {
+  const finalHeaders = new Headers(headers);
   let token = '';
 
   try {
@@ -123,13 +124,11 @@ export function addCSRFHeader(headers: HeadersInit = {}): HeadersInit {
   }
 
   if (!token) {
-    return headers;
+    return finalHeaders;
   }
 
-  return {
-    ...headers,
-    [CSRF_TOKEN_HEADER]: token,
-  };
+  finalHeaders.set(CSRF_TOKEN_HEADER, token);
+  return finalHeaders;
 }
 
 /**

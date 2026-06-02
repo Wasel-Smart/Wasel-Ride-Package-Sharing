@@ -124,6 +124,13 @@ async function resolveContext(authMode: BackendAuthMode): Promise<BackendWorkflo
   }
 
   const { token, userId } = await getAuthDetails();
+  if (!token?.trim() || !userId?.trim()) {
+    throw new BackendRequestError(
+      'Your session has expired. Please sign in again before continuing.',
+      { recoverable: false },
+    );
+  }
+
   return { token, userId };
 }
 
@@ -158,6 +165,13 @@ export async function requestEdgeJson<T>({
 
   const resolvedContext =
     authMode === 'required' ? (context ?? (await resolveContext(authMode))) : (context ?? {});
+
+  if (authMode === 'required' && !resolvedContext.token?.trim()) {
+    throw new BackendRequestError(
+      'Your session has expired. Please sign in again before continuing.',
+      { recoverable: false },
+    );
+  }
   
   // Determine if CSRF should be included (for state-changing operations)
   const includeCSRF = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
@@ -167,6 +181,13 @@ export async function requestEdgeJson<T>({
     authMode === 'required' ? resolvedContext.token : undefined,
     includeCSRF,
   );
+
+  if (authMode === 'required' && !finalHeaders.has('Authorization')) {
+    throw new BackendRequestError(
+      `${operation} requires a signed-in session. Please sign in again before continuing.`,
+      { recoverable: false },
+    );
+  }
 
   if (authMode === 'none' && !publicAnonKey) {
     finalHeaders.delete('apikey');
