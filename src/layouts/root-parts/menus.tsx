@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Activity, Settings, ShieldCheck, Sparkles, UserCircle2, Wallet, X } from 'lucide-react';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { lockBodyScroll } from '../../utils/bodyScrollLock';
 import {
   getVisibleNavItems,
   isVisibleNavGroup,
@@ -357,11 +358,8 @@ export function MobileDrawer({
   const isAuthenticated = Boolean(user);
 
   useEffect(() => {
-    if (open) document.body.style.overflow = 'hidden';
-    else document.body.style.overflow = '';
-    return () => {
-      document.body.style.overflow = '';
-    };
+    if (!open) return undefined;
+    return lockBodyScroll();
   }, [open]);
 
   if (!open) return null;
@@ -383,7 +381,8 @@ export function MobileDrawer({
            top: 0,
            insetInlineEnd: 0,
            width: 300,
-           height: '100%',
+           height: '100dvh',
+           minHeight: '-webkit-fill-available',
            background: C.bg,
            borderInlineStart: `1px solid ${C.border}`,
            boxShadow: ar ? '20px 0 60px rgba(0,0,0,0.7)' : '-20px 0 60px rgba(0,0,0,0.7)',

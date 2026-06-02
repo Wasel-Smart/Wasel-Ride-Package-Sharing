@@ -26,6 +26,13 @@ import {
   isRuntimeAdminEnabled,
   resolveAllowedOrigin,
 } from './_shared/request-security.ts';
+import {
+  advanceCorridorAfterBooking,
+  buildMobilitySnapshot,
+  MOBILITY_OS_SEED_SQL,
+  type MobilityBookingType,
+  type MobilityCorridorRow,
+} from './_shared/mobility-os-runtime.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('VITE_SUPABASE_ANON_KEY') ?? '';
@@ -411,6 +418,642 @@ function parseWalletRoute(path: string) {
     userId: decodeURIComponent(match[1]),
     action: decodeURIComponent(match[2]),
   };
+}
+
+function parseEntityRoute(path: string, prefix: string) {
+  const match = new RegExp(`^/${prefix}/([^/]+)(?:/([^/]+))?$`).exec(path);
+  if (!match) return null;
+  return {
+    id: decodeURIComponent(match[1]),
+    action: match[2] ? decodeURIComponent(match[2]) : null,
+  };
+}
+
+function toNumber(value: unknown, fallback = 0): number {
+  const next = Number(value);
+  return Number.isFinite(next) ? next : fallback;
+}
+
+function formatDate(value: unknown, fallback = new Date().toISOString().slice(0, 10)): string {
+  const date = new Date(String(value ?? ''));
+  if (Number.isNaN(date.getTime())) return fallback;
+  return date.toISOString().slice(0, 10);
+}
+
+function formatTime(value: unknown): string {
+  const date = new Date(String(value ?? ''));
+  if (Number.isNaN(date.getTime())) return String(value ?? '').slice(0, 5) || '08:00';
+  return date.toISOString().slice(11, 16);
+}
+
+async function authenticateAuthUser(request: Request) {
+  const authorization = request.headers.get('Authorization') ?? '';
+  const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
+  if (!token) {
+    return { error: json({ error: 'Missing bearer token' }, 401) };
+  }
+
+  const admin = getAdminClient();
+  const { data, error } = await admin.auth.getUser(token);
+  if (error || !data.user) {
+    return { error: json({ error: 'Invalid auth token' }, 401) };
+  }
+
+  return { admin, authUser: data.user };
+}
+
+async function ensureCanonicalUserForAuth(
+  admin: ReturnType<typeof getAdminClient>,
+  authUser: Record<string, unknown>,
+  body: Record<string, unknown> = {},
+) {
+  const authUserId = String(authUser.id ?? '');
+  const email = String(body.email ?? authUser.email ?? '').trim() || null;
+  const fullName =
+    String(
+      body.fullName ??
+        [body.firstName, body.lastName].filter(Boolean).join(' ') ??
+        (authUser.user_metadata as Record<string, unknown> | undefined)?.full_name ??
+        '',
+    ).trim() || null;
+  const phoneNumber = String(body.phone_number ?? body.phone ?? '').trim() || null;
+
+  const { data: existing, error: selectError } = await admin
+    .from('users')
+    .select('*')
+    .eq('auth_user_id', authUserId)
+    .maybeSingle();
+  if (selectError) throw selectError;
+  if (existing) return existing;
+
+  const { data, error } = await admin
+    .from('users')
+    .insert({
+      id: authUserId,
+      auth_user_id: authUserId,
+      email,
+      full_name: fullName,
+      phone_number: phoneNumber,
+      role: 'passenger',
+      verification_level: 'level_0',
+      profile_status: 'active',
+    })
+    .select('*')
+    .single();
+  if (error) throw error;
+
+  await admin
+    .from('wallets')
+    .insert({
+      user_id: data.id,
+      balance: 0,
+      pending_balance: 0,
+      wallet_status: 'active',
+      currency_code: 'JOD',
+    })
+    .catch(() => undefined);
+
+  return data;
+}
+
+async function getWalletForUser(admin: ReturnType<typeof getAdminClient>, userId: string) {
+  const { data, error } = await admin
+    .from('wallets')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+async function getVerificationForUser(admin: ReturnType<typeof getAdminClient>, userId: string) {
+  const { data, error } = await admin
+    .from('verification_records')
+    .select('*')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) return null;
+  return data;
+}
+
+async function getDriverForUser(admin: ReturnType<typeof getAdminClient>, userId: string) {
+  const { data, error } = await admin
+    .from('drivers')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) return null;
+  return data;
+}
+
+async function ensureDriverForUser(admin: ReturnType<typeof getAdminClient>, user: Record<string, unknown>) {
+  const existing = await getDriverForUser(admin, String(user.id));
+  if (existing) return existing;
+
+  const { data, error } = await admin
+    .from('drivers')
+    .insert({
+      user_id: user.id,
+      driver_status: 'available',
+      verification_level: user.verification_level ?? 'level_0',
+      sanad_identity_linked: false,
+    })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+async function buildProfilePayload(admin: ReturnType<typeof getAdminClient>, user: Record<string, unknown>) {
+  const [wallet, verification, driver] = await Promise.all([
+    getWalletForUser(admin, String(user.id)).catch(() => null),
+    getVerificationForUser(admin, String(user.id)).catch(() => null),
+    getDriverForUser(admin, String(user.id)).catch(() => null),
+  ]);
+  const tripCount = driver?.driver_id
+    ? await admin
+        .from('trips')
+        .select('trip_id', { count: 'exact', head: true })
+        .eq('driver_id', driver.driver_id)
+        .then(({ count }: { count: number | null }) => count ?? 0)
+        .catch(() => 0)
+    : 0;
+  const verified =
+    verification?.sanad_status === 'verified' ||
+    user.sanad_verified_status === 'verified' ||
+    driver?.sanad_identity_linked === true;
+
+  return {
+    id: String(user.auth_user_id ?? user.id),
+    canonical_user_id: String(user.id),
+    email: user.email ?? null,
+    full_name: user.full_name ?? null,
+    role: user.role ?? null,
+    phone: user.phone_number ?? null,
+    phone_number: user.phone_number ?? null,
+    phone_verified: Boolean(user.phone_verified_at),
+    email_verified: null,
+    wallet_balance: toNumber(wallet?.balance, 0),
+    rating: 5,
+    rating_as_driver: 5,
+    total_trips: tripCount,
+    trip_count: tripCount,
+    verified,
+    id_verified: verified,
+    is_verified: verified,
+    sanad_verified: verified,
+    verification_level:
+      verification?.verification_level ??
+      driver?.verification_level ??
+      user.verification_level ??
+      'level_0',
+    wallet_status: wallet?.wallet_status ?? 'active',
+    avatar_url: user.avatar_url ?? null,
+    two_factor_enabled: Boolean(user.two_factor_enabled),
+    created_at: user.created_at ?? null,
+  };
+}
+
+function mapTripRow(row: Record<string, unknown>, driverProfile?: Record<string, unknown> | null) {
+  const createdAt = String(row.created_at ?? new Date().toISOString());
+  return {
+    id: String(row.trip_id ?? ''),
+    from: String(row.origin_city ?? ''),
+    to: String(row.destination_city ?? ''),
+    date: formatDate(row.departure_time, createdAt.slice(0, 10)),
+    time: formatTime(row.departure_time),
+    seats: toNumber(row.available_seats, 0),
+    price: toNumber(row.price_per_seat, 0),
+    driver: {
+      id: String(driverProfile?.id ?? row.driver_id ?? 'driver'),
+      name: String(driverProfile?.full_name ?? driverProfile?.email ?? 'Wasel Driver'),
+      rating: toNumber(driverProfile?.rating, 5),
+      verified: Boolean(driverProfile?.verified ?? driverProfile?.sanad_verified ?? false),
+    },
+  };
+}
+
+function mapBookingRow(row: Record<string, unknown>) {
+  const amount = toNumber(row.amount ?? row.total_price, 0);
+  return {
+    ...row,
+    id: String(row.booking_id ?? row.id ?? ''),
+    booking_id: String(row.booking_id ?? row.id ?? ''),
+    seats_requested: toNumber(row.seats_requested, 1),
+    price_per_seat: toNumber(row.price_per_seat, amount),
+    total_price: amount,
+    amount,
+    status: String(row.booking_status ?? row.status ?? 'pending'),
+    booking_status: String(row.booking_status ?? row.status ?? 'pending'),
+  };
+}
+
+async function fetchDriverProfiles(
+  admin: ReturnType<typeof getAdminClient>,
+  driverIds: string[],
+): Promise<Record<string, Record<string, unknown>>> {
+  const uniqueIds = Array.from(new Set(driverIds.filter(Boolean)));
+  if (uniqueIds.length === 0) return {};
+
+  const { data: drivers } = await admin.from('drivers').select('*').in('driver_id', uniqueIds);
+  const driverRows = Array.isArray(drivers) ? drivers : [];
+  const usersById = new Map<string, Record<string, unknown>>();
+
+  const userIds = driverRows.map((driver: Record<string, unknown>) => String(driver.user_id ?? ''));
+  if (userIds.length > 0) {
+    const { data: users } = await admin.from('users').select('*').in('id', userIds);
+    (Array.isArray(users) ? users : []).forEach((user: Record<string, unknown>) => {
+      usersById.set(String(user.id), user);
+    });
+  }
+
+  const result: Record<string, Record<string, unknown>> = {};
+  for (const driver of driverRows as Array<Record<string, unknown>>) {
+    const user = usersById.get(String(driver.user_id ?? ''));
+    if (user) {
+      result[String(driver.driver_id)] = await buildProfilePayload(admin, user);
+    }
+  }
+  return result;
+}
+
+async function handleProfileRequest(request: Request, path: string) {
+  const auth = await authenticateAuthUser(request);
+  if ('error' in auth) return auth.error;
+
+  const profileRoute = parseEntityRoute(path, 'profile');
+  const body = request.method === 'GET' ? {} : await request.json().catch(() => ({}));
+  const user = await ensureCanonicalUserForAuth(auth.admin, auth.authUser, body);
+  const requestedUserId = profileRoute?.id ?? String(user.id);
+
+  if (requestedUserId !== String(user.id) && requestedUserId !== String(user.auth_user_id)) {
+    return json({ error: 'Profile route is not authorized for this user.' }, 403);
+  }
+
+  if (request.method === 'POST') {
+    return json(await buildProfilePayload(auth.admin, user));
+  }
+
+  if (request.method === 'PATCH') {
+    const patch: Record<string, unknown> = {};
+    if (typeof body.email === 'string') patch.email = body.email.trim();
+    if (typeof body.full_name === 'string') patch.full_name = body.full_name.trim();
+    if (typeof body.phone_number === 'string') patch.phone_number = body.phone_number.trim();
+    if (typeof body.phone === 'string') patch.phone_number = body.phone.trim();
+    if (typeof body.role === 'string') patch.role = body.role;
+    if (typeof body.verification_level === 'string') patch.verification_level = body.verification_level;
+    if (typeof body.avatar_url === 'string') patch.avatar_url = body.avatar_url;
+    if (Object.keys(patch).length > 0) {
+      const { error } = await auth.admin.from('users').update(patch).eq('id', user.id);
+      if (error) return json({ error: error.message }, 500);
+    }
+    if (body.wallet_balance !== undefined || typeof body.wallet_status === 'string') {
+      const walletPatch: Record<string, unknown> = {};
+      if (body.wallet_balance !== undefined) walletPatch.balance = toNumber(body.wallet_balance, 0);
+      if (typeof body.wallet_status === 'string') walletPatch.wallet_status = body.wallet_status;
+      await auth.admin.from('wallets').update(walletPatch).eq('user_id', user.id);
+    }
+  }
+
+  const { data: nextUser, error } = await auth.admin.from('users').select('*').eq('id', user.id).single();
+  if (error) return json({ error: error.message }, 500);
+  return json(await buildProfilePayload(auth.admin, nextUser));
+}
+
+async function handleTripRequest(request: Request, path: string) {
+  const admin = getAdminClient();
+  const url = new URL(request.url);
+
+  if (request.method === 'GET' && path === '/trips/search') {
+    let query = admin
+      .from('trips')
+      .select('trip_id, driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity, vehicle_make, vehicle_model, notes, created_at')
+      .is('deleted_at', null);
+    const from = url.searchParams.get('from');
+    const to = url.searchParams.get('to');
+    const date = url.searchParams.get('date');
+    const seats = url.searchParams.get('seats');
+    if (from) query = query.ilike('origin_city', `%${from}%`);
+    if (to) query = query.ilike('destination_city', `%${to}%`);
+    if (date) query = query.gte('departure_time', `${date}T00:00:00`).lt('departure_time', `${date}T23:59:59.999`);
+    if (seats) query = query.gte('available_seats', Number(seats));
+    const { data, error } = await query.in('trip_status', ['open', 'booked', 'in_progress']).order('departure_time');
+    if (error) return json({ error: error.message }, 500);
+    const rows = Array.isArray(data) ? data : [];
+    const profiles = await fetchDriverProfiles(admin, rows.map((row: Record<string, unknown>) => String(row.driver_id ?? '')));
+    return json(rows.map((row: Record<string, unknown>) => mapTripRow(row, profiles[String(row.driver_id ?? '')])));
+  }
+
+  if (request.method === 'POST' && path === '/trips/calculate-price') {
+    const body = await request.json().catch(() => ({}));
+    const type = body.type === 'package' ? 'package' : 'passenger';
+    const distance = Math.max(1, toNumber(body.distance_km, 8));
+    const base = Math.max(1, toNumber(body.base_price, type === 'package' ? 3.5 : 2.5));
+    const packageCharge = type === 'package' ? Math.max(0, toNumber(body.weight, 0.5) - 1) * 0.35 : 0;
+    const distanceCharge = distance * (type === 'package' ? 0.22 : 0.18);
+    return json({
+      price: Number((base + distanceCharge + packageCharge).toFixed(3)),
+      currency: 'JOD',
+      breakdown: {
+        base,
+        distance: Number(distanceCharge.toFixed(3)),
+        package: Number(packageCharge.toFixed(3)),
+      },
+    });
+  }
+
+  const tripRoute = parseEntityRoute(path, 'trips');
+  if (request.method === 'GET' && tripRoute?.action === 'bookings') {
+    return handleBookingCollectionForTrip(request, tripRoute.id);
+  }
+
+  if (request.method === 'GET' && tripRoute?.id === 'user') {
+    const auth = await authenticateRequest(request);
+    if ('error' in auth) return auth.error;
+    const requestedUserId = tripRoute.action ?? '';
+    if (!matchesAuthenticatedUser(auth, requestedUserId)) {
+      return json({ error: 'Trip route is not authorized for this user.' }, 403);
+    }
+    const driver = await ensureDriverForUser(auth.admin, auth.canonicalUser);
+    const { data, error } = await auth.admin
+      .from('trips')
+      .select('trip_id, driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity, vehicle_make, vehicle_model, notes, created_at')
+      .eq('driver_id', driver.driver_id)
+      .order('departure_time', { ascending: false });
+    if (error) return json({ error: error.message }, 500);
+    const profile = await buildProfilePayload(auth.admin, auth.canonicalUser);
+    return json((Array.isArray(data) ? data : []).map((row: Record<string, unknown>) => mapTripRow(row, profile)));
+  }
+
+  if (request.method === 'GET' && tripRoute?.id) {
+    const { data, error } = await admin
+      .from('trips')
+      .select('trip_id, driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity, vehicle_make, vehicle_model, notes, created_at')
+      .eq('trip_id', tripRoute.id)
+      .maybeSingle();
+    if (error) return json({ error: error.message }, 500);
+    if (!data) return json({ error: 'Trip not found' }, 404);
+    const profiles = await fetchDriverProfiles(admin, [String(data.driver_id ?? '')]);
+    return json(mapTripRow(data, profiles[String(data.driver_id ?? '')]));
+  }
+
+  if (request.method === 'POST' && path === '/trips') {
+    const auth = await authenticateRequest(request);
+    if ('error' in auth) return auth.error;
+    const body = await request.json().catch(() => ({}));
+    const driver = await ensureDriverForUser(auth.admin, auth.canonicalUser);
+    const departureTime = new Date(`${body.date}T${body.time}:00`).toISOString();
+    const vehicleParts = String(body.carModel ?? '').trim().split(/\s+/).filter(Boolean);
+    const [vehicleMake = null, ...vehicleRest] = vehicleParts;
+    const { data, error } = await auth.admin
+      .from('trips')
+      .insert({
+        driver_id: driver.driver_id,
+        origin_city: body.from,
+        destination_city: body.to,
+        departure_time: departureTime,
+        departure_date: body.date,
+        available_seats: toNumber(body.seats, 1),
+        price_per_seat: toNumber(body.price, 0),
+        trip_status: 'open',
+        allow_packages: Boolean(body.acceptsPackages),
+        package_capacity: body.packageCapacity === 'large' ? 3 : body.packageCapacity === 'medium' ? 2 : body.packageCapacity === 'small' ? 1 : 0,
+        package_slots_remaining: body.packageCapacity === 'large' ? 3 : body.packageCapacity === 'medium' ? 2 : body.packageCapacity === 'small' ? 1 : 0,
+        vehicle_make: vehicleMake,
+        vehicle_model: vehicleRest.length > 0 ? vehicleRest.join(' ') : body.carModel ?? null,
+        notes: body.note ?? null,
+      })
+      .select('trip_id, driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity, vehicle_make, vehicle_model, notes, created_at')
+      .single();
+    if (error) return json({ error: error.message }, 500);
+    return json(mapTripRow(data, await buildProfilePayload(auth.admin, auth.canonicalUser)));
+  }
+
+  if ((request.method === 'PUT' || request.method === 'DELETE' || (request.method === 'POST' && tripRoute?.action === 'publish')) && tripRoute?.id) {
+    const auth = await authenticateRequest(request);
+    if ('error' in auth) return auth.error;
+    if (request.method === 'DELETE') {
+      const { error } = await auth.admin
+        .from('trips')
+        .update({ trip_status: 'cancelled', deleted_at: new Date().toISOString() })
+        .eq('trip_id', tripRoute.id);
+      return error ? json({ error: error.message }, 500) : json({ success: true });
+    }
+    if (request.method === 'POST') {
+      const { error } = await auth.admin.from('trips').update({ trip_status: 'open' }).eq('trip_id', tripRoute.id);
+      return error ? json({ error: error.message }, 500) : json({ success: true });
+    }
+    const body = await request.json().catch(() => ({}));
+    const patch: Record<string, unknown> = {};
+    if (body.from) patch.origin_city = body.from;
+    if (body.to) patch.destination_city = body.to;
+    if (body.date || body.time) patch.departure_time = new Date(`${body.date ?? new Date().toISOString().slice(0, 10)}T${body.time ?? '08:00'}:00`).toISOString();
+    if (body.date) patch.departure_date = body.date;
+    if (typeof body.seats === 'number') patch.available_seats = body.seats;
+    if (typeof body.price === 'number') patch.price_per_seat = body.price;
+    if (typeof body.status === 'string') patch.trip_status = body.status === 'active' ? 'open' : body.status;
+    if (typeof body.note === 'string') patch.notes = body.note;
+    const { data, error } = await auth.admin
+      .from('trips')
+      .update(patch)
+      .eq('trip_id', tripRoute.id)
+      .select('trip_id, driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity, vehicle_make, vehicle_model, notes, created_at')
+      .single();
+    if (error) return json({ error: error.message }, 500);
+    const profiles = await fetchDriverProfiles(auth.admin, [String(data.driver_id ?? '')]);
+    return json(mapTripRow(data, profiles[String(data.driver_id ?? '')]));
+  }
+
+  return null;
+}
+
+async function handleBookingCollectionForTrip(request: Request, tripId: string) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth.error;
+  const { data, error } = await auth.admin
+    .from('bookings')
+    .select('*')
+    .eq('trip_id', tripId)
+    .order('created_at', { ascending: false });
+  if (error) return json({ error: error.message }, 500);
+  return json((Array.isArray(data) ? data : []).map(mapBookingRow));
+}
+
+async function handleBookingRequest(request: Request, path: string) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth.error;
+
+  if (request.method === 'POST' && path === '/bookings') {
+    const body = await request.json().catch(() => ({}));
+    const tripId = String(body.trip_id ?? '');
+    const seatsRequested = Math.max(1, toNumber(body.seats_requested, 1));
+    const { data: trip, error: tripError } = await auth.admin
+      .from('trips')
+      .select('trip_id, available_seats, price_per_seat, trip_status')
+      .eq('trip_id', tripId)
+      .single();
+    if (tripError) return json({ error: tripError.message }, 500);
+    const availableSeats = toNumber(trip.available_seats, 0);
+    if (availableSeats < seatsRequested) return json({ error: 'Not enough seats available' }, 409);
+
+    const totalPrice = toNumber(body.total_price, toNumber(trip.price_per_seat, 0) * seatsRequested);
+    const status = String(body.status ?? body.booking_status ?? 'confirmed');
+    const { data, error } = await auth.admin
+      .from('bookings')
+      .insert({
+        trip_id: tripId,
+        passenger_id: auth.canonicalUser.id,
+        seats_requested: seatsRequested,
+        seat_number: toNumber(body.seat_number, 1),
+        pickup_location: body.pickup_stop ?? body.pickup_location ?? null,
+        dropoff_location: body.dropoff_stop ?? body.dropoff_location ?? null,
+        booking_status: status,
+        status,
+        confirmed_by_driver: status !== 'pending_driver',
+        amount: totalPrice,
+        price_per_seat: toNumber(trip.price_per_seat, 0),
+        total_price: totalPrice,
+      })
+      .select('*')
+      .single();
+    if (error) return json({ error: error.message }, 500);
+    if (status !== 'pending_driver') {
+      await auth.admin
+        .from('trips')
+        .update({
+          available_seats: Math.max(availableSeats - seatsRequested, 0),
+          trip_status: availableSeats - seatsRequested <= 0 ? 'booked' : trip.trip_status ?? 'open',
+        })
+        .eq('trip_id', tripId);
+    }
+    return json({ booking: mapBookingRow(data) });
+  }
+
+  const bookingRoute = parseEntityRoute(path, 'bookings');
+  if (request.method === 'GET' && bookingRoute?.id === 'user') {
+    const requestedUserId = bookingRoute.action ?? '';
+    if (!matchesAuthenticatedUser(auth, requestedUserId)) {
+      return json({ error: 'Booking route is not authorized for this user.' }, 403);
+    }
+    const { data, error } = await auth.admin
+      .from('bookings')
+      .select('*')
+      .eq('passenger_id', auth.canonicalUser.id)
+      .order('created_at', { ascending: false });
+    if (error) return json({ error: error.message }, 500);
+    return json((Array.isArray(data) ? data : []).map(mapBookingRow));
+  }
+
+  if (request.method === 'PUT' && bookingRoute?.id) {
+    const body = await request.json().catch(() => ({}));
+    const status = body.status === 'accepted' ? 'confirmed' : body.status === 'rejected' ? 'cancelled' : String(body.status ?? 'cancelled');
+    const { data, error } = await auth.admin
+      .from('bookings')
+      .update({
+        booking_status: status,
+        status,
+        confirmed_by_driver: status === 'confirmed',
+      })
+      .eq('booking_id', bookingRoute.id)
+      .select('*')
+      .single();
+    if (error) return json({ error: error.message }, 500);
+    return json(mapBookingRow(data));
+  }
+
+  return null;
+}
+
+async function ensureMobilitySeed(admin: ReturnType<typeof getAdminClient>) {
+  const { data } = await admin.from('mobility_corridors').select('id').limit(1);
+  if (Array.isArray(data) && data.length > 0) return;
+  if (SUPABASE_DB_URL) {
+    await executeSqlStatements(MOBILITY_OS_SEED_SQL).catch(() => undefined);
+  }
+}
+
+async function handleMobilityOSRequest(request: Request, path: string) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth.error;
+
+  await ensureMobilitySeed(auth.admin);
+
+  if (request.method === 'GET' && path === '/mobility-os/snapshot') {
+    const { data, error } = await auth.admin.from('mobility_corridors').select('*').order('demand_index', { ascending: false });
+    if (error) return json({ error: error.message }, 500);
+    return json(buildMobilitySnapshot((Array.isArray(data) ? data : []) as MobilityCorridorRow[]));
+  }
+
+  if (request.method === 'POST' && path === '/mobility-os/booking/create') {
+    const body = await request.json().catch(() => ({}));
+    const corridorId = String(body.corridor_id ?? '');
+    const type: MobilityBookingType = body.type === 'cargo' ? 'cargo' : 'seat';
+    const quantity = Math.max(0, toNumber(body.quantity, 0));
+    if (!corridorId || quantity <= 0) return json({ error: 'Invalid booking request.' }, 400);
+
+    const { data: corridor, error } = await auth.admin
+      .from('mobility_corridors')
+      .select('*')
+      .eq('id', corridorId)
+      .single();
+    if (error) return json({ error: error.message }, 500);
+
+    const snapshot = buildMobilitySnapshot([corridor as MobilityCorridorRow]);
+    const projection = snapshot.corridors[0];
+    const remaining = type === 'seat' ? projection?.seats_available : projection?.cargo_available_kg;
+    if (!projection || quantity > remaining) return json({ error: 'Not enough corridor capacity remains.' }, 409);
+
+    const timestamp = String(body.timestamp ?? new Date().toISOString());
+    const traceId = `trace-${crypto.randomUUID()}`;
+    const nextCorridor = advanceCorridorAfterBooking({
+      corridor: corridor as MobilityCorridorRow,
+      type,
+      quantity,
+      timestamp,
+    });
+    const unitPrice = type === 'seat' ? projection.dynamic_seat_price : projection.dynamic_cargo_price;
+    const { data: booking, error: bookingError } = await auth.admin
+      .from('mobility_bookings')
+      .insert({
+        corridor_id: corridorId,
+        user_id: auth.canonicalUser.id,
+        type,
+        quantity,
+        unit_price: unitPrice,
+        total_price: Number((unitPrice * quantity).toFixed(2)),
+        booking_timestamp: timestamp,
+        trace_id: traceId,
+      })
+      .select('booking_id')
+      .single();
+    if (bookingError) return json({ error: bookingError.message }, 500);
+
+    await auth.admin
+      .from('mobility_corridors')
+      .update({
+        seats_booked: nextCorridor.seats_booked,
+        cargo_booked_kg: nextCorridor.cargo_booked_kg,
+        demand_index: nextCorridor.demand_index,
+        demand_history: nextCorridor.demand_history,
+        price_history: nextCorridor.price_history,
+        updated_at: nextCorridor.updated_at,
+      })
+      .eq('id', corridorId);
+
+    await auth.admin.from('mobility_event_outbox').insert({
+      aggregate_type: 'mobility_corridor',
+      aggregate_id: corridorId,
+      event_type: 'BookingCreated',
+      trace_id: traceId,
+      payload: { booking_id: booking.booking_id, corridor_id: corridorId, type, quantity, timestamp },
+    }).catch(() => undefined);
+
+    return json({ booking_id: booking.booking_id, status: 'accepted', trace_id: traceId }, 201);
+  }
+
+  return null;
 }
 
 function mapWalletPaymentMethod(paymentMethod: string): string {
@@ -2722,6 +3365,38 @@ Deno.serve(async (request) => {
     if (request.method === 'GET' && path === '/health') {
       response = await handleHealth(request);
       return finalizeResponse(request, response);
+    }
+
+    if (
+      (request.method === 'POST' && path === '/profile') ||
+      ((request.method === 'GET' || request.method === 'PATCH') && /^\/profile\/[^/]+$/.test(path))
+    ) {
+      response = await handleProfileRequest(request, path);
+      return finalizeResponse(request, response);
+    }
+
+    if (path === '/trips' || path.startsWith('/trips/')) {
+      const tripResponse = await handleTripRequest(request, path);
+      if (tripResponse) {
+        response = tripResponse;
+        return finalizeResponse(request, response);
+      }
+    }
+
+    if (path === '/bookings' || path.startsWith('/bookings/')) {
+      const bookingResponse = await handleBookingRequest(request, path);
+      if (bookingResponse) {
+        response = bookingResponse;
+        return finalizeResponse(request, response);
+      }
+    }
+
+    if (path === '/mobility-os/snapshot' || path === '/mobility-os/booking/create') {
+      const mobilityResponse = await handleMobilityOSRequest(request, path);
+      if (mobilityResponse) {
+        response = mobilityResponse;
+        return finalizeResponse(request, response);
+      }
     }
 
     const walletRoute = parseWalletRoute(path);

@@ -150,7 +150,7 @@ export function HomePage() {
 
   return (
     <div
-      className="min-h-screen relative"
+      className="min-h-[var(--app-min-height)] relative"
       dir={dir}
       style={{ background: C.bg, color: C.text, fontFamily: F }}
     >

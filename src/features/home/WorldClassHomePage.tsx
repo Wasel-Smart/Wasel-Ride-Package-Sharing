@@ -107,7 +107,7 @@ export function WorldClassHomePage() {
   if (showOnboarding) {
     return (
       <div style={{
-        minHeight: '100vh',
+        minHeight: 'var(--app-min-height)',
         background: 'linear-gradient(135deg, #0B1D2D 0%, #051218 100%)',
         color: '#fff',
         display: 'flex',
@@ -233,7 +233,7 @@ export function WorldClassHomePage() {
   // Main home page
   return (
     <div style={{
-      minHeight: '100vh',
+      minHeight: 'var(--app-min-height)',
       background: 'linear-gradient(135deg, #0B1D2D 0%, #051218 100%)',
       color: '#fff',
       fontFamily: 'Inter, system-ui, sans-serif'

@@ -718,7 +718,7 @@ export default function MobilityOSCore() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'var(--app-min-height)',
         background: `${GRAD_AURORA}, radial-gradient(circle at 16% 14%, rgba(88,221,255,0.12), transparent 20%), radial-gradient(circle at 84% 18%, rgba(255,190,92,0.12), transparent 22%), ${C.bg}`,
         color: C.text,
         fontFamily: F,

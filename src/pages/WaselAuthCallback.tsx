@@ -161,7 +161,7 @@ export default function WaselAuthCallback() {
     return (
       <div
         style={{
-          minHeight: '100vh',
+          minHeight: 'var(--app-min-height)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -295,7 +295,7 @@ export default function WaselAuthCallback() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'var(--app-min-height)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

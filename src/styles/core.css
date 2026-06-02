@@ -7,6 +7,9 @@
 
 /* ── Brand Colors (never change) ────────────────────────────────────────── */
 :root {
+  --app-min-height: 100vh;
+  --app-visual-height: 100vh;
+
   --wasel-cyan: #58ddff;
   --wasel-gold: #ffbe5c;
   --wasel-green: #47d69e;
@@ -131,16 +134,32 @@ body {
 }
 
 html {
-  overscroll-behavior: none;
+  min-height: var(--app-min-height);
+  overscroll-behavior-x: none;
 }
 
 body {
-  overscroll-behavior-y: contain;
+  min-height: var(--app-min-height);
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: auto;
   background: var(--background);
   color: var(--foreground);
   transition:
     background-color 0.3s ease,
     color 0.3s ease;
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-min-height: 100dvh;
+    --app-visual-height: 100dvh;
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  :root {
+    --app-min-height: -webkit-fill-available;
+  }
 }
 
 *,

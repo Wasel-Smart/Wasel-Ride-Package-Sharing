@@ -65,7 +65,7 @@ export function PageShell({
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'var(--app-min-height)',
         background: `
           radial-gradient(circle at 14% 12%, rgba(88,221,255,0.12), transparent 24%),
           radial-gradient(circle at 76% 20%, rgba(255,190,92,0.08), transparent 18%),
