@@ -16,7 +16,8 @@ const errorMessages = {
   invalidPhone: 'Please enter a valid phone number',
   invalidJordanPhone: 'Please enter a valid Jordanian phone number',
   passwordTooShort: 'Password must be at least 8 characters',
-  passwordTooWeak: 'Password must contain letters and numbers',
+  passwordTooWeak:
+    'Password must include lowercase, uppercase, number, and special character',
   invalidAmount: 'Please enter a valid amount',
   amountTooLow: 'Amount must be greater than 0',
   amountTooHigh: 'Amount exceeds maximum limit',
@@ -44,7 +45,7 @@ export const passwordSchema = z
   .string({ required_error: errorMessages.required })
   .min(8, errorMessages.passwordTooShort)
   .max(128, errorMessages.stringTooLong)
-  .regex(/^(?=.*[A-Za-z])(?=.*\d)/, errorMessages.passwordTooWeak);
+  .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])/, errorMessages.passwordTooWeak);
 
 export const phoneSchema = z
   .string({ required_error: errorMessages.required })
