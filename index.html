@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0B0F14" />
+    <meta name="theme-color" content="#16A34A" />
     <meta name="color-scheme" content="light dark" />
     <meta name="application-name" content="Wasel" />
     <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
@@ -59,14 +59,14 @@
       })();
     </script>
 
-    <title>Wasel | Live Mobility Network</title>
+    <title>Wasel14.online | Share Rides, Split Costs, Travel Smarter Across Jordan</title>
     <meta
       name="description"
-      content="Wasel is the live mobility network for rides, buses, packages, and mobility operations across Jordan."
+      content="Wasel14.online is Jordan’s bilingual ride-sharing platform for verified drivers and passengers to share rides, split costs, and travel smarter between Amman, Zarqa, Irbid, the airport, the Dead Sea, and more."
     />
     <meta
       name="keywords"
-      content="Wasel, Jordan mobility, intercity rides, package delivery, Raje3, Amman, Aqaba, Irbid, trusted travel"
+      content="Wasel14, Jordan ride sharing, Amman Zarqa rides, Amman Irbid rides, airport rides Jordan, carpool Jordan, verified drivers, safe rides"
     />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://wasel14.online" />
@@ -74,10 +74,10 @@
     <!-- ── Open Graph ───────────────────────────────────────────────────── -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Wasel" />
-    <meta property="og:title" content="Wasel | Live Mobility Network" />
+    <meta property="og:title" content="Wasel14.online | Share Rides Across Jordan" />
     <meta
       property="og:description"
-      content="Wasel is the live mobility network for rides, buses, packages, and mobility operations across Jordan."
+      content="Share rides, split costs, and travel smarter across Jordan with verified drivers and passengers."
     />
     <meta property="og:url" content="https://wasel14.online" />
     <meta property="og:locale" content="en_JO" />
@@ -91,13 +91,31 @@
     <!-- ── Twitter / X Card ─────────────────────────────────────────────── -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@wasel_jo" />
-    <meta name="twitter:title" content="Wasel | Live Mobility Network" />
+    <meta name="twitter:title" content="Wasel14.online | Share Rides Across Jordan" />
     <meta
       name="twitter:description"
-      content="Wasel is the live mobility network for rides, buses, packages, and mobility operations across Jordan."
+      content="Share rides, split costs, and travel smarter across Jordan with verified drivers and passengers."
     />
     <meta name="twitter:image" content="https://wasel14.online/brand/og-social-card.png?v=20260422-premium" />
     <meta name="twitter:image:alt" content="Wasel — Shared Routes across Jordan" />
+
+
+    <!-- ── Optional Google Analytics (set VITE_GA_MEASUREMENT_ID in production) ── -->
+    <script>
+      (() => {
+        const id = '%VITE_GA_MEASUREMENT_ID%';
+        if (!id || id.includes('VITE_') || id === 'undefined') return;
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
+        document.head.appendChild(script);
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){ window.dataLayer.push(arguments); }
+        window.gtag = gtag;
+        gtag('js', new Date());
+        gtag('config', id, { anonymize_ip: true });
+      })();
+    </script>
 
     <!-- ── PWA / Apple ───────────────────────────────────────────────────── -->
     <meta name="mobile-web-app-capable" content="yes" />
@@ -154,16 +172,18 @@
           {
             "@type": "Organization",
             "@id": "https://wasel14.online/#organization",
-            "name": "Wasel",
+            "name": "Wasel14",
             "url": "https://wasel14.online",
             "logo": {
               "@type": "ImageObject",
               "url": "https://wasel14.online/brand/wasel-main-network-logo.svg?v=20260422-premium"
             },
-            "sameAs": [],
+            "sameAs": ["https://facebook.com/wasel14", "https://instagram.com/wasel14", "https://x.com/wasel14", "https://tiktok.com/@wasel14"],
             "contactPoint": {
               "@type": "ContactPoint",
               "contactType": "customer support",
+              "telephone": "+962790000000",
+              "email": "support@wasel.jo",
               "availableLanguage": ["English", "Arabic"]
             }
           },
@@ -171,13 +191,13 @@
             "@type": "WebSite",
             "@id": "https://wasel14.online/#website",
             "url": "https://wasel14.online",
-            "name": "Wasel",
-            "description": "Jordan's shared ride, bus, and parcel delivery marketplace.",
+            "name": "Wasel14.online",
+            "description": "Jordan's bilingual ride-sharing platform for verified drivers and passengers to share rides, split costs, and travel smarter.",
             "publisher": { "@id": "https://wasel14.online/#organization" },
             "inLanguage": ["en-JO", "ar-JO"],
             "potentialAction": {
               "@type": "SearchAction",
-              "target": "https://wasel14.online/app/find-ride?q={search_term_string}",
+              "target": "https://wasel14.online/app/find-ride?search=1&q={search_term_string}",
               "query-input": "required name=search_term_string"
             }
           }
