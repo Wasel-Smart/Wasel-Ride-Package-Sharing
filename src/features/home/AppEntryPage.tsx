@@ -405,6 +405,10 @@ export default function AppEntryPage() {
           .landing-hero-map-caption {
             max-width: none !important;
           }
+          .landing-brand-lockup {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+          }
         }
       `}</style>
 
@@ -455,7 +459,7 @@ export default function AppEntryPage() {
             flexWrap: 'wrap',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div className="landing-brand-lockup" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <WaselLogo size={44} theme="light" />
             <div>
               <div
