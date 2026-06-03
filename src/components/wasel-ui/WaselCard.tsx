@@ -67,7 +67,7 @@ export function WaselCard({
     padding,
     fontFamily: F,
     transition: hover
-      ? 'transform 200ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 200ms ease, border-color 200ms ease'
+      ? 'transform 160ms cubic-bezier(0.25,0.1,0.25,1), box-shadow 160ms ease, border-color 160ms ease'
       : undefined,
     ...variantMap[variant],
     ...style,
