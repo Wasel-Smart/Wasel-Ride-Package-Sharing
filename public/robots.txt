@@ -1,7 +1,13 @@
 User-agent: *
 Allow: /
-Allow: /app/privacy
-Allow: /app/terms
+Allow: /privacy-policy
+Allow: /terms-and-conditions
+Allow: /how-it-works
+Allow: /for-drivers
+Allow: /for-passengers
+Allow: /cities
+Allow: /about
+Allow: /contact
 
 # Block authenticated and operational application surfaces from indexing.
 Disallow: /app/
