@@ -153,7 +153,7 @@
     "lint:fix": "eslint src tests playwright.config.ts vitest.config.ts --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
-    "verify": "npm run type-check && npm run check:ts-strict && npm run lint:strict && npm run check:design-system && npm run check:domain-boundaries && npm run check:translations && npm run check:openapi && npm run test && npm run build && npm run size && npm run test:e2e:smoke",
+    "verify": "npm run type-check && npm run check:ts-strict && npm run lint:strict && npm run check:design-system && npm run check:domain-boundaries && npm run check:no-inline-api-in-ui && npm run check:translations && npm run check:openapi && npm run test && npm run build && npm run size && npm run test:e2e:smoke",
     "verify:full": "npm run verify && npm run test:e2e && npm run test:lhci && npm run test:security",
     "build:production": "node scripts/build-production.mjs",
     "build:analyze": "node scripts/analyze-bundle.mjs",
@@ -167,7 +167,7 @@
     "clean:optimize": "node scripts/detect-dead-code.mjs && node scripts/optimize-performance.mjs",
     "clean": "rimraf dist build coverage .nyc_output",
     "clean:deps": "rimraf node_modules package-lock.json && npm install",
-    "ci:verify": "npm run type-check && npm run check:ts-strict && npm run lint:strict && npm run check:design-system && npm run check:domain-boundaries && npm run check:translations && npm run check:openapi && npm run test && npm run build && npm run size && npm run test:e2e:smoke",
+    "ci:verify": "npm run type-check && npm run check:ts-strict && npm run lint:strict && npm run check:design-system && npm run check:domain-boundaries && npm run check:no-inline-api-in-ui && npm run check:translations && npm run check:openapi && npm run test && npm run build && npm run size && npm run test:e2e:smoke",
     "precommit": "npm run type-check && npm run lint:strict && npm run format:check",
     "prepush": "npm run test && npm run build",
     "production:validate": "node scripts/validate-production-env.mjs",
@@ -177,6 +177,7 @@
     "verify:gaps": "node scripts/verify-gaps-fixed.mjs",
     "backup:db": "node scripts/backup-database.mjs --type=full",
     "backup:schema": "node scripts/backup-database.mjs --type=schema",
-    "backup:data": "node scripts/backup-database.mjs --type=data"
+    "backup:data": "node scripts/backup-database.mjs --type=data",
+    "check:no-inline-api-in-ui": "node scripts/check-no-inline-api-in-ui.mjs"
   }
 }

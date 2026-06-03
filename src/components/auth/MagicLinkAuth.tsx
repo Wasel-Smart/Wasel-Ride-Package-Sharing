@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Mail, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { supabase } from '../../utils/supabase/client';
+import { authAPI } from '../../services/auth';
 import { validateEmail } from '../../utils/security';
 import { normalizeEmailInput } from '../../utils/authHelpers';
 
@@ -29,16 +29,7 @@ export function MagicLinkAuth({ onSuccess, returnTo }: MagicLinkAuthProps) {
 
     setLoading(true);
     try {
-      if (!supabase) throw new Error('Auth not configured');
-      
-      const { error: magicLinkError } = await supabase.auth.signInWithOtp({
-        email: normalized,
-        options: {
-          emailRedirectTo: returnTo || window.location.origin + '/app',
-        },
-      });
-
-      if (magicLinkError) throw magicLinkError;
+      await authAPI.sendMagicLink(normalized, returnTo || window.location.origin + '/app');
       onSuccess(normalized);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send magic link');
