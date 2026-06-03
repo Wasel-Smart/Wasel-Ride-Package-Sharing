@@ -50,7 +50,7 @@ const SERVICE_NAME = 'make-server-0b1f4071';
 
 const responseBaseHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-csrf-token, x-communication-worker-secret, stripe-signature',
-  'Access-Control-Allow-Methods': 'GET, POST, PATCH, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
   'Cache-Control': 'no-store',
   'Referrer-Policy': 'no-referrer',
   'X-Content-Type-Options': 'nosniff',
@@ -413,11 +413,12 @@ function matchesAuthenticatedUser(
 }
 
 function parseWalletRoute(path: string) {
-  const match = /^\/wallet\/([^/]+)\/([^/]+)$/.exec(path);
+  const match = /^\/wallet\/([^/]+)(?:\/([^/]+))?(?:\/([^/]+))?$/.exec(path);
   if (!match) return null;
   return {
     userId: decodeURIComponent(match[1]),
-    action: decodeURIComponent(match[2]),
+    action: match[2] ? decodeURIComponent(match[2]) : '',
+    resourceId: match[3] ? decodeURIComponent(match[3]) : null,
   };
 }
 
@@ -1733,6 +1734,634 @@ async function getWalletSubscription(
     trialStart: data.trial_start ? String(data.trial_start) : null,
     trialEnd: data.trial_end ? String(data.trial_end) : null,
   };
+}
+
+type WalletRow = {
+  wallet_id?: string;
+  user_id?: string;
+  balance?: number | string | null;
+  pending_balance?: number | string | null;
+  wallet_status?: string | null;
+  currency_code?: string | null;
+  auto_top_up_enabled?: boolean | null;
+  auto_top_up_amount?: number | string | null;
+  auto_top_up_threshold?: number | string | null;
+  pin_hash?: string | null;
+  created_at?: string | null;
+};
+
+type WalletTransactionRow = {
+  transaction_id?: string;
+  amount?: number | string | null;
+  direction?: string | null;
+  transaction_type?: string | null;
+  transaction_status?: string | null;
+  created_at?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
+
+type PaymentMethodRow = {
+  payment_method_id?: string;
+  user_id?: string;
+  provider?: string | null;
+  method_type?: string | null;
+  token_reference?: string | null;
+  is_default?: boolean | null;
+  status?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+function describeWalletTransaction(row: WalletTransactionRow): string {
+  const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
+  const metadataDescription = metadata.description ?? metadata.note;
+  if (metadataDescription) return String(metadataDescription);
+
+  switch (row.transaction_type) {
+    case 'add_funds':
+      return 'Wallet top-up';
+    case 'transfer_funds':
+      return row.direction === 'credit' ? 'Wallet transfer received' : 'Wallet transfer sent';
+    case 'withdraw_funds':
+    case 'withdrawal':
+      return 'Wallet withdrawal';
+    case 'driver_earning':
+      return 'Driver earnings';
+    case 'ride_payment':
+      return 'Ride payment';
+    case 'package_payment':
+      return 'Package payment';
+    case 'refund':
+      return 'Wallet refund';
+    default:
+      return 'Wallet transaction';
+  }
+}
+
+function toWalletTransaction(row: WalletTransactionRow) {
+  const amount = toNumber(row.amount, 0);
+  const signedAmount = row.direction === 'debit' ? -Math.abs(amount) : Math.abs(amount);
+
+  return {
+    id: String(row.transaction_id ?? crypto.randomUUID()),
+    type: String(row.transaction_type ?? 'wallet'),
+    description: describeWalletTransaction(row),
+    amount: signedAmount,
+    createdAt: String(row.created_at ?? new Date().toISOString()),
+    status: row.transaction_status ? String(row.transaction_status) : undefined,
+  };
+}
+
+function buildWalletInsights(transactions: ReturnType<typeof toWalletTransaction>[]) {
+  const now = new Date();
+  const currentMonthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+  const previousMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+  const previousMonthKey = `${previousMonthDate.getUTCFullYear()}-${String(previousMonthDate.getUTCMonth() + 1).padStart(2, '0')}`;
+  const thisMonth = transactions.filter(tx => tx.createdAt.startsWith(currentMonthKey));
+  const lastMonth = transactions.filter(tx => tx.createdAt.startsWith(previousMonthKey));
+  const thisMonthSpent = thisMonth.filter(tx => tx.amount < 0).reduce((total, tx) => total + Math.abs(tx.amount), 0);
+  const lastMonthSpent = lastMonth.filter(tx => tx.amount < 0).reduce((total, tx) => total + Math.abs(tx.amount), 0);
+  const thisMonthEarned = thisMonth.filter(tx => tx.amount > 0).reduce((total, tx) => total + tx.amount, 0);
+  const categoryBreakdown = transactions.reduce<Record<string, number>>((acc, tx) => {
+    const key = tx.type || 'wallet';
+    acc[key] = Number(((acc[key] ?? 0) + Math.abs(tx.amount)).toFixed(2));
+    return acc;
+  }, {});
+  const monthlyBuckets = new Map<string, { spent: number; earned: number }>();
+  for (const tx of transactions) {
+    const date = new Date(tx.createdAt);
+    if (Number.isNaN(date.getTime())) continue;
+    const month = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+    const bucket = monthlyBuckets.get(month) ?? { spent: 0, earned: 0 };
+    if (tx.amount < 0) bucket.spent += Math.abs(tx.amount);
+    if (tx.amount > 0) bucket.earned += tx.amount;
+    monthlyBuckets.set(month, bucket);
+  }
+
+  return {
+    thisMonthSpent: Number(thisMonthSpent.toFixed(2)),
+    lastMonthSpent: Number(lastMonthSpent.toFixed(2)),
+    thisMonthEarned: Number(thisMonthEarned.toFixed(2)),
+    changePercent: lastMonthSpent > 0
+      ? Number((((thisMonthSpent - lastMonthSpent) / lastMonthSpent) * 100).toFixed(1))
+      : thisMonthSpent > 0 ? 100 : 0,
+    categoryBreakdown,
+    monthlyTrend: Array.from(monthlyBuckets.entries()).map(([month, bucket]) => ({
+      month,
+      spent: Number(bucket.spent.toFixed(2)),
+      earned: Number(bucket.earned.toFixed(2)),
+    })),
+    totalTransactions: transactions.length,
+    carbonSaved: Math.max(0, Math.round(transactions.length * 1.5)),
+  };
+}
+
+function normalizeWalletPaymentMethod(method: unknown): string {
+  const value = String(method ?? 'card').trim();
+  return ['card_payment', 'local_gateway', 'wallet_balance', 'government_api'].includes(value)
+    ? value
+    : mapWalletPaymentMethod(value);
+}
+
+function buildWalletPayload(
+  wallet: WalletRow,
+  transactions: WalletTransactionRow[],
+  paymentMethods: PaymentMethodRow[],
+  subscription: Awaited<ReturnType<typeof getWalletSubscription>>,
+) {
+  const normalizedTransactions = transactions.map(toWalletTransaction);
+  const totalEarned = transactions
+    .filter(row => row.direction === 'credit')
+    .reduce((total, row) => total + toNumber(row.amount, 0), 0);
+  const totalSpent = transactions
+    .filter(row => row.direction === 'debit')
+    .reduce((total, row) => total + toNumber(row.amount, 0), 0);
+  const totalDeposited = transactions
+    .filter(row => row.transaction_type === 'add_funds' && row.direction === 'credit')
+    .reduce((total, row) => total + toNumber(row.amount, 0), 0);
+  const currency = String(wallet.currency_code ?? 'JOD').toUpperCase();
+
+  return {
+    wallet: {
+      id: wallet.wallet_id ?? null,
+      userId: wallet.user_id ?? null,
+      walletType: 'user',
+      status: wallet.wallet_status ?? 'active',
+      currency,
+      autoTopUp: Boolean(wallet.auto_top_up_enabled),
+      autoTopUpAmount: toNumber(wallet.auto_top_up_amount, 20),
+      autoTopUpThreshold: toNumber(wallet.auto_top_up_threshold, 5),
+      paymentMethods,
+      createdAt: wallet.created_at ?? null,
+    },
+    balance: toNumber(wallet.balance, 0),
+    pendingBalance: toNumber(wallet.pending_balance, 0),
+    rewardsBalance: 0,
+    total_earned: Number(totalEarned.toFixed(2)),
+    total_spent: Number(totalSpent.toFixed(2)),
+    total_deposited: Number(totalDeposited.toFixed(2)),
+    currency,
+    pinSet: Boolean(wallet.pin_hash),
+    autoTopUp: Boolean(wallet.auto_top_up_enabled),
+    transactions: normalizedTransactions,
+    activeEscrows: [],
+    activeRewards: [],
+    subscription,
+  };
+}
+
+async function ensureWalletForUser(admin: ReturnType<typeof getAdminClient>, userId: string): Promise<WalletRow> {
+  const { data: existing, error: existingError } = await admin
+    .from('wallets')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
+  if (existing?.wallet_id) {
+    return existing as WalletRow;
+  }
+
+  const { data: created, error: createError } = await admin
+    .from('wallets')
+    .insert({ user_id: userId })
+    .select('*')
+    .single();
+
+  if (createError) {
+    throw new Error(createError.message);
+  }
+
+  return created as WalletRow;
+}
+
+async function loadWalletDetails(admin: ReturnType<typeof getAdminClient>, userId: string) {
+  const wallet = await ensureWalletForUser(admin, userId);
+  const [{ data: transactions, error: transactionsError }, { data: paymentMethods, error: paymentMethodsError }, subscription] = await Promise.all([
+    admin
+      .from('transactions')
+      .select('*')
+      .eq('wallet_id', wallet.wallet_id)
+      .order('created_at', { ascending: false })
+      .limit(50),
+    admin
+      .from('payment_methods')
+      .select('*')
+      .eq('user_id', userId)
+      .order('is_default', { ascending: false })
+      .order('created_at', { ascending: false }),
+    getWalletSubscription(admin, userId),
+  ]);
+
+  if (transactionsError) throw new Error(transactionsError.message);
+  if (paymentMethodsError) throw new Error(paymentMethodsError.message);
+
+  return {
+    wallet,
+    transactions: (Array.isArray(transactions) ? transactions : []) as WalletTransactionRow[],
+    paymentMethods: (Array.isArray(paymentMethods) ? paymentMethods : []) as PaymentMethodRow[],
+    subscription,
+  };
+}
+
+async function loadWalletPayload(admin: ReturnType<typeof getAdminClient>, userId: string) {
+  const details = await loadWalletDetails(admin, userId);
+  return buildWalletPayload(
+    details.wallet,
+    details.transactions,
+    details.paymentMethods,
+    details.subscription,
+  );
+}
+
+async function authenticateWalletRequest(request: Request, requestedUserId: string) {
+  const auth = await authenticateRequest(request);
+  if ('error' in auth) return auth;
+  if (!matchesAuthenticatedUser(auth, requestedUserId)) {
+    return { error: json({ error: 'Wallet route is not authorized for this user.' }, 403) };
+  }
+  return auth;
+}
+
+function toHex(bytes: Uint8Array): string {
+  return Array.from(bytes).map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+function fromHex(value: string): Uint8Array {
+  const normalized = value.trim();
+  if (!/^[0-9a-f]+$/i.test(normalized) || normalized.length % 2 !== 0) {
+    return new Uint8Array();
+  }
+  const bytes = new Uint8Array(normalized.length / 2);
+  for (let index = 0; index < normalized.length; index += 2) {
+    bytes[index / 2] = Number.parseInt(normalized.slice(index, index + 2), 16);
+  }
+  return bytes;
+}
+
+function timingSafeEqual(left: Uint8Array, right: Uint8Array): boolean {
+  if (left.length !== right.length) return false;
+  let diff = 0;
+  for (let index = 0; index < left.length; index += 1) {
+    diff |= left[index] ^ right[index];
+  }
+  return diff === 0;
+}
+
+async function hashLegacyWalletPin(pin: string): Promise<string> {
+  const bytes = new TextEncoder().encode(`wasel-wallet-pin:${pin}`);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return toHex(new Uint8Array(digest));
+}
+
+async function hashWalletPin(pin: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iterations = 210_000;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(`wasel-wallet-pin:${pin}`),
+    'PBKDF2',
+    false,
+    ['deriveBits'],
+  );
+  const derivedBits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt, iterations },
+    key,
+    256,
+  );
+  return `pbkdf2_sha256$${iterations}$${toHex(salt)}$${toHex(new Uint8Array(derivedBits))}`;
+}
+
+async function verifyWalletPinHash(pin: string, storedHash?: string | null): Promise<boolean> {
+  if (!storedHash) return false;
+  const parts = storedHash.split('$');
+  if (parts.length !== 4 || parts[0] !== 'pbkdf2_sha256') {
+    const legacyHash = await hashLegacyWalletPin(pin);
+    return timingSafeEqual(fromHex(storedHash), fromHex(legacyHash));
+  }
+
+  const iterations = Number.parseInt(parts[1] ?? '', 10);
+  const salt = fromHex(parts[2] ?? '');
+  const expected = fromHex(parts[3] ?? '');
+  if (!Number.isFinite(iterations) || iterations < 100_000 || salt.length < 16 || expected.length !== 32) {
+    return false;
+  }
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(`wasel-wallet-pin:${pin}`),
+    'PBKDF2',
+    false,
+    ['deriveBits'],
+  );
+  const derivedBits = await crypto.subtle.deriveBits(
+    { name: 'PBKDF2', hash: 'SHA-256', salt, iterations },
+    key,
+    expected.length * 8,
+  );
+  return timingSafeEqual(new Uint8Array(derivedBits), expected);
+}
+
+async function handleGetWallet(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+
+  try {
+    return json(await loadWalletPayload(auth.admin, auth.canonicalUser.id));
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
+async function handleGetWalletTransactions(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+
+  try {
+    const url = new URL(request.url);
+    const page = Math.max(1, Number.parseInt(url.searchParams.get('page') ?? '1', 10) || 1);
+    const limit = Math.min(100, Math.max(1, Number.parseInt(url.searchParams.get('limit') ?? '20', 10) || 20));
+    const type = url.searchParams.get('type');
+    const details = await loadWalletDetails(auth.admin, auth.canonicalUser.id);
+    const all = details.transactions.map(toWalletTransaction);
+    const filtered = type ? all.filter(tx => tx.type === type) : all;
+    const start = (page - 1) * limit;
+    return json({
+      transactions: filtered.slice(start, start + limit),
+      page,
+      limit,
+      total: filtered.length,
+    });
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
+async function handleGetWalletInsights(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+
+  try {
+    const details = await loadWalletDetails(auth.admin, auth.canonicalUser.id);
+    return json(buildWalletInsights(details.transactions.map(toWalletTransaction)));
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
+async function handleWalletWithdraw(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+
+  const body = await request.json().catch(() => ({}));
+  const amountJod = toMoneyNumber(body.amount);
+  const bankAccount = String(body.bankAccount ?? '').trim();
+  const method = String(body.method ?? 'bank_transfer').trim() || 'bank_transfer';
+  if (amountJod <= 0) return json({ error: 'Amount must be greater than zero.' }, 400);
+  if (!bankAccount) return json({ error: 'Bank account is required.' }, 400);
+
+  try {
+    const wallet = await ensureWalletForUser(auth.admin, auth.canonicalUser.id);
+    if (toNumber(wallet.balance, 0) < amountJod) {
+      return json({ error: 'Insufficient wallet balance.' }, 400);
+    }
+    const { error } = await auth.admin.rpc('wallet_post_transaction', {
+      p_wallet_id: wallet.wallet_id,
+      p_amount: amountJod,
+      p_transaction_type: 'withdraw_funds',
+      p_payment_method: 'local_gateway',
+      p_direction: 'debit',
+      p_reference_type: 'bank_account',
+      p_reference_id: null,
+      p_metadata: {
+        bank_account: bankAccount,
+        requested_via: method,
+        description: 'Wallet withdrawal',
+      },
+    });
+    if (error) throw new Error(error.message);
+    return json(await loadWalletPayload(auth.admin, auth.canonicalUser.id));
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
+async function resolveWalletRecipient(admin: ReturnType<typeof getAdminClient>, recipientId: string) {
+  const recipient = recipientId.trim();
+  if (!recipient) return null;
+
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(recipient);
+  if (isUuid) {
+    const { data, error } = await admin
+      .from('users')
+      .select('id')
+      .or(`id.eq.${recipient},auth_user_id.eq.${recipient}`)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (data?.id) return String(data.id);
+  }
+
+  const { data, error } = await admin
+    .from('users')
+    .select('id')
+    .or(`email.eq.${recipient},phone_number.eq.${recipient}`)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data?.id ? String(data.id) : null;
+}
+
+async function handleWalletSend(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+
+  const body = await request.json().catch(() => ({}));
+  const amountJod = toMoneyNumber(body.amount);
+  const recipientId = String(body.recipientId ?? '').trim();
+  const note = String(body.note ?? '').trim();
+  if (amountJod <= 0) return json({ error: 'Amount must be greater than zero.' }, 400);
+
+  try {
+    const recipientUserId = await resolveWalletRecipient(auth.admin, recipientId);
+    if (!recipientUserId) return json({ error: 'Recipient wallet was not found.' }, 404);
+    if (recipientUserId === auth.canonicalUser.id) {
+      return json({ error: 'Cannot send wallet funds to the same account.' }, 400);
+    }
+
+    const { error } = await auth.admin.rpc('app_transfer_wallet_funds', {
+      p_from_user_id: auth.canonicalUser.id,
+      p_to_user_id: recipientUserId,
+      p_amount: amountJod,
+      p_payment_method: 'wallet_balance',
+    });
+    if (error) throw new Error(error.message);
+
+    return json({ success: true, note, wallet: await loadWalletPayload(auth.admin, auth.canonicalUser.id) });
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
+async function handleSetWalletPin(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+
+  const body = await request.json().catch(() => ({}));
+  const pin = String(body.pin ?? '').trim();
+  if (!/^\d{4}$/.test(pin)) return json({ error: 'Wallet PIN must be four digits.' }, 400);
+
+  try {
+    const pinHash = await hashWalletPin(pin);
+    const { error } = await auth.admin
+      .from('wallets')
+      .update({ pin_hash: pinHash, updated_at: new Date().toISOString() })
+      .eq('user_id', auth.canonicalUser.id);
+    if (error) throw new Error(error.message);
+    return json({ success: true, wallet: await loadWalletPayload(auth.admin, auth.canonicalUser.id) });
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
+async function handleVerifyWalletPin(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+
+  const body = await request.json().catch(() => ({}));
+  const pin = String(body.pin ?? '').trim();
+  try {
+    const wallet = await ensureWalletForUser(auth.admin, auth.canonicalUser.id);
+    const verified = await verifyWalletPinHash(pin, wallet.pin_hash);
+    return json({ verified });
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
+async function handleSetWalletAutoTopUp(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+
+  const body = await request.json().catch(() => ({}));
+  const amount = toMoneyNumber(body.amount);
+  const threshold = toMoneyNumber(body.threshold);
+  try {
+    const { error } = await auth.admin
+      .from('wallets')
+      .update({
+        auto_top_up_enabled: Boolean(body.enabled),
+        auto_top_up_amount: amount > 0 ? amount : 20,
+        auto_top_up_threshold: threshold >= 0 ? threshold : 5,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', auth.canonicalUser.id);
+    if (error) throw new Error(error.message);
+    return json(await loadWalletPayload(auth.admin, auth.canonicalUser.id));
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
+async function handleGetWalletPaymentMethods(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+
+  try {
+    const details = await loadWalletDetails(auth.admin, auth.canonicalUser.id);
+    return json({ methods: details.paymentMethods });
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
+async function handleAddWalletPaymentMethod(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+
+  const body = await request.json().catch(() => ({}));
+  const provider = String(body.provider ?? 'manual').trim() || 'manual';
+  try {
+    const { data, error } = await auth.admin
+      .from('payment_methods')
+      .insert({
+        user_id: auth.canonicalUser.id,
+        provider,
+        method_type: normalizeWalletPaymentMethod(body.type ?? body.method_type),
+        token_reference: String(body.token_reference ?? body.last4 ?? `pm-${crypto.randomUUID()}`),
+        is_default: Boolean(body.is_default),
+        status: 'active',
+      })
+      .select('*')
+      .single();
+    if (error) throw new Error(error.message);
+    return json(data, 201);
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
+async function handleDeleteWalletPaymentMethod(request: Request, requestedUserId: string, methodId: string | null) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+  if (!methodId) return json({ error: 'Payment method id is required.' }, 400);
+
+  try {
+    const { error } = await auth.admin
+      .from('payment_methods')
+      .delete()
+      .eq('payment_method_id', methodId)
+      .eq('user_id', auth.canonicalUser.id);
+    if (error) throw new Error(error.message);
+    return json({ success: true });
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
+async function handleGetWalletTrustScore(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+
+  try {
+    const [{ data: wallet }, { data: driver }, { data: user, error: userError }] = await Promise.all([
+      auth.admin.from('wallets').select('balance').eq('user_id', auth.canonicalUser.id).maybeSingle(),
+      auth.admin.from('drivers').select('driver_id').eq('user_id', auth.canonicalUser.id).maybeSingle(),
+      auth.admin.from('users').select('verification_level').eq('id', auth.canonicalUser.id).maybeSingle(),
+    ]);
+    if (userError) throw new Error(userError.message);
+    let tripCount = 0;
+    if (driver?.driver_id) {
+      const { count } = await auth.admin
+        .from('trips')
+        .select('trip_id', { count: 'exact', head: true })
+        .eq('driver_id', driver.driver_id);
+      tripCount = toNumber(count, 0);
+    }
+    return json({
+      totalTrips: tripCount,
+      cashRating: 5,
+      onTimePayments: user?.verification_level === 'level_0' ? 80 : 98,
+      deposit: toNumber(wallet?.balance, 0),
+    });
+  } catch (error) {
+    return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  }
+}
+
+async function handleGetWalletRewards(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+  return json({ rewards: [] });
+}
+
+async function handleClaimWalletReward(request: Request, requestedUserId: string) {
+  const auth = await authenticateWalletRequest(request, requestedUserId);
+  if ('error' in auth) return auth.error;
+  const body = await request.json().catch(() => ({}));
+  const rewardId = String(body.rewardId ?? '').trim();
+  if (!rewardId) return json({ error: 'Reward id is required.' }, 400);
+  return json({ error: 'Reward is not available.' }, 404);
 }
 
 async function createPendingTopUpTransaction(
@@ -3417,6 +4046,62 @@ Deno.serve(async (request) => {
 
     const walletRoute = parseWalletRoute(path);
     if (walletRoute) {
+      if (request.method === 'GET' && walletRoute.action === '') {
+        response = await handleGetWallet(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'GET' && walletRoute.action === 'transactions') {
+        response = await handleGetWalletTransactions(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'GET' && walletRoute.action === 'insights') {
+        response = await handleGetWalletInsights(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'POST' && walletRoute.action === 'withdraw') {
+        response = await handleWalletWithdraw(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'POST' && walletRoute.action === 'send') {
+        response = await handleWalletSend(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'POST' && walletRoute.action === 'pin' && walletRoute.resourceId === 'set') {
+        response = await handleSetWalletPin(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'POST' && walletRoute.action === 'pin' && walletRoute.resourceId === 'verify') {
+        response = await handleVerifyWalletPin(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'POST' && walletRoute.action === 'auto-topup') {
+        response = await handleSetWalletAutoTopUp(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'GET' && walletRoute.action === 'payment-methods') {
+        response = await handleGetWalletPaymentMethods(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'POST' && walletRoute.action === 'payment-methods') {
+        response = await handleAddWalletPaymentMethod(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'DELETE' && walletRoute.action === 'payment-methods') {
+        response = await handleDeleteWalletPaymentMethod(request, walletRoute.userId, walletRoute.resourceId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'GET' && walletRoute.action === 'trust-score') {
+        response = await handleGetWalletTrustScore(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'GET' && walletRoute.action === 'rewards') {
+        response = await handleGetWalletRewards(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
+      if (request.method === 'POST' && walletRoute.action === 'rewards' && walletRoute.resourceId === 'claim') {
+        response = await handleClaimWalletReward(request, walletRoute.userId);
+        return finalizeResponse(request, response);
+      }
       if (request.method === 'GET' && walletRoute.action === 'subscription') {
         response = await handleGetWalletSubscription(request, walletRoute.userId);
         return finalizeResponse(request, response);
