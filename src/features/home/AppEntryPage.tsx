@@ -350,6 +350,75 @@ export default function AppEntryPage() {
         ],
       };
 
+  if (ar) {
+    Object.assign(heroCopy, {
+      topbarEyebrow: 'إدارة نقل الموظفين',
+      topbarBody: 'رحلات الموظفين والموافقات والحركة الحية وتكلفة المسارات في تدفق واحد.',
+      topbarPill: 'مصمم لعمليات الأردن',
+      heroBadge: 'تحكم مؤسسي بالمسارات',
+      heroTitleA: 'نقل الموظفين،',
+      heroTitleB: 'تحت السيطرة من البداية للنهاية.',
+      heroBody:
+        'يساعد واصل الشركات على حجز رحلات مشتركة للموظفين، اعتماد طلبات التنقل، متابعة الرحلات مباشرة، وخفض تكلفة النقل اليومي بدون تنسيق يدوي أو ملفات متابعة.',
+      secondaryCta: 'جاهز للتجربة خلال أقل من 30 ثانية',
+      stats: [
+        { value: '35%', label: 'هدف خفض التكلفة', tone: C.cyanSoft },
+        { value: '24/7', label: 'متابعة الرحلات', tone: C.green },
+        { value: 'RLS', label: 'تحكم بالوصول', tone: C.gold },
+      ],
+      trustSignals: [
+        { label: 'سائقون موثقون', detail: 'تحقق من الهوية ومراجعة الرحلات', icon: ShieldCheck },
+        { label: 'مدفوعات آمنة', detail: 'جاهز للدفع عبر Stripe', icon: CreditCard },
+        { label: 'خصوصية واضحة', detail: 'تصدير البيانات وحذف الحساب', icon: LockKeyhole },
+      ],
+      mapEyebrow: 'سطح تشغيل الحركة',
+      mapTitle: 'كل مسار يعرض التكلفة والموافقة والحركة الحية',
+      mapBody:
+        'يعطي السطح التشغيلي الموظف والمدير وفريق العمليات نفس الحقيقة قبل الحجز أو الاعتماد أو الإرسال.',
+      corridorLabel: 'مسار اليوم',
+      fareLabel: 'السعر المشترك',
+      savingsLabel: 'التوفير',
+      pickupLabel: 'نقطة الالتقاء',
+      groupingLabel: 'التجميع التلقائي',
+      servicesEyebrow: 'الخدمات الأساسية',
+      servicesTitle: 'مسارات خدمة واضحة وخطوة واحدة تالية.',
+      servicesBody:
+        'الموظف يحجز أو يطلب، المدير يعتمد، وفريق العمليات يدير السعة والاستثناءات. كل شاشة توجه المستخدم للخطوة المفيدة التالية.',
+      proofEyebrow: 'لماذا يثق المستخدم بسرعة',
+      proofTitle: 'الثقة تظهر قبل الالتزام.',
+      proofBody:
+        'الواجهة تبدأ بالنتيجة، تثبت طريقة التشغيل، وتضع إشارات الأمان والدفع والخصوصية قرب قرار الحجز.',
+      corridorsEyebrow: 'المسارات الحية',
+      corridorsTitle: 'المسارات المحددة تجعل المنتج ملموسا.',
+      corridorsBody:
+        'بعد أن يفهم الزائر نموذج التشغيل، يرى كيف يتحول ذلك إلى مسارات حقيقية قابلة للفتح مباشرة.',
+      routeFocus: 'تركيز مسار اليوم',
+      routeFocusBody:
+        'عندما يعود الموظفون إلى نفس المسار، تتحول الحركة المشتركة من تجربة منفصلة إلى عادة تشغيلية.',
+      finalEyebrow: 'الخطوة التالية',
+      finalTitle: 'ابدأ بمسار موظفين واحد تحت السيطرة.',
+      finalBody: 'يحول واصل المسار إلى وحدة تشغيل للتكلفة والموافقات والحركة الحية وثقة الدفع.',
+      finalCta: 'ابدأ الحجز الموجه',
+      openService: 'افتح الخدمة',
+      openCorridor: 'استكشف هذا المسار',
+      belowSolo: 'أقل من خيار الرحلة الفردية',
+    });
+  }
+
+  const journeySteps = ar
+    ? [
+        { label: 'احجز', detail: 'اختر المسار والمقاعد' },
+        { label: 'اعتمد', detail: 'احسم الطلب بسياق واضح' },
+        { label: 'ادفع', detail: 'استخدم دفعا آمنا' },
+        { label: 'أدر', detail: 'تابع الرحلات والسعة' },
+      ]
+    : [
+        { label: 'Book', detail: 'Pick route and seats' },
+        { label: 'Approve', detail: 'Clear policy-ready travel' },
+        { label: 'Pay', detail: 'Use secure checkout' },
+        { label: 'Manage', detail: 'Track trips and supply' },
+      ];
+
   const meta = corridorMeta(spotlightCorridor);
 
   return (
@@ -725,12 +794,7 @@ export default function AppEntryPage() {
                   maxWidth: 620,
                 }}
               >
-                {[
-                  { label: 'Book', detail: 'Pick route and seats' },
-                  { label: 'Approve', detail: 'Clear policy-ready travel' },
-                  { label: 'Pay', detail: 'Use secure checkout' },
-                  { label: 'Manage', detail: 'Track trips and supply' },
-                ].map((step, index) => (
+                {journeySteps.map((step, index) => (
                   <div
                     key={step.label}
                     style={{

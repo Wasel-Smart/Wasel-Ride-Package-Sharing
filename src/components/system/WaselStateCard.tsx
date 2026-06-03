@@ -146,9 +146,9 @@ export function WaselStateCard({
           <h2
             style={{
               margin: 0,
-              fontSize: 'clamp(1.55rem, 4vw, 2.15rem)',
+              fontSize: '2rem',
               lineHeight: 1.06,
-              letterSpacing: '-0.04em',
+              letterSpacing: 0,
               fontWeight: 900,
             }}
           >

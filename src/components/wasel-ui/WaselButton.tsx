@@ -13,7 +13,7 @@
 
 import { Loader2 } from 'lucide-react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { C, R, SH, F, TYPE } from '../../utils/wasel-ds';
+import { C, R, SH, F, TYPE, focusRing } from '../../utils/wasel-ds';
 
 type ButtonVariant = 'primary' | 'outline' | 'ghost' | 'gold' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -107,7 +107,7 @@ export function WaselButton({
     fontSize: s.fontSize,
     fontWeight: TYPE.weight.black,
     fontFamily: F,
-    letterSpacing: '-0.01em',
+    letterSpacing: 0,
     borderRadius: s.borderRadius,
     border: v.border,
     background: v.background,
@@ -116,6 +116,7 @@ export function WaselButton({
     cursor: isDisabled ? 'not-allowed' : 'pointer',
     opacity: isDisabled ? 0.6 : 1,
     transition: 'all 160ms cubic-bezier(0.25,0.1,0.25,1)',
+    touchAction: 'manipulation',
     userSelect: 'none',
     WebkitUserSelect: 'none',
     outline: 'none',
@@ -152,6 +153,16 @@ export function WaselButton({
       onMouseUp={e => {
         if (!isDisabled) (e.currentTarget as HTMLButtonElement).style.transform = '';
         rest.onMouseUp?.(e);
+      }}
+      onFocus={e => {
+        if (!isDisabled) {
+          (e.currentTarget as HTMLButtonElement).style.boxShadow = `${v.boxShadow}, ${focusRing(C.gold)}`;
+        }
+        rest.onFocus?.(e);
+      }}
+      onBlur={e => {
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = v.boxShadow;
+        rest.onBlur?.(e);
       }}
     >
       {loading ? (
