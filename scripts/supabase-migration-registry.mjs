@@ -358,6 +358,36 @@ export const migrationCatalog = [
     category: 'runtime-contract',
     naming: 'canonical',
   },
+  {
+    sequence: 39,
+    path: 'src/supabase/migrations/20260531070000_harden_public_security_definer_boundaries.sql',
+    description:
+      'Move privileged security-definer implementations into the private schema and keep only invoker-compatible public wrappers',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'security',
+    naming: 'canonical',
+  },
+  {
+    sequence: 40,
+    path: 'src/supabase/migrations/20260531083000_restrict_private_rpc_execute_grants.sql',
+    description:
+      'Revoke browser-role private schema access and keep privileged RPC wrappers service-role only',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'security',
+    naming: 'canonical',
+  },
+  {
+    sequence: 41,
+    path: 'src/supabase/migrations/20260531084000_user_settings_notifications_contract.sql',
+    description:
+      'Add notification preferences to the canonical user settings runtime contract',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'runtime-contract',
+    naming: 'canonical',
+  },
 ];
 
 export const operationalSeedFiles = [

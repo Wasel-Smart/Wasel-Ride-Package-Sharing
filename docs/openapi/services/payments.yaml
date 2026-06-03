@@ -1,16 +1,16 @@
 openapi: 3.1.0
 info:
-  title: Wasel Trips Service API
+  title: Wasel Payments Service API
   version: v1
-  description: Generated OpenAPI contract for the trips bounded domain.
+  description: Generated OpenAPI contract for the payments bounded domain.
 servers:
   - url: https://api.wasel.app
     description: Production
   - url: https://staging-api.wasel.app
     description: Staging
 tags:
-  - name: trips
-    description: mobility-platform
+  - name: payments
+    description: payments-platform
 components:
   securitySchemes:
     bearerAuth:
@@ -22,12 +22,12 @@ components:
       in: header
       name: X-Wasel-Signature
 paths:
-  /v1/trips:
+  /payments/confirm:
     post:
       tags:
-        - trips
-      operationId: createTrip
-      summary: Create a trip.
+        - payments
+      operationId: confirmPaymentIntentRuntime
+      summary: Confirm a payment intent and return settlement state.
       security:
         - bearerAuth: []
         - requestSignature: []
@@ -42,28 +42,12 @@ paths:
           description: Rate limited
         '500':
           description: Internal platform error
-  /v1/trips/{id}:
-    get:
+  /payments/create-intent:
+    post:
       tags:
-        - trips
-      operationId: getTripById
-      summary: Read a single trip.
-      responses:
-        '200':
-          description: Successful response
-        '400':
-          description: Invalid request
-        '401':
-          description: Authentication failed
-        '429':
-          description: Rate limited
-        '500':
-          description: Internal platform error
-    put:
-      tags:
-        - trips
-      operationId: updateTrip
-      summary: Update trip state.
+        - payments
+      operationId: createPaymentIntentRuntime
+      summary: Create a payment intent for card, wallet, or subscription flows.
       security:
         - bearerAuth: []
         - requestSignature: []
@@ -78,12 +62,15 @@ paths:
           description: Rate limited
         '500':
           description: Internal platform error
-  /v1/trips/search:
-    get:
+  /payments/status:
+    post:
       tags:
-        - trips
-      operationId: searchTrips
-      summary: Search corridor inventory.
+        - payments
+      operationId: getPaymentIntentRuntimeStatus
+      summary: Read payment intent status after webhook processing.
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response

@@ -1,16 +1,16 @@
 openapi: 3.1.0
 info:
-  title: Wasel Analytics Service API
+  title: Wasel User-settings Service API
   version: v1
-  description: Generated OpenAPI contract for the analytics bounded domain.
+  description: Generated OpenAPI contract for the user-settings bounded domain.
 servers:
   - url: https://api.wasel.app
     description: Production
   - url: https://staging-api.wasel.app
     description: Staging
 tags:
-  - name: analytics
-    description: insights-platform
+  - name: user-settings
+    description: identity-platform
 components:
   securitySchemes:
     bearerAuth:
@@ -22,12 +22,12 @@ components:
       in: header
       name: X-Wasel-Signature
 paths:
-  /v1/analytics/dashboard:
+  /user/settings:
     get:
       tags:
-        - analytics
-      operationId: getGrowthDashboard
-      summary: Read growth and corridor metrics.
+        - user-settings
+      operationId: getUserSettings
+      summary: Read user settings and preferences.
       security:
         - bearerAuth: []
         - requestSignature: []
@@ -42,12 +42,11 @@ paths:
           description: Rate limited
         '500':
           description: Internal platform error
-  /v1/analytics/events:
-    post:
+    put:
       tags:
-        - analytics
-      operationId: trackGrowthEvent
-      summary: Append a domain analytics event.
+        - user-settings
+      operationId: updateUserSettings
+      summary: Update user settings and preferences.
       security:
         - bearerAuth: []
         - requestSignature: []

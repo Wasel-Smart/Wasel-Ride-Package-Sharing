@@ -8,7 +8,7 @@ const servicesDir = path.join(outputDir, 'services');
 function toOperationYaml(operation, indent = '  ') {
   const securityLine =
     operation.authentication === 'jwt'
-      ? `${indent}    security:\n${indent}      - bearerAuth: []\n${indent}      - requestSignature: []\n`
+      ? `${indent}  security:\n${indent}    - bearerAuth: []\n${indent}    - requestSignature: []\n`
       : '';
 
   return [

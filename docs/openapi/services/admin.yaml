@@ -1,16 +1,16 @@
 openapi: 3.1.0
 info:
-  title: Wasel Analytics Service API
+  title: Wasel Admin Service API
   version: v1
-  description: Generated OpenAPI contract for the analytics bounded domain.
+  description: Generated OpenAPI contract for the admin bounded domain.
 servers:
   - url: https://api.wasel.app
     description: Production
   - url: https://staging-api.wasel.app
     description: Staging
 tags:
-  - name: analytics
-    description: insights-platform
+  - name: admin
+    description: operations-platform
 components:
   securitySchemes:
     bearerAuth:
@@ -22,12 +22,12 @@ components:
       in: header
       name: X-Wasel-Signature
 paths:
-  /v1/analytics/dashboard:
-    get:
+  /admin/drivers/{driverId}/approve:
+    post:
       tags:
-        - analytics
-      operationId: getGrowthDashboard
-      summary: Read growth and corridor metrics.
+        - admin
+      operationId: approveDriver
+      summary: Approve a driver after admin authorization and readiness checks.
       security:
         - bearerAuth: []
         - requestSignature: []
@@ -42,12 +42,12 @@ paths:
           description: Rate limited
         '500':
           description: Internal platform error
-  /v1/analytics/events:
-    post:
+  /admin/drivers/pending:
+    get:
       tags:
-        - analytics
-      operationId: trackGrowthEvent
-      summary: Append a domain analytics event.
+        - admin
+      operationId: listPendingDrivers
+      summary: List pending driver approvals for admin users.
       security:
         - bearerAuth: []
         - requestSignature: []

@@ -66,6 +66,55 @@
         "operationId": "sendMoney",
         "path": "/v1/wallet/transfers",
         "summary": "Execute a peer-to-peer transfer after step-up verification."
+      },
+      {
+        "authentication": "jwt",
+        "method": "GET",
+        "operationId": "getWallet",
+        "path": "/wallet",
+        "summary": "Read the authenticated wallet snapshot used by the web app."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "withdrawWalletFunds",
+        "path": "/wallet/withdraw",
+        "summary": "Request wallet withdrawal after step-up verification."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "transferWalletFunds",
+        "path": "/wallet/transfer",
+        "summary": "Transfer wallet funds after step-up verification."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "manageWalletPaymentMethods",
+        "path": "/wallet/payment-methods",
+        "summary": "Add, remove, or set default wallet payment methods."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "setWalletPin",
+        "path": "/wallet/set-pin",
+        "summary": "Set the wallet PIN."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "verifyWalletPin",
+        "path": "/wallet/verify-pin",
+        "summary": "Verify wallet PIN and OTP for step-up actions."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "updateWalletSettings",
+        "path": "/wallet/settings",
+        "summary": "Update wallet settings such as auto top-up."
       }
     ]
   },
@@ -150,6 +199,139 @@
         "operationId": "getGrowthDashboard",
         "path": "/v1/analytics/dashboard",
         "summary": "Read growth and corridor metrics."
+      }
+    ]
+  },
+  {
+    "name": "profile",
+    "ownership": "identity-platform",
+    "version": "v1",
+    "operations": [
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "createProfile",
+        "path": "/profile",
+        "summary": "Create the authenticated user profile."
+      },
+      {
+        "authentication": "jwt",
+        "method": "GET",
+        "operationId": "getProfileByUserId",
+        "path": "/profile/{userId}",
+        "summary": "Read a profile by authenticated user id."
+      },
+      {
+        "authentication": "jwt",
+        "method": "PATCH",
+        "operationId": "updateProfile",
+        "path": "/profile/{userId}",
+        "summary": "Update the authenticated user profile."
+      }
+    ]
+  },
+  {
+    "name": "payments",
+    "ownership": "payments-platform",
+    "version": "v1",
+    "operations": [
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "createPaymentIntentRuntime",
+        "path": "/payments/create-intent",
+        "summary": "Create a payment intent for card, wallet, or subscription flows."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "confirmPaymentIntentRuntime",
+        "path": "/payments/confirm",
+        "summary": "Confirm a payment intent and return settlement state."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "getPaymentIntentRuntimeStatus",
+        "path": "/payments/status",
+        "summary": "Read payment intent status after webhook processing."
+      }
+    ]
+  },
+  {
+    "name": "admin",
+    "ownership": "operations-platform",
+    "version": "v1",
+    "operations": [
+      {
+        "authentication": "jwt",
+        "method": "GET",
+        "operationId": "listPendingDrivers",
+        "path": "/admin/drivers/pending",
+        "summary": "List pending driver approvals for admin users."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "approveDriver",
+        "path": "/admin/drivers/{driverId}/approve",
+        "summary": "Approve a driver after admin authorization and readiness checks."
+      }
+    ]
+  },
+  {
+    "name": "safety",
+    "ownership": "safety-platform",
+    "version": "v1",
+    "operations": [
+      {
+        "authentication": "jwt",
+        "method": "GET",
+        "operationId": "getSafetySettings",
+        "path": "/safety/settings",
+        "summary": "Read the authenticated safety dashboard/settings."
+      },
+      {
+        "authentication": "jwt",
+        "method": "PUT",
+        "operationId": "updateSafetySettings",
+        "path": "/safety/settings",
+        "summary": "Update safety settings."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "createSafetyIncident",
+        "path": "/safety/incident",
+        "summary": "Create a safety incident report."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "createSosAlert",
+        "path": "/safety/sos",
+        "summary": "Create a safety SOS alert."
+      }
+    ]
+  },
+  {
+    "name": "user-settings",
+    "ownership": "identity-platform",
+    "version": "v1",
+    "operations": [
+      {
+        "authentication": "jwt",
+        "method": "GET",
+        "operationId": "getUserSettings",
+        "path": "/user/settings",
+        "summary": "Read user settings and preferences."
+      },
+      {
+        "authentication": "jwt",
+        "method": "PUT",
+        "operationId": "updateUserSettings",
+        "path": "/user/settings",
+        "summary": "Update user settings and preferences."
       }
     ]
   }

@@ -28,9 +28,9 @@ paths:
         - auth
       operationId: getProfile
       summary: Resolve the authenticated profile.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -65,9 +65,9 @@ paths:
         - auth
       operationId: signOut
       summary: Revoke the current session.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response

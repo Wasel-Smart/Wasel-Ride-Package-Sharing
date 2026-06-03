@@ -1,16 +1,16 @@
 openapi: 3.1.0
 info:
-  title: Wasel Trips Service API
+  title: Wasel Safety Service API
   version: v1
-  description: Generated OpenAPI contract for the trips bounded domain.
+  description: Generated OpenAPI contract for the safety bounded domain.
 servers:
   - url: https://api.wasel.app
     description: Production
   - url: https://staging-api.wasel.app
     description: Staging
 tags:
-  - name: trips
-    description: mobility-platform
+  - name: safety
+    description: safety-platform
 components:
   securitySchemes:
     bearerAuth:
@@ -22,12 +22,12 @@ components:
       in: header
       name: X-Wasel-Signature
 paths:
-  /v1/trips:
+  /safety/incident:
     post:
       tags:
-        - trips
-      operationId: createTrip
-      summary: Create a trip.
+        - safety
+      operationId: createSafetyIncident
+      summary: Create a safety incident report.
       security:
         - bearerAuth: []
         - requestSignature: []
@@ -42,12 +42,15 @@ paths:
           description: Rate limited
         '500':
           description: Internal platform error
-  /v1/trips/{id}:
+  /safety/settings:
     get:
       tags:
-        - trips
-      operationId: getTripById
-      summary: Read a single trip.
+        - safety
+      operationId: getSafetySettings
+      summary: Read the authenticated safety dashboard/settings.
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -61,9 +64,9 @@ paths:
           description: Internal platform error
     put:
       tags:
-        - trips
-      operationId: updateTrip
-      summary: Update trip state.
+        - safety
+      operationId: updateSafetySettings
+      summary: Update safety settings.
       security:
         - bearerAuth: []
         - requestSignature: []
@@ -78,12 +81,15 @@ paths:
           description: Rate limited
         '500':
           description: Internal platform error
-  /v1/trips/search:
-    get:
+  /safety/sos:
+    post:
       tags:
-        - trips
-      operationId: searchTrips
-      summary: Search corridor inventory.
+        - safety
+      operationId: createSosAlert
+      summary: Create a safety SOS alert.
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
