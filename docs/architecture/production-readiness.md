@@ -24,7 +24,7 @@ The production baseline is protected by these checks:
 
 - `npm run check:design-system` rejects inline styles and hardcoded color literals in active app surfaces.
 - `npm run check:domain-boundaries` rejects domain-layer dependency inversions.
-- `npm run check:no-inline-api-in-ui` rejects network/Supabase calls from enforced UI directories.
+- `node scripts/check-no-inline-api-in-ui.mjs` rejects network/Supabase calls from enforced UI directories without requiring `package.json` script wiring.
 - `npm run size` protects bundle budgets and tree-shaking regressions.
 - `npm run test:lhci` collects the Lighthouse baseline; the target for production routes is a 90+ performance score.
 
