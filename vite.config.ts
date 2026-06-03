@@ -42,9 +42,6 @@ export default defineConfig({
           if (id.includes('@supabase')) return 'vendor-supabase';
           if (id.includes('@stripe') || id.includes('stripe')) return 'vendor-payments';
           if (id.includes('@tanstack')) return 'vendor-query';
-          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-            return 'vendor-react';
-          }
           if (id.includes('leaflet') || id.includes('recharts') || id.includes('motion')) {
             return 'vendor-visualization';
           }
