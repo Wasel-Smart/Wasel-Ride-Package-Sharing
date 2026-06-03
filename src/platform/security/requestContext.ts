@@ -1,5 +1,3 @@
-import { randomBytes } from 'crypto';
-
 export interface PlatformRequestContext {
   correlationId: string;
   idempotencyKey: string;
@@ -9,13 +7,26 @@ export interface PlatformRequestContext {
   timestamp: string;
 }
 
+function randomHex(bytes: number): string {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.getRandomValues) {
+    const values = new Uint8Array(bytes);
+    cryptoApi.getRandomValues(values);
+    return Array.from(values, value => value.toString(16).padStart(2, '0')).join('');
+  }
+
+  return Array.from({ length: bytes }, () =>
+    Math.floor(Math.random() * 256).toString(16).padStart(2, '0'),
+  ).join('');
+}
+
 function randomId(prefix: string): string {
   const uuid = globalThis.crypto?.randomUUID?.();
   if (uuid) {
     return uuid;
   }
 
-  return `${prefix}-${Date.now()}-${randomBytes(16).toString('hex')}`;
+  return `${prefix}-${Date.now()}-${randomHex(16)}`;
 }
 
 function getOrCreateSessionId(): string {

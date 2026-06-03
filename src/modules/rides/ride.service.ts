@@ -221,7 +221,7 @@ function toRideResultFromPostedRide(ride: ReturnType<typeof getConnectedRides>[n
       phone: ride.ownerPhone,
       email: ride.ownerEmail,
     },
-    routeMode: 'shared_route',
+    routeMode: 'live_post',
     ownerId: ride.ownerId,
     vehicleType: vehicleLabel,
     carModel: vehicleLabel,
