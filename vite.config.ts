@@ -32,8 +32,27 @@ export default defineConfig({
   build: {
     target: 'es2018',
     cssTarget: 'chrome80',
+    cssCodeSplit: true,
     sourcemap: false,
-    chunkSizeWarningLimit: 1500,
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('@supabase')) return 'vendor-supabase';
+          if (id.includes('@stripe') || id.includes('stripe')) return 'vendor-payments';
+          if (id.includes('@tanstack')) return 'vendor-query';
+          if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            return 'vendor-react';
+          }
+          if (id.includes('leaflet') || id.includes('recharts') || id.includes('motion')) {
+            return 'vendor-visualization';
+          }
+          if (id.includes('@radix-ui') || id.includes('lucide-react')) return 'vendor-ui';
+          return 'vendor';
+        },
+      },
+    },
   },
 
   server: {
