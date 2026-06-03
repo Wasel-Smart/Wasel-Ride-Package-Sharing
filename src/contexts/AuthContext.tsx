@@ -275,7 +275,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         return {
           error: null,
-          requiresEmailConfirmation: !authUser,
+          requiresEmailConfirmation: !data.session,
           user: authUser,
         };
       } catch (error: unknown) {

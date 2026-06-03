@@ -47,9 +47,10 @@ function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'gen
     return 'This email is already registered.';
   }
 
+  if (message.trim()) return message;
   if (context === 'signin') return 'Sign in failed. Please try again.';
   if (context === 'signup') return 'Sign up failed. Please try again.';
-  return message || 'Request failed.';
+  return 'Request failed.';
 }
 
 function requireSupabase() {
