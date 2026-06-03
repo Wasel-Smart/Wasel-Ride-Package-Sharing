@@ -1715,6 +1715,13 @@ async function getWalletSubscription(
     .maybeSingle();
 
   if (error) {
+    const message = String(error.message ?? '');
+    if (
+      message.includes("Could not find the table 'public.subscriptions'") ||
+      message.includes('relation "public.subscriptions" does not exist')
+    ) {
+      return null;
+    }
     throw new Error(error.message);
   }
 
