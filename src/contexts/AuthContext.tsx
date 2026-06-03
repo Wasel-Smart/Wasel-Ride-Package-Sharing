@@ -266,7 +266,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (authUser && data.session) {
           setSession(data.session);
           setUser(authUser);
-          await fetchProfile(true, authUser);
+          void fetchProfile(true, authUser).catch(error => {
+            if (import.meta.env?.DEV) {
+              console.warn('[Auth] Profile bootstrap skipped:', sanitizeLogMessage(String(error)));
+            }
+          });
         }
 
         return {
@@ -293,7 +297,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (authUser && data.session) {
           setSession(data.session);
           setUser(authUser);
-          await fetchProfile(true, authUser);
+          void fetchProfile(true, authUser).catch(error => {
+            if (import.meta.env?.DEV) {
+              console.warn('[Auth] Profile bootstrap skipped:', sanitizeLogMessage(String(error)));
+            }
+          });
         }
 
         return { error: null };
