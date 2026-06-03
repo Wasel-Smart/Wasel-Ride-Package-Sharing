@@ -1299,3 +1299,30 @@ img {
     padding-bottom: calc(var(--ds-space-7) + 4.5rem);
   }
 }
+
+.ds-async-state {
+  display: grid;
+  gap: var(--ds-space-4);
+  padding: var(--ds-space-6);
+}
+
+.ds-skeleton {
+  animation: ds-pulse 1.4s ease-in-out infinite;
+  background: var(--ds-surface-soft);
+  border-radius: var(--ds-radius-md);
+}
+
+.ds-skeleton--title {
+  block-size: var(--ds-space-6);
+  inline-size: min(16rem, 70%);
+}
+
+.ds-skeleton--body {
+  block-size: var(--ds-space-10);
+  inline-size: 100%;
+}
+
+@keyframes ds-pulse {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
