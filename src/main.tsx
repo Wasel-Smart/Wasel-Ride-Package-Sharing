@@ -80,22 +80,47 @@ try {
   }
 }
 
-// Verify backend connectivity on startup (both dev and prod).
-// In production we log warnings without blocking render.
-verifyBackendConnection()
-  .then(result => {
-    if (result.connected) {
-      if (import.meta.env.DEV) {
-        console.log('[Wasel] ✓ Backend connected:', result.message);
-      }
-      startHealthCheckMonitoring(60_000);
-    } else {
-      console.warn('[Wasel] ⚠ Backend connection issue:', sanitizeLogMessage(result.message));
+function scheduleAfterFirstPaint(task: () => void): void {
+  if (typeof window === 'undefined') {
+    task();
+    return;
+  }
+
+  const run = () => {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(task, { timeout: 3_000 });
+      return;
     }
-  })
-  .catch(error => {
-    console.error('[Wasel] Backend health check failed:', sanitizeLogMessage(String(error)));
-  });
+
+    globalThis.setTimeout(task, 900);
+  };
+
+  if (document.readyState === 'complete') {
+    run();
+    return;
+  }
+
+  window.addEventListener('load', run, { once: true });
+}
+
+// Verify backend connectivity after first paint so startup probes do not compete
+// with initial route rendering, CSS evaluation, and hydration work.
+scheduleAfterFirstPaint(() => {
+  verifyBackendConnection()
+    .then(result => {
+      if (result.connected) {
+        if (import.meta.env.DEV) {
+          console.log('[Wasel] Backend connected:', result.message);
+        }
+        startHealthCheckMonitoring(60_000);
+      } else {
+        console.warn('[Wasel] Backend connection issue:', sanitizeLogMessage(result.message));
+      }
+    })
+    .catch(error => {
+      console.error('[Wasel] Backend health check failed:', sanitizeLogMessage(String(error)));
+    });
+});
 
 // Clear encryption key on logout
 window.addEventListener('storage', e => {

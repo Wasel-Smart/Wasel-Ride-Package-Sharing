@@ -3,6 +3,8 @@ import {
   ArrowRight,
   Bus,
   Clock3,
+  CreditCard,
+  LockKeyhole,
   MapPinned,
   Package,
   Route,
@@ -141,6 +143,11 @@ export default function AppEntryPage() {
           { value: `${membership.streakDays}d`, label: 'التتابع', tone: C.green },
           { value: tierLabel(membership.loyaltyTier), label: 'الفئة', tone: C.gold },
         ],
+        trustSignals: [
+          { label: 'Verified drivers', detail: 'Identity and trip review', icon: ShieldCheck },
+          { label: 'Secure payments', detail: 'Stripe-ready checkout', icon: CreditCard },
+          { label: 'Privacy controls', detail: 'Data export and deletion', icon: LockKeyhole },
+        ],
         mapEyebrow: 'خريطة Mobility OS',
         mapTitle: 'الذكاء يظهر على المسار نفسه',
         mapBody:
@@ -231,36 +238,41 @@ export default function AppEntryPage() {
       }
     : {
         topbarEyebrow: 'Employee travel control',
-        topbarBody: 'Lower commute cost with booking, approval, and live management in one flow.',
-        topbarPill: 'Built for Jordan teams',
-        heroBadge: 'Book, request, approve, manage',
-        heroTitleA: 'Reduce transport cost.',
-        heroTitleB: 'Automate employee travel.',
+        topbarBody: 'Employee rides, approvals, live trips, and route spend in one controlled flow.',
+        topbarPill: 'Built for Jordan operations',
+        heroBadge: 'Enterprise route control',
+        heroTitleA: 'Employee transport,',
+        heroTitleB: 'controlled end to end.',
         heroBody:
-          'Wasel guides employees and operators from the first route decision to approval, booking, and live trip management without manual coordination.',
-        secondaryCta: '30-second guided flow',
+          'Wasel helps companies book shared employee rides, approve travel requests, manage live trips, and reduce daily transport cost without WhatsApp coordination or spreadsheet follow-up.',
+        secondaryCta: 'Setup-ready in under 30 seconds',
         stats: [
-          { value: `${membership.movementCredits}`, label: 'Credits', tone: C.cyanSoft },
-          { value: `${membership.streakDays}d`, label: 'Streak', tone: C.green },
-          { value: tierLabel(membership.loyaltyTier), label: 'Tier', tone: C.gold },
+          { value: '35%', label: 'Cost reduction target', tone: C.cyanSoft },
+          { value: '24/7', label: 'Live trip visibility', tone: C.green },
+          { value: 'RLS', label: 'Data access control', tone: C.gold },
+        ],
+        trustSignals: [
+          { label: 'Verified drivers', detail: 'Identity and trip review', icon: ShieldCheck },
+          { label: 'Secure payments', detail: 'Stripe-ready checkout', icon: CreditCard },
+          { label: 'Privacy controls', detail: 'Data export and deletion', icon: LockKeyhole },
         ],
         mapEyebrow: 'Travel automation field',
-        mapTitle: 'Cost, approval, and movement stay on the route itself',
+        mapTitle: 'Every route shows cost, approval status, and live movement',
         mapBody:
-          'The live surface shows where employees are moving, what the shared fare saves, and which action should happen next.',
+          'A route-first operating surface gives employees, approvers, and operators the same source of truth before anyone books or dispatches.',
         corridorLabel: 'Daily corridor',
         fareLabel: 'Shared fare',
         savingsLabel: 'Savings',
         pickupLabel: 'Pickup anchor',
         groupingLabel: 'Auto-group',
         servicesEyebrow: 'Core services',
-        servicesTitle: 'One primary action per screen, matched to the user job.',
+        servicesTitle: 'Clear service lanes with one next action.',
         servicesBody:
-          'Employees book or request. Approvers clear pending travel. Operators manage supply and live movement. Each flow has one dominant next step.',
+          'Employees book or request. Approvers clear pending travel. Operators manage supply and exceptions. The product always points to the next useful action.',
         proofEyebrow: 'Why this lands fast',
-        proofTitle: 'Onboarding should reach the first useful action in under 30 seconds.',
+        proofTitle: 'Trust is visible before commitment.',
         proofBody:
-          'The first screen now leads with the outcome, exposes the guided flow, and removes extra hero choices that slow the first decision.',
+          'The first screen leads with the outcome, proves the operating model, and keeps security, payments, and privacy signals close to the booking decision.',
         corridorsEyebrow: 'Live corridors',
         corridorsTitle: 'Specific routes make the product feel real.',
         corridorsBody:
@@ -268,9 +280,9 @@ export default function AppEntryPage() {
         routeFocus: 'Daily route focus',
         routeFocusBody: 'Shared movement compounds when the same corridor stays easy to reopen.',
         finalEyebrow: 'Fast next step',
-        finalTitle: 'Start with the corridor, then let the mode follow.',
+        finalTitle: 'Start with one controlled employee route.',
         finalBody:
-          'That is the difference between a landing page that only looks polished and one that explains the product at a glance.',
+          'Wasel turns the route into the operating unit for cost, approvals, live movement, and payment confidence.',
         finalCta: 'Start guided booking',
         openService: 'Open service',
         openCorridor: 'Explore this corridor',
@@ -370,6 +382,7 @@ export default function AppEntryPage() {
           .landing-proof-grid,
           .landing-corridor-grid,
           .landing-stats-grid,
+          .landing-trust-grid,
           .landing-meta-grid {
             grid-template-columns: 1fr !important;
           }
@@ -386,7 +399,8 @@ export default function AppEntryPage() {
             border-radius: 28px !important;
           }
           .landing-hero-title {
-            font-size: clamp(2.7rem, 15vw, 4.1rem) !important;
+            font-size: 3.05rem !important;
+            line-height: 0.98 !important;
           }
           .landing-hero-map-caption {
             max-width: none !important;
@@ -400,10 +414,9 @@ export default function AppEntryPage() {
           position: 'absolute',
           inset: 0,
           background: `
-            radial-gradient(circle at 12% 16%, rgba(88,221,255,0.2), transparent 25%),
-            radial-gradient(circle at 84% 14%, rgba(255,190,92,0.18), transparent 22%),
-            radial-gradient(circle at 72% 62%, rgba(71,214,158,0.14), transparent 22%),
-            linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0))
+            linear-gradient(135deg, rgba(88,221,255,0.16), rgba(6,19,31,0) 34%),
+            linear-gradient(225deg, rgba(255,190,92,0.14), rgba(6,19,31,0) 32%),
+            linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0))
           `,
           pointerEvents: 'none',
         }}
@@ -417,10 +430,8 @@ export default function AppEntryPage() {
           left: '50%',
           transform: 'translateX(-50%)',
           width: 'min(92vw, 1180px)',
-          height: 500,
-          borderRadius: 52,
-          background: 'radial-gradient(circle at center, rgba(88,221,255,0.08), rgba(4,11,18,0))',
-          filter: 'blur(10px)',
+          height: 1,
+          background: 'linear-gradient(90deg, transparent, rgba(88,221,255,0.24), transparent)',
           pointerEvents: 'none',
         }}
       />
@@ -543,9 +554,9 @@ export default function AppEntryPage() {
                 className="landing-hero-title"
                 style={{
                   margin: '22px 0 14px',
-                  fontSize: 'clamp(3.35rem, 6.4vw, 5.8rem)',
+                  fontSize: '4.85rem',
                   lineHeight: 0.92,
-                  letterSpacing: '-0.075em',
+                  letterSpacing: 0,
                   fontWeight: 950,
                   maxWidth: 760,
                 }}
@@ -590,6 +601,7 @@ export default function AppEntryPage() {
                 }}
               >
                 <button
+                  aria-label={primaryLabel}
                   onClick={() => navigate(primaryPath)}
                   style={{
                     height: 56,
@@ -631,6 +643,76 @@ export default function AppEntryPage() {
               </div>
 
               <div
+                className="landing-trust-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: 10,
+                  marginTop: 18,
+                }}
+              >
+                {heroCopy.trustSignals.map(signal => {
+                  const Icon = signal.icon;
+                  return (
+                    <div
+                      key={signal.label}
+                      style={{
+                        minHeight: 76,
+                        borderRadius: 18,
+                        padding: '12px 13px',
+                        background: 'rgba(255,255,255,0.035)',
+                        border: `1px solid ${C.borderSoft}`,
+                        display: 'grid',
+                        gridTemplateColumns: '28px 1fr',
+                        gap: 10,
+                        alignItems: 'start',
+                      }}
+                    >
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: 10,
+                          display: 'grid',
+                          placeItems: 'center',
+                          color: C.green,
+                          background: 'rgba(71,214,158,0.12)',
+                          border: '1px solid rgba(71,214,158,0.18)',
+                        }}
+                      >
+                        <Icon size={15} />
+                      </span>
+                      <span>
+                        <span
+                          style={{
+                            display: 'block',
+                            color: C.text,
+                            fontSize: '0.82rem',
+                            fontWeight: 900,
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {signal.label}
+                        </span>
+                        <span
+                          style={{
+                            display: 'block',
+                            marginTop: 4,
+                            color: C.soft,
+                            fontSize: '0.72rem',
+                            lineHeight: 1.35,
+                          }}
+                        >
+                          {signal.detail}
+                        </span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
@@ -641,8 +723,8 @@ export default function AppEntryPage() {
               >
                 {[
                   { label: 'Book', detail: 'Pick route and seats' },
-                  { label: 'Request', detail: 'Send approval context' },
-                  { label: 'Approve', detail: 'Clear pending travel' },
+                  { label: 'Approve', detail: 'Clear policy-ready travel' },
+                  { label: 'Pay', detail: 'Use secure checkout' },
                   { label: 'Manage', detail: 'Track trips and supply' },
                 ].map((step, index) => (
                   <div
@@ -902,9 +984,9 @@ export default function AppEntryPage() {
               <h2
                 style={{
                   margin: '10px 0 0',
-                  fontSize: 'clamp(1.8rem, 3vw, 2.7rem)',
+                  fontSize: '2.25rem',
                   lineHeight: 1.02,
-                  letterSpacing: '-0.05em',
+                  letterSpacing: 0,
                 }}
               >
                 {heroCopy.servicesTitle}
@@ -936,6 +1018,7 @@ export default function AppEntryPage() {
               return (
                 <button
                   key={service.title}
+                  aria-label={`${heroCopy.openService}: ${service.title}`}
                   onClick={() => navigate(service.path)}
                   style={{
                     textAlign: 'left',
@@ -1054,9 +1137,9 @@ export default function AppEntryPage() {
               <h2
                 style={{
                   margin: '10px 0 0',
-                  fontSize: 'clamp(1.65rem, 2.8vw, 2.4rem)',
+                  fontSize: '2rem',
                   lineHeight: 1.04,
-                  letterSpacing: '-0.045em',
+                  letterSpacing: 0,
                 }}
               >
                 {heroCopy.proofTitle}
@@ -1172,9 +1255,9 @@ export default function AppEntryPage() {
                 <h2
                   style={{
                     margin: '10px 0 0',
-                    fontSize: 'clamp(1.85rem, 3vw, 2.8rem)',
+                    fontSize: '2.35rem',
                     lineHeight: 1.02,
-                    letterSpacing: '-0.05em',
+                    letterSpacing: 0,
                   }}
                 >
                   {heroCopy.corridorsTitle}
@@ -1239,6 +1322,7 @@ export default function AppEntryPage() {
               {corridorCards.map((corridor, index) => (
                 <button
                   key={corridor.id}
+                  aria-label={`${heroCopy.openCorridor}: ${corridor.label}`}
                   onClick={() =>
                     navigate(
                       `/app/find-ride?from=${encodeURIComponent(
@@ -1440,6 +1524,7 @@ export default function AppEntryPage() {
               </div>
 
               <button
+                aria-label={heroCopy.finalCta}
                 onClick={() => navigate(primaryPath)}
                 style={{
                   height: 54,
