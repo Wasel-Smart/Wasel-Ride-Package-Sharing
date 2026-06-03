@@ -28,9 +28,9 @@ paths:
         - notifications
       operationId: getNotifications
       summary: List notifications.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -47,9 +47,9 @@ paths:
         - notifications
       operationId: createNotification
       summary: Create an in-app notification and optional deliveries.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -67,9 +67,9 @@ paths:
         - notifications
       operationId: markNotificationAsRead
       summary: Mark a notification as read.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response

@@ -28,9 +28,9 @@ paths:
         - wallet
       operationId: createPaymentIntent
       summary: Create a payment intent with idempotency.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -48,9 +48,9 @@ paths:
         - wallet
       operationId: confirmPaymentIntent
       summary: Confirm a payment intent.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -68,9 +68,9 @@ paths:
         - wallet
       operationId: getWalletSnapshot
       summary: Read the wallet and transaction snapshot.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -88,9 +88,9 @@ paths:
         - wallet
       operationId: sendMoney
       summary: Execute a peer-to-peer transfer after step-up verification.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -108,9 +108,9 @@ paths:
         - wallet
       operationId: getWallet
       summary: Read the authenticated wallet snapshot used by the web app.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -128,9 +128,9 @@ paths:
         - wallet
       operationId: manageWalletPaymentMethods
       summary: Add, remove, or set default wallet payment methods.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -148,9 +148,9 @@ paths:
         - wallet
       operationId: setWalletPin
       summary: Set the wallet PIN.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -168,9 +168,9 @@ paths:
         - wallet
       operationId: updateWalletSettings
       summary: Update wallet settings such as auto top-up.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -188,9 +188,9 @@ paths:
         - wallet
       operationId: transferWalletFunds
       summary: Transfer wallet funds after step-up verification.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -208,9 +208,9 @@ paths:
         - wallet
       operationId: verifyWalletPin
       summary: Verify wallet PIN and OTP for step-up actions.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -228,9 +228,9 @@ paths:
         - wallet
       operationId: withdrawWalletFunds
       summary: Request wallet withdrawal after step-up verification.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response

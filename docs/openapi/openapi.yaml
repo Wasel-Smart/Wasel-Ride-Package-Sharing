@@ -46,9 +46,9 @@ paths:
         - admin
       operationId: approveDriver
       summary: Approve a driver after admin authorization and readiness checks.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -66,9 +66,9 @@ paths:
         - admin
       operationId: listPendingDrivers
       summary: List pending driver approvals for admin users.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -86,9 +86,9 @@ paths:
         - payments
       operationId: confirmPaymentIntentRuntime
       summary: Confirm a payment intent and return settlement state.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -106,9 +106,9 @@ paths:
         - payments
       operationId: createPaymentIntentRuntime
       summary: Create a payment intent for card, wallet, or subscription flows.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -126,9 +126,9 @@ paths:
         - payments
       operationId: getPaymentIntentRuntimeStatus
       summary: Read payment intent status after webhook processing.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -146,9 +146,9 @@ paths:
         - profile
       operationId: createProfile
       summary: Create the authenticated user profile.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -166,9 +166,9 @@ paths:
         - profile
       operationId: getProfileByUserId
       summary: Read a profile by authenticated user id.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -185,9 +185,9 @@ paths:
         - profile
       operationId: updateProfile
       summary: Update the authenticated user profile.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -205,9 +205,9 @@ paths:
         - safety
       operationId: createSafetyIncident
       summary: Create a safety incident report.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -225,9 +225,9 @@ paths:
         - safety
       operationId: getSafetySettings
       summary: Read the authenticated safety dashboard/settings.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -244,9 +244,9 @@ paths:
         - safety
       operationId: updateSafetySettings
       summary: Update safety settings.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -264,9 +264,9 @@ paths:
         - safety
       operationId: createSosAlert
       summary: Create a safety SOS alert.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -278,15 +278,15 @@ paths:
           description: Rate limited
         '500':
           description: Internal platform error
-  /user-settings:
+  /user/settings:
     get:
       tags:
         - user-settings
       operationId: getUserSettings
       summary: Read user settings and preferences.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -303,9 +303,9 @@ paths:
         - user-settings
       operationId: updateUserSettings
       summary: Update user settings and preferences.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -323,9 +323,9 @@ paths:
         - analytics
       operationId: getGrowthDashboard
       summary: Read growth and corridor metrics.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -343,9 +343,9 @@ paths:
         - analytics
       operationId: trackGrowthEvent
       summary: Append a domain analytics event.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -363,9 +363,9 @@ paths:
         - auth
       operationId: getProfile
       summary: Resolve the authenticated profile.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -400,9 +400,9 @@ paths:
         - auth
       operationId: signOut
       summary: Revoke the current session.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -437,9 +437,9 @@ paths:
         - notifications
       operationId: getNotifications
       summary: List notifications.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -456,9 +456,9 @@ paths:
         - notifications
       operationId: createNotification
       summary: Create an in-app notification and optional deliveries.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -476,9 +476,9 @@ paths:
         - notifications
       operationId: markNotificationAsRead
       summary: Mark a notification as read.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -496,9 +496,9 @@ paths:
         - trips
       operationId: createTrip
       summary: Create a trip.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -532,9 +532,9 @@ paths:
         - trips
       operationId: updateTrip
       summary: Update trip state.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -569,9 +569,9 @@ paths:
         - wallet
       operationId: createPaymentIntent
       summary: Create a payment intent with idempotency.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -589,9 +589,9 @@ paths:
         - wallet
       operationId: confirmPaymentIntent
       summary: Confirm a payment intent.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -609,9 +609,9 @@ paths:
         - wallet
       operationId: getWalletSnapshot
       summary: Read the wallet and transaction snapshot.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -629,9 +629,9 @@ paths:
         - wallet
       operationId: sendMoney
       summary: Execute a peer-to-peer transfer after step-up verification.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -649,9 +649,9 @@ paths:
         - wallet
       operationId: getWallet
       summary: Read the authenticated wallet snapshot used by the web app.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -669,9 +669,9 @@ paths:
         - wallet
       operationId: manageWalletPaymentMethods
       summary: Add, remove, or set default wallet payment methods.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -689,9 +689,9 @@ paths:
         - wallet
       operationId: setWalletPin
       summary: Set the wallet PIN.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -709,9 +709,9 @@ paths:
         - wallet
       operationId: updateWalletSettings
       summary: Update wallet settings such as auto top-up.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -729,9 +729,9 @@ paths:
         - wallet
       operationId: transferWalletFunds
       summary: Transfer wallet funds after step-up verification.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -749,9 +749,9 @@ paths:
         - wallet
       operationId: verifyWalletPin
       summary: Verify wallet PIN and OTP for step-up actions.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -769,9 +769,9 @@ paths:
         - wallet
       operationId: withdrawWalletFunds
       summary: Request wallet withdrawal after step-up verification.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response

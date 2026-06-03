@@ -22,15 +22,15 @@ components:
       in: header
       name: X-Wasel-Signature
 paths:
-  /user-settings:
+  /user/settings:
     get:
       tags:
         - user-settings
       operationId: getUserSettings
       summary: Read user settings and preferences.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -47,9 +47,9 @@ paths:
         - user-settings
       operationId: updateUserSettings
       summary: Update user settings and preferences.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response

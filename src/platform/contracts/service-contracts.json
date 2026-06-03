@@ -323,14 +323,14 @@
         "authentication": "jwt",
         "method": "GET",
         "operationId": "getUserSettings",
-        "path": "/user-settings",
+        "path": "/user/settings",
         "summary": "Read user settings and preferences."
       },
       {
         "authentication": "jwt",
         "method": "PUT",
         "operationId": "updateUserSettings",
-        "path": "/user-settings",
+        "path": "/user/settings",
         "summary": "Update user settings and preferences."
       }
     ]

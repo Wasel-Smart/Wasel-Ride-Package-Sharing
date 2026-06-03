@@ -71,6 +71,8 @@ Historical files that predate the current standards remain frozen and explicitly
 | 37 | `20241201000002_bus_services_tables.sql` | schema | Legacy bus operations schema retained while canonical runtime contracts evolve | Applied |
 | 38 | `20260324005540_kv_store.sql` | runtime-contract | Production KV store for feature flags and app configuration | Applied |
 | 39 | `20260531070000_harden_public_security_definer_boundaries.sql` | security | Move privileged security-definer implementations into the private schema and keep only invoker-compatible public wrappers | Ready |
+| 40 | `20260531083000_restrict_private_rpc_execute_grants.sql` | security | Revoke browser-role private schema access and keep privileged RPC wrappers service-role only | Ready |
+| 41 | `20260531084000_user_settings_notifications_contract.sql` | runtime-contract | Add notification preferences to the canonical user settings runtime contract | Ready |
 
 ## Rollout Sequence
 
@@ -104,6 +106,8 @@ Apply the rollout set in this exact order for production cutover projects:
 24. `20260424140000_harden_user_owned_rpc_boundaries.sql`
 25. `20260424153000_database_governance_and_rls_hardening.sql`
 26. `20260531070000_harden_public_security_definer_boundaries.sql`
+27. `20260531083000_restrict_private_rpc_execute_grants.sql`
+28. `20260531084000_user_settings_notifications_contract.sql`
 
 ### Operational seeds
 

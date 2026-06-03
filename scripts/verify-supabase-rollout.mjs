@@ -195,6 +195,27 @@ if (!process.exitCode) {
   console.log('Latest rollout migrations still match the expected application contract.');
 }
 
+printSection('Tracked Edge Function Contract');
+const edgeFunctionSource = read('src/supabase/functions/make-server-0b1f4071/index.ts');
+for (const snippet of [
+  'handleWalletSnapshot',
+  'handleCreateIntent',
+  'handlePendingDrivers',
+  'handleSafetyDashboard',
+  'handleGetSettings',
+  '/^\\/user\\/settings$/',
+]) {
+  if (!edgeFunctionSource.includes(snippet)) {
+    fail(`Tracked Edge Function is missing expected implementation snippet: ${snippet}`);
+  }
+}
+if (edgeFunctionSource.includes('notImplemented(') || edgeFunctionSource.includes("status: 'not_implemented'")) {
+  fail('Tracked Edge Function must not publish frontend routes as 501/not implemented stubs.');
+}
+if (!process.exitCode) {
+  console.log('Tracked Edge Function implements the committed frontend route surface.');
+}
+
 printSection('Next Commands');
 for (const file of rolloutMigrations) {
   console.log(`psql "$SUPABASE_DB_URL" -f ${file}`);

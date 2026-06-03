@@ -16,4 +16,4 @@ Do not implement privileged wallet, payment, admin, or profile writes in the bro
 supabase functions serve make-server-0b1f4071 --env-file .env
 ```
 
-The current tracked function declares every route used by the frontend and returns `501` for routes whose production implementation still needs to be ported into this repo. A route must not be considered production-ready until its handler, authorization checks, idempotency behavior, and tests are committed here.
+The tracked function now implements the frontend route surface for health, profile, wallet, payments, admin driver approval, safety, and user settings. A route must not be considered production-ready unless its handler keeps service-role work server-side, verifies the Supabase JWT, enforces ownership/admin authorization, and is represented in the generated OpenAPI contracts.

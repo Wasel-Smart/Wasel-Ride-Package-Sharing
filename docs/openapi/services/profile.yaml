@@ -28,9 +28,9 @@ paths:
         - profile
       operationId: createProfile
       summary: Create the authenticated user profile.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -48,9 +48,9 @@ paths:
         - profile
       operationId: getProfileByUserId
       summary: Read a profile by authenticated user id.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -67,9 +67,9 @@ paths:
         - profile
       operationId: updateProfile
       summary: Update the authenticated user profile.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response

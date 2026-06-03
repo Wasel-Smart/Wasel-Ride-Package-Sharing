@@ -28,9 +28,9 @@ paths:
         - admin
       operationId: approveDriver
       summary: Approve a driver after admin authorization and readiness checks.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -48,9 +48,9 @@ paths:
         - admin
       operationId: listPendingDrivers
       summary: List pending driver approvals for admin users.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response

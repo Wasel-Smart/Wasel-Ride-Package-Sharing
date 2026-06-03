@@ -28,9 +28,9 @@ paths:
         - payments
       operationId: confirmPaymentIntentRuntime
       summary: Confirm a payment intent and return settlement state.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -48,9 +48,9 @@ paths:
         - payments
       operationId: createPaymentIntentRuntime
       summary: Create a payment intent for card, wallet, or subscription flows.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -68,9 +68,9 @@ paths:
         - payments
       operationId: getPaymentIntentRuntimeStatus
       summary: Read payment intent status after webhook processing.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
