@@ -93,7 +93,7 @@
     "supabase": "^2.98.2",
     "tailwindcss": "^4.1.12",
     "terser": "^5.44.1",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.3",
     "vercel": "^54.9.1",
     "vite": "^6.4.1",
