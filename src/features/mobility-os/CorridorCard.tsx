@@ -40,11 +40,9 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
       style={{
         width: '100%',
         textAlign: 'left',
-        borderRadius: 24,
+        borderRadius: R.xxl,
         border: `1px solid ${selected ? C.cyan : C.border}`,
-        background: selected
-          ? 'linear-gradient(180deg, rgba(88,221,255,0.1), rgba(8,22,35,0.96))'
-          : 'linear-gradient(180deg, rgba(11,29,45,0.94), rgba(6,19,31,0.98))',
+        background: selected ? `linear-gradient(180deg, ${C.cyanDim}, ${C.card})` : C.card,
         boxShadow: selected ? SH.cyanL : SH.card,
         padding: 18,
         color: C.text,
@@ -85,7 +83,7 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
             padding: '8px 10px',
             borderRadius: R.full,
             border: `1px solid ${C.border}`,
-            background: 'rgba(255,255,255,0.03)',
+            background: C.elevated,
             fontFamily: FM,
             fontSize: '0.74rem',
             color: C.cyan,
@@ -107,7 +105,7 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
             style={{
               borderRadius: 16,
               border: `1px solid ${C.borderFaint}`,
-              background: 'rgba(255,255,255,0.03)',
+              background: C.elevated,
               padding: '12px 12px 10px',
             }}
           >
@@ -131,7 +129,7 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
           style={{
             borderRadius: 18,
             border: `1px solid ${C.goldDim}`,
-            background: 'rgba(255,190,92,0.08)',
+            background: C.goldDim,
             padding: '12px 13px',
           }}
         >
@@ -165,7 +163,7 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
           style={{
             borderRadius: 18,
             border: `1px solid ${C.greenDim}`,
-            background: 'rgba(71,214,158,0.08)',
+            background: C.greenDim,
             padding: '12px 13px',
           }}
         >

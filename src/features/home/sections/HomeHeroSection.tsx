@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle, Shield } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
-import { WaselButton } from '../../../design-system';
+
 import { GRAD, R, SH } from '../../../utils/wasel-ds';
 import { C, F, InlineCurrencySwitcher } from '../HomePageShared';
 import { MobilityOSLandingMap } from '../MobilityOSLandingMap';
@@ -105,7 +105,7 @@ function TripModeCard({
                 style={{
                   minHeight: 76,
                   padding: '12px 14px',
-                  borderRadius: 14,
+                  borderRadius: R.lg,
                   textAlign: 'left',
                   background: selected ? C.cyanDim : 'transparent',
                   border: `1px solid ${selected ? C.borderHov : 'transparent'}`,
@@ -150,16 +150,16 @@ function TripModeCard({
           style={{
             height: 50,
             padding: '0 20px',
-            borderRadius: 14,
+            borderRadius: R.lg,
             border: 'none',
-            background: 'linear-gradient(135deg, #58DDFF 0%, #25B6FF 55%, #47D69E 100%)',
-            color: '#041018',
+            background: GRAD,
+            color: C.bgDeep,
             fontWeight: 900,
             cursor: 'pointer',
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            boxShadow: '0 14px 30px rgba(37,182,255,0.22)',
+            boxShadow: SH.cyanL,
           }}
         >
           {ar ? 'ابدأ البحث' : 'Book employee travel'}
@@ -169,9 +169,9 @@ function TripModeCard({
           style={{
             height: 50,
             padding: '0 18px',
-            borderRadius: 14,
-            border: '1px solid rgba(255,255,255,0.12)',
-            background: 'rgba(255,255,255,0.03)',
+            borderRadius: R.lg,
+            border: `1px solid ${C.border}`,
+            background: C.elevated,
             color: C.textMuted,
             fontWeight: 800,
             display: 'inline-flex',
