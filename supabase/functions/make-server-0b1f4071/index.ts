@@ -4405,6 +4405,254 @@ async function handleCancelDeletion(request: Request) {
   return json({ ok: true });
 }
 
+async function assertTripParticipant(admin: ReturnType<typeof getAdminClient>, tripId: string, userId: string) {
+  const [{ data: trip, error: tripError }, { data: booking, error: bookingError }] = await Promise.all([
+    admin.from('trips').select('id, trip_id, driver_id').or(`id.eq.${tripId},trip_id.eq.${tripId}`).maybeSingle(),
+    admin
+      .from('bookings')
+      .select('id, user_id')
+      .eq('trip_id', tripId)
+      .eq('user_id', userId)
+      .maybeSingle(),
+  ]);
+
+  if (tripError) throw tripError;
+  if (bookingError) throw bookingError;
+  return Boolean((trip && trip.driver_id === userId) || booking);
+}
+
+async function handleGetChatMessages(request: Request, path: string) {
+  const auth = await authenticateRequest(request);
+  if (auth.error) return auth.error;
+
+  const tripId = decodeURIComponent(path.split('/')[3] ?? '');
+  if (!(await assertTripParticipant(auth.admin, tripId, auth.canonicalUser.id))) {
+    return json({ error: 'Not authorized to read messages in this trip' }, 403);
+  }
+
+  const limit = Math.min(Number(new URL(request.url).searchParams.get('limit') ?? 50), 100);
+  const { data, error } = await auth.admin
+    .from('messages')
+    .select('id, trip_id, sender_id, content, type, metadata, read_by, created_at, sender:profiles(id, full_name, avatar_url)')
+    .eq('trip_id', tripId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) return json({ error: error.message }, 500);
+  return json({ messages: (data ?? []).reverse() });
+}
+
+async function handleSendChatMessage(request: Request, path: string) {
+  const auth = await authenticateRequest(request);
+  if (auth.error) return auth.error;
+
+  const tripId = decodeURIComponent(path.split('/')[3] ?? '');
+  if (!(await assertTripParticipant(auth.admin, tripId, auth.canonicalUser.id))) {
+    return json({ error: 'Not authorized to send messages in this trip' }, 403);
+  }
+
+  const body = await request.json();
+  const content = String(body.content ?? '').trim();
+  if (!content) return json({ error: 'Message content is required' }, 400);
+
+  const { data, error } = await auth.admin
+    .from('messages')
+    .insert({
+      trip_id: tripId,
+      sender_id: auth.canonicalUser.id,
+      content,
+      type: body.type === 'location' || body.type === 'system' ? body.type : 'text',
+      metadata: body.metadata && typeof body.metadata === 'object' ? body.metadata : {},
+      read_by: [auth.canonicalUser.id],
+    })
+    .select('id, trip_id, sender_id, content, type, metadata, read_by, created_at, sender:profiles(id, full_name, avatar_url)')
+    .single();
+
+  if (error) return json({ error: error.message }, 500);
+  return json({ message: data }, 201);
+}
+
+async function handleMarkChatMessagesRead(request: Request) {
+  const auth = await authenticateRequest(request);
+  if (auth.error) return auth.error;
+
+  const body = await request.json();
+  const messageIds = Array.isArray(body.messageIds) ? body.messageIds.map(String).filter(Boolean) : [];
+  if (messageIds.length === 0) return json({ ok: true });
+
+  const { data: messages, error } = await auth.admin
+    .from('messages')
+    .select('id, read_by')
+    .in('id', messageIds);
+
+  if (error) return json({ error: error.message }, 500);
+
+  for (const message of messages ?? []) {
+    const readBy = Array.isArray(message.read_by) ? message.read_by : [];
+    if (readBy.includes(auth.canonicalUser.id)) continue;
+    const { error: updateError } = await auth.admin
+      .from('messages')
+      .update({ read_by: [...readBy, auth.canonicalUser.id] })
+      .eq('id', message.id);
+    if (updateError) return json({ error: updateError.message }, 500);
+  }
+
+  return json({ ok: true });
+}
+
+async function handleGetChatUnreadCount(request: Request, path: string) {
+  const auth = await authenticateRequest(request);
+  if (auth.error) return auth.error;
+
+  const tripId = decodeURIComponent(path.split('/')[3] ?? '');
+  if (!(await assertTripParticipant(auth.admin, tripId, auth.canonicalUser.id))) {
+    return json({ count: 0 });
+  }
+
+  const { data, error } = await auth.admin
+    .from('messages')
+    .select('id, read_by')
+    .eq('trip_id', tripId);
+
+  if (error) return json({ error: error.message }, 500);
+
+  const count = (data ?? []).filter((message) => {
+    const readBy = Array.isArray(message.read_by) ? message.read_by : [];
+    return !readBy.includes(auth.canonicalUser.id);
+  }).length;
+
+  return json({ count });
+}
+
+async function handleGetMobilityLiveRows(request: Request) {
+  const auth = await authenticateRequest(request);
+  if (auth.error) return auth.error;
+
+  const [{ data: trips }, { data: bookings }, { data: packages }, { data: tripPresence }] =
+    await Promise.all([
+      auth.admin
+        .from('trips')
+        .select(
+          'trip_id, origin_city, destination_city, available_seats, total_seats, package_capacity, package_slots_remaining, departure_time, trip_status, allow_packages',
+        )
+        .is('deleted_at', null)
+        .in('trip_status', ['open', 'booked', 'in_progress']),
+      auth.admin
+        .from('bookings')
+        .select('trip_id, seats_requested, booking_status, status')
+        .in('booking_status', ['confirmed', 'pending_driver'])
+        .order('created_at', { ascending: false }),
+      auth.admin
+        .from('packages')
+        .select('trip_id, origin_name, origin_location, destination_name, destination_location, package_status, status')
+        .in('package_status', ['created', 'assigned', 'in_transit']),
+      auth.admin
+        .from('trip_presence')
+        .select('trip_id, active_passengers, active_packages, last_location, last_heartbeat_at'),
+    ]);
+
+  return json({
+    trips: trips ?? [],
+    bookings: bookings ?? [],
+    packages: packages ?? [],
+    tripPresence: tripPresence ?? [],
+  });
+}
+
+function cityCoord(city: string | null | undefined) {
+  const coords: Record<string, { lat: number; lng: number }> = {
+    amman: { lat: 31.9539, lng: 35.9106 },
+    aqaba: { lat: 29.5321, lng: 35.006 },
+    irbid: { lat: 32.5568, lng: 35.8479 },
+    zarqa: { lat: 32.0728, lng: 36.088 },
+  };
+  return coords[String(city ?? '').toLowerCase()] ?? coords.amman;
+}
+
+async function handleGetLiveTrip(request: Request) {
+  const auth = await authenticateRequest(request);
+  if (auth.error) return auth.error;
+
+  const { data: booking, error: bookingError } = await auth.admin
+    .from('bookings')
+    .select('id, trip_id, seats_requested, total_price, amount, created_at, status, booking_status')
+    .eq('user_id', auth.canonicalUser.id)
+    .in('status', ['confirmed', 'in_progress'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (bookingError) return json({ error: bookingError.message }, 500);
+  if (!booking?.trip_id) return json({ snapshot: null });
+
+  const [{ data: trip }, { data: presence }] = await Promise.all([
+    auth.admin
+      .from('trips')
+      .select('trip_id, id, driver_id, origin_city, destination_city, origin_name, destination_name, departure_time, price_per_seat, trip_status')
+      .or(`id.eq.${booking.trip_id},trip_id.eq.${booking.trip_id}`)
+      .maybeSingle(),
+    auth.admin
+      .from('trip_presence')
+      .select('last_location, last_heartbeat_at')
+      .eq('trip_id', booking.trip_id)
+      .maybeSingle(),
+  ]);
+
+  if (!trip) return json({ snapshot: null });
+
+  const { data: driver } = await auth.admin
+    .from('users')
+    .select('id, full_name, phone_number, avatar_url')
+    .eq('id', trip.driver_id)
+    .maybeSingle();
+
+  const fromCoord = cityCoord(trip.origin_city ?? trip.origin_name);
+  const toCoord = cityCoord(trip.destination_city ?? trip.destination_name);
+  const driverPosition = presence?.last_location?.lat && (presence.last_location.lng ?? presence.last_location.lon)
+    ? {
+        lat: Number(presence.last_location.lat),
+        lng: Number(presence.last_location.lng ?? presence.last_location.lon),
+      }
+    : fromCoord;
+
+  return json({
+    snapshot: {
+      bookingId: booking.id,
+      tripId: booking.trip_id,
+      status: trip.trip_status === 'completed' ? 'completed' : 'en_route_to_pickup',
+      from: String(trip.origin_name ?? trip.origin_city ?? 'Origin'),
+      fromCoord,
+      to: String(trip.destination_name ?? trip.destination_city ?? 'Destination'),
+      toCoord,
+      driver: {
+        id: String(trip.driver_id ?? ''),
+        name: String(driver?.full_name ?? 'Driver'),
+        rating: 0,
+        trips: 0,
+        img: String(driver?.avatar_url ?? ''),
+        phone: String(driver?.phone_number ?? ''),
+        initials: String(driver?.full_name ?? 'D').slice(0, 2).toUpperCase(),
+      },
+      vehicle: { model: 'Assigned vehicle', color: '', plate: '', year: new Date().getFullYear() },
+      price: Number(booking.total_price ?? booking.amount ?? trip.price_per_seat ?? 0),
+      startedAt: String(booking.created_at ?? new Date().toISOString()),
+      estimatedArrival: String(trip.departure_time ?? new Date().toISOString()),
+      totalDistanceKm: 0,
+      passengers: Number(booking.seats_requested ?? 1),
+      shareCode: String(booking.id).slice(0, 8).toUpperCase(),
+      progress: 0,
+      timeLeftMinutes: 0,
+      driverPosition,
+      waypoints: [
+        { label: String(trip.origin_name ?? trip.origin_city ?? 'Origin'), coord: fromCoord },
+        { label: String(trip.destination_name ?? trip.destination_city ?? 'Destination'), coord: toCoord },
+      ],
+      heartbeatAt: presence?.last_heartbeat_at ?? null,
+      telemetryFresh: Boolean(presence?.last_heartbeat_at),
+    },
+  });
+}
+
 Deno.serve(async (request) => {
   let response: Response | undefined;
 
@@ -4478,6 +4726,36 @@ Deno.serve(async (request) => {
 
     if (request.method === 'GET' && /^\/cancellations\/bookings\/[^/]+\/eligibility$/.test(path)) {
       response = await handleCanCancelBooking(request, path);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'GET' && /^\/chat\/trips\/[^/]+\/messages$/.test(path)) {
+      response = await handleGetChatMessages(request, path);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'POST' && /^\/chat\/trips\/[^/]+\/messages$/.test(path)) {
+      response = await handleSendChatMessage(request, path);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'POST' && path === '/chat/messages/read') {
+      response = await handleMarkChatMessagesRead(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'GET' && /^\/chat\/trips\/[^/]+\/unread-count$/.test(path)) {
+      response = await handleGetChatUnreadCount(request, path);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'GET' && path === '/mobility-os/live-rows') {
+      response = await handleGetMobilityLiveRows(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'GET' && path === '/live-trip') {
+      response = await handleGetLiveTrip(request);
       return finalizeResponse(request, response);
     }
 
