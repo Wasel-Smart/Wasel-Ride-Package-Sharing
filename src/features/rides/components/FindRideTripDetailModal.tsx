@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { MapWrapper } from '../../../components/MapWrapper';
+import { WaselButton } from '../../../design-system';
 import { getCorridorOpportunity } from '../../../config/wasel-movement-network';
 import { DS, midpoint, pill, r, resolveCityCoord } from '../../../pages/waselServiceShared';
 import { getMovementPriceQuote } from '../../../services/movementPricing';
@@ -129,23 +130,19 @@ export function FindRideTripDetailModal({
               >
                 Trip Details
               </h2>
-              <button
+              <WaselButton
                 onClick={onClose}
+                variant="ghost"
+                size="sm"
+                aria-label="Close trip details"
                 style={{
-                  background: C.elevated,
-                  border: 'none',
                   width: 36,
                   height: 36,
-                  borderRadius: '50%',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: C.text,
+                  padding: 0,
                 }}
               >
                 <X size={18} />
-              </button>
+              </WaselButton>
             </div>
             <div
               className="sp-modal-route"
