@@ -153,6 +153,7 @@
     "verify:contracts": "node scripts/validate-openapi.mjs && node scripts/validate-infra.mjs && node scripts/validate-topology.mjs && node scripts/validate-env-example.mjs",
     "verify:oauth": "node scripts/verify-oauth-config.mjs",
     "verify:wiring": "node scripts/verify-wiring.mjs",
+    "verify:production-10": "node scripts/production-10-gate.mjs",
     "type-check": "tsc --noEmit",
     "type-check:tests": "tsc --noEmit -p tsconfig.tests.json",
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
