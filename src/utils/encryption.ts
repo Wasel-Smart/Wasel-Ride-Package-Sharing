@@ -76,7 +76,7 @@ export async function encryptData(data: string): Promise<string> {
     return btoa(String.fromCharCode(...combined));
   } catch (error) {
     console.error('Encryption failed:', error);
-    throw new Error('Failed to encrypt data');
+    throw Object.assign(new Error('Failed to encrypt data'), { cause: error });
   }
 }
 
@@ -110,7 +110,7 @@ export async function decryptData(encryptedData: string): Promise<string> {
     return decoder.decode(decryptedData);
   } catch (error) {
     console.error('Decryption failed:', error);
-    throw new Error('Failed to decrypt data');
+    throw Object.assign(new Error('Failed to decrypt data'), { cause: error });
   }
 }
 

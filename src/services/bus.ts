@@ -197,14 +197,15 @@ function persistBusBooking(booking: StoredBusBooking): StoredBusBooking {
   const key = 'wasel-bus-bookings';
 
   if (typeof window !== 'undefined') {
-    let current: StoredBusBooking[] = [];
-    try {
+    const current: StoredBusBooking[] = (() => {
+      try {
       const currentRaw = window.localStorage.getItem(key);
       const parsed = currentRaw ? JSON.parse(currentRaw) : [];
-      current = Array.isArray(parsed) ? (parsed as StoredBusBooking[]) : [];
-    } catch {
-      current = [];
-    }
+        return Array.isArray(parsed) ? (parsed as StoredBusBooking[]) : [];
+      } catch {
+        return [];
+      }
+    })();
     const next = [booking, ...current.filter(item => item.id !== booking.id)].slice(0, 50);
     window.localStorage.setItem(key, JSON.stringify(next));
   }

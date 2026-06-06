@@ -44,7 +44,7 @@ export async function getTrustCenterStatus(
     if (user) {
       return buildFallbackTrustCenterStatus(user);
     }
-    throw new Error(toErrorMessage(error));
+    throw Object.assign(new Error(toErrorMessage(error)), { cause: error });
   }
 }
 

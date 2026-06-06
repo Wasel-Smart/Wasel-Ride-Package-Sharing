@@ -1,0 +1,134 @@
+[
+  {
+    "route": "/",
+    "viewport": "desktop",
+    "ok": false,
+    "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app",
+    "viewport": "desktop",
+    "ok": false,
+    "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/auth",
+    "viewport": "desktop",
+    "ok": false,
+    "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/auth\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/find-ride",
+    "viewport": "desktop",
+    "ok": false,
+    "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/find-ride\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/offer-ride",
+    "viewport": "desktop",
+    "ok": false,
+    "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/offer-ride\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/packages",
+    "viewport": "desktop",
+    "ok": false,
+    "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/packages\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/bus",
+    "viewport": "desktop",
+    "ok": false,
+    "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/bus\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/wallet",
+    "viewport": "desktop",
+    "ok": false,
+    "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/wallet\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/trust",
+    "viewport": "desktop",
+    "ok": false,
+    "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/trust\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/mobility-os",
+    "viewport": "desktop",
+    "ok": false,
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3002/app/mobility-os\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/mobility-os\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/profile",
+    "viewport": "desktop",
+    "ok": false,
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3002/app/profile\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/profile\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/",
+    "viewport": "mobile",
+    "ok": false,
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3002/\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app",
+    "viewport": "mobile",
+    "ok": false,
+    "error": "page.goto: Navigation to \"http://127.0.0.1:3002/app\" is interrupted by another navigation to \"chrome-error://chromewebdata/\"\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/auth",
+    "viewport": "mobile",
+    "ok": false,
+    "error": "page.goto: Navigation to \"http://127.0.0.1:3002/app/auth\" is interrupted by another navigation to \"http://127.0.0.1:3002/app\"\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/auth\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/find-ride",
+    "viewport": "mobile",
+    "ok": false,
+    "error": "page.goto: net::ERR_CONNECTION_RESET at http://127.0.0.1:3002/app/find-ride\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/find-ride\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/offer-ride",
+    "viewport": "mobile",
+    "ok": false,
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3002/app/offer-ride\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/offer-ride\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/packages",
+    "viewport": "mobile",
+    "ok": false,
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3002/app/packages\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/packages\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/bus",
+    "viewport": "mobile",
+    "ok": false,
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3002/app/bus\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/bus\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/wallet",
+    "viewport": "mobile",
+    "ok": false,
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3002/app/wallet\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/wallet\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/trust",
+    "viewport": "mobile",
+    "ok": false,
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3002/app/trust\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/trust\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/mobility-os",
+    "viewport": "mobile",
+    "ok": false,
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3002/app/mobility-os\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/mobility-os\", waiting until \"networkidle\"\u001b[22m\n"
+  },
+  {
+    "route": "/app/profile",
+    "viewport": "mobile",
+    "ok": false,
+    "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://127.0.0.1:3002/app/profile\nCall log:\n\u001b[2m  - navigating to \"http://127.0.0.1:3002/app/profile\", waiting until \"networkidle\"\u001b[22m\n"
+  }
+]
