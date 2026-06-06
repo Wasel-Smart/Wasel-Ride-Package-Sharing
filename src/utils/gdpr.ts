@@ -1,11 +1,12 @@
 /**
  * GDPR Compliance Module
- * Implements data privacy and user rights under GDPR
+ * Frontend boundary: auth + backend API calls only. All data access and
+ * privacy workflows execute on the backend.
  */
 
+import { API_URL, fetchWithRetry, getAuthDetails } from '@/services/core';
 import { logger } from './monitoring';
 import { sanitizeLogMessage } from './sanitization';
-import { API_URL, createEdgeHeaders, fetchWithRetry, getAuthDetails } from '../services/core';
 
 export interface ConsentRecord {
   userId: string;
@@ -32,54 +33,32 @@ export interface DataDeletionRequest {
   reason?: string;
 }
 
-class GDPRCompliance {
-  private async requestBackend<T>(
-    path: string,
-    options: RequestInit = {},
-    allowAnonymous = false,
-  ): Promise<T> {
-    if (!API_URL) {
-      throw new Error('Backend API is not configured');
-    }
+async function requestBackend<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(`${API_URL}${path}`, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      ...init.headers,
+    },
+    timeout: 15_000,
+  });
 
-    const auth = allowAnonymous ? null : await getAuthDetails();
-    const response = await fetchWithRetry(`${API_URL}${path}`, {
-      ...options,
-      headers: createEdgeHeaders(
-        {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        auth?.token,
-      ),
-    });
-
-    if (!response.ok) {
-      throw new Error(`GDPR backend request failed: ${response.status}`);
-    }
-
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    return response.json() as Promise<T>;
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(String(body.error ?? `Backend request failed: ${path}`));
   }
 
-  /**
-   * Record user consent
-   */
+  return response.json() as Promise<T>;
+}
+
+class GDPRCompliance {
   async recordConsent(consent: ConsentRecord): Promise<void> {
     try {
-      await this.requestBackend<void>('/privacy/consents', {
+      await requestBackend<{ ok: true }>('/gdpr/consents', {
         method: 'POST',
-        body: JSON.stringify({
-          userId: consent.userId,
-          consentType: consent.consentType,
-          granted: consent.granted,
-          ipAddress: consent.ipAddress,
-          userAgent: consent.userAgent,
-          timestamp: consent.timestamp,
-        }),
+        body: JSON.stringify(consent),
       });
 
       logger.info('Consent recorded', {
@@ -93,16 +72,13 @@ class GDPRCompliance {
     }
   }
 
-  /**
-   * Get user consent status
-   */
   async getConsent(
     userId: string,
-    consentType: ConsentRecord['consentType']
+    consentType: ConsentRecord['consentType'],
   ): Promise<boolean> {
     try {
-      const result = await this.requestBackend<{ granted: boolean }>(
-        `/privacy/consents/${encodeURIComponent(userId)}/${encodeURIComponent(consentType)}`,
+      const result = await requestBackend<{ granted: boolean }>(
+        `/gdpr/consents/${encodeURIComponent(consentType)}?userId=${encodeURIComponent(userId)}`,
       );
       return result.granted;
     } catch (error) {
@@ -111,23 +87,14 @@ class GDPRCompliance {
     }
   }
 
-  /**
-   * Request data export (Right to Data Portability)
-   */
   async requestDataExport(userId: string): Promise<DataExportRequest> {
     try {
-      const request: DataExportRequest = {
-        userId,
-        requestedAt: Date.now(),
-      };
-
-      await this.requestBackend<DataExportRequest>('/privacy/data-export', {
+      const request = await requestBackend<DataExportRequest>('/gdpr/data-exports', {
         method: 'POST',
         body: JSON.stringify({ userId }),
       });
 
       logger.info('Data export requested', { userId: sanitizeLogMessage(userId) });
-
       return request;
     } catch (error) {
       logger.error('Failed to request data export', error);
@@ -135,51 +102,16 @@ class GDPRCompliance {
     }
   }
 
-  /**
-   * Generate data export
-   */
-  private async generateDataExport(userId: string): Promise<string> {
+  async requestDeletion(userId: string, reason?: string): Promise<DataDeletionRequest> {
     try {
-      const result = await this.requestBackend<{ downloadUrl: string }>(
-        `/privacy/data-export/${encodeURIComponent(userId)}/generate`,
-        { method: 'POST' },
-      );
-
-      logger.info('Data export generated', { userId });
-
-      return result.downloadUrl;
-    } catch (error) {
-      logger.error('Failed to generate data export', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Request account deletion (Right to be Forgotten)
-   */
-  async requestDeletion(
-    userId: string,
-    reason?: string
-  ): Promise<DataDeletionRequest> {
-    try {
-      // Schedule deletion for 30 days from now (grace period)
-      const scheduledFor = Date.now() + 30 * 24 * 60 * 60 * 1000;
-
-      const request: DataDeletionRequest = {
-        userId,
-        requestedAt: Date.now(),
-        scheduledFor,
-        reason,
-      };
-
-      await this.requestBackend<DataDeletionRequest>('/privacy/deletions', {
+      const request = await requestBackend<DataDeletionRequest>('/gdpr/deletions', {
         method: 'POST',
         body: JSON.stringify({ userId, reason }),
       });
 
       logger.info('Account deletion requested', {
-        userId,
-        scheduledFor: new Date(scheduledFor).toISOString(),
+        userId: sanitizeLogMessage(userId),
+        scheduledFor: new Date(request.scheduledFor).toISOString(),
       });
 
       return request;
@@ -189,64 +121,33 @@ class GDPRCompliance {
     }
   }
 
-  /**
-   * Cancel deletion request
-   */
   async cancelDeletion(userId: string): Promise<void> {
     try {
-      await this.requestBackend<void>(`/privacy/deletions/${encodeURIComponent(userId)}/cancel`, {
+      await requestBackend<{ ok: true }>('/gdpr/deletions/cancel', {
         method: 'POST',
+        body: JSON.stringify({ userId }),
       });
 
-      logger.info('Account deletion cancelled', { userId });
+      logger.info('Account deletion cancelled', { userId: sanitizeLogMessage(userId) });
     } catch (error) {
       logger.error('Failed to cancel deletion', error);
       throw error;
     }
   }
 
-  /**
-   * Execute scheduled deletions (called by worker)
-   */
   async executeScheduledDeletions(): Promise<void> {
-    try {
-      await this.requestBackend<void>('/privacy/deletions/execute-due', { method: 'POST' });
-    } catch (error) {
-      logger.error('Failed to execute scheduled deletions', error);
-    }
+    throw new Error('Scheduled GDPR deletions are backend-only. Use gdpr-deletion-scheduler.');
   }
 
-  /**
-   * Delete all user data
-   */
-  private async deleteUserData(userId: string): Promise<void> {
-    await this.requestBackend<void>(`/privacy/users/${encodeURIComponent(userId)}/delete`, {
-      method: 'POST',
-    });
-  }
-
-  /**
-   * Anonymize user data in related records
-   */
-  private async anonymizeUserData(userId: string): Promise<void> {
-    await this.requestBackend<void>(`/privacy/users/${encodeURIComponent(userId)}/anonymize`, {
-      method: 'POST',
-    });
-  }
-
-  /**
-   * Get user's data processing activities
-   */
   async getDataProcessingActivities(userId: string): Promise<string[]> {
+    const [analytics, marketing] = await Promise.all([
+      this.getConsent(userId, 'analytics'),
+      this.getConsent(userId, 'marketing'),
+    ]);
+
     const activities: string[] = [];
-
-    if (await this.getConsent(userId, 'analytics')) {
-      activities.push('Analytics and performance monitoring');
-    }
-
-    if (await this.getConsent(userId, 'marketing')) {
-      activities.push('Marketing communications');
-    }
+    if (analytics) activities.push('Analytics and performance monitoring');
+    if (marketing) activities.push('Marketing communications');
 
     activities.push('Service delivery and transaction processing');
     activities.push('Security and fraud prevention');
@@ -256,8 +157,4 @@ class GDPRCompliance {
   }
 }
 
-// Export singleton instance
 export const gdpr = new GDPRCompliance();
-
-// Note: In production, scheduled deletions are handled by the gdpr-deletion-scheduler
-// edge function. The client-side timer is disabled to prevent unnecessary API calls.

@@ -1,0 +1,32 @@
+{
+  "name": "@wasel/ride-matching-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Wasel Ride Matching Service - Geospatial driver matching",
+  "main": "dist/service.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch service.ts",
+    "build": "tsc",
+    "start": "node dist/service.js",
+    "test": "vitest run",
+    "lint": "eslint . --ext .ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pg": "^8.13.1",
+    "ioredis": "^5.4.1",
+    "@types/pg": "^8.11.10"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2",
+    "eslint": "^10.4.0",
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
