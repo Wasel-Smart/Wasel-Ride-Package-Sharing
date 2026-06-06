@@ -216,7 +216,7 @@ export function PackagesPage() {
         <SectionHead
           emoji="Goods"
           title="Send a Package"
-          titleAr="Ø£Ø±Ø³Ù„ Ø·Ø±Ø¯Ø§Ù‹"
+          titleAr="أرسل طرداً"
           sub="Send, track, or return a package."
           color={DS.gold}
           action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
