@@ -9,15 +9,15 @@ import { mobileAuth } from './auth';
 
 interface OfflineAction {
   id: string;
-  type: 'RIDE_REQUEST' | 'RIDE_CANCEL' | 'RIDE_RATING' | 'PROFILE_UPDATE';
-  payload: any;
+  type: 'RIDE_REQUEST' | 'RIDE_CANCEL' | 'RIDE_RATING' | 'PACKAGE_REQUEST' | 'PROFILE_UPDATE';
+  payload: unknown;
   timestamp: number;
   retries: number;
 }
 
-interface CachedData {
+interface CachedData<T = unknown> {
   key: string;
-  data: any;
+  data: T;
   timestamp: number;
   expiresIn: number; // milliseconds
 }
@@ -181,27 +181,38 @@ export class OfflineService {
         break;
 
       case 'RIDE_CANCEL':
-        await fetch(`${apiUrl}/v1/rides/${action.payload.rideId}/cancel`, {
+        await fetch(`${apiUrl}/v1/rides/${this.readPayloadField(action.payload, 'rideId')}/cancel`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ reason: action.payload.reason }),
+          body: JSON.stringify({ reason: this.readPayloadField(action.payload, 'reason') }),
         });
         break;
 
       case 'RIDE_RATING':
-        await fetch(`${apiUrl}/v1/rides/${action.payload.rideId}/rating`, {
+        await fetch(`${apiUrl}/v1/rides/${this.readPayloadField(action.payload, 'rideId')}/rating`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            rating: action.payload.rating,
-            feedback: action.payload.feedback,
+            rating: this.readPayloadField(action.payload, 'rating'),
+            feedback: this.readPayloadField(action.payload, 'feedback'),
           }),
+        });
+        break;
+
+      case 'PACKAGE_REQUEST':
+        await fetch(`${apiUrl}/v1/packages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(action.payload),
         });
         break;
 
@@ -217,15 +228,23 @@ export class OfflineService {
         break;
 
       default:
-        throw new Error(`Unknown action type: ${(action as any).type}`);
+        throw new Error(`Unknown action type: ${String((action as { type?: string }).type)}`);
     }
+  }
+
+  private readPayloadField(payload: unknown, field: string): unknown {
+    if (!payload || typeof payload !== 'object' || !(field in payload)) {
+      return undefined;
+    }
+
+    return (payload as Record<string, unknown>)[field];
   }
 
   /**
    * Cache data for offline access
    */
-  async cacheData(key: string, data: any, expiresIn: number = 3600000): Promise<void> {
-    const cached: CachedData = {
+  async cacheData<T>(key: string, data: T, expiresIn: number = 3600000): Promise<void> {
+    const cached: CachedData<T> = {
       key,
       data,
       timestamp: Date.now(),
@@ -244,7 +263,7 @@ export class OfflineService {
       const item = await AsyncStorage.getItem(`@wasel:cache:${key}`);
       if (!item) return null;
 
-      const cached: CachedData = JSON.parse(item);
+      const cached = JSON.parse(item) as CachedData<T>;
       const age = Date.now() - cached.timestamp;
 
       if (age > cached.expiresIn) {
@@ -265,43 +284,43 @@ export class OfflineService {
   /**
    * Cache ride history for offline viewing
    */
-  async cacheRideHistory(rides: any[]): Promise<void> {
+  async cacheRideHistory<T>(rides: T[]): Promise<void> {
     await this.cacheData(STORAGE_KEYS.CACHED_HISTORY, rides, 86400000); // 24 hours
   }
 
   /**
    * Get cached ride history
    */
-  async getCachedRideHistory(): Promise<any[] | null> {
-    return this.getCachedData<any[]>(STORAGE_KEYS.CACHED_HISTORY);
+  async getCachedRideHistory<T = unknown>(): Promise<T[] | null> {
+    return this.getCachedData<T[]>(STORAGE_KEYS.CACHED_HISTORY);
   }
 
   /**
    * Cache current active ride
    */
-  async cacheActiveRide(ride: any): Promise<void> {
+  async cacheActiveRide<T>(ride: T): Promise<void> {
     await this.cacheData(STORAGE_KEYS.CACHED_RIDES, ride, 3600000); // 1 hour
   }
 
   /**
    * Get cached active ride
    */
-  async getCachedActiveRide(): Promise<any | null> {
-    return this.getCachedData<any>(STORAGE_KEYS.CACHED_RIDES);
+  async getCachedActiveRide<T = unknown>(): Promise<T | null> {
+    return this.getCachedData<T>(STORAGE_KEYS.CACHED_RIDES);
   }
 
   /**
    * Cache driver info
    */
-  async cacheDriverInfo(driverId: string, driver: any): Promise<void> {
+  async cacheDriverInfo<T>(driverId: string, driver: T): Promise<void> {
     await this.cacheData(`${STORAGE_KEYS.CACHED_DRIVER}_${driverId}`, driver, 7200000); // 2 hours
   }
 
   /**
    * Get cached driver info
    */
-  async getCachedDriverInfo(driverId: string): Promise<any | null> {
-    return this.getCachedData<any>(`${STORAGE_KEYS.CACHED_DRIVER}_${driverId}`);
+  async getCachedDriverInfo<T = unknown>(driverId: string): Promise<T | null> {
+    return this.getCachedData<T>(`${STORAGE_KEYS.CACHED_DRIVER}_${driverId}`);
   }
 
   /**

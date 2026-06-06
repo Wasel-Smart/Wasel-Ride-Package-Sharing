@@ -229,7 +229,7 @@ export class RideLifecycleService {
 
     // If offline, try to get cached ride
     if (!offlineService.isDeviceOnline()) {
-      const cached = await offlineService.getCachedActiveRide();
+      const cached = await offlineService.getCachedActiveRide<Ride>();
       if (cached) {
         this.setActiveRide(cached);
         return cached;
@@ -252,7 +252,7 @@ export class RideLifecycleService {
       console.error('[RideLifecycle] Error fetching active ride:', error);
       
       // Fallback to cache on error
-      const cached = await offlineService.getCachedActiveRide();
+      const cached = await offlineService.getCachedActiveRide<Ride>();
       if (cached) {
         this.setActiveRide(cached);
         return cached;
@@ -265,7 +265,7 @@ export class RideLifecycleService {
   async getDriverInfo(driverId: string): Promise<Driver | null> {
     // If offline, try to get cached driver info
     if (!offlineService.isDeviceOnline()) {
-      return await offlineService.getCachedDriverInfo(driverId);
+      return await offlineService.getCachedDriverInfo<Driver>(driverId);
     }
 
     try {
@@ -283,7 +283,7 @@ export class RideLifecycleService {
       console.error('[RideLifecycle] Error fetching driver info:', error);
       
       // Fallback to cache on error
-      return await offlineService.getCachedDriverInfo(driverId);
+      return await offlineService.getCachedDriverInfo<Driver>(driverId);
     }
   }
 
@@ -293,7 +293,7 @@ export class RideLifecycleService {
 
     // If offline, return cached history
     if (!offlineService.isDeviceOnline()) {
-      const cached = await offlineService.getCachedRideHistory();
+      const cached = await offlineService.getCachedRideHistory<Ride>();
       return cached || [];
     }
 
@@ -311,7 +311,7 @@ export class RideLifecycleService {
       console.error('[RideLifecycle] Error fetching ride history:', error);
       
       // Fallback to cache on error
-      const cached = await offlineService.getCachedRideHistory();
+      const cached = await offlineService.getCachedRideHistory<Ride>();
       return cached || [];
     }
   }
