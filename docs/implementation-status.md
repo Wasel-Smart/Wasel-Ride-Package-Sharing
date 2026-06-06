@@ -41,7 +41,26 @@ These capabilities are fully implemented and running in the current deployment.
 ### Observability
 - Sentry for runtime error capture
 - Structured client-side logging via `src/platform/observability.ts`
+- Production telemetry and metrics via `src/platform/telemetry.ts`
+- Distributed tracing with OpenTelemetry patterns
+- Web Vitals instrumentation (CLS, FID, LCP, FCP, TTFB, INP)
+- Real-time observability dashboard at `/ops/observability`
+- SLO compliance tracking per service
 - Vercel Analytics and Speed Insights
+
+### Workers and async processing
+- Worker framework with retry logic and circuit breakers (`src/platform/worker-framework.ts`)
+- Exponential backoff for failed jobs
+- Dead-letter queue handling
+- Worker registry for lifecycle management
+- In-memory implementation with production-ready patterns
+
+### Real-time features
+- WebSocket-based geo-streaming service (`src/platform/geo-stream-realtime.ts`)
+- Live driver location tracking
+- Area-based subscriptions (radius search)
+- Auto-reconnect with exponential backoff
+- Heartbeat keep-alive
 
 ---
 

@@ -100,17 +100,18 @@
     "yaml": "^2.8.3"
   },
   "overrides": {
+    "@vercel/static-config": {
+      "ajv": "8.20.0"
+    },
     "tar": "7.5.15",
     "@tootallnate/once": "3.0.1",
     "undici": "7.25.0",
     "path-to-regexp": "8.4.2",
-    "ajv": "8.17.1",
     "srvx": "0.11.13",
     "minimatch": "10.2.3",
     "smol-toml": "1.6.1",
     "@eslint/eslintrc": "3.3.1",
-    "@vercel/node": "latest",
-    "@vercel/static-config": "latest"
+    "@vercel/node": "latest"
   },
   "browserslist": {
     "production": [
@@ -147,6 +148,7 @@
     "test:e2e": "playwright test",
     "test:e2e:oauth": "playwright test e2e/oauth.spec.ts",
     "test:load:smoke": "k6 run tests/load/k6-smoke.js",
+    "test:load:production": "k6 run tests/load/k6-production.js",
     "verify:contracts": "node scripts/validate-openapi.mjs && node scripts/validate-infra.mjs && node scripts/validate-topology.mjs && node scripts/validate-env-example.mjs",
     "verify:oauth": "node scripts/verify-oauth-config.mjs",
     "verify:wiring": "node scripts/verify-wiring.mjs",
@@ -165,6 +167,10 @@
     "release:minor": "node scripts/release.mjs minor",
     "release:major": "node scripts/release.mjs major",
     "verify:ci": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-ci.ps1",
-    "verify": "npm run type-check && npm run type-check:tests && npm run lint && npm run verify:contracts && npm run test && npm run build && npm run test:e2e"
+    "verify": "npm run type-check && npm run type-check:tests && npm run lint && npm run verify:contracts && npm run test && npm run build && npm run test:e2e",
+    "workers:start": "node -e \"import('./src/platform/worker-framework.ts').then(m => m.workerRegistry.startAll())\"",
+    "observability:dashboard": "npm run dev -- --open /ops/observability",
+    "telemetry:init": "node -e \"import('./src/platform/telemetry.ts').then(m => m.initWebVitals())\"",
+    "health:check:production": "curl -f https://wasel.jo/health || exit 1"
   }
 }

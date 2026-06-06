@@ -12,6 +12,7 @@ import {
   getDirectNotifications,
   markDirectNotificationAsRead,
 } from './directSupabase';
+import { getConfig } from '../utils/env';
 
 const LOCAL_NOTIFICATION_KEY = 'wasel-local-notifications';
 
@@ -60,6 +61,10 @@ type NotificationCreateResult = {
 
 function canUseEdgeApi(): boolean {
   return Boolean(API_URL);
+}
+
+function canUseDirectFallback(): boolean {
+  return getConfig().allowDirectSupabaseFallback;
 }
 
 function readLocalNotifications(): StoredNotification[] {
@@ -252,17 +257,7 @@ export const notificationsAPI = {
           notifications: mergeNotifications(localNotifications, serverNotifications),
         };
       } catch {
-        try {
-          const serverNotifications = await getDirectNotifications(userId);
-          return {
-            notifications: mergeNotifications(
-              localNotifications,
-              serverNotifications as StoredNotification[],
-            ),
-          };
-        } catch {
-          return { notifications: sortNotifications(localNotifications.map(normalizeNotification)) };
-        }
+        return { notifications: sortNotifications(localNotifications.map(normalizeNotification)) };
       }
     } catch {
       return { notifications: sortNotifications(localNotifications.map(normalizeNotification)) };
@@ -295,6 +290,10 @@ export const notificationsAPI = {
         if (!response.ok) return { success: false, source: 'server' };
         return await response.json();
       } catch {
+        if (!canUseDirectFallback()) {
+          return { success: false, source: 'server' };
+        }
+
         try {
           await markDirectNotificationAsRead(notificationId, userId);
           return { success: true, source: 'server' };
@@ -432,6 +431,20 @@ export const notificationsAPI = {
       });
       return { success: true, source: 'server', ...deliveryResult };
     } catch {
+      if (!canUseDirectFallback()) {
+        const localDraft = createLocalDraft();
+        writeLocalNotifications(sortNotifications([localDraft, ...localNotifications]));
+        const deliveryResult = await queueSecondaryDeliveries({
+          notificationId: localDraft.id,
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          explicitChannels: data.channels,
+          contact: data.contact,
+        });
+        return { success: false, source: 'local', ...deliveryResult };
+      }
+
       try {
         const { userId } = await getAuthDetails();
         const localDraft = createLocalDraft(userId);

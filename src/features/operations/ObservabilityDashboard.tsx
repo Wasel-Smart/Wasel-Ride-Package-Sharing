@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { telemetry } from '@/platform/telemetry';
+import { useEffect, useState } from 'react';
 
 interface SystemMetrics {
   apiLatency: { p50: number; p95: number; p99: number };
@@ -12,7 +11,7 @@ interface SystemMetrics {
 
 export function ObservabilityDashboard() {
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
-  const [isLive, setIsLive] = useState(true);
+  const isLive = Boolean(metrics);
 
   useEffect(() => {
     const fetchMetrics = async () => {
