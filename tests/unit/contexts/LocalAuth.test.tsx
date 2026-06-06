@@ -157,7 +157,7 @@ describe('LocalAuthProvider', () => {
     expect(screen.getByText('+962790000001')).toBeInTheDocument();
   });
 
-  it('keeps the stored local session when the backend is unavailable', () => {
+  it('clears the stored local session when the backend is unavailable outside e2e mode', () => {
     window.localStorage.setItem('wasel_user_session', JSON.stringify({
        id: 'demo-e2e-user',
        name: 'Demo Rider',
@@ -196,8 +196,8 @@ describe('LocalAuthProvider', () => {
     );
 
     expect(screen.getByText('ready')).toBeInTheDocument();
-    expect(screen.getByText('Demo Rider')).toBeInTheDocument();
-    expect(screen.getByText('+962790000999')).toBeInTheDocument();
+    expect(screen.getByText('no-user')).toBeInTheDocument();
+    expect(window.localStorage.getItem('wasel_user_session')).toBeNull();
   });
 
   it('falls back to level_2 for Sanad-verified riders without driver clearance', () => {
