@@ -20,6 +20,8 @@ export type DeliveryProcessorEnv = {
   sendgridFromEmail?: string;
   twilioAccountSid?: string;
   twilioAuthToken?: string;
+  twilioApiKeySid?: string;
+  twilioApiKeySecret?: string;
   twilioMessagingServiceSid?: string;
   twilioSmsFrom?: string;
   twilioWhatsappFrom?: string;
@@ -192,7 +194,15 @@ export function buildTwilioRequest(
   delivery: CommunicationDeliveryRecord,
   env: DeliveryProcessorEnv,
 ) {
-  if (!env.twilioAccountSid || !env.twilioAuthToken) {
+  if (!env.twilioAccountSid) {
+    throw new Error('TWILIO_ACCOUNT_SID is not configured');
+  }
+
+  const hasApiKeyCredentials = Boolean(env.twilioApiKeySid && env.twilioApiKeySecret);
+  const authUser = hasApiKeyCredentials ? env.twilioApiKeySid : env.twilioAccountSid;
+  const authPassword = hasApiKeyCredentials ? env.twilioApiKeySecret : env.twilioAuthToken;
+
+  if (!authUser || !authPassword) {
     throw new Error('Twilio credentials are not configured');
   }
 
@@ -231,7 +241,7 @@ export function buildTwilioRequest(
     init: {
       method: 'POST',
       headers: {
-        Authorization: `Basic ${btoa(`${env.twilioAccountSid}:${env.twilioAuthToken}`)}`,
+        Authorization: `Basic ${btoa(`${authUser}:${authPassword}`)}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: params.toString(),
