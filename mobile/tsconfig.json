@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["ES2020"],
+    "lib": [
+      "ES2020"
+    ],
     "allowJs": true,
     "jsx": "react-native",
     "noEmit": true,
@@ -18,11 +20,27 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "paths": {
-      "@/*": ["./src/*"],
-      "@app/*": ["./app/*"],
-      "@assets/*": ["./assets/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@app/*": [
+        "./app/*"
+      ],
+      "@assets/*": [
+        "./assets/*"
+      ]
     }
   },
-  "include": ["app", "src", "*.ts", "*.tsx"],
-  "exclude": ["node_modules", "dist", "build"]
+  "include": [
+    "app",
+    "src",
+    "*.ts",
+    "*.tsx",
+    "nativewind-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build"
+  ]
 }
