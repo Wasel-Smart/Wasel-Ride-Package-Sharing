@@ -1,0 +1,83 @@
+openapi: 3.1.0
+info:
+  title: Wasel Profile Service API
+  version: v1
+  description: Generated OpenAPI contract for the profile bounded domain.
+servers:
+  - url: https://api.wasel.app
+    description: Production
+  - url: https://staging-api.wasel.app
+    description: Staging
+tags:
+  - name: profile
+    description: identity-platform
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    requestSignature:
+      type: apiKey
+      in: header
+      name: X-Wasel-Signature
+paths:
+  /profile:
+    post:
+      tags:
+        - profile
+      operationId: createProfile
+      summary: Create the authenticated user profile.
+      security:
+        - bearerAuth: []
+        - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /profile/{userId}:
+    get:
+      tags:
+        - profile
+      operationId: getProfileByUserId
+      summary: Read a profile by authenticated user id.
+      security:
+        - bearerAuth: []
+        - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+    patch:
+      tags:
+        - profile
+      operationId: updateProfile
+      summary: Update the authenticated user profile.
+      security:
+        - bearerAuth: []
+        - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error

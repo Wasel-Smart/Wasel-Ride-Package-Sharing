@@ -2,7 +2,7 @@
 
 Shared rides, bus booking, parcel coordination, and wallet flows for the Jordan market.
 
-**Status**: Production-ready | **Rating**: 10/10 | **Bundle**: Optimized | **Architecture**: Microservices-ready
+**Status**: Hardening in progress | **Quality**: Verified by current CI only | **Bundle**: Enforced after successful build | **Architecture**: Microservices-ready frontend with tracked Edge Function contract
 
 ## Stack
 
@@ -33,8 +33,8 @@ Useful commands:
 - `npm run test` - Unit tests
 - `npm run test:coverage` - Coverage report
 - `npm run test:e2e` - E2E tests
-- `npm run type-check` - TypeScript validation
-- `npm run verify` - Full quality gate
+- `npm run type-check` - App and test TypeScript validation
+- `npm run verify` - Full strict quality gate, including security audit
 - `npm run verify:quality` - Quality metrics check
 
 ## Project Structure
@@ -73,12 +73,12 @@ docs/            Maintained project documentation
 
 ## Quality Gates
 
-The repository includes CI for:
+The repository includes CI definitions for the gates below. Treat the current CI status as the source of truth:
 
-- TypeScript strict mode validation
+- App and test TypeScript validation
 - ESLint with zero warnings
 - Unit test coverage with metrics
-- Production builds with bundle optimization
+- Production builds with bundle checks
 - Bundle size limits (200KB per chunk)
 - E2E tests (Chromium, mobile, RTL)
 - Accessibility audits (WCAG 2.1 AA)
@@ -91,6 +91,10 @@ The repository includes CI for:
 
 - [SECURITY.md](./SECURITY.md) for private vulnerability reporting
 - [.github/workflows/security.yml](./.github/workflows/security.yml) for automated scanning
+
+## Backend Source Boundary
+
+The default Supabase Edge Function route surface is tracked at `src/supabase/functions/make-server-0b1f4071/index.ts`; see `docs/backend/EDGE_FUNCTION_SOURCE.md` before changing wallet, payment, admin, profile, safety, or settings APIs.
 
 ## Notes
 

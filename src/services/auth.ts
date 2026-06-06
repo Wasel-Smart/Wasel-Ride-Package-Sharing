@@ -422,6 +422,33 @@ export const authAPI = {
     }
   },
 
+  async sendMagicLink(email: string, returnTo?: string) {
+    if (!checkRateLimit(getClientKey('auth:signin'), AUTH_RATE_LIMITS.signIn)) {
+      throw new ValidationError('Too many sign-in attempts. Please wait a minute and try again.');
+    }
+
+    const client = requireSupabase();
+    const sanitizedEmail = sanitizeEmail(normalizeEmailInput(email));
+    const redirectTo =
+      returnTo ||
+      getAuthRedirectCandidates(
+        typeof window !== 'undefined' ? window.location.origin : undefined,
+      )[0];
+
+    const { error } = await client.auth.signInWithOtp({
+      email: sanitizedEmail,
+      options: {
+        emailRedirectTo: redirectTo,
+      },
+    });
+
+    if (error) {
+      throw new Error(normalizeAuthError(error.message, 'signin'));
+    }
+
+    return { email: sanitizedEmail };
+  },
+
   async signOut() {
     const client = requireSupabase();
     const { error } = await client.auth.signOut({ scope: 'local' });

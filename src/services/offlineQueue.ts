@@ -29,6 +29,27 @@ function isSafeQueueMethod(method: string): boolean {
   return ['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase());
 }
 
+function canPersistBodyForMethod(method: string): boolean {
+  return isSafeQueueMethod(method);
+}
+
+const SENSITIVE_HEADER_NAMES = new Set([
+  'authorization',
+  'cookie',
+  'set-cookie',
+  'x-wasel-signature',
+]);
+
+function sanitizePersistedHeaders(headers?: Record<string, string>): Record<string, string> | undefined {
+  if (!headers) {return undefined;}
+
+  const sanitized = Object.fromEntries(
+    Object.entries(headers).filter(([key]) => !SENSITIVE_HEADER_NAMES.has(key.toLowerCase())),
+  );
+
+  return Object.keys(sanitized).length > 0 ? sanitized : undefined;
+}
+
 export interface QueueStats {
   totalQueued: number;
   highPriority: number;
@@ -88,12 +109,14 @@ class OfflineQueueManager {
     }
 
     const requestId = this.generateRequestId();
+    const normalizedMethod = method.toUpperCase();
     const request: QueuedRequest = {
       id: requestId,
-      method: method as QueuedRequest['method'],
+      method: normalizedMethod as QueuedRequest['method'],
       url,
-      body: options?.body,
-      headers: options?.headers,
+      // Do not persist mutation bodies; callers should recreate sensitive mutations when online.
+      body: canPersistBodyForMethod(normalizedMethod) ? options?.body : undefined,
+      headers: sanitizePersistedHeaders(options?.headers),
       priority,
       retries: 0,
       maxRetries: options?.maxRetries ?? 5,
@@ -231,16 +254,28 @@ class OfflineQueueManager {
   /**
    * Execute a request with proper headers and timeout
    */
-  private executeRequest(request: QueuedRequest): Promise<Response> {
+  private async executeRequest(request: QueuedRequest): Promise<Response> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(sanitizePersistedHeaders(request.headers) ?? {}),
+    };
+
+    try {
+      const { API_URL, getAuthDetails } = await import('./core');
+      if (API_URL && request.url.startsWith(API_URL)) {
+        const { token } = await getAuthDetails();
+        headers.Authorization = `Bearer ${token}`;
+      }
+    } catch {
+      // Replay without auth; protected endpoints will reject stale unauthenticated requests.
+    }
+
     return fetch(request.url, {
       method: request.method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...request.headers,
-      },
+      headers,
       body: request.body ? JSON.stringify(request.body) : undefined,
       signal: controller.signal,
     }).finally(() => clearTimeout(timeout));
@@ -288,7 +323,13 @@ class OfflineQueueManager {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as QueuedRequest[];
-        parsed.forEach(req => this.queue.set(req.id, req));
+        parsed.forEach(req => {
+          this.queue.set(req.id, {
+            ...req,
+            body: undefined,
+            headers: sanitizePersistedHeaders(req.headers),
+          });
+        });
       }
     } catch (error) {
       console.warn('[OfflineQueue] Failed to load from storage:', error);
@@ -397,7 +438,7 @@ export async function fetchWithOfflineQueue(
         url,
         {
           body: options?.body,
-      headers: options?.headers as Record<string, string>,
+          headers: options?.headers as Record<string, string>,
           priority: options?.priority,
           deduplicationKey: options?.deduplicationKey,
         }

@@ -3,29 +3,21 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://wasel14.online/</loc>
-    <lastmod>2026-04-21</lastmod>
+    <lastmod>2026-06-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/"/>
+    <xhtml:link rel="alternate" hreflang="en-JO" href="https://wasel14.online/"/>
+    <xhtml:link rel="alternate" hreflang="ar-JO" href="https://wasel14.online/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://wasel14.online/"/>
   </url>
-
-  <url>
-    <loc>https://wasel14.online/app/privacy</loc>
-    <lastmod>2026-04-21</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/privacy"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/privacy"/>
-  </url>
-
-  <url>
-    <loc>https://wasel14.online/app/terms</loc>
-    <lastmod>2026-04-21</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://wasel14.online/app/terms"/>
-    <xhtml:link rel="alternate" hreflang="ar" href="https://wasel14.online/app/terms"/>
-  </url>
+  <url><loc>https://wasel14.online/how-it-works</loc><lastmod>2026-06-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://wasel14.online/for-drivers</loc><lastmod>2026-06-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://wasel14.online/for-passengers</loc><lastmod>2026-06-02</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://wasel14.online/cities</loc><lastmod>2026-06-02</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://wasel14.online/about</loc><lastmod>2026-06-02</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://wasel14.online/contact</loc><lastmod>2026-06-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://wasel14.online/login</loc><lastmod>2026-06-02</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://wasel14.online/register</loc><lastmod>2026-06-02</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://wasel14.online/privacy-policy</loc><lastmod>2026-06-02</lastmod><changefreq>yearly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://wasel14.online/terms-and-conditions</loc><lastmod>2026-06-02</lastmod><changefreq>yearly</changefreq><priority>0.4</priority></url>
 </urlset>

@@ -164,6 +164,28 @@ describe('AuthContext — signUp', () => {
     await waitFor(() => expect(result).not.toBeNull());
     expect((result?.error as Error).message).toBe('Email already in use');
   });
+
+  it('propagates email confirmation requirement from LocalAuth.register', async () => {
+    mockLocalRegister.mockResolvedValueOnce({
+      error: null,
+      requiresEmailConfirmation: true,
+      email: 'user@example.com',
+    });
+    let result: {
+      error: unknown;
+      requiresEmailConfirmation?: boolean;
+      email?: string;
+    } | null = null;
+
+    renderWithAuth(ctx => {
+      void ctx.signUp('user@example.com', 'ValidPass1!', 'Ahmad Wasel').then(r => { result = r; });
+    });
+
+    await waitFor(() => expect(result).not.toBeNull());
+    expect(result?.error).toBeNull();
+    expect(result?.requiresEmailConfirmation).toBe(true);
+    expect(result?.email).toBe('user@example.com');
+  });
 });
 
 describe('AuthContext — signOut', () => {

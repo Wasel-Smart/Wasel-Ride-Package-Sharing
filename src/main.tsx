@@ -127,7 +127,7 @@ if (environmentIsValid) {
 }
 
 window.addEventListener(CONSENT_DECISION_EVENT, (event) => {
-  const detail = event?.detail;
+  const detail = event instanceof CustomEvent ? event.detail : undefined;
   if (detail?.accepted) initializeTelemetry();
 });
 

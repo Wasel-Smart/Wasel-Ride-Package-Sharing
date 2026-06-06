@@ -28,9 +28,9 @@ paths:
         - trips
       operationId: createTrip
       summary: Create a trip.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response
@@ -64,9 +64,9 @@ paths:
         - trips
       operationId: updateTrip
       summary: Update trip state.
-        security:
-          - bearerAuth: []
-          - requestSignature: []
+      security:
+        - bearerAuth: []
+        - requestSignature: []
       responses:
         '200':
           description: Successful response

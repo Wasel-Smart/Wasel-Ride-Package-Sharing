@@ -98,12 +98,26 @@ if (featureFlags.core.bus === true) {
   appChildren.splice(insertIndex, 0, { lazy: loadBusPage, path: APP_ROUTES.bus.child });
 }
 
+const publicWebsitePaths = [
+  '/',
+  '/how-it-works',
+  '/for-drivers',
+  '/for-passengers',
+  '/cities',
+  '/about',
+  '/contact',
+  '/login',
+  '/register',
+  '/privacy-policy',
+  '/terms-and-conditions',
+];
+
 export const waselRouter = createBrowserRouter([
-  {
+  ...publicWebsitePaths.map(path => ({
     errorElement: <RouteErrorBoundary />,
     lazy: loadLandingPage,
-    path: '/',
-  },
+    path,
+  })),
   {
     Component: WaselRoot,
     errorElement: <RouteErrorBoundary />,
@@ -195,11 +209,11 @@ export const waselRouter = createBrowserRouter([
     path: '/admin',
   },
   {
-    Component: () => <Navigate replace to={APP_ROUTES.privacy.full} />,
+    Component: () => <Navigate replace to="/privacy-policy" />,
     path: '/privacy',
   },
   {
-    Component: () => <Navigate replace to={APP_ROUTES.terms.full} />,
+    Component: () => <Navigate replace to="/terms-and-conditions" />,
     path: '/terms',
   },
   {
