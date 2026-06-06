@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { Wallet } from 'lucide-react';
-import { GRAD, R, SH } from '../../../utils/wasel-ds';
+import { WaselButton } from '../../../components/wasel-ui/WaselButton';
+import { R, SH } from '../../../utils/wasel-ds';
 import { C, SectionHeader, Skeleton, SOSButton, TrustScoreCard } from '../HomePageShared';
 
 interface SignedInUtilitySectionProps {
@@ -176,39 +177,35 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
             marginTop: 24,
           }}
         >
-          <button
+          <WaselButton
             type="button"
             onClick={() => onNavigate('/auth?tab=register')}
+            variant="primary"
+            size="lg"
             style={{
               height: 50,
               padding: '0 22px',
               borderRadius: R.lg,
-              border: 'none',
-              background: GRAD,
-              color: C.bgDeep,
-              fontWeight: 900,
-              cursor: 'pointer',
               boxShadow: SH.cyanL,
             }}
           >
             {ar ? 'ابدأ الآن' : 'Get started'}
-          </button>
-          <button
+          </WaselButton>
+          <WaselButton
             type="button"
             onClick={() => onNavigate('/find-ride')}
+            variant="outline"
+            size="lg"
             style={{
               height: 50,
               padding: '0 22px',
               borderRadius: R.lg,
-              border: `1px solid ${C.border}`,
               background: C.elevated,
               color: C.text,
-              fontWeight: 800,
-              cursor: 'pointer',
             }}
           >
             {ar ? 'تصفح الرحلات' : 'Browse rides'}
-          </button>
+          </WaselButton>
         </div>
       </div>
     </motion.section>

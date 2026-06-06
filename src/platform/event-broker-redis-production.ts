@@ -12,6 +12,9 @@ type RedisStreamEntry = [messageId: string, fields: string[]];
 type RedisStreamReadResult = [streamKey: string, entries: RedisStreamEntry[]][];
 type InMemoryEventHandler = (event: DomainEventEnvelope) => Promise<void>;
 
+const MAX_DELIVERY_ATTEMPTS = Number(process.env.REDIS_STREAM_MAX_DELIVERY_ATTEMPTS ?? 5);
+const PENDING_IDLE_MS = Number(process.env.REDIS_STREAM_PENDING_IDLE_MS ?? 60_000);
+
 interface RedisStreamConfig {
   host: string;
   port: number;
@@ -192,6 +195,8 @@ class RedisStreamsBroker implements EventBrokerAdapter {
 
     while (this.subscriptions.get(subKey)) {
       try {
+        await this.recoverPending(streamKey, config, handler);
+
         const xreadgroup = this.redis.xreadgroup.bind(this.redis) as (
           ...values: RedisCommandValue[]
         ) => Promise<RedisStreamReadResult | null>;
@@ -220,7 +225,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
                   eventType: event.type,
                   messageId,
                 });
-                throw error;
+                await this.handleFailedMessage(streamKey, config.groupName, messageId, fields, error);
               }
             }
           }
@@ -233,6 +238,113 @@ class RedisStreamsBroker implements EventBrokerAdapter {
         await new Promise(resolve => setTimeout(resolve, 5000));
       }
     }
+  }
+
+  private async recoverPending<TType extends DomainEventType>(
+    streamKey: string,
+    config: ConsumerConfig,
+    handler: (event: DomainEventEnvelope<TType>) => Promise<void>,
+  ): Promise<void> {
+    const xpending = this.redis.xpending.bind(this.redis) as unknown as (
+      ...values: RedisCommandValue[]
+    ) => Promise<Array<[string, string, number, number]>>;
+    const pending = await xpending(
+      streamKey,
+      config.groupName,
+      'IDLE',
+      PENDING_IDLE_MS,
+      '-',
+      '+',
+      config.count ?? 10,
+    );
+
+    if (pending.length === 0) return;
+
+    const messageIds = pending.map(([messageId]) => messageId);
+    const xclaim = this.redis.xclaim.bind(this.redis) as (
+      ...values: RedisCommandValue[]
+    ) => Promise<RedisStreamEntry[]>;
+    const claimed = await xclaim(
+      streamKey,
+      config.groupName,
+      config.consumerName,
+      PENDING_IDLE_MS,
+      ...messageIds,
+    );
+
+    for (const [messageId, fields] of claimed) {
+      const event = this.deserializeEvent<TType>(fields);
+
+      try {
+        await handler(event);
+        await this.ack(streamKey, config.groupName, messageId);
+        telemetry.recordMetric('event_pending_recovered', 1, {
+          eventType: event.type,
+          groupName: config.groupName,
+        });
+      } catch (error) {
+        await this.handleFailedMessage(streamKey, config.groupName, messageId, fields, error);
+      }
+    }
+  }
+
+  private async handleFailedMessage(
+    streamKey: string,
+    groupName: string,
+    messageId: string,
+    fields: string[],
+    error: unknown,
+  ): Promise<void> {
+    const event = this.deserializeEvent(fields);
+    const deliveryCount = await this.getDeliveryCount(streamKey, groupName, messageId);
+
+    if (deliveryCount < MAX_DELIVERY_ATTEMPTS) {
+      telemetry.recordMetric('event_retry_scheduled', 1, {
+        eventType: event.type,
+        streamKey,
+        groupName,
+      });
+      return;
+    }
+
+    const dlqKey = `${streamKey}:dlq`;
+    const xadd = this.redis.xadd.bind(this.redis) as (
+      ...values: RedisCommandValue[]
+    ) => Promise<string | null>;
+    await xadd(
+      dlqKey,
+      '*',
+      'originalMessageId',
+      messageId,
+      'originalStream',
+      streamKey,
+      'groupName',
+      groupName,
+      'event',
+      JSON.stringify(event),
+      'error',
+      error instanceof Error ? error.message : String(error),
+      'failedAt',
+      new Date().toISOString(),
+    );
+    await this.ack(streamKey, groupName, messageId);
+    telemetry.recordMetric('event_moved_to_dlq', 1, {
+      eventType: event.type,
+      streamKey,
+      groupName,
+    });
+  }
+
+  private async getDeliveryCount(
+    streamKey: string,
+    groupName: string,
+    messageId: string,
+  ): Promise<number> {
+    const xpending = this.redis.xpending.bind(this.redis) as unknown as (
+      ...values: RedisCommandValue[]
+    ) => Promise<Array<[string, string, number, number]>>;
+    const rows = await xpending(streamKey, groupName, messageId, messageId, 1);
+    return rows[0]?.[3] ?? 1;
   }
 
   async ack(streamKey: string, groupName: string, messageId: string): Promise<void> {

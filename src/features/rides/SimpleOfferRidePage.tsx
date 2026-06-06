@@ -7,18 +7,30 @@ import { C, GRAD, GRAD_HERO } from '../../utils/wasel-ds';
 
 const CITIES = ['Amman', 'Aqaba', 'Irbid', 'Zarqa', 'Madaba'];
 const TIMES = [
-  '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM',
-  '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM',
-  '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM'
+  '6:00 AM',
+  '7:00 AM',
+  '8:00 AM',
+  '9:00 AM',
+  '10:00 AM',
+  '11:00 AM',
+  '12:00 PM',
+  '1:00 PM',
+  '2:00 PM',
+  '3:00 PM',
+  '4:00 PM',
+  '5:00 PM',
+  '6:00 PM',
+  '7:00 PM',
+  '8:00 PM',
 ];
 
 export function SimpleOfferRidePage() {
   const { user } = useAuth();
   const { language } = useLanguage();
   const navigate = useIframeSafeNavigate();
-  
+
   const ar = language === 'ar';
-  
+
   // Simple form state - no complex objects
   const [from, setFrom] = useState('Amman');
   const [to, setTo] = useState('Aqaba');
@@ -44,7 +56,7 @@ export function SimpleOfferRidePage() {
     }
 
     setPosting(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setPosted(true);
@@ -55,57 +67,68 @@ export function SimpleOfferRidePage() {
   // Success state
   if (posted) {
     return (
-      <div style={{
-        minHeight: 'var(--app-min-height)',
-        background: GRAD_HERO,
-        color: C.text,
-        padding: '20px',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{
-          maxWidth: '500px',
-          textAlign: 'center',
-          background: C.card,
-          borderRadius: '24px',
-          padding: '40px',
-          border: `1px solid ${C.border}`
-        }}>
+      <div
+        style={{
+          minHeight: 'var(--app-min-height)',
+          background: GRAD_HERO,
+          color: C.text,
+          padding: '20px',
+          fontFamily: 'Inter, system-ui, sans-serif',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: '500px',
+            textAlign: 'center',
+            background: C.card,
+            borderRadius: '24px',
+            padding: '40px',
+            border: `1px solid ${C.border}`,
+          }}
+        >
           <div style={{ fontSize: '4rem', marginBottom: '20px' }}>✅</div>
-          <h2 style={{
-            fontSize: '2rem',
-            fontWeight: '900',
-            margin: '0 0 16px',
-            color: C.green
-          }}>
+          <h2
+            style={{
+              fontSize: '2rem',
+              fontWeight: '900',
+              margin: '0 0 16px',
+              color: C.green,
+            }}
+          >
             {ar ? 'تم نشر الرحلة!' : 'Ride Posted!'}
           </h2>
-          <p style={{
-            color: C.textMuted,
-            fontSize: '1.1rem',
-            margin: '0 0 24px'
-          }}>
-            {ar 
+          <p
+            style={{
+              color: C.textMuted,
+              fontSize: '1.1rem',
+              margin: '0 0 24px',
+            }}
+          >
+            {ar
               ? `رحلتك من ${from} إلى ${to} متاحة الآن للحجز`
-              : `Your ride from ${from} to ${to} is now available for booking`
-            }
+              : `Your ride from ${from} to ${to} is now available for booking`}
           </p>
-          
-          <div style={{
-            background: C.greenDim,
-            borderRadius: '16px',
-            padding: '20px',
-            marginBottom: '24px',
-            border: `1px solid ${C.greenDim}`
-          }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '16px',
-              textAlign: 'left'
-            }}>
+
+          <div
+            style={{
+              background: C.greenDim,
+              borderRadius: '16px',
+              padding: '20px',
+              marginBottom: '24px',
+              border: `1px solid ${C.greenDim}`,
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '16px',
+                textAlign: 'left',
+              }}
+            >
               <div>
                 <div style={{ color: C.textMuted, fontSize: '0.9rem' }}>
                   {ar ? 'المسار' : 'Route'}
@@ -118,17 +141,13 @@ export function SimpleOfferRidePage() {
                 <div style={{ color: C.textMuted, fontSize: '0.9rem' }}>
                   {ar ? 'الوقت' : 'Time'}
                 </div>
-                <div style={{ color: C.text, fontWeight: '700' }}>
-                  {time}
-                </div>
+                <div style={{ color: C.text, fontWeight: '700' }}>{time}</div>
               </div>
               <div>
                 <div style={{ color: C.textMuted, fontSize: '0.9rem' }}>
                   {ar ? 'السعر' : 'Price'}
                 </div>
-                <div style={{ color: C.green, fontWeight: '700' }}>
-                  {price} JOD
-                </div>
+                <div style={{ color: C.green, fontWeight: '700' }}>{price} JOD</div>
               </div>
               <div>
                 <div style={{ color: C.textMuted, fontSize: '0.9rem' }}>
@@ -141,11 +160,13 @@ export function SimpleOfferRidePage() {
             </div>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '12px'
-          }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '12px',
+            }}
+          >
             <button
               onClick={() => {
                 setPosted(false);
@@ -163,7 +184,7 @@ export function SimpleOfferRidePage() {
                 color: C.text,
                 fontSize: '0.9rem',
                 fontWeight: '700',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               {ar ? 'رحلة أخرى' : 'Post Another'}
@@ -178,7 +199,7 @@ export function SimpleOfferRidePage() {
                 color: C.text,
                 fontSize: '0.9rem',
                 fontWeight: '700',
-                cursor: 'pointer'
+                cursor: 'pointer',
               }}
             >
               {ar ? 'رحلاتي' : 'My Trips'}
@@ -190,19 +211,23 @@ export function SimpleOfferRidePage() {
   }
 
   return (
-    <div style={{
-      minHeight: 'var(--app-min-height)',
-      background: GRAD_HERO,
-      color: C.text,
-      padding: '20px',
-      fontFamily: 'Inter, system-ui, sans-serif'
-    }}>
+    <div
+      style={{
+        minHeight: 'var(--app-min-height)',
+        background: GRAD_HERO,
+        color: C.text,
+        padding: '20px',
+        fontFamily: 'Inter, system-ui, sans-serif',
+      }}
+    >
       {/* Simple Header */}
-      <div style={{
-        maxWidth: '600px',
-        margin: '0 auto',
-        marginBottom: '30px'
-      }}>
+      <div
+        style={{
+          maxWidth: '600px',
+          margin: '0 auto',
+          marginBottom: '30px',
+        }}
+      >
         <button
           onClick={() => navigate('/app')}
           style={{
@@ -211,79 +236,93 @@ export function SimpleOfferRidePage() {
             color: C.textMuted,
             fontSize: '0.9rem',
             cursor: 'pointer',
-            marginBottom: '20px'
+            marginBottom: '20px',
           }}
         >
           ← {ar ? 'العودة' : 'Back'}
         </button>
-        
-        <h1 style={{
-          fontSize: '2rem',
-          fontWeight: '900',
-          margin: '0 0 8px',
-          color: C.text
-        }}>
+
+        <h1
+          style={{
+            fontSize: '2rem',
+            fontWeight: '900',
+            margin: '0 0 8px',
+            color: C.text,
+          }}
+        >
           {ar ? 'اعرض رحلة' : 'Offer a Ride'}
         </h1>
-        <p style={{
-          color: C.textMuted,
-          margin: 0,
-          fontSize: '1rem'
-        }}>
+        <p
+          style={{
+            color: C.textMuted,
+            margin: 0,
+            fontSize: '1rem',
+          }}
+        >
           {ar ? 'شارك رحلتك واكسب المال' : 'Share your trip and earn money'}
         </p>
       </div>
 
       {/* Simple Form */}
-      <div style={{
-        maxWidth: '600px',
-        margin: '0 auto',
-        background: C.card,
-        borderRadius: '24px',
-        padding: '32px',
-        border: `1px solid ${C.border}`
-      }}>
-        <div style={{
-          display: 'grid',
-          gap: '24px'
-        }}>
-          {/* Route Selection */}
-          <div style={{
+      <div
+        style={{
+          maxWidth: '600px',
+          margin: '0 auto',
+          background: C.card,
+          borderRadius: '24px',
+          padding: '32px',
+          border: `1px solid ${C.border}`,
+        }}
+      >
+        <div
+          style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '16px'
-          }}>
+            gap: '24px',
+          }}
+        >
+          {/* Route Selection */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px',
+            }}
+          >
             {/* From */}
             <div>
-              <label style={{
-                display: 'block',
-                color: C.textMuted,
-                fontSize: '0.9rem',
-                marginBottom: '8px',
-                fontWeight: '600'
-              }}>
+              <label
+                style={{
+                  display: 'block',
+                  color: C.textMuted,
+                  fontSize: '0.9rem',
+                  marginBottom: '8px',
+                  fontWeight: '600',
+                }}
+              >
                 {ar ? 'من' : 'From'}
               </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                background: C.elevated,
-                borderRadius: '12px',
-                padding: '14px 16px',
-                border: `1px solid ${C.borderHov}`
-              }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  background: C.elevated,
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  border: `1px solid ${C.borderHov}`,
+                }}
+              >
                 <MapPin size={18} color="#10B981" />
                 <select
                   value={from}
-                  onChange={(e) => setFrom(e.target.value)}
+                  onChange={e => setFrom(e.target.value)}
                   style={{
                     background: 'transparent',
                     border: 'none',
                     color: C.text,
                     fontSize: '1rem',
                     flex: 1,
-                    outline: 'none'
+                    outline: 'none',
                   }}
                 >
                   {CITIES.map(city => (
@@ -297,35 +336,39 @@ export function SimpleOfferRidePage() {
 
             {/* To */}
             <div>
-              <label style={{
-                display: 'block',
-                color: C.textMuted,
-                fontSize: '0.9rem',
-                marginBottom: '8px',
-                fontWeight: '600'
-              }}>
+              <label
+                style={{
+                  display: 'block',
+                  color: C.textMuted,
+                  fontSize: '0.9rem',
+                  marginBottom: '8px',
+                  fontWeight: '600',
+                }}
+              >
                 {ar ? 'إلى' : 'To'}
               </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                background: C.elevated,
-                borderRadius: '12px',
-                padding: '14px 16px',
-                border: `1px solid ${C.borderHov}`
-              }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  background: C.elevated,
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  border: `1px solid ${C.borderHov}`,
+                }}
+              >
                 <MapPin size={18} color="#00C8E8" />
                 <select
                   value={to}
-                  onChange={(e) => setTo(e.target.value)}
+                  onChange={e => setTo(e.target.value)}
                   style={{
                     background: 'transparent',
                     border: 'none',
                     color: C.text,
                     fontSize: '1rem',
                     flex: 1,
-                    outline: 'none'
+                    outline: 'none',
                   }}
                 >
                   {CITIES.map(city => (
@@ -339,42 +382,48 @@ export function SimpleOfferRidePage() {
           </div>
 
           {/* Time and Price */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '16px'
-          }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px',
+            }}
+          >
             {/* Time */}
             <div>
-              <label style={{
-                display: 'block',
-                color: C.textMuted,
-                fontSize: '0.9rem',
-                marginBottom: '8px',
-                fontWeight: '600'
-              }}>
+              <label
+                style={{
+                  display: 'block',
+                  color: C.textMuted,
+                  fontSize: '0.9rem',
+                  marginBottom: '8px',
+                  fontWeight: '600',
+                }}
+              >
                 {ar ? 'الوقت' : 'Time'}
               </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                background: C.elevated,
-                borderRadius: '12px',
-                padding: '14px 16px',
-                border: `1px solid ${C.borderHov}`
-              }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  background: C.elevated,
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  border: `1px solid ${C.borderHov}`,
+                }}
+              >
                 <Clock size={18} color="#F59E0B" />
                 <select
                   value={time}
-                  onChange={(e) => setTime(e.target.value)}
+                  onChange={e => setTime(e.target.value)}
                   style={{
                     background: 'transparent',
                     border: 'none',
                     color: C.text,
                     fontSize: '1rem',
                     flex: 1,
-                    outline: 'none'
+                    outline: 'none',
                   }}
                 >
                   {TIMES.map(t => (
@@ -388,29 +437,33 @@ export function SimpleOfferRidePage() {
 
             {/* Price */}
             <div>
-              <label style={{
-                display: 'block',
-                color: C.textMuted,
-                fontSize: '0.9rem',
-                marginBottom: '8px',
-                fontWeight: '600'
-              }}>
+              <label
+                style={{
+                  display: 'block',
+                  color: C.textMuted,
+                  fontSize: '0.9rem',
+                  marginBottom: '8px',
+                  fontWeight: '600',
+                }}
+              >
                 {ar ? 'السعر (دينار)' : 'Price (JOD)'}
               </label>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                background: C.elevated,
-                borderRadius: '12px',
-                padding: '14px 16px',
-                border: `1px solid ${C.borderHov}`
-              }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  background: C.elevated,
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  border: `1px solid ${C.borderHov}`,
+                }}
+              >
                 <DollarSign size={18} color="#10B981" />
                 <input
                   type="number"
                   value={price}
-                  onChange={(e) => setPrice(Number(e.target.value))}
+                  onChange={e => setPrice(Number(e.target.value))}
                   min="1"
                   max="100"
                   style={{
@@ -419,7 +472,7 @@ export function SimpleOfferRidePage() {
                     color: C.text,
                     fontSize: '1rem',
                     flex: 1,
-                    outline: 'none'
+                    outline: 'none',
                   }}
                 />
               </div>
@@ -428,29 +481,33 @@ export function SimpleOfferRidePage() {
 
           {/* Seats */}
           <div>
-            <label style={{
-              display: 'block',
-              color: C.textMuted,
-              fontSize: '0.9rem',
-              marginBottom: '8px',
-              fontWeight: '600'
-            }}>
+            <label
+              style={{
+                display: 'block',
+                color: C.textMuted,
+                fontSize: '0.9rem',
+                marginBottom: '8px',
+                fontWeight: '600',
+              }}
+            >
               {ar ? 'عدد المقاعد المتاحة' : 'Available Seats'}
             </label>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              background: C.elevated,
-              borderRadius: '12px',
-              padding: '14px 16px',
-              border: `1px solid ${C.borderHov}`
-            }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                background: C.elevated,
+                borderRadius: '12px',
+                padding: '14px 16px',
+                border: `1px solid ${C.borderHov}`,
+              }}
+            >
               <Users size={18} color="#8B5CF6" />
               <input
                 type="number"
                 value={seats}
-                onChange={(e) => setSeats(Number(e.target.value))}
+                onChange={e => setSeats(Number(e.target.value))}
                 min="1"
                 max="7"
                 style={{
@@ -459,35 +516,45 @@ export function SimpleOfferRidePage() {
                   color: C.text,
                   fontSize: '1rem',
                   flex: 1,
-                  outline: 'none'
+                  outline: 'none',
                 }}
               />
             </div>
           </div>
 
           {/* Preview */}
-          <div style={{
-            background: C.cyanDim,
-            borderRadius: '16px',
-            padding: '20px',
-            border: `1px solid ${C.cyanDim}`
-          }}>
-            <h3 style={{
-              margin: '0 0 12px',
-              color: C.cyan,
-              fontSize: '1.1rem',
-              fontWeight: '800'
-            }}>
+          <div
+            style={{
+              background: C.cyanDim,
+              borderRadius: '16px',
+              padding: '20px',
+              border: `1px solid ${C.cyanDim}`,
+            }}
+          >
+            <h3
+              style={{
+                margin: '0 0 12px',
+                color: C.cyan,
+                fontSize: '1.1rem',
+                fontWeight: '800',
+              }}
+            >
               {ar ? 'معاينة الرحلة' : 'Ride Preview'}
             </h3>
-            <div style={{
-              color: C.text,
-              fontSize: '1rem',
-              lineHeight: '1.6'
-            }}>
-              <strong>{from}</strong> → <strong>{to}</strong><br />
-              {ar ? 'الوقت:' : 'Time:'} {time}<br />
-              {ar ? 'السعر:' : 'Price:'} <span style={{ color: C.green, fontWeight: '700' }}>{price} JOD</span><br />
+            <div
+              style={{
+                color: C.text,
+                fontSize: '1rem',
+                lineHeight: '1.6',
+              }}
+            >
+              <strong>{from}</strong> → <strong>{to}</strong>
+              <br />
+              {ar ? 'الوقت:' : 'Time:'} {time}
+              <br />
+              {ar ? 'السعر:' : 'Price:'}{' '}
+              <span style={{ color: C.green, fontWeight: '700' }}>{price} JOD</span>
+              <br />
               {ar ? 'المقاعد:' : 'Seats:'} {seats} {ar ? 'متاح' : 'available'}
             </div>
           </div>
@@ -498,9 +565,7 @@ export function SimpleOfferRidePage() {
             disabled={!canPost || posting}
             style={{
               width: '100%',
-              background: canPost && !posting 
-                ? GRAD
-                : C.elevated,
+              background: canPost && !posting ? GRAD : C.elevated,
               border: 'none',
               borderRadius: '16px',
               padding: '18px',
@@ -512,11 +577,15 @@ export function SimpleOfferRidePage() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '10px'
+              gap: '10px',
             }}
           >
             {posting ? (
-              ar ? 'جاري النشر...' : 'Posting...'
+              ar ? (
+                'جاري النشر...'
+              ) : (
+                'Posting...'
+              )
             ) : (
               <>
                 {ar ? 'انشر الرحلة' : 'Post Ride'}
@@ -526,17 +595,18 @@ export function SimpleOfferRidePage() {
           </button>
 
           {/* Help Text */}
-          <p style={{
-            color: C.textMuted,
-            fontSize: '0.9rem',
-            textAlign: 'center',
-            margin: 0,
-            lineHeight: '1.5'
-          }}>
-            {ar 
+          <p
+            style={{
+              color: C.textMuted,
+              fontSize: '0.9rem',
+              textAlign: 'center',
+              margin: 0,
+              lineHeight: '1.5',
+            }}
+          >
+            {ar
               ? 'ستظهر رحلتك للركاب فوراً وستتلقى إشعارات عند الحجز'
-              : 'Your ride will be visible to passengers immediately and you\'ll get notifications when booked'
-            }
+              : "Your ride will be visible to passengers immediately and you'll get notifications when booked"}
           </p>
         </div>
       </div>
@@ -545,4 +615,3 @@ export function SimpleOfferRidePage() {
 }
 
 export default SimpleOfferRidePage;
-

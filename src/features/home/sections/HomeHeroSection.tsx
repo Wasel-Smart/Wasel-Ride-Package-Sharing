@@ -4,7 +4,7 @@ import type { User } from '@supabase/supabase-js';
 import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 
-import { GRAD, R, SH } from '../../../utils/wasel-ds';
+import { R, SH } from '../../../utils/wasel-ds';
 import { C, F, InlineCurrencySwitcher } from '../HomePageShared';
 import { MobilityOSLandingMap } from '../MobilityOSLandingMap';
 import type { TripMode } from './types';
@@ -159,19 +159,10 @@ function TripModeCard({
             height: 50,
             padding: '0 20px',
             borderRadius: R.lg,
-            border: 'none',
-            background: GRAD,
-            color: C.bgDeep,
-            fontWeight: 900,
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
             boxShadow: SH.cyanL,
           }}
         >
           {ar ? 'ابدأ البحث' : 'Book employee travel'}
-          <ArrowRight size={16} />
         </WaselButton>
         <span
           style={{

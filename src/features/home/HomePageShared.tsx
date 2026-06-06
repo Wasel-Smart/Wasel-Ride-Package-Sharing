@@ -92,8 +92,7 @@ export function Skeleton({
         width: w,
         height: h,
         borderRadius: radius,
-        background:
-          `linear-gradient(90deg, ${C.elevated} 0%, ${C.panel} 50%, ${C.elevated} 100%)`,
+        background: `linear-gradient(90deg, ${C.elevated} 0%, ${C.panel} 50%, ${C.elevated} 100%)`,
         backgroundSize: '200% 100%',
         animation: 'shimmer 1.6s infinite linear',
       }}

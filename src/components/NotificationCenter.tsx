@@ -307,25 +307,13 @@ export function NotificationCenter() {
         </div>
 
         <div className="grid gap-3 md:grid-cols-4">
-          <NotificationMetric
-            label={labels.total}
-            value={summary.total}
-            tone="border-white/10 text-white"
-          />
-          <NotificationMetric
-            label={labels.unreadCount}
-            value={summary.unread}
-            tone="border-cyan-400/20 text-cyan-50"
-          />
-          <NotificationMetric
-            label={labels.urgentCount}
-            value={summary.urgent}
-            tone="border-amber-400/20 text-amber-50"
-          />
+          <NotificationMetric label={labels.total} value={summary.total} tone="neutral" />
+          <NotificationMetric label={labels.unreadCount} value={summary.unread} tone="attention" />
+          <NotificationMetric label={labels.urgentCount} value={summary.urgent} tone="urgent" />
           <NotificationMetric
             label={labels.archivedCount}
             value={summary.archived}
-            tone="border-slate-400/20 text-slate-100"
+            tone="archived"
           />
         </div>
       </WaselCard>
