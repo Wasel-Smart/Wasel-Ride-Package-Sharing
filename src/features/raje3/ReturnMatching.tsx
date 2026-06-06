@@ -251,7 +251,7 @@ export function ReturnMatching() {
                     >
                       {complete ? 'Live' : `Step ${index + 1}`}
                     </div>
-                    <div style={{ color: '#fff', fontSize: '0.8rem', fontWeight: 800, marginTop: 6 }}>
+                    <div style={{ color: D.text, fontSize: '0.8rem', fontWeight: 800, marginTop: 6 }}>
                       {label}
                     </div>
                   </div>
@@ -287,10 +287,10 @@ export function ReturnMatching() {
                         style={{
                           background: retailer === retailerItem.id ? `${retailerItem.color}12` : D.card2,
                           border: `1px solid ${retailer === retailerItem.id ? `${retailerItem.color}55` : D.border}`,
-                          borderRadius: 14,
+                          borderRadius: R.lg,
                           padding: '16px 14px',
                           cursor: 'pointer',
-                          color: '#fff',
+                          color: D.text,
                           textAlign: 'left',
                         }}
                       >
@@ -299,7 +299,7 @@ export function ReturnMatching() {
                             width: 36,
                             height: 36,
                             borderRadius: 12,
-                            background: 'rgba(255,255,255,0.06)',
+                            background: C.elevated,
                             display: 'grid',
                             placeItems: 'center',
                             fontWeight: 900,
@@ -351,9 +351,9 @@ export function ReturnMatching() {
                       borderRadius: 14,
                       border: 'none',
                       background: retailer
-                        ? `linear-gradient(135deg,${D.gold},#E89200)`
-                        : 'rgba(255,255,255,0.08)',
-                      color: retailer ? '#040C18' : D.muted,
+                        ? `linear-gradient(135deg,${D.gold},${C.orange})`
+                        : C.elevated,
+                      color: retailer ? C.bgDeep : D.muted,
                       fontWeight: 900,
                       fontSize: '0.92rem',
                       fontFamily: D.F,
@@ -501,11 +501,11 @@ export function ReturnMatching() {
                       disabled={!item || !reason || searching}
                       style={{
                         height: 48,
-                        borderRadius: 12,
+                        borderRadius: R.md,
                         border: 'none',
                         background:
-                          item && reason ? `linear-gradient(135deg,${D.gold},#E89200)` : 'rgba(255,255,255,0.08)',
-                        color: item && reason ? '#040C18' : D.muted,
+                          item && reason ? `linear-gradient(135deg,${D.gold},${C.orange})` : C.elevated,
+                        color: item && reason ? C.bgDeep : D.muted,
                         fontWeight: 900,
                         cursor: item && reason ? 'pointer' : 'not-allowed',
                         display: 'flex',
@@ -638,14 +638,14 @@ export function ReturnMatching() {
                       disabled={creating || (matches.length > 0 && !selectedMatch)}
                       style={{
                         height: 48,
-                        borderRadius: 12,
+                        borderRadius: R.md,
                         border: 'none',
                         background:
                           !creating && (matches.length === 0 || selectedMatch)
-                            ? `linear-gradient(135deg,${D.gold},#E89200)`
-                            : 'rgba(255,255,255,0.08)',
+                            ? `linear-gradient(135deg,${D.gold},${C.orange})`
+                            : C.elevated,
                         color:
-                          !creating && (matches.length === 0 || selectedMatch) ? '#040C18' : D.muted,
+                          !creating && (matches.length === 0 || selectedMatch) ? C.bgDeep : D.muted,
                         fontWeight: 900,
                         cursor:
                           !creating && (matches.length === 0 || selectedMatch) ? 'pointer' : 'not-allowed',
@@ -655,7 +655,7 @@ export function ReturnMatching() {
                     </button>
                   </div>
                   {error ? (
-                    <div style={{ marginTop: 14, color: '#FCA5A5', fontSize: '0.8rem' }}>{error}</div>
+                    <div style={{ marginTop: 14, color: C.error, fontSize: '0.8rem' }}>{error}</div>
                   ) : null}
                 </motion.div>
               )}
@@ -672,7 +672,7 @@ export function ReturnMatching() {
                         width: 72,
                         height: 72,
                         borderRadius: '50%',
-                        background: 'rgba(0,200,117,0.12)',
+                        background: C.greenDim,
                         border: `2px solid ${D.green}`,
                         display: 'flex',
                         alignItems: 'center',
@@ -711,9 +711,9 @@ export function ReturnMatching() {
                         style={{
                           width: 116,
                           height: 116,
-                          background: 'linear-gradient(135deg,rgba(240,168,48,0.15),rgba(0,200,232,0.10))',
+                          background: `linear-gradient(135deg,${C.goldDim},${C.cyanDim})`,
                           border: `2px solid ${D.gold}40`,
-                          borderRadius: 14,
+                          borderRadius: R.lg,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -747,7 +747,7 @@ export function ReturnMatching() {
                         }}
                         style={{
                           height: 44,
-                          borderRadius: 12,
+                          borderRadius: R.md,
                           border: `1px solid ${D.border}`,
                           background: D.card2,
                           color: D.sub,
@@ -763,8 +763,8 @@ export function ReturnMatching() {
                           height: 44,
                           borderRadius: 12,
                           border: 'none',
-                          background: `linear-gradient(135deg,${D.gold},#E89200)`,
-                          color: '#040C18',
+                          background: `linear-gradient(135deg,${D.gold},${C.orange})`,
+                          color: C.bgDeep,
                           fontWeight: 900,
                           cursor: 'pointer',
                         }}
@@ -781,9 +781,8 @@ export function ReturnMatching() {
           <div style={{ display: 'grid', gap: 16 }}>
             <div
               style={{
-                background:
-                  'linear-gradient(135deg, rgba(240,168,48,0.12), rgba(8,18,35,0.96) 68%, rgba(0,200,232,0.08))',
-                borderRadius: 22,
+                background: `linear-gradient(135deg, ${C.goldDim}, ${C.cardSolid} 68%, ${C.cyanDim})`,
+                borderRadius: R.xxl,
                 padding: '20px',
                 border: `1px solid ${D.border}`,
               }}
@@ -799,7 +798,7 @@ export function ReturnMatching() {
               >
                 Return state
               </div>
-              <h2 style={{ color: '#fff', fontSize: '1.4rem', fontWeight: 900, margin: '8px 0 10px' }}>
+              <h2 style={{ color: D.text, fontSize: '1.4rem', fontWeight: 900, margin: '8px 0 10px' }}>
                 {createdReturn ? 'Tracking live' : step >= 2 ? 'Matching now' : 'Building return'}
               </h2>
               <div style={{ display: 'grid', gap: 10 }}>
@@ -807,11 +806,11 @@ export function ReturnMatching() {
                   <div
                     key={line}
                     style={{
-                      background: 'rgba(5,12,24,0.44)',
-                      borderRadius: 14,
+                      background: C.elevated,
+                      borderRadius: R.lg,
                       border: `1px solid ${D.border}`,
                       padding: '12px 14px',
-                      color: '#fff',
+                      color: D.text,
                       fontSize: '0.8rem',
                       lineHeight: 1.5,
                     }}
@@ -836,8 +835,8 @@ export function ReturnMatching() {
                   <div
                     key={item.label}
                     style={{
-                      background: 'rgba(5,12,24,0.44)',
-                      borderRadius: 14,
+                      background: C.elevated,
+                      borderRadius: R.lg,
                       border: `1px solid ${D.border}`,
                       padding: '12px 12px 10px',
                     }}
@@ -845,7 +844,7 @@ export function ReturnMatching() {
                     <div style={{ color: D.muted, fontSize: '0.66rem', fontWeight: 800, textTransform: 'uppercase' }}>
                       {item.label}
                     </div>
-                    <div style={{ color: '#fff', fontSize: '0.78rem', fontWeight: 800, marginTop: 6 }}>
+                    <div style={{ color: D.text, fontSize: '0.78rem', fontWeight: 800, marginTop: 6 }}>
                       {item.value}
                     </div>
                   </div>
@@ -857,11 +856,11 @@ export function ReturnMatching() {
               style={{
                 background: D.card,
                 border: `1px solid ${D.border}`,
-                borderRadius: 20,
+                borderRadius: R.xl,
                 padding: '18px',
               }}
             >
-              <div style={{ color: '#fff', fontWeight: 900, marginBottom: 12 }}>Network pulse</div>
+              <div style={{ color: D.text, fontWeight: 900, marginBottom: 12 }}>Network pulse</div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
                   `${matches.length} rides can absorb package returns into Amman.`,
@@ -876,10 +875,10 @@ export function ReturnMatching() {
                     key={line}
                     style={{
                       background: D.card2,
-                      borderRadius: 14,
+                      borderRadius: R.lg,
                       border: `1px solid ${D.border}`,
                       padding: '12px 14px',
-                      color: '#fff',
+                      color: D.text,
                       fontSize: '0.78rem',
                       lineHeight: 1.55,
                     }}
@@ -894,20 +893,20 @@ export function ReturnMatching() {
               style={{
                 background: D.card,
                 border: `1px solid ${D.border}`,
-                borderRadius: 20,
+                borderRadius: R.xl,
                 padding: '18px',
               }}
             >
-              <div style={{ color: '#fff', fontWeight: 900, marginBottom: 12 }}>Actions</div>
+              <div style={{ color: D.text, fontWeight: 900, marginBottom: 12 }}>Actions</div>
               <div style={{ display: 'grid', gap: 10 }}>
                 <button
                   onClick={() => nav('/app/packages')}
                   style={{
                     height: 42,
-                    borderRadius: 12,
+                    borderRadius: R.md,
                     border: 'none',
-                    background: `linear-gradient(135deg,${D.gold},#E89200)`,
-                    color: '#040C18',
+                    background: `linear-gradient(135deg,${D.gold},${C.orange})`,
+                    color: C.bgDeep,
                     fontWeight: 900,
                     cursor: 'pointer',
                   }}
@@ -918,10 +917,10 @@ export function ReturnMatching() {
                   onClick={() => nav('/app/find-ride')}
                   style={{
                     height: 42,
-                    borderRadius: 12,
+                    borderRadius: R.md,
                     border: `1px solid ${D.border}`,
                     background: D.card2,
-                    color: '#fff',
+                    color: D.text,
                     fontWeight: 800,
                     cursor: 'pointer',
                   }}
