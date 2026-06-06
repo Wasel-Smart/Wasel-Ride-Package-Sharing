@@ -550,9 +550,7 @@ export default function OperationsOverviewPage() {
                   <div style={{ color: GOLD, fontWeight: 800, fontSize: '0.82rem', marginTop: 12 }}>
                     Backhaul attach rate: {serviceSnapshot.packageBackhaulPercent}%
                   </div>
-                  <div
-                    style={{ color: C.textMuted, fontSize: '0.75rem', marginTop: 6 }}
-                  >
+                  <div style={{ color: C.textMuted, fontSize: '0.75rem', marginTop: 6 }}>
                     Invoice cadence: {serviceSnapshot.invoiceCadence}
                   </div>
                 </div>
@@ -944,9 +942,7 @@ export default function OperationsOverviewPage() {
                             padding: '10px 11px',
                           }}
                         >
-                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>
-                            Wasel
-                          </div>
+                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>Wasel</div>
                           <div
                             style={{
                               color: C.text,
@@ -966,9 +962,7 @@ export default function OperationsOverviewPage() {
                             padding: '10px 11px',
                           }}
                         >
-                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>
-                            Benchmark
-                          </div>
+                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>Benchmark</div>
                           <div
                             style={{
                               color: C.text,
@@ -988,9 +982,7 @@ export default function OperationsOverviewPage() {
                             padding: '10px 11px',
                           }}
                         >
-                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>
-                            Ownership
-                          </div>
+                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>Ownership</div>
                           <div
                             style={{
                               color: C.text,
@@ -1010,9 +1002,7 @@ export default function OperationsOverviewPage() {
                             padding: '10px 11px',
                           }}
                         >
-                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>
-                            Mode
-                          </div>
+                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>Mode</div>
                           <div
                             style={{
                               color: row.proofMode === 'live-production' ? GREEN : GOLD,
