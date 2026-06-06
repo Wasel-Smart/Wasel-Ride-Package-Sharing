@@ -96,7 +96,7 @@ describe('communication runtime helpers', () => {
     expect(String(request.init.body)).toContain('StatusCallback=');
   });
 
-  it('prefers twilio account auth when both account and api key credentials are configured', () => {
+  it('prefers twilio api key auth when both account and api key credentials are configured', () => {
     const request = buildTwilioRequest(
       {
         delivery_id: 'd3',
@@ -118,7 +118,7 @@ describe('communication runtime helpers', () => {
     );
 
     expect(request.url).toContain('/Accounts/AC123/Messages.json');
-    expect(request.init.headers.Authorization).toBe(`Basic ${btoa('AC123:account-secret')}`);
+    expect(request.init.headers.Authorization).toBe(`Basic ${btoa('SK123:api-key-secret')}`);
     expect(String(request.init.body)).toContain('MessagingServiceSid=MG123');
   });
 

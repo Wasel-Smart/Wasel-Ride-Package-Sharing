@@ -41,6 +41,7 @@ const SUPABASE_DB_URL = Deno.env.get('SUPABASE_DB_URL') ?? '';
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? '';
 const STRIPE_API_VERSION = Deno.env.get('STRIPE_API_VERSION') ?? '2026-02-25.clover';
+const TWILIO_VERIFY_SERVICE_SID = Deno.env.get('TWILIO_VERIFY_SERVICE_SID') ?? '';
 const APP_BASE_URL = (Deno.env.get('APP_BASE_URL') ?? 'https://wasel14.online').replace(/\/$/, '');
 const CLIQ_CHECKOUT_URL_TEMPLATE = Deno.env.get('CLIQ_CHECKOUT_URL_TEMPLATE') ?? '';
 const STRIPE_WASEL_PLUS_PRICE_ID = Deno.env.get('STRIPE_WASEL_PLUS_PRICE_ID') ?? '';
@@ -1148,6 +1149,100 @@ function isPhoneNumberUniqueViolation(error: unknown): boolean {
 function generateOtpCode(): string {
   const random = crypto.getRandomValues(new Uint32Array(1))[0] % 900000;
   return String(random + 100000).padStart(6, '0');
+}
+
+function getTwilioAuthPair(): { user: string; password: string } | null {
+  if (!deliveryEnv.twilioAccountSid) {
+    return null;
+  }
+
+  if (deliveryEnv.twilioApiKeySid && deliveryEnv.twilioApiKeySecret) {
+    return {
+      user: deliveryEnv.twilioApiKeySid,
+      password: deliveryEnv.twilioApiKeySecret,
+    };
+  }
+
+  if (deliveryEnv.twilioAuthToken) {
+    return {
+      user: deliveryEnv.twilioAccountSid,
+      password: deliveryEnv.twilioAuthToken,
+    };
+  }
+
+  return null;
+}
+
+function hasTwilioVerifyRuntime(): boolean {
+  return Boolean(deliveryEnv.twilioAccountSid && TWILIO_VERIFY_SERVICE_SID && getTwilioAuthPair());
+}
+
+async function callTwilioVerify(path: string, params: URLSearchParams) {
+  const authPair = getTwilioAuthPair();
+  if (!authPair || !deliveryEnv.twilioAccountSid || !TWILIO_VERIFY_SERVICE_SID) {
+    return {
+      ok: false,
+      retryable: false,
+      error: 'Twilio Verify is not configured.',
+    };
+  }
+
+  const response = await fetch(
+    `https://verify.twilio.com/v2/Services/${TWILIO_VERIFY_SERVICE_SID}${path}`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${btoa(`${authPair.user}:${authPair.password}`)}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    },
+  );
+  const payload = await response.json().catch(() => ({}));
+
+  return {
+    ok: response.ok,
+    retryable: response.status >= 400 && response.status < 500,
+    payload,
+    error:
+      typeof payload?.message === 'string'
+        ? payload.message
+        : `Twilio Verify request failed (${response.status}).`,
+  };
+}
+
+async function startTwilioPhoneVerification(phoneNumber: string) {
+  const result = await callTwilioVerify(
+    '/Verifications',
+    new URLSearchParams({
+      To: phoneNumber,
+      Channel: 'sms',
+      Locale: 'en',
+    }),
+  );
+
+  return {
+    ok: result.ok,
+    retryable: result.retryable,
+    error: result.ok ? undefined : result.error,
+  };
+}
+
+async function checkTwilioPhoneVerification(phoneNumber: string, code: string) {
+  const result = await callTwilioVerify(
+    '/VerificationCheck',
+    new URLSearchParams({
+      To: phoneNumber,
+      Code: code,
+    }),
+  );
+  const status = typeof result.payload?.status === 'string' ? result.payload.status : '';
+
+  return {
+    ok: result.ok && status === 'approved',
+    retryable: result.retryable,
+    error: result.ok ? 'That verification code is incorrect.' : result.error,
+  };
 }
 
 async function hashOtpCode(code: string): Promise<string> {
@@ -2694,9 +2789,11 @@ async function handleHealth(request: Request) {
       sendgridConfigured: Boolean(deliveryEnv.sendgridApiKey && deliveryEnv.sendgridFromEmail),
       twilioConfigured: Boolean(
         deliveryEnv.twilioAccountSid &&
-        deliveryEnv.twilioAuthToken &&
+        (deliveryEnv.twilioAuthToken ||
+          (deliveryEnv.twilioApiKeySid && deliveryEnv.twilioApiKeySecret)) &&
         (deliveryEnv.twilioMessagingServiceSid || deliveryEnv.twilioSmsFrom || deliveryEnv.twilioWhatsappFrom),
       ),
+      twilioVerifyConfigured: hasTwilioVerifyRuntime(),
       workerSecretConfigured: Boolean(getWorkerSecret()),
       webhookTokenConfigured: Boolean(deliveryEnv.communicationWebhookToken),
     },
@@ -2895,8 +2992,9 @@ async function handleStartPhoneVerification(request: Request) {
   const expiresAt = new Date(
     Date.now() + PHONE_VERIFICATION_TTL_MINUTES * 60 * 1000,
   ).toISOString();
-  const code = generateOtpCode();
-  const otpHash = await hashOtpCode(code);
+  const useTwilioVerify = hasTwilioVerifyRuntime();
+  const code = useTwilioVerify ? null : generateOtpCode();
+  const otpHash = useTwilioVerify ? `twilio-verify:${TWILIO_VERIFY_SERVICE_SID}` : await hashOtpCode(code ?? '');
 
   const { error: invalidateError } = await auth.admin
     .from('otp_sessions')
@@ -2938,6 +3036,31 @@ async function handleStartPhoneVerification(request: Request) {
     .single();
   if (otpError) {
     return json({ error: otpError.message }, 500);
+  }
+
+  if (useTwilioVerify) {
+    const verifyResult = await startTwilioPhoneVerification(phoneNumber);
+    if (!verifyResult.ok) {
+      await auth.admin.from('otp_sessions').delete().eq('otp_session_id', otpSession.otp_session_id);
+      return json(
+        {
+          error:
+            verifyResult.error ??
+            'Phone verification could not be delivered. Check Twilio Verify configuration.',
+        },
+        502,
+      );
+    }
+
+    return json(
+      {
+        started: true,
+        phoneNumber,
+        expiresAt,
+        provider: 'twilio_verify',
+      },
+      202,
+    );
   }
 
   const message = `Your Wasel verification code is ${code}. It expires in ${PHONE_VERIFICATION_TTL_MINUTES} minutes.`;
@@ -2992,6 +3115,7 @@ async function handleStartPhoneVerification(request: Request) {
       started: true,
       phoneNumber,
       expiresAt,
+      provider: 'twilio_sms',
     },
     202,
   );
@@ -3034,8 +3158,24 @@ async function handleConfirmPhoneVerification(request: Request) {
   }
 
   const nextAttempts = attempts + 1;
-  const hashedCode = await hashOtpCode(code);
-  if (hashedCode !== otpSession.otp_hash) {
+  const usesTwilioVerify = String(otpSession.otp_hash ?? '').startsWith('twilio-verify:');
+  let isCodeValid = false;
+  let verificationError = 'That verification code is incorrect.';
+  let verificationErrorStatus = 400;
+
+  if (usesTwilioVerify) {
+    const verifyResult = await checkTwilioPhoneVerification(otpSession.phone_number, code);
+    isCodeValid = verifyResult.ok;
+    if (!verifyResult.ok) {
+      verificationError = verifyResult.error;
+      verificationErrorStatus = verifyResult.retryable ? 400 : 502;
+    }
+  } else {
+    const hashedCode = await hashOtpCode(code);
+    isCodeValid = hashedCode === otpSession.otp_hash;
+  }
+
+  if (!isCodeValid) {
     const { error: attemptError } = await auth.admin
       .from('otp_sessions')
       .update({ attempts: nextAttempts })
@@ -3049,9 +3189,9 @@ async function handleConfirmPhoneVerification(request: Request) {
         error:
           nextAttempts >= maxAttempts
             ? 'Too many incorrect attempts. Send a new code.'
-            : 'That verification code is incorrect.',
+            : verificationError,
       },
-      400,
+      verificationErrorStatus,
     );
   }
 
@@ -3563,10 +3703,11 @@ async function handleProviderDiagnostics(request: Request) {
       configured: Boolean(deliveryEnv.sendgridApiKey && deliveryEnv.sendgridFromEmail),
     },
     twilio: {
-      configured: Boolean(deliveryEnv.twilioAccountSid && deliveryEnv.twilioAuthToken),
+      configured: Boolean(deliveryEnv.twilioAccountSid && getTwilioAuthPair()),
       messagingServiceConfigured: Boolean(deliveryEnv.twilioMessagingServiceSid),
       smsFromConfigured: Boolean(deliveryEnv.twilioSmsFrom),
       whatsappFromConfigured: Boolean(deliveryEnv.twilioWhatsappFrom),
+      verifyConfigured: hasTwilioVerifyRuntime(),
     },
   };
 

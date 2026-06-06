@@ -3,7 +3,7 @@
  * React Native implementation with Supabase Auth
  */
 
-import { createClient, SupabaseClient, Session, User } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, Session, User, type AuthError } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import 'react-native-url-polyfill/auto';
 
@@ -76,47 +76,71 @@ export class MobileAuthService {
     return this.currentState;
   }
 
-  async signInWithEmail(email: string, password: string): Promise<{ error?: Error }> {
+  async getSession(): Promise<Session | null> {
+    return this.currentState.session;
+  }
+
+  async signIn(email: string, password: string): Promise<Session> {
+    const { data, error } = await this.supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data.session) {
+      throw new Error('Sign in did not return a session.');
+    }
+
+    return data.session;
+  }
+
+  async signInWithEmail(email: string, password: string): Promise<{ error?: AuthError }> {
     const { error } = await this.supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    return { error: error || undefined };
+    return error ? { error } : {};
   }
 
   async signUpWithEmail(
     email: string,
     password: string,
     metadata?: Record<string, any>,
-  ): Promise<{ error?: Error }> {
+  ): Promise<{ error?: AuthError }> {
+    const options: { data?: object } = {};
+    if (metadata) {
+      options.data = metadata;
+    }
+
     const { error } = await this.supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: metadata,
-      },
+      options,
     });
 
-    return { error: error || undefined };
+    return error ? { error } : {};
   }
 
-  async signInWithPhone(phone: string): Promise<{ error?: Error }> {
+  async signInWithPhone(phone: string): Promise<{ error?: AuthError }> {
     const { error } = await this.supabase.auth.signInWithOtp({
       phone,
     });
 
-    return { error: error || undefined };
+    return error ? { error } : {};
   }
 
-  async verifyOtp(phone: string, token: string): Promise<{ error?: Error }> {
+  async verifyOtp(phone: string, token: string): Promise<{ error?: AuthError }> {
     const { error } = await this.supabase.auth.verifyOtp({
       phone,
       token,
       type: 'sms',
     });
 
-    return { error: error || undefined };
+    return error ? { error } : {};
   }
 
   async signOut(): Promise<void> {
@@ -142,3 +166,4 @@ export class MobileAuthService {
 }
 
 export const mobileAuth = new MobileAuthService();
+export const authService = mobileAuth;

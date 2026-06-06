@@ -181,7 +181,7 @@ jobs:
       - name: Run smoke tests
         run: |
           sleep 30
-          curl -f https://staging.wasel14.online/ || exit 1
+          curl -f https://staging.wasel14.online/health || exit 1
 
       - name: Create Sentry release
         run: |
@@ -210,7 +210,7 @@ jobs:
 
       - name: Pre-deployment health check
         run: |
-          curl -f https://wasel14.online/ || exit 1
+          curl -f https://wasel14.online/health || exit 1
 
       - name: Deploy to Vercel (Production)
         id: deploy
@@ -230,7 +230,7 @@ jobs:
         id: health-check
         run: |
           for i in {1..5}; do
-            if curl -f https://wasel14.online/; then
+            if curl -f https://wasel14.online/health; then
               echo "Health check passed"
               exit 0
             fi

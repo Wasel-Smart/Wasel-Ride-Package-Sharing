@@ -50,7 +50,7 @@ export const options = {
   },
   ext: {
     loadimpact: {
-      projectID: process.env.K6_PROJECT_ID,
+      projectID: __ENV.K6_PROJECT_ID,
       name: 'Wasel Production Load Test',
     },
   },
@@ -102,6 +102,14 @@ function generatePackageDelivery() {
   };
 }
 
+function parseJsonBody(response) {
+  try {
+    return response.body ? JSON.parse(response.body) : {};
+  } catch {
+    return {};
+  }
+}
+
 export default function () {
   const params = {
     headers: {
@@ -124,7 +132,7 @@ export default function () {
 
       const rideSuccess = check(rideResponse, {
         'ride request status is 200': (r) => r.status === 200,
-        'ride request has trip_id': (r) => JSON.parse(r.body).trip_id !== undefined,
+        'ride request has trip_id': (r) => parseJsonBody(r).trip_id !== undefined,
         'ride request latency < 700ms': () => rideLatency < 700,
       });
 
@@ -135,7 +143,9 @@ export default function () {
       sleep(2);
 
       if (rideResponse.status === 200) {
-        const tripId = JSON.parse(rideResponse.body).trip_id;
+        const tripId = parseJsonBody(rideResponse).trip_id;
+        if (!tripId) return;
+
         const statusResponse = http.get(`${BASE_URL}/api/rides/${tripId}/status`, params);
 
         check(statusResponse, {
@@ -163,7 +173,7 @@ export default function () {
 
       const packageSuccess = check(packageResponse, {
         'package request status is 200': (r) => r.status === 200,
-        'package request has delivery_id': (r) => JSON.parse(r.body).delivery_id !== undefined,
+        'package request has delivery_id': (r) => parseJsonBody(r).delivery_id !== undefined,
         'package request latency < 400ms': () => packageLatency < 400,
       });
 
@@ -189,15 +199,15 @@ export default function () {
         paymentPayload,
         params,
       );
-      const paymentLatency = Date.now() - paymentStart;
+      const paymentDuration = Date.now() - paymentStart;
 
-      paymentLatency.add(paymentLatency);
+      paymentLatency.add(paymentDuration);
       apiCallCounter.add(1);
 
       const paymentSuccess = check(paymentResponse, {
         'payment authorization status is 200': (r) => r.status === 200,
-        'payment has transaction_id': (r) => JSON.parse(r.body).transaction_id !== undefined,
-        'payment latency < 350ms': () => paymentLatency < 350,
+        'payment has transaction_id': (r) => parseJsonBody(r).transaction_id !== undefined,
+        'payment latency < 350ms': () => paymentDuration < 350,
       });
 
       if (!paymentSuccess) errorRate.add(1);

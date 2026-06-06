@@ -1,0 +1,100 @@
+{
+  "generatedAt": "2026-06-06T14:28:25.420Z",
+  "targetUrl": "https://wasel14.online/health",
+  "totalRequests": 60,
+  "concurrency": 6,
+  "passed": false,
+  "errorRate": 100,
+  "latencyMs": {
+    "p50": 83.23,
+    "p95": 412.41,
+    "p99": 721.57,
+    "max": 721.57
+  },
+  "statusCounts": {
+    "200": 60
+  },
+  "traceIdsObserved": 0,
+  "failures": [
+    {
+      "ok": false,
+      "status": 200,
+      "durationMs": 409.38059999999996,
+      "contentType": "text/html; charset=utf-8",
+      "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
+      "validation": "fail"
+    },
+    {
+      "ok": false,
+      "status": 200,
+      "durationMs": 415.4787,
+      "contentType": "text/html; charset=utf-8",
+      "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
+      "validation": "fail"
+    },
+    {
+      "ok": false,
+      "status": 200,
+      "durationMs": 412.4124,
+      "contentType": "text/html; charset=utf-8",
+      "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
+      "validation": "fail"
+    },
+    {
+      "ok": false,
+      "status": 200,
+      "durationMs": 408.321,
+      "contentType": "text/html; charset=utf-8",
+      "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
+      "validation": "fail"
+    },
+    {
+      "ok": false,
+      "status": 200,
+      "durationMs": 721.5717,
+      "contentType": "text/html; charset=utf-8",
+      "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
+      "validation": "fail"
+    },
+    {
+      "ok": false,
+      "status": 200,
+      "durationMs": 414.7333,
+      "contentType": "text/html; charset=utf-8",
+      "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
+      "validation": "fail"
+    },
+    {
+      "ok": false,
+      "status": 200,
+      "durationMs": 81.37360000000001,
+      "contentType": "text/html; charset=utf-8",
+      "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
+      "validation": "fail"
+    },
+    {
+      "ok": false,
+      "status": 200,
+      "durationMs": 82.53320000000008,
+      "contentType": "text/html; charset=utf-8",
+      "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
+      "validation": "fail"
+    },
+    {
+      "ok": false,
+      "status": 200,
+      "durationMs": 87.90240000000006,
+      "contentType": "text/html; charset=utf-8",
+      "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
+      "validation": "fail"
+    },
+    {
+      "ok": false,
+      "status": 200,
+      "durationMs": 92.53269999999998,
+      "contentType": "text/html; charset=utf-8",
+      "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
+      "validation": "fail"
+    }
+  ]
+}
