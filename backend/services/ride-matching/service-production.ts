@@ -4,7 +4,6 @@
  */
 
 import postgres from 'postgres';
-import Redis from 'ioredis';
 import { fileURLToPath } from 'node:url';
 import type { DomainEventEnvelope } from '../../../src/domain/events';
 import { eventBroker } from '../../../src/platform/event-broker-redis-production';
@@ -14,12 +13,6 @@ const sql = postgres(process.env.DATABASE_URL || '', {
   max: 10,
   idle_timeout: 20,
   connect_timeout: 10,
-});
-
-const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
 });
 
 interface RideRequest {
@@ -105,44 +98,7 @@ class MatchingEngine {
       }));
     } catch (error) {
       console.error('[MatchingEngine] PostGIS query error:', error);
-      
-      // Fallback to Redis GEO
-      try {
-        const driverIds = (await redis.georadius(
-          'drivers:locations',
-          origin.lng,
-          origin.lat,
-          radiusKm,
-          'km',
-          'WITHDIST',
-          'ASC',
-          'COUNT',
-          20
-        )) as Array<[string, string]>;
-
-        const drivers: Driver[] = [];
-        for (const [driverId, distance] of driverIds) {
-          const driverData = await redis.hgetall(`driver:${driverId}`);
-          if (driverData.status === 'available' && Number(driverData.availableSeats) >= seats) {
-            drivers.push({
-              driverId: String(driverId),
-              vehicleId: driverData.vehicleId,
-              location: { 
-                lat: Number(driverData.lat), 
-                lng: Number(driverData.lng) 
-              },
-              availableSeats: Number(driverData.availableSeats),
-              rating: Number(driverData.rating) || 4.5,
-              status: 'available',
-            });
-          }
-        }
-
-        return drivers;
-      } catch (redisError) {
-        console.error('[MatchingEngine] Redis GEO fallback failed:', redisError);
-        return [];
-      }
+      throw error;
     }
   }
 
@@ -264,7 +220,6 @@ export class RideMatchingService {
       await this.healthServer.close();
     }
     await sql.end();
-    redis.disconnect();
     console.log('[RideMatchingService] Service stopped');
   }
 
@@ -316,7 +271,6 @@ export class RideMatchingService {
   async healthCheck(): Promise<boolean> {
     try {
       await sql`SELECT 1`;
-      await redis.ping();
       return true;
     } catch {
       return false;
