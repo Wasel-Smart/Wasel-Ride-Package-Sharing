@@ -1,4 +1,4 @@
-import { API_URL, createEdgeHeaders, fetchWithRetry, getAuthDetails } from './core';
+import { API_URL, fetchWithRetry, getAuthDetails } from './core';
 
 export interface RatingSubmission {
   bookingId: string;
@@ -21,52 +21,59 @@ export interface DriverRating {
 }
 
 class RatingsService {
-  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const auth = await getAuthDetails();
-    const response = await fetchWithRetry(`${API_URL}${path}`, {
-      ...options,
-      headers: createEdgeHeaders(
-        {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        auth.token,
-      ),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Ratings request failed: ${response.status}`);
-    }
-
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    return response.json() as Promise<T>;
-  }
-
   async submitRating(submission: RatingSubmission): Promise<void> {
     if (submission.rating < 1 || submission.rating > 5) {
       throw new Error('Rating must be between 1 and 5');
     }
 
-    await this.request<void>('/ratings', {
+    const { token } = await getAuthDetails();
+    const response = await fetchWithRetry(`${API_URL}/ratings`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(submission),
+      timeout: 10_000,
     });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(String(body.error ?? 'Failed to submit rating'));
+    }
   }
 
   async getDriverRating(driverId: string): Promise<DriverRating> {
-    return this.request<DriverRating>(`/drivers/${encodeURIComponent(driverId)}/rating`);
+    const { token } = await getAuthDetails();
+    const response = await fetchWithRetry(`${API_URL}/ratings/drivers/${encodeURIComponent(driverId)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      timeout: 10_000,
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(String(body.error ?? 'Failed to load driver rating'));
+    }
+
+    return response.json() as Promise<DriverRating>;
   }
 
   async canRateBooking(bookingId: string): Promise<{
     canRate: boolean;
     reason?: string;
   }> {
-    return this.request<{ canRate: boolean; reason?: string }>(
-      `/bookings/${encodeURIComponent(bookingId)}/rating-eligibility`,
-    );
+    const { token } = await getAuthDetails();
+    const response = await fetchWithRetry(`${API_URL}/ratings/bookings/${encodeURIComponent(bookingId)}/eligibility`, {
+      headers: { Authorization: `Bearer ${token}` },
+      timeout: 10_000,
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      return { canRate: false, reason: String(body.error ?? 'Unable to verify rating eligibility') };
+    }
+
+    return response.json() as Promise<{ canRate: boolean; reason?: string }>;
   }
 }
 
