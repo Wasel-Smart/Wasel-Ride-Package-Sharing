@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { Wallet } from 'lucide-react';
+import { GRAD, R, SH } from '../../../utils/wasel-ds';
 import { C, SectionHeader, Skeleton, SOSButton, TrustScoreCard } from '../HomePageShared';
 
 interface SignedInUtilitySectionProps {
@@ -35,11 +36,11 @@ export function SignedInUtilitySection({
         <div style={{ display: 'grid', gap: 14 }}>
           <div
             style={{
-              borderRadius: 24,
+              borderRadius: R.xxl,
               padding: '20px 20px 18px',
-              background: 'linear-gradient(135deg, rgba(88,221,255,0.08), rgba(71,214,158,0.05))',
-              border: '1px solid rgba(88,221,255,0.16)',
-              boxShadow: '0 14px 32px rgba(0,0,0,0.16)',
+              background: C.cyanDim,
+              border: `1px solid ${C.borderHov}`,
+              boxShadow: SH.card,
             }}
           >
             <div
@@ -84,9 +85,9 @@ export function SignedInUtilitySection({
 
           <div
             style={{
-              borderRadius: 24,
+              borderRadius: R.xxl,
               padding: '20px 20px 18px',
-              background: 'rgba(255,255,255,0.03)',
+              background: C.elevated,
               border: `1px solid ${C.border}`,
             }}
           >
@@ -124,12 +125,12 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
     <motion.section initial={false} style={{ marginTop: 40, marginBottom: 24 }}>
       <div
         style={{
-          borderRadius: 28,
+          borderRadius: R['3xl'],
           padding: '30px 26px',
           textAlign: 'center',
-          background: 'linear-gradient(135deg, rgba(88,221,255,0.09), rgba(71,214,158,0.05))',
-          border: '1px solid rgba(88,221,255,0.18)',
-          boxShadow: '0 20px 42px rgba(0,0,0,0.2)',
+          background: C.card,
+          border: `1px solid ${C.borderHov}`,
+          boxShadow: SH.lg,
         }}
       >
         <div
@@ -181,13 +182,13 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
             style={{
               height: 50,
               padding: '0 22px',
-              borderRadius: 14,
+              borderRadius: R.lg,
               border: 'none',
-              background: 'linear-gradient(135deg, #58DDFF 0%, #25B6FF 55%, #47D69E 100%)',
-              color: '#041018',
+              background: GRAD,
+              color: C.bgDeep,
               fontWeight: 900,
               cursor: 'pointer',
-              boxShadow: '0 14px 30px rgba(37,182,255,0.22)',
+              boxShadow: SH.cyanL,
             }}
           >
             {ar ? 'ابدأ الآن' : 'Get started'}
@@ -198,9 +199,9 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
             style={{
               height: 50,
               padding: '0 22px',
-              borderRadius: 14,
-              border: '1px solid rgba(255,255,255,0.12)',
-              background: 'rgba(255,255,255,0.03)',
+              borderRadius: R.lg,
+              border: `1px solid ${C.border}`,
+              background: C.elevated,
               color: C.text,
               fontWeight: 800,
               cursor: 'pointer',
