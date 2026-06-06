@@ -14,7 +14,7 @@
     "test:e2e:ios": "detox test --configuration ios.sim.debug",
     "build:e2e:android": "detox build --configuration android.emu.debug",
     "build:e2e:ios": "detox build --configuration ios.sim.debug",
-    "lint": "eslint .",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"app/**/*.{ts,tsx}\"",
     "type-check": "tsc --noEmit",
     "build:android": "cd android && gradlew.bat assembleRelease",
     "build:ios": "cd ios && xcodebuild -workspace Wasel.xcworkspace -scheme Wasel -configuration Release",

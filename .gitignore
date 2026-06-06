@@ -24,6 +24,7 @@ coverage/
 test-results/
 playwright-report/
 .playwright/e2e-build.json
+mobile/.jest-localstorage
 
 # Logs
 *.log
