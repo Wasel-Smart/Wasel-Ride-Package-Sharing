@@ -13,11 +13,11 @@ export function OfflineBanner() {
 
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
-      toValue: isOnline ? 0 : 1,
+      toValue: !isOnline || queueSize > 0 ? 1 : 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, [isOnline]);
+  }, [fadeAnim, isOnline, queueSize]);
 
   if (isOnline && queueSize === 0) {
     return null;
@@ -35,7 +35,7 @@ export function OfflineBanner() {
       <View style={styles.content}>
         <View style={styles.textContainer}>
           <Text style={styles.title}>
-            {!isOnline ? '📡 Offline Mode' : '🔄 Syncing'}
+            {!isOnline ? 'Offline mode' : 'Queued updates'}
           </Text>
           <Text style={styles.subtitle}>
             {!isOnline
