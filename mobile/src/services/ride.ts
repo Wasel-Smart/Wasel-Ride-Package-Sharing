@@ -3,11 +3,7 @@
  * Manages ride requests, matching, and completion flow
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { mobileAuth } from './auth';
-
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export type RideStatus =
   | 'requested'
@@ -72,36 +68,49 @@ export interface Driver {
 }
 
 export class RideLifecycleService {
-  private supabase: SupabaseClient;
   private activeRide: Ride | null = null;
   private listeners = new Set<(ride: Ride | null) => void>();
 
-  constructor() {
-    this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-    this.initializeRealtimeSubscription();
+  constructor() {}
+
+  private getApiUrl(path: string): string {
+    const baseUrl = process.env.EXPO_PUBLIC_API_URL;
+    if (!baseUrl) {
+      throw new Error('Mobile API URL is not configured');
+    }
+    return `${baseUrl.replace(/\/$/, '')}${path}`;
   }
 
-  private initializeRealtimeSubscription(): void {
-    const user = mobileAuth.getUser();
-    if (!user) return;
+  private getAuthHeaders(): HeadersInit {
+    const token = mobileAuth.getAccessToken();
+    if (!token) {
+      throw new Error('User not authenticated');
+    }
 
-    // Subscribe to rides table for real-time updates
-    this.supabase
-      .channel('ride-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'rides',
-          filter: `rider_id=eq.${user.id}`,
-        },
-        payload => {
-          const ride = this.mapDatabaseRide(payload.new as any);
-          this.setActiveRide(ride);
-        },
-      )
-      .subscribe();
+    return {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    };
+  }
+
+  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
+    const response = await fetch(this.getApiUrl(path), {
+      ...options,
+      headers: {
+        ...this.getAuthHeaders(),
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Mobile ride API request failed: ${response.status}`);
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
+    return response.json() as Promise<T>;
   }
 
   async requestRide(request: RideRequest): Promise<{ ride?: Ride; error?: Error }> {
@@ -112,12 +121,9 @@ export class RideLifecycleService {
 
     try {
       // Call backend API
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/v1/rides`, {
+      const response = await fetch(this.getApiUrl('/v1/rides'), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${mobileAuth.getAccessToken()}`,
-        },
+        headers: this.getAuthHeaders(),
         body: JSON.stringify({
           rider_id: user.id,
           origin_lat: request.origin.latitude,
@@ -150,13 +156,10 @@ export class RideLifecycleService {
   async cancelRide(rideId: string, reason?: string): Promise<{ error?: Error }> {
     try {
       const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/v1/rides/${rideId}/cancel`,
+        this.getApiUrl(`/v1/rides/${encodeURIComponent(rideId)}/cancel`),
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${mobileAuth.getAccessToken()}`,
-          },
+          headers: this.getAuthHeaders(),
           body: JSON.stringify({ reason }),
         },
       );
@@ -174,14 +177,10 @@ export class RideLifecycleService {
 
   async rateRide(rideId: string, rating: number, feedback?: string): Promise<{ error?: Error }> {
     try {
-      const { error } = await this.supabase.from('ride_ratings').insert({
-        ride_id: rideId,
-        rating,
-        feedback,
-        rated_at: new Date().toISOString(),
+      await this.request<void>(`/v1/rides/${encodeURIComponent(rideId)}/rating`, {
+        method: 'POST',
+        body: JSON.stringify({ rating, feedback }),
       });
-
-      if (error) throw error;
       return {};
     } catch (error) {
       return { error: error as Error };
@@ -195,18 +194,10 @@ export class RideLifecycleService {
     if (!user) return null;
 
     try {
-      const { data, error } = await this.supabase
-        .from('rides')
-        .select('*')
-        .eq('rider_id', user.id)
-        .in('status', ['requested', 'matched', 'accepted', 'in_progress'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      const data = await this.request<{ ride: unknown | null }>('/v1/rides/active');
+      if (!data.ride) return null;
 
-      if (error || !data) return null;
-
-      const ride = this.mapDatabaseRide(data);
+      const ride = this.mapDatabaseRide(data.ride);
       this.setActiveRide(ride);
       return ride;
     } catch (error) {
@@ -217,23 +208,10 @@ export class RideLifecycleService {
 
   async getDriverInfo(driverId: string): Promise<Driver | null> {
     try {
-      const { data, error } = await this.supabase
-        .from('profiles')
-        .select('id, full_name, phone, rating, total_rides')
-        .eq('id', driverId)
-        .single();
-
-      if (error || !data) return null;
-
-      return {
-        id: data.id,
-        name: data.full_name,
-        phone: data.phone,
-        rating: data.rating || 4.5,
-        totalRides: data.total_rides || 0,
-        vehicleModel: 'Toyota Camry', // TODO: Join with vehicles table
-        vehiclePlate: 'ABC-1234',
-      };
+      const data = await this.request<{ driver: Driver | null }>(
+        `/v1/drivers/${encodeURIComponent(driverId)}`,
+      );
+      return data.driver;
     } catch (error) {
       console.error('[RideLifecycle] Error fetching driver info:', error);
       return null;
@@ -245,17 +223,10 @@ export class RideLifecycleService {
     if (!user) return [];
 
     try {
-      const { data, error } = await this.supabase
-        .from('rides')
-        .select('*')
-        .eq('rider_id', user.id)
-        .in('status', ['completed', 'cancelled'])
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-      if (error || !data) return [];
-
-      return data.map(ride => this.mapDatabaseRide(ride));
+      const data = await this.request<{ rides: unknown[] }>(
+        `/v1/rides/history?limit=${encodeURIComponent(String(limit))}`,
+      );
+      return data.rides.map(ride => this.mapDatabaseRide(ride));
     } catch (error) {
       console.error('[RideLifecycle] Error fetching ride history:', error);
       return [];
