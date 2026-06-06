@@ -556,24 +556,12 @@ export function FindRidePage() {
                 </div>
               </div>
 
-              <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
+              <WaselButton
                 onClick={handleSearch}
                 data-testid="find-ride-search"
+                fullWidth
+                size="lg"
                 style={{
-                  width: '100%',
-                  height: 52,
-                  borderRadius: r(14),
-                  border: 'none',
-                  background: DS.gradC,
-                  color: C.bgDeep,
-                  fontWeight: 800,
-                  fontSize: '1rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
                   gap: 10,
                 }}
               >
@@ -593,7 +581,7 @@ export function FindRidePage() {
                   <Search size={18} />
                 )}
                 {loading ? t.searching : 'Search rides'}
-              </motion.button>
+              </WaselButton>
 
               <div
                 style={{
