@@ -1,0 +1,39 @@
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+platform :ios, '13.4'
+install! 'cocoapods', :deterministic_uuids => false
+
+target 'Wasel' do
+  config = use_native_modules!
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    :hermes_enabled => true,
+    :fabric_enabled => false,
+    :app_clip_enabled => false
+  )
+
+  # Google Maps
+  pod 'GoogleMaps', '8.3.0'
+  pod 'Google-Maps-iOS-Utils', '4.2.2'
+  
+  # Firebase
+  pod 'Firebase/Messaging', '~> 10.20.0'
+  
+  # React Native Community
+  pod 'react-native-maps', :path => '../node_modules/react-native-maps'
+  pod 'react-native-geolocation', :path => '../node_modules/react-native-geolocation-service'
+
+  target 'WaselTests' do
+    inherit! :complete
+  end
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false
+    )
+  end
+end

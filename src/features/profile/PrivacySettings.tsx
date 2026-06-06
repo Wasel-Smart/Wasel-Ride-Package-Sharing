@@ -3,6 +3,8 @@
  * GDPR compliance controls
  */
 
+import { DataExportButton } from '@/components/gdpr/DataExportButton';
+import { AccountDeletionDialog } from '@/components/gdpr/AccountDeletionDialog';
 import { C, R } from '../../utils/wasel-ds';
 
 export function PrivacySettings() {
