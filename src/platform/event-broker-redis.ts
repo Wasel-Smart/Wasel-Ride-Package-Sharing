@@ -185,6 +185,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
   ): Promise<void> {
     const subKey = `${streamKey}:${config.groupName}:${config.consumerName}`;
     void handler;
+    void this.deserializeEvent.bind(this);
 
     while (this.subscriptions.get(subKey)) {
       try {
