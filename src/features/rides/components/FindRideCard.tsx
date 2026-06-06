@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { Brain, CheckCircle2, Clock, Package, Star, Users } from 'lucide-react';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
+import { C } from '../../../utils/wasel-ds';
 import { getCorridorOpportunity } from '../../../config/wasel-movement-network';
 import { getMovementPriceQuote } from '../../../services/movementPricing';
 import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
@@ -40,7 +41,7 @@ export function FindRideCard({
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.06, type: 'spring', stiffness: 380, damping: 28 }}
-      whileHover={{ y: -3, boxShadow: '0 12px 40px rgba(0,200,232,0.12)' }}
+      whileHover={{ y: -3, boxShadow: `0 12px 40px ${C.cyanDim}` }}
       onClick={onOpen}
       style={{
         background: DS.card,
@@ -79,7 +80,7 @@ export function FindRideCard({
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 900,
-                  color: '#fff',
+                  color: C.text,
                   fontSize: '0.95rem',
                 }}
               >
@@ -101,13 +102,13 @@ export function FindRideCard({
                     justifyContent: 'center',
                   }}
                 >
-                  <CheckCircle2 size={9} color="#fff" />
+                    <CheckCircle2 size={9} color={C.text} />
                 </div>
               )}
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontWeight: 800, color: '#fff', fontSize: '0.92rem' }}>
+                <span style={{ fontWeight: 800, color: C.text, fontSize: '0.92rem' }}>
                   {ride.driver.name}
                 </span>
                 {ride.driver.verified && (
@@ -115,8 +116,8 @@ export function FindRideCard({
                 )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                <Star size={11} fill="#F59E0B" color="#F59E0B" />
-                <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: '0.75rem' }}>
+                  <Star size={11} fill={C.gold} color={C.gold} />
+                  <span style={{ color: C.gold, fontWeight: 700, fontSize: '0.75rem' }}>
                   {ride.driver.rating}
                 </span>
                 <span style={{ color: DS.muted, fontSize: '0.72rem' }}>
@@ -142,7 +143,7 @@ export function FindRideCard({
 
         <div
           style={{
-            background: 'rgba(0,0,0,0.25)',
+                  background: C.overlay,
             borderRadius: r(14),
             padding: '14px 18px',
             marginBottom: 14,
@@ -152,7 +153,7 @@ export function FindRideCard({
           }}
         >
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 800, color: '#fff', fontSize: '0.92rem' }}>{ride.from}</div>
+            <div style={{ fontWeight: 800, color: C.text, fontSize: '0.92rem' }}>{ride.from}</div>
             <div style={{ color: DS.muted, fontSize: '0.7rem', marginTop: 1 }}>
               <Clock size={10} style={{ display: 'inline', marginRight: 3 }} />
               {ride.time}
@@ -197,7 +198,7 @@ export function FindRideCard({
             </span>
           </div>
           <div style={{ flex: 1, textAlign: 'right' }}>
-            <div style={{ fontWeight: 800, color: '#fff', fontSize: '0.92rem' }}>{ride.to}</div>
+            <div style={{ fontWeight: 800, color: C.text, fontSize: '0.92rem' }}>{ride.to}</div>
             <div style={{ color: DS.muted, fontSize: '0.7rem', marginTop: 1 }}>
               {ride.distance} km
             </div>
@@ -210,13 +211,13 @@ export function FindRideCard({
               marginBottom: 14,
               borderRadius: r(14),
               padding: '12px 14px',
-              background: 'linear-gradient(135deg, rgba(0,200,232,0.08), rgba(255,255,255,0.03))',
+              background: `linear-gradient(135deg, ${C.cyanDim}, ${C.elevated})`,
               border: `1px solid ${DS.border}`,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <Brain size={14} color={DS.cyan} />
-              <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.8rem' }}>
+              <span style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem' }}>
                 Wasel Brain
               </span>
             </div>
@@ -312,9 +313,9 @@ export function FindRideCard({
                     ? DS.gradGold
                     : DS.gradG
                   : soldOut
-                    ? 'linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))'
+                    ? C.elevated
                     : DS.gradC,
-                color: '#fff',
+                color: C.text,
                 fontWeight: 800,
                 fontSize: '0.82rem',
                 boxShadow: `0 4px 16px ${
@@ -323,7 +324,7 @@ export function FindRideCard({
                       ? DS.gold
                       : DS.green
                     : soldOut
-                      ? 'rgba(255,255,255,0.14)'
+                    ? C.elevated
                       : DS.cyan
                 }30`,
                 cursor: soldOut ? 'not-allowed' : 'pointer',

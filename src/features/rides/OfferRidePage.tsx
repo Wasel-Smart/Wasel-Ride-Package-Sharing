@@ -23,6 +23,7 @@ import { evaluateTrustCapability } from '../../services/trustRules';
 import { recordMovementActivity } from '../../services/movementMembership';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 import { buildDriverRoutePlan, getMarketplaceNodes } from '../../config/wasel-movement-network';
+import { C } from '../../utils/wasel-ds';
 import { OfferRideFormPanel } from './components/OfferRideFormPanel';
 import { OfferRideIncomingRequests } from './components/OfferRideIncomingRequests';
 
@@ -217,11 +218,11 @@ export function OfferRidePage() {
           <div
             style={{
               marginBottom: 18,
-              background: 'rgba(240,168,48,0.10)',
+                  background: C.goldDim,
               border: `1px solid ${DS.gold}35`,
               borderRadius: r(18),
               padding: '16px 18px',
-              color: '#fff',
+              color: C.text,
             }}
           >
             <div style={{ fontWeight: 800, marginBottom: 6 }}>Finish trust setup</div>
@@ -238,7 +239,7 @@ export function OfferRidePage() {
                   borderRadius: '99px',
                   border: 'none',
                   background: DS.gradG,
-                  color: '#fff',
+                  color: C.text,
                   fontWeight: 700,
                   cursor: 'pointer',
                 }}
@@ -253,7 +254,7 @@ export function OfferRidePage() {
                   borderRadius: '99px',
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: '#fff',
+                  color: C.text,
                   fontWeight: 700,
                   cursor: 'pointer',
                 }}
@@ -296,8 +297,8 @@ export function OfferRidePage() {
                   Ride offer is live
                 </h2>
                 <p style={{ color: DS.sub, margin: 0 }}>
-                  <strong style={{ color: '#fff' }}>{form.from}</strong> to{' '}
-                  <strong style={{ color: '#fff' }}>{form.to}</strong> is now open across the
+                  <strong style={{ color: C.text }}>{form.from}</strong> to{' '}
+                  <strong style={{ color: C.text }}>{form.to}</strong> is now open across the
                   movement network.
                 </p>
                 <div
@@ -342,7 +343,7 @@ export function OfferRidePage() {
                         {item.label}
                       </div>
                       <div
-                        style={{ color: '#fff', fontWeight: 800, fontSize: '0.86rem', marginTop: 6 }}
+                        style={{ color: C.text, fontWeight: 800, fontSize: '0.86rem', marginTop: 6 }}
                       >
                         {item.value}
                       </div>
@@ -362,7 +363,7 @@ export function OfferRidePage() {
                     borderRadius: '999px',
                     border: 'none',
                     background: DS.gradC,
-                    color: '#fff',
+                    color: C.text,
                     fontWeight: 800,
                     cursor: 'pointer',
                   }}
@@ -393,7 +394,7 @@ export function OfferRidePage() {
             <div
               style={{
                 background:
-                  'linear-gradient(135deg, rgba(0,200,232,0.12), rgba(8,18,35,0.96) 62%, rgba(240,168,48,0.08))',
+                `linear-gradient(135deg, ${C.cyanDim}, ${C.cardSolid} 62%, ${C.goldDim})`,
                 borderRadius: r(22),
                 padding: '20px',
                 border: `1px solid ${DS.border}`,
@@ -412,7 +413,7 @@ export function OfferRidePage() {
               </div>
               <h2
                 style={{
-                  color: '#fff',
+                  color: C.text,
                   fontWeight: 900,
                   fontSize: '1.5rem',
                   lineHeight: 1.1,
@@ -438,7 +439,7 @@ export function OfferRidePage() {
                   <div
                     key={item.label}
                     style={{
-                      background: 'rgba(5,12,24,0.48)',
+                      background: C.elevated,
                       borderRadius: r(16),
                       border: `1px solid ${DS.border}`,
                       padding: '14px 14px 12px',
@@ -448,7 +449,7 @@ export function OfferRidePage() {
                       {item.value}
                     </div>
                     <div
-                      style={{ color: '#fff', fontWeight: 800, fontSize: '0.74rem', marginTop: 4 }}
+                      style={{ color: C.text, fontWeight: 800, fontSize: '0.74rem', marginTop: 4 }}
                     >
                       {item.label}
                     </div>
@@ -467,7 +468,7 @@ export function OfferRidePage() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <Brain size={18} color={DS.cyan} />
-                <div style={{ color: '#fff', fontWeight: 900 }}>Corridor pulse</div>
+                <div style={{ color: C.text, fontWeight: 900 }}>Corridor pulse</div>
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
@@ -490,7 +491,7 @@ export function OfferRidePage() {
                       border: `1px solid ${DS.border}`,
                       background: DS.card2,
                       padding: '12px 14px',
-                      color: '#fff',
+                      color: C.text,
                       fontSize: '0.78rem',
                       lineHeight: 1.55,
                     }}
@@ -511,7 +512,7 @@ export function OfferRidePage() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <Network size={18} color={DS.green} />
-                <div style={{ color: '#fff', fontWeight: 900 }}>Add-on demand</div>
+                <div style={{ color: C.text, fontWeight: 900 }}>Add-on demand</div>
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {marketplaceNodes.map(node => (
@@ -524,7 +525,7 @@ export function OfferRidePage() {
                       padding: '12px 14px',
                     }}
                   >
-                    <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>
+                    <div style={{ color: C.text, fontWeight: 700, fontSize: '0.8rem' }}>
                       {node.title}
                     </div>
                     <div
@@ -545,7 +546,7 @@ export function OfferRidePage() {
                 border: `1px solid ${DS.border}`,
               }}
             >
-              <div style={{ color: '#fff', fontWeight: 900, marginBottom: 12 }}>Quick actions</div>
+              <div style={{ color: C.text, fontWeight: 900, marginBottom: 12 }}>Quick actions</div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {driverReadiness.steps
                   .filter(step => !step.complete)
@@ -560,7 +561,7 @@ export function OfferRidePage() {
                         padding: '12px 14px',
                       }}
                     >
-                      <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.8rem' }}>
+                      <div style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem' }}>
                         {step.label}
                       </div>
                       <div
@@ -579,7 +580,7 @@ export function OfferRidePage() {
                     borderRadius: '999px',
                     border: 'none',
                     background: DS.gradC,
-                    color: '#fff',
+                    color: C.text,
                     fontWeight: 800,
                     cursor: 'pointer',
                   }}
@@ -593,7 +594,7 @@ export function OfferRidePage() {
                     borderRadius: '999px',
                     border: `1px solid ${DS.border}`,
                     background: DS.card2,
-                    color: '#fff',
+                    color: C.text,
                     fontWeight: 800,
                     cursor: 'pointer',
                   }}

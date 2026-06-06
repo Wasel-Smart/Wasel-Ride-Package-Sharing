@@ -26,6 +26,7 @@ import {
 } from '../../services/movementRetention';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 import { getFeaturedCorridors, getHabitLoopPrograms } from '../../config/wasel-movement-network';
+import { C } from '../../utils/wasel-ds';
 
 function tierLabel(tier: MovementMembershipSnapshot['loyaltyTier']) {
   if (tier === 'infrastructure') return 'Infrastructure';
@@ -142,11 +143,11 @@ export default function WaselPlusPage() {
               key={item.label}
               style={{
                 background:
-                  'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+                  C.card,
                 borderRadius: r(18),
                 padding: '18px 18px 16px',
                 border: `1px solid ${DS.border}`,
-                boxShadow: '0 12px 28px rgba(0,0,0,0.16)',
+                  boxShadow: `0 12px 28px ${C.overlay}`,
               }}
             >
               <div
@@ -154,7 +155,7 @@ export default function WaselPlusPage() {
               >
                 {item.value}
               </div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>
+              <div style={{ color: C.text, fontWeight: 800, fontSize: '0.84rem' }}>
                 {item.label}
               </div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.45, marginTop: 4 }}>
@@ -183,7 +184,7 @@ export default function WaselPlusPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <BadgeDollarSign size={18} color={DS.gold} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Your plan</div>
+              <div style={{ color: C.text, fontWeight: 900 }}>Your plan</div>
             </div>
             <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.65, marginBottom: 18 }}>
               Built for cheaper repeat travel.
@@ -207,7 +208,7 @@ export default function WaselPlusPage() {
                     borderRadius: r(12),
                     padding: '12px 14px',
                     border: `1px solid ${DS.border}`,
-                    color: '#fff',
+                    color: C.text,
                     fontSize: '0.8rem',
                     lineHeight: 1.55,
                   }}
@@ -225,7 +226,7 @@ export default function WaselPlusPage() {
                 borderRadius: '999px',
                 border: 'none',
                 background: DS.gradGold,
-                color: '#fff',
+                color: C.text,
                 fontWeight: 800,
                 fontFamily: DS.F,
                 cursor: 'pointer',
@@ -246,7 +247,7 @@ export default function WaselPlusPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <Brain size={18} color={DS.cyan} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Benefits</div>
+              <div style={{ color: C.text, fontWeight: 900 }}>Benefits</div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {habitPrograms.map(program => (
@@ -259,7 +260,7 @@ export default function WaselPlusPage() {
                     border: `1px solid ${DS.border}`,
                   }}
                 >
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem' }}>
+                  <div style={{ color: C.text, fontWeight: 800, fontSize: '0.82rem' }}>
                     {program.title}
                   </div>
                   <div
@@ -289,7 +290,7 @@ export default function WaselPlusPage() {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
             <Route size={18} color={DS.green} />
-            <div style={{ color: '#fff', fontWeight: 900 }}>
+            <div style={{ color: C.text, fontWeight: 900 }}>
               Commuter passes on strategic corridors
             </div>
           </div>
@@ -319,7 +320,7 @@ export default function WaselPlusPage() {
                       gap: 10,
                     }}
                   >
-                    <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>
+                    <div style={{ color: C.text, fontWeight: 800, fontSize: '0.84rem' }}>
                       {corridor.label}
                     </div>
                     <span
@@ -363,7 +364,7 @@ export default function WaselPlusPage() {
                         style={{
                           borderRadius: r(12),
                           border: `1px solid ${DS.border}`,
-                          background: 'rgba(255,255,255,0.03)',
+                    background: C.elevated,
                           padding: '10px 10px 9px',
                         }}
                       >
@@ -379,7 +380,7 @@ export default function WaselPlusPage() {
                         </div>
                         <div
                           style={{
-                            color: '#fff',
+                            color: C.text,
                             fontWeight: 800,
                             fontSize: '0.78rem',
                             marginTop: 5,
@@ -399,7 +400,7 @@ export default function WaselPlusPage() {
                       borderRadius: '999px',
                       border: 'none',
                       background: active ? DS.gradGold : DS.gradC,
-                      color: '#fff',
+                      color: C.text,
                       fontWeight: 800,
                       cursor: 'pointer',
                     }}
@@ -426,7 +427,7 @@ export default function WaselPlusPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <Route size={18} color={DS.cyan} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Suggested recurring routes</div>
+              <div style={{ color: C.text, fontWeight: 900 }}>Suggested recurring routes</div>
             </div>
             {retentionMessage ? (
               <div
@@ -436,7 +437,7 @@ export default function WaselPlusPage() {
                   border: `1px solid ${DS.cyan}35`,
                   background: `${DS.cyan}12`,
                   padding: '11px 12px',
-                  color: '#fff',
+                  color: C.text,
                   fontSize: '0.78rem',
                 }}
               >
@@ -465,7 +466,7 @@ export default function WaselPlusPage() {
                         flexWrap: 'wrap',
                       }}
                     >
-                      <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem' }}>
+                      <div style={{ color: C.text, fontWeight: 800, fontSize: '0.82rem' }}>
                         {suggestion.label}
                       </div>
                       <span style={{ color: DS.gold, fontSize: '0.72rem', fontWeight: 700 }}>
@@ -497,7 +498,7 @@ export default function WaselPlusPage() {
                           borderRadius: '999px',
                           border: 'none',
                           background: alreadySaved ? DS.gradG : DS.gradC,
-                          color: '#fff',
+                          color: C.text,
                           fontWeight: 800,
                           cursor: 'pointer',
                         }}
@@ -516,7 +517,7 @@ export default function WaselPlusPage() {
                           borderRadius: '999px',
                           border: `1px solid ${DS.border}`,
                           background: DS.card,
-                          color: '#fff',
+                          color: C.text,
                           fontWeight: 700,
                           cursor: 'pointer',
                         }}
@@ -540,7 +541,7 @@ export default function WaselPlusPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <Sparkles size={18} color={DS.gold} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Saved reminders</div>
+              <div style={{ color: C.text, fontWeight: 900 }}>Saved reminders</div>
             </div>
             {savedReminders.length > 0 ? (
               <div style={{ display: 'grid', gap: 10 }}>
@@ -554,7 +555,7 @@ export default function WaselPlusPage() {
                       border: `1px solid ${DS.border}`,
                     }}
                   >
-                    <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem' }}>
+                    <div style={{ color: C.text, fontWeight: 800, fontSize: '0.82rem' }}>
                       {reminder.label}
                     </div>
                     <div style={{ color: DS.sub, fontSize: '0.75rem', marginTop: 4 }}>
@@ -581,7 +582,7 @@ export default function WaselPlusPage() {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
             <Sparkles size={18} color={DS.blue} />
-            <div style={{ color: '#fff', fontWeight: 900 }}>Why Plus matters</div>
+            <div style={{ color: C.text, fontWeight: 900 }}>Why Plus matters</div>
           </div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.65 }}>
             Credits, saved routes, and passes make repeat trips easier.
