@@ -309,7 +309,7 @@ function accentColor(accent: Accent) {
 function panelStyle(extra: CSSProperties = {}) {
   return {
     position: 'relative',
-      background: C.card,
+    background: C.card,
     border: `1px solid ${C.border}`,
     borderRadius: 24,
     boxShadow: SH.lg,
@@ -433,7 +433,7 @@ export default function MobilityOSPage() {
     <div
       style={{
         minHeight: 'var(--app-min-height)',
-          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, ${C.goldDim}, transparent 22%), ${C.bg}`,
+        background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, ${C.goldDim}, transparent 22%), ${C.bg}`,
         color: C.text,
         fontFamily: F,
         padding: '24px 16px 44px',
@@ -451,7 +451,7 @@ export default function MobilityOSPage() {
                   padding: '10px 14px',
                   borderRadius: R.full,
                   border: `1px solid ${C.border}`,
-                background: C.elevated,
+                  background: C.elevated,
                   width: 'fit-content',
                 }}
               >
@@ -574,7 +574,7 @@ export default function MobilityOSPage() {
                 borderRadius: 22,
                 border: `1px solid ${accentColor(card.accent)}30`,
                 boxShadow: `0 18px 42px ${accentColor(card.accent)}18`,
-      background: C.card,
+                background: C.card,
               })}
             >
               <div

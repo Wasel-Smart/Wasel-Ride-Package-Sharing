@@ -233,10 +233,20 @@ export function NotificationCenter() {
                 {labels.title}
               </div>
               <div>
-                <h2 style={{ color: C.text, fontSize: TYPE.size['3xl'], fontWeight: 900, margin: 0 }}>
+                <h2
+                  style={{ color: C.text, fontSize: TYPE.size['3xl'], fontWeight: 900, margin: 0 }}
+                >
                   {labels.title}
                 </h2>
-                <p style={{ margin: '8px 0 0', maxWidth: 720, color: C.textSub, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+                <p
+                  style={{
+                    margin: '8px 0 0',
+                    maxWidth: 720,
+                    color: C.textSub,
+                    fontSize: TYPE.size.sm,
+                    lineHeight: 1.7,
+                  }}
+                >
                   {labels.subtitle}
                 </p>
               </div>
@@ -288,11 +298,7 @@ export function NotificationCenter() {
               )}
 
               {summary.archived > 0 && (
-                <WaselButton
-                  variant="outline"
-                  size="sm"
-                  onClick={restoreArchivedNotifications}
-                >
+                <WaselButton variant="outline" size="sm" onClick={restoreArchivedNotifications}>
                   {labels.restoreArchived}
                 </WaselButton>
               )}
@@ -326,10 +332,7 @@ export function NotificationCenter() {
 
       {/* ── Error banner ── */}
       {errorMessage && (
-        <WaselCard
-          variant="elevated"
-          style={{ borderColor: C.goldDim, background: C.goldDim }}
-        >
+        <WaselCard variant="elevated" style={{ borderColor: C.goldDim, background: C.goldDim }}>
           <div className="flex flex-col gap-3 text-sm md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-0.5 size-4 shrink-0" color={C.gold} />
