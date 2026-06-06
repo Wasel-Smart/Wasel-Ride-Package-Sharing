@@ -366,12 +366,14 @@ export default function WaselAuth() {
   }, []);
 
   const getCaptchaTokenForSubmit = () => {
+    // Only require captcha if it's actually configured
     if (isAuthCaptchaConfigured && !captchaToken) {
-      setError('Complete the account protection check before continuing.');
+      setError('Please complete the verification check below.');
       return null;
     }
 
-    return captchaToken ?? undefined;
+    // If captcha is not configured, proceed without token
+    return isAuthCaptchaConfigured ? captchaToken : undefined;
   };
 
   useEffect(() => {
