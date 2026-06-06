@@ -3,7 +3,17 @@
  *
  * New UI code should import tokens and primitives from here:
  *
- *   import { C, R, TYPE, WaselButton, WaselInput, WaselCard, WaselBadge } from '@/design-system';
+ *   import {
+ *     C,
+ *     R,
+ *     TYPE,
+ *     WaselBadge,
+ *     WaselButton,
+ *     WaselCard,
+ *     WaselDialog,
+ *     WaselInput,
+ *     WaselSelect,
+ *   } from '@/design-system';
  *
  * `src/utils/wasel-ds.ts` owns the canonical token values. Older token modules
  * are re-exported only for compatibility while route screens migrate.
@@ -38,3 +48,6 @@ export { WaselBadge } from '../components/wasel-ui/WaselBadge';
 export { WaselButton } from '../components/wasel-ui/WaselButton';
 export { WaselInput } from '../components/wasel-ui/WaselInput';
 export { WaselCard } from '../components/wasel-ui/WaselCard';
+export { WaselDialog } from '../components/wasel-ui/WaselDialog';
+export { WaselSelect } from '../components/wasel-ui/WaselSelect';
+export type { WaselSelectOption } from '../components/wasel-ui/WaselSelect';

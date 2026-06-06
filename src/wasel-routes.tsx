@@ -1,11 +1,11 @@
 /**
- * Wasel Router v7.2 — WaselServicePage monolith split into feature files.
+ * Wasel Router v7.2 - WaselServicePage monolith split into feature files.
  *
  * Changes from v7.1:
- *  - FindRidePage   → src/features/rides/FindRidePage.tsx   (re-exported from WaselServicePage for compatibility)
- *  - OfferRidePage  → src/features/rides/OfferRidePage.tsx  (re-exported)
- *  - BusPage        → src/features/bus/BusPage.tsx
- *  - PackagesPage   → src/features/packages/PackagesPage.tsx (re-exported)
+ *  - FindRidePage   -> src/features/rides/FindRidePage.tsx   (re-exported from WaselServicePage for compatibility)
+ *  - OfferRidePage  -> src/features/rides/OfferRidePage.tsx  (re-exported)
+ *  - BusPage        -> src/features/bus/BusPage.tsx
+ *  - PackagesPage   -> src/features/packages/PackagesPage.tsx (re-exported)
  *  - Shared primitives extracted to src/features/shared/pageShared.tsx
  *  - WaselServicePage.tsx retained as the source of truth for FindRide, OfferRide, Packages
  *    until those are individually migrated; BusPage is now fully standalone.
@@ -19,7 +19,7 @@ import { useLanguage } from './contexts/LanguageContext';
 import WaselRoot from './layouts/WaselRoot';
 import ProtectedOutlet from './router/ProtectedOutlet';
 
-// ── Page loader fallback ──────────────────────────────────────────────────────
+// -- Page loader fallback ------------------------------------------------------
 function PageLoader() {
   const { language } = useLanguage();
   const ar = language === 'ar';
@@ -59,7 +59,7 @@ function lazy(
   };
 }
 
-// ── Utility redirects ─────────────────────────────────────────────────────────
+// -- Utility redirects ---------------------------------------------------------
 function RedirectTo({ to }: { to: string }) {
   return <Navigate to={to} replace />;
 }
@@ -102,7 +102,7 @@ const LEGACY_APP_ALIASES = [
   '/moderation',
 ] as const;
 
-// ── 404 ───────────────────────────────────────────────────────────────────────
+// -- 404 -----------------------------------------------------------------------
 function NotFound() {
   const { language } = useLanguage();
   const ar = language === 'ar';
@@ -127,7 +127,7 @@ function NotFound() {
   );
 }
 
-// ── Route Error Fallback ──────────────────────────────────────────────────────
+// -- Route Error Fallback ------------------------------------------------------
 function RouteErrorFallback() {
   const { language } = useLanguage();
   const ar = language === 'ar';
@@ -151,7 +151,7 @@ function RouteErrorFallback() {
       actions={
         <>
           <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <a href="/app/find-ride">{ar ? 'ابحث عن مشوار' : 'Find a ride'}</a>
+            <a href="/app/find-ride">{ar ? 'ابحث عن رحلة' : 'Find a ride'}</a>
           </Button>
           <Button
             asChild
@@ -164,26 +164,26 @@ function RouteErrorFallback() {
       }
       footer={
         ar
-          ? 'إذا تكرر هذا، فأعد تحميل التطبيق أو افتح التدفق مرة أخرى من الشاشة الرئيسية.'
+          ? 'إذا تكرر هذا، أعد تحميل التطبيق أو افتح التدفق مرة أخرى من الشاشة الرئيسية.'
           : 'If this repeats, reload the app shell or reopen the flow from the home screen.'
       }
     />
   );
 }
 
-// ── Route children factory ────────────────────────────────────────────────────
+// -- Route children factory ----------------------------------------------------
 const buildMainChildren = () => [
-  // ── Landing ──────────────────────────────────────────────────────────────
+  // -- Landing --------------------------------------------------------------
   {
     index: true,
     lazy: lazy(() => import('./features/home/HomePage'), 'HomePage'),
   },
 
-  // ── Auth ─────────────────────────────────────────────────────────────────
+  // -- Auth -----------------------------------------------------------------
   { path: 'auth', lazy: lazy(() => import('./pages/WaselAuth')) },
   { path: 'auth/callback', lazy: lazy(() => import('./pages/WaselAuthCallback')) },
 
-  // ── Dashboard ────────────────────────────────────────────────────────────
+  // -- Dashboard ------------------------------------------------------------
   { path: 'dashboard', Component: () => <RedirectTo to="/app" /> },
   { path: 'home', Component: () => <RedirectTo to="/app" /> },
 
@@ -202,17 +202,17 @@ const buildMainChildren = () => [
     ],
   },
 
-  // ── Rides — FindRidePage & OfferRidePage still live in WaselServicePage
+  // -- Rides - FindRidePage & OfferRidePage still live in WaselServicePage
   //            until they are individually migrated (they share type Ride and
   //            a lot of internal state logic that benefits from a separate pass).
 
-  // ── My Trips ──────────────────────────────────────────────────────────────
+  // -- My Trips --------------------------------------------------------------
 
-  // ── Booking Requests ──────────────────────────────────────────────────────
+  // -- Booking Requests ------------------------------------------------------
 
-  // ── Live Trip ─────────────────────────────────────────────────────────────
+  // -- Live Trip -------------------------------------------------------------
 
-  // ── Routes / Popular ──────────────────────────────────────────────────────
+  // -- Routes / Popular ------------------------------------------------------
   { path: 'routes', lazy: lazy(() => import('./components/PopularRoutes'), 'PopularRoutes') },
 
   {
@@ -227,13 +227,13 @@ const buildMainChildren = () => [
     ],
   },
 
-  // ── Bus — now its own dedicated file ─────────────────────────────────────
+  // -- Bus - now its own dedicated file -------------------------------------
 
-  // ── Packages / Awasel — still in WaselServicePage pending migration ───────
+  // -- Packages / Awasel - still in WaselServicePage pending migration -------
 
-  // ── Raje3 Returns ─────────────────────────────────────────────────────────
+  // -- Raje3 Returns ---------------------------------------------------------
 
-  // ── B2B / B2S / Ops ──────────────────────────────────────────────────────
+  // -- B2B / B2S / Ops ------------------------------------------------------
   {
     Component: ProtectedOutlet,
     children: [
@@ -265,21 +265,21 @@ const buildMainChildren = () => [
     ],
   },
 
-  // ── Wallet ────────────────────────────────────────────────────────────────
+  // -- Wallet ----------------------------------------------------------------
 
-  // ── Plus ──────────────────────────────────────────────────────────────────
+  // -- Plus ------------------------------------------------------------------
 
-  // ── Profile ───────────────────────────────────────────────────────────────
+  // -- Profile ---------------------------------------------------------------
 
-  // ── Settings ──────────────────────────────────────────────────────────────
+  // -- Settings --------------------------------------------------------------
 
-  // ── Notifications ─────────────────────────────────────────────────────────
+  // -- Notifications ---------------------------------------------------------
 
-  // ── Trust Center ──────────────────────────────────────────────────────────
+  // -- Trust Center ----------------------------------------------------------
 
-  // ── Driver ────────────────────────────────────────────────────────────────
+  // -- Driver ----------------------------------------------------------------
 
-  // ── Safety ────────────────────────────────────────────────────────────────
+  // -- Safety ----------------------------------------------------------------
 
   {
     Component: ProtectedOutlet,
@@ -299,13 +299,13 @@ const buildMainChildren = () => [
     ],
   },
 
-  // ── Legal ─────────────────────────────────────────────────────────────────
+  // -- Legal -----------------------------------------------------------------
   { path: 'privacy', lazy: lazy(() => import('./features/legal/PrivacyPolicy'), 'PrivacyPolicy') },
   { path: 'terms', lazy: lazy(() => import('./features/legal/TermsOfService'), 'TermsOfService') },
   { path: 'legal/privacy', Component: () => <RedirectTo to="/app/privacy" /> },
   { path: 'legal/terms', Component: () => <RedirectTo to="/app/terms" /> },
 
-  // ── 404 catch-all ─────────────────────────────────────────────────────────
+  // -- 404 catch-all ---------------------------------------------------------
   { path: '*', Component: NotFound },
 ];
 
@@ -315,9 +315,9 @@ const buildLegacyAliases = () =>
     Component: () => <RedirectTo to={`/app${path}`} />,
   }));
 
-// ── Router ────────────────────────────────────────────────────────────────────
+// -- Router --------------------------------------------------------------------
 export const waselRouter = createBrowserRouter([
-  { path: '/', lazy: lazy(() => import('./features/home/AppEntryPage')) },
+  { path: '/', lazy: lazy(() => import('./features/home/HomePage'), 'HomePage') },
   ...buildLegacyAliases(),
   {
     path: '/app',

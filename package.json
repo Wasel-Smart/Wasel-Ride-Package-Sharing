@@ -163,7 +163,7 @@
     "release:patch": "node scripts/release.mjs patch",
     "release:minor": "node scripts/release.mjs minor",
     "release:major": "node scripts/release.mjs major",
-    "verify:ci": "npm run type-check && npm run type-check:tests && npm run lint && npm run verify:contracts && npm run test:unit && npm run build",
+    "verify:ci": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-ci.ps1",
     "verify": "npm run type-check && npm run type-check:tests && npm run lint && npm run verify:contracts && npm run test && npm run build && npm run test:e2e"
   }
 }

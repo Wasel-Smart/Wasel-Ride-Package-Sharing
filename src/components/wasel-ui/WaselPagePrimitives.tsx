@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { ChevronRight, type LucideIcon } from 'lucide-react';
-import { ANIM, C, F, FA, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { ANIM, C, F, FA, GRAD_HERO, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 
 interface PageShellProps {
   children: ReactNode;
@@ -67,9 +67,9 @@ export function PageShell({
       style={{
         minHeight: 'var(--app-min-height)',
         background: `
-          radial-gradient(circle at 14% 12%, rgba(88,221,255,0.12), transparent 24%),
-          radial-gradient(circle at 76% 20%, rgba(255,190,92,0.08), transparent 18%),
-          radial-gradient(circle at 66% 84%, rgba(71,214,158,0.06), transparent 20%),
+          radial-gradient(circle at 14% 12%, ${C.cyanDim}, transparent 24%),
+          radial-gradient(circle at 76% 20%, ${C.goldDim}, transparent 18%),
+          radial-gradient(circle at 66% 84%, ${C.greenDim}, transparent 20%),
           ${C.bg}
         `,
         color: C.text,
@@ -86,8 +86,7 @@ export function PageShell({
           position: 'fixed',
           inset: 0,
           pointerEvents: 'none',
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)',
+          backgroundImage: `linear-gradient(${C.borderFaint} 1px, transparent 1px), linear-gradient(90deg, ${C.borderFaint} 1px, transparent 1px)`,
           backgroundSize: '72px 72px',
           maskImage: 'radial-gradient(circle at center, black 0%, black 48%, transparent 84%)',
           opacity: 0.08,
@@ -130,7 +129,7 @@ export function PageHero({
         borderRadius: R['3xl'],
         background: `
           radial-gradient(circle at top left, ${accent}16, transparent 32%),
-          linear-gradient(145deg, rgba(16,37,58,0.96) 0%, rgba(11,29,45,0.94) 62%, rgba(4,11,18,0.96) 100%)
+          ${GRAD_HERO}
         `,
         border: `1px solid ${C.border}`,
         boxShadow: SH.lg,
@@ -142,8 +141,7 @@ export function PageHero({
         style={{
           position: 'absolute',
           inset: 0,
-          background:
-            'linear-gradient(120deg, rgba(255,255,255,0.04), transparent 30%, transparent 70%, rgba(255,255,255,0.02))',
+          background: `linear-gradient(120deg, ${C.elevated}, transparent 30%, transparent 70%, ${C.borderFaint})`,
           pointerEvents: 'none',
         }}
       />
@@ -177,7 +175,7 @@ export function PageHero({
             lineHeight: TYPE.lineHeight.tight,
             letterSpacing: TYPE.letterSpacing.tighter,
             fontWeight: TYPE.weight.ultra,
-            color: '#FFFFFF',
+            color: C.text,
             maxWidth: 760,
           }}
         >
@@ -208,7 +206,7 @@ export function PageHero({
             position: 'relative',
             minWidth: 0,
             borderRadius: R.xxl,
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02))',
+            background: C.elevated,
             border: `1px solid ${C.border}`,
             boxShadow: SH.md,
             padding: SPACE[5],
@@ -273,8 +271,7 @@ export function SectionCard({
       </div>
       <div
         style={{
-          background:
-            'radial-gradient(circle at top left, rgba(88,221,255,0.05), transparent 28%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)',
+          background: `radial-gradient(circle at top left, ${C.cyanDim}, transparent 28%), ${C.card}`,
           border: `1px solid ${C.border}`,
           borderRadius: R.xxl,
           boxShadow: SH.md,
@@ -298,7 +295,7 @@ export function MetricCard({ label, value, detail, accent = C.cyan, icon }: Metr
         borderStyle: 'solid',
         borderWidth: 1,
         borderRadius: R.xxl,
-        background: `radial-gradient(circle at top left, ${accent}10, transparent 30%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)`,
+        background: `radial-gradient(circle at top left, ${accent}10, transparent 30%), ${C.card}`,
         boxShadow: SH.md,
       }}
     >
@@ -341,7 +338,7 @@ export function MetricCard({ label, value, detail, accent = C.cyan, icon }: Metr
       </div>
       <div
         style={{
-          color: '#FFFFFF',
+          color: C.text,
           fontSize: TYPE.size['3xl'],
           fontWeight: TYPE.weight.ultra,
           lineHeight: TYPE.lineHeight.tight,
@@ -377,7 +374,7 @@ export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: Ac
         padding: `${SPACE[5]} ${SPACE[4]}`,
         borderRadius: R.xxl,
         border: `1px solid ${accent}1f`,
-        background: `linear-gradient(145deg, rgba(16,37,58,0.9) 0%, rgba(11,29,45,0.94) 100%)`,
+        background: C.card,
         color: C.text,
         cursor: clickable ? 'pointer' : 'default',
         textAlign: 'left',
@@ -427,7 +424,7 @@ export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: Ac
           marginTop: SPACE[4],
           fontSize: TYPE.size.base,
           fontWeight: TYPE.weight.bold,
-          color: '#FFFFFF',
+          color: C.text,
         }}
       >
         {label}
@@ -469,7 +466,7 @@ export function DataRow({ label, value, sub, icon, badge, onClick, danger = fals
         transition: `background ${ANIM.dur.normal} ${ANIM.ease.default}`,
       }}
       onMouseEnter={event => {
-        if (onClick) event.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+        if (onClick) event.currentTarget.style.background = C.elevated;
       }}
       onMouseLeave={event => {
         event.currentTarget.style.background = 'transparent';
@@ -496,7 +493,7 @@ export function DataRow({ label, value, sub, icon, badge, onClick, danger = fals
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
-            color: danger ? C.error : '#FFFFFF',
+            color: danger ? C.error : C.text,
             fontSize: TYPE.size.base,
             fontWeight: TYPE.weight.semibold,
           }}

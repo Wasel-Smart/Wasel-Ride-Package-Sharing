@@ -147,6 +147,7 @@ describe('LocalAuthProvider', () => {
       'Sara Ali',
       '+962790000000',
       undefined,
+      undefined,
     );
 
     await act(async () => {

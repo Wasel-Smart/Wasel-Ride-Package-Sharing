@@ -31,23 +31,34 @@ interface AuthContextType {
     fullName: string,
     phone?: string,
     returnTo?: string,
+    captchaToken?: string,
   ) => Promise<SignUpResult>;
-  signIn: (email: string, password: string) => Promise<{ error: AuthOperationError }>;
+  signIn: (
+    email: string,
+    password: string,
+    captchaToken?: string,
+  ) => Promise<{ error: AuthOperationError }>;
   signInWithGoogle: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
   signInWithFacebook: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
   startPhoneOtp: (
     phone: string,
     channel: 'sms' | 'whatsapp',
+    captchaToken?: string,
   ) => Promise<{ error: AuthOperationError }>;
   verifyPhoneOtp: (
     phone: string,
     token: string,
     returnTo?: string,
+    captchaToken?: string,
   ) => Promise<{ error: AuthOperationError }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: AuthOperationError }>;
   refreshProfile: () => Promise<void>;
-  resetPassword: (email: string, returnTo?: string) => Promise<{ error: AuthOperationError }>;
+  resetPassword: (
+    email: string,
+    returnTo?: string,
+    captchaToken?: string,
+  ) => Promise<{ error: AuthOperationError }>;
   changePassword: (nextPassword: string) => Promise<{ error: AuthOperationError }>;
 }
 
@@ -244,6 +255,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       fullName: string,
       phone?: string,
       returnTo?: string,
+      captchaToken?: string,
     ): Promise<SignUpResult> => {
       if (!supabase) {
         return { error: new Error('Backend not configured') };
@@ -260,6 +272,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           lastName,
           phone ?? '',
           returnTo,
+          captchaToken,
         );
         const authUser = data.user ?? data.session?.user ?? null;
 
@@ -288,10 +301,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const signIn = useCallback(
-    async (email: string, password: string): Promise<{ error: AuthOperationError }> => {
+    async (
+      email: string,
+      password: string,
+      captchaToken?: string,
+    ): Promise<{ error: AuthOperationError }> => {
       setBusy(true);
       try {
-        const data = await authAPI.signIn(email, password);
+        const data = await authAPI.signIn(email, password, captchaToken);
         const authUser = data.user ?? data.session?.user ?? null;
 
         if (authUser && data.session) {
@@ -371,7 +388,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const startPhoneOtp = useCallback(
-    async (phone: string, channel: 'sms' | 'whatsapp'): Promise<{ error: AuthOperationError }> => {
+    async (
+      phone: string,
+      channel: 'sms' | 'whatsapp',
+      captchaToken?: string,
+    ): Promise<{ error: AuthOperationError }> => {
       if (!supabase) {
         return { error: new Error('Backend not configured') };
       }
@@ -383,6 +404,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           options: {
             channel,
             shouldCreateUser: true,
+            captchaToken,
           },
         });
 
@@ -401,6 +423,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       phone: string,
       token: string,
       _returnTo?: string,
+      captchaToken?: string,
     ): Promise<{ error: AuthOperationError }> => {
       if (!supabase) {
         return { error: new Error('Backend not configured') };
@@ -412,6 +435,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           phone,
           token,
           type: 'sms',
+          options: { captchaToken },
         });
 
         if (error) {
@@ -486,7 +510,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [fetchProfile, user]);
 
   const resetPassword = useCallback(
-    async (email: string, returnTo?: string): Promise<{ error: AuthOperationError }> => {
+    async (
+      email: string,
+      returnTo?: string,
+      captchaToken?: string,
+    ): Promise<{ error: AuthOperationError }> => {
       if (!supabase) return { error: new Error('Backend not configured') };
 
       try {
@@ -495,6 +523,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             window.location.origin,
             returnTo ? { returnTo } : undefined,
           ),
+          captchaToken,
         });
         return { error: error ?? null };
       } catch (error: unknown) {

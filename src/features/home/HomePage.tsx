@@ -65,9 +65,9 @@ export function HomePage() {
       {
         icon: Package,
         kicker: ar ? 'للطرود' : 'Manager workflow',
-        title: ar ? 'أرسل طرداً' : 'Approve travel',
+        title: ar ? 'أرسل طردا' : 'Approve travel',
         desc: ar
-          ? 'حرّك الطرد على نفس المسار بدون منتج منفصل أو منطق مختلف.'
+          ? 'حرك الطرد على نفس المسار بدون منتج منفصل أو منطق مختلف.'
           : 'Move a parcel on the same corridor without a separate product logic.',
         outcome: ar
           ? 'تتبع واضح وتسليم ضمن شبكة الرحلات نفسها'
@@ -125,8 +125,8 @@ export function HomePage() {
       key: `${route.from}-${route.to}`,
       title: ar ? `${route.fromAr} ← ${route.toAr}` : `${route.from} → ${route.to}`,
       detail: ar
-        ? `${route.dist} كم • ${svc.formatFromJOD(route.priceJod)}`
-        : `${route.dist} km • ${svc.formatFromJOD(route.priceJod)}`,
+        ? `${route.dist} كم - ${svc.formatFromJOD(route.priceJod)}`
+        : `${route.dist} km - ${svc.formatFromJOD(route.priceJod)}`,
       meta: ar ? 'مسار شائع' : 'Popular corridor',
       insight:
         index === 0

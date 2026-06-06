@@ -21,7 +21,7 @@ interface OAuthStatusCardProps {
 
 export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatusCardProps) {
   const providerName = status.provider === 'google' ? 'Google' : 'Facebook';
-  const providerColor = status.provider === 'google' ? '#4285F4' : '#1877F2';
+  const providerColor = status.provider === 'google' ? C.cyan : C.navyLight;
 
   return (
     <div
@@ -29,7 +29,7 @@ export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatus
         padding: SPACE[4],
         borderRadius: R.lg,
         border: `1px solid ${status.connected ? `${providerColor}30` : C.border}`,
-        background: status.connected ? `${providerColor}08` : 'rgba(255,255,255,0.03)',
+        background: status.connected ? `${providerColor}08` : C.elevated,
         display: 'flex',
         alignItems: 'center',
         gap: SPACE[3],
@@ -60,7 +60,7 @@ export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatus
           style={{
             fontSize: TYPE.size.base,
             fontWeight: TYPE.weight.bold,
-            color: '#EFF6FF',
+            color: C.text,
             fontFamily: F,
             marginBottom: 2,
           }}
@@ -76,11 +76,11 @@ export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatus
         >
           {status.connected ? (
             <>
-              Connected {status.email && `· ${status.email}`}
-              {status.lastUsed && ` · Last used ${status.lastUsed}`}
+              Connected {status.email && ` - ${status.email}`}
+              {status.lastUsed && ` - Last used ${status.lastUsed}`}
             </>
           ) : (
-            `Not connected · Click to link your ${providerName} account`
+            `Not connected - Click to link your ${providerName} account`
           )}
         </div>
       </div>

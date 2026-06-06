@@ -76,7 +76,7 @@ function TripModeCard({
           </div>
           <div style={{ marginTop: 6, fontSize: '0.86rem', color: C.textMuted, lineHeight: 1.55 }}>
             {ar
-              ? 'اختر طريقة البحث ثم افتح المسار المناسب فوراً.'
+              ? 'اختر طريقة البحث ثم افتح المسار المناسب فورا.'
               : 'Pick one decision, then Wasel opens the right flow with route context already attached.'}
           </div>
         </div>
@@ -96,6 +96,8 @@ function TripModeCard({
             const selected = tripMode === option.key;
             return (
               <button
+                type="button"
+                aria-pressed={selected}
                 key={option.key}
                 onClick={() => onTripModeChange(option.key)}
                 style={{
@@ -141,6 +143,7 @@ function TripModeCard({
         }}
       >
         <button
+          type="button"
           onClick={() => onNavigate(primaryTripPath)}
           style={{
             height: 50,
@@ -173,7 +176,7 @@ function TripModeCard({
             alignItems: 'center',
           }}
         >
-          {ar ? 'اعرض مقعداً' : 'Need supply? Open Manage after booking'}
+          {ar ? 'اعرض مقعدا' : 'Need supply? Open Manage after booking'}
         </span>
       </div>
     </div>
@@ -271,7 +274,7 @@ export function HomeHeroSection({
           }}
         >
           {ar
-            ? 'سواء أردت مقعداً أو أردت عرض مقعد أو إرسال طرد أو التحول إلى الباص، تبدأ كل خطوة من نفس منطق المسار حتى تبقى التجربة أوضح وأسرع.'
+            ? 'سواء أردت مقعدا أو عرض مقعد أو إرسال طرد أو التحول إلى الباص، تبدأ كل خطوة من نفس منطق المسار حتى تبقى التجربة أوضح وأسرع.'
             : 'Wasel turns daily commute demand into guided booking, request approval, driver supply, and live trip management so teams spend less time coordinating rides.'}
         </p>
 

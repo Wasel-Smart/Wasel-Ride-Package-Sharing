@@ -40,6 +40,14 @@ function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'gen
   }
 
   if (
+    lower.includes('captcha') ||
+    lower.includes('request disallowed') ||
+    lower.includes('account protection')
+  ) {
+    return 'Complete the account protection check and try again.';
+  }
+
+  if (
     lower.includes('already been registered') ||
     lower.includes('already registered') ||
     lower.includes('user already exists')
@@ -134,6 +142,7 @@ export const authAPI = {
     lastName: string,
     phone: string,
     returnTo?: string,
+    captchaToken?: string,
   ) {
     const client = requireSupabase();
     const redirectTo = getAuthCallbackUrl(
@@ -146,6 +155,7 @@ export const authAPI = {
       password,
       options: {
         emailRedirectTo: redirectTo,
+        captchaToken,
         data: {
           full_name: `${firstName} ${lastName}`.trim(),
           phone,
@@ -264,9 +274,13 @@ export const authAPI = {
     }
   },
 
-  async signIn(email: string, password: string) {
+  async signIn(email: string, password: string, captchaToken?: string) {
     const client = requireSupabase();
-    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    const { data, error } = await client.auth.signInWithPassword({
+      email,
+      password,
+      options: { captchaToken },
+    });
 
     if (error) throw new Error(normalizeAuthError(error.message, 'signin'));
     return data;

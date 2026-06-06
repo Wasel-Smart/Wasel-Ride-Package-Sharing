@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import { toast } from 'sonner';
@@ -18,6 +18,7 @@ import { WaselHeroMark, WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { WaselButton } from '../components/wasel-ui/WaselButton';
 import { WaselInput } from '../components/wasel-ui/WaselInput';
 import { WaselCard } from '../components/wasel-ui/WaselCard';
+import { AuthCaptcha, isAuthCaptchaConfigured } from '../components/AuthCaptcha';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { checkRateLimit, validateEmail } from '../utils/security';
@@ -25,7 +26,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { normalizeReturnToPath } from '../utils/env';
 import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
 
-import { C, R, TYPE, F, SPACE } from '../utils/wasel-ds';
+import { C, R, TYPE, F, SPACE, GRAD, GRAD_SIGNAL } from '../utils/wasel-ds';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = 'signin' | 'signup';
@@ -138,7 +139,7 @@ function BrandPanel() {
           <span
             style={{
               display: 'block',
-              background: 'linear-gradient(90deg, #55E9FF, #60A5FA)',
+              background: GRAD_SIGNAL,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
             }}
@@ -315,9 +316,7 @@ function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }
               fontSize: TYPE.size.sm,
               fontWeight: active ? TYPE.weight.black : TYPE.weight.semibold,
               fontFamily: F,
-              background: active
-                ? 'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)'
-                : 'transparent',
+              background: active ? GRAD : 'transparent',
               color: active ? C.bg : C.textMuted,
               boxShadow: active ? `0 2px 12px ${C.cyanGlow}` : 'none',
               transition: 'all 150ms ease',
@@ -351,6 +350,8 @@ export default function WaselAuth() {
   const [phoneOtpChannel, setPhoneOtpChannel] = useState<PhoneOtpChannel | null>(null);
   const [phoneOtpCode, setPhoneOtpCode] = useState('');
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
 
   const { signIn, register, loading, user } = useLocalAuth();
   const { resetPassword, signInWithGoogle, signInWithFacebook, startPhoneOtp, verifyPhoneOtp } =
@@ -359,6 +360,19 @@ export default function WaselAuth() {
   const mountedRef = useRef(true);
 
   const safeReturnTo = normalizeReturnToPath(params.get('returnTo'));
+  const resetCaptcha = () => setCaptchaResetSignal(value => value + 1);
+  const handleCaptchaTokenChange = useCallback((token: string | null) => {
+    setCaptchaToken(token);
+  }, []);
+
+  const getCaptchaTokenForSubmit = () => {
+    if (isAuthCaptchaConfigured && !captchaToken) {
+      setError('Complete the account protection check before continuing.');
+      return null;
+    }
+
+    return captchaToken ?? undefined;
+  };
 
   useEffect(() => {
     mountedRef.current = true;
@@ -385,6 +399,7 @@ export default function WaselAuth() {
     setPhoneOtpChannel(null);
     setPhoneOtpSent(false);
     setPhoneOtpCode('');
+    resetCaptcha();
     if (!passwordResetCompleted) {
       setNotice('');
     }
@@ -411,7 +426,11 @@ export default function WaselAuth() {
       setError('Too many attempts. Please wait a minute and try again.');
       return;
     }
-    const { error: signInError } = await signIn(email, password);
+    const token = getCaptchaTokenForSubmit();
+    if (token === null) return;
+
+    const { error: signInError } = await signIn(email, password, token);
+    resetCaptcha();
     if (signInError) {
       setError(friendlyAuthError(signInError, 'Sign in failed. Please try again.'));
       return;
@@ -444,7 +463,11 @@ export default function WaselAuth() {
       setError('Too many attempts. Please wait a minute and try again.');
       return;
     }
-    const registration = await register(name, email, password, phone, safeReturnTo);
+    const token = getCaptchaTokenForSubmit();
+    if (token === null) return;
+
+    const registration = await register(name, email, password, phone, safeReturnTo, token);
+    resetCaptcha();
     if (registration.error) {
       setError(friendlyAuthError(registration.error, 'Sign up failed. Please try again.'));
       return;
@@ -469,7 +492,11 @@ export default function WaselAuth() {
       setError('Please enter a valid email address.');
       return;
     }
-    const { error: resetError } = await resetPassword(email, safeReturnTo);
+    const token = getCaptchaTokenForSubmit();
+    if (token === null) return;
+
+    const { error: resetError } = await resetPassword(email, safeReturnTo, token);
+    resetCaptcha();
     if (resetError) {
       setError(friendlyAuthError(resetError, 'Password reset failed.'));
       return;
@@ -506,7 +533,11 @@ export default function WaselAuth() {
       return;
     }
 
-    const { error: otpError } = await startPhoneOtp(normalizedPhone, channel);
+    const token = getCaptchaTokenForSubmit();
+    if (token === null) return;
+
+    const { error: otpError } = await startPhoneOtp(normalizedPhone, channel, token);
+    resetCaptcha();
     if (otpError) {
       setError(
         friendlyAuthError(
@@ -537,7 +568,16 @@ export default function WaselAuth() {
       return;
     }
 
-    const { error: verifyError } = await verifyPhoneOtp(normalizedPhone, token, safeReturnTo);
+    const captcha = getCaptchaTokenForSubmit();
+    if (captcha === null) return;
+
+    const { error: verifyError } = await verifyPhoneOtp(
+      normalizedPhone,
+      token,
+      safeReturnTo,
+      captcha,
+    );
+    resetCaptcha();
     if (verifyError) {
       setError(friendlyAuthError(verifyError, 'Phone verification failed. Please try again.'));
       return;
@@ -547,8 +587,8 @@ export default function WaselAuth() {
   };
 
   const socialButtons = [
-    { label: 'Google', color: '#4285F4', onClick: handleGoogleSignIn },
-    { label: 'Facebook', color: '#1877F2', onClick: handleFacebookSignIn },
+    { label: 'Google', color: C.cyan, onClick: handleGoogleSignIn },
+    { label: 'Facebook', color: C.navyLight, onClick: handleFacebookSignIn },
   ] as const;
 
   return (
@@ -806,6 +846,11 @@ export default function WaselAuth() {
                   </div>
                 )}
 
+                <AuthCaptcha
+                  onTokenChange={handleCaptchaTokenChange}
+                  resetSignal={captchaResetSignal}
+                />
+
                 <WaselButton
                   variant="primary"
                   size="lg"
@@ -931,9 +976,9 @@ export default function WaselAuth() {
                         flex: '1 1 110px',
                         minHeight: 42,
                         borderRadius: R.lg,
-                        border: '1px solid rgba(37, 211, 102, 0.3)',
-                        background: 'rgba(37, 211, 102, 0.06)',
-                        color: '#25D366',
+                        border: `1px solid ${C.greenDim}`,
+                        background: C.greenDim,
+                        color: C.green,
                         fontWeight: TYPE.weight.black,
                         fontSize: TYPE.size.sm,
                         fontFamily: F,
@@ -955,7 +1000,7 @@ export default function WaselAuth() {
                           minHeight: 42,
                           borderRadius: R.lg,
                           border: 'none',
-                          background: 'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)',
+                          background: GRAD,
                           color: C.bg,
                           fontWeight: TYPE.weight.black,
                           fontSize: TYPE.size.sm,

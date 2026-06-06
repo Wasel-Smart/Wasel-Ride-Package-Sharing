@@ -1,17 +1,9 @@
 /**
- * WaselCard — design-system surface container.
- *
- * Variants:
- *  - default  : Glass card (translucent, backdrop blur)
- *  - solid    : Opaque dark card (#0A1628)
- *  - brand    : Cyan-tinted hero/feature card
- *  - elevated : Slightly brighter surface, for nested cards
- *
- * All values from design tokens — zero hardcoded hex.
+ * WaselCard - design-system surface container.
  */
 
 import type { CSSProperties, HTMLAttributes, ReactNode } from 'react';
-import { C, R, SH, F } from '../../utils/wasel-ds';
+import { ANIM, C, F, R, SH } from '../../utils/wasel-ds';
 
 type CardVariant = 'default' | 'solid' | 'brand' | 'elevated';
 
@@ -67,7 +59,7 @@ export function WaselCard({
     padding,
     fontFamily: F,
     transition: hover
-      ? 'transform 200ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 200ms ease, border-color 200ms ease'
+      ? `transform ${ANIM.dur.slow} ${ANIM.ease.spring}, box-shadow ${ANIM.dur.slow} ${ANIM.ease.default}, border-color ${ANIM.dur.slow} ${ANIM.ease.default}`
       : undefined,
     ...variantMap[variant],
     ...style,
@@ -79,18 +71,17 @@ export function WaselCard({
       style={base}
       onMouseEnter={e => {
         if (hover) {
-          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px) scale(1.01)';
-          (e.currentTarget as HTMLDivElement).style.boxShadow = SH.md;
-          (e.currentTarget as HTMLDivElement).style.borderColor = C.borderHov;
+          e.currentTarget.style.transform = 'translateY(-3px)';
+          e.currentTarget.style.boxShadow = SH.md;
+          e.currentTarget.style.borderColor = C.borderHov;
         }
         onMouseEnter?.(e);
       }}
       onMouseLeave={e => {
         if (hover) {
-          (e.currentTarget as HTMLDivElement).style.transform = '';
-          (e.currentTarget as HTMLDivElement).style.boxShadow =
-            (variantMap[variant].boxShadow as string) ?? '';
-          (e.currentTarget as HTMLDivElement).style.borderColor = '';
+          e.currentTarget.style.transform = '';
+          e.currentTarget.style.boxShadow = (variantMap[variant].boxShadow as string) ?? '';
+          e.currentTarget.style.borderColor = '';
         }
         onMouseLeave?.(e);
       }}

@@ -25,6 +25,7 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
           const Icon = action.icon;
           return (
             <motion.button
+              type="button"
               key={action.path}
               onClick={() => onNavigate(action.path)}
               whileHover={{ y: -2 }}
