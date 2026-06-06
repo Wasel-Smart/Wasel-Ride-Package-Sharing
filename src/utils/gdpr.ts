@@ -4,8 +4,8 @@
  */
 
 import { logger } from './monitoring';
-import { supabase } from './supabase/client';
 import { sanitizeLogMessage } from './sanitization';
+import { API_URL, createEdgeHeaders, fetchWithRetry, getAuthDetails } from '../services/core';
 
 export interface ConsentRecord {
   userId: string;
@@ -33,25 +33,54 @@ export interface DataDeletionRequest {
 }
 
 class GDPRCompliance {
+  private async requestBackend<T>(
+    path: string,
+    options: RequestInit = {},
+    allowAnonymous = false,
+  ): Promise<T> {
+    if (!API_URL) {
+      throw new Error('Backend API is not configured');
+    }
+
+    const auth = allowAnonymous ? null : await getAuthDetails();
+    const response = await fetchWithRetry(`${API_URL}${path}`, {
+      ...options,
+      headers: createEdgeHeaders(
+        {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+        auth?.token,
+      ),
+    });
+
+    if (!response.ok) {
+      throw new Error(`GDPR backend request failed: ${response.status}`);
+    }
+
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
+    return response.json() as Promise<T>;
+  }
+
   /**
    * Record user consent
    */
   async recordConsent(consent: ConsentRecord): Promise<void> {
     try {
-      if (!supabase) {
-        throw new Error('Supabase not initialized');
-      }
-
-      const { error } = await supabase.from('user_consents').insert({
-        user_id: consent.userId,
-        consent_type: consent.consentType,
-        granted: consent.granted,
-        ip_address: consent.ipAddress,
-        user_agent: consent.userAgent,
-        created_at: new Date(consent.timestamp).toISOString(),
+      await this.requestBackend<void>('/privacy/consents', {
+        method: 'POST',
+        body: JSON.stringify({
+          userId: consent.userId,
+          consentType: consent.consentType,
+          granted: consent.granted,
+          ipAddress: consent.ipAddress,
+          userAgent: consent.userAgent,
+          timestamp: consent.timestamp,
+        }),
       });
-
-      if (error) throw error;
 
       logger.info('Consent recorded', {
         userId: sanitizeLogMessage(consent.userId),
@@ -72,22 +101,10 @@ class GDPRCompliance {
     consentType: ConsentRecord['consentType']
   ): Promise<boolean> {
     try {
-      if (!supabase) {
-        return false;
-      }
-
-      const { data, error } = await supabase
-        .from('user_consents')
-        .select('granted')
-        .eq('user_id', userId)
-        .eq('consent_type', consentType)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-
-      return data?.granted ?? false;
+      const result = await this.requestBackend<{ granted: boolean }>(
+        `/privacy/consents/${encodeURIComponent(userId)}/${encodeURIComponent(consentType)}`,
+      );
+      return result.granted;
     } catch (error) {
       logger.error('Failed to get consent', error);
       return false;
@@ -99,30 +116,17 @@ class GDPRCompliance {
    */
   async requestDataExport(userId: string): Promise<DataExportRequest> {
     try {
-      if (!supabase) {
-        throw new Error('Supabase not initialized');
-      }
-
       const request: DataExportRequest = {
         userId,
         requestedAt: Date.now(),
       };
 
-      // Store request
-      const { error } = await supabase.from('data_export_requests').insert({
-        user_id: userId,
-        requested_at: new Date(request.requestedAt).toISOString(),
-        status: 'pending',
+      await this.requestBackend<DataExportRequest>('/privacy/data-export', {
+        method: 'POST',
+        body: JSON.stringify({ userId }),
       });
-
-      if (error) throw error;
 
       logger.info('Data export requested', { userId: sanitizeLogMessage(userId) });
-
-      // Trigger async export job (would be handled by worker)
-      this.generateDataExport(userId).catch((error) => {
-        logger.error('Data export generation failed', error);
-      });
 
       return request;
     } catch (error) {
@@ -136,51 +140,14 @@ class GDPRCompliance {
    */
   private async generateDataExport(userId: string): Promise<string> {
     try {
-      if (!supabase) {
-        throw new Error('Supabase not initialized');
-      }
-
-      // Collect all user data
-      const [profile, bookings, packages, transactions, consents] = await Promise.all([
-        supabase.from('users').select('*').eq('id', userId).single(),
-        supabase.from('ride_bookings').select('*').eq('passenger_id', userId),
-        supabase.from('packages').select('*').eq('sender_id', userId),
-        supabase.from('wallet_transactions').select('*').eq('user_id', userId),
-        supabase.from('user_consents').select('*').eq('user_id', userId),
-      ]);
-
-      const exportData = {
-        exportDate: new Date().toISOString(),
-        userId,
-        profile: profile.data,
-        bookings: bookings.data,
-        packages: packages.data,
-        transactions: transactions.data,
-        consents: consents.data,
-      };
-
-      // Convert to JSON
-      const jsonData = JSON.stringify(exportData, null, 2);
-      
-      // In production, upload to secure storage and return URL
-      // For now, return data URL
-      const dataUrl = `data:application/json;base64,${btoa(jsonData)}`;
-
-      // Update request with download URL
-      await supabase
-        .from('data_export_requests')
-        .update({
-          status: 'completed',
-          download_url: dataUrl,
-          completed_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
-        })
-        .eq('user_id', userId)
-        .eq('status', 'pending');
+      const result = await this.requestBackend<{ downloadUrl: string }>(
+        `/privacy/data-export/${encodeURIComponent(userId)}/generate`,
+        { method: 'POST' },
+      );
 
       logger.info('Data export generated', { userId });
 
-      return dataUrl;
+      return result.downloadUrl;
     } catch (error) {
       logger.error('Failed to generate data export', error);
       throw error;
@@ -195,10 +162,6 @@ class GDPRCompliance {
     reason?: string
   ): Promise<DataDeletionRequest> {
     try {
-      if (!supabase) {
-        throw new Error('Supabase not initialized');
-      }
-
       // Schedule deletion for 30 days from now (grace period)
       const scheduledFor = Date.now() + 30 * 24 * 60 * 60 * 1000;
 
@@ -209,16 +172,10 @@ class GDPRCompliance {
         reason,
       };
 
-      // Store request
-      const { error } = await supabase.from('data_deletion_requests').insert({
-        user_id: userId,
-        requested_at: new Date(request.requestedAt).toISOString(),
-        scheduled_for: new Date(scheduledFor).toISOString(),
-        reason,
-        status: 'pending',
+      await this.requestBackend<DataDeletionRequest>('/privacy/deletions', {
+        method: 'POST',
+        body: JSON.stringify({ userId, reason }),
       });
-
-      if (error) throw error;
 
       logger.info('Account deletion requested', {
         userId,
@@ -237,17 +194,9 @@ class GDPRCompliance {
    */
   async cancelDeletion(userId: string): Promise<void> {
     try {
-      if (!supabase) {
-        throw new Error('Supabase not initialized');
-      }
-
-      const { error } = await supabase
-        .from('data_deletion_requests')
-        .update({ status: 'cancelled' })
-        .eq('user_id', userId)
-        .eq('status', 'pending');
-
-      if (error) throw error;
+      await this.requestBackend<void>(`/privacy/deletions/${encodeURIComponent(userId)}/cancel`, {
+        method: 'POST',
+      });
 
       logger.info('Account deletion cancelled', { userId });
     } catch (error) {
@@ -261,45 +210,7 @@ class GDPRCompliance {
    */
   async executeScheduledDeletions(): Promise<void> {
     try {
-      if (!supabase) {
-        throw new Error('Supabase not initialized');
-      }
-
-      // Find pending deletions that are due
-      const { data: requests, error } = await supabase
-        .from('data_deletion_requests')
-        .select('user_id')
-        .eq('status', 'pending')
-        .lte('scheduled_for', new Date().toISOString());
-
-      if (error) throw error;
-
-      if (!requests || requests.length === 0) {
-        return;
-      }
-
-      // Process each deletion
-      for (const request of requests) {
-        try {
-          await this.deleteUserData(request.user_id);
-          
-          // Mark as completed
-          await supabase
-            .from('data_deletion_requests')
-            .update({
-              status: 'completed',
-              completed_at: new Date().toISOString(),
-            })
-            .eq('user_id', request.user_id);
-
-          logger.info('User data deleted', { userId: request.user_id });
-        } catch (error) {
-          logger.error('Failed to delete user data', {
-            userId: request.user_id,
-            error,
-          });
-        }
-      }
+      await this.requestBackend<void>('/privacy/deletions/execute-due', { method: 'POST' });
     } catch (error) {
       logger.error('Failed to execute scheduled deletions', error);
     }
@@ -309,54 +220,18 @@ class GDPRCompliance {
    * Delete all user data
    */
   private async deleteUserData(userId: string): Promise<void> {
-    if (!supabase) {
-      throw new Error('Supabase not initialized');
-    }
-
-    // Soft delete user data
-    await Promise.all([
-      supabase
-        .from('users')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', userId),
-      supabase
-        .from('ride_bookings')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('passenger_id', userId),
-      supabase
-        .from('packages')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('sender_id', userId),
-      supabase
-        .from('wallet_transactions')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('user_id', userId),
-    ]);
-
-    // Anonymize remaining references
-    await this.anonymizeUserData(userId);
+    await this.requestBackend<void>(`/privacy/users/${encodeURIComponent(userId)}/delete`, {
+      method: 'POST',
+    });
   }
 
   /**
    * Anonymize user data in related records
    */
   private async anonymizeUserData(userId: string): Promise<void> {
-    if (!supabase) {
-      throw new Error('Supabase not initialized');
-    }
-
-    const anonymousEmail = `deleted-${userId.slice(0, 8)}@wasel.local`;
-    const anonymousName = 'Deleted User';
-
-    await supabase
-      .from('users')
-      .update({
-        email: anonymousEmail,
-        full_name: anonymousName,
-        phone_number: `deleted-${userId.slice(0, 8)}`,
-        avatar_url: null,
-      })
-      .eq('id', userId);
+    await this.requestBackend<void>(`/privacy/users/${encodeURIComponent(userId)}/anonymize`, {
+      method: 'POST',
+    });
   }
 
   /**
