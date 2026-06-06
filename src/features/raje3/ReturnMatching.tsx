@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { AlertCircle, Check, CheckCircle2, QrCode, RefreshCw, Search, Star } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { C, F, FM, GRAD_HERO, R, SH } from '../../utils/wasel-ds';
 import {
   createConnectedPackage,
   getConnectedRides,
@@ -14,18 +15,18 @@ import {
 } from '../../services/journeyLogistics';
 
 const D = {
-  bg: '#040C18',
-  card: '#0A1628',
-  card2: '#0D1F38',
-  border: 'rgba(240,168,48,0.12)',
-  gold: '#F0A830',
-  cyan: '#00C8E8',
-  green: '#00C875',
-  text: '#EFF6FF',
-  sub: 'rgba(148,163,184,0.80)',
-  muted: 'rgba(100,130,180,0.60)',
-  F: "-apple-system,'Inter','Cairo',sans-serif",
-  MONO: "'JetBrains Mono','Fira Mono',monospace",
+  bg: C.bg,
+  card: C.cardSolid,
+  card2: C.card2,
+  border: C.border,
+  gold: C.gold,
+  cyan: C.cyan,
+  green: C.green,
+  text: C.text,
+  sub: C.textSub,
+  muted: C.textMuted,
+  F,
+  MONO: FM,
 } as const;
 
 const RETAILERS = [
@@ -138,12 +139,12 @@ export function ReturnMatching() {
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         <div
           style={{
-            background: 'linear-gradient(135deg,#0B1D45 0%,#2A1A05 60%,#0A1628 100%)',
-            borderRadius: 24,
+            background: GRAD_HERO,
+            borderRadius: R.xxl,
             padding: '26px 28px',
             marginBottom: 18,
-            border: `1px solid ${D.gold}20`,
-            boxShadow: '0 18px 48px rgba(0,0,0,0.22)',
+            border: `1px solid ${C.borderHov}`,
+            boxShadow: SH.lg,
           }}
         >
           <div
@@ -183,15 +184,15 @@ export function ReturnMatching() {
             </div>
             <div
               style={{
-                background: 'rgba(5,12,24,0.44)',
+                background: C.elevated,
                 border: `1px solid ${D.border}`,
-                borderRadius: 18,
+                borderRadius: R.xl,
                 padding: '14px 16px',
                 minWidth: 220,
               }}
             >
               <div style={{ color: D.gold, fontSize: '0.72rem', fontWeight: 800 }}>Live lane</div>
-              <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 900, marginTop: 6 }}>
+              <div style={{ color: D.text, fontSize: '1rem', fontWeight: 900, marginTop: 6 }}>
                 {liveLane}
               </div>
               <div style={{ color: D.muted, fontSize: '0.74rem', marginTop: 6 }}>

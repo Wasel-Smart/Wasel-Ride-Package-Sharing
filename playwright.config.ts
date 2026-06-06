@@ -19,7 +19,7 @@ export default defineConfig({
         command: 'node scripts/start-playwright-dev.mjs',
         url: 'http://127.0.0.1:4173',
         reuseExistingServer: false,
-        timeout: 420_000,
+        timeout: 600_000,
       },
   projects: [
     {

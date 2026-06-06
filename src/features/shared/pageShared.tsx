@@ -11,6 +11,7 @@ import { ProtectedPagePreview } from '../../components/system/ProtectedPagePrevi
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
+import { C, GRAD, GRAD_HERO, R, SH } from '../../utils/wasel-ds';
 
 // ── Design-system shorthand ───────────────────────────────────────────────────
 export const DS = PAGE_DS;
@@ -123,7 +124,7 @@ export function PageShell({ children }: { children: ReactNode }) {
     <div
       style={{
         minHeight: 'var(--app-min-height)',
-        background: `radial-gradient(circle at 12% 10%, rgba(0,200,232,0.12), transparent 24%), radial-gradient(circle at 88% 6%, rgba(240,168,48,0.10), transparent 22%), radial-gradient(circle at 80% 86%, rgba(0,200,117,0.08), transparent 24%), ${DS.bg}`,
+        background: `radial-gradient(circle at 12% 10%, ${C.cyanDim}, transparent 24%), radial-gradient(circle at 88% 6%, ${C.goldDim}, transparent 22%), radial-gradient(circle at 80% 86%, ${C.greenDim}, transparent 24%), ${DS.bg}`,
         fontFamily: DS.F,
         direction: ar ? 'rtl' : 'ltr',
         position: 'relative',
@@ -132,8 +133,8 @@ export function PageShell({ children }: { children: ReactNode }) {
     >
       <style>{`
         :root { color-scheme: dark; scroll-behavior: smooth; }
-        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(0,200,232,0.28); }
-        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(240,168,48,0.28); }
+        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px ${C.cyanGlow}; }
+        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px ${C.goldDim}; }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
             animation-duration: 0.01ms !important;
@@ -176,7 +177,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           position: 'fixed',
           inset: 0,
           backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)',
+            `linear-gradient(${C.borderFaint} 1px, transparent 1px), linear-gradient(90deg, ${C.borderFaint} 1px, transparent 1px)`,
           backgroundSize: '54px 54px',
           maskImage: 'radial-gradient(circle at center, black 0%, black 44%, transparent 82%)',
           pointerEvents: 'none',
@@ -188,7 +189,7 @@ export function PageShell({ children }: { children: ReactNode }) {
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'radial-gradient(circle at 50% 0%, rgba(0,200,232,0.06), transparent 38%)',
+          background: `radial-gradient(circle at 50% 0%, ${C.cyanDim}, transparent 38%)`,
           pointerEvents: 'none',
         }}
       />
@@ -231,14 +232,14 @@ export function SectionHead({
     <div
       className="sp-head"
       style={{
-        background: `linear-gradient(135deg, rgba(11,29,69,0.96), rgba(13,31,56,0.94))`,
-        borderRadius: r(22),
+        background: GRAD_HERO,
+        borderRadius: R.xxl,
         padding: '26px 24px',
         marginBottom: 20,
         position: 'relative',
         overflow: 'hidden',
         border: `1px solid ${color}20`,
-        boxShadow: '0 16px 44px rgba(0,0,0,0.42)',
+        boxShadow: SH.lg,
       }}
     >
       <div
@@ -263,7 +264,7 @@ export function SectionHead({
             style={{
               width: 58,
               height: 58,
-              borderRadius: r(18),
+              borderRadius: R.xl,
               background: `${color}18`,
               border: `1.5px solid ${color}34`,
               display: 'flex',
@@ -281,7 +282,7 @@ export function SectionHead({
                 style={{
                   fontSize: '1.62rem',
                   fontWeight: 950,
-                  color: '#fff',
+                  color: C.text,
                   margin: 0,
                   letterSpacing: '-0.03em',
                 }}
@@ -291,7 +292,7 @@ export function SectionHead({
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
               {sub && (
-                <span style={{ color: 'rgba(255,255,255,0.48)', fontSize: '0.78rem' }}>{sub}</span>
+                <span style={{ color: C.textMuted, fontSize: '0.78rem' }}>{sub}</span>
               )}
             </div>
           </div>
@@ -303,13 +304,13 @@ export function SectionHead({
             style={{
               height: 44,
               padding: '0 22px',
-              borderRadius: '99px',
+              borderRadius: R.full,
               border: 'none',
-              background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 52%, #18D7C8 100%)',
-              color: '#041018',
+              background: GRAD,
+              color: C.bgDeep,
               fontWeight: 900,
               fontSize: '0.875rem',
-              boxShadow: `0 12px 28px ${DS.cyan}25`,
+              boxShadow: SH.cyanL,
               cursor: 'pointer',
               flexShrink: 0,
             }}

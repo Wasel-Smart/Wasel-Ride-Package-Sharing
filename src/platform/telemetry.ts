@@ -168,9 +168,8 @@ export const telemetry = new TelemetryCollector();
 export function initWebVitals(): void {
   if (typeof window === 'undefined') return;
 
-  import('web-vitals').then(({ onCLS, onFID, onLCP, onFCP, onTTFB, onINP }) => {
+  import('web-vitals').then(({ onCLS, onLCP, onFCP, onTTFB, onINP }) => {
     onCLS((metric) => telemetry.recordMetric('web_vital.cls', metric.value, 'score'));
-    onFID((metric) => telemetry.recordMetric('web_vital.fid', metric.value, 'ms'));
     onLCP((metric) => telemetry.recordMetric('web_vital.lcp', metric.value, 'ms'));
     onFCP((metric) => telemetry.recordMetric('web_vital.fcp', metric.value, 'ms'));
     onTTFB((metric) => telemetry.recordMetric('web_vital.ttfb', metric.value, 'ms'));

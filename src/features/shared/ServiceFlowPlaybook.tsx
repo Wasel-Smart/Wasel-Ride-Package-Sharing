@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DS, pill, r } from './pageShared';
+import { C, R, SH } from '../../utils/wasel-ds';
 
 export type ServiceFlowKey =
   | 'find-ride'
@@ -195,11 +196,11 @@ export function ServiceFlowPlaybook({
     <section
       style={{
         marginTop: 24,
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025))',
+        background: C.card,
         border: `1px solid ${DS.border}`,
-        borderRadius: r(24),
+        borderRadius: R.xxl,
         padding: 22,
-        boxShadow: '0 18px 38px rgba(0,0,0,0.16)',
+        boxShadow: SH.card,
       }}
     >
       <style>{`
@@ -223,12 +224,12 @@ export function ServiceFlowPlaybook({
       >
         <div style={{ maxWidth: 720 }}>
           <div style={{ ...pill(active.accent), marginBottom: 10 }}>{active.label}</div>
-          <div style={{ color: '#fff', fontWeight: 900, fontSize: '1.04rem', marginBottom: 8 }}>
+          <div style={{ color: C.text, fontWeight: 900, fontSize: '1.04rem', marginBottom: 8 }}>
             {title}
           </div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.65 }}>{subtitle}</div>
         </div>
-        <div style={{ maxWidth: 340, color: '#fff', fontSize: '0.84rem', lineHeight: 1.65 }}>
+        <div style={{ maxWidth: 340, color: C.textSub, fontSize: '0.84rem', lineHeight: 1.65 }}>
           {active.summary}
         </div>
       </div>
@@ -246,10 +247,10 @@ export function ServiceFlowPlaybook({
               style={{
                 minHeight: 40,
                 padding: '0 14px',
-                borderRadius: '999px',
+                borderRadius: R.full,
                 border: `1px solid ${selected ? service.accent : DS.border}`,
-                background: selected ? `${service.accent}16` : DS.card2,
-                color: '#fff',
+                background: selected ? `${service.accent}16` : C.elevated,
+                color: C.text,
                 fontWeight: 800,
                 cursor: 'pointer',
               }}
@@ -295,7 +296,7 @@ export function ServiceFlowPlaybook({
             >
               {index + 1}
             </div>
-            <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginBottom: 6 }}>
+              <div style={{ color: C.text, fontWeight: 800, fontSize: '0.84rem', marginBottom: 6 }}>
               {step.title}
             </div>
             <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>{step.detail}</div>
@@ -329,7 +330,7 @@ export function ServiceFlowPlaybook({
             >
               Keep clear
             </div>
-            <div style={{ color: '#fff', fontSize: '0.79rem', lineHeight: 1.65 }}>{note}</div>
+              <div style={{ color: C.textSub, fontSize: '0.79rem', lineHeight: 1.65 }}>{note}</div>
           </div>
         ))}
       </div>

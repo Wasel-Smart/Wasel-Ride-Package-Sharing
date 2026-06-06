@@ -5,6 +5,7 @@ import { useLocalAuth } from '../contexts/LocalAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { PAGE_DS } from '../styles/wasel-page-theme';
+import { C, GRAD, GRAD_HERO, R, SH } from '../utils/wasel-ds';
 import {
   CoreExperienceBanner as SharedCoreExperienceBanner,
   PageShell as SharedPageShell,
@@ -95,7 +96,7 @@ export function Protected({ children }: { children: ReactNode }) {
             borderRadius: r(24),
             background: `linear-gradient(180deg, ${DS.card} 0%, ${DS.bg} 100%)`,
             border: `1px solid ${DS.border}`,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
+            boxShadow: SH.xl,
             textAlign: 'center',
           }}
         >
@@ -147,8 +148,8 @@ export function PageShell({ children }: { children: ReactNode }) {
     >
       <style>{`
         :root { color-scheme: dark; }
-        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(0,200,232,0.28); }
-        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(240,168,48,0.28); }
+          .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px ${C.cyanGlow}; }
+          .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px ${C.goldDim}; }
         @media(max-width:899px){
           .sp-inner{ padding:16px !important; }
           .sp-2col { grid-template-columns:1fr !important; }
@@ -198,9 +199,9 @@ export function PageShell({ children }: { children: ReactNode }) {
               gap: 8,
               padding: '8px 12px',
               borderRadius: '999px',
-              background: 'rgba(0,200,232,0.08)',
-              border: '1px solid rgba(0,200,232,0.16)',
-              color: 'rgba(239,246,255,0.78)',
+              background: C.cyanDim,
+              border: `1px solid ${C.borderHov}`,
+              color: C.textSub,
               fontSize: '0.72rem',
               fontWeight: 700,
             }}
@@ -248,14 +249,14 @@ export function SectionHead({
     <div
       className="sp-head"
       style={{
-        background: DS.gradNav,
-        borderRadius: r(20),
+        background: GRAD_HERO,
+        borderRadius: R.xxl,
         padding: '24px 24px',
         marginBottom: 20,
         position: 'relative',
         overflow: 'hidden',
         border: `1px solid ${color}18`,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+        boxShadow: SH.lg,
       }}
     >
       <div
@@ -280,7 +281,7 @@ export function SectionHead({
             style={{
               width: 56,
               height: 56,
-              borderRadius: r(16),
+              borderRadius: R.xl,
               background: `${color}18`,
               border: `1.5px solid ${color}30`,
               display: 'flex',
@@ -294,12 +295,12 @@ export function SectionHead({
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>
+              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: C.text, margin: 0 }}>
                 {displayTitle}
               </h1>
             </div>
             {sub && (
-              <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.46)', margin: 0 }}>
+              <p style={{ fontSize: '0.78rem', color: C.textMuted, margin: 0 }}>
                 {sub}
               </p>
             )}
@@ -312,13 +313,13 @@ export function SectionHead({
             style={{
               height: 44,
               padding: '0 22px',
-              borderRadius: '99px',
+              borderRadius: R.full,
               border: 'none',
-              background: DS.gradC,
-              color: '#fff',
-              fontWeight: 700,
+              background: GRAD,
+              color: C.bgDeep,
+              fontWeight: 900,
               fontSize: '0.875rem',
-              boxShadow: `0 4px 16px ${DS.cyan}30`,
+              boxShadow: SH.cyanL,
               cursor: 'pointer',
               flexShrink: 0,
             }}

@@ -3,7 +3,7 @@
  * Implements retry, dead-letter, and circuit breaker patterns
  */
 
-import { createCorrelationId, createStructuredLogEntry } from './observability';
+import { createStructuredLogEntry } from './observability';
 import { telemetry } from './telemetry';
 
 export interface QueueMessage<T = unknown> {
@@ -191,6 +191,7 @@ export class InMemoryWorker<T = unknown> extends BaseWorker<T> {
   private subscriptions: Map<string, Set<(message: QueueMessage<T>) => void>> = new Map();
 
   async process(message: QueueMessage<T>): Promise<void> {
+    void message;
     // Override in subclass
     throw new Error('process() must be implemented');
   }
