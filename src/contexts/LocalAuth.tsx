@@ -135,13 +135,18 @@ function applyUserUpdates(user: WaselUser, updates: Partial<WaselUser>): WaselUs
 interface LocalAuthCtx {
   user: WaselUser | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (
+    email: string,
+    password: string,
+    captchaToken?: string,
+  ) => Promise<{ error: string | null }>;
   register: (
     name: string,
     email: string,
     password: string,
     phone?: string,
     returnTo?: string,
+    captchaToken?: string,
   ) => Promise<{
     error: string | null;
     requiresEmailConfirmation?: boolean;
@@ -279,7 +284,11 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
      saveUser(nextUser);
    }, [auth.isBackendConnected, auth.loading, auth.profile, auth.user, optimisticUpdates]);
 
-   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
+   const signIn = async (
+     email: string,
+     password: string,
+     captchaToken?: string,
+   ): Promise<{ error: string | null }> => {
      if (isLocalE2EAuthEnabled()) {
        setLocalLoading(true);
        try {
@@ -299,7 +308,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
        }
      }
 
-     const result = await auth.signIn(email, password);
+     const result = await auth.signIn(email, password, captchaToken);
      return { error: result.error ? toMessage(result.error) : null };
    };
 
@@ -309,6 +318,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
      password: string,
      phone?: string,
      returnTo?: string,
+     captchaToken?: string,
    ): Promise<{
      error: string | null;
      requiresEmailConfirmation?: boolean;
@@ -350,7 +360,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
        }
      }
 
-     const result = await auth.signUp(email, password, name, phone, returnTo);
+     const result = await auth.signUp(email, password, name, phone, returnTo, captchaToken);
      return {
        error: result.error ? toMessage(result.error) : null,
        requiresEmailConfirmation: result.requiresEmailConfirmation,

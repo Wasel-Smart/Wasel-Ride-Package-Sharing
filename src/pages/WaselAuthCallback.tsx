@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import { WaselButton, WaselCard, WaselInput } from '../design-system';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { normalizeReturnToPath } from '../utils/env';
+import { C, F, GRAD, R, TYPE } from '../utils/wasel-ds';
 import {
   completeAuthCallbackSession,
   subscribeToPasswordRecovery,
@@ -155,78 +157,57 @@ export default function WaselAuthCallback() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#040C18',
-          color: '#EFF6FF',
+          background: C.bgDeep,
+          color: C.text,
           padding: 24,
-          fontFamily: "-apple-system,'Inter',sans-serif",
+          fontFamily: F,
         }}
       >
-        <div
-          style={{
-            width: '100%',
-            maxWidth: 420,
-            borderRadius: 20,
-            padding: 28,
-            background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(0,200,232,0.14)',
-            display: 'grid',
-            gap: 14,
-          }}
+        <WaselCard
+          variant="default"
+          padding="28px"
+          radius={R.xxl}
+          style={{ width: '100%', maxWidth: 420, display: 'grid', gap: 14 }}
         >
           <div>
-            <h1 style={{ margin: '0 0 8px', fontSize: '1.35rem', lineHeight: 1.2 }}>
+            <h1
+              style={{
+                margin: '0 0 8px',
+                fontSize: TYPE.size.xl,
+                lineHeight: TYPE.lineHeight.snug,
+                color: C.text,
+              }}
+            >
               Reset your password
             </h1>
-            <p style={{ margin: 0, color: 'rgba(239,246,255,0.7)', lineHeight: 1.6 }}>{message}</p>
+            <p style={{ margin: 0, color: C.textMuted, lineHeight: TYPE.lineHeight.relaxed }}>
+              {message}
+            </p>
           </div>
 
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: '0.82rem', color: '#CBD5E1' }}>New password</span>
-            <input
-              type="password"
-              value={password}
-              onChange={event => setPassword(event.target.value)}
-              placeholder="Enter a new password"
-              style={{
-                width: '100%',
-                minHeight: 46,
-                borderRadius: 12,
-                border: '1px solid rgba(0,200,232,0.18)',
-                background: 'rgba(255,255,255,0.03)',
-                color: '#EFF6FF',
-                padding: '0 14px',
-                fontSize: '0.95rem',
-              }}
-            />
-          </label>
+          <WaselInput
+            label="New password"
+            type="password"
+            value={password}
+            onChange={setPassword}
+            placeholder="Enter a new password"
+          />
 
-          <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: '0.82rem', color: '#CBD5E1' }}>Confirm password</span>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={event => setConfirmPassword(event.target.value)}
-              placeholder="Re-enter your new password"
-              style={{
-                width: '100%',
-                minHeight: 46,
-                borderRadius: 12,
-                border: '1px solid rgba(0,200,232,0.18)',
-                background: 'rgba(255,255,255,0.03)',
-                color: '#EFF6FF',
-                padding: '0 14px',
-                fontSize: '0.95rem',
-              }}
-            />
-          </label>
+          <WaselInput
+            label="Confirm password"
+            type="password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            placeholder="Re-enter your new password"
+          />
 
           {formError && (
             <div
               style={{
-                borderRadius: 12,
-                border: '1px solid rgba(255,68,85,0.28)',
-                background: 'rgba(255,68,85,0.12)',
-                color: '#FF8A96',
+                borderRadius: R.md,
+                border: `1px solid ${C.errorDim}`,
+                background: C.errorDim,
+                color: C.error,
                 padding: '12px 14px',
                 fontSize: '0.85rem',
                 lineHeight: 1.5,
@@ -236,48 +217,31 @@ export default function WaselAuthCallback() {
             </div>
           )}
 
-          <button
+          <WaselButton
             type="button"
             onClick={() => {
               void handlePasswordUpdate();
             }}
             disabled={savingPassword}
-            style={{
-              minHeight: 46,
-              borderRadius: 12,
-              border: 'none',
-              background: 'linear-gradient(135deg, #00C8E8, #0095B8)',
-              color: '#041018',
-              fontSize: '0.95rem',
-              fontWeight: 800,
-              cursor: savingPassword ? 'not-allowed' : 'pointer',
-              opacity: savingPassword ? 0.7 : 1,
-            }}
+            fullWidth
+            style={{ background: GRAD, color: C.bgDeep }}
           >
             {savingPassword ? 'Updating password...' : 'Save new password'}
-          </button>
+          </WaselButton>
 
-          <button
+          <WaselButton
             type="button"
+            variant="outline"
+            fullWidth
             onClick={() =>
               navigate(`/app/auth?tab=signin&returnTo=${encodeURIComponent(returnTo)}`, {
                 replace: true,
               })
             }
-            style={{
-              minHeight: 42,
-              borderRadius: 12,
-              border: '1px solid rgba(0,200,232,0.18)',
-              background: 'transparent',
-              color: '#EFF6FF',
-              fontSize: '0.9rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
           >
             Back to sign in
-          </button>
-        </div>
+          </WaselButton>
+        </WaselCard>
       </div>
     );
   }
@@ -289,34 +253,26 @@ export default function WaselAuthCallback() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#040C18',
-        color: '#EFF6FF',
+        background: C.bgDeep,
+        color: C.text,
         padding: 24,
-        fontFamily: "-apple-system,'Inter',sans-serif",
+        fontFamily: F,
       }}
     >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 420,
-          borderRadius: 20,
-          padding: 28,
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(0,200,232,0.14)',
-          textAlign: 'center',
-        }}
+      <WaselCard
+        variant="default"
+        padding="28px"
+        radius={R.xxl}
+        style={{ width: '100%', maxWidth: 420, textAlign: 'center' }}
       >
         <div
           style={{
             width: 42,
             height: 42,
             margin: '0 auto 16px',
-            borderRadius: '50%',
-            border:
-              state === 'error'
-                ? '3px solid rgba(255,68,85,0.3)'
-                : '3px solid rgba(0,200,232,0.15)',
-            borderTop: state === 'error' ? '3px solid #FF4455' : '3px solid #00C8E8',
+            borderRadius: R.full,
+            border: state === 'error' ? `3px solid ${C.errorDim}` : `3px solid ${C.cyanDim}`,
+            borderTop: state === 'error' ? `3px solid ${C.error}` : `3px solid ${C.cyan}`,
             animation:
               state === 'redirecting' || state === 'loading' || state === 'closing'
                 ? 'spin 0.8s linear infinite'
@@ -326,9 +282,9 @@ export default function WaselAuthCallback() {
         <h1 style={{ margin: '0 0 8px', fontSize: '1.35rem', lineHeight: 1.2 }}>
           {state === 'error' ? 'Sign-in could not finish' : 'Finalizing authentication'}
         </h1>
-        <p style={{ margin: 0, color: 'rgba(239,246,255,0.7)' }}>{message}</p>
+        <p style={{ margin: 0, color: C.textMuted }}>{message}</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
+      </WaselCard>
     </div>
   );
 }

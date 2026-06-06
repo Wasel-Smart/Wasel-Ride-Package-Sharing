@@ -1,19 +1,10 @@
 /**
- * WaselInput — design-system text field.
- *
- * Features:
- *  - Focus ring from design tokens (no hardcoded rgba)
- *  - Optional leading icon, trailing element (button/icon)
- *  - Password show/hide built in when type="password"
- *  - Error state with red border + message
- *  - Label + description in token colours
- *
- * All colours reference C, R, TYPE from wasel-ds — zero hardcoded hex.
+ * WaselInput - design-system text field.
  */
 
 import { Eye, EyeOff } from 'lucide-react';
 import { type InputHTMLAttributes, type ReactNode, useState } from 'react';
-import { C, R, TYPE, F } from '../../utils/wasel-ds';
+import { ANIM, C, F, R, TYPE } from '../../utils/wasel-ds';
 
 interface WaselInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
   label?: string;
@@ -45,7 +36,6 @@ export function WaselInput({
   const hasError = Boolean(error);
 
   const borderColor = hasError ? C.error : focused ? C.borderHov : C.border;
-
   const boxShadow = hasError
     ? `0 0 0 3px ${C.errorDim}`
     : focused
@@ -96,7 +86,7 @@ export function WaselInput({
           background: focused ? C.card2 : C.cardSolid,
           border: `1.5px solid ${borderColor}`,
           boxShadow,
-          transition: 'border-color 150ms ease, box-shadow 150ms ease, background 150ms ease',
+          transition: `border-color ${ANIM.dur.normal} ${ANIM.ease.default}, box-shadow ${ANIM.dur.normal} ${ANIM.ease.default}, background ${ANIM.dur.normal} ${ANIM.ease.default}`,
         }}
       >
         {icon && (

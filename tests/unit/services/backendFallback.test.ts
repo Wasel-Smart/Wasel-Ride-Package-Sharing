@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mockGetAuthDetails = vi.fn();
 const mockFetchWithRetry = vi.fn();
 const mockSupabaseSignUp = vi.fn();
+const mockSupabaseSignInWithPassword = vi.fn();
 const mockCreateDirectTrip = vi.fn();
 const mockSearchDirectTrips = vi.fn();
 const mockGetDirectProfile = vi.fn();
@@ -24,6 +25,7 @@ vi.mock('../../../src/services/core', () => ({
   supabase: {
     auth: {
       signUp: (...args: any[]) => mockSupabaseSignUp(...args),
+      signInWithPassword: (...args: any[]) => mockSupabaseSignInWithPassword(...args),
     },
   },
 }));
@@ -80,6 +82,7 @@ describe('backend fallback services', () => {
       password: 'secret123',
       options: {
         emailRedirectTo: 'https://wasel.test/app/auth/callback',
+        captchaToken: undefined,
         data: {
           full_name: 'Sara Ali',
           phone: '+962790000000',
@@ -87,6 +90,24 @@ describe('backend fallback services', () => {
       },
     });
 
+    expect(result.user.id).toBe('user-123');
+  });
+
+  it('passes CAPTCHA tokens through password sign in', async () => {
+    mockSupabaseSignInWithPassword.mockResolvedValue({
+      data: { user: { id: 'user-123' }, session: { access_token: 'token-123' } },
+      error: null,
+    });
+
+    const result = await authAPI.signIn('sara@example.com', 'secret123', 'captcha-token-123');
+
+    expect(mockSupabaseSignInWithPassword).toHaveBeenCalledWith({
+      email: 'sara@example.com',
+      password: 'secret123',
+      options: {
+        captchaToken: 'captcha-token-123',
+      },
+    });
     expect(result.user.id).toBe('user-123');
   });
 

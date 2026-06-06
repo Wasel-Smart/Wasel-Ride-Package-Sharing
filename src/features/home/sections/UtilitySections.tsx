@@ -176,6 +176,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
           }}
         >
           <button
+            type="button"
             onClick={() => onNavigate('/auth?tab=register')}
             style={{
               height: 50,
@@ -192,6 +193,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
             {ar ? 'ابدأ الآن' : 'Get started'}
           </button>
           <button
+            type="button"
             onClick={() => onNavigate('/find-ride')}
             style={{
               height: 50,

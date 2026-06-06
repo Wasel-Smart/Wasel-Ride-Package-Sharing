@@ -28,6 +28,7 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
       >
         {corridorCards.map(card => (
           <button
+            type="button"
             key={card.key}
             onClick={() => onNavigate(card.path)}
             style={{

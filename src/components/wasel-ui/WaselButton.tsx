@@ -1,19 +1,10 @@
 /**
- * WaselButton — primary interactive element.
- *
- * Variants:
- *  - primary  : Electric Cyan gradient CTA
- *  - outline  : Transparent with cyan border
- *  - ghost    : No border, subtle hover
- *  - gold     : Solar Gold gradient (accent / demo)
- *  - danger   : Error red
- *
- * Always pulls from design-system tokens — zero hardcoded hex.
+ * WaselButton - primary interactive element.
  */
 
 import { Loader2 } from 'lucide-react';
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { C, R, SH, F, TYPE } from '../../utils/wasel-ds';
+import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
+import { ANIM, C, F, GRAD, GRAD_GOLD, R, SH, TYPE } from '../../utils/wasel-ds';
 
 type ButtonVariant = 'primary' | 'outline' | 'ghost' | 'gold' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -33,8 +24,8 @@ const variantStyles: Record<
   { background: string; color: string; border: string; boxShadow: string; hoverShadow: string }
 > = {
   primary: {
-    background: 'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)',
-    color: '#040C18',
+    background: GRAD,
+    color: C.bgDeep,
     border: 'none',
     boxShadow: SH.cyan,
     hoverShadow: SH.cyanL,
@@ -54,18 +45,18 @@ const variantStyles: Record<
     hoverShadow: 'none',
   },
   gold: {
-    background: 'linear-gradient(135deg, #F0A830 0%, #C8751A 100%)',
-    color: '#040C18',
+    background: GRAD_GOLD,
+    color: C.bgDeep,
     border: 'none',
     boxShadow: SH.gold,
-    hoverShadow: '0 10px 36px rgba(240,168,48,0.45)',
+    hoverShadow: SH.gold,
   },
   danger: {
     background: C.errorDim,
     color: C.error,
-    border: `1px solid ${C.error}28`,
+    border: `1px solid ${C.errorDim}`,
     boxShadow: 'none',
-    hoverShadow: '0 4px 20px rgba(255,68,85,0.25)',
+    hoverShadow: SH.sm,
   },
 };
 
@@ -96,7 +87,7 @@ export function WaselButton({
   const s = sizeStyles[size];
   const isDisabled = disabled || loading;
 
-  const baseStyle: React.CSSProperties = {
+  const baseStyle: CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -107,7 +98,7 @@ export function WaselButton({
     fontSize: s.fontSize,
     fontWeight: TYPE.weight.black,
     fontFamily: F,
-    letterSpacing: '-0.01em',
+    letterSpacing: TYPE.letterSpacing.normal,
     borderRadius: s.borderRadius,
     border: v.border,
     background: v.background,
@@ -115,10 +106,12 @@ export function WaselButton({
     boxShadow: v.boxShadow,
     cursor: isDisabled ? 'not-allowed' : 'pointer',
     opacity: isDisabled ? 0.6 : 1,
-    transition: 'all 160ms cubic-bezier(0.25,0.1,0.25,1)',
+    transition: `transform ${ANIM.dur.normal} ${ANIM.ease.default}, box-shadow ${ANIM.dur.normal} ${ANIM.ease.default}, border-color ${ANIM.dur.normal} ${ANIM.ease.default}, background ${ANIM.dur.normal} ${ANIM.ease.default}`,
     userSelect: 'none',
     WebkitUserSelect: 'none',
     outline: 'none',
+    whiteSpace: 'nowrap',
+    minWidth: 0,
     ...style,
   };
 
@@ -129,28 +122,33 @@ export function WaselButton({
       style={baseStyle}
       onMouseEnter={e => {
         if (!isDisabled) {
-          (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px) scale(1.01)';
-          (e.currentTarget as HTMLButtonElement).style.boxShadow = v.hoverShadow;
+          e.currentTarget.style.transform = 'translateY(-1px)';
+          e.currentTarget.style.boxShadow = v.hoverShadow;
           if (variant === 'outline') {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = C.borderHov;
-            (e.currentTarget as HTMLButtonElement).style.background = C.cyanDim;
+            e.currentTarget.style.borderColor = C.borderHov;
+            e.currentTarget.style.background = C.cyanDim;
+          }
+          if (variant === 'ghost') {
+            e.currentTarget.style.background = C.elevated;
+            e.currentTarget.style.color = C.text;
           }
         }
         onMouseEnter?.(e);
       }}
       onMouseLeave={e => {
-        (e.currentTarget as HTMLButtonElement).style.transform = '';
-        (e.currentTarget as HTMLButtonElement).style.boxShadow = v.boxShadow;
-        (e.currentTarget as HTMLButtonElement).style.borderColor = '';
-        (e.currentTarget as HTMLButtonElement).style.background = v.background;
+        e.currentTarget.style.transform = '';
+        e.currentTarget.style.boxShadow = v.boxShadow;
+        e.currentTarget.style.borderColor = '';
+        e.currentTarget.style.background = v.background;
+        e.currentTarget.style.color = v.color;
         onMouseLeave?.(e);
       }}
       onMouseDown={e => {
-        if (!isDisabled) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.97)';
+        if (!isDisabled) e.currentTarget.style.transform = 'scale(0.98)';
         rest.onMouseDown?.(e);
       }}
       onMouseUp={e => {
-        if (!isDisabled) (e.currentTarget as HTMLButtonElement).style.transform = '';
+        if (!isDisabled) e.currentTarget.style.transform = '';
         rest.onMouseUp?.(e);
       }}
     >
@@ -159,7 +157,7 @@ export function WaselButton({
       ) : (
         icon
       )}
-      {children}
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{children}</span>
       {!loading && iconEnd}
     </button>
   );

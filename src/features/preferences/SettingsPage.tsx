@@ -12,6 +12,7 @@ import {
   SectionCard,
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
+import { WaselButton, WaselInput, WaselSelect } from '../../design-system';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
@@ -74,7 +75,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
         width: 44,
         height: 24,
         borderRadius: 12,
-        background: value ? C.cyan : 'rgba(255,255,255,0.15)',
+        background: value ? C.cyan : C.elevated,
         border: 'none',
         cursor: 'pointer',
         position: 'relative',
@@ -90,7 +91,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
           width: 18,
           height: 18,
           borderRadius: '50%',
-          background: '#fff',
+          background: C.text,
           transition: 'left 0.2s',
           boxShadow: SH.sm,
         }}
@@ -125,7 +126,7 @@ function ToggleRow({
           style={{
             fontSize: TYPE.size.base,
             fontWeight: TYPE.weight.semibold,
-            color: '#EFF6FF',
+            color: C.text,
             fontFamily: F,
           }}
         >
@@ -168,34 +169,22 @@ function SelectRow({
           flex: 1,
           fontSize: TYPE.size.base,
           fontWeight: TYPE.weight.semibold,
-          color: '#EFF6FF',
+          color: C.text,
           fontFamily: F,
         }}
       >
         {label}
       </div>
-      <select
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        style={{
-          background: 'rgba(255,255,255,0.07)',
-          border: `1px solid ${C.border}`,
-          borderRadius: R.md,
-          color: '#EFF6FF',
-          fontFamily: F,
-          fontSize: TYPE.size.sm,
-          padding: '6px 10px',
-          cursor: 'pointer',
-          outline: 'none',
-          boxShadow: SH.none,
-        }}
-      >
-        {options.map(option => (
-          <option key={option.value} value={option.value} style={{ background: '#0F172A' }}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <div style={{ minWidth: 220 }}>
+        <WaselSelect
+          aria-label={label}
+          options={options}
+          value={value}
+          onChange={onChange}
+          containerStyle={{ gap: 0 }}
+          style={{ minHeight: 38, fontSize: TYPE.size.sm }}
+        />
+      </div>
     </div>
   );
 }
@@ -223,7 +212,7 @@ function LinkRow({ label, sub, onClick }: { label: string; sub?: string; onClick
           style={{
             fontSize: TYPE.size.base,
             fontWeight: TYPE.weight.semibold,
-            color: '#EFF6FF',
+            color: C.text,
             fontFamily: F,
           }}
         >
@@ -252,33 +241,31 @@ function ActionButton({
   variant?: 'primary' | 'secondary' | 'danger';
 }) {
   const styles = {
-    primary: { background: C.cyan, color: '#040C18', border: 'none' },
+    primary: { background: C.cyan, color: C.bgDeep, border: 'none' },
     secondary: {
-      background: 'rgba(255,255,255,0.06)',
-      color: '#EFF6FF',
+      background: C.elevated,
+      color: C.text,
       border: `1px solid ${C.border}`,
     },
     danger: { background: C.errorDim, color: C.error, border: `1px solid ${C.error}33` },
   } as const;
 
   return (
-    <button
+    <WaselButton
       type="button"
       onClick={onClick}
       disabled={disabled}
+      variant={variant === 'danger' ? 'danger' : variant === 'secondary' ? 'outline' : 'primary'}
+      size="sm"
       style={{
         height: 38,
         borderRadius: R.md,
         padding: '0 14px',
-        fontFamily: F,
-        fontWeight: TYPE.weight.bold,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.6 : 1,
         ...styles[variant],
       }}
     >
       {label}
-    </button>
+    </WaselButton>
   );
 }
 
@@ -293,26 +280,7 @@ function FormField({
   type?: string;
   placeholder?: string;
 }) {
-  return (
-    <input
-      type={type}
-      value={value}
-      onChange={event => onChange(event.target.value)}
-      placeholder={placeholder}
-      style={{
-        width: '100%',
-        minHeight: 42,
-        padding: '0 12px',
-        borderRadius: R.md,
-        border: `1px solid ${C.border}`,
-        background: 'rgba(255,255,255,0.04)',
-        color: '#EFF6FF',
-        fontFamily: F,
-        outline: 'none',
-        boxShadow: SH.none,
-      }}
-    />
-  );
+  return <WaselInput type={type} value={value} onChange={onChange} placeholder={placeholder} />;
 }
 
 export default function SettingsPage() {
@@ -672,7 +640,7 @@ export default function SettingsPage() {
   };
 
   const sessionSummary = user
-    ? 'One active session on this device · Supabase'
+    ? 'One active session on this device - Supabase'
     : 'Sign in to view active sessions';
 
   return (
@@ -785,7 +753,7 @@ export default function SettingsPage() {
           />
           <LinkRow
             label="SMS Support"
-            sub="Open your phone’s SMS app for quick support escalation"
+            sub="Open your phone's SMS app for quick support escalation"
             onClick={() =>
               openSupportLink(
                 getSmsSupportUrl('Hi Wasel support team'),
@@ -886,7 +854,7 @@ export default function SettingsPage() {
                   style={{
                     fontSize: '0.82rem',
                     fontWeight: TYPE.weight.bold,
-                    color: '#EFF6FF',
+                    color: C.text,
                     fontFamily: F,
                   }}
                 >
@@ -919,12 +887,12 @@ export default function SettingsPage() {
                   <div
                     style={{
                       fontSize: '0.72rem',
-                      color: 'rgba(148,163,184,0.7)',
+                      color: C.textMuted,
                       fontFamily: F,
                       lineHeight: 1.5,
                     }}
                   >
-                    {passwordStrength.feedback.join(' · ')}
+                    {passwordStrength.feedback.join(' - ')}
                   </div>
                 )}
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -963,7 +931,7 @@ export default function SettingsPage() {
                       style={{
                         fontSize: '0.82rem',
                         fontWeight: TYPE.weight.bold,
-                        color: '#EFF6FF',
+                        color: C.text,
                         fontFamily: F,
                       }}
                     >
@@ -972,7 +940,7 @@ export default function SettingsPage() {
                     <div
                       style={{
                         fontSize: '0.72rem',
-                        color: 'rgba(148,163,184,0.65)',
+                        color: C.textMuted,
                         fontFamily: F,
                         marginTop: 4,
                       }}
@@ -1028,7 +996,7 @@ export default function SettingsPage() {
                     <div
                       style={{
                         fontSize: '0.72rem',
-                        color: 'rgba(148,163,184,0.65)',
+                        color: C.textMuted,
                         fontFamily: F,
                       }}
                     >
@@ -1044,7 +1012,7 @@ export default function SettingsPage() {
                     style={{
                       display: 'grid',
                       gap: 12,
-                      background: 'rgba(255,255,255,0.03)',
+                      background: C.elevated,
                       border: `1px solid ${C.border}`,
                       borderRadius: 12,
                       padding: 14,
@@ -1053,7 +1021,7 @@ export default function SettingsPage() {
                     <div
                       style={{
                         fontSize: '0.76rem',
-                        color: '#EFF6FF',
+                        color: C.text,
                         fontFamily: F,
                         fontWeight: TYPE.weight.bold,
                       }}
@@ -1067,34 +1035,34 @@ export default function SettingsPage() {
                         width: 160,
                         height: 160,
                         borderRadius: 12,
-                        background: '#fff',
+                        background: C.text,
                         padding: 8,
                       }}
                     />
                     <div
                       style={{
                         fontSize: '0.72rem',
-                        color: 'rgba(148,163,184,0.7)',
+                        color: C.textMuted,
                         fontFamily: F,
                         lineHeight: 1.5,
                       }}
                     >
-                      Secret: <span style={{ color: '#EFF6FF' }}>{twoFactorSetup.secret}</span>
+                      Secret: <span style={{ color: C.text }}>{twoFactorSetup.secret}</span>
                     </div>
                     <div
                       style={{
                         fontSize: '0.72rem',
-                        color: 'rgba(148,163,184,0.7)',
+                        color: C.textMuted,
                         fontFamily: F,
                         lineHeight: 1.6,
                       }}
                     >
-                      Backup codes: {twoFactorSetup.backupCodes.join(' · ')}
+                      Backup codes: {twoFactorSetup.backupCodes.join(' - ')}
                     </div>
                   </div>
                 )}
 
-                <div style={{ fontSize: '0.78rem', color: 'rgba(148,163,184,0.7)', fontFamily: F }}>
+                <div style={{ fontSize: '0.78rem', color: C.textMuted, fontFamily: F }}>
                   {sessionSummary}
                 </div>
               </div>
@@ -1110,7 +1078,7 @@ export default function SettingsPage() {
                   style={{
                     fontSize: '0.82rem',
                     fontWeight: TYPE.weight.bold,
-                    color: '#EFF6FF',
+                    color: C.text,
                     fontFamily: F,
                   }}
                 >
@@ -1125,7 +1093,7 @@ export default function SettingsPage() {
                 <div
                   style={{
                     fontSize: '0.72rem',
-                    color: 'rgba(148,163,184,0.65)',
+                    color: C.textMuted,
                     fontFamily: F,
                     lineHeight: 1.5,
                   }}
@@ -1169,12 +1137,12 @@ export default function SettingsPage() {
           style={{
             textAlign: 'center',
             fontSize: '0.7rem',
-            color: 'rgba(148,163,184,0.3)',
+            color: C.textDim,
             fontFamily: F,
             marginTop: 8,
           }}
         >
-          Wasel v1.0.0 · wasel14.online
+          Wasel v1.0.0 - wasel14.online
         </p>
       </div>
     </PageShell>

@@ -13,12 +13,14 @@ export default defineConfig({
     baseURL: 'http://127.0.0.1:4173',
     trace: 'retain-on-failure',
   },
-  webServer: {
-    command: 'node scripts/start-playwright-dev.mjs',
-    url: 'http://127.0.0.1:4173',
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  webServer: process.env.PLAYWRIGHT_EXTERNAL_SERVER === 'true'
+    ? undefined
+    : {
+        command: 'node scripts/start-playwright-dev.mjs',
+        url: 'http://127.0.0.1:4173',
+        reuseExistingServer: false,
+        timeout: 420_000,
+      },
   projects: [
     {
       name: 'chromium',

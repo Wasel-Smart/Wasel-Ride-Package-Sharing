@@ -20,6 +20,13 @@ export function friendlyAuthError(error: unknown, fallback: string): string {
   if (lower.includes('already registered') || lower.includes('already been registered'))
     return 'This email is already registered.';
 
+  if (
+    lower.includes('captcha') ||
+    lower.includes('account protection') ||
+    lower.includes('request disallowed')
+  )
+    return 'Complete the account protection check and try again.';
+
   return message || fallback;
 }
 
