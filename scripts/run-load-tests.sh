@@ -8,7 +8,7 @@ echo "📊 Wasel Production Load Testing"
 echo "=================================="
 
 TEST_TYPE=${1:-smoke}
-TARGET_URL=${2:-https://wasel.jo}
+TARGET_URL=${2:-https://wasel14.online}
 
 if ! command -v k6 &> /dev/null; then
     echo "❌ k6 not found. Installing..."
@@ -29,6 +29,7 @@ fi
 
 # Set environment variables
 export API_URL=$TARGET_URL
+export BASE_URL=$TARGET_URL
 export K6_PROJECT_ID=${K6_PROJECT_ID:-wasel-production}
 
 # Create results directory

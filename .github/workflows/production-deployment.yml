@@ -58,7 +58,7 @@ jobs:
       - name: Run smoke tests
         run: |
           chmod +x scripts/run-load-tests.sh
-          ./scripts/run-load-tests.sh smoke https://wasel.jo
+          ./scripts/run-load-tests.sh smoke https://wasel14.online
       
       - name: Upload load test results
         uses: actions/upload-artifact@v4
