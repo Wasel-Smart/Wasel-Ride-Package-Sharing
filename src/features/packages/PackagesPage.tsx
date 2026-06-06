@@ -30,6 +30,7 @@ import {
   getFeaturedCorridors,
   getMarketplaceNodes,
 } from '../../config/wasel-movement-network';
+import { C, R, SH } from '../../utils/wasel-ds';
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { PackageReturnsPanel } from './components/PackageReturnsPanel';
 import { PackageSendPanel } from './components/PackageSendPanel';
@@ -266,12 +267,11 @@ export function PackagesPage() {
             <div
               key={item.label}
               style={{
-                background:
-                  'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+                background: C.card,
                 borderRadius: r(18),
                 border: `1px solid ${DS.border}`,
                 padding: '18px 18px 16px',
-                boxShadow: '0 12px 28px rgba(0,0,0,0.16)',
+                boxShadow: SH.card,
               }}
             >
               <div
@@ -279,7 +279,7 @@ export function PackagesPage() {
               >
                 {item.value}
               </div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>
+              <div style={{ color: C.text, fontWeight: 800, fontSize: '0.84rem' }}>
                 {item.label}
               </div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.45 }}>
@@ -321,7 +321,7 @@ export function PackagesPage() {
                 <Brain size={18} color={DS.cyan} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Route fit</div>
+                <div style={{ color: C.text, fontWeight: 800 }}>Route fit</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
                   Match, pickup, and price.
                 </div>
@@ -346,7 +346,7 @@ export function PackagesPage() {
                     border: `1px solid ${DS.border}`,
                     background: DS.card2,
                     padding: '12px 14px',
-                    color: '#fff',
+                    color: C.text,
                     fontSize: '0.82rem',
                     lineHeight: 1.65,
                   }}
@@ -380,7 +380,7 @@ export function PackagesPage() {
                 <Network size={18} color={DS.green} />
               </div>
               <div>
-                <div style={{ color: '#fff', fontWeight: 800 }}>Extra demand</div>
+                <div style={{ color: C.text, fontWeight: 800 }}>Extra demand</div>
                 <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
                   Returns and repeat lanes help.
                 </div>
@@ -397,7 +397,7 @@ export function PackagesPage() {
                     padding: '12px 14px',
                   }}
                 >
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>
+                  <div style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem' }}>
                     {node.title}
                   </div>
                   <div
@@ -438,7 +438,7 @@ export function PackagesPage() {
                   gap: 10,
                 }}
               >
-                <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.86rem' }}>
+                <div style={{ color: C.text, fontWeight: 800, fontSize: '0.86rem' }}>
                   {corridor.label}
                 </div>
                 <span style={{ color: DS.cyan, fontSize: '0.72rem', fontWeight: 700 }}>
@@ -455,7 +455,7 @@ export function PackagesPage() {
                     style={{
                       padding: '5px 9px',
                       borderRadius: '999px',
-                      background: 'rgba(255,255,255,0.05)',
+                      background: C.elevated,
                       border: `1px solid ${DS.border}`,
                       color: DS.sub,
                       fontSize: '0.69rem',
@@ -474,12 +474,12 @@ export function PackagesPage() {
           style={{
             display: 'flex',
             gap: 8,
-            background: 'rgba(255,255,255,0.03)',
-            borderRadius: r(16),
+            background: C.elevated,
+            borderRadius: R.xl,
             padding: 6,
             border: `1px solid ${DS.border}`,
             marginBottom: 24,
-            boxShadow: '0 10px 22px rgba(0,0,0,0.14)',
+            boxShadow: SH.card,
           }}
         >
           {(
@@ -503,7 +503,7 @@ export function PackagesPage() {
                 fontSize: '0.82rem',
                 letterSpacing: '-0.01em',
                 background: activeTab === key ? DS.gradG : 'transparent',
-                color: activeTab === key ? '#fff' : DS.muted,
+                color: activeTab === key ? C.text : DS.muted,
                 transition: 'all 0.18s',
               }}
             >
@@ -514,11 +514,11 @@ export function PackagesPage() {
 
         <div
           style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+            background: C.card,
             borderRadius: r(22),
             padding: '28px 28px',
             border: `1px solid ${DS.border}`,
-            boxShadow: '0 16px 38px rgba(0,0,0,0.18)',
+            boxShadow: SH.card,
           }}
         >
           {activeTab === 'send' && (
@@ -573,7 +573,7 @@ export function PackagesPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <Boxes size={18} color={DS.gold} />
-              <div style={{ color: '#fff', fontWeight: 800 }}>Why this works</div>
+              <div style={{ color: C.text, fontWeight: 800 }}>Why this works</div>
             </div>
             <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.65 }}>
               Every package request improves route matching, handoff clarity, and corridor coverage.
