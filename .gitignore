@@ -55,6 +55,13 @@ deno.lock
 Supabase+TIA+250314.pdf
 u4fphus5luuzlavxipwmexiwwwu2qg.html
 Wasel-Ride-Package-Sharing/
+actions-runner/
+*.vsix
+
+# Vendored SDK exports and sample apps do not belong in the web app repository
+docs/AccountKit.framework/
+docs/FacebookSDKStrings.bundle/
+docs/Samples/
 
 # Security: never commit backup codes, key exports, or credential docs
 Backup-codes-*.txt
@@ -65,6 +72,9 @@ client_secret_*.json
 *.p8
 *.key
 COMPLETE_DEPLOYMENT_GUIDE.md
+DEEP_DIVE_RATING.md
+FINAL_10_OUT_OF_10_SUMMARY.md
+OFFICIAL_10_OUT_OF_10_CERTIFICATION.md
 
 # Firebase and native mobile config not used by the web client
 src/GoogleService-Info.plist

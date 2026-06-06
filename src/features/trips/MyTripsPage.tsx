@@ -22,6 +22,7 @@ import {
   SectionCard,
   StatusBadge as PageStatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
+import { WaselButton } from '../../design-system';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -361,7 +362,7 @@ function LifecycleBadge({ lifecycle }: { lifecycle: TripLifecycle }) {
 
 function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
   const [expanded, setExpanded] = useState(false);
-  const routeAccent = trip.kind === 'rides' ? CYAN : trip.kind === 'packages' ? GOLD : '#4F8CFF';
+  const routeAccent = trip.kind === 'rides' ? CYAN : trip.kind === 'packages' ? GOLD : C.blue;
   const payment = paymentConfig[trip.paymentStatus ?? 'n/a'];
 
   return (
@@ -374,18 +375,15 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
         marginBottom: 12,
       }}
     >
-      <button
+      <WaselButton
         onClick={() => setExpanded(value => !value)}
+        variant="ghost"
         style={{
           width: '100%',
           padding: '16px 18px',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
           textAlign: 'left',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 14,
+          height: 'auto',
+          justifyContent: 'stretch',
         }}
       >
         <div
@@ -414,7 +412,7 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
             <span style={{ fontWeight: 800, color: TEXT, fontFamily: FONT, fontSize: '0.92rem' }}>
               {trip.from}
             </span>
-            <span style={{ color: 'rgba(148,163,184,0.42)', fontSize: '0.78rem' }}>to</span>
+            <span style={{ color: C.textDim, fontSize: '0.78rem' }}>to</span>
             <span style={{ fontWeight: 800, color: TEXT, fontFamily: FONT, fontSize: '0.92rem' }}>
               {trip.to}
             </span>
@@ -425,7 +423,7 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
           <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <span style={pill(routeAccent)}>{trip.primaryStatus}</span>
             {trip.ticketLabel ? (
-              <span style={pill('#ffffff', 'rgba(255,255,255,0.06)')}>
+              <span style={pill(C.text, C.elevated)}>
                 <Ticket size={12} />
                 {trip.ticketLabel}
               </span>
@@ -448,14 +446,14 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
         </div>
         <ChevronRight
           size={14}
-          color="rgba(148,163,184,0.35)"
+          color={C.textDim}
           style={{
             flexShrink: 0,
             transform: expanded ? 'rotate(90deg)' : 'none',
             transition: 'transform 0.15s',
           }}
         />
-      </button>
+      </WaselButton>
 
       {expanded ? (
         <div
@@ -473,13 +471,13 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
               {payment.label}
             </span>
             {trip.supportCount > 0 ? (
-              <span style={pill(AMBER, 'rgba(245,158,11,0.12)')}>
+              <span style={pill(AMBER, C.goldDim)}>
                 <LifeBuoy size={12} />
                 {trip.supportCount} active support
               </span>
             ) : null}
             {trip.captainLabel ? (
-              <span style={pill(GREEN, 'rgba(34,197,94,0.12)')}>{trip.captainLabel}</span>
+              <span style={pill(GREEN, C.greenDim)}>{trip.captainLabel}</span>
             ) : null}
           </div>
           {trip.secondaryStatus ? (
@@ -500,22 +498,9 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
               Operational status is now tied to live booking, package, bus, and support records so
               this view shows what still needs action.
             </div>
-            <button
-              onClick={onOpen}
-              style={{
-                padding: '7px 14px',
-                borderRadius: 10,
-                background: 'transparent',
-                border: `1px solid ${BORDER}`,
-                color: TEXT,
-                fontWeight: 700,
-                fontFamily: FONT,
-                fontSize: '0.76rem',
-                cursor: 'pointer',
-              }}
-            >
+            <WaselButton onClick={onOpen} variant="outline" size="sm">
               Open journey
-            </button>
+            </WaselButton>
           </div>
         </div>
       ) : null}
@@ -738,26 +723,9 @@ export default function MyTripsPage() {
           description={`Welcome ${user?.name ?? 'traveler'}. See what is moving, what needs action, and what is already settled across rides, parcels, and buses.`}
           accent={CYAN}
           actions={
-            <button
-              onClick={() => nav(createPath)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 16px',
-                borderRadius: 12,
-                background: `linear-gradient(135deg,${CYAN},#0095B8)`,
-                border: 'none',
-                color: '#041018',
-                fontWeight: 800,
-                fontFamily: FONT,
-                fontSize: '0.82rem',
-                cursor: 'pointer',
-              }}
-            >
-              <Plus size={14} />
+            <WaselButton onClick={() => nav(createPath)} icon={<Plus size={14} />}>
               {tab === 'rides' ? 'New ride' : tab === 'packages' ? 'New package' : 'Book bus'}
-            </button>
+            </WaselButton>
           }
           aside={
             <div style={{ display: 'grid', gap: SPACE[3] }}>
@@ -789,7 +757,7 @@ export default function MyTripsPage() {
                   >
                     <div
                       style={{
-                        color: '#FFFFFF',
+                        color: C.text,
                         fontSize: TYPE.size.xl,
                         fontWeight: 900,
                         lineHeight: 1.1,
@@ -855,26 +823,9 @@ export default function MyTripsPage() {
               {filtered.length === 1 ? '' : 's'} visible right now
             </p>
           </div>
-          <button
-            onClick={() => nav(createPath)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '10px 16px',
-              borderRadius: 12,
-              background: `linear-gradient(135deg,${CYAN},#0095B8)`,
-              border: 'none',
-              color: '#041018',
-              fontWeight: 800,
-              fontFamily: FONT,
-              fontSize: '0.82rem',
-              cursor: 'pointer',
-            }}
-          >
-            <Plus size={14} />
+          <WaselButton onClick={() => nav(createPath)} icon={<Plus size={14} />}>
             {tab === 'rides' ? 'New ride' : tab === 'packages' ? 'New package' : 'Book bus'}
-          </button>
+          </WaselButton>
         </div>
 
         <div
@@ -884,8 +835,8 @@ export default function MyTripsPage() {
             gap: 14,
             borderRadius: 18,
             padding: '18px 20px',
-            background: 'linear-gradient(135deg, rgba(0,200,232,0.10), rgba(255,255,255,0.03))',
-            border: '1px solid rgba(0,200,232,0.18)',
+            background: `linear-gradient(135deg, ${C.cyanDim}, ${C.elevated})`,
+            border: `1px solid ${C.borderHov}`,
             marginBottom: 18,
           }}
         >
@@ -974,7 +925,7 @@ export default function MyTripsPage() {
           >
             <div
               style={{
-                background: 'linear-gradient(135deg, rgba(0,200,232,0.12), rgba(255,255,255,0.03))',
+                background: `linear-gradient(135deg, ${C.cyanDim}, ${C.elevated})`,
                 border: `1px solid ${nextPriorityTrip?.lifecycle === 'attention' ? AMBER : CYAN}24`,
                 borderRadius: 18,
                 padding: '18px 18px 16px',
@@ -982,7 +933,15 @@ export default function MyTripsPage() {
                 gap: 10,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                  flexWrap: 'wrap',
+                }}
+              >
                 <div>
                   <div
                     style={{
@@ -993,7 +952,9 @@ export default function MyTripsPage() {
                       textTransform: 'uppercase',
                     }}
                   >
-                    {nextPriorityTrip?.lifecycle === 'attention' ? 'Next item needing action' : 'Next live item'}
+                    {nextPriorityTrip?.lifecycle === 'attention'
+                      ? 'Next item needing action'
+                      : 'Next live item'}
                   </div>
                   <div style={{ color: TEXT, fontWeight: 900, fontSize: '1rem', marginTop: 6 }}>
                     {nextPriorityTrip
@@ -1001,56 +962,43 @@ export default function MyTripsPage() {
                       : 'No trip is active yet'}
                   </div>
                 </div>
-                {nextPriorityTrip ? <LifecycleBadge lifecycle={nextPriorityTrip.lifecycle} /> : null}
+                {nextPriorityTrip ? (
+                  <LifecycleBadge lifecycle={nextPriorityTrip.lifecycle} />
+                ) : null}
               </div>
 
-              <div style={{ color: MUTED, fontSize: '0.84rem', lineHeight: 1.65, fontFamily: FONT }}>
+              <div
+                style={{ color: MUTED, fontSize: '0.84rem', lineHeight: 1.65, fontFamily: FONT }}
+              >
                 {nextPriorityTrip
                   ? `${nextPriorityTrip.primaryStatus}. ${nextPriorityTrip.supportCount > 0 ? `${nextPriorityTrip.supportCount} support thread${nextPriorityTrip.supportCount > 1 ? 's are' : ' is'} attached.` : 'No support thread is attached yet.'}`
                   : 'The lane is clear right now. Start a new ride, package movement, or bus booking from here.'}
               </div>
 
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <button
-                  onClick={() => (nextPriorityTrip ? nav(nextPriorityTrip.openPath) : nav(createPath))}
-                  style={{
-                    padding: '10px 14px',
-                    borderRadius: 12,
-                    border: 'none',
-                    background: nextPriorityTrip?.lifecycle === 'attention' ? AMBER : CYAN,
-                    color: '#041018',
-                    fontWeight: 800,
-                    fontFamily: FONT,
-                    fontSize: '0.8rem',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                  }}
+                <WaselButton
+                  onClick={() =>
+                    nextPriorityTrip ? nav(nextPriorityTrip.openPath) : nav(createPath)
+                  }
+                  variant={nextPriorityTrip?.lifecycle === 'attention' ? 'gold' : 'primary'}
+                  size="sm"
+                  iconEnd={<ArrowRight size={14} />}
                 >
                   {nextPriorityTrip ? 'Open item' : 'Create movement'}
-                  <ArrowRight size={14} />
-                </button>
+                </WaselButton>
                 {nextPriorityTrip ? (
-                  <button
+                  <WaselButton
                     onClick={() => {
                       setTab(nextPriorityTrip.kind);
-                      setFilter(nextPriorityTrip.lifecycle === 'attention' ? 'attention' : 'active');
+                      setFilter(
+                        nextPriorityTrip.lifecycle === 'attention' ? 'attention' : 'active',
+                      );
                     }}
-                    style={{
-                      padding: '10px 14px',
-                      borderRadius: 12,
-                      border: `1px solid ${BORDER}`,
-                      background: CARD,
-                      color: TEXT,
-                      fontWeight: 700,
-                      fontFamily: FONT,
-                      fontSize: '0.8rem',
-                      cursor: 'pointer',
-                    }}
+                    variant="outline"
+                    size="sm"
                   >
                     Focus this lane
-                  </button>
+                  </WaselButton>
                 ) : null}
               </div>
             </div>
@@ -1065,30 +1013,31 @@ export default function MyTripsPage() {
                 gap: 8,
               }}
             >
-              <div style={{ color: AMBER, fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              <div
+                style={{
+                  color: AMBER,
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                }}
+              >
                 Attention lane
               </div>
-              <div style={{ color: TEXT, fontSize: '1.3rem', fontWeight: 900 }}>{attentionItems.length}</div>
+              <div style={{ color: TEXT, fontSize: '1.3rem', fontWeight: 900 }}>
+                {attentionItems.length}
+              </div>
               <div style={{ color: MUTED, fontSize: '0.8rem', lineHeight: 1.65 }}>
                 Bookings, route matches, or settlements that still need a decision.
               </div>
-              <button
+              <WaselButton
                 onClick={() => setFilter('attention')}
-                style={{
-                  marginTop: 'auto',
-                  padding: '10px 12px',
-                  borderRadius: 12,
-                  border: `1px solid ${AMBER}24`,
-                  background: 'rgba(245,158,11,0.10)',
-                  color: AMBER,
-                  fontWeight: 800,
-                  fontFamily: FONT,
-                  fontSize: '0.78rem',
-                  cursor: 'pointer',
-                }}
+                variant="gold"
+                size="sm"
+                style={{ marginTop: 'auto' }}
               >
                 Review attention items
-              </button>
+              </WaselButton>
             </div>
 
             <div
@@ -1101,7 +1050,15 @@ export default function MyTripsPage() {
                 gap: 8,
               }}
             >
-              <div style={{ color: GREEN, fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              <div
+                style={{
+                  color: GREEN,
+                  fontSize: '0.68rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                }}
+              >
                 Support and completion
               </div>
               <div style={{ color: TEXT, fontSize: '1.3rem', fontWeight: 900 }}>
@@ -1112,7 +1069,7 @@ export default function MyTripsPage() {
                   ? 'Open support threads stay visible until they are resolved.'
                   : 'Completion stays high when active lanes and attention lanes remain separated.'}
               </div>
-              <button
+              <WaselButton
                 onClick={() => {
                   if (supportBacklog > 0) {
                     setFilter('attention');
@@ -1120,21 +1077,12 @@ export default function MyTripsPage() {
                   }
                   setFilter('completed');
                 }}
-                style={{
-                  marginTop: 'auto',
-                  padding: '10px 12px',
-                  borderRadius: 12,
-                  border: `1px solid ${GREEN}24`,
-                  background: 'rgba(34,197,94,0.10)',
-                  color: GREEN,
-                  fontWeight: 800,
-                  fontFamily: FONT,
-                  fontSize: '0.78rem',
-                  cursor: 'pointer',
-                }}
+                variant="outline"
+                size="sm"
+                style={{ marginTop: 'auto' }}
               >
                 {supportBacklog > 0 ? 'Open support-linked items' : 'Review completed items'}
-              </button>
+              </WaselButton>
             </div>
           </div>
         </SectionCard>
@@ -1157,60 +1105,39 @@ export default function MyTripsPage() {
               marginBottom: 16,
             }}
           >
-          {(
-            [
-              ['rides', <Car key="car" size={14} />, 'Rides'],
-              ['packages', <Package key="pkg" size={14} />, 'Packages'],
-              ['buses', <Bus key="bus" size={14} />, 'Buses'],
-            ] as const
-          ).map(([key, icon, label]) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              style={{
-                flex: 1,
-                padding: '9px 0',
-                borderRadius: 10,
-                background: tab === key ? 'rgba(0,200,232,0.12)' : 'transparent',
-                border: tab === key ? '1px solid rgba(0,200,232,0.25)' : '1px solid transparent',
-                color: tab === key ? CYAN : MUTED,
-                fontWeight: tab === key ? 800 : 600,
-                fontFamily: FONT,
-                fontSize: '0.82rem',
-                cursor: 'pointer',
-                transition: 'all 0.14s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-              }}
-            >
-              {icon}
-              {label}
-            </button>
-          ))}
+            {(
+              [
+                ['rides', <Car key="car" size={14} />, 'Rides'],
+                ['packages', <Package key="pkg" size={14} />, 'Packages'],
+                ['buses', <Bus key="bus" size={14} />, 'Buses'],
+              ] as const
+            ).map(([key, icon, label]) => (
+              <WaselButton
+                key={key}
+                onClick={() => setTab(key)}
+                variant={tab === key ? 'primary' : 'ghost'}
+                size="sm"
+                style={{
+                  flex: 1,
+                }}
+                icon={icon}
+              >
+                {label}
+              </WaselButton>
+            ))}
           </div>
 
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-          {filters.map(filterOption => (
-            <button
-              key={filterOption.key}
-              onClick={() => setFilter(filterOption.key)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 999,
-                fontSize: '0.75rem',
-                fontWeight: filter === filterOption.key ? 800 : 600,
-                fontFamily: FONT,
-                cursor: 'pointer',
-                border: `1px solid ${filter === filterOption.key ? CYAN : BORDER}`,
-                background: filter === filterOption.key ? 'rgba(0,200,232,0.12)' : 'transparent',
-                color: filter === filterOption.key ? CYAN : MUTED,
-              }}
-            >
-              {filterOption.label}
-            </button>
-          ))}
+            {filters.map(filterOption => (
+              <WaselButton
+                key={filterOption.key}
+                onClick={() => setFilter(filterOption.key)}
+                variant={filter === filterOption.key ? 'primary' : 'outline'}
+                size="sm"
+              >
+                {filterOption.label}
+              </WaselButton>
+            ))}
           </div>
 
           {filtered.length === 0 ? (
@@ -1224,41 +1151,28 @@ export default function MyTripsPage() {
                 borderRadius: 18,
               }}
             >
-            {tab === 'rides' ? (
-              <Car size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
-            ) : tab === 'packages' ? (
-              <Package size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
-            ) : (
-              <Bus size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
-            )}
-            <p style={{ fontFamily: FONT, fontSize: '0.94rem', margin: 0 }}>
-              No {tab} match this lifecycle filter yet
-            </p>
-            <button
-              onClick={() => nav(createPath)}
-              style={{
-                marginTop: 16,
-                padding: '10px 18px',
-                borderRadius: 10,
-                background: 'rgba(0,200,232,0.12)',
-                border: '1px solid rgba(0,200,232,0.25)',
-                color: CYAN,
-                fontWeight: 800,
-                fontFamily: FONT,
-                fontSize: '0.82rem',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              {tab === 'rides'
-                ? 'Create ride'
-                : tab === 'packages'
-                  ? 'Create package request'
-                  : 'Find a bus'}
-              <ArrowRight size={14} />
-            </button>
+              {tab === 'rides' ? (
+                <Car size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
+              ) : tab === 'packages' ? (
+                <Package size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
+              ) : (
+                <Bus size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
+              )}
+              <p style={{ fontFamily: FONT, fontSize: '0.94rem', margin: 0 }}>
+                No {tab} match this lifecycle filter yet
+              </p>
+              <WaselButton
+                onClick={() => nav(createPath)}
+                variant="outline"
+                style={{ marginTop: 16 }}
+                iconEnd={<ArrowRight size={14} />}
+              >
+                {tab === 'rides'
+                  ? 'Create ride'
+                  : tab === 'packages'
+                    ? 'Create package request'
+                    : 'Find a bus'}
+              </WaselButton>
             </div>
           ) : (
             filtered.map(trip => (

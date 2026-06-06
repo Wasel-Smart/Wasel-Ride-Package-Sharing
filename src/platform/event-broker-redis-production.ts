@@ -1,30 +1,11 @@
 /**
  * Production Event Broker - Redis Streams Implementation
- * Replaces in-memory event bus with durable, distributed event streaming
+ * Real ioredis integration with durable event streaming
  */
 
 import type { DomainEventEnvelope, DomainEventType } from '../domain/events';
 import { telemetry } from './telemetry';
-
-type RedisFieldValue = string | number;
-type RedisStreamEntry = [messageId: string, fields: string[]];
-type RedisStreamReadResult = [streamKey: string, entries: RedisStreamEntry[]][];
-type InMemoryEventHandler = (event: DomainEventEnvelope) => Promise<void>;
-
-interface RedisClient {
-  xadd(...args: RedisFieldValue[]): Promise<string>;
-  xgroup(...args: RedisFieldValue[]): Promise<unknown>;
-  xreadgroup(...args: RedisFieldValue[]): Promise<RedisStreamReadResult | null>;
-  xack(streamKey: string, groupName: string, messageId: string): Promise<number>;
-  xrevrange(
-    streamKey: string,
-    end: string,
-    start: string,
-    countKeyword: 'COUNT',
-    count: number,
-  ): Promise<RedisStreamEntry[]>;
-  quit(): Promise<unknown>;
-}
+import Redis from 'ioredis';
 
 interface RedisStreamConfig {
   host: string;
@@ -43,8 +24,8 @@ interface ConsumerConfig {
 }
 
 interface PublishOptions {
-  maxlen?: number; // Trim stream to this length
-  approximate?: boolean; // Use approximate trimming
+  maxlen?: number;
+  approximate?: boolean;
 }
 
 export interface EventBrokerAdapter {
@@ -68,54 +49,44 @@ export interface EventBrokerAdapter {
   disconnect(): Promise<void>;
 }
 
-/**
- * Redis Streams Event Broker
- * Production-grade implementation with:
- * - Durable event persistence
- * - Consumer groups for load balancing
- * - Automatic retry and DLQ handling
- * - Schema versioning support
- * - Distributed tracing integration
- */
 class RedisStreamsBroker implements EventBrokerAdapter {
-  private redis: RedisClient | null = null;
+  private redis: Redis;
   private connected = false;
   private subscriptions = new Map<string, boolean>();
 
-  constructor(private config: RedisStreamConfig) {}
+  constructor(private config: RedisStreamConfig) {
+    this.redis = new Redis({
+      host: config.host,
+      port: config.port,
+      password: config.password,
+      tls: config.tls ? {} : undefined,
+      maxRetriesPerRequest: config.maxRetries,
+      retryStrategy: (times: number) => {
+        if (times > config.maxRetries) return null;
+        return Math.min(times * config.retryDelayMs, 5000);
+      },
+      enableReadyCheck: true,
+      enableOfflineQueue: false,
+    });
+  }
 
   async connect(): Promise<void> {
     if (this.connected) return;
 
     try {
-      if (typeof window !== 'undefined') {
-        throw new Error('Redis Streams broker is server-only and cannot run in the browser');
-      }
-
-      const { default: Redis } = await import('ioredis');
-      this.redis = new Redis({
+      await this.redis.ping();
+      this.connected = true;
+      
+      console.log('[EventBroker] Redis Streams connected:', {
         host: this.config.host,
         port: this.config.port,
-        password: this.config.password,
-        tls: this.config.tls ? {} : undefined,
-        maxRetriesPerRequest: this.config.maxRetries,
-        retryStrategy: attempts => Math.min(attempts * this.config.retryDelayMs, 30_000),
-      }) as unknown as RedisClient;
-
-      this.connected = true;
+      });
+      
       telemetry.recordMetric('event_broker_connected', 1, { broker: 'redis-streams' });
     } catch (error) {
       telemetry.recordMetric('event_broker_connection_error', 1);
-      throw new Error(`Failed to connect to Redis Streams: ${error}`, { cause: error });
+      throw new Error(`Failed to connect to Redis Streams: ${error}`);
     }
-  }
-
-  private getClient(): RedisClient {
-    if (!this.redis) {
-      throw new Error('Redis Streams broker is not connected');
-    }
-
-    return this.redis;
   }
 
   async publish<TType extends DomainEventType>(
@@ -135,19 +106,20 @@ class RedisStreamsBroker implements EventBrokerAdapter {
         producer: event.producer,
         traceId: event.traceId,
         occurredAt: event.occurredAt,
-        schemaVersion: '1.0', // Schema versioning
+        schemaVersion: '1.0',
       };
 
-      const trimArgs: RedisFieldValue[] = options.maxlen
-        ? ['MAXLEN', options.approximate === false ? '=' : '~', options.maxlen]
-        : [];
+      const args: (string | number)[] = [streamKey];
+      if (options.maxlen) {
+        args.push('MAXLEN', options.approximate ? '~' : '=', options.maxlen);
+      }
+      args.push('*');
+      
+      for (const [key, value] of Object.entries(payload)) {
+        args.push(key, String(value));
+      }
 
-      const messageId = await this.getClient().xadd(
-        streamKey,
-        ...trimArgs,
-        '*',
-        ...Object.entries(payload).flat(),
-      );
+      const messageId = await this.redis.xadd(...args);
       
       const duration = Date.now() - startTime;
       telemetry.recordMetric('event_published', 1, {
@@ -157,7 +129,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
       });
       telemetry.recordMetric('event_publish_latency', duration, { eventType: event.type });
 
-      return messageId;
+      return messageId as string;
     } catch (error) {
       telemetry.recordMetric('event_publish_error', 1, { eventType: event.type });
       throw error;
@@ -178,12 +150,11 @@ class RedisStreamsBroker implements EventBrokerAdapter {
       throw new Error(`Already subscribed: ${subKey}`);
     }
 
-    // Create consumer group if it doesn't exist
     await this.createConsumerGroup(eventType, config.groupName);
 
     this.subscriptions.set(subKey, true);
 
-    void this.runConsumer(streamKey, config, handler);
+    this.runConsumer(streamKey, config, handler);
 
     telemetry.recordMetric('event_subscription_created', 1, {
       eventType,
@@ -191,7 +162,6 @@ class RedisStreamsBroker implements EventBrokerAdapter {
       consumerName: config.consumerName,
     });
 
-    // Return unsubscribe function
     return async () => {
       this.subscriptions.set(subKey, false);
       telemetry.recordMetric('event_subscription_removed', 1, {
@@ -210,31 +180,33 @@ class RedisStreamsBroker implements EventBrokerAdapter {
 
     while (this.subscriptions.get(subKey)) {
       try {
-        const messages = await this.getClient().xreadgroup(
-          'GROUP',
-          config.groupName,
-          config.consumerName,
-          'BLOCK',
-          config.blockMs ?? 5000,
-          'COUNT',
-          config.count ?? 10,
-          'STREAMS',
-          streamKey,
-          '>',
+        const messages = await this.redis.xreadgroup(
+          'GROUP', config.groupName, config.consumerName,
+          'BLOCK', config.blockMs || 5000,
+          'COUNT', config.count || 10,
+          'STREAMS', streamKey, '>'
         );
 
-        for (const [currentStreamKey, entries] of messages ?? []) {
-          for (const [messageId, fields] of entries) {
-            const event = this.deserializeEvent<TType>(fields);
-
-            try {
-              await handler(event);
-              await this.ack(currentStreamKey, config.groupName, messageId);
-            } catch (error) {
-              telemetry.recordMetric('event_handler_error', 1, {
-                eventType: event.type,
-                messageId,
-              });
+        if (messages && messages.length > 0) {
+          for (const [stream, entries] of messages) {
+            for (const [messageId, fields] of entries) {
+              const event = this.deserializeEvent<TType>(fields as string[]);
+              
+              try {
+                await handler(event);
+                await this.ack(streamKey, config.groupName, messageId);
+                
+                telemetry.recordMetric('event_consumed', 1, {
+                  eventType: event.type,
+                  groupName: config.groupName,
+                });
+              } catch (error) {
+                telemetry.recordMetric('event_handler_error', 1, {
+                  eventType: event.type,
+                  messageId,
+                });
+                throw error;
+              }
             }
           }
         }
@@ -243,14 +215,14 @@ class RedisStreamsBroker implements EventBrokerAdapter {
           groupName: config.groupName,
           consumerName: config.consumerName,
         });
-        await new Promise(resolve => setTimeout(resolve, 5000)); // Back off on error
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
     }
   }
 
   async ack(streamKey: string, groupName: string, messageId: string): Promise<void> {
     try {
-      await this.getClient().xack(streamKey, groupName, messageId);
+      await this.redis.xack(streamKey, groupName, messageId);
       telemetry.recordMetric('event_acked', 1, { streamKey, groupName });
     } catch (error) {
       telemetry.recordMetric('event_ack_error', 1);
@@ -264,10 +236,11 @@ class RedisStreamsBroker implements EventBrokerAdapter {
     const streamKey = this.getStreamKey(eventType);
 
     try {
-      const entries = await this.getClient().xrevrange(streamKey, '+', '-', 'COUNT', count);
-      return entries.map(([, fields]) => this.deserializeEvent(fields));
+      const entries = await this.redis.xrevrange(streamKey, '+', '-', 'COUNT', count);
+      return entries.map(([id, fields]) => this.deserializeEvent(fields));
     } catch (error) {
       telemetry.recordMetric('history_fetch_error', 1);
+      console.error('[EventBroker] History fetch error:', error);
       return [];
     }
   }
@@ -276,12 +249,10 @@ class RedisStreamsBroker implements EventBrokerAdapter {
     const streamKey = this.getStreamKey(eventType);
 
     try {
-      await this.getClient().xgroup('CREATE', streamKey, groupName, '0', 'MKSTREAM');
+      await this.redis.xgroup('CREATE', streamKey, groupName, '0', 'MKSTREAM');
       telemetry.recordMetric('consumer_group_created', 1, { eventType, groupName });
-    } catch (error) {
-      // Ignore if group already exists
-      const message = error instanceof Error ? error.message : String(error);
-      if (!message.includes('BUSYGROUP')) {
+    } catch (error: any) {
+      if (!error.message?.includes('BUSYGROUP')) {
         throw error;
       }
     }
@@ -292,8 +263,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
 
     try {
       this.subscriptions.clear();
-      await this.redis?.quit();
-      this.redis = null;
+      await this.redis.quit();
       this.connected = false;
       telemetry.recordMetric('event_broker_disconnected', 1);
     } catch (error) {
@@ -308,7 +278,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
   private deserializeEvent<TType extends DomainEventType>(
     fields: string[],
   ): DomainEventEnvelope<TType> {
-    const data: Record<string, string | undefined> = {};
+    const data: any = {};
     for (let i = 0; i < fields.length; i += 2) {
       const key = fields[i];
       if (key) {
@@ -317,46 +287,19 @@ class RedisStreamsBroker implements EventBrokerAdapter {
     }
 
     return {
-      id: data.id ?? '',
+      id: data.id,
       type: data.type as TType,
-      payload: JSON.parse(data.payload ?? '{}') as DomainEventEnvelope<TType>['payload'],
-      producer: data.producer ?? 'unknown',
-      traceId: data.traceId ?? '',
-      occurredAt: data.occurredAt ?? new Date().toISOString(),
+      payload: JSON.parse(data.payload),
+      producer: data.producer,
+      traceId: data.traceId,
+      occurredAt: data.occurredAt,
     };
   }
 }
 
-/**
- * Event Broker Factory
- * Returns Redis Streams broker in production, in-memory for local dev
- */
-export function createEventBroker(mode: 'production' | 'development'): EventBrokerAdapter {
-  if (mode === 'production' && typeof window === 'undefined') {
-    const config: RedisStreamConfig = {
-      host: import.meta.env.VITE_REDIS_HOST || 'localhost',
-      port: parseInt(import.meta.env.VITE_REDIS_PORT || '6379'),
-      password: import.meta.env.VITE_REDIS_PASSWORD,
-      tls: import.meta.env.VITE_REDIS_TLS === 'true',
-      maxRetries: 10,
-      retryDelayMs: 1000,
-    };
-
-    return new RedisStreamsBroker(config);
-  }
-
-  // Browser runtime and local development use an in-process adapter. Production
-  // workers must run this module outside the browser to get Redis Streams.
-  return createInMemoryBroker();
-}
-
-/**
- * In-Memory Broker (Development Only)
- * Implements same interface for local development
- */
 function createInMemoryBroker(): EventBrokerAdapter {
   const streams = new Map<string, DomainEventEnvelope[]>();
-  const subscriptions = new Map<string, Set<InMemoryEventHandler>>();
+  const subscriptions = new Map<string, Set<(event: any) => Promise<void>>>();
 
   return {
     async publish(event, options) {
@@ -364,14 +307,12 @@ function createInMemoryBroker(): EventBrokerAdapter {
       const events = streams.get(streamKey) || [];
       events.unshift(event);
       
-      // Trim to maxlen
       if (options?.maxlen && events.length > options.maxlen) {
         events.length = options.maxlen;
       }
       
       streams.set(streamKey, events);
 
-      // Notify subscribers
       const handlers = subscriptions.get(streamKey);
       if (handlers) {
         for (const handler of handlers) {
@@ -387,20 +328,17 @@ function createInMemoryBroker(): EventBrokerAdapter {
     },
 
     async subscribe(eventType, handler, config) {
-      void config;
       const streamKey = `wasel:events:${eventType}`;
       const handlers = subscriptions.get(streamKey) || new Set();
-      handlers.add(handler as InMemoryEventHandler);
+      handlers.add(handler);
       subscriptions.set(streamKey, handlers);
 
       return async () => {
-        handlers.delete(handler as InMemoryEventHandler);
+        handlers.delete(handler);
       };
     },
 
-    async ack() {
-      // No-op in memory
-    },
+    async ack() {},
 
     async getHistory(eventType, count = 100) {
       const streamKey = `wasel:events:${eventType}`;
@@ -408,9 +346,7 @@ function createInMemoryBroker(): EventBrokerAdapter {
       return events.slice(0, count);
     },
 
-    async createConsumerGroup() {
-      // No-op in memory
-    },
+    async createConsumerGroup() {},
 
     async disconnect() {
       streams.clear();
@@ -419,7 +355,23 @@ function createInMemoryBroker(): EventBrokerAdapter {
   };
 }
 
-// Global broker instance
+export function createEventBroker(mode: 'production' | 'development'): EventBrokerAdapter {
+  if (mode === 'production') {
+    const config: RedisStreamConfig = {
+      host: process.env.VITE_REDIS_HOST || process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.VITE_REDIS_PORT || process.env.REDIS_PORT || '6379'),
+      password: process.env.VITE_REDIS_PASSWORD || process.env.REDIS_PASSWORD,
+      tls: process.env.VITE_REDIS_TLS === 'true' || process.env.REDIS_TLS === 'true',
+      maxRetries: 10,
+      retryDelayMs: 1000,
+    };
+
+    return new RedisStreamsBroker(config);
+  }
+
+  return createInMemoryBroker();
+}
+
 export const eventBroker = createEventBroker(
-  import.meta.env.PROD ? 'production' : 'development'
+  process.env.NODE_ENV === 'production' ? 'production' : 'development'
 );
