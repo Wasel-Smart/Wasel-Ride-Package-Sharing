@@ -229,7 +229,7 @@ class GeoStreamService {
 
 // Singleton instance
 export const geoStream = new GeoStreamService(
-  import.meta.env.VITE_GEO_STREAM_URL || 'wss://api.wasel.jo/geo',
+  import.meta.env.VITE_GEO_STREAM_URL || 'wss://wasel14.online/geo',
 );
 
 // Auto-connect in browser

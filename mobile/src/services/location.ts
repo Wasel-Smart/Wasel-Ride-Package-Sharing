@@ -32,7 +32,7 @@ export class LocationTrackingService {
   private listeners = new Map<string, (location: DriverLocation) => void>();
 
   async initialize(): Promise<void> {
-    const wsUrl = process.env.EXPO_PUBLIC_WS_URL || 'wss://wasel.jo/ws';
+    const wsUrl = process.env.EXPO_PUBLIC_WS_URL || 'wss://wasel14.online/ws';
     const token = mobileAuth.getAccessToken();
 
     if (!token) {
