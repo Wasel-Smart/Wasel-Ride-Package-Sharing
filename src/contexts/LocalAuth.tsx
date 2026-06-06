@@ -267,7 +267,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!auth.user) {
-      if (shouldUseLocalAuth(auth.isBackendConnected)) {
+      if (shouldUseLocalAuth()) {
         const storedUser = loadUser();
         setUser(storedUser);
         return;
@@ -293,7 +293,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     password: string,
     captchaToken?: string,
   ): Promise<{ error: string | null }> => {
-    if (shouldUseLocalAuth(auth.isBackendConnected)) {
+    if (shouldUseLocalAuth()) {
       setLocalLoading(true);
       try {
         const account = loadLocalAccounts().find(
@@ -328,7 +328,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     requiresEmailConfirmation?: boolean;
     email?: string;
   }> => {
-    if (shouldUseLocalAuth(auth.isBackendConnected)) {
+    if (shouldUseLocalAuth()) {
       setLocalLoading(true);
       try {
         const normalizedEmail = normalizeEmail(email);
@@ -387,7 +387,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     setUser(previous => {
       if (!previous) return previous;
       const next = applyUserUpdates(previous, updates);
-      if (shouldUseLocalAuth(auth.isBackendConnected)) {
+      if (shouldUseLocalAuth()) {
         const accounts = loadLocalAccounts();
         const nextAccounts = accounts.map(account =>
           account.user.id === next.id ? { ...account, user: next } : account,

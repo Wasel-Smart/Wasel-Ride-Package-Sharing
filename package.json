@@ -172,6 +172,16 @@
     "workers:start": "node -e \"import('./src/platform/worker-framework.ts').then(m => m.workerRegistry.startAll())\"",
     "observability:dashboard": "npm run dev -- --open /ops/observability",
     "telemetry:init": "node -e \"import('./src/platform/telemetry.ts').then(m => m.initWebVitals())\"",
-    "health:check:production": "curl -f https://wasel.jo/health || exit 1"
+    "health:check:production": "curl -f https://wasel.jo/health || exit 1",
+    "mobile:install": "cd mobile && npm install",
+    "mobile:android": "cd mobile && npm run android",
+    "mobile:ios": "cd mobile && npm run ios",
+    "mobile:build": "bash scripts/build-mobile-apps.sh all release",
+    "mobile:build:android": "bash scripts/build-mobile-apps.sh android release",
+    "mobile:build:ios": "bash scripts/build-mobile-apps.sh ios release",
+    "k8s:deploy": "bash scripts/deploy-kubernetes.sh",
+    "load:test": "bash scripts/run-load-tests.sh production https://wasel.jo",
+    "load:smoke": "bash scripts/run-load-tests.sh smoke https://wasel.jo",
+    "validate:10-out-of-10": "node scripts/validate-10-out-of-10.mjs"
   }
 }

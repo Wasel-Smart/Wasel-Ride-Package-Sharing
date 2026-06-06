@@ -162,7 +162,7 @@ function TripModeCard({
             boxShadow: SH.cyanL,
           }}
         >
-          {ar ? 'ابدأ البحث' : 'Book employee travel'}
+          {ar ? 'ابدأ البحث' : 'Book public travel'}
         </WaselButton>
         <span
           style={{
@@ -243,7 +243,7 @@ export function HomeHeroSection({
               }}
             >
               <Shield size={12} color={C.cyan} />
-              {ar ? 'منطق واحد للحركة' : 'Employee travel automation'}
+              {ar ? 'منطق واحد للحركة' : 'Public travel automation'}
             </div>
             <WaselLogo size={34} theme="light" variant="full" />
           </div>
@@ -262,7 +262,7 @@ export function HomeHeroSection({
         >
           {ar
             ? `اختر المسار ثم تحرك${firstName ? `، ${firstName}` : ''}`
-            : `Reduce transport cost and automate employee travel${firstName ? `, ${firstName}` : ''}`}
+            : `Reduce transport cost and automate public travel${firstName ? `, ${firstName}` : ''}`}
         </h1>
 
         <p
@@ -276,7 +276,7 @@ export function HomeHeroSection({
         >
           {ar
             ? 'سواء أردت مقعدا أو عرض مقعد أو إرسال طرد أو التحول إلى الباص، تبدأ كل خطوة من نفس منطق المسار حتى تبقى التجربة أوضح وأسرع.'
-            : 'Wasel turns daily commute demand into guided booking, request approval, driver supply, and live trip management so teams spend less time coordinating rides.'}
+            : 'Wasel turns public commute demand into guided booking, request approval, driver supply, and live trip management so people spend less time coordinating rides.'}
         </p>
 
         <div
