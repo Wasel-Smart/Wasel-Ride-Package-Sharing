@@ -22,12 +22,10 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react';
-import { Badge } from './ui/badge';
-import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
 import { WaselStateCard } from './system/WaselStateCard';
+import { WaselBadge, WaselButton, WaselCard, WaselInput } from '../design-system';
+import { C, R, SH, SPACE, TYPE } from '../utils/wasel-ds';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotifications, type Notification } from '../hooks/useNotifications';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
@@ -205,77 +203,104 @@ export function NotificationCenter() {
   return (
     <div className="mx-auto max-w-5xl space-y-5">
       {/* ── Summary card ── */}
-      <Card className="overflow-hidden border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_32%),linear-gradient(135deg,rgba(4,12,24,0.96),rgba(8,15,28,0.98))] shadow-[0_28px_80px_-48px_rgba(34,211,238,0.6)]">
-        <CardHeader className="border-b border-white/8 pb-5">
+      <WaselCard variant="brand" padding={SPACE[6]} radius={R.xxl}>
+        <div
+          style={{
+            borderBottom: `1px solid ${C.borderFaint}`,
+            paddingBottom: SPACE[5],
+            marginBottom: SPACE[5],
+          }}
+        >
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-cyan-200">
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: SPACE[2],
+                  borderRadius: R.full,
+                  border: `1px solid ${C.borderHov}`,
+                  background: C.cyanDim,
+                  padding: '4px 12px',
+                  color: C.cyan,
+                  fontSize: TYPE.size.xs,
+                  fontWeight: TYPE.weight.bold,
+                  letterSpacing: TYPE.letterSpacing.widest,
+                  textTransform: 'uppercase',
+                }}
+              >
                 <Inbox className="size-3.5" />
                 {labels.title}
               </div>
               <div>
-                <CardTitle className="text-3xl font-semibold tracking-tight text-white">
+                <h2 style={{ color: C.text, fontSize: TYPE.size['3xl'], fontWeight: 900, margin: 0 }}>
                   {labels.title}
-                </CardTitle>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">{labels.subtitle}</p>
+                </h2>
+                <p style={{ margin: '8px 0 0', maxWidth: 720, color: C.textSub, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+                  {labels.subtitle}
+                </p>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="gap-1 border-white/15 bg-white/5">
-                {connectionStatus === 'online' && <Wifi className="size-3 text-emerald-400" />}
-                {connectionStatus === 'offline' && <WifiOff className="size-3 text-rose-400" />}
-                {connectionStatus === 'syncing' && (
-                  <RefreshCw className="size-3 animate-spin text-cyan-300" />
-                )}
-                <span className="text-slate-200">
-                  {connectionStatus === 'online'
+              <WaselBadge
+                variant={connectionStatus === 'offline' ? 'hot' : 'live'}
+                label={
+                  connectionStatus === 'online'
                     ? labels.online
                     : connectionStatus === 'offline'
                       ? labels.offline
-                      : labels.syncing}
-                </span>
-              </Badge>
+                      : labels.syncing
+                }
+                icon={
+                  connectionStatus === 'online' ? (
+                    <Wifi className="size-3" />
+                  ) : connectionStatus === 'offline' ? (
+                    <WifiOff className="size-3" />
+                  ) : (
+                    <RefreshCw className="size-3 animate-spin" />
+                  )
+                }
+              />
 
-              <Button
+              <WaselButton
                 variant="outline"
                 size="sm"
                 onClick={() => void refresh()}
                 disabled={connectionStatus === 'offline'}
-                className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+                icon={
+                  <RefreshCw
+                    className={`size-4 ${connectionStatus === 'syncing' ? 'animate-spin' : ''}`}
+                  />
+                }
               >
-                <RefreshCw
-                  className={`size-4 ${connectionStatus === 'syncing' ? 'animate-spin' : ''}`}
-                />
                 {labels.refresh}
-              </Button>
+              </WaselButton>
 
               {unreadCount > 0 && (
-                <Button
+                <WaselButton
                   size="sm"
                   onClick={() => void markAllAsRead()}
-                  className="bg-cyan-400 text-slate-950 hover:bg-cyan-300"
+                  icon={<CheckCheck className="size-4" />}
                 >
-                  <CheckCheck className="size-4" />
                   {labels.markAllRead}
-                </Button>
+                </WaselButton>
               )}
 
               {summary.archived > 0 && (
-                <Button
+                <WaselButton
                   variant="outline"
                   size="sm"
                   onClick={restoreArchivedNotifications}
-                  className="border-white/15 bg-white/5 text-white hover:bg-white/10"
                 >
                   {labels.restoreArchived}
-                </Button>
+                </WaselButton>
               )}
             </div>
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="grid gap-3 pt-6 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-4">
           <NotificationMetric
             label={labels.total}
             value={summary.total}
@@ -296,68 +321,64 @@ export function NotificationCenter() {
             value={summary.archived}
             tone="border-slate-400/20 text-slate-100"
           />
-        </CardContent>
-      </Card>
+        </div>
+      </WaselCard>
 
       {/* ── Error banner ── */}
       {errorMessage && (
-        <Card className="border-amber-400/25 bg-amber-400/10">
-          <CardContent className="flex flex-col gap-3 pt-6 text-sm text-amber-50 md:flex-row md:items-center md:justify-between">
+        <WaselCard
+          variant="elevated"
+          style={{ borderColor: C.goldDim, background: C.goldDim }}
+        >
+          <div className="flex flex-col gap-3 text-sm md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" color={C.gold} />
               <div className="space-y-1">
-                <p className="font-semibold">{labels.serviceUnavailable}</p>
-                <p className="text-amber-100/90">{errorMessage}</p>
+                <p style={{ color: C.text, fontWeight: 800, margin: 0 }}>
+                  {labels.serviceUnavailable}
+                </p>
+                <p style={{ color: C.textSub, margin: 0 }}>{errorMessage}</p>
               </div>
             </div>
-            <Button
+            <WaselButton
               variant="outline"
               size="sm"
               onClick={() => void refresh()}
-              className="border-amber-200/30 bg-transparent text-amber-50 hover:bg-amber-300/10"
+              icon={<RefreshCw className="size-4" />}
             >
-              <RefreshCw className="size-4" />
               {labels.refresh}
-            </Button>
-          </CardContent>
-        </Card>
+            </WaselButton>
+          </div>
+        </WaselCard>
       )}
 
       {/* ── Search + filters ── */}
-      <Card className="border-white/10 bg-card/80 backdrop-blur">
-        <CardContent className="space-y-4 pt-6">
+      <WaselCard variant="solid">
+        <div className="space-y-4">
           <div className="relative">
             <Search className="pointer-events-none absolute inset-y-0 left-3 my-auto size-4 text-muted-foreground" />
-            <Input
+            <WaselInput
               value={searchTerm}
-              onChange={event => {
-                const nextValue = event.target.value;
-                startTransition(() => setSearchTerm(nextValue));
-              }}
+              onChange={nextValue => startTransition(() => setSearchTerm(nextValue))}
               placeholder={labels.searchPlaceholder}
-              className="h-11 rounded-2xl border-white/10 bg-background/60 pl-10"
+              icon={<Search size={16} color={C.textMuted} />}
             />
           </div>
 
           <div className="flex flex-wrap gap-2">
             {filters.map(entry => (
-              <Button
+              <WaselButton
                 key={entry.value}
-                variant={filter === entry.value ? 'default' : 'outline'}
+                variant={filter === entry.value ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setFilter(entry.value)}
-                className={
-                  filter === entry.value
-                    ? 'bg-primary text-primary-foreground'
-                    : 'border-white/10 bg-background/40'
-                }
               >
                 {entry.label}
-              </Button>
+              </WaselButton>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </WaselCard>
 
       {/* ── Notification list ── */}
       <div className="space-y-4">
@@ -370,25 +391,23 @@ export function NotificationCenter() {
             minHeight={280}
             actions={
               searchTerm || filter !== 'all' ? (
-                <Button
+                <WaselButton
                   variant="outline"
                   onClick={() => {
                     setSearchTerm('');
                     setFilter('all');
                   }}
-                  className="border-white/15 bg-white/5 text-white hover:bg-white/10"
                 >
                   {labels.resetView}
-                </Button>
+                </WaselButton>
               ) : (
-                <Button
+                <WaselButton
                   variant="outline"
                   onClick={() => void refresh()}
-                  className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+                  icon={<RefreshCw className="size-4" />}
                 >
-                  <RefreshCw className="size-4" />
                   {labels.refresh}
-                </Button>
+                </WaselButton>
               )
             }
           />

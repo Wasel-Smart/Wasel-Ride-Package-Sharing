@@ -14,6 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import { WaselButton } from '../../design-system';
 import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
 
 type Accent = 'cyan' | 'green' | 'gold' | 'purple';
@@ -308,7 +309,7 @@ function accentColor(accent: Accent) {
 function panelStyle(extra: CSSProperties = {}) {
   return {
     position: 'relative',
-    background: 'linear-gradient(180deg, rgba(9,20,36,0.92), rgba(6,14,28,0.96))',
+      background: C.card,
     border: `1px solid ${C.border}`,
     borderRadius: 24,
     boxShadow: SH.lg,
@@ -432,7 +433,7 @@ export default function MobilityOSPage() {
     <div
       style={{
         minHeight: 'var(--app-min-height)',
-        background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, rgba(240,168,48,0.16), transparent 22%), ${C.bg}`,
+          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, ${C.goldDim}, transparent 22%), ${C.bg}`,
         color: C.text,
         fontFamily: F,
         padding: '24px 16px 44px',
@@ -450,7 +451,7 @@ export default function MobilityOSPage() {
                   padding: '10px 14px',
                   borderRadius: R.full,
                   border: `1px solid ${C.border}`,
-                  background: 'rgba(255,255,255,0.04)',
+                background: C.elevated,
                   width: 'fit-content',
                 }}
               >
@@ -502,7 +503,7 @@ export default function MobilityOSPage() {
                       padding: '10px 14px',
                       borderRadius: 16,
                       border: `1px solid ${C.border}`,
-                      background: 'rgba(255,255,255,0.04)',
+                      background: C.elevated,
                       fontFamily: FM,
                       fontSize: '0.84rem',
                     }}
@@ -513,44 +514,22 @@ export default function MobilityOSPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-              <button
+              <WaselButton
                 onClick={() => setPaused(value => !value)}
-                style={{
-                  height: 44,
-                  padding: '0 18px',
-                  borderRadius: R.full,
-                  border: `1px solid ${paused ? C.border : C.cyanGlow}`,
-                  background: paused ? 'rgba(255,255,255,0.04)' : C.cyanDim,
-                  color: paused ? C.text : C.bg,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                }}
+                variant={paused ? 'outline' : 'primary'}
+                size="md"
+                icon={paused ? <Play size={16} /> : <Pause size={16} />}
               >
-                {paused ? <Play size={16} /> : <Pause size={16} />}
                 {paused ? 'Resume Field' : 'Pause Field'}
-              </button>
-              <button
+              </WaselButton>
+              <WaselButton
                 onClick={() => setTick(0)}
-                style={{
-                  height: 44,
-                  padding: '0 18px',
-                  borderRadius: R.full,
-                  border: `1px solid ${C.border}`,
-                  background: 'rgba(255,255,255,0.04)',
-                  color: C.text,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
+                variant="outline"
+                size="md"
+                icon={<RotateCcw size={16} />}
               >
-                <RotateCcw size={16} />
                 Reset Simulation
-              </button>
+              </WaselButton>
             </div>
           </div>
         </section>
@@ -595,7 +574,7 @@ export default function MobilityOSPage() {
                 borderRadius: 22,
                 border: `1px solid ${accentColor(card.accent)}30`,
                 boxShadow: `0 18px 42px ${accentColor(card.accent)}18`,
-                background: 'linear-gradient(180deg, rgba(9,20,36,0.95), rgba(6,14,28,0.96))',
+      background: C.card,
               })}
             >
               <div
@@ -664,25 +643,18 @@ export default function MobilityOSPage() {
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {(Object.keys(TABS) as TabKey[]).map(key => (
-                  <button
+                  <WaselButton
                     key={key}
                     onClick={() => setTab(key)}
+                    variant={tab === key ? 'primary' : 'outline'}
+                    size="sm"
                     style={{
-                      height: 38,
-                      padding: '0 14px',
-                      borderRadius: R.full,
-                      border: `1px solid ${tab === key ? C.cyan : C.border}`,
-                      background: tab === key ? C.cyanDim : 'rgba(255,255,255,0.03)',
-                      color: tab === key ? C.text : C.textMuted,
-                      cursor: 'pointer',
-                      fontWeight: 800,
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
-                      fontSize: '0.72rem',
                     }}
                   >
                     {TABS[key]}
-                  </button>
+                  </WaselButton>
                 ))}
               </div>
             </div>
