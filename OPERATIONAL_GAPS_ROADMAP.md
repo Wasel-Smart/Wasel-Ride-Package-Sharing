@@ -9,6 +9,7 @@ Wasel has production-grade code but needs operational excellence infrastructure.
 ## Gap 1: Comprehensive Monitoring Dashboard (Priority: CRITICAL)
 
 ### Current State
+
 - ✅ Basic Sentry error tracking
 - ✅ Lighthouse performance
 - ❌ No real-time ops dashboard
@@ -52,6 +53,7 @@ export function trackPayment(amount: number, method: string, success: boolean) {
 ```
 
 **Dashboards to Create:**
+
 1. Operations Dashboard
    - Active users (real-time)
    - Rides in progress
@@ -74,7 +76,9 @@ export function trackPayment(amount: number, method: string, success: boolean) {
    - Uptime SLA
 
 **Cost:** $300-500/month
+
 **Timeline:** 1 week
+
 **Impact:** Operational excellence +0.4
 
 ---
@@ -189,14 +193,17 @@ setInterval(() => new AlertSystem().checkHealth(), 60000);
 ```
 
 **Cost:** $0 (Slack free, PagerDuty $14/user/month for 1-2 engineers)
+
 **Timeline:** 3 days
+
 **Impact:** Operational uptime +1%
 
 ---
 
 ## Gap 3: Database Backup & Recovery (Priority: CRITICAL)
 
-### Current State
+### Current State - Backup Infrastructure
+
 - ❌ No automated backups
 - ❌ No disaster recovery plan
 - ❌ No tested restore procedures
@@ -273,27 +280,32 @@ export async function scheduleBackups() {
 ```
 
 **Backup Strategy:**
+
 - Daily full backups (kept 30 days)
 - Hourly incremental backups (kept 7 days)
 - Multi-region S3 replication
 - Weekly restore test
 
 **Cost:** $20/month (S3 storage)
+
 **Timeline:** 1 week
+
 **RTO (Recovery Time Objective):** <30 minutes
+
 **RPO (Recovery Point Objective):** <1 hour
+
 **Impact:** Disaster recovery readiness +2.0
 
 ---
 
 ## Gap 4: Disaster Recovery Plan (Priority: HIGH)
 
-### Runbook: Complete Database Loss
+### Disaster Recovery Runbook
 
 ```markdown
 # DISASTER RECOVERY RUNBOOK
 
-## Scenario: Complete Database Loss
+## Database Recovery Scenario
 
 ### Step 1: Assess Situation (5 min)
 - [ ] Verify database is unreachable
@@ -304,45 +316,56 @@ export async function scheduleBackups() {
 ### Step 2: Restore from Backup (10 min)
 - [ ] SSH to recovery server
 - [ ] Download latest backup from S3
+
   ```bash
   aws s3 cp s3://wasel-backups/backups/latest.sql.gz .
   gunzip latest.sql.gz
   ```
+
 - [ ] Create new database instance
 - [ ] Restore from backup
+
   ```bash
   psql "postgres://user:pass@new-host/wasel" < latest.sql
   ```
 
 ### Step 3: Point Traffic (5 min)
+
 - [ ] Update DNS to new database host
 - [ ] Update environment variables
 - [ ] Restart Edge Functions
 - [ ] Verify database connectivity
 
 ### Step 4: Verify Data (10 min)
+
 - [ ] Check row counts in critical tables
 - [ ] Verify recent transactions
 - [ ] Run smoke tests
 - [ ] Confirm user activity
 
 ### Step 5: Communicate (ongoing)
+
 - [ ] Post updates every 5 minutes
 - [ ] Notify users when service restored
 - [ ] Send post-mortem within 24 hours
 
 **Total Recovery Time: ~30 minutes**
+
 **Data Loss: ~1 hour (since latest backup)**
+
 ```
 
 **Other Disaster Scenarios:**
+
 1. Payment processing down → Switch to CliQ backup
 2. API slow → Auto-scale or rollback
 3. Data corruption → Restore from hourly backup
 4. Security breach → Activate incident response
 
 **Cost:** $0 (included in backup costs)
+
 **Timeline:** 1 week to document and test
+
 **Impact:** Business continuity +2.0
 
 ---
@@ -394,6 +417,7 @@ export async function callExternalAPI(url: string, options: any) {
 ```
 
 **Metrics to Track:**
+
 - Request latency (p50, p95, p99)
 - Error rates by endpoint
 - Database query performance
@@ -402,7 +426,9 @@ export async function callExternalAPI(url: string, options: any) {
 - CPU usage trends
 
 **Cost:** $300/month
+
 **Timeline:** 2 days
+
 **Impact:** Performance optimization +0.3
 
 ---
@@ -438,12 +464,15 @@ logger.warn('High latency detected', {
 ```
 
 **Log Retention:**
+
 - 7 days: All logs (searchable)
 - 30 days: Archived (searchable)
 - 1 year: Long-term storage (limited search)
 
 **Cost:** $200/month (Datadog logs)
+
 **Timeline:** 1 week
+
 **Impact:** Operational insight +0.4
 
 ---
@@ -452,7 +481,7 @@ logger.warn('High latency detected', {
 
 ### Cost Breakdown
 
-```
+```text
 Monthly Operating Costs:
 ├─ Supabase Database: $50
 ├─ Supabase Storage: $20
@@ -501,7 +530,9 @@ const optimizations = [
 ```
 
 **Cost Target:** <$1K/month for 10K DAU
+
 **Timeline:** 1 week
+
 **Impact:** Financial sustainability +1.0
 
 ---
@@ -556,13 +587,16 @@ const recommendations = planner.recommendScaling(predictions);
 ```
 
 **Scaling Timeline:**
+
 - Month 1: 1K DAU → No scaling needed
 - Month 2-3: 1K-2K DAU → Increase database connections
 - Month 4-6: 2K-5K DAU → Add read replicas
 - Month 6+: 5K+ DAU → Multi-region setup
 
 **Cost:** $0 (internal)
+
 **Timeline:** 1 week
+
 **Impact:** Growth readiness +1.0
 
 ---
