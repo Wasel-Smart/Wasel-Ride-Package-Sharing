@@ -5,7 +5,7 @@
     "lib": ["ES2022"],
     "moduleResolution": "node",
     "outDir": "./dist",
-    "rootDir": "./",
+    "rootDir": "../",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -15,6 +15,12 @@
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["backend/**/*", "src/domain/**/*", "src/platform/event-broker-redis.ts", "src/platform/telemetry.ts"],
+  "include": [
+    "services/**/*",
+    "../src/domain/**/*",
+    "../src/platform/event-broker-redis.ts",
+    "../src/platform/event-broker-redis-production.ts",
+    "../src/platform/telemetry.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

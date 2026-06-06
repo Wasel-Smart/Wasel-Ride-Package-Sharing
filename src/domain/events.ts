@@ -1,9 +1,12 @@
 export type DomainEventType =
   | 'RideRequested'
+  | 'rides.requested'
   | 'DriverAssigned'
+  | 'rides.assigned'
   | 'RideAccepted'
   | 'RideStarted'
   | 'RideCompleted'
+  | 'rides.completed'
   | 'RideCancelled'
   | 'PackageCreated'
   | 'PackageAssigned'
@@ -12,7 +15,9 @@ export type DomainEventType =
   | 'PackageLocationUpdated'
   | 'DriverAvailabilityChanged'
   | 'PaymentAuthorized'
-  | 'PaymentCaptured';
+  | 'payments.authorized'
+  | 'PaymentCaptured'
+  | 'payments.captured';
 
 export interface DomainEventPayloadMap {
   RideRequested: {
@@ -22,11 +27,27 @@ export interface DomainEventPayloadMap {
     origin: string;
     destination: string;
   };
+  'rides.requested': {
+    rideId: string;
+    riderId: string;
+    origin: { lat: number; lng: number };
+    destination: { lat: number; lng: number };
+    requestedAt: string;
+    seats: number;
+    preferredVehicleType?: string;
+  };
   DriverAssigned: {
     bookingId: string;
     rideId: string;
     driverId?: string;
     driverName?: string;
+  };
+  'rides.assigned': {
+    rideId: string;
+    driverId: string;
+    vehicleId: string;
+    matchedAt: string;
+    estimatedArrival: number;
   };
   RideAccepted: {
     bookingId: string;
@@ -39,6 +60,17 @@ export interface DomainEventPayloadMap {
   RideCompleted: {
     bookingId: string;
     rideId: string;
+  };
+  'rides.completed': {
+    rideId: string;
+    riderId: string;
+    driverId: string;
+    origin: { lat: number; lng: number };
+    destination: { lat: number; lng: number };
+    distance: number;
+    duration: number;
+    fare: number;
+    completedAt: string;
   };
   RideCancelled: {
     bookingId: string;
@@ -80,10 +112,28 @@ export interface DomainEventPayloadMap {
     entityType: 'ride' | 'package';
     amount: number;
   };
+  'payments.authorized': {
+    paymentId: string;
+    rideId?: string;
+    packageId?: string;
+    amount: number;
+    currency: string;
+    providerId: string;
+    escrowStatus: 'held' | 'released' | 'refunded';
+    authorizedAt: string;
+  };
   PaymentCaptured: {
     entityId: string;
     entityType: 'ride' | 'package';
     amount: number;
+  };
+  'payments.captured': {
+    paymentId: string;
+    rideId?: string;
+    packageId?: string;
+    capturedAmount: number;
+    providerTransactionId: string;
+    capturedAt: string;
   };
 }
 
