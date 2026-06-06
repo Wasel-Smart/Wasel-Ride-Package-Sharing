@@ -225,6 +225,7 @@ function shouldUseLocalBusFallback(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error ?? '');
   return (
     message.includes('temporarily unavailable') ||
+    message.includes('Auth session missing') ||
     message.includes('backend transport is not configured') ||
     message.includes('secure backend') ||
     message.includes('Supabase client is not initialised')

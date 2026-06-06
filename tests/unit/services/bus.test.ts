@@ -111,4 +111,31 @@ describe('bus service', () => {
 
     expect(window.localStorage.getItem('wasel-bus-bookings')).toBe('{bad json');
   });
+
+  it('saves a local bus booking when secure auth is unavailable', async () => {
+    mockCreateBooking.mockRejectedValue(new Error('Auth session missing!'));
+
+    const result = await createBusBooking({
+      tripId: 'bus-4',
+      seatsRequested: 1,
+      pickupStop: 'Abdali Station',
+      dropoffStop: 'Aqaba Station',
+      scheduleDate: '2026-04-06',
+      departureTime: '07:00',
+      seatPreference: 'window',
+      scheduleMode: 'depart-now',
+      totalPrice: 10,
+    });
+
+    expect(result.source).toBe('local');
+    expect(result.ticketCode).toMatch(/^BUS-/);
+
+    const stored = JSON.parse(window.localStorage.getItem('wasel-bus-bookings') ?? '[]');
+    expect(stored).toHaveLength(1);
+    expect(stored[0]).toMatchObject({
+      tripId: 'bus-4',
+      status: 'confirmed',
+      source: 'local',
+    });
+  });
 });

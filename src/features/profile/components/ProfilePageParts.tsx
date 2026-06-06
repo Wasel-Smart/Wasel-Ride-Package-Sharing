@@ -93,7 +93,7 @@ export function InsightCard({ label, value, detail, color }: InsightCardProps) {
         padding: `${SPACE[4]} ${SPACE[4]}`,
         borderRadius: R.xxl,
         border: `1px solid ${color}28`,
-        background: `radial-gradient(circle at top left, ${color}14, transparent 34%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)`,
+        background: `radial-gradient(circle at top left, ${color}14, transparent 34%), ${C.card}`,
         boxShadow: SH.card,
       }}
     >
