@@ -40,9 +40,9 @@ type SurfaceConfig = {
 
 const CONFIG: Record<string, SurfaceConfig> = {
   '/app/services/corporate': {
-    title: 'Corporate Mobility',
+    title: 'Public Mobility',
     detail:
-      'Recurring employee movement, managed billing, service-provider dispatch, and return-lane logistics on one route graph.',
+      'Recurring public movement, shared billing, service-provider dispatch, and return-lane logistics on one route graph.',
     accent: CYAN,
     icon: <Briefcase size={22} />,
   },
@@ -448,9 +448,9 @@ export default function OperationsOverviewPage() {
                       marginTop: 14,
                     }}
                   >
-                    {businessSnapshot.employees.slice(0, 4).map(employee => (
+                    {businessSnapshot.publicRiders.slice(0, 4).map(rider => (
                       <div
-                        key={employee.id}
+                        key={rider.id}
                         style={{
                           borderRadius: 14,
                           border: `1px solid ${C.borderFaint}`,
@@ -459,7 +459,7 @@ export default function OperationsOverviewPage() {
                         }}
                       >
                         <div style={{ color: C.text, fontWeight: 800, fontSize: '0.82rem' }}>
-                          {employee.name}
+                          {rider.name}
                         </div>
                         <div
                           style={{
@@ -468,8 +468,8 @@ export default function OperationsOverviewPage() {
                             marginTop: 4,
                           }}
                         >
-                          {employee.department} | {employee.monthlyTrips} trips |{' '}
-                          {employee.monthlySpendJOD.toFixed(0)} JOD
+                          {rider.segment} | {rider.monthlyTrips} trips |{' '}
+                          {rider.monthlySpendJOD.toFixed(0)} JOD
                         </div>
                       </div>
                     ))}
