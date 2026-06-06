@@ -253,9 +253,9 @@ export default function OperationsOverviewPage() {
     if (pathname === '/app/services/corporate' && businessSnapshot && serviceSnapshot) {
       return [
         {
-          label: 'Managed accounts',
+          label: 'Public accounts',
           value: String(serviceSnapshot.activeAccounts),
-          detail: 'Recurring business lanes',
+          detail: 'Recurring public lanes',
           accent: CYAN,
         },
         {
@@ -395,13 +395,13 @@ export default function OperationsOverviewPage() {
               }}
             >
               <StatCard
-                label="Monthly invoice"
+                label="Monthly spend"
                 value={`${businessSnapshot.monthlyInvoiceJOD.toFixed(0)} JOD`}
                 detail={`${businessSnapshot.recurringDays} commuting days across one managed lane.`}
                 color={CYAN}
               />
               <StatCard
-                label="Enterprise savings"
+                label="Public savings"
                 value={`${businessSnapshot.estimatedSavingsPercent}%`}
                 detail="Shared-route pricing is replacing solo reimbursements and fragmented taxis."
                 color={GREEN}
@@ -424,11 +424,11 @@ export default function OperationsOverviewPage() {
               />
             </div>
 
-            <Section title="Business Workflow">
+            <Section title="Public Workflow">
               <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 12 }}>
                 <div style={cardStyle()}>
                   <div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>
-                    Managed account snapshot
+                    Public rider snapshot
                   </div>
                   <div style={{ display: 'grid', gap: 10 }}>
                     {businessSnapshot.policyHighlights.map(line => (
