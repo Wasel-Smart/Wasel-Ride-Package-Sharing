@@ -125,21 +125,28 @@ export function useLiveDriverTracking(
   const error: Error | null = null;
 
   useEffect(() => {
-    setIsConnected(true);
+    try {
+      setError(null);
+      setIsConnected(true);
 
-    const unsubscribe = geoStream.subscribeToArea(lat, lng, radiusKm, (updatedDrivers) => {
-      setDrivers(updatedDrivers);
+      const unsubscribe = geoStream.subscribeToArea(lat, lng, radiusKm, (updatedDrivers) => {
+        setDrivers(updatedDrivers);
 
-      // Update local manager
-      updatedDrivers.forEach((driver) => {
-        driverLocationManager.updateDriverLocation(driver);
+        // Update local manager
+        updatedDrivers.forEach((driver) => {
+          driverLocationManager.updateDriverLocation(driver);
+        });
       });
-    });
 
-    return () => {
-      unsubscribe();
+      return () => {
+        unsubscribe();
+        setIsConnected(false);
+      };
+    } catch (cause) {
+      setError(cause instanceof Error ? cause : new Error(String(cause)));
       setIsConnected(false);
-    };
+      return undefined;
+    }
   }, [lat, lng, radiusKm]);
 
   return { drivers, isConnected, error };
@@ -257,8 +264,8 @@ export function LiveDriverMap({
 
 function MapPlaceholder({
   drivers,
-  selectedDriver,
-  onDriverClick,
+  selectedDriver: _selectedDriver,
+  onDriverClick: _onDriverClick,
 }: {
   drivers: DriverLocation[];
   selectedDriver: string | null;
