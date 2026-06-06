@@ -1,0 +1,219 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-reconciliation-service
+  namespace: wasel-production
+  labels:
+    app: payment-reconciliation-service
+    tier: backend
+    component: worker
+spec:
+  selector:
+    app: payment-reconciliation-service
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      name: http
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-reconciliation-service
+  namespace: wasel-production
+  labels:
+    app: payment-reconciliation-service
+    tier: backend
+    component: worker
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: payment-reconciliation-service
+  template:
+    metadata:
+      labels:
+        app: payment-reconciliation-service
+        tier: backend
+        component: worker
+    spec:
+      serviceAccountName: wasel-worker
+      containers:
+        - name: payment-reconciliation-service
+          image: wasel.azurecr.io/payment-reconciliation-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wasel-secrets
+                  key: stripe.secret.key
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: wasel-config
+                  key: redis.host
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: wasel-secrets
+                  key: database.url
+          resources:
+            requests:
+              cpu: "300m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: payment-reconciliation-hpa
+  namespace: wasel-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: payment-reconciliation-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ops-analytics-worker
+  namespace: wasel-production
+  labels:
+    app: ops-analytics-worker
+    tier: backend
+    component: worker
+spec:
+  selector:
+    app: ops-analytics-worker
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      name: http
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ops-analytics-worker
+  namespace: wasel-production
+  labels:
+    app: ops-analytics-worker
+    tier: backend
+    component: worker
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: ops-analytics-worker
+  template:
+    metadata:
+      labels:
+        app: ops-analytics-worker
+        tier: backend
+        component: worker
+    spec:
+      serviceAccountName: wasel-worker
+      containers:
+        - name: ops-analytics-worker
+          image: wasel.azurecr.io/ops-analytics-worker:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: wasel-config
+                  key: redis.host
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: wasel-secrets
+                  key: database.url
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ops-analytics-worker-hpa
+  namespace: wasel-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ops-analytics-worker
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

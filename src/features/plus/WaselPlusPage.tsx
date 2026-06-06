@@ -26,7 +26,6 @@ import {
 } from '../../services/movementRetention';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 import { getFeaturedCorridors, getHabitLoopPrograms } from '../../config/wasel-movement-network';
-import { C } from '../../utils/wasel-ds';
 
 function tierLabel(tier: MovementMembershipSnapshot['loyaltyTier']) {
   if (tier === 'infrastructure') return 'Infrastructure';

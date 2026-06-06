@@ -453,7 +453,7 @@ export function FindRidePage() {
                 borderRadius: r(12),
                 border: `1px solid ${tab === key ? DS.cyan : DS.border}`,
                 background: tab === key ? `${DS.cyan}18` : DS.card,
-                color: '#fff',
+                color: C.text,
                 fontWeight: 700,
                 cursor: 'pointer',
               }}
@@ -472,7 +472,7 @@ export function FindRidePage() {
                     <label style={{ display: 'block', fontSize: '0.7rem', color: DS.muted, fontWeight: 700, marginBottom: 6 }}>{field.label}</label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: DS.card2, borderRadius: r(12), padding: '0 14px', border: `1px solid ${DS.border}`, height: 46 }}>
                       <MapPin size={15} color={field.icon} />
-                      <select value={field.value} onChange={(event) => field.setter(event.target.value)} style={{ background: 'transparent', border: 'none', color: '#fff', fontFamily: DS.F, fontSize: '0.9rem', flex: 1, outline: 'none' }}>
+              <select value={field.value} onChange={(event) => field.setter(event.target.value)} style={{ background: 'transparent', border: 'none', color: C.text, fontFamily: DS.F, fontSize: '0.9rem', flex: 1, outline: 'none' }}>
                         {CITIES.map((city) => (
                           <option key={city} value={city} style={{ background: DS.card }}>
                             {city}
@@ -486,13 +486,13 @@ export function FindRidePage() {
                   <label style={{ display: 'block', fontSize: '0.7rem', color: DS.muted, fontWeight: 700, marginBottom: 6 }}>{t.date}</label>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: DS.card2, borderRadius: r(12), padding: '0 14px', border: `1px solid ${DS.border}`, height: 46 }}>
                     <Calendar size={15} color={DS.muted} />
-                    <input type="date" value={date} onChange={(event) => setDate(event.target.value)} min={new Date().toISOString().split('T')[0]} style={{ background: 'transparent', border: 'none', color: '#fff', fontFamily: DS.F, fontSize: '0.85rem', flex: 1, outline: 'none', colorScheme: 'dark' }} />
+                    <input type="date" value={date} onChange={(event) => setDate(event.target.value)} min={new Date().toISOString().split('T')[0]} style={{ background: 'transparent', border: 'none', color: C.text, fontFamily: DS.F, fontSize: '0.85rem', flex: 1, outline: 'none', colorScheme: 'dark' }} />
                   </div>
                 </div>
               </div>
 
-              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={handleSearch} data-testid="find-ride-search" style={{ width: '100%', height: 52, borderRadius: r(14), border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                {loading ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }} style={{ width: 20, height: 20, border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%' }} /> : <Search size={18} />}
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={handleSearch} data-testid="find-ride-search" style={{ width: '100%', height: 52, borderRadius: r(14), border: 'none', background: DS.gradC, color: C.bgDeep, fontWeight: 800, fontSize: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                {loading ? <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }} style={{ width: 20, height: 20, border: `2px solid ${C.border}`, borderTop: `2px solid ${C.text}`, borderRadius: '50%' }} /> : <Search size={18} />}
                 {loading ? t.searching : 'Search rides'}
               </motion.button>
 
@@ -513,14 +513,14 @@ export function FindRidePage() {
                 <MapWrapper mode="static" center={midpoint(searchFromCoord, searchToCoord)} pickupLocation={searchFromCoord} dropoffLocation={searchToCoord} height={180} showMosques={false} showRadars={false} />
               </div>
 
-              {searchError && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: `${DS.gold}12`, border: `1px solid ${DS.gold}30`, borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}><Shield size={16} color={DS.gold} /><span>{searchError}</span></div>}
-              {bookingMessage && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: 'rgba(0,200,117,0.10)', border: '1px solid rgba(0,200,117,0.28)', borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}><CheckCircle2 size={16} color={DS.green} /><span>{bookingMessage}</span></div>}
+              {searchError && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: `${DS.gold}12`, border: `1px solid ${DS.gold}30`, borderRadius: r(14), padding: '12px 14px', color: C.text, fontSize: '0.84rem' }}><Shield size={16} color={DS.gold} /><span>{searchError}</span></div>}
+              {bookingMessage && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: C.greenDim, border: `1px solid ${C.greenDim}`, borderRadius: r(14), padding: '12px 14px', color: C.text, fontSize: '0.84rem' }}><CheckCircle2 size={16} color={DS.green} /><span>{bookingMessage}</span></div>}
               {bookingSuccess && (
                 <div
                   style={{
                     marginTop: 14,
-                    background: 'linear-gradient(135deg, rgba(0,200,117,0.16), rgba(0,200,232,0.10))',
-                    border: '1px solid rgba(0,200,117,0.28)',
+                    background: `linear-gradient(135deg, ${C.greenDim}, ${C.cyanDim})`,
+                    border: `1px solid ${C.greenDim}`,
                     borderRadius: r(16),
                     padding: '16px 18px',
                     display: 'grid',
@@ -529,7 +529,7 @@ export function FindRidePage() {
                 >
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                     <div>
-                      <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem' }}>
+                      <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem' }}>
                         {bookingSuccess.status === 'pending_driver' ? 'Request sent' : 'Seat confirmed'}
                       </div>
                       <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.6, marginTop: 6 }}>
@@ -547,13 +547,13 @@ export function FindRidePage() {
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <button
                       onClick={openMyTrips}
-                      style={{ height: 42, padding: '0 16px', borderRadius: '999px', border: 'none', background: DS.gradG, color: '#fff', fontWeight: 800, cursor: 'pointer' }}
+                      style={{ height: 42, padding: '0 16px', borderRadius: '999px', border: 'none', background: DS.gradG, color: C.bgDeep, fontWeight: 800, cursor: 'pointer' }}
                     >
                       Open My Trips
                     </button>
                     <button
                       onClick={() => setBookingSuccess(null)}
-                      style={{ height: 42, padding: '0 16px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 700, cursor: 'pointer' }}
+                      style={{ height: 42, padding: '0 16px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: C.text, fontWeight: 700, cursor: 'pointer' }}
                     >
                       Keep browsing
                     </button>
@@ -565,7 +565,7 @@ export function FindRidePage() {
                   ) : null}
                 </div>
               )}
-              {retentionMessage && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}30`, borderRadius: r(14), padding: '12px 14px', color: '#fff', fontSize: '0.84rem' }}><Sparkles size={16} color={DS.cyan} /><span>{retentionMessage}</span></div>}
+              {retentionMessage && <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}30`, borderRadius: r(14), padding: '12px 14px', color: C.text, fontSize: '0.84rem' }}><Sparkles size={16} color={DS.cyan} /><span>{retentionMessage}</span></div>}
 
               <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginTop: 14 }}>
                 {[
@@ -604,7 +604,7 @@ export function FindRidePage() {
             </div>
 
             <div className="sp-results-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-              <h2 style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
+              <h2 style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
                 {searched
                   ? `${from} to ${to} | ${results.length} route match${results.length !== 1 ? 'es' : ''}`
                   : `Popular routes | showing ${results.length} departures`}
@@ -626,17 +626,17 @@ export function FindRidePage() {
                 {results.length === 0 ? (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: DS.card, borderRadius: r(20), padding: '60px 24px', textAlign: 'center', border: `1px solid ${DS.border}` }}>
                     <div style={{ fontSize: '3rem', marginBottom: 16 }}>{copy.noResultsIcon}</div>
-                    <h3 style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>{t.noRidesFound}</h3>
+                    <h3 style={{ color: C.text, fontWeight: 800, marginBottom: 8 }}>{t.noRidesFound}</h3>
                     <p style={{ color: DS.sub, fontSize: '0.875rem' }}>
                       No ride found yet. Save this route and get alerted when one opens{selectedSignal ? ` around ${selectedSignal.nextWaveWindow}` : ''}.
                     </p>
                     <div className="sp-empty-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 18 }}>
-                      <button onClick={() => { setDate(''); setSearchError(null); setSearched(true); }} style={{ height: 44, borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{t.clearDateFilter}</button>
-                      <button onClick={() => nav(`/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)} style={{ height: 44, borderRadius: r(12), border: 'none', background: DS.gradG, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>{t.openBusFallback}</button>
+                      <button onClick={() => { setDate(''); setSearchError(null); setSearched(true); }} style={{ height: 44, borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, color: C.text, fontWeight: 700, cursor: 'pointer' }}>{t.clearDateFilter}</button>
+                      <button onClick={() => nav(`/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)} style={{ height: 44, borderRadius: r(12), border: 'none', background: DS.gradG, color: C.bgDeep, fontWeight: 800, cursor: 'pointer' }}>{t.openBusFallback}</button>
                     </div>
-                    <button onClick={handleDemandCapture} style={{ marginTop: 10, width: '100%', height: 44, borderRadius: r(12), border: `1px solid ${DS.cyan}35`, background: `${DS.cyan}12`, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>{copy.notifyMe}</button>
+                    <button onClick={handleDemandCapture} style={{ marginTop: 10, width: '100%', height: 44, borderRadius: r(12), border: `1px solid ${DS.cyan}35`, background: `${DS.cyan}12`, color: C.text, fontWeight: 700, cursor: 'pointer' }}>{copy.notifyMe}</button>
                     {(waitlistMessage || demandStats.active > 0) && <div style={{ marginTop: 12, color: DS.sub, fontSize: '0.78rem', lineHeight: 1.5 }}>{waitlistMessage ?? `${demandStats.active} active alert${demandStats.active === 1 ? '' : 's'}.`}</div>}
-                    {nearbyCorridors.length > 0 && <div style={{ marginTop: 20, textAlign: 'left' }}><div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>{t.nearbyCorridors}</div><div style={{ display: 'grid', gap: 10 }}>{nearbyCorridors.map((ride) => <button key={ride.id} onClick={() => handleOpenRide(ride)} style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}><div><div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div><div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>{ride.time} | {ride.driver.name}</div></div><span style={{ ...pill(ride.seatsAvailable > 0 ? DS.cyan : DS.gold) }}>{ride.seatsAvailable > 0 ? `${getMovementPriceQuote({ basePriceJod: ride.pricePerSeat, corridorId: resolveSignalForRoute(ride.from, ride.to)?.id, forecastDemandScore: resolveSignalForRoute(ride.from, ride.to)?.forecastDemandScore, membership: routeIntelligence.membership }).finalPriceJod} JOD` : 'Sold out'}</span></div></button>)}</div></div>}
+                    {nearbyCorridors.length > 0 && <div style={{ marginTop: 20, textAlign: 'left' }}><div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>{t.nearbyCorridors}</div><div style={{ display: 'grid', gap: 10 }}>{nearbyCorridors.map((ride) => <button key={ride.id} onClick={() => handleOpenRide(ride)} style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}><div><div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div><div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>{ride.time} | {ride.driver.name}</div></div><span style={{ ...pill(ride.seatsAvailable > 0 ? DS.cyan : DS.gold) }}>{ride.seatsAvailable > 0 ? `${getMovementPriceQuote({ basePriceJod: ride.pricePerSeat, corridorId: resolveSignalForRoute(ride.from, ride.to)?.id, forecastDemandScore: resolveSignalForRoute(ride.from, ride.to)?.forecastDemandScore, membership: routeIntelligence.membership }).finalPriceJod} JOD` : 'Sold out'}</span></div></button>)}</div></div>}
                   </motion.div>
                 ) : results.map((ride, index) => (
                   <FindRideCard
@@ -659,7 +659,7 @@ export function FindRidePage() {
                     <Brain size={18} color={DS.cyan} />
                   </div>
                   <div>
-                    <div style={{ color: '#fff', fontWeight: 800 }}>Why it fits</div>
+                    <div style={{ color: C.text, fontWeight: 800 }}>Why it fits</div>
                     <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
                       Quick route signals.
                     </div>
@@ -679,7 +679,7 @@ export function FindRidePage() {
                           'Shared rides stay cheaper.',
                         ]
                   ).map((line) => (
-                    <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: '#fff', fontSize: '0.82rem', lineHeight: 1.65 }}>
+                    <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: C.text, fontSize: '0.82rem', lineHeight: 1.65 }}>
                       {line}
                     </div>
                   ))}
@@ -700,7 +700,7 @@ export function FindRidePage() {
                       <TrendingUp size={18} color={DS.gold} />
                     </div>
                     <div>
-                    <div style={{ color: '#fff', fontWeight: 800 }}>Popular now</div>
+                    <div style={{ color: C.text, fontWeight: 800 }}>Popular now</div>
                     <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
                         Routes with strong live activity.
                       </div>
@@ -719,7 +719,7 @@ export function FindRidePage() {
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                           <div>
-                            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{corridor.label}</div>
+                            <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>{corridor.label}</div>
                             <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
                               Demand {corridor.forecastDemandScore} | {corridor.priceQuote.finalPriceJod} JOD | Owns {corridor.routeOwnershipScore}
                             </div>
@@ -737,7 +737,7 @@ export function FindRidePage() {
                       <Network size={18} color={DS.green} />
                     </div>
                     <div>
-                    <div style={{ color: '#fff', fontWeight: 800 }}>Package-ready rides</div>
+                    <div style={{ color: C.text, fontWeight: 800 }}>Package-ready rides</div>
                     <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
                         Some rides also carry packages.
                       </div>
@@ -746,7 +746,7 @@ export function FindRidePage() {
                   <div style={{ display: 'grid', gap: 10 }}>
                     {marketplaceNodes.map((node) => (
                       <div key={node.id} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>{node.title}</div>
+                        <div style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem' }}>{node.title}</div>
                         <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.55 }}>{node.summary}</div>
                       </div>
                     ))}
@@ -757,7 +757,7 @@ export function FindRidePage() {
 
             <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
               <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Suggested reminders</div>
+                <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>Suggested reminders</div>
                 {recurringSuggestions.length > 0 ? (
                   <div style={{ display: 'grid', gap: 10 }}>
                     {recurringSuggestions.map((suggestion) => {
@@ -766,7 +766,7 @@ export function FindRidePage() {
                         <div key={suggestion.corridorId} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                             <div>
-                              <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{suggestion.label}</div>
+                              <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>{suggestion.label}</div>
                               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
                                 {suggestion.confidenceScore}/100 | {suggestion.priceQuote.finalPriceJod} JOD | {suggestion.weeklyFrequency} signals
                               </div>
@@ -775,10 +775,10 @@ export function FindRidePage() {
                           </div>
                             <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 8 }}>{suggestion.reason}</div>
                           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-                            <button onClick={() => { setFrom(suggestion.from); setTo(suggestion.to); setSearched(true); }} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+                            <button onClick={() => { setFrom(suggestion.from); setTo(suggestion.to); setSearched(true); }} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card, color: C.text, fontWeight: 700, cursor: 'pointer' }}>
                               Search route
                             </button>
-                            <button onClick={() => handleSaveReminder(suggestion.corridorId)} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: 'none', background: alreadySaved ? DS.gradG : DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
+                            <button onClick={() => handleSaveReminder(suggestion.corridorId)} style={{ height: 38, padding: '0 14px', borderRadius: '999px', border: 'none', background: alreadySaved ? DS.gradG : DS.gradC, color: C.bgDeep, fontWeight: 800, cursor: 'pointer' }}>
                               {alreadySaved ? 'Reminder active' : 'Save reminder'}
                             </button>
                           </div>
@@ -794,12 +794,12 @@ export function FindRidePage() {
               </div>
 
               <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Saved reminders</div>
+                <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>Saved reminders</div>
                 {savedReminders.length > 0 ? (
                   <div style={{ display: 'grid', gap: 10 }}>
                     {savedReminders.slice(0, 4).map((reminder) => (
                       <div key={reminder.id} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, padding: '11px 12px' }}>
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>{reminder.label}</div>
+                        <div style={{ color: C.text, fontWeight: 700, fontSize: '0.8rem' }}>{reminder.label}</div>
                         <div style={{ color: DS.muted, fontSize: '0.73rem', marginTop: 4 }}>
                           {formatRouteReminderSchedule(reminder)}
                         </div>
@@ -816,7 +816,7 @@ export function FindRidePage() {
 
             <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.15fr 0.85fr', gap: 14, marginBottom: 18 }}>
               <div style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Best ride matches</div>
+                <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>Best ride matches</div>
                 <div style={{ display: 'grid', gap: 10 }}>
                   {recommendedRides.map((ride) => {
                     const rideSignal = resolveSignalForRoute(ride.from, ride.to);
@@ -831,7 +831,7 @@ export function FindRidePage() {
                       <button key={ride.id} onClick={() => handleOpenRide(ride)} style={{ textAlign: 'left', borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', cursor: 'pointer' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                           <div>
-                            <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div>
+                            <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div>
                             <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
                               {ride.time} | {ride.driver.name} | {rideSignal ? `${rideSignal.routeOwnershipScore}/100 ownership` : ride.car}
                             </div>
@@ -849,8 +849,8 @@ export function FindRidePage() {
               <div style={{ display: 'grid', gap: 14 }}>
                 {[{ title: t.recentSearches, items: recentSearches, empty: t.searchHelp }, { title: t.bookedTrips, items: bookedRides.map((ride) => `${ride.from} to ${ride.to} | ${ride.time} | ${ride.driver.name}`), empty: t.noTripsYet }].map((card) => (
                   <div key={card.title} style={{ background: DS.card, borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}` }}>
-                    <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>{card.title}</div>
-                    {card.items.length > 0 ? <div style={{ display: 'grid', gap: 10 }}>{card.items.map((item) => <div key={item} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, padding: '11px 12px', color: '#fff', fontSize: '0.78rem' }}>{item}</div>)}</div> : <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{card.empty}</div>}
+                    <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>{card.title}</div>
+                    {card.items.length > 0 ? <div style={{ display: 'grid', gap: 10 }}>{card.items.map((item) => <div key={item} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card2, padding: '11px 12px', color: C.text, fontSize: '0.78rem' }}>{item}</div>)}</div> : <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{card.empty}</div>}
                   </div>
                 ))}
               </div>
