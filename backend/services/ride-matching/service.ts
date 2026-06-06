@@ -11,6 +11,7 @@
 
 import type { DomainEventEnvelope } from '../../../src/domain/events';
 import { eventBroker } from '../../../src/platform/event-broker-redis';
+import { db, findMany, updateOne } from '../shared/database';
 
 interface RideRequest {
   rideId: string;
@@ -52,20 +53,42 @@ class MatchingEngine {
     seats: number,
     radiusKm: number = 5,
   ): Promise<Driver[]> {
-    // In production: Query Redis GEORADIUS or PostGIS ST_DWithin
-    // SELECT driver_id, ST_X(location::geometry) as lng, ST_Y(location::geometry) as lat
-    // FROM driver_availability
-    // WHERE status = 'available' 
-    //   AND available_seats >= $1
-    //   AND ST_DWithin(
-    //     location::geography,
-    //     ST_MakePoint($2, $3)::geography,
-    //     $4 * 1000 -- radius in meters
-    //   )
-    // ORDER BY ST_Distance(location::geography, ST_MakePoint($2, $3)::geography)
-    // LIMIT 20
+    const query = `
+      SELECT 
+        d.driver_id,
+        d.vehicle_id,
+        ST_X(d.location::geometry) as lng,
+        ST_Y(d.location::geometry) as lat,
+        d.available_seats,
+        COALESCE(p.rating, 4.5) as rating,
+        d.status,
+        ST_Distance(
+          d.location::geography,
+          ST_MakePoint($2, $3)::geography
+        ) / 1000 as distance_km
+      FROM driver_availability d
+      LEFT JOIN profiles p ON d.driver_id = p.id
+      WHERE d.status = 'available'
+        AND d.available_seats >= $1
+        AND ST_DWithin(
+          d.location::geography,
+          ST_MakePoint($2, $3)::geography,
+          $4 * 1000
+        )
+      ORDER BY distance_km
+      LIMIT 20
+    `;
 
-    return []; // Mock - replace with actual query
+    const results = await findMany<any>(query, [seats, origin.lng, origin.lat, radiusKm]);
+    
+    return results.map(row => ({
+      driverId: row.driver_id,
+      vehicleId: row.vehicle_id,
+      location: { lat: row.lat, lng: row.lng },
+      availableSeats: row.available_seats,
+      rating: parseFloat(row.rating),
+      status: row.status,
+    }));
   }
 
   async scoreDrivers(
@@ -107,11 +130,20 @@ class MatchingEngine {
   }
 
   private async reserveDriver(driverId: string, rideId: string): Promise<boolean> {
-    // UPDATE driver_availability
-    // SET status = 'reserved', reserved_for_ride_id = $1, reserved_at = NOW()
-    // WHERE driver_id = $2 AND status = 'available'
-    // RETURNING driver_id
-    return true; // Mock
+    const query = `
+      UPDATE driver_availability
+      SET 
+        status = 'reserved',
+        reserved_for_ride_id = $1,
+        reserved_at = NOW(),
+        updated_at = NOW()
+      WHERE driver_id = $2 
+        AND status = 'available'
+      RETURNING driver_id
+    `;
+
+    const result = await db.query(query, [rideId, driverId]);
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   private calculateDistance(

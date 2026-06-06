@@ -12,6 +12,8 @@
 
 import type { DomainEventEnvelope } from '../../../src/domain/events';
 import { eventBroker } from '../../../src/platform/event-broker-redis';
+import { stripeClient } from '../shared/stripe';
+import { db, updateOne } from '../shared/database';
 
 interface PaymentAuthorization {
   paymentId: string;
@@ -46,46 +48,41 @@ class PaymentProviderAdapter {
     amount: number,
     idempotencyKey: string,
   ): Promise<CaptureResult> {
-    // In production: Use Stripe SDK
-    // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-    // 
-    // try {
-    //   const paymentIntent = await stripe.paymentIntents.capture(
-    //     providerId,
-    //     {
-    //       amount_to_capture: amount,
-    //     },
-    //     {
-    //       idempotencyKey,
-    //     }
-    //   );
-    //
-    //   return {
-    //     paymentId: paymentIntent.metadata.paymentId,
-    //     capturedAmount: paymentIntent.amount_received,
-    //     providerTransactionId: paymentIntent.id,
-    //     capturedAt: new Date(paymentIntent.created * 1000).toISOString(),
-    //     status: 'success',
-    //   };
-    // } catch (error: any) {
-    //   return {
-    //     paymentId: '',
-    //     capturedAmount: 0,
-    //     providerTransactionId: providerId,
-    //     capturedAt: new Date().toISOString(),
-    //     status: 'failed',
-    //     failureReason: error.message,
-    //   };
-    // }
+    try {
+      const result = await stripeClient.capturePayment(
+        providerId,
+        amount,
+        idempotencyKey,
+      );
 
-    // Mock successful capture
-    return {
-      paymentId: '',
-      capturedAmount: amount,
-      providerTransactionId: `txn_${Date.now()}`,
-      capturedAt: new Date().toISOString(),
-      status: 'success',
-    };
+      if (!result.success || !result.paymentIntent) {
+        return {
+          paymentId: '',
+          capturedAmount: 0,
+          providerTransactionId: providerId,
+          capturedAt: new Date().toISOString(),
+          status: 'failed',
+          failureReason: result.error || 'Unknown error',
+        };
+      }
+
+      return {
+        paymentId: result.paymentIntent.metadata?.paymentId || '',
+        capturedAmount: result.paymentIntent.amount_received / 100,
+        providerTransactionId: result.paymentIntent.id,
+        capturedAt: new Date(result.paymentIntent.created * 1000).toISOString(),
+        status: 'success',
+      };
+    } catch (error: any) {
+      return {
+        paymentId: '',
+        capturedAmount: 0,
+        providerTransactionId: providerId,
+        capturedAt: new Date().toISOString(),
+        status: 'failed',
+        failureReason: error.message,
+      };
+    }
   }
 
   async refundPayment(
@@ -94,35 +91,19 @@ class PaymentProviderAdapter {
     reason: string,
     idempotencyKey: string,
   ): Promise<boolean> {
-    // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-    // 
-    // try {
-    //   await stripe.refunds.create(
-    //     {
-    //       payment_intent: providerId,
-    //       amount,
-    //       reason: 'requested_by_customer',
-    //       metadata: { reason },
-    //     },
-    //     {
-    //       idempotencyKey,
-    //     }
-    //   );
-    //   return true;
-    // } catch (error) {
-    //   console.error('[PaymentProvider] Refund failed:', error);
-    //   return false;
-    // }
+    const result = await stripeClient.refundPayment(
+      providerId,
+      amount,
+      'requested_by_customer',
+      idempotencyKey,
+    );
 
-    return true; // Mock
+    return result.success;
   }
 
   async getPaymentStatus(providerId: string): Promise<string> {
-    // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-    // const paymentIntent = await stripe.paymentIntents.retrieve(providerId);
-    // return paymentIntent.status;
-
-    return 'requires_capture'; // Mock
+    const paymentIntent = await stripeClient.getPaymentIntent(providerId);
+    return paymentIntent.status;
   }
 }
 
@@ -247,14 +228,16 @@ export class PaymentReconciliationService {
   }
 
   private async recordCapture(paymentId: string, result: CaptureResult): Promise<void> {
-    // UPDATE payments
-    // SET 
-    //   status = 'captured',
-    //   captured_amount = $1,
-    //   provider_transaction_id = $2,
-    //   captured_at = $3,
-    //   updated_at = NOW()
-    // WHERE id = $4
+    await updateOne(
+      'payments',
+      paymentId,
+      {
+        status: 'captured',
+        captured_amount: result.capturedAmount,
+        provider_transaction_id: result.providerTransactionId,
+        captured_at: result.capturedAt,
+      }
+    );
 
     console.log(`[PaymentReconciliation] Recorded capture for payment ${paymentId}`);
   }

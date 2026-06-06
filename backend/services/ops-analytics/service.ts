@@ -11,6 +11,7 @@
 
 import type { DomainEventEnvelope } from '../../../src/domain/events';
 import { eventBroker } from '../../../src/platform/event-broker-redis';
+import { db, findMany, insertOne } from '../shared/database';
 
 interface RideCompletion {
   rideId: string;
@@ -60,85 +61,109 @@ interface DriverPayoutSummary {
  */
 class AnalyticsEngine {
   async recordRideCompletion(ride: RideCompletion): Promise<void> {
-    // INSERT INTO operational_metrics (
-    //   metric_type, entity_id, value, metadata, recorded_at
-    // ) VALUES (
-    //   'ride_completion',
-    //   $1, -- ride_id
-    //   $2, -- fare
-    //   jsonb_build_object(
-    //     'driver_id', $3,
-    //     'rider_id', $4,
-    //     'distance', $5,
-    //     'duration', $6,
-    //     'origin', $7,
-    //     'destination', $8
-    //   ),
-    //   $9 -- completed_at
-    // )
+    await insertOne('operational_metrics', {
+      metric_type: 'ride_completion',
+      entity_id: ride.rideId,
+      value: ride.fare,
+      metadata: {
+        driver_id: ride.driverId,
+        rider_id: ride.riderId,
+        distance: ride.distance,
+        duration: ride.duration,
+        origin: ride.origin,
+        destination: ride.destination,
+      },
+      recorded_at: ride.completedAt,
+    });
 
     console.log(`[Analytics] Recorded ride completion: ${ride.rideId}`);
   }
 
   async recordPaymentCapture(payment: PaymentCapture): Promise<void> {
-    // INSERT INTO financial_metrics (
-    //   metric_type, payment_id, entity_id, amount, recorded_at
-    // ) VALUES (
-    //   'payment_capture',
-    //   $1, -- payment_id
-    //   COALESCE($2, $3), -- ride_id or package_id
-    //   $4, -- captured_amount
-    //   $5 -- captured_at
-    // )
+    await insertOne('financial_metrics', {
+      metric_type: 'payment_capture',
+      payment_id: payment.paymentId,
+      entity_id: payment.rideId || payment.packageId,
+      amount: payment.capturedAmount,
+      recorded_at: payment.capturedAt,
+    });
 
     console.log(`[Analytics] Recorded payment capture: ${payment.paymentId}`);
   }
 
   async updateCorridorIntelligence(ride: RideCompletion): Promise<void> {
-    // Identify corridor
     const corridorId = this.identifyCorridor(ride.origin, ride.destination);
 
-    // INSERT INTO corridor_intelligence (
-    //   corridor_id, origin_lat, origin_lng, dest_lat, dest_lng,
-    //   ride_count, total_revenue, avg_fare, avg_duration,
-    //   last_updated
-    // ) VALUES (
-    //   $1, $2, $3, $4, $5, 1, $6, $6, $7, NOW()
-    // )
-    // ON CONFLICT (corridor_id) DO UPDATE SET
-    //   ride_count = corridor_intelligence.ride_count + 1,
-    //   total_revenue = corridor_intelligence.total_revenue + EXCLUDED.total_revenue,
-    //   avg_fare = (corridor_intelligence.total_revenue + EXCLUDED.total_revenue) / 
-    //              (corridor_intelligence.ride_count + 1),
-    //   avg_duration = (corridor_intelligence.avg_duration * corridor_intelligence.ride_count + EXCLUDED.avg_duration) /
-    //                  (corridor_intelligence.ride_count + 1),
-    //   last_updated = NOW()
+    const query = `
+      INSERT INTO corridor_intelligence (
+        corridor_id, origin_lat, origin_lng, dest_lat, dest_lng,
+        ride_count, total_revenue, avg_fare, avg_duration,
+        last_updated
+      ) VALUES (
+        $1, $2, $3, $4, $5, 1, $6, $6, $7, NOW()
+      )
+      ON CONFLICT (corridor_id) DO UPDATE SET
+        ride_count = corridor_intelligence.ride_count + 1,
+        total_revenue = corridor_intelligence.total_revenue + EXCLUDED.total_revenue,
+        avg_fare = (corridor_intelligence.total_revenue + EXCLUDED.total_revenue) / 
+                   (corridor_intelligence.ride_count + 1),
+        avg_duration = (corridor_intelligence.avg_duration * corridor_intelligence.ride_count + EXCLUDED.avg_duration) /
+                       (corridor_intelligence.ride_count + 1),
+        last_updated = NOW()
+    `;
+
+    await db.query(query, [
+      corridorId,
+      ride.origin.lat,
+      ride.origin.lng,
+      ride.destination.lat,
+      ride.destination.lng,
+      ride.fare,
+      ride.duration,
+    ]);
 
     console.log(`[Analytics] Updated corridor intelligence: ${corridorId}`);
   }
 
   async generateDriverPayout(driverId: string, period: string): Promise<DriverPayoutSummary> {
-    // SELECT 
-    //   d.driver_id,
-    //   COUNT(*) as total_rides,
-    //   SUM(r.fare) as total_earnings,
-    //   SUM(r.fare * 0.20) as platform_fee,
-    //   SUM(r.fare * 0.80) as net_payout
-    // FROM rides r
-    // JOIN driver_availability d ON r.driver_id = d.driver_id
-    // WHERE r.driver_id = $1
-    //   AND r.completed_at >= $2
-    //   AND r.completed_at < $3
-    //   AND r.status = 'completed'
-    // GROUP BY d.driver_id
+    const query = `
+      SELECT 
+        d.driver_id,
+        COUNT(*) as total_rides,
+        SUM(r.fare) as total_earnings,
+        SUM(r.fare * 0.20) as platform_fee,
+        SUM(r.fare * 0.80) as net_payout
+      FROM rides r
+      JOIN driver_availability d ON r.driver_id = d.driver_id
+      WHERE r.driver_id = $1
+        AND r.completed_at >= $2::timestamp
+        AND r.completed_at < ($2::timestamp + interval '1 month')
+        AND r.status = 'completed'
+      GROUP BY d.driver_id
+    `;
+
+    const result = await db.query(query, [driverId, period]);
+    const row = result.rows[0];
+
+    if (!row) {
+      return {
+        driverId,
+        period,
+        totalRides: 0,
+        totalEarnings: 0,
+        platformFee: 0,
+        netPayout: 0,
+        status: 'pending',
+      };
+    }
 
     return {
-      driverId,
+      driverId: row.driver_id,
       period,
-      totalRides: 0,
-      totalEarnings: 0,
-      platformFee: 0,
-      netPayout: 0,
+      totalRides: parseInt(row.total_rides),
+      totalEarnings: parseFloat(row.total_earnings),
+      platformFee: parseFloat(row.platform_fee),
+      netPayout: parseFloat(row.net_payout),
       status: 'pending',
     };
   }
@@ -154,25 +179,38 @@ class AnalyticsEngine {
   }
 
   async getTopCorridors(limit = 10): Promise<CorridorMetrics[]> {
-    // SELECT 
-    //   corridor_id,
-    //   origin_name,
-    //   destination_name,
-    //   ride_count,
-    //   total_revenue,
-    //   avg_fare,
-    //   avg_duration,
-    //   peak_hours,
-    //   CASE 
-    //     WHEN ride_count > 100 THEN 'high'
-    //     WHEN ride_count > 20 THEN 'medium'
-    //     ELSE 'low'
-    //   END as demand
-    // FROM corridor_intelligence
-    // ORDER BY ride_count DESC
-    // LIMIT $1
+    const query = `
+      SELECT 
+        corridor_id,
+        origin_name,
+        destination_name,
+        ride_count,
+        total_revenue,
+        avg_fare,
+        avg_duration,
+        peak_hours,
+        CASE 
+          WHEN ride_count > 100 THEN 'high'
+          WHEN ride_count > 20 THEN 'medium'
+          ELSE 'low'
+        END as demand
+      FROM corridor_intelligence
+      ORDER BY ride_count DESC
+      LIMIT $1
+    `;
 
-    return [];
+    const results = await findMany<any>(query, [limit]);
+    return results.map(row => ({
+      corridorId: row.corridor_id,
+      origin: row.origin_name || 'Unknown',
+      destination: row.destination_name || 'Unknown',
+      rideCount: parseInt(row.ride_count),
+      totalRevenue: parseFloat(row.total_revenue),
+      avgFare: parseFloat(row.avg_fare),
+      avgDuration: parseFloat(row.avg_duration),
+      peakHours: row.peak_hours || [],
+      demand: row.demand as 'high' | 'medium' | 'low',
+    }));
   }
 }
 
