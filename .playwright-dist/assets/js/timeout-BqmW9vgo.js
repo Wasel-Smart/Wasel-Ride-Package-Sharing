@@ -1,0 +1,1 @@
+async function a(i,t,o=`Operation exceeded timeout of ${t}ms`){let e=null;const r=new Promise((m,n)=>{e=setTimeout(()=>n(new Error(o)),t)});try{return await Promise.race([i(),r])}finally{e&&clearTimeout(e)}}export{a as w};

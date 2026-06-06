@@ -1,0 +1,1 @@
+import{v as o,a4 as n}from"./index-Dey87KqN.js";function r(e,a){const t=n(e);return t?`https://wa.me/${t.replace(/^\+/,"")}?text=${encodeURIComponent(a)}`:""}function s(e){return r(e.phone,e.message)||o(e.fallbackMessage??e.message)}function l(e){return!!n(e)}export{s as b,l as h};

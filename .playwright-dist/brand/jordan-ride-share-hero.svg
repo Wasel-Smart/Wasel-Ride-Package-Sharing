@@ -1,0 +1,64 @@
+<svg width="1200" height="780" viewBox="0 0 1200 780" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Jordan roads ride sharing illustration</title>
+  <desc id="desc">A modern illustration of Jordan roads, hills, a driver, and happy passengers for Wasel14 ride sharing.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1200" y2="780" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DBEAFE"/>
+      <stop offset="0.45" stop-color="#ECFDF5"/>
+      <stop offset="1" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <linearGradient id="road" x1="270" y1="446" x2="1122" y2="819" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <filter id="softShadow" x="80" y="240" width="1040" height="480" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="30" stdDeviation="35" flood-color="#0F172A" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="780" rx="48" fill="url(#sky)"/>
+  <circle cx="995" cy="116" r="74" fill="#FBBF24" opacity="0.88"/>
+  <path d="M0 377C147 306 284 290 420 340C557 390 665 398 800 343C938 288 1066 300 1200 356V780H0V377Z" fill="#BBF7D0"/>
+  <path d="M0 448C127 385 274 378 421 422C569 466 686 469 823 428C961 387 1087 392 1200 450V780H0V448Z" fill="#86EFAC" opacity="0.72"/>
+  <path d="M46 604C185 540 329 526 477 564C625 602 756 601 894 558C1032 515 1121 533 1200 580V780H46V604Z" fill="#C7D2FE" opacity="0.54"/>
+  <g opacity="0.85">
+    <path d="M173 414H233L250 357L271 414H332L283 449L302 507L250 472L200 507L219 449L173 414Z" fill="#0F766E" opacity="0.22"/>
+    <path d="M832 271H883L898 223L914 271H966L924 301L940 350L898 320L856 350L873 301L832 271Z" fill="#2563EB" opacity="0.16"/>
+  </g>
+  <path d="M283 780C350 650 417 567 491 530C584 483 686 499 768 552C834 594 904 666 981 780H283Z" fill="url(#road)"/>
+  <path d="M620 529C609 598 601 672 594 780" stroke="#F8FAFC" stroke-width="10" stroke-linecap="round" stroke-dasharray="34 34" opacity="0.9"/>
+  <g filter="url(#softShadow)">
+    <path d="M258 488C268 422 325 373 393 373H787C852 373 907 419 920 483L943 600C949 632 925 662 892 662H286C253 662 229 631 235 599L258 488Z" fill="#0F172A"/>
+    <path d="M309 470C321 430 358 403 400 403H779C819 403 855 428 869 466L893 534H286L309 470Z" fill="#2563EB"/>
+    <path d="M357 426H506C529 426 548 445 548 468V520H319L337 456C340 438 347 426 357 426Z" fill="#DBEAFE"/>
+    <path d="M592 426H766C788 426 807 439 816 459L842 520H592V426Z" fill="#DCFCE7"/>
+    <circle cx="374" cy="650" r="70" fill="#020617"/>
+    <circle cx="374" cy="650" r="34" fill="#94A3B8"/>
+    <circle cx="803" cy="650" r="70" fill="#020617"/>
+    <circle cx="803" cy="650" r="34" fill="#94A3B8"/>
+    <path d="M267 557H930" stroke="#F8FAFC" stroke-width="10" stroke-linecap="round" opacity="0.32"/>
+    <rect x="668" y="569" width="108" height="24" rx="12" fill="#22C55E"/>
+    <rect x="405" y="569" width="86" height="24" rx="12" fill="#60A5FA"/>
+  </g>
+  <g>
+    <circle cx="441" cy="390" r="31" fill="#F59E0B"/>
+    <path d="M387 501C393 445 416 420 441 420C466 420 490 445 495 501H387Z" fill="#0F766E"/>
+    <circle cx="682" cy="391" r="30" fill="#F97316"/>
+    <path d="M630 501C636 447 658 421 682 421C707 421 730 447 735 501H630Z" fill="#1D4ED8"/>
+    <circle cx="749" cy="390" r="28" fill="#FDBA74"/>
+    <path d="M704 501C709 449 729 422 750 422C771 422 792 449 798 501H704Z" fill="#16A34A"/>
+  </g>
+  <g>
+    <rect x="96" y="116" width="246" height="96" rx="28" fill="white" fill-opacity="0.92"/>
+    <circle cx="142" cy="164" r="22" fill="#22C55E"/>
+    <path d="M133 164L140 171L154 155" stroke="white" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="180" y="154" fill="#0F172A" font-family="Inter, Arial" font-size="22" font-weight="800">Verified users</text>
+    <text x="180" y="184" fill="#64748B" font-family="Inter, Arial" font-size="17">Safe rides across Jordan</text>
+  </g>
+  <g>
+    <rect x="830" y="468" width="272" height="94" rx="28" fill="white" fill-opacity="0.94"/>
+    <circle cx="879" cy="515" r="22" fill="#2563EB"/>
+    <path d="M867 516H891" stroke="white" stroke-width="7" stroke-linecap="round"/>
+    <text x="921" y="506" fill="#0F172A" font-family="Inter, Arial" font-size="22" font-weight="800">Split costs</text>
+    <text x="921" y="536" fill="#64748B" font-family="Inter, Arial" font-size="17">Amman · Zarqa · Irbid</text>
+  </g>
+</svg>
