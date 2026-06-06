@@ -720,11 +720,7 @@ export function FindRidePage() {
                     </span>
                   </div>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <WaselButton
-                      onClick={openMyTrips}
-                      variant="gold"
-                      size="sm"
-                    >
+                    <WaselButton onClick={openMyTrips} variant="gold" size="sm">
                       Open My Trips
                     </WaselButton>
                     <WaselButton
