@@ -330,12 +330,12 @@ export function BusPage() {
 
         <div
           style={{
-            background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+            background: C.card,
             border: `1px solid ${DS.border}`,
             borderRadius: r(22),
             padding: 18,
             marginBottom: 18,
-            boxShadow: '0 14px 34px rgba(0,0,0,0.18)',
+            boxShadow: SH.card,
           }}
         >
           <div
@@ -376,7 +376,7 @@ export function BusPage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
-                boxShadow: '0 8px 18px rgba(0,0,0,0.14)',
+                  boxShadow: SH.sm,
               }}
             >
               <ArrowLeftRight size={16} />
@@ -549,11 +549,11 @@ export function BusPage() {
               key={item.label}
               style={{
                 background:
-                  'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+                      C.card,
                 border: `1px solid ${DS.border}`,
                 borderRadius: r(18),
                 padding: '18px 18px 16px',
-                boxShadow: '0 12px 28px rgba(0,0,0,0.16)',
+                  boxShadow: SH.card,
               }}
             >
               <div
@@ -616,9 +616,9 @@ export function BusPage() {
             style={{
               borderRadius: r(20),
               padding: '18px 18px 16px',
-              background: 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(255,255,255,0.03))',
+              background: `linear-gradient(135deg, ${C.greenDim}, ${C.elevated})`,
               border: `1px solid ${activeStatus.color}22`,
-              boxShadow: '0 14px 34px rgba(0,0,0,0.16)',
+              boxShadow: SH.card,
               display: 'grid',
               gap: 10,
             }}
@@ -670,7 +670,7 @@ export function BusPage() {
               padding: '18px 18px 16px',
               background: DS.card,
               border: `1px solid ${DS.border}`,
-              boxShadow: '0 14px 34px rgba(0,0,0,0.16)',
+              boxShadow: SH.card,
               display: 'grid',
               gap: 10,
             }}
@@ -706,7 +706,7 @@ export function BusPage() {
                     textAlign: 'left',
                     borderRadius: r(14),
                     border: `1px solid ${route.color ?? DS.cyan}24`,
-                    background: 'rgba(255,255,255,0.03)',
+              background: C.elevated,
                     padding: '12px 14px',
                     cursor: 'pointer',
                     display: 'grid',
@@ -914,7 +914,7 @@ export function BusPage() {
                         <div
                           key={item.label}
                           style={{
-                            background: 'rgba(255,255,255,0.03)',
+                  background: C.elevated,
                             border: `1px solid ${DS.border}`,
                             borderRadius: r(12),
                             padding: '12px 13px',
@@ -990,7 +990,7 @@ export function BusPage() {
             <div
               style={{
                 background:
-                  'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+                    C.card,
                 border: `1px solid ${activeBus.color ?? DS.cyan}30`,
                 borderRadius: r(22),
                 overflow: 'hidden',
@@ -1045,7 +1045,7 @@ export function BusPage() {
                             ? mode === 'depart-now'
                               ? DS.gradC
                               : DS.gradG
-                            : 'rgba(255,255,255,0.08)',
+                    : C.elevated,
                         color: '#fff',
                         fontWeight: 700,
                       }}
@@ -1135,8 +1135,8 @@ export function BusPage() {
                 {activeBus.seats === 0 && (
                   <div
                     style={{
-                      background: 'rgba(240,168,48,0.10)',
-                      border: '1px solid rgba(240,168,48,0.28)',
+              background: C.goldDim,
+              border: `1px solid ${C.goldDim}`,
                       borderRadius: r(16),
                       padding: '14px 16px',
                       color: '#fff',
@@ -1276,11 +1276,11 @@ export function BusPage() {
                 <div
                   style={{
                     background:
-                      'linear-gradient(135deg, rgba(0,200,232,0.08), rgba(240,168,48,0.08))',
+                  `linear-gradient(135deg, ${C.cyanDim}, ${C.goldDim})`,
                     border: `1px solid ${DS.border}`,
                     borderRadius: r(16),
                     padding: '16px 16px 14px',
-                    boxShadow: '0 10px 24px rgba(0,0,0,0.12)',
+                boxShadow: SH.card,
                   }}
                 >
                   {[
@@ -1336,7 +1336,7 @@ export function BusPage() {
                     borderRadius: r(16),
                     border: 'none',
                     background: bookingDisabled
-                      ? 'linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))'
+                      ? C.elevated
                       : `linear-gradient(135deg,${activeBus.color ?? DS.cyan},${DS.blue})`,
                     color: '#fff',
                     fontWeight: 900,
@@ -1344,7 +1344,7 @@ export function BusPage() {
                     cursor: bookingDisabled ? 'not-allowed' : 'pointer',
                     fontSize: '0.95rem',
                     opacity: bookingDisabled ? 0.72 : 1,
-                    boxShadow: '0 14px 28px rgba(0,0,0,0.18)',
+                    boxShadow: SH.card,
                   }}
                 >
                   {bookingBusy
@@ -1379,8 +1379,8 @@ export function BusPage() {
                 {bookingComplete && (
                   <div
                     style={{
-                      background: 'rgba(0,200,117,0.10)',
-                      border: '1px solid rgba(0,200,117,0.28)',
+              background: C.greenDim,
+              border: `1px solid ${C.greenDim}`,
                       borderRadius: r(16),
                       padding: '14px 16px',
                     }}
