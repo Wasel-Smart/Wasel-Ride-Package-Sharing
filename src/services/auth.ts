@@ -150,6 +150,8 @@ export const authAPI = {
       returnTo ? { returnTo } : undefined,
     );
 
+    const normalizedPhone = phone?.trim();
+
     const { data, error } = await client.auth.signUp({
       email,
       password,
@@ -158,7 +160,7 @@ export const authAPI = {
         captchaToken,
         data: {
           full_name: `${firstName} ${lastName}`.trim(),
-          phone,
+          ...(normalizedPhone ? { phone: normalizedPhone } : {}),
         },
       },
     });

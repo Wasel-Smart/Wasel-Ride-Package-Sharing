@@ -96,6 +96,56 @@ describe('communication runtime helpers', () => {
     expect(String(request.init.body)).toContain('StatusCallback=');
   });
 
+  it('uses twilio api key credentials when both key fields are configured', () => {
+    const request = buildTwilioRequest(
+      {
+        delivery_id: 'd3',
+        channel: 'sms',
+        destination: '+962790000000',
+        subject: 'OTP',
+        payload: { body: 'Your Wasel verification code is 123456.' },
+        provider_name: 'twilio',
+        external_reference: null,
+        attempts_count: 0,
+      },
+      {
+        twilioAccountSid: 'AC123',
+        twilioAuthToken: 'account-secret',
+        twilioApiKeySid: 'SK123',
+        twilioApiKeySecret: 'api-key-secret',
+        twilioMessagingServiceSid: 'MG123',
+      },
+    );
+
+    expect(request.url).toContain('/Accounts/AC123/Messages.json');
+    expect(request.init.headers.Authorization).toBe(`Basic ${btoa('SK123:api-key-secret')}`);
+    expect(String(request.init.body)).toContain('MessagingServiceSid=MG123');
+  });
+
+  it('falls back to account auth when api key secret is missing', () => {
+    const request = buildTwilioRequest(
+      {
+        delivery_id: 'd4',
+        channel: 'sms',
+        destination: '+962790000000',
+        subject: 'OTP',
+        payload: { body: 'Your Wasel verification code is 123456.' },
+        provider_name: 'twilio',
+        external_reference: null,
+        attempts_count: 0,
+      },
+      {
+        twilioAccountSid: 'AC123',
+        twilioAuthToken: 'account-secret',
+        twilioApiKeySid: 'SK123',
+        twilioSmsFrom: '+18335555267',
+      },
+    );
+
+    expect(request.init.headers.Authorization).toBe(`Basic ${btoa('AC123:account-secret')}`);
+    expect(String(request.init.body)).toContain('From=%2B18335555267');
+  });
+
   it('maps webhook states into lifecycle states', () => {
     expect(mapResendEventToStatus('email.delivered')).toBe('delivered');
     expect(mapResendEventToStatus('email.bounced')).toBe('failed');

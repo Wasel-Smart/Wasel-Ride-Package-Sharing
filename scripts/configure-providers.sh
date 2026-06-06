@@ -161,12 +161,19 @@ echo ""
 
 TWILIO_ACCOUNT_SID=$(prompt_secret "TWILIO_ACCOUNT_SID" "Twilio Account SID (AC...)" "AC1386e065d313ae43d256ca0394d0b4e6")
 TWILIO_AUTH_TOKEN=$(prompt_secret "TWILIO_AUTH_TOKEN" "Twilio Auth Token" "<YOUR_TWILIO_AUTH_TOKEN>")
+TWILIO_API_KEY_SID=$(prompt_secret "TWILIO_API_KEY_SID" "Twilio API Key SID (SK...)" "")
+TWILIO_API_KEY_SECRET=$(prompt_secret "TWILIO_API_KEY_SECRET" "Twilio API Key Secret" "")
 TWILIO_MESSAGING_SID=$(prompt_secret "TWILIO_MESSAGING_SID" "Twilio Messaging Service SID (MG...)" "")
 TWILIO_SMS_FROM=$(prompt_secret "TWILIO_SMS_FROM" "Twilio SMS From Number (+962...)" "+962790000000")
 
 if [ -n "$TWILIO_ACCOUNT_SID" ] && [ -n "$TWILIO_AUTH_TOKEN" ]; then
     supabase secrets set TWILIO_ACCOUNT_SID="$TWILIO_ACCOUNT_SID"
     supabase secrets set TWILIO_AUTH_TOKEN="$TWILIO_AUTH_TOKEN"
+
+    if [ -n "$TWILIO_API_KEY_SID" ] && [ -n "$TWILIO_API_KEY_SECRET" ]; then
+        supabase secrets set TWILIO_API_KEY_SID="$TWILIO_API_KEY_SID"
+        supabase secrets set TWILIO_API_KEY_SECRET="$TWILIO_API_KEY_SECRET"
+    fi
     
     if [ -n "$TWILIO_MESSAGING_SID" ]; then
         supabase secrets set TWILIO_MESSAGING_SERVICE_SID="$TWILIO_MESSAGING_SID"

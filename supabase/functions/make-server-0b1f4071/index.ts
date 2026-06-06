@@ -65,6 +65,8 @@ const deliveryEnv: DeliveryProcessorEnv = {
   sendgridFromEmail: Deno.env.get('SENDGRID_FROM_EMAIL') ?? undefined,
   twilioAccountSid: Deno.env.get('TWILIO_ACCOUNT_SID') ?? undefined,
   twilioAuthToken: Deno.env.get('TWILIO_AUTH_TOKEN') ?? undefined,
+  twilioApiKeySid: Deno.env.get('TWILIO_API_KEY_SID') ?? undefined,
+  twilioApiKeySecret: Deno.env.get('TWILIO_API_KEY_SECRET') ?? undefined,
   twilioMessagingServiceSid: Deno.env.get('TWILIO_MESSAGING_SERVICE_SID') ?? undefined,
   twilioSmsFrom: Deno.env.get('TWILIO_SMS_FROM') ?? undefined,
   twilioWhatsappFrom: Deno.env.get('TWILIO_WHATSAPP_FROM') ?? undefined,
