@@ -58,6 +58,8 @@ export const options = {
 
 const BASE_URL = __ENV.API_URL || 'http://localhost:5173';
 const AUTH_TOKEN = __ENV.AUTH_TOKEN || '';
+const HAS_AUTH_TOKEN = AUTH_TOKEN.trim().length > 0;
+const PUBLIC_PATHS = ['/', '/app/find-ride', '/app/packages', '/app/payments'];
 
 // Test data pools
 const ORIGINS = [
@@ -111,6 +113,30 @@ function parseJsonBody(response) {
 }
 
 export default function () {
+  if (!HAS_AUTH_TOKEN) {
+    group('Public Site Flow', function () {
+      const path = PUBLIC_PATHS[Math.floor(Math.random() * PUBLIC_PATHS.length)];
+      const response = http.get(`${BASE_URL}${path}`);
+      const duration = response.timings.duration;
+
+      if (path.includes('find-ride')) rideRequestLatency.add(duration);
+      else if (path.includes('packages')) packageRequestLatency.add(duration);
+      else if (path.includes('payments')) paymentLatency.add(duration);
+
+      apiCallCounter.add(1);
+
+      const publicSuccess = check(response, {
+        'public page status is 200': (r) => r.status === 200,
+        'public page latency < 800ms': (r) => r.timings.duration < 800,
+      });
+
+      errorRate.add(publicSuccess ? 0 : 1);
+      sleep(1);
+    });
+
+    return;
+  }
+
   const params = {
     headers: {
       'Content-Type': 'application/json',
