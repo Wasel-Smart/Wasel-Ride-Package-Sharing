@@ -39,17 +39,20 @@ class TelemetryCollector {
   recordMetric(
     name: string,
     value: number,
-    unit: string = 'count',
+    unit: string | Record<string, string> = 'count',
     tags: Record<string, string> = {},
   ): void {
+    const resolvedUnit = typeof unit === 'string' ? unit : 'count';
+    const resolvedTags = typeof unit === 'string' ? tags : unit;
+
     this.metrics.push({
       name,
       value,
-      unit,
+      unit: resolvedUnit,
       timestamp: Date.now(),
       tags: {
         environment: import.meta.env.MODE,
-        ...tags,
+        ...resolvedTags,
       },
     });
   }

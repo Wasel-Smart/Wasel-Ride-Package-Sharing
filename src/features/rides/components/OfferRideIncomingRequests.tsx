@@ -2,6 +2,7 @@ import { notificationsAPI } from '../../../services/notifications.js';
 import { getConnectedRides, updateConnectedRide } from '../../../services/journeyLogistics';
 import { updateRideBooking, type RideBookingRecord } from '../../../services/rideLifecycle';
 import { DS, r } from '../../../pages/waselServiceShared';
+import { C } from '../../../utils/wasel-ds';
 
 type OfferRideIncomingRequestsProps = {
   incomingRequests: RideBookingRecord[];
