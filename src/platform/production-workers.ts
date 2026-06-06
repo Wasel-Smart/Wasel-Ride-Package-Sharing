@@ -3,7 +3,7 @@
  * Bridges worker framework to actual infrastructure (Kubernetes, Cloud Functions, etc.)
  */
 
-import { BaseWorker, WorkerRegistry, createWorker } from './worker-framework';
+import { WorkerRegistry, createWorker } from './worker-framework';
 import { domainEventBus } from './event-bus';
 import { telemetry } from './telemetry';
 import { createStructuredLogEntry } from './observability';
@@ -57,6 +57,9 @@ const matchingWorker = createWorker<RideMatchRequest>(
 
     // Score and rank drivers
     const bestDriver = nearbyDrivers[0];
+    if (!bestDriver) {
+      throw new Error('No drivers available after ranking');
+    }
 
     // Publish driver assignment event
     domainEventBus.publish({
@@ -118,8 +121,9 @@ const packageWorker = createWorker<PackageRequest>(
     if (message.topic === 'packages.created') {
       // Assign package to available courier
       const couriers = await findAvailableCouriers(payload.pickup.lat, payload.pickup.lng, 15);
+      const courier = couriers[0];
 
-      if (couriers.length > 0) {
+      if (courier) {
         domainEventBus.publish({
           id: `evt-${Date.now()}`,
           type: 'PackageAssigned',
@@ -128,8 +132,8 @@ const packageWorker = createWorker<PackageRequest>(
           producer: 'package-worker',
           payload: {
             packageId: payload.packageId,
-            rideId: couriers[0].currentRideId,
-            driverId: couriers[0].id,
+            rideId: courier.currentRideId,
+            driverId: courier.id,
           },
         });
       }
@@ -274,6 +278,9 @@ async function findNearbyDrivers(
   lng: number,
   radiusKm: number,
 ): Promise<Array<{ id: string; name: string; distance: number }>> {
+  void lat;
+  void lng;
+  void radiusKm;
   // In production: PostGIS query
   // SELECT * FROM drivers WHERE status = 'available' 
   // AND ST_DWithin(location, ST_MakePoint($1, $2)::geography, $3 * 1000)
@@ -288,10 +295,15 @@ async function findAvailableCouriers(
   lng: number,
   radiusKm: number,
 ): Promise<Array<{ id: string; currentRideId: string }>> {
+  void lat;
+  void lng;
+  void radiusKm;
   return [{ id: 'courier-1', currentRideId: 'ride-123' }];
 }
 
 async function capturePayment(entityId: string, amount: number): Promise<boolean> {
+  void entityId;
+  void amount;
   // In production: Stripe API call
   // await stripe.paymentIntents.capture(paymentIntentId);
   return true;
@@ -300,7 +312,7 @@ async function capturePayment(entityId: string, amount: number): Promise<boolean
 async function sendPushNotification(
   userId: string,
   template: string,
-  data: Record<string, unknown>,
+  _data: Record<string, unknown>,
 ): Promise<void> {
   console.log(`📱 Push notification to ${userId}: ${template}`);
 }
@@ -308,7 +320,7 @@ async function sendPushNotification(
 async function sendSMS(
   userId: string,
   template: string,
-  data: Record<string, unknown>,
+  _data: Record<string, unknown>,
 ): Promise<void> {
   console.log(`📨 SMS to ${userId}: ${template}`);
 }
@@ -316,7 +328,7 @@ async function sendSMS(
 async function sendEmail(
   userId: string,
   template: string,
-  data: Record<string, unknown>,
+  _data: Record<string, unknown>,
 ): Promise<void> {
   console.log(`📧 Email to ${userId}: ${template}`);
 }
@@ -324,20 +336,20 @@ async function sendEmail(
 async function sendWhatsApp(
   userId: string,
   template: string,
-  data: Record<string, unknown>,
+  _data: Record<string, unknown>,
 ): Promise<void> {
   console.log(`💬 WhatsApp to ${userId}: ${template}`);
 }
 
 async function updateCorridorAnalytics(
-  origin: string,
-  destination: string,
-  revenue: number,
+  _origin: string,
+  _destination: string,
+  _revenue: number,
 ): Promise<void> {
   // Update analytics database
 }
 
-async function updateRevenueMetrics(revenue: number): Promise<void> {
+async function updateRevenueMetrics(_revenue: number): Promise<void> {
   // Update revenue tracking
 }
 
