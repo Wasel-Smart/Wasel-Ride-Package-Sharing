@@ -21,11 +21,11 @@ import {
 } from './packageTrackingService';
 import { generateId } from '../utils/api';
 
-export interface BusinessEmployee {
+export interface PublicRider {
   id: string;
   name: string;
   email: string;
-  department: string;
+  segment: string;
   monthlyTrips: number;
   monthlySpendJOD: number;
   status: 'active' | 'onboarding';
@@ -42,9 +42,9 @@ export interface FleetDriver {
 }
 
 export interface BusinessAccountSnapshot {
-  companyName: string;
+  communityName: string;
   corridor: CityRoute;
-  employees: BusinessEmployee[];
+  publicRiders: PublicRider[];
   fleetDrivers: FleetDriver[];
   liquidity: LiquidityMetrics & { routeId: string; averagePriceJOD: number };
   seatYield: SeatPricingModel[];
@@ -124,41 +124,41 @@ function buildTripCandidates(route: CityRoute, seatsPerTrip: number): TripSummar
   }));
 }
 
-function buildDefaultBusinessEmployees(route: CityRoute, seatPrice: number): BusinessEmployee[] {
+function buildDefaultPublicRiders(route: CityRoute, seatPrice: number): PublicRider[] {
   void route;
   return [
     {
-      id: generateId('emp'),
+      id: generateId('rider'),
       name: 'Alaa Haddad',
-      email: 'alaa@waselbiz.com',
-      department: 'Operations',
+      email: 'alaa@wasel.app',
+      segment: 'Daily commuter',
       monthlyTrips: 22,
       monthlySpendJOD: Number((seatPrice * 22).toFixed(2)),
       status: 'active',
     },
     {
-      id: generateId('emp'),
+      id: generateId('rider'),
       name: 'Lina Khoury',
-      email: 'lina@waselbiz.com',
-      department: 'Finance',
+      email: 'lina@wasel.app',
+      segment: 'University traveler',
       monthlyTrips: 18,
       monthlySpendJOD: Number((seatPrice * 18).toFixed(2)),
       status: 'active',
     },
     {
-      id: generateId('emp'),
+      id: generateId('rider'),
       name: 'Basil Naser',
-      email: 'basil@waselbiz.com',
-      department: 'Commercial',
+      email: 'basil@wasel.app',
+      segment: 'Intercity rider',
       monthlyTrips: 16,
       monthlySpendJOD: Number((seatPrice * 16).toFixed(2)),
       status: 'onboarding',
     },
     {
-      id: generateId('emp'),
+      id: generateId('rider'),
       name: 'Rana Samir',
-      email: 'rana@waselbiz.com',
-      department: 'Customer Success',
+      email: 'rana@wasel.app',
+      segment: 'Family travel',
       monthlyTrips: 20,
       monthlySpendJOD: Number((seatPrice * 20).toFixed(2)),
       status: 'active',
@@ -211,9 +211,9 @@ function buildDefaultSchoolStudents(): SchoolStudentDraft[] {
   ];
 }
 
-function computeBusinessInvoice(employees: BusinessEmployee[]): number {
+function computeCommunitySpend(publicRiders: PublicRider[]): number {
   return Number(
-    employees.reduce((total, employee) => total + employee.monthlySpendJOD, 0).toFixed(2),
+    publicRiders.reduce((total, rider) => total + rider.monthlySpendJOD, 0).toFixed(2),
   );
 }
 
@@ -224,7 +224,7 @@ export async function buildBusinessAccountSnapshot(
   const totalTripCost =
     calculateFare(corridor.distanceKm, 1, 'on-demand') + corridor.tollCostLocal + 6;
   const seatYield = SmartPricingEngine.calculateSharedRidePricing(totalTripCost, 4);
-  const employees = buildDefaultBusinessEmployees(
+  const publicRiders = buildDefaultPublicRiders(
     corridor,
     seatYield[1]?.price ?? seatYield[0]?.price ?? 0,
   );
@@ -232,7 +232,7 @@ export async function buildBusinessAccountSnapshot(
   const passengerTrips = buildTripCandidates(corridor, 4);
 
   const passengerRequest: PassengerRequest = {
-    id: generateId('biz-passenger'),
+    id: generateId('public-passenger'),
     originCity: corridor.from,
     destinationCity: corridor.to,
     country: 'JO',
@@ -244,13 +244,13 @@ export async function buildBusinessAccountSnapshot(
   };
 
   const packageRequest: PackageSummary = {
-    id: generateId('biz-return'),
+    id: generateId('public-return'),
     originCity: corridor.to,
     destinationCity: corridor.from,
     country: 'JO',
     weightKg: 2,
     neededBy: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    category: 'corporate-return',
+    category: 'public-return',
     fragile: true,
     declaredValueJOD: 120,
   };
@@ -269,20 +269,20 @@ export async function buildBusinessAccountSnapshot(
   const passengerMatches = rankTripsForPassenger(passengerTrips, passengerRequest);
   const packageMatches = rankTripsForPackage(packageTrips, packageRequest);
   const tracking = await packageTrackingService.createPackage({
-    senderId: 'business-ops',
+    senderId: 'public-rider',
     from: corridor.to,
     to: corridor.from,
     size: 'medium',
     value: packageRequest.declaredValueJOD,
     insurance: true,
-    description: `Corporate return lane on ${corridor.from} <> ${corridor.to}`,
+    description: `Public return lane on ${corridor.from} <> ${corridor.to}`,
   });
   const topPackageMatch = packageMatches[0];
   if (topPackageMatch) {
     await packageTrackingService.linkPackageToRide(tracking.id, {
       rideId: topPackageMatch.trip.id,
       driverId: generateId('driver'),
-      driverName: 'Wasel Corporate Lane',
+      driverName: 'Wasel Public Lane',
       driverPhone: '+962790123456',
       vehicleInfo: 'Fleet return shuttle',
     });
@@ -295,9 +295,9 @@ export async function buildBusinessAccountSnapshot(
   };
 
   return {
-    companyName: 'Wasel Enterprise',
+    communityName: 'Wasel Public Riders',
     corridor,
-    employees,
+    publicRiders,
     fleetDrivers,
     liquidity: {
       ...liquidityHealth,
@@ -313,13 +313,13 @@ export async function buildBusinessAccountSnapshot(
       tracking: linkedTracking,
       escrow,
     },
-    monthlyInvoiceJOD: computeBusinessInvoice(employees),
+    monthlyInvoiceJOD: computeCommunitySpend(publicRiders),
     estimatedSavingsPercent: 34,
     recurringDays: 22,
     policyHighlights: [
-      'Recurring corridor budget instead of ad hoc ride reimbursements',
-      'Return packages only move on already scheduled employee or fleet trips',
-      'High-trust drivers and insured lanes for finance, HR, and document returns',
+      'Recurring corridor budget instead of ad hoc solo ride costs',
+      'Return packages only move on already scheduled public rider or fleet trips',
+      'High-trust drivers and insured lanes for riders, families, and document returns',
     ],
   };
 }

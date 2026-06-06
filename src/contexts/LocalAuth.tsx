@@ -167,18 +167,11 @@ type LocalStoredAccount = {
 };
 
 function isLocalE2EAuthEnabled() {
-  if ((import.meta.env.VITE_E2E_LOCAL_AUTH as string | undefined) === 'true') return true;
+  return (import.meta.env.VITE_E2E_LOCAL_AUTH as string | undefined) === 'true';
+}
 
-  const provider = (import.meta.env.VITE_AUTH_CAPTCHA_PROVIDER as string | undefined)
-    ?.trim()
-    .toLowerCase();
-  const siteKey = (import.meta.env.VITE_AUTH_CAPTCHA_SITE_KEY as string | undefined)?.trim();
-  const captchaConfigured =
-    Boolean(siteKey) && (provider === 'hcaptcha' || provider === 'turnstile');
-
-  if (captchaConfigured || import.meta.env.PROD || typeof window === 'undefined') return false;
-
-  return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+function shouldUseLocalAuth() {
+  return isLocalE2EAuthEnabled();
 }
 
 function normalizeEmail(email: string) {
@@ -274,7 +267,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!auth.user) {
-      if (isLocalE2EAuthEnabled() || !auth.isBackendConnected) {
+      if (shouldUseLocalAuth(auth.isBackendConnected)) {
         const storedUser = loadUser();
         setUser(storedUser);
         return;
@@ -300,7 +293,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     password: string,
     captchaToken?: string,
   ): Promise<{ error: string | null }> => {
-    if (isLocalE2EAuthEnabled()) {
+    if (shouldUseLocalAuth(auth.isBackendConnected)) {
       setLocalLoading(true);
       try {
         const account = loadLocalAccounts().find(
@@ -335,7 +328,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     requiresEmailConfirmation?: boolean;
     email?: string;
   }> => {
-    if (isLocalE2EAuthEnabled()) {
+    if (shouldUseLocalAuth(auth.isBackendConnected)) {
       setLocalLoading(true);
       try {
         const normalizedEmail = normalizeEmail(email);
@@ -394,7 +387,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     setUser(previous => {
       if (!previous) return previous;
       const next = applyUserUpdates(previous, updates);
-      if (isLocalE2EAuthEnabled()) {
+      if (shouldUseLocalAuth(auth.isBackendConnected)) {
         const accounts = loadLocalAccounts();
         const nextAccounts = accounts.map(account =>
           account.user.id === next.id ? { ...account, user: next } : account,

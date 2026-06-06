@@ -5,8 +5,6 @@ metadata:
   namespace: wasel-production
   labels:
     app: payment-reconciliation-service
-    tier: backend
-    component: worker
 spec:
   selector:
     app: payment-reconciliation-service
@@ -14,7 +12,6 @@ spec:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-      name: http
   type: ClusterIP
 
 ---
@@ -23,10 +20,6 @@ kind: Deployment
 metadata:
   name: payment-reconciliation-service
   namespace: wasel-production
-  labels:
-    app: payment-reconciliation-service
-    tier: backend
-    component: worker
 spec:
   replicas: 2
   strategy:
@@ -41,24 +34,18 @@ spec:
     metadata:
       labels:
         app: payment-reconciliation-service
-        tier: backend
-        component: worker
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
     spec:
-      serviceAccountName: wasel-worker
       containers:
-        - name: payment-reconciliation-service
+        - name: payment-reconciliation
           image: wasel.azurecr.io/payment-reconciliation-service:latest
-          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
             - name: NODE_ENV
               value: "production"
-            - name: STRIPE_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: wasel-secrets
-                  key: stripe.secret.key
             - name: REDIS_HOST
               valueFrom:
                 configMapKeyRef:
@@ -69,13 +56,18 @@ spec:
                 secretKeyRef:
                   name: wasel-secrets
                   key: database.url
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wasel-secrets
+                  key: stripe.secret.key
           resources:
             requests:
-              cpu: "300m"
-              memory: "512Mi"
+              cpu: 250m
+              memory: 256Mi
             limits:
-              cpu: "1000m"
-              memory: "1Gi"
+              cpu: 1000m
+              memory: 1Gi
           livenessProbe:
             httpGet:
               path: /health
@@ -114,32 +106,25 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ops-analytics-worker
+  name: ops-analytics-service
   namespace: wasel-production
   labels:
-    app: ops-analytics-worker
-    tier: backend
-    component: worker
+    app: ops-analytics-service
 spec:
   selector:
-    app: ops-analytics-worker
+    app: ops-analytics-service
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-      name: http
   type: ClusterIP
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ops-analytics-worker
+  name: ops-analytics-service
   namespace: wasel-production
-  labels:
-    app: ops-analytics-worker
-    tier: backend
-    component: worker
 spec:
   replicas: 2
   strategy:
@@ -149,19 +134,18 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: ops-analytics-worker
+      app: ops-analytics-service
   template:
     metadata:
       labels:
-        app: ops-analytics-worker
-        tier: backend
-        component: worker
+        app: ops-analytics-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
     spec:
-      serviceAccountName: wasel-worker
       containers:
-        - name: ops-analytics-worker
-          image: wasel.azurecr.io/ops-analytics-worker:latest
-          imagePullPolicy: Always
+        - name: ops-analytics
+          image: wasel.azurecr.io/ops-analytics-service:latest
           ports:
             - containerPort: 8080
           env:
@@ -179,11 +163,11 @@ spec:
                   key: database.url
           resources:
             requests:
-              cpu: "200m"
-              memory: "512Mi"
+              cpu: 250m
+              memory: 256Mi
             limits:
-              cpu: "1000m"
-              memory: "1Gi"
+              cpu: 1000m
+              memory: 1Gi
           livenessProbe:
             httpGet:
               path: /health
@@ -201,13 +185,13 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ops-analytics-worker-hpa
+  name: ops-analytics-hpa
   namespace: wasel-production
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: ops-analytics-worker
+    name: ops-analytics-service
   minReplicas: 2
   maxReplicas: 8
   metrics:
