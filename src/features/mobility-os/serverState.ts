@@ -119,6 +119,14 @@ export function useMobilityOSServerState() {
   const createBooking = async (request: BookingRequest) => {
     let response: ServerBookingResponse;
 
+    if (source === 'fallback') {
+      response = await createFallbackBooking(request);
+      setSnapshot(await fetchFallbackSnapshot());
+      setSource('fallback');
+      clearReconcileTimer();
+      return response;
+    }
+
     try {
       response = await runBackendWorkflow<ServerBookingResponse>({
         operation: 'Create Mobility OS booking',
