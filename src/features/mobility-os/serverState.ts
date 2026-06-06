@@ -59,7 +59,8 @@ export function useMobilityOSServerState() {
       setSource('server');
     } catch {
       if (!activeRef.current) return;
-      setSource('server');
+      setSnapshot(mobilityOSRuntime.getSnapshot());
+      setSource('fallback');
     } finally {
       if (activeRef.current) setLoading(false);
     }
@@ -74,25 +75,45 @@ export function useMobilityOSServerState() {
       clearReconcileTimer();
       void loadSnapshot();
     });
+    const unsubscribeFallback = mobilityOSRuntime.subscribe(() => {
+      if (!activeRef.current) return;
+      setSnapshot(mobilityOSRuntime.getSnapshot());
+    });
 
     return () => {
       activeRef.current = false;
       clearReconcileTimer();
       unsubscribe();
+      unsubscribeFallback();
     };
   }, [clearReconcileTimer, loadSnapshot]);
 
   const createBooking = async (request: BookingRequest) => {
-    const response = await createMobilityServerBooking(request);
+    try {
+      const response = await createMobilityServerBooking(request);
 
-    setSource('server');
-    clearReconcileTimer();
-    reconcileTimerRef.current = setTimeout(() => {
-      reconcileTimerRef.current = null;
-      void loadSnapshot();
-    }, 1500);
+      setSource('server');
+      clearReconcileTimer();
+      reconcileTimerRef.current = setTimeout(() => {
+        reconcileTimerRef.current = null;
+        void loadSnapshot();
+      }, 1500);
 
-    return response;
+      return response;
+    } catch {
+      const bookingId = mobilityOSRuntime.createBooking(request);
+      const nextSnapshot = mobilityOSRuntime.getSnapshot();
+
+      setSnapshot(nextSnapshot);
+      setSource('fallback');
+      setLoading(false);
+
+      return {
+        booking_id: bookingId,
+        status: 'accepted',
+        trace_id: `fallback-${bookingId}`,
+      } satisfies ServerBookingResponse;
+    }
   };
 
   return {
