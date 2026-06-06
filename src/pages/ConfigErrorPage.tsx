@@ -139,7 +139,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
           </div>
           <ol style={{ margin: 0, paddingLeft: 20 }}>
             <li>Go to your Vercel project dashboard</li>
-            <li>Navigate to Settings → Environment Variables</li>
+            <li>Navigate to Settings &gt; Environment Variables</li>
             <li>Add the missing variables listed above</li>
             <li>Redeploy your application</li>
           </ol>

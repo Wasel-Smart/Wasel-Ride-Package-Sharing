@@ -1,12 +1,17 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { seedDemoSession } from '../../e2e/helpers/session';
 
 test.beforeEach(async ({ page }) => {
   await seedDemoSession(page);
 });
 
+async function gotoApp(page: Page, route: string) {
+  await page.goto(route, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  await page.waitForLoadState('networkidle', { timeout: 15_000 }).catch(() => {});
+}
+
 test('find ride books a seat', async ({ page }) => {
-  await page.goto('/app/find-ride');
+  await gotoApp(page, '/app/find-ride');
   await page.getByTestId('find-ride-search').click();
   await page.getByRole('button', { name: /view details/i }).first().click();
   await page.getByRole('button', { name: /^reserve seat$/i }).click();
@@ -14,7 +19,7 @@ test('find ride books a seat', async ({ page }) => {
 });
 
 test('offer ride posts a connected trip', async ({ page }) => {
-  await page.goto('/app/offer-ride');
+  await gotoApp(page, '/app/offer-ride');
   await page.locator('input[type="date"]').fill('2026-05-01');
   await page.getByTestId('offer-ride-step-1').click();
   await page.getByPlaceholder(/toyota camry 2023/i).fill('Toyota Camry 2024');
@@ -24,14 +29,14 @@ test('offer ride posts a connected trip', async ({ page }) => {
 });
 
 test('bus flow reserves a seat', async ({ page }) => {
-  await page.goto('/app/bus');
+  await gotoApp(page, '/app/bus');
   await expect(page.getByText(/reserve your seat/i)).toBeVisible();
   await page.getByRole('button', { name: /reserve seat/i }).click();
   await expect(page.getByText(/seat confirmed/i)).toBeVisible();
 });
 
 test('packages flow creates tracking', async ({ page }) => {
-  await page.goto('/app/packages');
+  await gotoApp(page, '/app/packages');
   await page.getByTestId('package-recipient-name').fill('Receiver Test');
   await page.getByTestId('package-recipient-phone').fill('+962790000888');
   await page.getByTestId('package-create-request').click();
@@ -41,7 +46,7 @@ test('packages flow creates tracking', async ({ page }) => {
 });
 
 test('wallet stays available in local fallback mode', async ({ page }) => {
-  await page.goto('/app/wallet');
+  await gotoApp(page, '/app/wallet');
   await expect(page.getByText(/wallet unavailable/i)).toHaveCount(0);
   await expect(page.getByRole('heading', { name: /wasel wallet/i })).toBeVisible();
   await expect(page.getByText(/^Available$/i)).toBeVisible();

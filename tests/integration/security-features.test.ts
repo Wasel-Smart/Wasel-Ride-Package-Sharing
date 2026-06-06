@@ -2,7 +2,7 @@
  * Security Integration Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';import { CSRF } from '@/utils/csrf';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';import { CSRF } from '@/utils/csrf';
 import { sessionManager } from '@/utils/sessionManager';
 import { circuitBreakers, CircuitState } from '@/utils/circuitBreaker';
 
@@ -31,7 +31,7 @@ describe('CSRF Protection', () => {
 
   it('should add CSRF header', () => {
     const headers = CSRF.addHeader();
-    expect(headers).toHaveProperty('X-CSRF-Token');
+    expect(headers.has('X-CSRF-Token')).toBe(true);
   });
 
   it('should reject expired CSRF token', async () => {
@@ -51,8 +51,13 @@ describe('CSRF Protection', () => {
 
 describe('Session Management', () => {
   beforeEach(() => {
+    vi.useRealTimers();
     sessionStorage.clear();
     localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('should start a new session', () => {
@@ -75,13 +80,18 @@ describe('Session Management', () => {
   });
 
   it('should extend session', () => {
+    const now = new Date('2026-06-06T00:00:00.000Z');
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
     sessionManager.startSession('test-user-id');
+
+    vi.setSystemTime(new Date(now.getTime() + 1000));
     const before = sessionManager.getTimeUntilTimeout();
-    
+
     sessionManager.extendSession();
-    
+
     const after = sessionManager.getTimeUntilTimeout();
-    expect(after).toBeGreaterThanOrEqual(before);
+    expect(after).toBeGreaterThan(before);
   });
 
   it('should get session stats', () => {
@@ -158,9 +168,9 @@ describe('API Integration', () => {
   it('should add CSRF token to POST requests', () => {
     CSRF.generateToken();
     const headers = CSRF.addHeader({ 'Content-Type': 'application/json' });
-    
-    expect(headers).toHaveProperty('X-CSRF-Token');
-    expect(headers).toHaveProperty('Content-Type');
+
+    expect(headers.has('X-CSRF-Token')).toBe(true);
+    expect(headers.get('Content-Type')).toBe('application/json');
   });
 
   it('should validate API URLs', async () => {

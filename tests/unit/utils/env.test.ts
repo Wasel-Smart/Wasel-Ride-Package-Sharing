@@ -96,4 +96,14 @@ describe('runtime environment validation', () => {
     expect(result.ok).toBe(false);
     expect(result.issues.some((issue) => issue.key === 'VITE_APP_URL')).toBe(true);
   });
+
+  it('allows production bundles to render under localhost preview', () => {
+    const result = validateRuntimeConfiguration({
+      ...baseEnv,
+      VITE_APP_URL: 'https://wasel14.online',
+    });
+
+    expect(result.issues.some((issue) => issue.message.includes('HTTPS VITE_APP_URL'))).toBe(false);
+    expect(result.ok).toBe(true);
+  });
 });

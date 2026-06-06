@@ -208,7 +208,7 @@ export function OfferRidePage() {
         <SectionHead
           emoji="Supply"
           title="Offer a Ride"
-          titleAr="Ø§Ø¹Ø±Ø¶ Ù…Ø´ÙˆØ§Ø±"
+          titleAr="اعرض مشوار"
           sub="Route. Price. Go live."
           color={DS.blue}
         />

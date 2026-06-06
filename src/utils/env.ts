@@ -96,8 +96,12 @@ function resolveAppUrl(envSource: EnvSource = readEnvSource()): string {
     return configuredAppUrl;
   }
 
-  if (!configuredAppUrl || !isAbsoluteHttpUrl(configuredAppUrl)) {
+  if (!configuredAppUrl) {
     return browserOrigin;
+  }
+
+  if (!isAbsoluteHttpUrl(configuredAppUrl)) {
+    return configuredAppUrl;
   }
 
   if (isLocalHttpUrl(configuredAppUrl) && !isLocalHttpUrl(browserOrigin)) {
@@ -105,6 +109,10 @@ function resolveAppUrl(envSource: EnvSource = readEnvSource()): string {
   }
 
   if (configuredAppUrl.startsWith('http://') && browserOrigin.startsWith('https://')) {
+    return browserOrigin;
+  }
+
+  if (isLocalHttpUrl(browserOrigin)) {
     return browserOrigin;
   }
 
@@ -212,6 +220,7 @@ export function getRuntimeConfigIssues(
   const mode = envSource.MODE || envSource.VITE_MODE || envSource.NODE_ENV || 'development';
   const isProd = mode === 'production';
   const isBuildTime = typeof window === 'undefined';
+  const isLocalPreviewRuntime = !isBuildTime && isLocalHttpUrl(getBrowserOrigin());
   const hasApiTransport = Boolean(apiUrl) || (Boolean(supabaseUrl) && Boolean(supabasePublicKey));
 
   if (!appUrl) {
@@ -226,7 +235,7 @@ export function getRuntimeConfigIssues(
       message: 'VITE_APP_URL must be an absolute http(s) URL.',
       severity: isBuildTime ? 'warning' : 'error',
     });
-  } else if (isProd && !isBuildTime && !appUrl.startsWith('https://')) {
+  } else if (isProd && !isBuildTime && !isLocalPreviewRuntime && !appUrl.startsWith('https://')) {
     issues.push({
       key: 'VITE_APP_URL',
       message: 'Protected environments must use an HTTPS VITE_APP_URL',
@@ -273,7 +282,13 @@ export function getRuntimeConfigIssues(
       message: 'VITE_SUPABASE_URL must be an absolute http(s) URL when provided.',
       severity: 'error',
     });
-  } else if (isProd && !isBuildTime && supabaseUrl && !supabaseUrl.startsWith('https://')) {
+  } else if (
+    isProd &&
+    !isBuildTime &&
+    !isLocalPreviewRuntime &&
+    supabaseUrl &&
+    !supabaseUrl.startsWith('https://')
+  ) {
     issues.push({
       key: 'VITE_SUPABASE_URL',
       message: 'Protected environments must use an HTTPS Supabase URL',
