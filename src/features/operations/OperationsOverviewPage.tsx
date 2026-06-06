@@ -25,11 +25,11 @@ import {
   type ServiceProviderWorkflowSnapshot,
 } from '../../services/serviceProviderWorkflows';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
-import { C, F, SH, SPACE, TYPE } from '../../utils/wasel-ds';
-const CYAN = '#00C8E8';
-const GOLD = '#F59E0B';
-const GREEN = '#22C55E';
-const BLUE = '#3B82F6';
+import { C, F, GRAD_HERO, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+const CYAN = C.cyan;
+const GOLD = C.gold;
+const GREEN = C.green;
+const BLUE = C.blue;
 
 type SurfaceConfig = {
   title: string;
@@ -92,10 +92,9 @@ const CONFIG: Record<string, SurfaceConfig> = {
 
 function cardStyle() {
   return {
-    background:
-      'radial-gradient(circle at top left, rgba(88,221,255,0.06), transparent 32%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)',
+    background: GRAD_HERO,
     border: `1px solid ${C.border}`,
-    borderRadius: 20,
+    borderRadius: R.xl,
     padding: '18px 18px 16px',
     boxShadow: SH.card,
   } as const;
@@ -143,7 +142,7 @@ function HeroMetric({
         padding: '12px 14px',
       }}
     >
-      <div style={{ color: '#FFFFFF', fontSize: TYPE.size.lg, fontWeight: 900 }}>{value}</div>
+      <div style={{ color: C.text, fontSize: TYPE.size.lg, fontWeight: 900 }}>{value}</div>
       <div
         style={{
           marginTop: 4,
@@ -158,7 +157,7 @@ function HeroMetric({
       <div
         style={{
           marginTop: 6,
-          color: 'rgba(226,232,240,0.78)',
+          color: C.textSub,
           fontSize: TYPE.size.xs,
           lineHeight: TYPE.lineHeight.relaxed,
         }}

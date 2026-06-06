@@ -1,11 +1,11 @@
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { spawn, spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const workspaceRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const distIndex = path.join(workspaceRoot, 'dist', 'index.html');
-const buildMarker = path.join(workspaceRoot, 'dist', '.playwright-e2e-build.json');
+const buildMarker = path.join(workspaceRoot, '.playwright', 'e2e-build.json');
 const viteBin = path.join(workspaceRoot, 'node_modules', 'vite', 'bin', 'vite.js');
 
 const useDemoData = process.env.PLAYWRIGHT_USE_DEMO_DATA === 'true';
@@ -75,6 +75,7 @@ if (shouldBuild) {
     process.exit(build.status ?? 1);
   }
 
+  mkdirSync(path.dirname(buildMarker), { recursive: true });
   writeFileSync(
     buildMarker,
     `${JSON.stringify(

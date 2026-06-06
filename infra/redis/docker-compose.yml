@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  redis-primary:
+    image: redis:7-alpine
+    container_name: wasel-redis-primary
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+      - redis-data:/data
+    command: redis-server /usr/local/etc/redis/redis.conf
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  redis-replica-1:
+    image: redis:7-alpine
+    container_name: wasel-redis-replica-1
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis-replica-1-data:/data
+    command: redis-server --replicaof redis-primary 6379 --requirepass WASEL_REDIS_PASSWORD_REPLACE_IN_PROD
+    depends_on:
+      - redis-primary
+    restart: unless-stopped
+
+  redis-replica-2:
+    image: redis:7-alpine
+    container_name: wasel-redis-replica-2
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis-replica-2-data:/data
+    command: redis-server --replicaof redis-primary 6379 --requirepass WASEL_REDIS_PASSWORD_REPLACE_IN_PROD
+    depends_on:
+      - redis-primary
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  redis-replica-1-data:
+  redis-replica-2-data:
