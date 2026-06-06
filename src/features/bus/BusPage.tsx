@@ -349,7 +349,7 @@ export function BusPage() {
             }}
           >
             <div>
-              <div style={{ color: '#fff', fontWeight: 900, letterSpacing: '-0.02em' }}>
+              <div style={{ color: C.text, fontWeight: 900, letterSpacing: '-0.02em' }}>
                 Trip details
               </div>
               <div style={{ color: DS.sub, fontSize: '0.82rem', marginTop: 4 }}>
@@ -370,7 +370,7 @@ export function BusPage() {
                 borderRadius: '99px',
                 border: `1px solid ${DS.border}`,
                 background: DS.card2,
-                color: '#fff',
+                color: C.text,
                 fontWeight: 800,
                 cursor: 'pointer',
                 display: 'inline-flex',
@@ -406,7 +406,7 @@ export function BusPage() {
                   borderRadius: r(14),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: '#fff',
+                  color: C.text,
                   padding: '0 14px',
                   fontFamily: DS.F,
                 }}
@@ -437,7 +437,7 @@ export function BusPage() {
                   borderRadius: r(14),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: '#fff',
+                  color: C.text,
                   padding: '0 14px',
                   fontFamily: DS.F,
                 }}
@@ -469,7 +469,7 @@ export function BusPage() {
                   borderRadius: r(14),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: '#fff',
+                  color: C.text,
                   padding: '0 14px',
                   fontFamily: DS.F,
                 }}
@@ -494,7 +494,7 @@ export function BusPage() {
                     border: `1px solid ${active ? DS.green : DS.border}`,
                     background: active ? `${DS.green}12` : DS.card2,
                     padding: '10px 14px',
-                    color: '#fff',
+                    color: C.text,
                     cursor: 'pointer',
                     fontWeight: 800,
                   }}
@@ -577,7 +577,7 @@ export function BusPage() {
               >
                 {item.value}
               </div>
-              <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.86rem' }}>
+              <div style={{ color: C.text, fontWeight: 700, fontSize: '0.86rem' }}>
                 {item.label}
               </div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
@@ -636,7 +636,7 @@ export function BusPage() {
                 >
                   Departure plan
                 </div>
-                <div style={{ color: '#fff', fontSize: '1.08rem', fontWeight: 900, marginTop: 6 }}>
+                <div style={{ color: C.text, fontSize: '1.08rem', fontWeight: 900, marginTop: 6 }}>
                   {activeBus.from} to {activeBus.to}
                 </div>
               </div>
@@ -687,7 +687,7 @@ export function BusPage() {
               >
                 Fallback departures
               </div>
-              <div style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', marginTop: 6 }}>
+              <div style={{ color: C.text, fontWeight: 900, fontSize: '1rem', marginTop: 6 }}>
                 {fallbackBuses.length > 0 ? 'Keep one calmer alternative visible' : 'Selected departure is currently the clearest fit'}
               </div>
             </div>
@@ -714,7 +714,7 @@ export function BusPage() {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
-                    <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>
+                    <span style={{ color: C.text, fontWeight: 800, fontSize: '0.84rem' }}>
                       {route.company}
                     </span>
                     <span style={{ ...pill(route.color ?? DS.cyan), fontSize: '0.64rem' }}>
@@ -807,7 +807,7 @@ export function BusPage() {
                         <div style={{ minWidth: 0 }}>
                           <div
                             style={{
-                              color: '#fff',
+                              color: C.text,
                               fontWeight: 900,
                               fontSize: '1.05rem',
                               letterSpacing: '-0.02em',
@@ -936,7 +936,7 @@ export function BusPage() {
                           </div>
                           <div
                             style={{
-                              color: '#fff',
+                              color: C.text,
                               fontWeight: 700,
                               fontSize: '0.8rem',
                               lineHeight: 1.35,
@@ -1013,7 +1013,7 @@ export function BusPage() {
                   }}
                 >
                   <div>
-                    <div style={{ color: '#fff', fontWeight: 900, fontSize: '1.15rem' }}>
+                    <div style={{ color: C.text, fontWeight: 900, fontSize: '1.15rem' }}>
                       Reserve your seat
                     </div>
                     <div style={{ color: DS.sub, fontSize: '0.8rem', marginTop: 4 }}>
@@ -1046,7 +1046,7 @@ export function BusPage() {
                               ? DS.gradC
                               : DS.gradG
                     : C.elevated,
-                        color: '#fff',
+                        color: C.text,
                         fontWeight: 700,
                       }}
                     >
@@ -1076,7 +1076,7 @@ export function BusPage() {
                   >
                     Departure plan
                   </div>
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem' }}>
+                  <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem' }}>
                     {departureLabel}
                   </div>
                   <div style={{ color: DS.sub, fontSize: '0.78rem', marginTop: 4 }}>
@@ -1122,7 +1122,7 @@ export function BusPage() {
                             selectedDeparture === time
                               ? `${activeBus.color ?? DS.cyan}18`
                               : DS.card2,
-                          color: '#fff',
+                          color: C.text,
                           fontWeight: 700,
                           cursor: 'pointer',
                         }}
@@ -1139,7 +1139,7 @@ export function BusPage() {
               border: `1px solid ${C.goldDim}`,
                       borderRadius: r(16),
                       padding: '14px 16px',
-                      color: '#fff',
+                      color: C.text,
                       fontSize: '0.84rem',
                       lineHeight: 1.5,
                     }}
@@ -1162,7 +1162,7 @@ export function BusPage() {
                       borderRadius: r(14),
                       border: `1px solid ${DS.border}`,
                       background: DS.card2,
-                      color: '#fff',
+                      color: C.text,
                       padding: '0 14px',
                       fontFamily: DS.F,
                     }}
@@ -1201,14 +1201,14 @@ export function BusPage() {
                           height: 46,
                           border: 'none',
                           background: 'transparent',
-                          color: '#fff',
+                          color: C.text,
                           fontSize: '1.1rem',
                           cursor: 'pointer',
                         }}
                       >
                         -
                       </button>
-                      <div style={{ flex: 1, textAlign: 'center', color: '#fff', fontWeight: 800 }}>
+                      <div style={{ flex: 1, textAlign: 'center', color: C.text, fontWeight: 800 }}>
                         {passengers}
                       </div>
                       <button
@@ -1225,7 +1225,7 @@ export function BusPage() {
                           height: 46,
                           border: 'none',
                           background: 'transparent',
-                          color: '#fff',
+                          color: C.text,
                           fontSize: '1.1rem',
                           cursor:
                             activeBus.seats === 0 || passengers >= activeBus.seats
@@ -1262,7 +1262,7 @@ export function BusPage() {
                         borderRadius: r(14),
                         border: `1px solid ${DS.border}`,
                         background: DS.card2,
-                        color: '#fff',
+                        color: C.text,
                         padding: '0 14px',
                         fontFamily: DS.F,
                       }}
@@ -1301,7 +1301,7 @@ export function BusPage() {
                       }}
                     >
                       <span style={{ color: DS.sub, fontSize: '0.78rem' }}>{row.label}</span>
-                      <span style={{ color: '#fff', fontWeight: 700 }}>{row.value}</span>
+                      <span style={{ color: C.text, fontWeight: 700 }}>{row.value}</span>
                     </div>
                   ))}
                   <div
@@ -1313,7 +1313,7 @@ export function BusPage() {
                       borderTop: `1px solid ${DS.border}`,
                     }}
                   >
-                    <span style={{ color: '#fff', fontWeight: 800 }}>Total</span>
+                    <span style={{ color: C.text, fontWeight: 800 }}>Total</span>
                     <span
                       style={{
                         color: activeBus.color ?? DS.cyan,
@@ -1338,7 +1338,7 @@ export function BusPage() {
                     background: bookingDisabled
                       ? C.elevated
                       : `linear-gradient(135deg,${activeBus.color ?? DS.cyan},${DS.blue})`,
-                    color: '#fff',
+                    color: C.text,
                     fontWeight: 900,
                     fontFamily: DS.F,
                     cursor: bookingDisabled ? 'not-allowed' : 'pointer',
@@ -1398,7 +1398,7 @@ export function BusPage() {
                       <CheckCircle2 size={16} />
                       Seat confirmed
                     </div>
-                    <div style={{ color: '#fff', fontSize: '0.86rem', lineHeight: 1.5 }}>
+                    <div style={{ color: C.text, fontSize: '0.86rem', lineHeight: 1.5 }}>
                       {passengers} seat{passengers > 1 ? 's are' : ' is'} reserved for{' '}
                       {departureLabel}. Ticket code {bookingTicketCode ?? 'pending'} was saved for
                       the {activeBus.from} to {activeBus.to} corridor. Saved in your account with
@@ -1417,7 +1417,7 @@ export function BusPage() {
                           borderRadius: '99px',
                           border: `1px solid ${DS.border}`,
                           background: DS.card2,
-                          color: '#fff',
+                          color: C.text,
                           fontWeight: 700,
                           cursor: 'pointer',
                         }}
@@ -1448,7 +1448,7 @@ export function BusPage() {
                 }}
               >
                 <div>
-                  <div style={{ color: '#fff', fontWeight: 800 }}>Live route view</div>
+                  <div style={{ color: C.text, fontWeight: 800 }}>Live route view</div>
                   <div style={{ color: DS.sub, fontSize: '0.76rem', marginTop: 4 }}>
                     See pickup, destination, and route direction before checkout.
                   </div>
@@ -1515,7 +1515,7 @@ export function BusPage() {
                       <div style={{ color: DS.muted, fontSize: '0.68rem', fontWeight: 700 }}>
                         {item.label}
                       </div>
-                      <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
+                      <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>
                         {item.value}
                       </div>
                     </div>
@@ -1532,7 +1532,7 @@ export function BusPage() {
                 padding: '18px 18px 16px',
               }}
             >
-              <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
+              <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>
                 Corridor snapshot
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
@@ -1554,7 +1554,7 @@ export function BusPage() {
                       }}
                     >
                       <div>
-                        <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
+                        <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>
                           {route.from} to {route.to}
                         </div>
                         <div style={{ color: DS.sub, fontSize: '0.74rem', marginTop: 4 }}>
@@ -1592,7 +1592,7 @@ export function BusPage() {
                 padding: '18px 18px 16px',
               }}
             >
-              <div style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>
+              <div style={{ color: C.text, fontWeight: 800, marginBottom: 8 }}>
                 What to know before you go
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
@@ -1626,7 +1626,7 @@ export function BusPage() {
                 padding: '18px 18px 16px',
               }}
             >
-              <div style={{ color: '#fff', fontWeight: 800, marginBottom: 8 }}>
+              <div style={{ color: C.text, fontWeight: 800, marginBottom: 8 }}>
                 If this coach fills up
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
@@ -1650,7 +1650,7 @@ export function BusPage() {
                         background: DS.card2,
                         padding: '12px 14px',
                         cursor: 'pointer',
-                        color: '#fff',
+                        color: C.text,
                       }}
                     >
                       <div style={{ textAlign: 'left' }}>
