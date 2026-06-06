@@ -149,9 +149,12 @@ function TripModeCard({
           marginTop: 16,
         }}
       >
-        <button
+        <WaselButton
           type="button"
           onClick={() => onNavigate(primaryTripPath)}
+          variant="primary"
+          size="lg"
+          iconEnd={<ArrowRight size={16} />}
           style={{
             height: 50,
             padding: '0 20px',
@@ -169,7 +172,7 @@ function TripModeCard({
         >
           {ar ? 'ابدأ البحث' : 'Book employee travel'}
           <ArrowRight size={16} />
-        </button>
+        </WaselButton>
         <span
           style={{
             height: 50,

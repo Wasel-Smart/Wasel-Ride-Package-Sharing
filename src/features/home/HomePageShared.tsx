@@ -12,7 +12,7 @@ export const C = {
 } as const;
 
 export const F = FONT_SANS;
-export const glass = (op = 0.84) => `rgba(8, 20, 32, ${op})`;
+export const glass = (_op = 0.84) => C.glass;
 
 export const POPULAR_ROUTES = [
   {
@@ -43,7 +43,7 @@ export const POPULAR_ROUTES = [
     dist: 60,
     priceJod: 5,
     icon: 'D',
-    color: '#0EA5E9',
+    color: C.cyan,
   },
   {
     from: 'Amman',
@@ -63,7 +63,7 @@ export const POPULAR_ROUTES = [
     dist: 320,
     priceJod: 15,
     icon: 'W',
-    color: '#F59E0B',
+    color: C.gold,
   },
   {
     from: 'Amman',
@@ -93,7 +93,7 @@ export function Skeleton({
         height: h,
         borderRadius: radius,
         background:
-          'linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 100%)',
+          `linear-gradient(90deg, ${C.elevated} 0%, ${C.panel} 50%, ${C.elevated} 100%)`,
         backgroundSize: '200% 100%',
         animation: 'shimmer 1.6s infinite linear',
       }}
@@ -130,7 +130,7 @@ export function SectionHeader({
             gap: 8,
             padding: '5px 10px',
             borderRadius: R.full,
-            background: 'rgba(255,255,255,0.03)',
+            background: C.elevated,
             border: `1px solid ${C.borderFaint}`,
             color: C.textMuted,
             fontSize: TYPE.size.xs,
@@ -176,7 +176,7 @@ export function SectionHeader({
             height: 36,
             padding: '0 14px',
             borderRadius: R.full,
-            background: 'rgba(255,255,255,0.03)',
+            background: C.elevated,
             border: `1px solid ${C.border}`,
             cursor: 'pointer',
             color: C.textSub,
@@ -228,7 +228,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
           height: 36,
           padding: '0 12px',
           borderRadius: R.full,
-          background: open ? C.cyanDim : 'rgba(255,255,255,0.04)',
+          background: open ? C.cyanDim : C.elevated,
           border: `1px solid ${open ? C.borderHov : C.border}`,
           cursor: 'pointer',
           fontSize: TYPE.size.sm,
@@ -269,7 +269,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
                 width: '100%',
                 padding: '9px 12px',
                 border: 'none',
-                background: cur === code ? 'rgba(255,255,255,0.04)' : 'transparent',
+                background: cur === code ? C.elevated : 'transparent',
                 cursor: 'pointer',
                 fontSize: TYPE.size.sm,
                 fontWeight: cur === code ? TYPE.weight.bold : TYPE.weight.medium,
@@ -315,7 +315,7 @@ export function SOSButton({ ar }: { ar: boolean }) {
           height: 42,
           padding: '0 16px',
           borderRadius: R.full,
-          background: confirm ? C.error : 'rgba(255,255,255,0.03)',
+          background: confirm ? C.error : C.elevated,
           border: `1px solid ${confirm ? `${C.error}AA` : `${C.error}40`}`,
           cursor: 'pointer',
           display: 'flex',
@@ -323,9 +323,9 @@ export function SOSButton({ ar }: { ar: boolean }) {
           gap: 8,
           fontSize: TYPE.size.sm,
           fontWeight: TYPE.weight.bold,
-          color: confirm ? '#fff' : C.error,
+          color: confirm ? C.text : C.error,
           fontFamily: F,
-          boxShadow: confirm ? '0 0 0 4px rgba(255,124,139,0.16)' : 'none',
+          boxShadow: confirm ? `0 0 0 4px ${C.errorDim}` : 'none',
         }}
       >
         <Phone size={14} />
@@ -371,7 +371,7 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
     { label: ar ? 'تقييمات المستخدمين' : 'User ratings', weight: 25, yours: 22, color: C.green },
     { label: ar ? 'الرحلات المكتملة' : 'Completed trips', weight: 20, yours: 14, color: C.gold },
     { label: ar ? 'النشاط الحديث' : 'Recent activity', weight: 10, yours: 8, color: C.purple },
-    { label: ar ? 'اكتمال الملف' : 'Profile completion', weight: 10, yours: 8, color: '#0EA5E9' },
+    { label: ar ? 'اكتمال الملف' : 'Profile completion', weight: 10, yours: 8, color: C.cyan },
   ];
   const color = pct >= 80 ? C.green : pct >= 60 ? C.gold : C.error;
 
@@ -445,7 +445,7 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
             height: 34,
             padding: '0 12px',
             borderRadius: R.full,
-            background: 'rgba(255,255,255,0.03)',
+            background: C.elevated,
             border: `1px solid ${C.borderFaint}`,
             cursor: 'pointer',
             display: 'flex',
@@ -471,7 +471,7 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
           marginTop: 16,
           height: 7,
           borderRadius: 9999,
-          background: 'rgba(255,255,255,0.06)',
+          background: C.elevated,
           overflow: 'hidden',
         }}
       >
@@ -536,7 +536,7 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
                     style={{
                       height: 5,
                       borderRadius: 9999,
-                      background: 'rgba(255,255,255,0.06)',
+                      background: C.elevated,
                       overflow: 'hidden',
                     }}
                   >

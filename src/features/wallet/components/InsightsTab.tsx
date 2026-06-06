@@ -70,14 +70,14 @@ function MiniTrendChart({
               x2={BAR_CHART_WIDTH - BAR_CHART_MARGIN.right}
               y1={tick.y}
               y2={tick.y}
-              stroke="#1E293B"
+              stroke={C.borderFaint}
               strokeDasharray="3 3"
             />
             <text
               x={BAR_CHART_MARGIN.left - 8}
               y={tick.y + 4}
               textAnchor="end"
-              fill="#94A3B8"
+              fill={C.textMuted}
               fontSize="11"
             >
               {formatCompactValue(tick.value)}
@@ -117,7 +117,7 @@ function MiniTrendChart({
                 x={x + groupWidth / 2}
                 y={BAR_CHART_HEIGHT - 10}
                 textAnchor="middle"
-                fill="#94A3B8"
+                fill={C.textMuted}
                 fontSize="11"
               >
                 {point.month}
@@ -158,7 +158,7 @@ function MiniCategoryDonut({ data }: { data: CategoryPoint[] }) {
         cy="60"
         r={DONUT_RADIUS}
         fill="none"
-        stroke="rgba(148, 163, 184, 0.18)"
+        stroke={C.border}
         strokeWidth={DONUT_STROKE}
       />
       {total > 0 &&
@@ -185,10 +185,10 @@ function MiniCategoryDonut({ data }: { data: CategoryPoint[] }) {
           offset += arc;
           return circle;
         })}
-      <text x="60" y="55" textAnchor="middle" fill="#F8FAFC" fontSize="16" fontWeight="700">
+      <text x="60" y="55" textAnchor="middle" fill={C.text} fontSize="16" fontWeight="700">
         {total.toFixed(0)}
       </text>
-      <text x="60" y="72" textAnchor="middle" fill="#94A3B8" fontSize="10">
+      <text x="60" y="72" textAnchor="middle" fill={C.textMuted} fontSize="10">
         total
       </text>
     </svg>

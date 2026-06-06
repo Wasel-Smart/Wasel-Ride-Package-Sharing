@@ -67,7 +67,7 @@ export function FindRidePackagePanel({ ar, copy, t, pkg, setPkg }: FindRidePacka
         </div>
       ) : (
         <>
-          <h3 style={{ color: '#fff', fontWeight: 800, marginBottom: 20 }}>{copy.packageTitle}</h3>
+          <h3 style={{ color: DS.text, fontWeight: 800, marginBottom: 20 }}>{copy.packageTitle}</h3>
           <div
             style={{
               display: 'grid',
@@ -87,7 +87,7 @@ export function FindRidePackagePanel({ ar, copy, t, pkg, setPkg }: FindRidePacka
                 }}
               >
                 <div
-                  style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginBottom: 4 }}
+                  style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem', marginBottom: 4 }}
                 >
                   {step.title}
                 </div>
@@ -128,7 +128,7 @@ export function FindRidePackagePanel({ ar, copy, t, pkg, setPkg }: FindRidePacka
                     borderRadius: r(10),
                     border: `1px solid ${DS.border}`,
                     background: DS.card2,
-                    color: '#fff',
+                    color: DS.text,
                     fontFamily: DS.F,
                     fontSize: '0.9rem',
                     outline: 'none',
@@ -167,7 +167,7 @@ export function FindRidePackagePanel({ ar, copy, t, pkg, setPkg }: FindRidePacka
                   borderRadius: r(10),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: '#fff',
+                  color: DS.text,
                   fontFamily: DS.F,
                   fontSize: '0.9rem',
                   outline: 'none',
@@ -204,7 +204,7 @@ export function FindRidePackagePanel({ ar, copy, t, pkg, setPkg }: FindRidePacka
                   borderRadius: r(10),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: '#fff',
+                  color: DS.text,
                   fontFamily: DS.F,
                   fontSize: '0.9rem',
                   outline: 'none',
@@ -269,7 +269,7 @@ export function FindRidePackagePanel({ ar, copy, t, pkg, setPkg }: FindRidePacka
               borderRadius: r(14),
               border: 'none',
               background: DS.gradGold,
-              color: '#fff',
+              color: DS.text,
               fontWeight: 800,
               fontSize: '0.95rem',
               cursor: 'pointer',
