@@ -23,6 +23,7 @@ mobile/node_modules/
 coverage/
 test-results/
 playwright-report/
+.playwright/e2e-build.json
 
 # Logs
 *.log
