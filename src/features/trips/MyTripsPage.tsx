@@ -38,20 +38,20 @@ import {
   type SupportStatus,
   type SupportTicket,
 } from '../../services/supportInbox';
-import { R, SPACE, TYPE } from '../../utils/wasel-ds';
+import { C, F, R, SPACE, TYPE } from '../../utils/wasel-ds';
 
-const CARD = 'rgba(255,255,255,0.04)';
-const CARD_ALT = 'rgba(255,255,255,0.03)';
-const BORDER = 'rgba(255,255,255,0.09)';
-const CYAN = '#00C8E8';
-const GOLD = '#F0A830';
-const GREEN = '#22C55E';
-const RED = '#EF4444';
-const AMBER = '#F59E0B';
-const TEXT = '#EFF6FF';
-const MUTED = 'rgba(148,163,184,0.72)';
-const DIM = 'rgba(148,163,184,0.55)';
-const FONT = "-apple-system,'Inter','Cairo','Tajawal',sans-serif";
+const CARD = C.card;
+const CARD_ALT = C.elevated;
+const BORDER = C.border;
+const CYAN = C.cyan;
+const GOLD = C.gold;
+const GREEN = C.green;
+const RED = C.error;
+const AMBER = C.warning;
+const TEXT = C.text;
+const MUTED = C.textMuted;
+const DIM = C.textDim;
+const FONT = F;
 
 type TripLifecycle = 'active' | 'attention' | 'completed' | 'cancelled';
 type TripKind = 'rides' | 'packages' | 'buses';
@@ -79,23 +79,23 @@ const lifecycleConfig: Record<
   TripLifecycle,
   { label: string; color: string; bg: string; icon: ReactNode }
 > = {
-  active: { label: 'Active', color: CYAN, bg: 'rgba(0,200,232,0.12)', icon: <Clock size={12} /> },
+  active: { label: 'Active', color: CYAN, bg: C.cyanDim, icon: <Clock size={12} /> },
   attention: {
     label: 'Needs attention',
     color: AMBER,
-    bg: 'rgba(245,158,11,0.12)',
+    bg: C.goldDim,
     icon: <ShieldAlert size={12} />,
   },
   completed: {
     label: 'Completed',
     color: GREEN,
-    bg: 'rgba(34,197,94,0.12)',
+    bg: C.greenDim,
     icon: <CheckCircle size={12} />,
   },
   cancelled: {
     label: 'Cancelled',
     color: RED,
-    bg: 'rgba(239,68,68,0.12)',
+    bg: C.errorDim,
     icon: <XCircle size={12} />,
   },
 };
@@ -104,20 +104,20 @@ const paymentConfig: Record<
   RidePaymentStatus | 'n/a',
   { label: string; color: string; bg: string }
 > = {
-  pending: { label: 'Payment pending', color: AMBER, bg: 'rgba(245,158,11,0.12)' },
-  authorized: { label: 'Payment authorized', color: CYAN, bg: 'rgba(0,200,232,0.12)' },
-  captured: { label: 'Settlement captured', color: GREEN, bg: 'rgba(34,197,94,0.12)' },
-  refunded: { label: 'Refund completed', color: CYAN, bg: 'rgba(59,130,246,0.12)' },
-  failed: { label: 'Payment issue', color: RED, bg: 'rgba(239,68,68,0.12)' },
-  'n/a': { label: 'No payment state', color: MUTED, bg: 'rgba(148,163,184,0.12)' },
+  pending: { label: 'Payment pending', color: AMBER, bg: C.goldDim },
+  authorized: { label: 'Payment authorized', color: CYAN, bg: C.cyanDim },
+  captured: { label: 'Settlement captured', color: GREEN, bg: C.greenDim },
+  refunded: { label: 'Refund completed', color: CYAN, bg: C.blueDim },
+  failed: { label: 'Payment issue', color: RED, bg: C.errorDim },
+  'n/a': { label: 'No payment state', color: MUTED, bg: C.elevated },
 };
 
 const supportStatusConfig: Record<SupportStatus, { label: string; color: string; bg: string }> = {
-  open: { label: 'Open', color: CYAN, bg: 'rgba(0,200,232,0.12)' },
-  investigating: { label: 'Investigating', color: AMBER, bg: 'rgba(245,158,11,0.12)' },
-  waiting_on_user: { label: 'Waiting on you', color: GOLD, bg: 'rgba(240,168,48,0.12)' },
-  resolved: { label: 'Resolved', color: GREEN, bg: 'rgba(34,197,94,0.12)' },
-  closed: { label: 'Closed', color: MUTED, bg: 'rgba(148,163,184,0.12)' },
+  open: { label: 'Open', color: CYAN, bg: C.cyanDim },
+  investigating: { label: 'Investigating', color: AMBER, bg: C.goldDim },
+  waiting_on_user: { label: 'Waiting on you', color: GOLD, bg: C.goldDim },
+  resolved: { label: 'Resolved', color: GREEN, bg: C.greenDim },
+  closed: { label: 'Closed', color: MUTED, bg: C.elevated },
 };
 
 const supportPriorityConfig: Record<SupportPriority, { label: string; color: string }> = {
