@@ -118,9 +118,13 @@ export function ReturnMatching() {
   };
 
   const stageLabels = ['Retailer', 'Details', 'Match', 'Track'];
-  const liveLane = selectedTrip ? `${selectedTrip.fromCity} → ${selectedTrip.toCity}` : 'Aqaba → Amman';
+  const liveLane = selectedTrip
+    ? `${selectedTrip.fromCity} → ${selectedTrip.toCity}`
+    : 'Aqaba → Amman';
   const railLines = [
-    selectedRetailer ? `${selectedRetailer.name} • ${orderId || 'Order ID pending'}` : 'Retailer not selected',
+    selectedRetailer
+      ? `${selectedRetailer.name} • ${orderId || 'Order ID pending'}`
+      : 'Retailer not selected',
     item ? `${item} • ${inferWeight(size)}` : `Package size ${size}`,
     selectedReason?.label ?? 'Return reason pending',
   ];
@@ -251,7 +255,9 @@ export function ReturnMatching() {
                     >
                       {complete ? 'Live' : `Step ${index + 1}`}
                     </div>
-                    <div style={{ color: D.text, fontSize: '0.8rem', fontWeight: 800, marginTop: 6 }}>
+                    <div
+                      style={{ color: D.text, fontSize: '0.8rem', fontWeight: 800, marginTop: 6 }}
+                    >
                       {label}
                     </div>
                   </div>
@@ -285,7 +291,8 @@ export function ReturnMatching() {
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setRetailer(retailerItem.id)}
                         style={{
-                          background: retailer === retailerItem.id ? `${retailerItem.color}12` : D.card2,
+                          background:
+                            retailer === retailerItem.id ? `${retailerItem.color}12` : D.card2,
                           border: `1px solid ${retailer === retailerItem.id ? `${retailerItem.color}55` : D.border}`,
                           borderRadius: R.lg,
                           padding: '16px 14px',
@@ -308,7 +315,9 @@ export function ReturnMatching() {
                         >
                           {retailerItem.logo}
                         </div>
-                        <div style={{ fontSize: '0.84rem', fontWeight: 800 }}>{retailerItem.name}</div>
+                        <div style={{ fontSize: '0.84rem', fontWeight: 800 }}>
+                          {retailerItem.name}
+                        </div>
                       </motion.button>
                     ))}
                   </div>
@@ -419,7 +428,13 @@ export function ReturnMatching() {
                       >
                         Package size
                       </label>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                          gap: 8,
+                        }}
+                      >
                         {(['small', 'medium', 'large'] as const).map(option => (
                           <button
                             key={option}
@@ -471,7 +486,11 @@ export function ReturnMatching() {
                               gap: 10,
                             }}
                           >
-                            {reason === reasonItem.id ? <Check size={15} /> : <div style={{ width: 15 }} />}
+                            {reason === reasonItem.id ? (
+                              <Check size={15} />
+                            ) : (
+                              <div style={{ width: 15 }} />
+                            )}
                             {reasonItem.label}
                           </button>
                         ))}
@@ -504,7 +523,9 @@ export function ReturnMatching() {
                         borderRadius: R.md,
                         border: 'none',
                         background:
-                          item && reason ? `linear-gradient(135deg,${D.gold},${C.orange})` : C.elevated,
+                          item && reason
+                            ? `linear-gradient(135deg,${D.gold},${C.orange})`
+                            : C.elevated,
                         color: item && reason ? C.bgDeep : D.muted,
                         fontWeight: 900,
                         cursor: item && reason ? 'pointer' : 'not-allowed',
@@ -614,7 +635,9 @@ export function ReturnMatching() {
                       }}
                     >
                       <AlertCircle size={16} color={D.gold} />
-                      <span>The return will stay in searching mode until a matching ride appears.</span>
+                      <span>
+                        The return will stay in searching mode until a matching ride appears.
+                      </span>
                     </div>
                   )}
 
@@ -648,7 +671,9 @@ export function ReturnMatching() {
                           !creating && (matches.length === 0 || selectedMatch) ? C.bgDeep : D.muted,
                         fontWeight: 900,
                         cursor:
-                          !creating && (matches.length === 0 || selectedMatch) ? 'pointer' : 'not-allowed',
+                          !creating && (matches.length === 0 || selectedMatch)
+                            ? 'pointer'
+                            : 'not-allowed',
                       }}
                     >
                       {creating ? 'Creating return' : 'Create return'}
@@ -798,7 +823,9 @@ export function ReturnMatching() {
               >
                 Return state
               </div>
-              <h2 style={{ color: D.text, fontSize: '1.4rem', fontWeight: 900, margin: '8px 0 10px' }}>
+              <h2
+                style={{ color: D.text, fontSize: '1.4rem', fontWeight: 900, margin: '8px 0 10px' }}
+              >
                 {createdReturn ? 'Tracking live' : step >= 2 ? 'Matching now' : 'Building return'}
               </h2>
               <div style={{ display: 'grid', gap: 10 }}>
@@ -830,7 +857,10 @@ export function ReturnMatching() {
                 {[
                   { label: 'Size', value: size },
                   { label: 'Lane', value: liveLane.replace(' → ', '-') },
-                  { label: 'Mode', value: selectedTrip ? 'Matched' : step >= 2 ? 'Searching' : 'Draft' },
+                  {
+                    label: 'Mode',
+                    value: selectedTrip ? 'Matched' : step >= 2 ? 'Searching' : 'Draft',
+                  },
                 ].map(item => (
                   <div
                     key={item.label}
@@ -841,10 +871,19 @@ export function ReturnMatching() {
                       padding: '12px 12px 10px',
                     }}
                   >
-                    <div style={{ color: D.muted, fontSize: '0.66rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                    <div
+                      style={{
+                        color: D.muted,
+                        fontSize: '0.66rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                      }}
+                    >
                       {item.label}
                     </div>
-                    <div style={{ color: D.text, fontSize: '0.78rem', fontWeight: 800, marginTop: 6 }}>
+                    <div
+                      style={{ color: D.text, fontSize: '0.78rem', fontWeight: 800, marginTop: 6 }}
+                    >
                       {item.value}
                     </div>
                   </div>

@@ -1,5 +1,4 @@
-﻿
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { Brain, Boxes, Network } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -598,4 +597,3 @@ export function PackagesPage() {
 }
 
 export default PackagesPage;
-

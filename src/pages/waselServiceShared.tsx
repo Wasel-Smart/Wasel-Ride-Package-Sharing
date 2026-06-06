@@ -299,11 +299,7 @@ export function SectionHead({
                 {displayTitle}
               </h1>
             </div>
-            {sub && (
-              <p style={{ fontSize: '0.78rem', color: C.textMuted, margin: 0 }}>
-                {sub}
-              </p>
-            )}
+            {sub && <p style={{ fontSize: '0.78rem', color: C.textMuted, margin: 0 }}>{sub}</p>}
           </div>
         </div>
         {action && (

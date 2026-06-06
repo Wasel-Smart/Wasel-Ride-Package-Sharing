@@ -296,7 +296,7 @@ export function ServiceFlowPlaybook({
             >
               {index + 1}
             </div>
-              <div style={{ color: C.text, fontWeight: 800, fontSize: '0.84rem', marginBottom: 6 }}>
+            <div style={{ color: C.text, fontWeight: 800, fontSize: '0.84rem', marginBottom: 6 }}>
               {step.title}
             </div>
             <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>{step.detail}</div>
@@ -330,7 +330,7 @@ export function ServiceFlowPlaybook({
             >
               Keep clear
             </div>
-              <div style={{ color: C.textSub, fontSize: '0.79rem', lineHeight: 1.65 }}>{note}</div>
+            <div style={{ color: C.textSub, fontSize: '0.79rem', lineHeight: 1.65 }}>{note}</div>
           </div>
         ))}
       </div>

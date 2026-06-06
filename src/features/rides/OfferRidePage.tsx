@@ -217,7 +217,7 @@ export function OfferRidePage() {
           <div
             style={{
               marginBottom: 18,
-                  background: C.goldDim,
+              background: C.goldDim,
               border: `1px solid ${DS.gold}35`,
               borderRadius: r(18),
               padding: '16px 18px',
@@ -319,7 +319,9 @@ export function OfferRidePage() {
                     },
                     {
                       label: 'Mode',
-                      value: form.acceptsPackages ? `Packages ${form.packageCapacity}` : 'Passengers',
+                      value: form.acceptsPackages
+                        ? `Packages ${form.packageCapacity}`
+                        : 'Passengers',
                     },
                   ].map(item => (
                     <div
@@ -342,7 +344,12 @@ export function OfferRidePage() {
                         {item.label}
                       </div>
                       <div
-                        style={{ color: C.text, fontWeight: 800, fontSize: '0.86rem', marginTop: 6 }}
+                        style={{
+                          color: C.text,
+                          fontWeight: 800,
+                          fontSize: '0.86rem',
+                          marginTop: 6,
+                        }}
                       >
                         {item.value}
                       </div>
@@ -392,8 +399,7 @@ export function OfferRidePage() {
           <div style={{ display: 'grid', gap: 14 }}>
             <div
               style={{
-                background:
-                `linear-gradient(135deg, ${C.cyanDim}, ${C.cardSolid} 62%, ${C.goldDim})`,
+                background: `linear-gradient(135deg, ${C.cyanDim}, ${C.cardSolid} 62%, ${C.goldDim})`,
                 borderRadius: r(22),
                 padding: '20px',
                 border: `1px solid ${DS.border}`,
@@ -528,7 +534,12 @@ export function OfferRidePage() {
                       {node.title}
                     </div>
                     <div
-                      style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.5, marginTop: 4 }}
+                      style={{
+                        color: DS.muted,
+                        fontSize: '0.74rem',
+                        lineHeight: 1.5,
+                        marginTop: 4,
+                      }}
                     >
                       {node.summary}
                     </div>
@@ -564,7 +575,12 @@ export function OfferRidePage() {
                         {step.label}
                       </div>
                       <div
-                        style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.5, marginTop: 4 }}
+                        style={{
+                          color: DS.muted,
+                          fontSize: '0.74rem',
+                          lineHeight: 1.5,
+                          marginTop: 4,
+                        }}
                       >
                         {step.description}
                       </div>

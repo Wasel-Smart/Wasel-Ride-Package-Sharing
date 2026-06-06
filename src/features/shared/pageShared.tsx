@@ -176,8 +176,7 @@ export function PageShell({ children }: { children: ReactNode }) {
         style={{
           position: 'fixed',
           inset: 0,
-          backgroundImage:
-            `linear-gradient(${C.borderFaint} 1px, transparent 1px), linear-gradient(90deg, ${C.borderFaint} 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(${C.borderFaint} 1px, transparent 1px), linear-gradient(90deg, ${C.borderFaint} 1px, transparent 1px)`,
           backgroundSize: '54px 54px',
           maskImage: 'radial-gradient(circle at center, black 0%, black 44%, transparent 82%)',
           pointerEvents: 'none',
@@ -291,9 +290,7 @@ export function SectionHead({
               </h1>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-              {sub && (
-                <span style={{ color: C.textMuted, fontSize: '0.78rem' }}>{sub}</span>
-              )}
+              {sub && <span style={{ color: C.textMuted, fontSize: '0.78rem' }}>{sub}</span>}
             </div>
           </div>
         </div>
