@@ -1,6 +1,6 @@
 # Wasel Production Gate Report
 
-Generated: 2026-06-06T10:33:58.819Z
+Generated: 2026-06-06T11:48:14.843Z
 Evidence-based score: 6.7/10
 10/10 certified: no
 

@@ -1118,6 +1118,8 @@ function toIsoFromUnix(value: unknown): string | null {
 const PHONE_VERIFICATION_TTL_MINUTES = 10;
 const IDENTITY_PENDING_TIMEOUT_HOURS = 24;
 const DRIVER_DOCUMENT_TIMEOUT_HOURS = 72;
+const PHONE_NUMBER_IN_USE_MESSAGE =
+  'This phone number is already linked to another Wasel account. Use a different number or sign in to the account that owns it.';
 
 function normalizePhoneNumber(value: unknown): string {
   return String(value ?? '')
@@ -1127,6 +1129,18 @@ function normalizePhoneNumber(value: unknown): string {
 
 function isValidE164Phone(value: string): boolean {
   return /^\+[1-9]\d{7,14}$/.test(value);
+}
+
+function isPhoneNumberUniqueViolation(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+
+  const record = error as { code?: unknown; message?: unknown; details?: unknown };
+  const message = String(record.message ?? record.details ?? '');
+  return (
+    record.code === '23505' ||
+    message.includes('users_phone_number_key') ||
+    message.includes('duplicate key value violates unique constraint')
+  );
 }
 
 function generateOtpCode(): string {
@@ -2862,6 +2876,19 @@ async function handleStartPhoneVerification(request: Request) {
     return json({ error: 'Enter a valid E.164 phone number such as +962791234567.' }, 400);
   }
 
+  const { data: existingPhoneOwner, error: phoneOwnerError } = await auth.admin
+    .from('users')
+    .select('id')
+    .eq('phone_number', phoneNumber)
+    .neq('id', auth.canonicalUser.id)
+    .maybeSingle();
+  if (phoneOwnerError) {
+    return json({ error: phoneOwnerError.message }, 500);
+  }
+  if (existingPhoneOwner) {
+    return json({ error: PHONE_NUMBER_IN_USE_MESSAGE }, 409);
+  }
+
   const now = new Date().toISOString();
   const expiresAt = new Date(
     Date.now() + PHONE_VERIFICATION_TTL_MINUTES * 60 * 1000,
@@ -2887,6 +2914,10 @@ async function handleStartPhoneVerification(request: Request) {
     })
     .eq('id', auth.canonicalUser.id);
   if (userError) {
+    if (isPhoneNumberUniqueViolation(userError)) {
+      return json({ error: PHONE_NUMBER_IN_USE_MESSAGE }, 409);
+    }
+
     return json({ error: userError.message }, 500);
   }
 
@@ -3047,6 +3078,10 @@ async function handleConfirmPhoneVerification(request: Request) {
     })
     .eq('id', auth.canonicalUser.id);
   if (userError) {
+    if (isPhoneNumberUniqueViolation(userError)) {
+      return json({ error: PHONE_NUMBER_IN_USE_MESSAGE }, 409);
+    }
+
     return json({ error: userError.message }, 500);
   }
 
