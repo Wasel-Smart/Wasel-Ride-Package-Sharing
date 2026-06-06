@@ -141,7 +141,7 @@ const MARKETPLACE_NODES: MarketplaceNode[] = [
     id: 'businesses',
     title: 'Businesses',
     summary:
-      'Corporate movement, returns, staff travel, and light logistics can all run through recurring corridor capacity.',
+      'Public movement, returns, community travel, and light logistics can all run through recurring corridor capacity.',
     moat: 'Recurring B2B volume hardens the best corridors.',
   },
   {
@@ -198,7 +198,7 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     pickupPoints: ['Abdali transfer gate', 'University north stop', '7th Circle commuter node'],
     autoGroupWindow: 'Group departures every 15 minutes during commute peaks.',
     movementLayers: ['commuters', 'students', 'light parcels', 'field teams'],
-    businessDemand: ['university travel', 'staff transport', 'document returns'],
+    businessDemand: ['university travel', 'commuter transport', 'document returns'],
     routeMoat:
       'This route teaches Wasel how northern demand shifts by hour, campus calendar, and return flow.',
     attachRatePercent: 62,
@@ -214,8 +214,8 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     density: 'surging',
     pickupPoints: ['Sports City node', 'Industrial gate cluster', 'Zarqa terminal edge'],
     autoGroupWindow: 'Auto-group micro departures every 10 minutes around shift changes.',
-    movementLayers: ['workers', 'daily commuters', 'industrial deliveries', 'service crews'],
-    businessDemand: ['factory staff transport', 'parts delivery', 'maintenance teams'],
+    movementLayers: ['public riders', 'daily commuters', 'industrial deliveries', 'service crews'],
+    businessDemand: ['commuter transport', 'parts delivery', 'maintenance teams'],
     routeMoat:
       'High-frequency commuting lets Wasel learn Jordanian movement cadence faster than any generic ride app.',
     attachRatePercent: 68,
@@ -223,7 +223,7 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     intelligenceSignals: [
       'Detect shift-change surges before they appear in search.',
       'Push the cheapest seat price when the corridor density spikes.',
-      'Blend worker transport with same-direction service demand.',
+      'Blend public commuter transport with same-direction service demand.',
     ],
   },
   'amman-aqaba': {
@@ -266,7 +266,7 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     pickupPoints: ['North bridge node', 'Ajloun forest stop', 'hill connector meetpoint'],
     autoGroupWindow: 'Use route alerts to cluster low-frequency demand into reliable shared trips.',
     movementLayers: ['leisure riders', 'families', 'weekend goods', 'eco-services'],
-    businessDemand: ['hospitality staff', 'tourism services', 'maintenance visits'],
+    businessDemand: ['hospitality commuters', 'tourism services', 'maintenance visits'],
     routeMoat:
       'Lower-frequency routes become defendable when Wasel knows exactly when to wake demand.',
     attachRatePercent: 44,
@@ -349,8 +349,8 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     density: 'high-frequency',
     pickupPoints: ['University belt', 'industrial relay', 'east connector hub'],
     autoGroupWindow: 'Continuously merge riders into the next viable departure.',
-    movementLayers: ['students', 'workers', 'returns', 'service teams'],
-    businessDemand: ['industrial staff movement', 'education corridor', 'returns'],
+    movementLayers: ['students', 'public riders', 'returns', 'service teams'],
+    businessDemand: ['industrial commuter movement', 'education corridor', 'returns'],
     routeMoat:
       'Cross-north industrial flow creates a distinct route graph that compounds with every trip.',
     attachRatePercent: 55,
@@ -383,9 +383,9 @@ const CORRIDOR_META: Record<string, CorridorMeta> = {
     density: 'steady',
     pickupPoints: ['Industrial edge', 'Mafraq gateway', 'east logistics stop'],
     autoGroupWindow: 'Cluster departures around workday turnover and eastbound logistics demand.',
-    movementLayers: ['workers', 'goods', 'truck support', 'field services'],
+    movementLayers: ['public riders', 'goods', 'truck support', 'field services'],
     businessDemand: ['industrial logistics', 'support vehicles', 'service teams'],
-    routeMoat: 'Truck and worker demand together create a differentiated eastbound movement graph.',
+    routeMoat: 'Truck and public rider demand together create a differentiated eastbound movement graph.',
     attachRatePercent: 51,
     fillTargetSeats: 4,
     intelligenceSignals: [
@@ -417,7 +417,7 @@ function getCorridorMeta(routeId: string): CorridorMeta {
       pickupPoints: ['Main corridor node', 'Trusted pickup zone', 'Demand capture point'],
       autoGroupWindow: 'Use route alerts and cost sharing to build the next departure wave.',
       movementLayers: ['people', 'goods', 'services', 'data'],
-      businessDemand: ['staff movement', 'returns', 'service calls'],
+      businessDemand: ['public movement', 'returns', 'service calls'],
       routeMoat: 'Wasel learns how this corridor behaves faster every time the route is searched.',
       attachRatePercent: 42,
       fillTargetSeats: 3,

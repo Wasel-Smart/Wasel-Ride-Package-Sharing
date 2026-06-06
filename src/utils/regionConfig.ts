@@ -407,7 +407,7 @@ const EGYPT: RegionConfig = {
       tier: 1,
       popular: false,
       packageEnabled: true,
-      useCase: 'Industrial, canal workers',
+      useCase: 'Industrial commuters, canal traffic',
       useCaseAr: 'صناعة وقناة السويس',
     },
     {
@@ -573,7 +573,7 @@ const SAUDI_ARABIA: RegionConfig = {
       tier: 1,
       popular: true,
       packageEnabled: true,
-      useCase: 'Eastern Province, oil workers',
+      useCase: 'Eastern Province, oil-field commuters',
       useCaseAr: 'المنطقة الشرقية',
     },
     {
@@ -839,8 +839,8 @@ const KUWAIT: RegionConfig = {
       tier: 1,
       popular: true,
       packageEnabled: true,
-      useCase: 'Oil workers, KOC employees',
-      useCaseAr: 'موظفو شركة النفط',
+      useCase: 'Oil-field commuters, public riders',
+      useCaseAr: 'ركاب حقول النفط',
     },
     {
       id: 'KW_KWT_JAH',

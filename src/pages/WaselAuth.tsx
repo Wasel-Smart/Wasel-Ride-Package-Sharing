@@ -72,12 +72,7 @@ function isValidOtpPhone(value: string) {
 }
 
 function isLocalCaptchaBypassActive() {
-  if (import.meta.env.VITE_E2E_LOCAL_AUTH === 'true') return true;
-  if (isAuthCaptchaConfigured || import.meta.env.PROD || typeof window === 'undefined') {
-    return false;
-  }
-
-  return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+  return import.meta.env.VITE_E2E_LOCAL_AUTH === 'true';
 }
 
 function isAccountProtectionError(error: unknown) {
@@ -455,7 +450,7 @@ export default function WaselAuth() {
     if (signInError) {
       if (!isAuthCaptchaConfigured && isAccountProtectionError(signInError)) {
         setError(
-          'Account protection is enabled on Supabase, but this build has no captcha site key. Localhost now uses local auth; create an account once here, then sign in with it. For Supabase auth, set VITE_AUTH_CAPTCHA_PROVIDER and VITE_AUTH_CAPTCHA_SITE_KEY.',
+          'Account protection is enabled on Supabase, but this build has no captcha site key. Configure VITE_AUTH_CAPTCHA_PROVIDER and VITE_AUTH_CAPTCHA_SITE_KEY to match your Supabase captcha settings, or disable captcha protection for this local Supabase project.',
         );
         return;
       }
@@ -498,7 +493,7 @@ export default function WaselAuth() {
     if (registration.error) {
       if (!isAuthCaptchaConfigured && isAccountProtectionError(registration.error)) {
         setError(
-          'Account protection is enabled on Supabase, but this build has no captcha site key. Localhost now uses local auth; create an account once here, then sign in with it. For Supabase auth, set VITE_AUTH_CAPTCHA_PROVIDER and VITE_AUTH_CAPTCHA_SITE_KEY.',
+          'Account protection is enabled on Supabase, but this build has no captcha site key. Configure VITE_AUTH_CAPTCHA_PROVIDER and VITE_AUTH_CAPTCHA_SITE_KEY to match your Supabase captcha settings, or disable captcha protection for this local Supabase project.',
         );
         return;
       }
@@ -706,8 +701,8 @@ export default function WaselAuth() {
               }}
             >
               <span style={{ fontSize: TYPE.size.xs, color: C.cyan, fontFamily: F }}>
-                Local auth is active for this localhost build because captcha keys are not
-                configured. Create an account once, then sign in normally.
+                Test auth is active because VITE_E2E_LOCAL_AUTH is enabled. Accounts are stored
+                only in this browser.
               </span>
             </WaselCard>
           )}

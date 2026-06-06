@@ -102,7 +102,7 @@ export function buildServiceProviderWorkflowSnapshot(
     dispatchWindows: [
       {
         label: 'Morning density window',
-        serviceMix: 'Installations, employee handoffs, urgent samples',
+        serviceMix: 'Installations, public handoffs, urgent samples',
         targetPriceJod: roundMoney(baseDispatchPrice * 0.92),
         recommendedPickupPoint: liveSignal?.recommendedPickupPoint ?? `${route.from} primary node`,
       },
@@ -123,7 +123,7 @@ export function buildServiceProviderWorkflowSnapshot(
     ],
     workflowSteps: [
       `Pin recurring jobs on ${route.from} to ${route.to} instead of dispatching ad hoc rides.`,
-      'Group technicians, employee seats, and return packages into the same corridor wave.',
+      'Group technicians, public rider seats, and return packages into the same corridor wave.',
       'Use route-density pricing so high-frequency service windows are cheaper than solo dispatch.',
       'Invoice accounts on one lane-level report with proof of stops, backhauls, and utilization.',
     ],
