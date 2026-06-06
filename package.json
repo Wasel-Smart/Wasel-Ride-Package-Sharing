@@ -104,6 +104,7 @@
     "@tootallnate/once": "3.0.1",
     "undici": "7.25.0",
     "path-to-regexp": "8.4.2",
+    "ajv": "8.17.1",
     "srvx": "0.11.13",
     "minimatch": "10.2.3",
     "smol-toml": "1.6.1",
