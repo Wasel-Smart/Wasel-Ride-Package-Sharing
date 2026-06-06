@@ -475,22 +475,16 @@ export function FindRidePage() {
               ['package', copy.tabPackage],
             ] as const
           ).map(([key, label]) => (
-            <button
+            <WaselButton
               key={key}
               onClick={() => setTab(key)}
+              variant={tab === key ? 'primary' : 'outline'}
               style={{
                 flex: 1,
-                height: 44,
-                borderRadius: r(12),
-                border: `1px solid ${tab === key ? DS.cyan : DS.border}`,
-                background: tab === key ? `${DS.cyan}18` : DS.card,
-                color: C.text,
-                fontWeight: 700,
-                cursor: 'pointer',
               }}
             >
               {label}
-            </button>
+            </WaselButton>
           ))}
         </div>
 
@@ -530,39 +524,13 @@ export function FindRidePage() {
                     >
                       {field.label}
                     </label>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        background: DS.card2,
-                        borderRadius: r(12),
-                        padding: '0 14px',
-                        border: `1px solid ${DS.border}`,
-                        height: 46,
-                      }}
-                    >
-                      <MapPin size={15} color={field.icon} />
-                      <select
-                        value={field.value}
-                        onChange={event => field.setter(event.target.value)}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          color: C.text,
-                          fontFamily: DS.F,
-                          fontSize: '0.9rem',
-                          flex: 1,
-                          outline: 'none',
-                        }}
-                      >
-                        {CITIES.map(city => (
-                          <option key={city} value={city} style={{ background: DS.card }}>
-                            {city}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    <WaselSelect
+                      value={field.value}
+                      onChange={field.setter}
+                      options={CITIES.map(city => ({ value: city, label: city }))}
+                      containerStyle={{ gap: 0 }}
+                      style={{ height: 46, paddingLeft: 42 }}
+                    />
                   </div>
                 ))}
                 <div>
@@ -577,36 +545,14 @@ export function FindRidePage() {
                   >
                     {t.date}
                   </label>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      background: DS.card2,
-                      borderRadius: r(12),
-                      padding: '0 14px',
-                      border: `1px solid ${DS.border}`,
-                      height: 46,
-                    }}
-                  >
-                    <Calendar size={15} color={DS.muted} />
-                    <input
-                      type="date"
-                      value={date}
-                      onChange={event => setDate(event.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: C.text,
-                        fontFamily: DS.F,
-                        fontSize: '0.85rem',
-                        flex: 1,
-                        outline: 'none',
-                        colorScheme: 'dark',
-                      }}
-                    />
-                  </div>
+                  <WaselInput
+                    type="date"
+                    value={date}
+                    onChange={setDate}
+                    min={new Date().toISOString().split('T')[0]}
+                    icon={<Calendar size={15} color={DS.muted} />}
+                    style={{ height: 46, colorScheme: 'dark' }}
+                  />
                 </div>
               </div>
 

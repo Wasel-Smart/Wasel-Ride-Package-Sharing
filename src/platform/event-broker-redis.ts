@@ -68,6 +68,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
     if (this.connected) return;
 
     try {
+      void this.redis;
       // In production, use ioredis:
       // const Redis = require('ioredis');
       // this.redis = new Redis(this.config);
@@ -95,6 +96,8 @@ class RedisStreamsBroker implements EventBrokerAdapter {
 
     const streamKey = this.getStreamKey(event.type);
     const startTime = Date.now();
+    void streamKey;
+    void options;
 
     try {
       // Serialize event with schema version
@@ -140,6 +143,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
     handler: (event: DomainEventEnvelope<TType>) => Promise<void>,
     config: ConsumerConfig,
   ): Promise<() => Promise<void>> {
+    void handler;
     await this.connect();
 
     const streamKey = this.getStreamKey(eventType);
@@ -179,6 +183,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
     handler: (event: DomainEventEnvelope<TType>) => Promise<void>,
   ): Promise<void> {
     const subKey = `${streamKey}:${config.groupName}:${config.consumerName}`;
+    void handler;
 
     while (this.subscriptions.get(subKey)) {
       try {
@@ -224,6 +229,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
 
   async ack(streamKey: string, groupName: string, messageId: string): Promise<void> {
     try {
+      void messageId;
       // await this.redis.xack(streamKey, groupName, messageId);
       telemetry.recordMetric('event_acked', 1, { streamKey, groupName });
     } catch (error) {
@@ -236,6 +242,8 @@ class RedisStreamsBroker implements EventBrokerAdapter {
     await this.connect();
 
     const streamKey = this.getStreamKey(eventType);
+    void streamKey;
+    void count;
 
     try {
       // XREVRANGE command for most recent events
@@ -286,7 +294,10 @@ class RedisStreamsBroker implements EventBrokerAdapter {
   ): DomainEventEnvelope<TType> {
     const data: any = {};
     for (let i = 0; i < fields.length; i += 2) {
-      data[fields[i]] = fields[i + 1];
+      const key = fields[i];
+      if (key) {
+        data[key] = fields[i + 1];
+      }
     }
 
     return {
@@ -359,6 +370,7 @@ function createInMemoryBroker(): EventBrokerAdapter {
     },
 
     async subscribe(eventType, handler, config) {
+      void config;
       const streamKey = `wasel:events:${eventType}`;
       const handlers = subscriptions.get(streamKey) || new Set();
       handlers.add(handler);
