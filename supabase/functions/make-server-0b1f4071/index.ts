@@ -4451,6 +4451,61 @@ Deno.serve(async (request) => {
       }
     }
 
+    if (request.method === 'POST' && path === '/ratings') {
+      response = await handleSubmitRating(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'GET' && /^\/ratings\/drivers\/[^/]+$/.test(path)) {
+      response = await handleGetDriverRating(request, path);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'GET' && /^\/ratings\/bookings\/[^/]+\/eligibility$/.test(path)) {
+      response = await handleCanRateBooking(request, path);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'POST' && path === '/cancellations/bookings') {
+      response = await handleCancelBooking(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'POST' && path === '/cancellations/trips') {
+      response = await handleCancelTrip(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'GET' && /^\/cancellations\/bookings\/[^/]+\/eligibility$/.test(path)) {
+      response = await handleCanCancelBooking(request, path);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'POST' && path === '/gdpr/consents') {
+      response = await handleRecordConsent(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'GET' && /^\/gdpr\/consents\/[^/]+$/.test(path)) {
+      response = await handleGetConsent(request, path);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'POST' && path === '/gdpr/data-exports') {
+      response = await handleRequestDataExport(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'POST' && path === '/gdpr/deletions') {
+      response = await handleRequestDeletion(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'POST' && path === '/gdpr/deletions/cancel') {
+      response = await handleCancelDeletion(request);
+      return finalizeResponse(request, response);
+    }
+
     if (path === '/mobility-os/snapshot' || path === '/mobility-os/booking/create') {
       const mobilityResponse = await handleMobilityOSRequest(request, path);
       if (mobilityResponse) {
