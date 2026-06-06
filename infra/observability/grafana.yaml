@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: wasel-production
+data:
+  wasel-platform-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Wasel Platform Overview",
+        "panels": [
+          {
+            "title": "Request Rate",
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total[5m])) by (service)"
+              }
+            ]
+          },
+          {
+            "title": "Error Rate",
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))"
+              }
+            ]
+          },
+          {
+            "title": "Response Time p95",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service))"
+              }
+            ]
+          },
+          {
+            "title": "Active VUs",
+            "targets": [
+              {
+                "expr": "sum(active_users) by (service)"
+              }
+            ]
+          },
+          {
+            "title": "Redis Streams Lag",
+            "targets": [
+              {
+                "expr": "redis_stream_consumer_group_lag"
+              }
+            ]
+          },
+          {
+            "title": "HPA Pod Count",
+            "targets": [
+              {
+                "expr": "kube_deployment_status_replicas{namespace=\"wasel-production\"}"
+              }
+            ]
+          },
+          {
+            "title": "Database Connections",
+            "targets": [
+              {
+                "expr": "pg_stat_database_numbackends"
+              }
+            ]
+          },
+          {
+            "title": "SLO Compliance",
+            "targets": [
+              {
+                "expr": "(sum(rate(http_requests_total{status!~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))) * 100"
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: wasel-production
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+  selector:
+    app: grafana
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: wasel-production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.2.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wasel-secrets
+                  key: grafana.password
+            - name: GF_SERVER_ROOT_URL
+              value: https://monitoring.wasel.jo
+          volumeMounts:
+            - name: grafana-storage
+              mountPath: /var/lib/grafana
+            - name: dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: grafana-storage
+          emptyDir: {}
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
