@@ -349,11 +349,11 @@ export async function scheduleBackups() {
 - [ ] Notify users when service restored
 - [ ] Send post-mortem within 24 hours
 
-**Total Recovery Time: ~30 minutes**
+#### Total Recovery Time: ~30 minutes
 
-**Data Loss: ~1 hour (since latest backup)**
+#### Data Loss: ~1 hour (since latest backup)
 
-```
+```markdown
 
 **Other Disaster Scenarios:**
 
@@ -613,7 +613,6 @@ const recommendations = planner.recommendScaling(predictions);
 | Log Aggregation | MEDIUM | 1 week | $200/mo | +0.4 |
 | Cost Tracking | LOW | 1 week | $0 | +1.0 |
 | Capacity Planning | MEDIUM | 1 week | $0 | +1.0 |
-|---|---|---|---|---|
 | **TOTAL** | - | **6 weeks** | **$834/mo** | **+8.1** |
 
 ---
