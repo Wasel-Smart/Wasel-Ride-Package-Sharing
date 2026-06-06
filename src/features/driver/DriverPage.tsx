@@ -4,6 +4,7 @@ import { ProtectedPagePreview } from '../../components/system/ProtectedPagePrevi
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
+import { C, GRAD_HERO, R, SH } from '../../utils/wasel-ds';
 import { getDriverReadinessSummary } from '../../services/driverOnboarding';
 import { getMovementMembershipSnapshot } from '../../services/movementMembership';
 import { buildDriverRoutePlan, getMarketplaceNodes } from '../../config/wasel-movement-network';
@@ -85,11 +86,11 @@ export default function DriverPage() {
         >
           <div
             style={{
-              background: `linear-gradient(135deg, rgba(0,200,232,0.12), rgba(8,18,35,0.96) 58%, rgba(240,168,48,0.08))`,
-              borderRadius: r(24),
+              background: GRAD_HERO,
+              borderRadius: R.xxl,
               padding: '24px',
               border: `1px solid ${DS.border}`,
-              boxShadow: '0 18px 48px rgba(0,0,0,0.22)',
+              boxShadow: SH.lg,
             }}
           >
             <div
@@ -116,7 +117,7 @@ export default function DriverPage() {
                 </div>
                 <h2
                   style={{
-                    color: '#fff',
+                    color: C.text,
                     fontWeight: 900,
                     fontSize: '2rem',
                     lineHeight: 1.05,
@@ -158,8 +159,8 @@ export default function DriverPage() {
                 <div
                   key={item.label}
                   style={{
-                    background: 'rgba(5,12,24,0.54)',
-                    borderRadius: r(18),
+                    background: C.elevated,
+                    borderRadius: R.xl,
                     border: `1px solid ${DS.border}`,
                     padding: '16px 16px 14px',
                   }}
@@ -167,7 +168,7 @@ export default function DriverPage() {
                   <div style={{ color: item.color, fontWeight: 900, fontSize: '1.22rem' }}>
                     {item.value}
                   </div>
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.8rem', marginTop: 4 }}>
+                  <div style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem', marginTop: 4 }}>
                     {item.label}
                   </div>
                   <div style={{ color: DS.muted, fontSize: '0.72rem', marginTop: 4 }}>
@@ -191,7 +192,7 @@ export default function DriverPage() {
                   borderRadius: '999px',
                   border: 'none',
                   background: DS.gradC,
-                  color: '#fff',
+                  color: C.bgDeep,
                   fontWeight: 800,
                   cursor: 'pointer',
                 }}
@@ -204,8 +205,8 @@ export default function DriverPage() {
                   height: 46,
                   borderRadius: '999px',
                   border: `1px solid ${DS.border}`,
-                  background: 'rgba(255,255,255,0.04)',
-                  color: '#fff',
+                  background: C.elevated,
+                  color: C.text,
                   fontWeight: 800,
                   cursor: 'pointer',
                 }}
@@ -218,8 +219,8 @@ export default function DriverPage() {
                   height: 46,
                   borderRadius: '999px',
                   border: `1px solid ${DS.border}`,
-                  background: 'rgba(255,255,255,0.04)',
-                  color: '#fff',
+                  background: C.elevated,
+                  color: C.text,
                   fontWeight: 800,
                   cursor: 'pointer',
                 }}
@@ -241,10 +242,10 @@ export default function DriverPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <ShieldCheck size={18} color={DS.green} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Ready state</div>
+              <div style={{ color: C.text, fontWeight: 900 }}>Ready state</div>
             </div>
             <div>
-              <div style={{ color: '#fff', fontWeight: 900, fontSize: '1.1rem' }}>
+              <div style={{ color: C.text, fontWeight: 900, fontSize: '1.1rem' }}>
                 {readiness.headline}
               </div>
               <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.55, marginTop: 6 }}>
@@ -256,8 +257,8 @@ export default function DriverPage() {
             <div
               style={{
                 height: 10,
-                background: 'rgba(255,255,255,0.06)',
-                borderRadius: '999px',
+                background: C.elevated,
+                borderRadius: R.full,
                 overflow: 'hidden',
               }}
             >
@@ -287,8 +288,8 @@ export default function DriverPage() {
                     style={{
                       width: 28,
                       height: 28,
-                      borderRadius: r(9),
-                      background: step.complete ? `${DS.green}16` : 'rgba(255,255,255,0.06)',
+                      borderRadius: R.md,
+                      background: step.complete ? C.greenDim : C.elevated,
                       border: `1px solid ${step.complete ? `${DS.green}2f` : DS.border}`,
                       color: step.complete ? DS.green : DS.gold,
                       display: 'flex',
@@ -301,7 +302,7 @@ export default function DriverPage() {
                     {step.complete ? 'OK' : '!'}
                   </div>
                   <div>
-                    <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.8rem' }}>
+                    <div style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem' }}>
                       {step.label}
                     </div>
                     <div
@@ -339,7 +340,7 @@ export default function DriverPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <Brain size={18} color={DS.cyan} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Route pulse</div>
+              <div style={{ color: C.text, fontWeight: 900 }}>Route pulse</div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {[
@@ -358,7 +359,7 @@ export default function DriverPage() {
                     borderRadius: r(14),
                     border: `1px solid ${DS.border}`,
                     padding: '12px 14px',
-                    color: '#fff',
+                    color: C.text,
                     fontSize: '0.8rem',
                     lineHeight: 1.55,
                   }}
@@ -382,10 +383,10 @@ export default function DriverPage() {
                     borderRadius: r(14),
                     padding: '12px 14px',
                     border: `1px solid ${DS.border}`,
-                    background: 'rgba(255,255,255,0.03)',
+                    background: C.elevated,
                   }}
                 >
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.76rem' }}>
+                  <div style={{ color: C.text, fontWeight: 800, fontSize: '0.76rem' }}>
                     {item.label}
                   </div>
                   <div
@@ -413,7 +414,7 @@ export default function DriverPage() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <Network size={18} color={DS.green} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Demand add-ons</div>
+              <div style={{ color: C.text, fontWeight: 900 }}>Demand add-ons</div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
               {marketplaceNodes.map(node => (
@@ -426,7 +427,7 @@ export default function DriverPage() {
                     border: `1px solid ${DS.border}`,
                   }}
                 >
-                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem' }}>
+                  <div style={{ color: C.text, fontWeight: 800, fontSize: '0.82rem' }}>
                     {node.title}
                   </div>
                   <div
@@ -447,7 +448,7 @@ export default function DriverPage() {
                 marginTop: 14,
                 borderRadius: r(16),
                 border: `1px solid ${DS.border}`,
-                background: 'linear-gradient(135deg, rgba(240,168,48,0.10), rgba(255,255,255,0.03))',
+                background: `linear-gradient(135deg, ${C.goldDim}, ${C.elevated})`,
                 padding: '14px 16px',
                 display: 'flex',
                 alignItems: 'flex-start',
@@ -456,7 +457,7 @@ export default function DriverPage() {
             >
               <Truck size={18} color={DS.gold} />
               <div>
-                <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.8rem' }}>
+                <div style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem' }}>
                   Lane expansion
                 </div>
                 <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 4 }}>
