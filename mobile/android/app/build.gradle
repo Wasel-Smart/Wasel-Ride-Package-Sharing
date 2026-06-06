@@ -1,0 +1,66 @@
+apply plugin: "com.android.application"
+apply plugin: "org.jetbrains.kotlin.android"
+apply plugin: "com.facebook.react"
+
+react {
+    root = file("../../../")
+    reactNativeDir = file("../../../node_modules/react-native")
+    codegenDir = file("../../../node_modules/@react-native/codegen")
+    hermesEnabled = true
+}
+
+def enableProguardInReleaseBuilds = true
+
+android {
+    namespace "com.wasel.mobility"
+    compileSdk 34
+    
+    defaultConfig {
+        applicationId "com.wasel.mobility"
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+        
+        buildConfigField "String", "SUPABASE_URL", "\"${System.getenv('VITE_SUPABASE_URL') ?: ''}\""
+        buildConfigField "String", "SUPABASE_ANON_KEY", "\"${System.getenv('VITE_SUPABASE_ANON_KEY') ?: ''}\""
+        
+        manifestPlaceholders = [
+            GOOGLE_MAPS_API_KEY: System.getenv('GOOGLE_MAPS_API_KEY') ?: ''
+        ]
+    }
+    
+    signingConfigs {
+        release {
+            if (project.hasProperty('WASEL_UPLOAD_STORE_FILE')) {
+                storeFile file(WASEL_UPLOAD_STORE_FILE)
+                storePassword WASEL_UPLOAD_STORE_PASSWORD
+                keyAlias WASEL_UPLOAD_KEY_ALIAS
+                keyPassword WASEL_UPLOAD_KEY_PASSWORD
+            }
+        }
+    }
+    
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled enableProguardInReleaseBuilds
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation("com.facebook.react:react-android")
+    implementation("com.facebook.react:flipper-integration")
+    implementation("com.facebook.react:hermes-android")
+    implementation 'com.google.android.gms:play-services-maps:18.2.0'
+    implementation 'com.google.android.gms:play-services-location:21.2.0'
+    implementation 'com.google.firebase:firebase-messaging:24.0.0'
+}
+
+apply plugin: 'com.google.gms.google-services'
