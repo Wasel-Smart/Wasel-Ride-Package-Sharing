@@ -110,6 +110,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
         occurredAt: event.occurredAt,
         schemaVersion: '1.0', // Schema versioning
       };
+      void payload;
 
       // XADD command with maxlen trimming
       // const messageId = await this.redis.xadd(
@@ -259,6 +260,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
 
   async createConsumerGroup(eventType: DomainEventType, groupName: string): Promise<void> {
     const streamKey = this.getStreamKey(eventType);
+    void streamKey;
 
     try {
       // XGROUP CREATE with MKSTREAM
@@ -292,6 +294,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
   private deserializeEvent<TType extends DomainEventType>(
     fields: string[],
   ): DomainEventEnvelope<TType> {
+    void fields;
     const data: any = {};
     for (let i = 0; i < fields.length; i += 2) {
       const key = fields[i];

@@ -5,7 +5,6 @@ import {
   Brain,
   Calendar,
   CheckCircle2,
-  MapPin,
   Network,
   Search,
   Shield,
@@ -721,36 +720,20 @@ export function FindRidePage() {
                     </span>
                   </div>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <button
+                    <WaselButton
                       onClick={openMyTrips}
-                      style={{
-                        height: 42,
-                        padding: '0 16px',
-                        borderRadius: '999px',
-                        border: 'none',
-                        background: DS.gradG,
-                        color: C.bgDeep,
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                      }}
+                      variant="gold"
+                      size="sm"
                     >
                       Open My Trips
-                    </button>
-                    <button
+                    </WaselButton>
+                    <WaselButton
                       onClick={() => setBookingSuccess(null)}
-                      style={{
-                        height: 42,
-                        padding: '0 16px',
-                        borderRadius: '999px',
-                        border: `1px solid ${DS.border}`,
-                        background: DS.card2,
-                        color: C.text,
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
+                      variant="outline"
+                      size="sm"
                     >
                       Keep browsing
-                    </button>
+                    </WaselButton>
                   </div>
                   {bookingSuccess.ticketCode ? (
                     <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
@@ -901,22 +884,14 @@ export function FindRidePage() {
                     ['rating', t.topRated],
                   ] as const
                 ).map(([key, label]) => (
-                  <button
+                  <WaselButton
                     key={key}
                     onClick={() => setSort(key)}
-                    style={{
-                      padding: '6px 14px',
-                      borderRadius: '99px',
-                      border: `1px solid ${sort === key ? DS.cyan : DS.border}`,
-                      background: sort === key ? `${DS.cyan}15` : DS.card2,
-                      color: sort === key ? DS.cyan : DS.sub,
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
+                    variant={sort === key ? 'primary' : 'outline'}
+                    size="sm"
                   >
                     {label}
-                  </button>
+                  </WaselButton>
                 ))}
               </div>
             </div>
@@ -952,59 +927,37 @@ export function FindRidePage() {
                         marginTop: 18,
                       }}
                     >
-                      <button
+                      <WaselButton
                         onClick={() => {
                           setDate('');
                           setSearchError(null);
                           setSearched(true);
                         }}
-                        style={{
-                          height: 44,
-                          borderRadius: r(12),
-                          border: `1px solid ${DS.border}`,
-                          background: DS.card2,
-                          color: C.text,
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                        }}
+                        variant="outline"
                       >
                         {t.clearDateFilter}
-                      </button>
-                      <button
+                      </WaselButton>
+                      <WaselButton
                         onClick={() =>
                           nav(
                             `/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
                           )
                         }
-                        style={{
-                          height: 44,
-                          borderRadius: r(12),
-                          border: 'none',
-                          background: DS.gradG,
-                          color: C.bgDeep,
-                          fontWeight: 800,
-                          cursor: 'pointer',
-                        }}
+                        variant="gold"
                       >
                         {t.openBusFallback}
-                      </button>
+                      </WaselButton>
                     </div>
-                    <button
+                    <WaselButton
                       onClick={handleDemandCapture}
+                      fullWidth
+                      variant="outline"
                       style={{
                         marginTop: 10,
-                        width: '100%',
-                        height: 44,
-                        borderRadius: r(12),
-                        border: `1px solid ${DS.cyan}35`,
-                        background: `${DS.cyan}12`,
-                        color: C.text,
-                        fontWeight: 700,
-                        cursor: 'pointer',
                       }}
                     >
                       {copy.notifyMe}
-                    </button>
+                    </WaselButton>
                     {(waitlistMessage || demandStats.active > 0) && (
                       <div
                         style={{
@@ -1025,16 +978,15 @@ export function FindRidePage() {
                         </div>
                         <div style={{ display: 'grid', gap: 10 }}>
                           {nearbyCorridors.map(ride => (
-                            <button
+                            <WaselButton
                               key={ride.id}
                               onClick={() => handleOpenRide(ride)}
+                              variant="outline"
                               style={{
                                 textAlign: 'left',
-                                borderRadius: r(14),
-                                border: `1px solid ${DS.border}`,
-                                background: DS.card2,
                                 padding: '12px 14px',
-                                cursor: 'pointer',
+                                height: 'auto',
+                                justifyContent: 'stretch',
                               }}
                             >
                               <div
@@ -1066,7 +1018,7 @@ export function FindRidePage() {
                                     : 'Sold out'}
                                 </span>
                               </div>
-                            </button>
+                            </WaselButton>
                           ))}
                         </div>
                       </div>
@@ -1196,20 +1148,19 @@ export function FindRidePage() {
                   </div>
                   <div style={{ display: 'grid', gap: 10 }}>
                     {featuredSignals.map(corridor => (
-                      <button
+                      <WaselButton
                         key={corridor.id}
                         onClick={() => {
                           setFrom(corridor.from);
                           setTo(corridor.to);
                           setSearched(true);
                         }}
+                        variant="outline"
                         style={{
                           textAlign: 'left',
-                          borderRadius: r(14),
-                          border: `1px solid ${DS.border}`,
-                          background: DS.card2,
                           padding: '12px 14px',
-                          cursor: 'pointer',
+                          height: 'auto',
+                          justifyContent: 'stretch',
                         }}
                       >
                         <div
@@ -1233,7 +1184,7 @@ export function FindRidePage() {
                           </div>
                           <span style={pill(DS.cyan)}>{corridor.pricePressure}</span>
                         </div>
-                      </button>
+                      </WaselButton>
                     ))}
                   </div>
                 </div>
@@ -1366,40 +1317,24 @@ export function FindRidePage() {
                             {suggestion.reason}
                           </div>
                           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
-                            <button
+                            <WaselButton
                               onClick={() => {
                                 setFrom(suggestion.from);
                                 setTo(suggestion.to);
                                 setSearched(true);
                               }}
-                              style={{
-                                height: 38,
-                                padding: '0 14px',
-                                borderRadius: '999px',
-                                border: `1px solid ${DS.border}`,
-                                background: DS.card,
-                                color: C.text,
-                                fontWeight: 700,
-                                cursor: 'pointer',
-                              }}
+                              variant="outline"
+                              size="sm"
                             >
                               Search route
-                            </button>
-                            <button
+                            </WaselButton>
+                            <WaselButton
                               onClick={() => handleSaveReminder(suggestion.corridorId)}
-                              style={{
-                                height: 38,
-                                padding: '0 14px',
-                                borderRadius: '999px',
-                                border: 'none',
-                                background: alreadySaved ? DS.gradG : DS.gradC,
-                                color: C.bgDeep,
-                                fontWeight: 800,
-                                cursor: 'pointer',
-                              }}
+                              variant={alreadySaved ? 'gold' : 'primary'}
+                              size="sm"
                             >
                               {alreadySaved ? 'Reminder active' : 'Save reminder'}
-                            </button>
+                            </WaselButton>
                           </div>
                         </div>
                       );
@@ -1483,16 +1418,15 @@ export function FindRidePage() {
                     });
 
                     return (
-                      <button
+                      <WaselButton
                         key={ride.id}
                         onClick={() => handleOpenRide(ride)}
+                        variant="outline"
                         style={{
                           textAlign: 'left',
-                          borderRadius: r(14),
-                          border: `1px solid ${DS.border}`,
-                          background: DS.card2,
                           padding: '12px 14px',
-                          cursor: 'pointer',
+                          height: 'auto',
+                          justifyContent: 'stretch',
                         }}
                       >
                         <div
@@ -1523,7 +1457,7 @@ export function FindRidePage() {
                               : `${ridePriceQuote.finalPriceJod} JOD`}
                           </span>
                         </div>
-                      </button>
+                      </WaselButton>
                     );
                   })}
                 </div>
