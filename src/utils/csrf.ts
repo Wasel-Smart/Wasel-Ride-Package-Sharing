@@ -115,13 +115,13 @@ function constantTimeCompare(a: string, b: string): boolean {
  */
 export function addCSRFHeader(headers: HeadersInit = {}): Headers {
   const finalHeaders = new Headers(headers);
-  let token = '';
-
-  try {
-    token = getCSRFToken();
-  } catch {
-    token = '';
-  }
+  const token = (() => {
+    try {
+      return getCSRFToken();
+    } catch {
+      return '';
+    }
+  })();
 
   if (!token) {
     return finalHeaders;

@@ -167,10 +167,6 @@ test.describe('OAuth Authentication', () => {
     const googleButton = page.getByRole('button', { name: /google/i });
     const facebookButton = page.getByRole('button', { name: /facebook/i });
 
-    // Check ARIA attributes
-    const googleAriaLabel = await googleButton.getAttribute('aria-label');
-    const facebookAriaLabel = await facebookButton.getAttribute('aria-label');
-
     // Buttons should be keyboard accessible
     await googleButton.focus();
     await expect(googleButton).toBeFocused();
@@ -226,13 +222,13 @@ test.describe('OAuth Callback Handling', () => {
 });
 
 test.describe('OAuth Profile Creation', () => {
-  test('should create profile after OAuth sign-in', async ({ page, context }) => {
+  test('should create profile after OAuth sign-in', async () => {
     // This test requires actual OAuth flow or mocked backend
     // Placeholder for integration testing
     test.skip(true, 'Requires backend integration');
   });
 
-  test('should handle OAuth profile creation errors', async ({ page, context }) => {
+  test('should handle OAuth profile creation errors', async () => {
     // This test requires actual OAuth flow or mocked backend
     // Placeholder for integration testing
     test.skip(true, 'Requires backend integration');
