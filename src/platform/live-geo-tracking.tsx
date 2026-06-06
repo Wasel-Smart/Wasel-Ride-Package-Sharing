@@ -122,7 +122,7 @@ export function useLiveDriverTracking(
 } {
   const [drivers, setDrivers] = useState<DriverLocation[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const error: Error | null = null;
 
   useEffect(() => {
     setIsConnected(true);
@@ -270,6 +270,18 @@ function MapPlaceholder({
         <div className="text-4xl">🗺️</div>
         <div className="mt-2 text-gray-600">Live Driver Map</div>
         <div className="mt-1 text-sm text-gray-500">{drivers.length} drivers tracked</div>
+        {selectedDriver ? (
+          <div className="mt-1 text-xs text-blue-600">Selected driver: {selectedDriver}</div>
+        ) : null}
+        {drivers.length > 0 ? (
+          <button
+            type="button"
+            className="mt-3 rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white"
+            onClick={() => onDriverClick(drivers[0]!)}
+          >
+            Select nearest driver
+          </button>
+        ) : null}
       </div>
     </div>
   );

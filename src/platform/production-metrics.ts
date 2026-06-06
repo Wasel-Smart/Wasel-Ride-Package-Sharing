@@ -3,8 +3,6 @@
  * Collects real production data and validates against SLO targets
  */
 
-import { telemetry } from './telemetry';
-
 export interface ProductionMetrics {
   timestamp: number;
   period: '1min' | '5min' | '15min' | '1hour' | '24hour';
@@ -88,6 +86,12 @@ export interface ProductionMetrics {
   };
 }
 
+type SLOTarget = {
+  availability: number;
+  p95Latency?: number;
+  freshnessMs?: number;
+};
+
 class ProductionMetricsCollector {
   private metricsBuffer: Map<string, number[]> = new Map();
   private sloViolations: Array<{
@@ -99,7 +103,7 @@ class ProductionMetricsCollector {
   }> = [];
 
   // SLO Targets from reliability-slos.md
-  private readonly SLO_TARGETS = {
+  private readonly SLO_TARGETS: Record<string, SLOTarget> = {
     'api-gateway': { availability: 99.9, p95Latency: 250 },
     'identity-service': { availability: 99.95, p95Latency: 200 },
     'ride-matching-service': { availability: 99.9, p95Latency: 700 },
@@ -130,7 +134,7 @@ class ProductionMetricsCollector {
     
     const sorted = [...values].sort((a, b) => a - b);
     const index = Math.ceil((percentile / 100) * sorted.length) - 1;
-    return sorted[Math.max(0, index)];
+    return sorted[Math.max(0, index)] ?? 0;
   }
 
   calculateAvailability(successCount: number, totalCount: number): number {
@@ -143,7 +147,7 @@ class ProductionMetricsCollector {
     metric: 'availability' | 'p95Latency' | 'freshnessMs',
     actual: number,
   ): boolean {
-    const target = this.SLO_TARGETS[service as keyof typeof this.SLO_TARGETS];
+    const target = this.SLO_TARGETS[service];
     if (!target) return true;
 
     let isCompliant = true;
@@ -155,11 +159,11 @@ class ProductionMetricsCollector {
         isCompliant = actual >= targetValue;
         break;
       case 'p95Latency':
-        targetValue = target.p95Latency || 0;
+        targetValue = target.p95Latency ?? 0;
         isCompliant = actual <= targetValue;
         break;
       case 'freshnessMs':
-        targetValue = target.freshnessMs || 0;
+        targetValue = target.freshnessMs ?? 0;
         isCompliant = actual <= targetValue;
         break;
     }
@@ -310,8 +314,9 @@ class ProductionMetricsCollector {
     const status: 'healthy' | 'degraded' | 'down' =
       failureRate > 0.2 ? 'down' : failureRate > 0.05 ? 'degraded' : 'healthy';
 
+    const circuitBreakerMetric = cbState.at(-1) ?? 0;
     const circuitBreakerState: 'closed' | 'open' | 'half-open' =
-      cbState[cbState.length - 1] === 2 ? 'half-open' : cbState[cbState.length - 1] === 1 ? 'open' : 'closed';
+      circuitBreakerMetric === 2 ? 'half-open' : circuitBreakerMetric === 1 ? 'open' : 'closed';
 
     return {
       status,
@@ -359,8 +364,9 @@ class ProductionMetricsCollector {
       report += '## Violations\n\n';
       
       const grouped = last24h.reduce((acc, v) => {
-        if (!acc[v.service]) acc[v.service] = [];
-        acc[v.service].push(v);
+        const serviceViolations = acc[v.service] ?? [];
+        serviceViolations.push(v);
+        acc[v.service] = serviceViolations;
         return acc;
       }, {} as Record<string, typeof violations>);
 

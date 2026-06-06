@@ -142,7 +142,7 @@ export function PackageSendPanel({
       }}
     >
       <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr' }}>
-        <h3 style={{ color: '#fff', fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>
+        <h3 style={{ color: C.text, fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>
           Send through the shared network
         </h3>
         {[
@@ -337,7 +337,7 @@ export function PackageSendPanel({
             border: `1px solid ${DS.border}`,
           }}
         >
-          <div style={{ color: '#fff', fontWeight: 800, marginBottom: 6 }}>Connected flow</div>
+          <div style={{ color: C.text, fontWeight: 800, marginBottom: 6 }}>Connected flow</div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
             Every package request checks live posted rides first. If a matching ride accepts
             parcels, the request attaches to that route and tracking starts from the same network.
@@ -361,7 +361,7 @@ export function PackageSendPanel({
                 background: C.elevated,
               }}
             >
-              <div style={{ color: '#fff', fontSize: '0.82rem', fontWeight: 700 }}>
+              <div style={{ color: C.text, fontSize: '0.82rem', fontWeight: 700 }}>
                 {item.title}
               </div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.5 }}>
@@ -434,7 +434,7 @@ export function PackageSendPanel({
             }}
           >
             <div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem' }}>
+              <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem' }}>
                 Route readiness
               </div>
               <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 4 }}>
@@ -460,7 +460,7 @@ export function PackageSendPanel({
             boxShadow: SH.card,
           }}
         >
-          <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>
+          <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>
             What great looks like
           </div>
           <div style={{ display: 'grid', gap: 10 }}>
@@ -474,7 +474,7 @@ export function PackageSendPanel({
                   background: C.elevated,
                 }}
               >
-                <div style={{ color: '#fff', fontSize: '0.84rem', fontWeight: 700 }}>
+                <div style={{ color: C.text, fontSize: '0.84rem', fontWeight: 700 }}>
                   {item.title}
                 </div>
                 <div style={{ color: DS.muted, fontSize: '0.75rem', marginTop: 4 }}>
@@ -493,7 +493,7 @@ export function PackageSendPanel({
             boxShadow: SH.card,
           }}
         >
-          <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', marginBottom: 10 }}>
+          <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem', marginBottom: 10 }}>
             Recent requests
           </div>
           {recentPackages.length > 0 ? (
@@ -519,7 +519,7 @@ export function PackageSendPanel({
                       flexWrap: 'wrap',
                     }}
                   >
-                    <span style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>
+                    <span style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem' }}>
                       {item.from} to {item.to}
                     </span>
                     <span style={{ ...pill(item.matchedRideId ? DS.green : DS.gold) }}>
