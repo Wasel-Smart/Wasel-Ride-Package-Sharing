@@ -16,9 +16,9 @@
     "sourceMap": true
   },
   "include": [
-    "services/**/*",
+    "services/**/*production.ts",
+    "services/runtime/**/*",
     "../src/domain/**/*",
-    "../src/platform/event-broker-redis.ts",
     "../src/platform/event-broker-redis-production.ts",
     "../src/platform/telemetry.ts"
   ],

@@ -5,6 +5,11 @@ import legacy from '@vitejs/plugin-legacy';
 import path from 'path';
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VITE_E2E_LOCAL_AUTH': JSON.stringify(process.env.VITE_E2E_LOCAL_AUTH ?? ''),
+    'import.meta.env.VITE_ENABLE_DEMO_DATA': JSON.stringify(process.env.VITE_ENABLE_DEMO_DATA ?? ''),
+  },
+
   plugins: [
     react(),
 

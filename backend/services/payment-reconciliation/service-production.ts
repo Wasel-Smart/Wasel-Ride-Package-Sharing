@@ -5,8 +5,10 @@
 
 import postgres from 'postgres';
 import Stripe from 'stripe';
+import { fileURLToPath } from 'node:url';
 import type { DomainEventEnvelope } from '../../../src/domain/events';
 import { eventBroker } from '../../../src/platform/event-broker-redis-production';
+import { startRuntimeHealthServer, type RuntimeHealthServer } from '../runtime/http-health';
 
 const sql = postgres(process.env.DATABASE_URL || '', {
   max: 10,
@@ -15,7 +17,6 @@ const sql = postgres(process.env.DATABASE_URL || '', {
 });
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-12-18.acacia',
   maxNetworkRetries: 3,
   timeout: 30000,
 });
@@ -121,9 +122,17 @@ export class PaymentReconciliationService {
   private provider = new PaymentProviderAdapter();
   private unsubscribe?: () => Promise<void>;
   private processing = new Set<string>();
+  private healthServer?: RuntimeHealthServer;
+  private ready = false;
 
   async start(): Promise<void> {
     console.log('[PaymentReconciliation] Starting service...');
+
+    this.healthServer = startRuntimeHealthServer({
+      serviceName: 'payment-reconciliation-service',
+      isReady: () => this.ready,
+      isHealthy: () => this.healthCheck(),
+    });
 
     this.unsubscribe = await eventBroker.subscribe(
       'payments.authorized',
@@ -136,12 +145,17 @@ export class PaymentReconciliationService {
       },
     );
 
+    this.ready = true;
     console.log('[PaymentReconciliation] Service started');
   }
 
   async stop(): Promise<void> {
+    this.ready = false;
     if (this.unsubscribe) {
       await this.unsubscribe();
+    }
+    if (this.healthServer) {
+      await this.healthServer.close();
     }
     await sql.end();
     console.log('[PaymentReconciliation] Service stopped');
@@ -308,7 +322,7 @@ export class PaymentReconciliationService {
   }
 }
 
-if (require.main === module) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const service = new PaymentReconciliationService();
   
   process.on('SIGTERM', async () => {

@@ -25,7 +25,7 @@ import {
 import { ScrollArea } from './ui/scroll-area';
 import { WaselStateCard } from './system/WaselStateCard';
 import { WaselBadge, WaselButton, WaselCard, WaselInput } from '../design-system';
-import { C, R, SH, SPACE, TYPE } from '../utils/wasel-ds';
+import { C, R, SPACE, TYPE } from '../utils/wasel-ds';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useNotifications, type Notification } from '../hooks/useNotifications';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';

@@ -13,7 +13,7 @@ function policyCardStyle(accent: string) {
   return {
     borderRadius: R.xxl,
     border: `1px solid ${accent}24`,
-    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)`,
+    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${C.card}`,
     boxShadow: SH.md,
     padding: SPACE[5],
   } as const;
@@ -220,7 +220,7 @@ export function PrivacyPolicy() {
                   { label: 'Data groups', value: '5', accent: C.cyan },
                   { label: 'User rights', value: '6', accent: C.green },
                   { label: 'Ad resale', value: '0', accent: C.gold },
-                  { label: 'Sensitive storage', value: 'AES-256', accent: '#60A5FA' },
+                  { label: 'Sensitive storage', value: 'AES-256', accent: C.blueLight },
                 ].map(item => (
                   <div
                     key={item.label}
@@ -233,7 +233,7 @@ export function PrivacyPolicy() {
                   >
                     <div
                       style={{
-                        color: '#FFFFFF',
+                        color: C.text,
                         fontSize: TYPE.size.lg,
                         fontWeight: TYPE.weight.ultra,
                         lineHeight: TYPE.lineHeight.tight,
@@ -292,7 +292,7 @@ export function PrivacyPolicy() {
             label="Your control"
             value="6 rights"
             detail="Access, correction, export, deletion, objection, withdrawal."
-            accent="#60A5FA"
+            accent={C.blueLight}
             icon={<Shield size={18} />}
           />
         </div>
@@ -339,7 +339,7 @@ export function PrivacyPolicy() {
                     </span>
                     <div
                       style={{
-                        color: '#FFFFFF',
+                        color: C.text,
                         fontSize: TYPE.size.base,
                         fontWeight: TYPE.weight.black,
                         lineHeight: TYPE.lineHeight.snug,
@@ -355,9 +355,9 @@ export function PrivacyPolicy() {
                         style={{
                           borderRadius: R.xl,
                           border: `1px solid ${C.borderFaint}`,
-                          background: 'rgba(255,255,255,0.03)',
+                          background: C.elevated,
                           padding: `${SPACE[3]} ${SPACE[4]}`,
-                          color: '#FFFFFF',
+                          color: C.text,
                           fontSize: TYPE.size.sm,
                           lineHeight: TYPE.lineHeight.relaxed,
                         }}
@@ -396,7 +396,7 @@ export function PrivacyPolicy() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
                   <Mail size={18} color={C.cyan} />
                   <div>
-                    <div style={{ color: '#FFFFFF', fontWeight: TYPE.weight.black }}>
+                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
                       {t.contact.email}
                     </div>
                     <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>Email</div>
@@ -414,10 +414,12 @@ export function PrivacyPolicy() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
                   <Phone size={18} color={C.green} />
                   <div>
-                    <div style={{ color: '#FFFFFF', fontWeight: TYPE.weight.black }}>
+                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
                       {t.contact.phone}
                     </div>
-                    <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>{t.contact.address}</div>
+                    <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>
+                      {t.contact.address}
+                    </div>
                   </div>
                 </div>
               </a>
@@ -434,7 +436,7 @@ export function PrivacyPolicy() {
                 <div key={item} style={policyCardStyle(C.green)}>
                   <div
                     style={{
-                      color: '#FFFFFF',
+                      color: C.text,
                       fontSize: TYPE.size.sm,
                       lineHeight: TYPE.lineHeight.relaxed,
                     }}

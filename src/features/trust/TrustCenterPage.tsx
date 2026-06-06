@@ -143,8 +143,8 @@ function FormField({
         padding: '0 12px',
         borderRadius: R.md,
         border: `1px solid ${C.border}`,
-        background: 'rgba(255,255,255,0.04)',
-        color: '#EFF6FF',
+        background: C.elevated,
+        color: C.text,
         fontFamily: F,
         outline: 'none',
         boxShadow: SH.none,
@@ -178,7 +178,7 @@ function StepCard({
         padding: SPACE[4],
         borderRadius: 20,
         border: `1px solid ${accent}24`,
-        background: `radial-gradient(circle at top left, ${accent}12, transparent 32%), rgba(255,255,255,0.03)`,
+        background: `radial-gradient(circle at top left, ${accent}12, transparent 32%), ${C.elevated}`,
       }}
     >
       <div
@@ -196,7 +196,7 @@ function StepCard({
               display: 'flex',
               alignItems: 'center',
               gap: 10,
-              color: '#EFF6FF',
+              color: C.text,
               fontWeight: TYPE.weight.bold,
               fontFamily: F,
             }}
@@ -204,11 +204,16 @@ function StepCard({
             {icon}
             <span>{title}</span>
           </div>
-          <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.6 }}>
+          <div
+            style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.6 }}
+          >
             {subtitle}
           </div>
         </div>
-        <StatusBadge label={getStepBadge(state, false).label} accent={getStepBadge(state, false).accent} />
+        <StatusBadge
+          label={getStepBadge(state, false).label}
+          accent={getStepBadge(state, false).accent}
+        />
       </div>
       {children}
       {footer}
@@ -260,12 +265,7 @@ export default function TrustCenterPage() {
       setIdentityDocumentReference(documentReference);
     }
     if (existingLicense && !licenseNumber) setLicenseNumber(existingLicense);
-  }, [
-    effectiveStatus,
-    identityDocumentReference,
-    identityReference,
-    licenseNumber,
-  ]);
+  }, [effectiveStatus, identityDocumentReference, identityReference, licenseNumber]);
 
   const reloadTrustStatus = async (silent = false) => {
     if (!user) return;
@@ -324,24 +324,22 @@ export default function TrustCenterPage() {
           : walletStep?.meta.walletStatus === 'unavailable'
             ? { label: ar ? 'غير متاحة' : 'Unavailable', color: C.error }
             : { label: ar ? 'نشطة' : 'Active', color: C.green };
-  const heroAccent =
-    effectiveStatus?.blockedSteps.length
-      ? C.error
-      : effectiveStatus?.nextStepId
-        ? C.gold
-        : C.green;
-  const heroLabel =
-    effectiveStatus?.blockedSteps.length
+  const heroAccent = effectiveStatus?.blockedSteps.length
+    ? C.error
+    : effectiveStatus?.nextStepId
+      ? C.gold
+      : C.green;
+  const heroLabel = effectiveStatus?.blockedSteps.length
+    ? ar
+      ? 'تحتاج متابعة'
+      : 'Needs review'
+    : effectiveStatus?.nextStepId
       ? ar
-        ? 'تحتاج متابعة'
-        : 'Needs review'
-      : effectiveStatus?.nextStepId
-        ? ar
-          ? 'إجراء مطلوب'
-          : 'Action needed'
-        : ar
-          ? 'جاهز'
-          : 'Ready';
+        ? 'إجراء مطلوب'
+        : 'Action needed'
+      : ar
+        ? 'جاهز'
+        : 'Ready';
 
   const runAction = async (key: string, work: () => Promise<void>) => {
     setActionKey(key);
@@ -471,7 +469,11 @@ export default function TrustCenterPage() {
         <PageHero
           eyebrow={ar ? 'مركز الثقة' : 'Trust Center'}
           icon={<StatusBadge label={heroLabel} accent={heroAccent} />}
-          title={ar ? 'كل خطوة يجب أن تنتهي بحالة واضحة' : 'Every trust check should end in a clear state'}
+          title={
+            ar
+              ? 'كل خطوة يجب أن تنتهي بحالة واضحة'
+              : 'Every trust check should end in a clear state'
+          }
           description={
             effectiveStatus
               ? effectiveStatus.nextStepId
@@ -522,7 +524,14 @@ export default function TrustCenterPage() {
           }
           aside={
             <div style={{ display: 'grid', gap: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                  flexWrap: 'wrap',
+                }}
+              >
                 <StatusBadge
                   label={
                     effectiveStatus
@@ -536,7 +545,7 @@ export default function TrustCenterPage() {
                   accent={C.green}
                 />
               </div>
-              <div style={{ color: '#FFFFFF', fontSize: '1.8rem', fontWeight: 900 }}>
+              <div style={{ color: C.text, fontSize: '1.8rem', fontWeight: 900 }}>
                 {user.trustScore}/100
               </div>
               <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7 }}>
@@ -621,7 +630,7 @@ export default function TrustCenterPage() {
                 padding: SPACE[4],
                 borderRadius: 20,
                 border: `1px solid ${heroAccent}24`,
-                background: `radial-gradient(circle at top left, ${heroAccent}12, transparent 36%), rgba(255,255,255,0.03)`,
+                background: `radial-gradient(circle at top left, ${heroAccent}12, transparent 36%), ${C.elevated}`,
               }}
             >
               <div
@@ -638,7 +647,7 @@ export default function TrustCenterPage() {
               </div>
               <div
                 style={{
-                  color: '#FFFFFF',
+                  color: C.text,
                   fontSize: TYPE.size.xl,
                   fontWeight: TYPE.weight.ultra,
                   fontFamily: F,
@@ -646,7 +655,14 @@ export default function TrustCenterPage() {
               >
                 {getTrustStepTitle(effectiveStatus?.nextStepId ?? null, ar)}
               </div>
-              <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7, fontFamily: F }}>
+              <div
+                style={{
+                  color: C.textMuted,
+                  fontSize: TYPE.size.sm,
+                  lineHeight: 1.7,
+                  fontFamily: F,
+                }}
+              >
                 {getNextTrustStepDetail(effectiveStatus ?? null, ar)}
               </div>
               {effectiveStatus?.blockedSteps.length ? (
@@ -656,7 +672,7 @@ export default function TrustCenterPage() {
                     padding: '12px 14px',
                     border: `1px solid ${C.error}26`,
                     background: `${C.error}12`,
-                    color: '#FECACA',
+                    color: C.error,
                     fontSize: TYPE.size.sm,
                     lineHeight: 1.65,
                     fontFamily: F,
@@ -676,7 +692,7 @@ export default function TrustCenterPage() {
                 padding: SPACE[4],
                 borderRadius: 20,
                 border: `1px solid ${C.border}`,
-                background: 'rgba(255,255,255,0.03)',
+                background: C.elevated,
               }}
             >
               <div
@@ -703,15 +719,27 @@ export default function TrustCenterPage() {
                       borderRadius: 14,
                       border: `1px solid ${C.border}`,
                       padding: '10px 12px',
-                      background: 'rgba(255,255,255,0.02)',
+                      background: C.card2,
                     }}
                   >
-                    <span style={{ color: '#FFFFFF', fontSize: TYPE.size.sm, fontFamily: F }}>{item.title}</span>
-                    <StatusBadge label={ar ? 'بانتظار الخطوة' : 'Waiting on next step'} accent={heroAccent} />
+                    <span style={{ color: C.text, fontSize: TYPE.size.sm, fontFamily: F }}>
+                      {item.title}
+                    </span>
+                    <StatusBadge
+                      label={ar ? 'بانتظار الخطوة' : 'Waiting on next step'}
+                      accent={heroAccent}
+                    />
                   </div>
                 ))
               ) : (
-                <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7, fontFamily: F }}>
+                <div
+                  style={{
+                    color: C.textMuted,
+                    fontSize: TYPE.size.sm,
+                    lineHeight: 1.7,
+                    fontFamily: F,
+                  }}
+                >
                   {ar
                     ? 'لا توجد قدرة أساسية مقفلة الآن. استخدم هذه الصفحة للمراجعة الدورية فقط.'
                     : 'No core capability is currently gated. Use this page for periodic review only.'}
@@ -740,7 +768,12 @@ export default function TrustCenterPage() {
                     'Submit Sanad verification to continue.'
                   }
                   state={effectiveStatus?.steps.identity.state ?? 'not_started'}
-                  icon={<Shield size={16} color={getPanelAccent(effectiveStatus?.steps.identity.state ?? 'not_started')} />}
+                  icon={
+                    <Shield
+                      size={16}
+                      color={getPanelAccent(effectiveStatus?.steps.identity.state ?? 'not_started')}
+                    />
+                  }
                   footer={
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                       <Button
@@ -785,7 +818,7 @@ export default function TrustCenterPage() {
                           border: `1px solid ${C.error}33`,
                           background: `${C.error}12`,
                           padding: '12px 14px',
-                          color: '#FECACA',
+                          color: C.error,
                           fontSize: TYPE.size.sm,
                           fontFamily: F,
                           lineHeight: 1.6,
@@ -850,22 +883,42 @@ export default function TrustCenterPage() {
                         padding: SPACE[4],
                         borderRadius: 16,
                         border: `1px solid ${getPanelAccent(effectiveStatus?.steps.email.state ?? 'not_started')}24`,
-                        background: 'rgba(255,255,255,0.02)',
+                        background: C.card2,
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                        <div style={{ color: '#EFF6FF', fontWeight: TYPE.weight.bold, fontFamily: F }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          gap: 10,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div style={{ color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F }}>
                           {ar ? 'تأكيد البريد' : 'Email confirmation'}
                         </div>
                         <StatusBadge
-                          label={getStepBadge(effectiveStatus?.steps.email.state ?? 'not_started', ar).label}
-                          accent={getStepBadge(effectiveStatus?.steps.email.state ?? 'not_started', ar).accent}
+                          label={
+                            getStepBadge(effectiveStatus?.steps.email.state ?? 'not_started', ar)
+                              .label
+                          }
+                          accent={
+                            getStepBadge(effectiveStatus?.steps.email.state ?? 'not_started', ar)
+                              .accent
+                          }
                         />
                       </div>
-                      <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.6 }}>
+                      <div
+                        style={{
+                          color: C.textMuted,
+                          fontSize: TYPE.size.sm,
+                          fontFamily: F,
+                          lineHeight: 1.6,
+                        }}
+                      >
                         {effectiveStatus?.steps.email.detail}
                       </div>
-                      <div style={{ color: '#EFF6FF', fontSize: TYPE.size.sm, fontFamily: F }}>
+                      <div style={{ color: C.text, fontSize: TYPE.size.sm, fontFamily: F }}>
                         {user.email || effectiveStatus?.steps.email.meta.email || 'No email'}
                       </div>
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -873,7 +926,10 @@ export default function TrustCenterPage() {
                           onClick={() => {
                             void handleResendEmail();
                           }}
-                          disabled={actionKey === 'email' || effectiveStatus?.steps.email.state === 'completed'}
+                          disabled={
+                            actionKey === 'email' ||
+                            effectiveStatus?.steps.email.state === 'completed'
+                          }
                           className="bg-primary text-primary-foreground hover:bg-primary/90"
                         >
                           {actionKey === 'email'
@@ -898,19 +954,39 @@ export default function TrustCenterPage() {
                         padding: SPACE[4],
                         borderRadius: 16,
                         border: `1px solid ${getPanelAccent(effectiveStatus?.steps.phone.state ?? 'not_started')}24`,
-                        background: 'rgba(255,255,255,0.02)',
+                        background: C.card2,
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-                        <div style={{ color: '#EFF6FF', fontWeight: TYPE.weight.bold, fontFamily: F }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          gap: 10,
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <div style={{ color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F }}>
                           {ar ? 'تأكيد الهاتف' : 'Phone confirmation'}
                         </div>
                         <StatusBadge
-                          label={getStepBadge(effectiveStatus?.steps.phone.state ?? 'not_started', ar).label}
-                          accent={getStepBadge(effectiveStatus?.steps.phone.state ?? 'not_started', ar).accent}
+                          label={
+                            getStepBadge(effectiveStatus?.steps.phone.state ?? 'not_started', ar)
+                              .label
+                          }
+                          accent={
+                            getStepBadge(effectiveStatus?.steps.phone.state ?? 'not_started', ar)
+                              .accent
+                          }
                         />
                       </div>
-                      <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.6 }}>
+                      <div
+                        style={{
+                          color: C.textMuted,
+                          fontSize: TYPE.size.sm,
+                          fontFamily: F,
+                          lineHeight: 1.6,
+                        }}
+                      >
                         {effectiveStatus?.steps.phone.detail}
                       </div>
                       {effectiveStatus?.steps.phone.failureReason ? (
@@ -920,7 +996,7 @@ export default function TrustCenterPage() {
                             border: `1px solid ${C.error}33`,
                             background: `${C.error}12`,
                             padding: '12px 14px',
-                            color: '#FECACA',
+                            color: C.error,
                             fontSize: TYPE.size.sm,
                             fontFamily: F,
                             lineHeight: 1.6,
@@ -980,7 +1056,9 @@ export default function TrustCenterPage() {
                                 : 'Confirm phone'}
                           </Button>
                           {formatTimestamp(effectiveStatus?.steps.phone.meta.expiresAt) ? (
-                            <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
+                            <div
+                              style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}
+                            >
                               {ar ? 'ينتهي الكود:' : 'Code expires:'}{' '}
                               {formatTimestamp(effectiveStatus?.steps.phone.meta.expiresAt)}
                             </div>
@@ -1000,7 +1078,14 @@ export default function TrustCenterPage() {
                     'Submit driver license and compliance documents.'
                   }
                   state={effectiveStatus?.steps.driverDocuments.state ?? 'not_started'}
-                  icon={<FileCheck size={16} color={getPanelAccent(effectiveStatus?.steps.driverDocuments.state ?? 'not_started')} />}
+                  icon={
+                    <FileCheck
+                      size={16}
+                      color={getPanelAccent(
+                        effectiveStatus?.steps.driverDocuments.state ?? 'not_started',
+                      )}
+                    />
+                  }
                 >
                   <div style={{ display: 'grid', gap: 10 }}>
                     {effectiveStatus?.steps.driverDocuments.failureReason ? (
@@ -1010,7 +1095,7 @@ export default function TrustCenterPage() {
                           border: `1px solid ${C.error}33`,
                           background: `${C.error}12`,
                           padding: '12px 14px',
-                          color: '#FECACA',
+                          color: C.error,
                           fontSize: TYPE.size.sm,
                           fontFamily: F,
                           lineHeight: 1.6,
@@ -1047,7 +1132,9 @@ export default function TrustCenterPage() {
                         <FormField
                           value={driverDocumentReference}
                           onChange={setDriverDocumentReference}
-                          placeholder={ar ? 'مرجع المستند (اختياري)' : 'Document reference (optional)'}
+                          placeholder={
+                            ar ? 'مرجع المستند (اختياري)' : 'Document reference (optional)'
+                          }
                         />
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                           <Button
@@ -1088,9 +1175,18 @@ export default function TrustCenterPage() {
               <div ref={walletRef}>
                 <StepCard
                   title={ar ? 'سلامة المحفظة' : 'Wallet standing'}
-                  subtitle={effectiveStatus?.steps.walletStanding.detail ?? 'Wallet status unavailable.'}
+                  subtitle={
+                    effectiveStatus?.steps.walletStanding.detail ?? 'Wallet status unavailable.'
+                  }
                   state={effectiveStatus?.steps.walletStanding.state ?? 'failed'}
-                  icon={<Wallet size={16} color={getPanelAccent(effectiveStatus?.steps.walletStanding.state ?? 'failed')} />}
+                  icon={
+                    <Wallet
+                      size={16}
+                      color={getPanelAccent(
+                        effectiveStatus?.steps.walletStanding.state ?? 'failed',
+                      )}
+                    />
+                  }
                   footer={
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                       <Button
@@ -1116,7 +1212,7 @@ export default function TrustCenterPage() {
                         border: `1px solid ${C.error}33`,
                         background: `${C.error}12`,
                         padding: '12px 14px',
-                        color: '#FECACA',
+                        color: C.error,
                         fontSize: TYPE.size.sm,
                         fontFamily: F,
                         lineHeight: 1.6,
@@ -1152,20 +1248,29 @@ export default function TrustCenterPage() {
                   padding: `${SPACE[4]} ${SPACE[4]}`,
                   borderRadius: 16,
                   border: `1px solid ${item.gate.allowed ? C.green : C.gold}24`,
-                  background: 'rgba(255,255,255,0.03)',
+                  background: C.elevated,
                   flexWrap: 'wrap',
                 }}
               >
                 <div style={{ display: 'grid', gap: 6, minWidth: 0 }}>
-                  <div style={{ color: '#EFF6FF', fontWeight: TYPE.weight.bold, fontFamily: F }}>
+                  <div style={{ color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F }}>
                     {item.title}
                   </div>
-                  <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.6 }}>
+                  <div
+                    style={{
+                      color: C.textMuted,
+                      fontSize: TYPE.size.sm,
+                      fontFamily: F,
+                      lineHeight: 1.6,
+                    }}
+                  >
                     {item.gate.allowed
                       ? ar
                         ? 'الشرط مكتمل ويمكن تنفيذ الإجراء الآن.'
                         : 'This action is available right now.'
-                      : item.gate.reason ?? item.gate.recommendation ?? (ar ? 'خطوة إضافية مطلوبة.' : 'One more step is required.')}
+                      : (item.gate.reason ??
+                        item.gate.recommendation ??
+                        (ar ? 'خطوة إضافية مطلوبة.' : 'One more step is required.'))}
                   </div>
                 </div>
                 <StatusBadge

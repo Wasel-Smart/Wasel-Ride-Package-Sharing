@@ -1,21 +1,16 @@
 FROM node:20-alpine AS builder
 
-WORKDIR /app
+WORKDIR /workspace
 
-# Copy backend workspace
-COPY backend/package*.json ./
-RUN npm ci --only=production
+COPY backend/package*.json ./backend/
+RUN cd backend && npm ci
 
-# Copy service code and dependencies
-COPY backend/services/ride-matching/ ./services/ride-matching/
-COPY src/domain/ ./src/domain/
+COPY backend ./backend
+COPY src/domain ./src/domain
 COPY src/platform/event-broker-redis-production.ts ./src/platform/event-broker-redis-production.ts
 COPY src/platform/telemetry.ts ./src/platform/telemetry.ts
-COPY backend/tsconfig.json ./
 
-# Build
-RUN npm install -g typescript
-RUN tsc --project ./tsconfig.json
+RUN cd backend && npm run build
 
 # Production image
 FROM node:20-alpine
@@ -23,12 +18,12 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy built artifacts
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /workspace/backend/dist ./dist
+COPY --from=builder /workspace/backend/node_modules ./node_modules
 
 # Health check
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD node -e "require('http').get('http://localhost:8080/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
-CMD ["node", "dist/services/ride-matching/service-production.js"]
+CMD ["node", "dist/backend/services/ride-matching/service-production.js"]

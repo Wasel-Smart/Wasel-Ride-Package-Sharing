@@ -1,11 +1,4 @@
-import {
-  AlertTriangle,
-  Headphones,
-  Shield,
-  ShieldCheck,
-  Siren,
-  UserCheck,
-} from 'lucide-react';
+import { AlertTriangle, Headphones, Shield, ShieldCheck, Siren, UserCheck } from 'lucide-react';
 import {
   MetricCard,
   PageHero,
@@ -17,10 +10,10 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { Protected } from '../../pages/waselServiceShared';
 import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 
-const GREEN = '#22C55E';
-const CYAN = '#00C8E8';
-const GOLD = '#F59E0B';
-const RED = '#EF4444';
+const GREEN = C.green;
+const CYAN = C.cyan;
+const GOLD = C.gold;
+const RED = C.error;
 
 const SAFETY_STACK = [
   {
@@ -82,7 +75,7 @@ function stackCardStyle(accent: string) {
   return {
     borderRadius: R.xxl,
     border: `1px solid ${accent}24`,
-    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)`,
+    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${C.card}`,
     boxShadow: SH.md,
     padding: SPACE[5],
   } as const;
@@ -129,7 +122,7 @@ export default function SafetyPage() {
                     >
                       <div
                         style={{
-                          color: '#FFFFFF',
+                          color: C.text,
                           fontSize: TYPE.size.xl,
                           fontWeight: TYPE.weight.ultra,
                           lineHeight: TYPE.lineHeight.tight,
@@ -245,7 +238,7 @@ export default function SafetyPage() {
                     </div>
                     <div
                       style={{
-                        color: '#FFFFFF',
+                        color: C.text,
                         fontSize: TYPE.size.lg,
                         fontWeight: TYPE.weight.black,
                         letterSpacing: TYPE.letterSpacing.tight,
@@ -304,7 +297,7 @@ export default function SafetyPage() {
                     </div>
                     <div
                       style={{
-                        color: '#FFFFFF',
+                        color: C.text,
                         fontSize: TYPE.size.base,
                         fontWeight: TYPE.weight.black,
                       }}
@@ -337,7 +330,7 @@ export default function SafetyPage() {
                 >
                   <div
                     style={{
-                      color: '#FFFFFF',
+                      color: C.text,
                       fontSize: TYPE.size.lg,
                       fontWeight: TYPE.weight.black,
                     }}
@@ -367,9 +360,9 @@ export default function SafetyPage() {
                       style={{
                         borderRadius: R.xl,
                         border: `1px solid ${C.borderFaint}`,
-                        background: 'rgba(255,255,255,0.03)',
+                        background: C.elevated,
                         padding: `${SPACE[3]} ${SPACE[4]}`,
-                        color: '#FFFFFF',
+                        color: C.text,
                         fontSize: TYPE.size.sm,
                         lineHeight: TYPE.lineHeight.relaxed,
                       }}
@@ -400,8 +393,7 @@ export default function SafetyPage() {
                   style={{
                     borderRadius: R.xxl,
                     border: `1px solid ${C.border}`,
-                    background:
-                      'linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)',
+                    background: C.card,
                     boxShadow: SH.md,
                     padding: SPACE[5],
                   }}
@@ -420,7 +412,7 @@ export default function SafetyPage() {
                   </div>
                   <div
                     style={{
-                      color: '#FFFFFF',
+                      color: C.text,
                       fontSize: TYPE.size.sm,
                       lineHeight: TYPE.lineHeight.relaxed,
                     }}

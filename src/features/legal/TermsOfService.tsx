@@ -13,7 +13,7 @@ function termsCardStyle(accent: string) {
   return {
     borderRadius: R.xxl,
     border: `1px solid ${accent}24`,
-    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), linear-gradient(145deg, rgba(16,37,58,0.92) 0%, rgba(11,29,45,0.94) 100%)`,
+    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${C.card}`,
     boxShadow: SH.md,
     padding: SPACE[5],
   } as const;
@@ -233,10 +233,10 @@ export function TermsOfService() {
           icon={<Scale size={18} />}
           title={t.title}
           description={t.intro}
-          accent="#60A5FA"
+          accent={C.blueLight}
           aside={
             <div style={{ display: 'grid', gap: SPACE[3] }}>
-              <StatusBadge label={t.subtitle} accent="#60A5FA" />
+              <StatusBadge label={t.subtitle} accent={C.blueLight} />
               <div
                 style={{
                   display: 'grid',
@@ -245,7 +245,7 @@ export function TermsOfService() {
                 }}
               >
                 {[
-                  { label: 'Minimum age', value: '18+', accent: '#60A5FA' },
+                  { label: 'Minimum age', value: '18+', accent: C.blueLight },
                   { label: 'Seat fee', value: '12%', accent: C.green },
                   { label: 'Package fee', value: '20%', accent: C.gold },
                   { label: 'Claims window', value: '30 days', accent: C.error },
@@ -261,7 +261,7 @@ export function TermsOfService() {
                   >
                     <div
                       style={{
-                        color: '#FFFFFF',
+                        color: C.text,
                         fontSize: TYPE.size.lg,
                         fontWeight: TYPE.weight.ultra,
                         lineHeight: TYPE.lineHeight.tight,
@@ -299,7 +299,7 @@ export function TermsOfService() {
             label="Eligibility"
             value="18+"
             detail="Drivers also need a valid license, insurance, and verification."
-            accent="#60A5FA"
+            accent={C.blueLight}
             icon={<Users size={18} />}
           />
           <MetricCard
@@ -328,7 +328,7 @@ export function TermsOfService() {
         <SectionCard
           title="Terms Overview"
           subtitle="Structured cards make the rules easier to scan and understand."
-          icon={<Scale size={18} color="#60A5FA" />}
+          icon={<Scale size={18} color={C.blueLight} />}
         >
           <div
             style={{
@@ -340,7 +340,7 @@ export function TermsOfService() {
             {t.sections.map(section => {
               const Icon = section.icon;
               return (
-                <div key={section.title} style={termsCardStyle('#60A5FA')}>
+                <div key={section.title} style={termsCardStyle(C.blueLight)}>
                   <div
                     style={{
                       display: 'flex',
@@ -357,9 +357,9 @@ export function TermsOfService() {
                         width: 40,
                         height: 40,
                         borderRadius: R.lg,
-                        background: 'rgba(96,165,250,0.18)',
-                        border: '1px solid rgba(96,165,250,0.28)',
-                        color: '#60A5FA',
+                        background: C.blueDim,
+                        border: `1px solid ${C.blueDim}`,
+                        color: C.blueLight,
                         flexShrink: 0,
                       }}
                     >
@@ -367,7 +367,7 @@ export function TermsOfService() {
                     </span>
                     <div
                       style={{
-                        color: '#FFFFFF',
+                        color: C.text,
                         fontSize: TYPE.size.base,
                         fontWeight: TYPE.weight.black,
                         lineHeight: TYPE.lineHeight.snug,
@@ -383,9 +383,9 @@ export function TermsOfService() {
                         style={{
                           borderRadius: R.xl,
                           border: `1px solid ${C.borderFaint}`,
-                          background: 'rgba(255,255,255,0.03)',
+                          background: C.elevated,
                           padding: `${SPACE[3]} ${SPACE[4]}`,
-                          color: '#FFFFFF',
+                          color: C.text,
                           fontSize: TYPE.size.sm,
                           lineHeight: TYPE.lineHeight.relaxed,
                         }}
@@ -417,7 +417,7 @@ export function TermsOfService() {
                 <div key={item} style={termsCardStyle(C.error)}>
                   <div
                     style={{
-                      color: '#FFFFFF',
+                      color: C.text,
                       fontSize: TYPE.size.sm,
                       lineHeight: TYPE.lineHeight.relaxed,
                     }}
@@ -437,7 +437,7 @@ export function TermsOfService() {
             <div style={termsCardStyle(C.gold)}>
               <div
                 style={{
-                  color: '#FFFFFF',
+                  color: C.text,
                   fontSize: TYPE.size.base,
                   lineHeight: TYPE.lineHeight.relaxed,
                 }}

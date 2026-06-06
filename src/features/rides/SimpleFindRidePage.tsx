@@ -4,6 +4,7 @@ import { ArrowRight, MapPin, Clock, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { C, GRAD, GRAD_HERO } from '../../utils/wasel-ds';
 
 // Simple ride data - no complex objects
 interface SimpleRide {
@@ -100,8 +101,8 @@ export function SimpleFindRidePage() {
   return (
     <div style={{
       minHeight: 'var(--app-min-height)',
-      background: 'linear-gradient(135deg, #0B1D2D 0%, #051218 100%)',
-      color: '#fff',
+      background: GRAD_HERO,
+      color: C.text,
       padding: '20px',
       fontFamily: 'Inter, system-ui, sans-serif'
     }}>
@@ -116,7 +117,7 @@ export function SimpleFindRidePage() {
           style={{
             background: 'none',
             border: 'none',
-            color: '#94A3B8',
+            color: C.textMuted,
             fontSize: '0.9rem',
             cursor: 'pointer',
             marginBottom: '20px'
@@ -129,12 +130,12 @@ export function SimpleFindRidePage() {
           fontSize: '2rem',
           fontWeight: '900',
           margin: '0 0 8px',
-          color: '#fff'
+          color: C.text
         }}>
           {ar ? 'ابحث عن رحلة' : 'Find a Ride'}
         </h1>
         <p style={{
-          color: '#94A3B8',
+          color: C.textMuted,
           margin: 0,
           fontSize: '1rem'
         }}>
@@ -147,10 +148,10 @@ export function SimpleFindRidePage() {
         maxWidth: '600px',
         margin: '0 auto',
         marginBottom: '30px',
-        background: 'rgba(255,255,255,0.05)',
+        background: C.card,
         borderRadius: '20px',
         padding: '24px',
-        border: '1px solid rgba(255,255,255,0.1)'
+        border: `1px solid ${C.border}`
       }}>
         <div style={{
           display: 'grid',
@@ -162,7 +163,7 @@ export function SimpleFindRidePage() {
           <div>
             <label style={{
               display: 'block',
-              color: '#94A3B8',
+              color: C.textMuted,
               fontSize: '0.9rem',
               marginBottom: '8px'
             }}>
@@ -172,10 +173,10 @@ export function SimpleFindRidePage() {
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
-              background: 'rgba(255,255,255,0.1)',
+              background: C.elevated,
               borderRadius: '12px',
               padding: '12px 16px',
-              border: '1px solid rgba(255,255,255,0.2)'
+              border: `1px solid ${C.borderHov}`
             }}>
               <MapPin size={18} color="#10B981" />
               <select
@@ -184,14 +185,14 @@ export function SimpleFindRidePage() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#fff',
+                  color: C.text,
                   fontSize: '1rem',
                   flex: 1,
                   outline: 'none'
                 }}
               >
                 {CITIES.map(city => (
-                  <option key={city} value={city} style={{ background: '#1E293B' }}>
+                  <option key={city} value={city} style={{ background: C.card2 }}>
                     {city}
                   </option>
                 ))}
@@ -203,7 +204,7 @@ export function SimpleFindRidePage() {
           <div>
             <label style={{
               display: 'block',
-              color: '#94A3B8',
+              color: C.textMuted,
               fontSize: '0.9rem',
               marginBottom: '8px'
             }}>
@@ -213,10 +214,10 @@ export function SimpleFindRidePage() {
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
-              background: 'rgba(255,255,255,0.1)',
+              background: C.elevated,
               borderRadius: '12px',
               padding: '12px 16px',
-              border: '1px solid rgba(255,255,255,0.2)'
+              border: `1px solid ${C.borderHov}`
             }}>
               <MapPin size={18} color="#00C8E8" />
               <select
@@ -225,14 +226,14 @@ export function SimpleFindRidePage() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#fff',
+                  color: C.text,
                   fontSize: '1rem',
                   flex: 1,
                   outline: 'none'
                 }}
               >
                 {CITIES.map(city => (
-                  <option key={city} value={city} style={{ background: '#1E293B' }}>
+                  <option key={city} value={city} style={{ background: C.card2 }}>
                     {city}
                   </option>
                 ))}
@@ -247,11 +248,11 @@ export function SimpleFindRidePage() {
           disabled={loading}
           style={{
             width: '100%',
-            background: 'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)',
+            background: GRAD,
             border: 'none',
             borderRadius: '12px',
             padding: '16px',
-            color: '#fff',
+            color: C.text,
             fontSize: '1rem',
             fontWeight: '800',
             cursor: loading ? 'not-allowed' : 'pointer',
@@ -283,7 +284,7 @@ export function SimpleFindRidePage() {
             fontSize: '1.3rem',
             fontWeight: '800',
             marginBottom: '20px',
-            color: '#fff'
+            color: C.text
           }}>
             {rides.length} {ar ? 'رحلة متاحة' : 'rides available'}
           </h2>
@@ -293,15 +294,15 @@ export function SimpleFindRidePage() {
           <div style={{
             textAlign: 'center',
             padding: '60px 20px',
-            background: 'rgba(255,255,255,0.05)',
+            background: C.card,
             borderRadius: '20px',
-            border: '1px solid rgba(255,255,255,0.1)'
+            border: `1px solid ${C.border}`
           }}>
             <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🚗</div>
-            <h3 style={{ color: '#fff', marginBottom: '8px' }}>
+            <h3 style={{ color: C.text, marginBottom: '8px' }}>
               {ar ? 'لا توجد رحلات' : 'No rides found'}
             </h3>
-            <p style={{ color: '#94A3B8', margin: 0 }}>
+            <p style={{ color: C.textMuted, margin: 0 }}>
               {ar ? 'جرب مسار آخر أو وقت مختلف' : 'Try a different route or time'}
             </p>
           </div>
@@ -316,11 +317,11 @@ export function SimpleFindRidePage() {
               onMouseLeave={() => setSelectedRide(null)}
               style={{
                 background: selectedRide === ride.id 
-                  ? 'rgba(0,200,232,0.1)' 
-                  : 'rgba(255,255,255,0.05)',
+                  ? C.cyanDim 
+                  : C.card,
                 border: selectedRide === ride.id
-                  ? '1px solid rgba(0,200,232,0.3)'
-                  : '1px solid rgba(255,255,255,0.1)',
+                  ? `1px solid ${C.cyanGlow}`
+                  : `1px solid ${C.border}`,
                 borderRadius: '16px',
                 padding: '20px',
                 transition: 'all 0.2s ease'
@@ -336,13 +337,13 @@ export function SimpleFindRidePage() {
                   <div style={{
                     fontSize: '1.1rem',
                     fontWeight: '800',
-                    color: '#fff',
+                    color: C.text,
                     marginBottom: '4px'
                   }}>
                     {ride.from} → {ride.to}
                   </div>
                   <div style={{
-                    color: '#94A3B8',
+                    color: C.textMuted,
                     fontSize: '0.9rem'
                   }}>
                     {ar ? 'السائق:' : 'Driver:'} {ride.driver}
@@ -352,7 +353,7 @@ export function SimpleFindRidePage() {
                 <div style={{
                   fontSize: '1.3rem',
                   fontWeight: '900',
-                  color: '#10B981'
+                  color: C.green
                 }}>
                   {ride.price} JOD
                 </div>
@@ -374,7 +375,7 @@ export function SimpleFindRidePage() {
                     gap: '6px'
                   }}>
                     <Clock size={16} color="#94A3B8" />
-                    <span style={{ color: '#94A3B8', fontSize: '0.9rem' }}>
+                    <span style={{ color: C.textMuted, fontSize: '0.9rem' }}>
                       {ride.time}
                     </span>
                   </div>
@@ -385,7 +386,7 @@ export function SimpleFindRidePage() {
                     gap: '6px'
                   }}>
                     <Users size={16} color="#94A3B8" />
-                    <span style={{ color: '#94A3B8', fontSize: '0.9rem' }}>
+                    <span style={{ color: C.textMuted, fontSize: '0.9rem' }}>
                       {ride.seats} {ar ? 'مقاعد' : 'seats'}
                     </span>
                   </div>
@@ -394,11 +395,11 @@ export function SimpleFindRidePage() {
                 <button
                   onClick={() => handleBook(ride)}
                   style={{
-                    background: 'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)',
+                    background: GRAD,
                     border: 'none',
                     borderRadius: '12px',
                     padding: '10px 20px',
-                    color: '#fff',
+                    color: C.text,
                     fontSize: '0.9rem',
                     fontWeight: '700',
                     cursor: 'pointer',
@@ -420,3 +421,4 @@ export function SimpleFindRidePage() {
 }
 
 export default SimpleFindRidePage;
+

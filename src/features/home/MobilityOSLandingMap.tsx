@@ -142,6 +142,43 @@ function withAlpha(hex: string, alpha: number) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
+const MAP_LAYER = {
+  focus: C.gold,
+  focusGhost: withAlpha(C.gold, 0.58),
+  panelStart: C.bgDeep,
+  panelEnd: C.bg,
+  transparent: withAlpha(C.text, 0),
+  innerGlow: withAlpha(C.cyan, 0.18),
+  land: withAlpha(C.green, 0.22),
+  landEdge: withAlpha(C.cyan, 0.18),
+  radarCore: withAlpha(C.cyan, 0.42),
+  radarShell: withAlpha(C.bg, 0.96),
+  radarStroke: withAlpha(C.text, 0.08),
+  radarSweep: withAlpha(C.cyan, 0.32),
+  radarBlip: withAlpha(C.text, 0.96),
+  hubGlow: withAlpha(C.green, 0.18),
+  topoBase: C.blueLight,
+  topoGrid: withAlpha(C.blueLight, 0.06),
+  corridorRail: withAlpha(C.cyan, 0.08),
+  corridorRailDim: withAlpha(C.cyan, 0.06),
+  routeHalo: withAlpha(C.text, 0.02),
+  routeBorder: withAlpha(C.cyan, 0.14),
+  routeLabelActive: withAlpha(C.overlay, 0.22),
+  routeLabel: withAlpha(C.overlay, 0.14),
+  routeRail: withAlpha(C.text, 0.05),
+  routeNameActive: withAlpha(C.gold, 0.98),
+  routeName: withAlpha(C.text, 0.98),
+  routeMetaActive: withAlpha(C.gold, 0.96),
+  routeMeta: withAlpha(C.cyan, 0.92),
+  flowActive: withAlpha(C.cyan, 0.28),
+  flow: withAlpha(C.text, 0.16),
+  cityLabelBackdrop: withAlpha(C.overlay, 0.16),
+  cityLabelActive: withAlpha(C.gold, 0.98),
+  cityLabel: withAlpha(C.text, 0.98),
+  footerPrimary: withAlpha(C.text, 0.98),
+  footerSecondary: withAlpha(C.textSub, 0.82),
+} as const;
+
 function normalizeToken(value?: string | null) {
   return (value ?? '')
     .toLowerCase()
@@ -184,7 +221,7 @@ export function MobilityOSLandingMap({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const frameRef = useRef<number | null>(null);
   const [size, setSize] = useState({ width: 720, height: preferredHeight ?? 560 });
-  const uiFocusStroke = runtimeMode === 'fallback' ? '#ffbe5c' : FLOW;
+  const uiFocusStroke = runtimeMode === 'fallback' ? MAP_LAYER.focus : FLOW;
   const uiFocusStrength = Math.max(
     0.28,
     Math.min(
@@ -239,8 +276,8 @@ export function MobilityOSLandingMap({
       const width = size.width;
       const height = size.height;
       const focusedRoute = routes.find(route => route.focused) ?? null;
-      const focusStroke = runtimeMode === 'fallback' ? '#ffbe5c' : FLOW;
-      const focusGhost = runtimeMode === 'fallback' ? '#ffd38c' : GHOST;
+      const focusStroke = runtimeMode === 'fallback' ? MAP_LAYER.focus : FLOW;
+      const focusGhost = runtimeMode === 'fallback' ? MAP_LAYER.focusGhost : GHOST;
       const focusPressure = Math.max(0.85, Math.min(demandPressure ?? 1, 2.4));
       const focusUtilization = Math.max(0, Math.min(utilization ?? 0.45, 1));
       const focusStrength = Math.max(
@@ -263,8 +300,8 @@ export function MobilityOSLandingMap({
       ctx.clearRect(0, 0, width, height);
 
       const panel = ctx.createLinearGradient(0, 0, 0, height);
-      panel.addColorStop(0, '#09131f');
-      panel.addColorStop(1, '#05101a');
+      panel.addColorStop(0, MAP_LAYER.panelStart);
+      panel.addColorStop(1, MAP_LAYER.panelEnd);
       ctx.fillStyle = panel;
       ctx.fillRect(0, 0, width, height);
 
@@ -276,14 +313,14 @@ export function MobilityOSLandingMap({
         height * 0.12,
         width * 0.44,
       );
-      innerGlow.addColorStop(0, 'rgba(87,241,225,0.18)');
-      innerGlow.addColorStop(1, 'rgba(87,241,225,0)');
+      innerGlow.addColorStop(0, MAP_LAYER.innerGlow);
+      innerGlow.addColorStop(1, MAP_LAYER.transparent);
       ctx.fillStyle = innerGlow;
       ctx.fillRect(0, 0, width, height);
 
       const land = ctx.createLinearGradient(0, 0, width * 0.5, height * 0.8);
-      land.addColorStop(0, 'rgba(34,142,133,0.22)');
-      land.addColorStop(1, 'rgba(8,22,34,0)');
+      land.addColorStop(0, MAP_LAYER.land);
+      land.addColorStop(1, MAP_LAYER.transparent);
       ctx.beginPath();
       ctx.moveTo(width * 0.03, height * 0.04);
       ctx.lineTo(width * 0.48, height * 0.04);
@@ -298,7 +335,7 @@ export function MobilityOSLandingMap({
       ctx.moveTo(width * 0.48, height * 0.04);
       ctx.lineTo(width * 0.45, height * 0.47);
       ctx.lineTo(width * 0.26, height * 0.98);
-      ctx.strokeStyle = 'rgba(92, 250, 234, 0.18)';
+      ctx.strokeStyle = MAP_LAYER.landEdge;
       ctx.lineWidth = 1.2;
       ctx.stroke();
 
@@ -306,13 +343,13 @@ export function MobilityOSLandingMap({
       ctx.translate(width * 0.11, height * 0.12);
       const radarRadius = Math.min(width, height) * 0.105;
       const radarGradient = ctx.createRadialGradient(0, 0, radarRadius * 0.14, 0, 0, radarRadius);
-      radarGradient.addColorStop(0, 'rgba(80,248,228,0.42)');
-      radarGradient.addColorStop(1, 'rgba(5,16,26,0.96)');
+      radarGradient.addColorStop(0, MAP_LAYER.radarCore);
+      radarGradient.addColorStop(1, MAP_LAYER.radarShell);
       ctx.beginPath();
       ctx.arc(0, 0, radarRadius, 0, Math.PI * 2);
       ctx.fillStyle = radarGradient;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(190,255,247,0.08)';
+      ctx.strokeStyle = MAP_LAYER.radarStroke;
       ctx.lineWidth = 1;
       ctx.stroke();
 
@@ -323,8 +360,8 @@ export function MobilityOSLandingMap({
         ctx.arc(0, 0, radarRadius * 0.9, sweep + i * 0.14, sweep + i * 0.14 + 0.45);
         ctx.closePath();
         const scan = ctx.createRadialGradient(0, 0, 0, 0, 0, radarRadius);
-        scan.addColorStop(0, 'rgba(99,255,238,0.32)');
-        scan.addColorStop(1, 'rgba(99,255,238,0)');
+        scan.addColorStop(0, MAP_LAYER.radarSweep);
+        scan.addColorStop(1, MAP_LAYER.transparent);
         ctx.fillStyle = scan;
         ctx.fill();
       }
@@ -340,7 +377,7 @@ export function MobilityOSLandingMap({
         const y = Math.sin(blip.angle) * radarRadius * blip.r;
         ctx.beginPath();
         ctx.arc(x, y, 2.4, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(214,255,248,0.96)';
+        ctx.fillStyle = MAP_LAYER.radarBlip;
         ctx.shadowBlur = 14;
         ctx.shadowColor = withAlpha(FLOW, 0.7);
         ctx.fill();
@@ -350,7 +387,7 @@ export function MobilityOSLandingMap({
 
       ctx.beginPath();
       ctx.arc(width * 0.33, height * 0.22, Math.min(width, height) * 0.08, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(65, 223, 196, 0.18)';
+      ctx.fillStyle = MAP_LAYER.hubGlow;
       ctx.fill();
 
       TOPO_LINES.forEach((line, index) => {
@@ -362,7 +399,7 @@ export function MobilityOSLandingMap({
           if (step === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = `rgba(146, 212, 223, ${0.05 + index * 0.01})`;
+        ctx.strokeStyle = withAlpha(MAP_LAYER.topoBase, 0.05 + index * 0.01);
         ctx.lineWidth = 0.8;
         ctx.stroke();
       });
@@ -372,7 +409,7 @@ export function MobilityOSLandingMap({
         ctx.beginPath();
         ctx.moveTo(x, height * 0.14);
         ctx.lineTo(x + Math.sin(i * 0.8) * 12, height * 0.82);
-        ctx.strokeStyle = 'rgba(157, 221, 230, 0.06)';
+        ctx.strokeStyle = MAP_LAYER.topoGrid;
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -390,7 +427,7 @@ export function MobilityOSLandingMap({
         ctx.beginPath();
         ctx.moveTo(width * 0.06, y);
         ctx.lineTo(width * 0.32, y + i * 0.8);
-        ctx.strokeStyle = 'rgba(111, 208, 219, 0.08)';
+        ctx.strokeStyle = MAP_LAYER.corridorRail;
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -399,7 +436,7 @@ export function MobilityOSLandingMap({
         ctx.beginPath();
         ctx.moveTo(x, height * 0.7);
         ctx.lineTo(x - width * 0.08, height);
-        ctx.strokeStyle = 'rgba(111, 208, 219, 0.06)';
+        ctx.strokeStyle = MAP_LAYER.corridorRailDim;
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -412,8 +449,8 @@ export function MobilityOSLandingMap({
         else ctx.lineTo(p.x, p.y);
       });
       ctx.closePath();
-      ctx.fillStyle = 'rgba(255,255,255,0.02)';
-      ctx.strokeStyle = 'rgba(112, 255, 236, 0.14)';
+      ctx.fillStyle = MAP_LAYER.routeHalo;
+      ctx.strokeStyle = MAP_LAYER.routeBorder;
       ctx.lineWidth = 1.2;
       ctx.fill();
       ctx.stroke();
@@ -477,13 +514,13 @@ export function MobilityOSLandingMap({
           0,
           Math.PI * 2,
         );
-        ctx.fillStyle = isFocused ? 'rgba(0,0,0,0.22)' : 'rgba(0,0,0,0.14)';
+        ctx.fillStyle = isFocused ? MAP_LAYER.routeLabelActive : MAP_LAYER.routeLabel;
         ctx.fill();
 
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);
         ctx.quadraticCurveTo(control.x, control.y, to.x, to.y);
-        ctx.strokeStyle = isFocused ? withAlpha(focusStroke, 0.24) : 'rgba(255,255,255,0.05)';
+        ctx.strokeStyle = isFocused ? withAlpha(focusStroke, 0.24) : MAP_LAYER.routeRail;
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -519,7 +556,7 @@ export function MobilityOSLandingMap({
           const point = pointOnCurve(from, control, to, t);
           ctx.beginPath();
           ctx.arc(point.x, point.y, isFocused ? 2.9 : 2.4, 0, Math.PI * 2);
-          ctx.fillStyle = isFocused ? 'rgba(255,248,232,0.98)' : 'rgba(231,255,253,0.98)';
+          ctx.fillStyle = isFocused ? MAP_LAYER.routeNameActive : MAP_LAYER.routeName;
           ctx.shadowBlur = isFocused ? 18 : 14;
           ctx.shadowColor = withAlpha(isFocused ? focusStroke : FLOW, isFocused ? 0.8 : 0.66);
           ctx.fill();
@@ -535,7 +572,7 @@ export function MobilityOSLandingMap({
         for (let i = 0; i < parcelCount; i += 1) {
           const t = 1 - ((time * 0.000038 * (1 + i * 0.08) + i / parcelCount + index * 0.05) % 1);
           const point = pointOnCurve(from, control, to, t);
-          ctx.fillStyle = isFocused ? 'rgba(255,218,151,0.96)' : 'rgba(180,255,246,0.92)';
+          ctx.fillStyle = isFocused ? MAP_LAYER.routeMetaActive : MAP_LAYER.routeMeta;
           ctx.shadowBlur = isFocused ? 14 : 10;
           ctx.shadowColor = withAlpha(isFocused ? focusGhost : PULSE, isFocused ? 0.62 : 0.48);
           const parcelSize = isFocused ? 4.4 : 3.6;
@@ -561,10 +598,10 @@ export function MobilityOSLandingMap({
           cityFocused
             ? withAlpha(focusStroke, 0.34)
             : city.hub
-              ? 'rgba(94,255,240,0.28)'
-              : 'rgba(240,255,255,0.16)',
+              ? MAP_LAYER.flowActive
+              : MAP_LAYER.flow,
         );
-        gradient.addColorStop(1, 'rgba(255,255,255,0)');
+        gradient.addColorStop(1, MAP_LAYER.transparent);
 
         ctx.beginPath();
         ctx.arc(point.x, point.y, halo, 0, Math.PI * 2);
@@ -573,12 +610,12 @@ export function MobilityOSLandingMap({
 
         ctx.beginPath();
         ctx.ellipse(point.x, point.y + 9, city.hub ? 14 : 10, city.hub ? 5 : 4, 0, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0,0,0,0.16)';
+        ctx.fillStyle = MAP_LAYER.cityLabelBackdrop;
         ctx.fill();
 
         ctx.beginPath();
         ctx.arc(point.x, point.y, city.hub ? 6.4 : 4.8, 0, Math.PI * 2);
-        ctx.fillStyle = cityFocused ? 'rgba(255,245,226,0.98)' : 'rgba(227,255,252,0.98)';
+        ctx.fillStyle = cityFocused ? MAP_LAYER.cityLabelActive : MAP_LAYER.cityLabel;
         ctx.fill();
         ctx.strokeStyle = withAlpha(cityFocused ? focusStroke : FLOW, cityFocused ? 0.78 : 0.42);
         ctx.lineWidth = cityFocused ? 2.4 : city.hub ? 1.8 : 1.2;
@@ -608,7 +645,7 @@ export function MobilityOSLandingMap({
           city.name === 'Aqaba'
         ) {
           ctx.fillStyle =
-            city.name === 'Amman' ? 'rgba(235,255,253,0.98)' : 'rgba(223,242,247,0.82)';
+            city.name === 'Amman' ? MAP_LAYER.footerPrimary : MAP_LAYER.footerSecondary;
           ctx.textAlign = city.labelAlign ?? 'center';
           ctx.font =
             city.name === 'Amman'

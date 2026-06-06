@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { C, SectionHeader } from '../HomePageShared';
+import { R, SH } from '../../../utils/wasel-ds';
 import type { QuickAction } from './types';
 
 interface QuickActionsSectionProps {
@@ -32,13 +33,12 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
               style={{
                 minHeight: 220,
                 textAlign: 'left',
-                borderRadius: 26,
+                borderRadius: R.xxl,
                 padding: '20px 20px 18px',
-                background:
-                  'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))',
+                background: `linear-gradient(180deg, ${C.card}, ${C.elevated})`,
                 border: `1px solid ${action.border}`,
                 cursor: 'pointer',
-                boxShadow: '0 16px 34px rgba(0,0,0,0.18)',
+                boxShadow: SH.card,
                 display: 'flex',
                 flexDirection: 'column',
               }}
@@ -55,7 +55,7 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
                   style={{
                     width: 48,
                     height: 48,
-                    borderRadius: 16,
+                    borderRadius: R.xl,
                     display: 'grid',
                     placeItems: 'center',
                     background: action.dim,
@@ -71,9 +71,9 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
                     gap: 8,
                     height: 30,
                     padding: '0 10px',
-                    borderRadius: 999,
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: R.full,
+                    background: C.elevated,
+                    border: `1px solid ${C.borderFaint}`,
                     color: C.textMuted,
                     fontSize: '0.68rem',
                     fontWeight: 800,

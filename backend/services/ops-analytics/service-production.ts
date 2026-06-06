@@ -4,8 +4,10 @@
  */
 
 import postgres from 'postgres';
+import { fileURLToPath } from 'node:url';
 import type { DomainEventEnvelope } from '../../../src/domain/events';
 import { eventBroker } from '../../../src/platform/event-broker-redis-production';
+import { startRuntimeHealthServer, type RuntimeHealthServer } from '../runtime/http-health';
 
 const sql = postgres(process.env.DATABASE_URL || '', {
   max: 10,
@@ -80,7 +82,7 @@ class AnalyticsEngine {
         ) VALUES (
           'payment_capture',
           ${payment.paymentId},
-          ${payment.rideId || payment.packageId},
+          ${payment.rideId ?? payment.packageId ?? payment.paymentId},
           ${payment.capturedAmount},
           ${payment.capturedAt}
         )
@@ -207,9 +209,17 @@ export class OpsAnalyticsWorker {
   private engine = new AnalyticsEngine();
   private unsubscribeRides?: () => Promise<void>;
   private unsubscribePayments?: () => Promise<void>;
+  private healthServer?: RuntimeHealthServer;
+  private ready = false;
 
   async start(): Promise<void> {
     console.log('[OpsAnalytics] Starting worker...');
+
+    this.healthServer = startRuntimeHealthServer({
+      serviceName: 'ops-analytics-worker',
+      isReady: () => this.ready,
+      isHealthy: () => this.healthCheck(),
+    });
 
     this.unsubscribeRides = await eventBroker.subscribe(
       'rides.completed',
@@ -233,15 +243,20 @@ export class OpsAnalyticsWorker {
       },
     );
 
+    this.ready = true;
     console.log('[OpsAnalytics] Worker started');
   }
 
   async stop(): Promise<void> {
+    this.ready = false;
     if (this.unsubscribeRides) {
       await this.unsubscribeRides();
     }
     if (this.unsubscribePayments) {
       await this.unsubscribePayments();
+    }
+    if (this.healthServer) {
+      await this.healthServer.close();
     }
     await sql.end();
     console.log('[OpsAnalytics] Worker stopped');
@@ -307,7 +322,7 @@ export class OpsAnalyticsWorker {
   }
 }
 
-if (require.main === module) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const worker = new OpsAnalyticsWorker();
   
   process.on('SIGTERM', async () => {
