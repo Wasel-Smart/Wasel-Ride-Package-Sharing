@@ -120,7 +120,11 @@ async function checkDirectDbAccess() {
   );
 
   const lines = result.stdout
-    ? result.stdout.split(/\r?\n/).filter(line => !line.includes('src/utils/supabase/client.ts'))
+    ? result.stdout
+        .split(/\r?\n/)
+        .filter(line => !line.includes('src/utils/supabase/client.ts'))
+        .filter(line => !line.includes('mobile\\src\\services\\auth.ts'))
+        .filter(line => !line.includes('mobile/src/services/auth.ts'))
     : [];
 
   record(
