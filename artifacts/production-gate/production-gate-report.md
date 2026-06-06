@@ -1,7 +1,7 @@
 # Wasel Production Gate Report
 
-Generated: 2026-06-06T11:48:14.843Z
-Evidence-based score: 6.7/10
+Generated: 2026-06-06T15:06:14.883Z
+Evidence-based score: 7.8/10
 10/10 certified: no
 
 ## Checks
@@ -38,6 +38,6 @@ no frontend direct Supabase query paths found
 
 no disallowed mock/fallback/demo runtime paths found
 
-### FAIL - load-test-execution-ready
+### PASS - load-test-execution-ready
 
-k6 is unavailable; scripts present: true
+k6 available: k6.exe v1.7.1 (commit/9f82e6f1fc, go1.26.1, windows/amd64)
