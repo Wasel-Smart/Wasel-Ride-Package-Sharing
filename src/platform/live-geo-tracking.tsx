@@ -122,7 +122,7 @@ export function useLiveDriverTracking(
 } {
   const [drivers, setDrivers] = useState<DriverLocation[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const error: Error | null = null;
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     try {
@@ -264,8 +264,8 @@ export function LiveDriverMap({
 
 function MapPlaceholder({
   drivers,
-  selectedDriver: _selectedDriver,
-  onDriverClick: _onDriverClick,
+  selectedDriver,
+  onDriverClick,
 }: {
   drivers: DriverLocation[];
   selectedDriver: string | null;
