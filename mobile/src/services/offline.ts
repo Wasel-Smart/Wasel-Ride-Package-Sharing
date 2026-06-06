@@ -6,14 +6,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { mobileAuth } from './auth';
-
-interface OfflineAction {
-  id: string;
-  type: 'RIDE_REQUEST' | 'RIDE_CANCEL' | 'RIDE_RATING' | 'PACKAGE_REQUEST' | 'PROFILE_UPDATE';
-  payload: unknown;
-  timestamp: number;
-  retries: number;
-}
+import {
+  createOfflineAction,
+  incrementOfflineRetry,
+  resolveOfflineQueueResult,
+  type OfflineAction,
+} from '../utils/offlineQueue';
 
 interface CachedData<T = unknown> {
   key: string;
@@ -85,12 +83,7 @@ export class OfflineService {
    * Queue an action for later sync when offline
    */
   async queueOfflineAction(action: Omit<OfflineAction, 'id' | 'timestamp' | 'retries'>): Promise<void> {
-    const offlineAction: OfflineAction = {
-      ...action,
-      id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: Date.now(),
-      retries: 0,
-    };
+    const offlineAction = createOfflineAction(action);
 
     const queue = await this.getOfflineQueue();
     queue.push(offlineAction);
@@ -138,8 +131,9 @@ export class OfflineService {
           console.error(`[Offline] Failed to sync ${action.type}:`, error);
           
           // Retry up to 3 times
-          if (action.retries < 3) {
-            failed.push({ ...action, retries: action.retries + 1 });
+          const retried = incrementOfflineRetry(action);
+          if (retried) {
+            failed.push(retried);
           } else {
             console.error(`[Offline] Discarding action after 3 retries: ${action.id}`);
           }
@@ -147,7 +141,10 @@ export class OfflineService {
       }
 
       // Update queue with only failed actions
-      await AsyncStorage.setItem(STORAGE_KEYS.OFFLINE_QUEUE, JSON.stringify(failed));
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.OFFLINE_QUEUE,
+        JSON.stringify(resolveOfflineQueueResult(queue, successful, failed)),
+      );
       console.log(`[Offline] Sync complete: ${successful.length} synced, ${failed.length} remaining`);
     } finally {
       this.syncInProgress = false;
