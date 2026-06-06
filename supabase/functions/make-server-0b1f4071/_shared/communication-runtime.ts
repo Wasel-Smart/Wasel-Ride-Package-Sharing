@@ -198,9 +198,9 @@ export function buildTwilioRequest(
     throw new Error('TWILIO_ACCOUNT_SID is not configured');
   }
 
-  const hasApiKeyCredentials = Boolean(env.twilioApiKeySid && env.twilioApiKeySecret);
-  const authUser = hasApiKeyCredentials ? env.twilioApiKeySid : env.twilioAccountSid;
-  const authPassword = hasApiKeyCredentials ? env.twilioApiKeySecret : env.twilioAuthToken;
+  const hasAccountTokenCredentials = Boolean(env.twilioAuthToken);
+  const authUser = hasAccountTokenCredentials ? env.twilioAccountSid : env.twilioApiKeySid;
+  const authPassword = hasAccountTokenCredentials ? env.twilioAuthToken : env.twilioApiKeySecret;
 
   if (!authUser || !authPassword) {
     throw new Error('Twilio credentials are not configured');

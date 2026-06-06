@@ -96,7 +96,7 @@ describe('communication runtime helpers', () => {
     expect(String(request.init.body)).toContain('StatusCallback=');
   });
 
-  it('uses twilio api key credentials when both key fields are configured', () => {
+  it('prefers twilio account auth when both account and api key credentials are configured', () => {
     const request = buildTwilioRequest(
       {
         delivery_id: 'd3',
@@ -118,11 +118,11 @@ describe('communication runtime helpers', () => {
     );
 
     expect(request.url).toContain('/Accounts/AC123/Messages.json');
-    expect(request.init.headers.Authorization).toBe(`Basic ${btoa('SK123:api-key-secret')}`);
+    expect(request.init.headers.Authorization).toBe(`Basic ${btoa('AC123:account-secret')}`);
     expect(String(request.init.body)).toContain('MessagingServiceSid=MG123');
   });
 
-  it('falls back to account auth when api key secret is missing', () => {
+  it('uses api key auth when account auth token is missing', () => {
     const request = buildTwilioRequest(
       {
         delivery_id: 'd4',
@@ -136,13 +136,13 @@ describe('communication runtime helpers', () => {
       },
       {
         twilioAccountSid: 'AC123',
-        twilioAuthToken: 'account-secret',
         twilioApiKeySid: 'SK123',
+        twilioApiKeySecret: 'api-key-secret',
         twilioSmsFrom: '+18335555267',
       },
     );
 
-    expect(request.init.headers.Authorization).toBe(`Basic ${btoa('AC123:account-secret')}`);
+    expect(request.init.headers.Authorization).toBe(`Basic ${btoa('SK123:api-key-secret')}`);
     expect(String(request.init.body)).toContain('From=%2B18335555267');
   });
 

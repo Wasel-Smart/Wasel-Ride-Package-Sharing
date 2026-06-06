@@ -36,10 +36,13 @@ for (const fileName of ENV_FILES) {
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim();
 const authToken = process.env.TWILIO_AUTH_TOKEN?.trim();
+const apiKeySid = process.env.TWILIO_API_KEY_SID?.trim();
+const apiKeySecret = process.env.TWILIO_API_KEY_SECRET?.trim();
 const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID?.trim();
 const smsFrom = process.env.TWILIO_SMS_FROM?.trim();
 const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID?.trim();
 const whatsappFrom = process.env.TWILIO_WHATSAPP_FROM?.trim();
+const requireApiKeyAuth = process.env.REQUIRE_TWILIO_API_KEY_AUTH === 'true';
 
 function requireValue(name, value, pattern) {
   if (!value) {
@@ -55,10 +58,14 @@ function authHeader() {
   return `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`;
 }
 
-async function twilioGet(url) {
+function apiKeyAuthHeader() {
+  return `Basic ${Buffer.from(`${apiKeySid}:${apiKeySecret}`).toString('base64')}`;
+}
+
+async function twilioGet(url, authorization = authHeader()) {
   const response = await fetch(url, {
     headers: {
-      Authorization: authHeader(),
+      Authorization: authorization,
     },
   });
 
@@ -73,6 +80,9 @@ async function twilioGet(url) {
 async function main() {
   requireValue('TWILIO_ACCOUNT_SID', accountSid, /^AC[a-f0-9]{32}$/i);
   requireValue('TWILIO_AUTH_TOKEN', authToken, /^[a-f0-9]{32}$/i);
+  requireValue('TWILIO_API_KEY_SID', apiKeySid, /^SK[a-f0-9]{32}$/i);
+  requireValue('TWILIO_API_KEY_SECRET', apiKeySecret);
+  requireValue('TWILIO_VERIFY_SERVICE_SID', verifyServiceSid, /^VA[a-f0-9]{32}$/i);
 
   if (!messagingServiceSid && !smsFrom) {
     throw new Error('TWILIO_MESSAGING_SERVICE_SID or TWILIO_SMS_FROM is required for SMS');
@@ -86,10 +96,6 @@ async function main() {
     requireValue('TWILIO_SMS_FROM', smsFrom, /^\+\d{8,15}$/);
   }
 
-  if (verifyServiceSid) {
-    requireValue('TWILIO_VERIFY_SERVICE_SID', verifyServiceSid, /^VA[a-f0-9]{32}$/i);
-  }
-
   if (whatsappFrom) {
     requireValue('TWILIO_WHATSAPP_FROM', whatsappFrom, /^whatsapp:\+\d{8,15}$/);
   }
@@ -100,6 +106,21 @@ async function main() {
 
   if (account.status !== 'active') {
     throw new Error(`Twilio account is not active: ${account.status}`);
+  }
+
+  let apiKeyAuthOk = false;
+  try {
+    const apiKeyAccount = await twilioGet(
+      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}.json`,
+      apiKeyAuthHeader(),
+    );
+    apiKeyAuthOk = apiKeyAccount.sid === accountSid;
+  } catch {
+    apiKeyAuthOk = false;
+  }
+
+  if (requireApiKeyAuth && !apiKeyAuthOk) {
+    throw new Error('Twilio API key does not authenticate against the configured account');
   }
 
   if (messagingServiceSid) {
@@ -116,15 +137,18 @@ async function main() {
     }
   }
 
-  if (verifyServiceSid) {
-    await twilioGet(`https://verify.twilio.com/v2/Services/${verifyServiceSid}`);
-  }
+  await twilioGet(`https://verify.twilio.com/v2/Services/${verifyServiceSid}`);
 
   console.log('Twilio configuration verified');
-  console.log(`Account: ${account.friendly_name || account.sid} (${account.status})`);
+  console.log(`Account: ${account.friendly_name || account.sid} (${account.status}, ${account.type})`);
+  console.log(`API key auth: ${apiKeyAuthOk ? 'verified' : 'configured but not accepted by Twilio REST auth'}`);
   console.log(`SMS sender: ${messagingServiceSid ? 'Messaging Service' : 'Twilio number'}`);
-  console.log(`Verify OTP: ${verifyServiceSid ? 'configured' : 'not configured'}`);
+  console.log('Verify OTP: configured');
   console.log(`WhatsApp sender: ${whatsappFrom ? 'configured' : 'not configured'}`);
+
+  if (String(account.type).toLowerCase() === 'trial') {
+    console.log('Production note: account is Trial; outbound SMS is limited to verified recipients until upgraded.');
+  }
 }
 
 main().catch(error => {
