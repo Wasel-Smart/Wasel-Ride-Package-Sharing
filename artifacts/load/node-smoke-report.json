@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-06-06T14:28:25.420Z",
+  "generatedAt": "2026-06-06T14:48:12.959Z",
   "targetUrl": "https://wasel14.online/health",
   "totalRequests": 60,
   "concurrency": 6,
   "passed": false,
   "errorRate": 100,
   "latencyMs": {
-    "p50": 83.23,
-    "p95": 412.41,
-    "p99": 721.57,
-    "max": 721.57
+    "p50": 84.4,
+    "p95": 440.53,
+    "p99": 760.5,
+    "max": 760.5
   },
   "statusCounts": {
     "200": 60
@@ -19,7 +19,7 @@
     {
       "ok": false,
       "status": 200,
-      "durationMs": 409.38059999999996,
+      "durationMs": 439.3445,
       "contentType": "text/html; charset=utf-8",
       "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
       "validation": "fail"
@@ -27,7 +27,7 @@
     {
       "ok": false,
       "status": 200,
-      "durationMs": 415.4787,
+      "durationMs": 436.7061,
       "contentType": "text/html; charset=utf-8",
       "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
       "validation": "fail"
@@ -35,7 +35,7 @@
     {
       "ok": false,
       "status": 200,
-      "durationMs": 412.4124,
+      "durationMs": 453.75260000000003,
       "contentType": "text/html; charset=utf-8",
       "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
       "validation": "fail"
@@ -43,7 +43,7 @@
     {
       "ok": false,
       "status": 200,
-      "durationMs": 408.321,
+      "durationMs": 760.4998,
       "contentType": "text/html; charset=utf-8",
       "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
       "validation": "fail"
@@ -51,7 +51,7 @@
     {
       "ok": false,
       "status": 200,
-      "durationMs": 721.5717,
+      "durationMs": 441.65009999999995,
       "contentType": "text/html; charset=utf-8",
       "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
       "validation": "fail"
@@ -59,7 +59,7 @@
     {
       "ok": false,
       "status": 200,
-      "durationMs": 414.7333,
+      "durationMs": 440.5266,
       "contentType": "text/html; charset=utf-8",
       "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
       "validation": "fail"
@@ -67,7 +67,7 @@
     {
       "ok": false,
       "status": 200,
-      "durationMs": 81.37360000000001,
+      "durationMs": 88.09029999999996,
       "contentType": "text/html; charset=utf-8",
       "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
       "validation": "fail"
@@ -75,7 +75,7 @@
     {
       "ok": false,
       "status": 200,
-      "durationMs": 82.53320000000008,
+      "durationMs": 93.57449999999994,
       "contentType": "text/html; charset=utf-8",
       "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
       "validation": "fail"
@@ -83,7 +83,7 @@
     {
       "ok": false,
       "status": 200,
-      "durationMs": 87.90240000000006,
+      "durationMs": 87.20460000000003,
       "contentType": "text/html; charset=utf-8",
       "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
       "validation": "fail"
@@ -91,7 +91,7 @@
     {
       "ok": false,
       "status": 200,
-      "durationMs": 92.53269999999998,
+      "durationMs": 92.48560000000009,
       "contentType": "text/html; charset=utf-8",
       "bodySample": "<!DOCTYPE html>\r\n<html lang=\"en\" dir=\"ltr\">\r\n  <head>\r\n    <meta charset=\"UTF-8\" />\r\n    <meta name=\"viewport\" content=\"",
       "validation": "fail"

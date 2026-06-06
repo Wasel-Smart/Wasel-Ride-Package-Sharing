@@ -56,11 +56,15 @@ fi
 
 PLATFORM=${1:-all}
 BUILD_TYPE=${2:-release}
+BUILD_IOS=true
 
-if [[ ("$PLATFORM" = "ios" || "$PLATFORM" = "all") && "$OSTYPE" != "darwin"* ]]; then
+if [[ "$PLATFORM" = "ios" && "$OSTYPE" != "darwin"* ]]; then
     echo "Error: iOS release builds require macOS with Xcode and CocoaPods."
     echo "Use npm run mobile:build:android on Windows, or run the iOS build on macOS."
     exit 1
+elif [[ "$PLATFORM" = "all" && "$OSTYPE" != "darwin"* ]]; then
+    echo "iOS builds require macOS. Continuing with Android only."
+    BUILD_IOS=false
 fi
 
 cd mobile
@@ -95,7 +99,7 @@ if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "all" ]; then
     cd ..
 fi
 
-if [ "$PLATFORM" = "ios" ] || [ "$PLATFORM" = "all" ]; then
+if [[ "$BUILD_IOS" = true && ("$PLATFORM" = "ios" || "$PLATFORM" = "all") ]]; then
     echo "Building iOS app..."
 
     npx react-native bundle \
