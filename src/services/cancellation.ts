@@ -1,4 +1,4 @@
-import { API_URL, createEdgeHeaders, fetchWithRetry, getAuthDetails } from './core';
+import { API_URL, fetchWithRetry, getAuthDetails } from './core';
 
 export interface CancelBookingRequest {
   bookingId: string;
@@ -12,55 +12,61 @@ export interface CancelTripRequest {
 }
 
 class CancellationService {
-  private async request<T>(path: string, options: RequestInit = {}): Promise<T> {
-    const auth = await getAuthDetails();
-    const response = await fetchWithRetry(`${API_URL}${path}`, {
-      ...options,
-      headers: createEdgeHeaders(
-        {
-          'Content-Type': 'application/json',
-          ...options.headers,
-        },
-        auth.token,
-      ),
+  async cancelBooking(request: CancelBookingRequest): Promise<void> {
+    const { token } = await getAuthDetails();
+    const response = await fetchWithRetry(`${API_URL}/cancellations/bookings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(request),
+      timeout: 15_000,
     });
 
     if (!response.ok) {
-      throw new Error(`Cancellation request failed: ${response.status}`);
+      const body = await response.json().catch(() => ({}));
+      throw new Error(String(body.error ?? 'Failed to cancel booking'));
     }
-
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    return response.json() as Promise<T>;
   }
 
-  async cancelBooking({
-    bookingId,
-    reason,
-    refundRequested = true,
-  }: CancelBookingRequest): Promise<void> {
-    await this.request<void>(`/bookings/${encodeURIComponent(bookingId)}/cancel`, {
+  async cancelTrip(request: CancelTripRequest): Promise<void> {
+    const { token } = await getAuthDetails();
+    const response = await fetchWithRetry(`${API_URL}/cancellations/trips`, {
       method: 'POST',
-      body: JSON.stringify({ reason, refundRequested }),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(request),
+      timeout: 15_000,
     });
-  }
 
-  async cancelTrip({ tripId, reason }: CancelTripRequest): Promise<void> {
-    await this.request<void>(`/trips/${encodeURIComponent(tripId)}/cancel`, {
-      method: 'POST',
-      body: JSON.stringify({ reason }),
-    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      throw new Error(String(body.error ?? 'Failed to cancel trip'));
+    }
   }
 
   async canCancelBooking(bookingId: string): Promise<{
     canCancel: boolean;
     reason?: string;
   }> {
-    return this.request<{ canCancel: boolean; reason?: string }>(
-      `/bookings/${encodeURIComponent(bookingId)}/cancellation-eligibility`,
+    const { token } = await getAuthDetails();
+    const response = await fetchWithRetry(
+      `${API_URL}/cancellations/bookings/${encodeURIComponent(bookingId)}/eligibility`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 10_000,
+      },
     );
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      return { canCancel: false, reason: String(body.error ?? 'Unable to verify cancellation eligibility') };
+    }
+
+    return response.json() as Promise<{ canCancel: boolean; reason?: string }>;
   }
 }
 
