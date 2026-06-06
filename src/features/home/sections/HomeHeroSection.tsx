@@ -2,6 +2,8 @@ import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle, Shield } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
+import { WaselButton } from '../../../design-system';
+import { GRAD, R, SH } from '../../../utils/wasel-ds';
 import { C, F, InlineCurrencySwitcher } from '../HomePageShared';
 import { MobilityOSLandingMap } from '../MobilityOSLandingMap';
 import type { TripMode } from './types';
@@ -47,9 +49,9 @@ function TripModeCard({
   return (
     <div
       style={{
-        borderRadius: 22,
+        borderRadius: R.xxl,
         padding: '18px',
-        background: 'rgba(255,255,255,0.03)',
+        background: C.elevated,
         border: `1px solid ${C.border}`,
       }}
     >
@@ -87,7 +89,7 @@ function TripModeCard({
             gap: 8,
             padding: 6,
             borderRadius: 18,
-            background: 'rgba(255,255,255,0.03)',
+            background: C.elevated,
             border: `1px solid ${C.borderFaint}`,
             minWidth: 280,
           }}
@@ -105,8 +107,8 @@ function TripModeCard({
                   padding: '12px 14px',
                   borderRadius: 14,
                   textAlign: 'left',
-                  background: selected ? 'rgba(88,221,255,0.14)' : 'transparent',
-                  border: `1px solid ${selected ? 'rgba(88,221,255,0.32)' : 'transparent'}`,
+                  background: selected ? C.cyanDim : 'transparent',
+                  border: `1px solid ${selected ? C.borderHov : 'transparent'}`,
                   color: C.text,
                   cursor: 'pointer',
                 }}
@@ -206,11 +208,11 @@ export function HomeHeroSection({
       <div
         className="wasel-home-hero-copy"
         style={{
-          borderRadius: 30,
+          borderRadius: R['3xl'],
           padding: '30px 28px',
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025))',
-          border: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: '0 22px 54px rgba(0,0,0,0.26)',
+          background: C.card,
+          border: `1px solid ${C.border}`,
+          boxShadow: SH.lg,
         }}
       >
         <div
@@ -231,8 +233,8 @@ export function HomeHeroSection({
                 gap: 8,
                 padding: '6px 12px',
                 borderRadius: 999,
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: C.elevated,
+                border: `1px solid ${C.borderFaint}`,
                 width: 'fit-content',
                 fontSize: '0.68rem',
                 fontWeight: 800,
@@ -296,8 +298,8 @@ export function HomeHeroSection({
               key={step.label}
               style={{
                 borderRadius: 16,
-                border: `1px solid ${index === 0 ? 'rgba(88,221,255,0.28)' : C.borderFaint}`,
-                background: index === 0 ? 'rgba(88,221,255,0.08)' : 'rgba(255,255,255,0.025)',
+                border: `1px solid ${index === 0 ? C.borderHov : C.borderFaint}`,
+                background: index === 0 ? C.cyanDim : C.elevated,
                 padding: '12px 12px 11px',
                 minHeight: 88,
               }}
@@ -342,8 +344,8 @@ export function HomeHeroSection({
                 height: 34,
                 padding: '0 12px',
                 borderRadius: 999,
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.08)',
+                background: C.elevated,
+                border: `1px solid ${C.borderFaint}`,
                 color: C.textSub,
                 fontSize: '0.76rem',
                 fontWeight: 600,
