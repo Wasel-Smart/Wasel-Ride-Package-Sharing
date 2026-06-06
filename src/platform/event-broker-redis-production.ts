@@ -10,7 +10,6 @@ import Redis from 'ioredis';
 type RedisCommandValue = string | number;
 type RedisStreamEntry = [messageId: string, fields: string[]];
 type RedisStreamReadResult = [streamKey: string, entries: RedisStreamEntry[]][];
-type InMemoryEventHandler = (event: DomainEventEnvelope) => Promise<void>;
 
 const MAX_DELIVERY_ATTEMPTS = Number(process.env.REDIS_STREAM_MAX_DELIVERY_ATTEMPTS ?? 5);
 const PENDING_IDLE_MS = Number(process.env.REDIS_STREAM_PENDING_IDLE_MS ?? 60_000);
@@ -425,82 +424,17 @@ class RedisStreamsBroker implements EventBrokerAdapter {
   }
 }
 
-function createInMemoryBroker(): EventBrokerAdapter {
-  const streams = new Map<string, DomainEventEnvelope[]>();
-  const subscriptions = new Map<string, Set<InMemoryEventHandler>>();
-
-  return {
-    async publish(event, options) {
-      const streamKey = `wasel:events:${event.type}`;
-      const events = streams.get(streamKey) || [];
-      events.unshift(event);
-      
-      if (options?.maxlen && events.length > options.maxlen) {
-        events.length = options.maxlen;
-      }
-      
-      streams.set(streamKey, events);
-
-      const handlers = subscriptions.get(streamKey);
-      if (handlers) {
-        for (const handler of handlers) {
-          try {
-            await handler(event);
-          } catch (error) {
-            console.error('[InMemoryBroker] Handler error:', error);
-          }
-        }
-      }
-
-      return `${Date.now()}-0`;
-    },
-
-    async subscribe(eventType, handler, config) {
-      void config;
-      const streamKey = `wasel:events:${eventType}`;
-      const handlers = subscriptions.get(streamKey) || new Set();
-      handlers.add(handler as InMemoryEventHandler);
-      subscriptions.set(streamKey, handlers);
-
-      return async () => {
-        handlers.delete(handler as InMemoryEventHandler);
-      };
-    },
-
-    async ack() {},
-
-    async getHistory(eventType, count = 100) {
-      const streamKey = `wasel:events:${eventType}`;
-      const events = streams.get(streamKey) || [];
-      return events.slice(0, count);
-    },
-
-    async createConsumerGroup() {},
-
-    async disconnect() {
-      streams.clear();
-      subscriptions.clear();
-    },
+export function createEventBroker(): EventBrokerAdapter {
+  const config: RedisStreamConfig = {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379'),
+    password: process.env.REDIS_PASSWORD,
+    tls: process.env.REDIS_TLS === 'true',
+    maxRetries: 10,
+    retryDelayMs: 1000,
   };
+
+  return new RedisStreamsBroker(config);
 }
 
-export function createEventBroker(mode: 'production' | 'development'): EventBrokerAdapter {
-  if (mode === 'production') {
-    const config: RedisStreamConfig = {
-      host: process.env.VITE_REDIS_HOST || process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.VITE_REDIS_PORT || process.env.REDIS_PORT || '6379'),
-      password: process.env.VITE_REDIS_PASSWORD || process.env.REDIS_PASSWORD,
-      tls: process.env.VITE_REDIS_TLS === 'true' || process.env.REDIS_TLS === 'true',
-      maxRetries: 10,
-      retryDelayMs: 1000,
-    };
-
-    return new RedisStreamsBroker(config);
-  }
-
-  return createInMemoryBroker();
-}
-
-export const eventBroker = createEventBroker(
-  process.env.NODE_ENV === 'production' ? 'production' : 'development'
-);
+export const eventBroker = createEventBroker();
