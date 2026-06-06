@@ -1,14 +1,14 @@
 # Wasel Production Gate Report
 
-Generated: 2026-06-06T10:25:16.412Z
-Evidence-based score: 4.4/10
+Generated: 2026-06-06T10:27:25.028Z
+Evidence-based score: 5.6/10
 10/10 certified: no
 
 ## Checks
 
-### FAIL - backend-production-build
+### PASS - backend-production-build
 
-spawn EINVAL
+backend TypeScript production service build passed
 
 ### FAIL - docker-runtime-available
 
@@ -46,9 +46,9 @@ src\utils\gdpr.ts:147:        supabase.from('packages').select('*').eq('sender_i
 src\utils\gdpr.ts:148:        supabase.from('wallet_transactions').select('*').eq('user_id', userId),
 src\utils\gdpr.ts:149:        supabase.from('user_consents').select('*').eq('user_id', userId),
 src\utils\gdpr.ts:213:      const { error } = await supabase.from('data_deletion_requests').insert({
-src\services\ratings.ts:87:    await supabase.from('notifications').insert({
 src\services\cancellation.ts:80:    await supabase.from('notifications').insert({
 src\services\cancellation.ts:163:        await supabase.from('notifications').insert({
+src\services\ratings.ts:87:    await supabase.from('notifications').insert({
 ```
 
 ### PASS - mock-fallback-runtime-paths
