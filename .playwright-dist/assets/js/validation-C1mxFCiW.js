@@ -1,0 +1,1 @@
+import{aE as n}from"./index-Dey87KqN.js";function m(t,p,o,e){const s=t.safeParse(p);if(s.success)return s.data;const r=s.error.issues.map(a=>({path:a.path.join("."),message:a.message}));throw new n(`Response contract violation for ${o}@${e}: ${r.map(a=>`${a.path||"payload"} ${a.message}`).join("; ")}`,{contractName:o,contractVersion:e,issues:r})}export{m as p};
