@@ -2,6 +2,7 @@ import { notificationsAPI } from '../../../services/notifications.js';
 import { getConnectedRides, updateConnectedRide } from '../../../services/journeyLogistics';
 import { updateRideBooking, type RideBookingRecord } from '../../../services/rideLifecycle';
 import { DS, r } from '../../../pages/waselServiceShared';
+import { C } from '../../../utils/wasel-ds';
 
 type OfferRideIncomingRequestsProps = {
   incomingRequests: RideBookingRecord[];
@@ -24,7 +25,7 @@ export function OfferRideIncomingRequests({
         marginBottom: 18,
       }}
     >
-      <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>
+      <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>
         Incoming booking requests
       </div>
       <div style={{ display: 'grid', gap: 10 }}>
@@ -48,7 +49,7 @@ export function OfferRideIncomingRequests({
               }}
             >
               <div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
+                <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>
                   {request.from} to {request.to}
                 </div>
                 <div style={{ color: DS.sub, fontSize: '0.74rem', marginTop: 4 }}>
@@ -88,7 +89,7 @@ export function OfferRideIncomingRequests({
                     borderRadius: '99px',
                     border: 'none',
                     background: DS.gradG,
-                    color: '#fff',
+                    color: C.text,
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}
@@ -120,7 +121,7 @@ export function OfferRideIncomingRequests({
                     borderRadius: '99px',
                     border: `1px solid ${DS.border}`,
                     background: DS.card2,
-                    color: '#fff',
+                    color: C.text,
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}

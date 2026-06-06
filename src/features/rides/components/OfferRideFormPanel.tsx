@@ -1,6 +1,7 @@
 import { Shield } from 'lucide-react';
 import { CITIES } from '../../../pages/waselCoreRideData';
 import { DS, r } from '../../../pages/waselServiceShared';
+import { C } from '../../../utils/wasel-ds';
 import type { PostedRide } from '../../../services/journeyLogistics';
 import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
 import type { DriverRoutePlan } from '../../../config/wasel-movement-network';
@@ -74,7 +75,7 @@ export function OfferRideFormPanel({
             border: `1px solid ${DS.border}`,
           }}
         >
-          <div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>Posting confidence</div>
+          <div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>Posting confidence</div>
           <div style={{ display: 'grid', gap: 10 }}>
             {[
               {
@@ -125,7 +126,7 @@ export function OfferRideFormPanel({
                 >
                   {item.label}
                 </div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>
+                <div style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>
                   {item.value}
                 </div>
               </div>
@@ -140,7 +141,7 @@ export function OfferRideFormPanel({
             border: `1px solid ${DS.border}`,
           }}
         >
-          <div style={{ color: '#fff', fontWeight: 800, marginBottom: 10 }}>
+          <div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>
             Recent corridor posts
           </div>
           {recentPostedRides.length > 0 ? (
@@ -155,7 +156,7 @@ export function OfferRideFormPanel({
                     background: DS.card,
                   }}
                 >
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.82rem' }}>
+                  <div style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem' }}>
                     {ride.from} to {ride.to}
                   </div>
                   <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
@@ -197,7 +198,7 @@ export function OfferRideFormPanel({
             border: `1px solid ${DS.gold}30`,
             borderRadius: r(14),
             padding: '12px 14px',
-            color: '#fff',
+            color: C.text,
             fontSize: '0.84rem',
           }}
         >
@@ -208,7 +209,7 @@ export function OfferRideFormPanel({
 
       {step === 1 && (
         <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr' }}>
-          <h3 style={{ color: '#fff', fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>
+          <h3 style={{ color: C.text, fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>
             Route Details
           </h3>
           {[
@@ -238,7 +239,7 @@ export function OfferRideFormPanel({
                   borderRadius: r(10),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: '#fff',
+                  color: C.text,
                   fontFamily: DS.F,
                   fontSize: '0.9rem',
                   outline: 'none',
@@ -277,7 +278,7 @@ export function OfferRideFormPanel({
                 borderRadius: r(10),
                 border: `1px solid ${DS.border}`,
                 background: DS.card2,
-                color: '#fff',
+                color: C.text,
                 fontFamily: DS.F,
                 fontSize: '0.9rem',
                 outline: 'none',
@@ -310,7 +311,7 @@ export function OfferRideFormPanel({
                 borderRadius: r(10),
                 border: `1px solid ${DS.border}`,
                 background: DS.card2,
-                color: '#fff',
+                color: C.text,
                 fontFamily: DS.F,
                 fontSize: '0.9rem',
                 outline: 'none',
@@ -328,7 +329,7 @@ export function OfferRideFormPanel({
               borderRadius: r(14),
               border: 'none',
               background: DS.gradC,
-              color: '#fff',
+              color: C.text,
               fontWeight: 800,
               fontFamily: DS.F,
               fontSize: '0.95rem',
@@ -343,7 +344,7 @@ export function OfferRideFormPanel({
 
       {step === 2 && (
         <div style={{ display: 'grid', gap: 14 }}>
-          <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 4px' }}>
+          <h3 style={{ color: C.text, fontWeight: 800, margin: '0 0 4px' }}>
             Seats, Pricing, and Capacity
           </h3>
           {driverPlan && (
@@ -391,7 +392,7 @@ export function OfferRideFormPanel({
                     {item.label}
                   </div>
                   <div
-                    style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}
+                    style={{ color: C.text, fontWeight: 800, fontSize: '0.84rem', marginTop: 6 }}
                   >
                     {item.value}
                   </div>
@@ -434,7 +435,7 @@ export function OfferRideFormPanel({
                   borderRadius: r(10),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: '#fff',
+                  color: C.text,
                   fontFamily: DS.F,
                   fontSize: '0.9rem',
                   outline: 'none',
@@ -452,7 +453,7 @@ export function OfferRideFormPanel({
                 padding: '13px 14px',
               }}
             >
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.82rem' }}>
+              <div style={{ color: C.text, fontWeight: 800, fontSize: '0.82rem' }}>
                 Wasel Brain recommendation
               </div>
               <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.6, marginTop: 6 }}>
@@ -489,7 +490,7 @@ export function OfferRideFormPanel({
                 borderRadius: r(10),
                 border: `1px solid ${DS.border}`,
                 background: DS.card2,
-                color: '#fff',
+                color: C.text,
                 fontFamily: DS.F,
                 fontSize: '0.9rem',
                 outline: 'none',
@@ -538,7 +539,7 @@ export function OfferRideFormPanel({
                   borderRadius: r(10),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: '#fff',
+                  color: C.text,
                   fontFamily: DS.F,
                   fontSize: '0.9rem',
                   outline: 'none',
@@ -579,7 +580,7 @@ export function OfferRideFormPanel({
                 borderRadius: r(14),
                 border: 'none',
                 background: DS.gradC,
-                color: '#fff',
+                color: C.text,
                 fontWeight: 800,
                 fontFamily: DS.F,
                 cursor: 'pointer',
@@ -594,7 +595,7 @@ export function OfferRideFormPanel({
 
       {step === 3 && (
         <div style={{ display: 'grid', gap: 14 }}>
-          <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 4px' }}>
+          <h3 style={{ color: C.text, fontWeight: 800, margin: '0 0 4px' }}>
             Preferences and Connected Delivery
           </h3>
           <div>
@@ -674,7 +675,7 @@ export function OfferRideFormPanel({
                   borderRadius: r(10),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: '#fff',
+                  color: C.text,
                   fontFamily: DS.F,
                   fontSize: '0.9rem',
                   outline: 'none',
@@ -708,7 +709,7 @@ export function OfferRideFormPanel({
                 borderRadius: r(10),
                 border: `1px solid ${DS.border}`,
                 background: DS.card2,
-                color: '#fff',
+                color: C.text,
                 fontFamily: DS.F,
                 fontSize: '0.9rem',
                 outline: 'none',
@@ -730,7 +731,7 @@ export function OfferRideFormPanel({
             >
               Summary
             </h4>
-            <div style={{ color: '#fff', fontSize: '0.9rem', lineHeight: 1.8 }}>
+            <div style={{ color: C.text, fontSize: '0.9rem', lineHeight: 1.8 }}>
               {form.from} to {form.to} - {form.date || 'Choose date'} at {form.time}
               <br />
               {form.seats} seats - {form.price} JOD/seat - {form.carModel || 'Car TBD'}
@@ -780,7 +781,7 @@ export function OfferRideFormPanel({
                 borderRadius: r(14),
                 border: 'none',
                 background: DS.gradG,
-                color: '#fff',
+                color: C.text,
                 fontWeight: 800,
                 fontFamily: DS.F,
                 cursor: busyState === 'posting' ? 'wait' : 'pointer',
