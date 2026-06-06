@@ -41,7 +41,7 @@ services:
   ride-matching-service:
     build:
       context: .
-      dockerfile: backend/services/ride-matching/Dockerfile
+      dockerfile: backend/services/ride-matching/Dockerfile.production
     container_name: wasel-ride-matching
     ports:
       - "8081:8080"
@@ -69,7 +69,7 @@ services:
   payment-reconciliation-service:
     build:
       context: .
-      dockerfile: backend/services/payment-reconciliation/Dockerfile
+      dockerfile: backend/services/payment-reconciliation/Dockerfile.production
     container_name: wasel-payment-reconciliation
     ports:
       - "8082:8080"
@@ -98,7 +98,7 @@ services:
   ops-analytics-worker:
     build:
       context: .
-      dockerfile: backend/services/ops-analytics/Dockerfile
+      dockerfile: backend/services/ops-analytics/Dockerfile.production
     container_name: wasel-ops-analytics
     ports:
       - "8083:8080"

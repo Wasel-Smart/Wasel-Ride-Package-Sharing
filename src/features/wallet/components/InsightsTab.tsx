@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui
 import { WaselColors } from '../../../tokens/wasel-tokens';
 import { PIE_COLORS } from './WalletShared';
 import type { InsightsData } from '../../../services/walletApi';
-import { C } from '../../../utils/wasel-ds';
 
 interface InsightsTabProps {
   insights: InsightsData | null;

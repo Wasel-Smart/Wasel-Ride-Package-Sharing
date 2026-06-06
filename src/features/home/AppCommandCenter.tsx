@@ -438,8 +438,7 @@ export function AppCommandCenter() {
             style={{
               borderRadius: 24,
               border: `1px solid ${C.borderSoft}`,
-              background:
-                `linear-gradient(180deg, ${C.elevated}, ${C.card})`,
+              background: `linear-gradient(180deg, ${C.elevated}, ${C.card})`,
               padding: '18px 18px 16px',
               display: 'grid',
               gap: 14,

@@ -167,7 +167,18 @@ type LocalStoredAccount = {
 };
 
 function isLocalE2EAuthEnabled() {
-  return (import.meta.env.VITE_E2E_LOCAL_AUTH as string | undefined) === 'true';
+  if ((import.meta.env.VITE_E2E_LOCAL_AUTH as string | undefined) === 'true') return true;
+
+  const provider = (import.meta.env.VITE_AUTH_CAPTCHA_PROVIDER as string | undefined)
+    ?.trim()
+    .toLowerCase();
+  const siteKey = (import.meta.env.VITE_AUTH_CAPTCHA_SITE_KEY as string | undefined)?.trim();
+  const captchaConfigured =
+    Boolean(siteKey) && (provider === 'hcaptcha' || provider === 'turnstile');
+
+  if (captchaConfigured || import.meta.env.PROD || typeof window === 'undefined') return false;
+
+  return ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
 }
 
 function normalizeEmail(email: string) {

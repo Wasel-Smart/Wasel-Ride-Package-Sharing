@@ -38,15 +38,7 @@ export const TX_ICONS: Record<string, any> = {
   cashback: { icon: Zap, color: C.purple, bg: 'bg-purple-500/10' },
 };
 
-export const PIE_COLORS = [
-  C.cyan,
-  C.gold,
-  C.green,
-  C.purple,
-  C.blue,
-  C.warning,
-  C.error,
-];
+export const PIE_COLORS = [C.cyan, C.gold, C.green, C.purple, C.blue, C.warning, C.error];
 
 const TX_STATUS_META: Record<string, { label: string; className: string }> = {
   pending: { label: 'Pending', className: 'text-amber-300 border-amber-400/30 bg-amber-500/10' },

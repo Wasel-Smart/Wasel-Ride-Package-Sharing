@@ -44,7 +44,7 @@ export function HomePage() {
           : 'Live seat supply and price on the same corridor',
         color: C.cyan,
         dim: C.cyanDim,
-        border: 'rgba(88,221,255,0.24)',
+        border: C.borderHov,
         path: '/find-ride',
       },
       {
@@ -59,7 +59,7 @@ export function HomePage() {
           : 'Manage seat supply, pricing, and clarity in one flow',
         color: C.gold,
         dim: C.goldDim,
-        border: 'rgba(255,190,92,0.24)',
+        border: C.goldDim,
         path: '/offer-ride',
       },
       {
@@ -72,9 +72,9 @@ export function HomePage() {
         outcome: ar
           ? 'تتبع واضح وتسليم ضمن شبكة الرحلات نفسها'
           : 'Clear tracking inside the same route network',
-        color: '#D9965B',
-        dim: 'rgba(217,149,91,0.12)',
-        border: 'rgba(217,149,91,0.24)',
+        color: C.orange,
+        dim: C.orangeDim,
+        border: C.orangeDim,
         path: '/packages',
       },
       {
@@ -89,7 +89,7 @@ export function HomePage() {
           : 'Keep moving even when shared supply is thin',
         color: C.green,
         dim: C.greenDim,
-        border: 'rgba(71,214,158,0.24)',
+        border: C.greenDim,
         path: '/bus',
       },
     ],
@@ -162,8 +162,7 @@ export function HomePage() {
           position: 'absolute',
           inset: 0,
           pointerEvents: 'none',
-          background:
-            'radial-gradient(circle at 14% 14%, rgba(88,221,255,0.12), transparent 24%), radial-gradient(circle at 84% 20%, rgba(255,190,92,0.08), transparent 18%), radial-gradient(circle at 72% 78%, rgba(71,214,158,0.09), transparent 22%)',
+          background: `radial-gradient(circle at 14% 14%, ${C.cyanDim}, transparent 24%), radial-gradient(circle at 84% 20%, ${C.goldDim}, transparent 18%), radial-gradient(circle at 72% 78%, ${C.greenDim}, transparent 22%)`,
         }}
       />
 
