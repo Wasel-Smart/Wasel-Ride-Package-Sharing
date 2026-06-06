@@ -101,7 +101,7 @@ export function FindRideCard({
                     justifyContent: 'center',
                   }}
                 >
-                    <CheckCircle2 size={9} color={C.text} />
+                  <CheckCircle2 size={9} color={C.text} />
                 </div>
               )}
             </div>
@@ -115,8 +115,8 @@ export function FindRideCard({
                 )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                  <Star size={11} fill={C.gold} color={C.gold} />
-                  <span style={{ color: C.gold, fontWeight: 700, fontSize: '0.75rem' }}>
+                <Star size={11} fill={C.gold} color={C.gold} />
+                <span style={{ color: C.gold, fontWeight: 700, fontSize: '0.75rem' }}>
                   {ride.driver.rating}
                 </span>
                 <span style={{ color: DS.muted, fontSize: '0.72rem' }}>
@@ -142,7 +142,7 @@ export function FindRideCard({
 
         <div
           style={{
-                  background: C.overlay,
+            background: C.overlay,
             borderRadius: r(14),
             padding: '14px 18px',
             marginBottom: 14,
@@ -323,7 +323,7 @@ export function FindRideCard({
                       ? DS.gold
                       : DS.green
                     : soldOut
-                    ? C.elevated
+                      ? C.elevated
                       : DS.cyan
                 }30`,
                 cursor: soldOut ? 'not-allowed' : 'pointer',

@@ -141,12 +141,11 @@ export default function WaselPlusPage() {
             <div
               key={item.label}
               style={{
-                background:
-                  C.card,
+                background: C.card,
                 borderRadius: r(18),
                 padding: '18px 18px 16px',
                 border: `1px solid ${DS.border}`,
-                  boxShadow: `0 12px 28px ${C.overlay}`,
+                boxShadow: `0 12px 28px ${C.overlay}`,
               }}
             >
               <div
@@ -363,7 +362,7 @@ export default function WaselPlusPage() {
                         style={{
                           borderRadius: r(12),
                           border: `1px solid ${DS.border}`,
-                    background: C.elevated,
+                          background: C.elevated,
                           padding: '10px 10px 9px',
                         }}
                       >

@@ -169,7 +169,9 @@ export function BusPage() {
         const nextPrimaryRoute = nextRoutes[0] ?? fallbackPrimaryRoute;
         if (nextRoutes.length) {
           setBusRoutes(nextRoutes);
-          setSelected(prev => (nextRoutes.some(route => route.id === prev) ? prev : nextPrimaryRoute.id));
+          setSelected(prev =>
+            nextRoutes.some(route => route.id === prev) ? prev : nextPrimaryRoute.id,
+          );
           setRoutesInfo(
             nextPrimaryRoute.dataSource === 'live'
               ? 'Live departures loaded.'
@@ -177,7 +179,9 @@ export function BusPage() {
           );
         } else {
           setBusRoutes(fallbackRoutes);
-          setSelected(prev => (fallbackRoutes.some(route => route.id === prev) ? prev : fallbackPrimaryRoute.id));
+          setSelected(prev =>
+            fallbackRoutes.some(route => route.id === prev) ? prev : fallbackPrimaryRoute.id,
+          );
           setRoutesInfo(
             fallbackRoutes.some(route => isExactRoute(route, origin, destination))
               ? `Official schedule shown. Verified ${fallbackPrimaryRoute.lastVerifiedAt ?? today}.`
@@ -187,7 +191,9 @@ export function BusPage() {
       } catch {
         if (cancelled) return;
         setBusRoutes(fallbackRoutes);
-        setSelected(prev => (fallbackRoutes.some(route => route.id === prev) ? prev : fallbackPrimaryRoute.id));
+        setSelected(prev =>
+          fallbackRoutes.some(route => route.id === prev) ? prev : fallbackPrimaryRoute.id,
+        );
         setRoutesInfo(
           `Live routes unavailable. Official schedule shown. Verified ${fallbackPrimaryRoute.lastVerifiedAt ?? today}.`,
         );
@@ -201,7 +207,8 @@ export function BusPage() {
     };
   }, [destination, origin, passengers, tripDate]);
 
-  const activeBus = busRoutes.find(route => route.id === selected) ?? busRoutes[0] ?? DEFAULT_BUS_ROUTE;
+  const activeBus =
+    busRoutes.find(route => route.id === selected) ?? busRoutes[0] ?? DEFAULT_BUS_ROUTE;
   const pickupCoord = resolveCityCoord(activeBus.from);
   const dropoffCoord = resolveCityCoord(activeBus.to);
   const routeCenter = midpoint(pickupCoord, dropoffCoord);
@@ -227,7 +234,8 @@ export function BusPage() {
   const fallbackBuses = busRoutes
     .filter(route => route.id !== activeBus.id && route.seats > 0)
     .slice(0, 2);
-  const selectedSourceLabel = activeBus.dataSource === 'live' ? 'Live operator feed' : 'Official schedule';
+  const selectedSourceLabel =
+    activeBus.dataSource === 'live' ? 'Live operator feed' : 'Official schedule';
   const selectedSourceDetail =
     activeBus.dataSource === 'live'
       ? 'Departure times and seat counts are coming from the live route response.'
@@ -376,7 +384,7 @@ export function BusPage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
-                  boxShadow: SH.sm,
+                boxShadow: SH.sm,
               }}
             >
               <ArrowLeftRight size={16} />
@@ -548,12 +556,11 @@ export function BusPage() {
             <div
               key={item.label}
               style={{
-                background:
-                      C.card,
+                background: C.card,
                 border: `1px solid ${DS.border}`,
                 borderRadius: r(18),
                 padding: '18px 18px 16px',
-                  boxShadow: SH.card,
+                boxShadow: SH.card,
               }}
             >
               <div
@@ -623,7 +630,15 @@ export function BusPage() {
               gap: 10,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                justifyContent: 'space-between',
+                gap: 12,
+                flexWrap: 'wrap',
+              }}
+            >
               <div>
                 <div
                   style={{
@@ -640,7 +655,9 @@ export function BusPage() {
                   {activeBus.from} to {activeBus.to}
                 </div>
               </div>
-              <span style={{ ...pill(activeStatus.color), fontSize: '0.68rem' }}>{activeStatus.label}</span>
+              <span style={{ ...pill(activeStatus.color), fontSize: '0.68rem' }}>
+                {activeStatus.label}
+              </span>
             </div>
 
             <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.65 }}>
@@ -688,7 +705,9 @@ export function BusPage() {
                 Fallback departures
               </div>
               <div style={{ color: C.text, fontWeight: 900, fontSize: '1rem', marginTop: 6 }}>
-                {fallbackBuses.length > 0 ? 'Keep one calmer alternative visible' : 'Selected departure is currently the clearest fit'}
+                {fallbackBuses.length > 0
+                  ? 'Keep one calmer alternative visible'
+                  : 'Selected departure is currently the clearest fit'}
               </div>
             </div>
 
@@ -706,14 +725,21 @@ export function BusPage() {
                     textAlign: 'left',
                     borderRadius: r(14),
                     border: `1px solid ${route.color ?? DS.cyan}24`,
-              background: C.elevated,
+                    background: C.elevated,
                     padding: '12px 14px',
                     cursor: 'pointer',
                     display: 'grid',
                     gap: 6,
                   }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      gap: 10,
+                      alignItems: 'center',
+                    }}
+                  >
                     <span style={{ color: C.text, fontWeight: 800, fontSize: '0.84rem' }}>
                       {route.company}
                     </span>
@@ -728,7 +754,8 @@ export function BusPage() {
               ))
             ) : (
               <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
-                No fallback departure is currently cleaner than the selected route. You can continue with the booking plan below.
+                No fallback departure is currently cleaner than the selected route. You can continue
+                with the booking plan below.
               </div>
             )}
           </div>
@@ -914,7 +941,7 @@ export function BusPage() {
                         <div
                           key={item.label}
                           style={{
-                  background: C.elevated,
+                            background: C.elevated,
                             border: `1px solid ${DS.border}`,
                             borderRadius: r(12),
                             padding: '12px 13px',
@@ -989,8 +1016,7 @@ export function BusPage() {
           >
             <div
               style={{
-                background:
-                    C.card,
+                background: C.card,
                 border: `1px solid ${activeBus.color ?? DS.cyan}30`,
                 borderRadius: r(22),
                 overflow: 'hidden',
@@ -1045,7 +1071,7 @@ export function BusPage() {
                             ? mode === 'depart-now'
                               ? DS.gradC
                               : DS.gradG
-                    : C.elevated,
+                            : C.elevated,
                         color: C.text,
                         fontWeight: 700,
                       }}
@@ -1135,8 +1161,8 @@ export function BusPage() {
                 {activeBus.seats === 0 && (
                   <div
                     style={{
-              background: C.goldDim,
-              border: `1px solid ${C.goldDim}`,
+                      background: C.goldDim,
+                      border: `1px solid ${C.goldDim}`,
                       borderRadius: r(16),
                       padding: '14px 16px',
                       color: C.text,
@@ -1275,12 +1301,11 @@ export function BusPage() {
                 </div>
                 <div
                   style={{
-                    background:
-                  `linear-gradient(135deg, ${C.cyanDim}, ${C.goldDim})`,
+                    background: `linear-gradient(135deg, ${C.cyanDim}, ${C.goldDim})`,
                     border: `1px solid ${DS.border}`,
                     borderRadius: r(16),
                     padding: '16px 16px 14px',
-                boxShadow: SH.card,
+                    boxShadow: SH.card,
                   }}
                 >
                   {[
@@ -1379,8 +1404,8 @@ export function BusPage() {
                 {bookingComplete && (
                   <div
                     style={{
-              background: C.greenDim,
-              border: `1px solid ${C.greenDim}`,
+                      background: C.greenDim,
+                      border: `1px solid ${C.greenDim}`,
                       borderRadius: r(16),
                       padding: '14px 16px',
                     }}
