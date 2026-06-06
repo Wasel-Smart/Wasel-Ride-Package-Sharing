@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { Shield } from 'lucide-react';
 import { CITIES } from '../../../pages/waselCoreRideData';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
+import { C, SH } from '../../../utils/wasel-ds';
 import type { PackageRequest } from '../../../services/journeyLogistics';
 import {
   PACKAGE_EXCELLENCE_POINTS,
@@ -63,11 +64,11 @@ export function PackageSendPanel({
           style={{
             margin: '20px auto',
             maxWidth: 360,
-            background: 'rgba(255,255,255,0.03)',
+            background: C.elevated,
             borderRadius: r(16),
             padding: '16px 20px',
             border: `1px solid ${DS.border}`,
-            boxShadow: '0 10px 22px rgba(0,0,0,0.14)',
+            boxShadow: SH.card,
           }}
         >
           <p style={{ color: DS.muted, fontSize: '0.75rem', marginBottom: 4 }}>Tracking ID</p>
@@ -330,7 +331,7 @@ export function PackageSendPanel({
         <div
           style={{
             gridColumn: '1/-1',
-            background: 'rgba(255,255,255,0.03)',
+            background: C.elevated,
             borderRadius: r(14),
             padding: '16px 18px',
             border: `1px solid ${DS.border}`,
@@ -357,7 +358,7 @@ export function PackageSendPanel({
                 borderRadius: r(12),
                 border: `1px solid ${DS.border}`,
                 padding: '12px 13px',
-                background: 'rgba(255,255,255,0.03)',
+                background: C.elevated,
               }}
             >
               <div style={{ color: '#fff', fontSize: '0.82rem', fontWeight: 700 }}>
@@ -416,11 +417,11 @@ export function PackageSendPanel({
       <div style={{ display: 'grid', gap: 14 }}>
         <div
           style={{
-            background: 'rgba(255,255,255,0.03)',
+            background: C.elevated,
             borderRadius: r(16),
             padding: '18px 18px 16px',
             border: `1px solid ${DS.border}`,
-            boxShadow: '0 10px 22px rgba(0,0,0,0.12)',
+            boxShadow: SH.card,
           }}
         >
           <div
@@ -452,11 +453,11 @@ export function PackageSendPanel({
         </div>
         <div
           style={{
-            background: 'rgba(255,255,255,0.03)',
+            background: C.elevated,
             borderRadius: r(16),
             padding: '18px 18px 16px',
             border: `1px solid ${DS.border}`,
-            boxShadow: '0 10px 22px rgba(0,0,0,0.12)',
+            boxShadow: SH.card,
           }}
         >
           <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>
@@ -470,7 +471,7 @@ export function PackageSendPanel({
                   borderRadius: r(12),
                   border: `1px solid ${DS.border}`,
                   padding: '12px 13px',
-                  background: 'rgba(255,255,255,0.03)',
+                  background: C.elevated,
                 }}
               >
                 <div style={{ color: '#fff', fontSize: '0.84rem', fontWeight: 700 }}>
@@ -485,11 +486,11 @@ export function PackageSendPanel({
         </div>
         <div
           style={{
-            background: 'rgba(255,255,255,0.03)',
+            background: C.elevated,
             borderRadius: r(16),
             padding: '18px 18px 16px',
             border: `1px solid ${DS.border}`,
-            boxShadow: '0 10px 22px rgba(0,0,0,0.12)',
+            boxShadow: SH.card,
           }}
         >
           <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.95rem', marginBottom: 10 }}>
@@ -506,7 +507,7 @@ export function PackageSendPanel({
                     borderRadius: r(12),
                     border: `1px solid ${DS.border}`,
                     padding: '12px 13px',
-                    background: 'rgba(255,255,255,0.03)',
+                    background: C.elevated,
                     cursor: 'pointer',
                   }}
                 >
