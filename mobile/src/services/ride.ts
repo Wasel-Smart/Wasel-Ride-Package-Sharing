@@ -4,6 +4,7 @@
  */
 
 import { mobileAuth } from './auth';
+import { offlineService } from './offline';
 
 export type RideStatus =
   | 'requested'
@@ -119,24 +120,35 @@ export class RideLifecycleService {
       return { error: new Error('User not authenticated') };
     }
 
+    const payload = {
+      rider_id: user.id,
+      origin_lat: request.origin.latitude,
+      origin_lng: request.origin.longitude,
+      origin_address: request.origin.address,
+      dest_lat: request.destination.latitude,
+      dest_lng: request.destination.longitude,
+      dest_address: request.destination.address,
+      seats: request.seats,
+      scheduled_for: request.scheduledFor,
+      preferred_vehicle_type: request.preferredVehicleType,
+      notes: request.notes,
+    };
+
+    // If offline, queue the action
+    if (!offlineService.isDeviceOnline()) {
+      await offlineService.queueOfflineAction({
+        type: 'RIDE_REQUEST',
+        payload,
+      });
+      return { error: new Error('Ride request queued for sync when online') };
+    }
+
     try {
       // Call backend API
       const response = await fetch(this.getApiUrl('/v1/rides'), {
         method: 'POST',
         headers: this.getAuthHeaders(),
-        body: JSON.stringify({
-          rider_id: user.id,
-          origin_lat: request.origin.latitude,
-          origin_lng: request.origin.longitude,
-          origin_address: request.origin.address,
-          dest_lat: request.destination.latitude,
-          dest_lng: request.destination.longitude,
-          dest_address: request.destination.address,
-          seats: request.seats,
-          scheduled_for: request.scheduledFor,
-          preferred_vehicle_type: request.preferredVehicleType,
-          notes: request.notes,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -146,6 +158,9 @@ export class RideLifecycleService {
       const data = await response.json();
       const ride = this.mapDatabaseRide(data.ride);
       this.setActiveRide(ride);
+      
+      // Cache the ride
+      await offlineService.cacheActiveRide(ride);
 
       return { ride };
     } catch (error) {
@@ -154,6 +169,16 @@ export class RideLifecycleService {
   }
 
   async cancelRide(rideId: string, reason?: string): Promise<{ error?: Error }> {
+    // If offline, queue the action
+    if (!offlineService.isDeviceOnline()) {
+      await offlineService.queueOfflineAction({
+        type: 'RIDE_CANCEL',
+        payload: { rideId, reason },
+      });
+      this.setActiveRide(null);
+      return {};
+    }
+
     try {
       const response = await fetch(
         this.getApiUrl(`/v1/rides/${encodeURIComponent(rideId)}/cancel`),
@@ -176,6 +201,15 @@ export class RideLifecycleService {
   }
 
   async rateRide(rideId: string, rating: number, feedback?: string): Promise<{ error?: Error }> {
+    // If offline, queue the action
+    if (!offlineService.isDeviceOnline()) {
+      await offlineService.queueOfflineAction({
+        type: 'RIDE_RATING',
+        payload: { rideId, rating, feedback },
+      });
+      return {};
+    }
+
     try {
       await this.request<void>(`/v1/rides/${encodeURIComponent(rideId)}/rating`, {
         method: 'POST',
@@ -193,28 +227,63 @@ export class RideLifecycleService {
     const user = mobileAuth.getUser();
     if (!user) return null;
 
+    // If offline, try to get cached ride
+    if (!offlineService.isDeviceOnline()) {
+      const cached = await offlineService.getCachedActiveRide();
+      if (cached) {
+        this.setActiveRide(cached);
+        return cached;
+      }
+      return null;
+    }
+
     try {
       const data = await this.request<{ ride: unknown | null }>('/v1/rides/active');
       if (!data.ride) return null;
 
       const ride = this.mapDatabaseRide(data.ride);
       this.setActiveRide(ride);
+      
+      // Cache the ride
+      await offlineService.cacheActiveRide(ride);
+      
       return ride;
     } catch (error) {
       console.error('[RideLifecycle] Error fetching active ride:', error);
+      
+      // Fallback to cache on error
+      const cached = await offlineService.getCachedActiveRide();
+      if (cached) {
+        this.setActiveRide(cached);
+        return cached;
+      }
+      
       return null;
     }
   }
 
   async getDriverInfo(driverId: string): Promise<Driver | null> {
+    // If offline, try to get cached driver info
+    if (!offlineService.isDeviceOnline()) {
+      return await offlineService.getCachedDriverInfo(driverId);
+    }
+
     try {
       const data = await this.request<{ driver: Driver | null }>(
         `/v1/drivers/${encodeURIComponent(driverId)}`,
       );
+      
+      if (data.driver) {
+        // Cache driver info
+        await offlineService.cacheDriverInfo(driverId, data.driver);
+      }
+      
       return data.driver;
     } catch (error) {
       console.error('[RideLifecycle] Error fetching driver info:', error);
-      return null;
+      
+      // Fallback to cache on error
+      return await offlineService.getCachedDriverInfo(driverId);
     }
   }
 
@@ -222,14 +291,28 @@ export class RideLifecycleService {
     const user = mobileAuth.getUser();
     if (!user) return [];
 
+    // If offline, return cached history
+    if (!offlineService.isDeviceOnline()) {
+      const cached = await offlineService.getCachedRideHistory();
+      return cached || [];
+    }
+
     try {
       const data = await this.request<{ rides: unknown[] }>(
         `/v1/rides/history?limit=${encodeURIComponent(String(limit))}`,
       );
-      return data.rides.map(ride => this.mapDatabaseRide(ride));
+      const rides = data.rides.map(ride => this.mapDatabaseRide(ride));
+      
+      // Cache ride history
+      await offlineService.cacheRideHistory(rides);
+      
+      return rides;
     } catch (error) {
       console.error('[RideLifecycle] Error fetching ride history:', error);
-      return [];
+      
+      // Fallback to cache on error
+      const cached = await offlineService.getCachedRideHistory();
+      return cached || [];
     }
   }
 

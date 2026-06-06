@@ -175,7 +175,7 @@
     "workers:start": "node -e \"import('./src/platform/worker-framework.ts').then(m => m.workerRegistry.startAll())\"",
     "observability:dashboard": "npm run dev -- --open /ops/observability",
     "telemetry:init": "node -e \"import('./src/platform/telemetry.ts').then(m => m.initWebVitals())\"",
-    "health:check:production": "curl -f https://wasel14.online/ || exit 1",
+    "health:check:production": "node scripts/verify-live-health.mjs https://wasel14.online/health",
     "mobile:install": "cd mobile && npm install",
     "mobile:android": "cd mobile && npm run android",
     "mobile:ios": "cd mobile && npm run ios",
@@ -185,6 +185,7 @@
     "k8s:deploy": "bash scripts/deploy-kubernetes.sh",
     "load:test": "bash scripts/run-load-tests.sh production https://wasel14.online",
     "load:smoke": "bash scripts/run-load-tests.sh smoke https://wasel14.online",
+    "load:smoke:node": "node scripts/load-smoke-node.mjs https://wasel14.online/health",
     "validate:10-out-of-10": "node scripts/validate-10-out-of-10.mjs"
   }
 }

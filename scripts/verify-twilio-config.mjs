@@ -110,11 +110,21 @@ async function main() {
 
   let apiKeyAuthOk = false;
   try {
-    const apiKeyAccount = await twilioGet(
-      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}.json`,
+    if (messagingServiceSid) {
+      const service = await twilioGet(
+        `https://messaging.twilio.com/v1/Services/${messagingServiceSid}`,
+        apiKeyAuthHeader(),
+      );
+      if (service.sid !== messagingServiceSid) {
+        throw new Error('Twilio API key authenticated but returned the wrong Messaging Service');
+      }
+    }
+
+    const verifyService = await twilioGet(
+      `https://verify.twilio.com/v2/Services/${verifyServiceSid}`,
       apiKeyAuthHeader(),
     );
-    apiKeyAuthOk = apiKeyAccount.sid === accountSid;
+    apiKeyAuthOk = verifyService.sid === verifyServiceSid;
   } catch {
     apiKeyAuthOk = false;
   }

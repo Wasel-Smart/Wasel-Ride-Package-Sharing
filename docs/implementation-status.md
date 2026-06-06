@@ -98,11 +98,12 @@ Deployment manifests and environment overlays for `dev`, `staging`, and `prod` l
 - ✅ Independent microservices architecture (11 services)
 - ✅ Kubernetes deployment with HPA
 - ✅ Production observability and distributed tracing
+- ✅ Mobile offline mode with auto-sync (network detection, queue, cache)
+- ✅ Mobile E2E testing with Detox (auth, rides, offline flows)
 
 ## Roadmap (future enhancements)
 
 - In-app chat between riders and drivers
-- Offline-first mobile experience
 - Multi-region deployment
 - Advanced fraud detection
 - AI-powered demand forecasting
