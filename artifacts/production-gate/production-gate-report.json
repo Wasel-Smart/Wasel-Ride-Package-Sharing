@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-06-06T10:25:16.412Z",
-  "scoreOutOf10": 4.4,
+  "generatedAt": "2026-06-06T10:27:25.028Z",
+  "scoreOutOf10": 5.6,
   "certified10Of10": false,
   "checks": [
     {
       "name": "backend-production-build",
-      "status": "fail",
-      "evidence": "spawn EINVAL",
+      "status": "pass",
+      "evidence": "backend TypeScript production service build passed",
       "details": []
     },
     {
@@ -55,9 +55,9 @@
         "src\\utils\\gdpr.ts:148:        supabase.from('wallet_transactions').select('*').eq('user_id', userId),",
         "src\\utils\\gdpr.ts:149:        supabase.from('user_consents').select('*').eq('user_id', userId),",
         "src\\utils\\gdpr.ts:213:      const { error } = await supabase.from('data_deletion_requests').insert({",
-        "src\\services\\ratings.ts:87:    await supabase.from('notifications').insert({",
         "src\\services\\cancellation.ts:80:    await supabase.from('notifications').insert({",
-        "src\\services\\cancellation.ts:163:        await supabase.from('notifications').insert({"
+        "src\\services\\cancellation.ts:163:        await supabase.from('notifications').insert({",
+        "src\\services\\ratings.ts:87:    await supabase.from('notifications').insert({"
       ]
     },
     {
