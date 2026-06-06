@@ -14,15 +14,15 @@ import {
   Shield,
   Star,
 } from 'lucide-react';
-import { Button } from '../../components/ui/button';
 import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import { PageHero, PageShell, StatusBadge } from '../../components/wasel-ui/WaselPagePrimitives';
+import { WaselButton } from '../../design-system';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { SPACE } from '../../utils/wasel-ds';
+import { C, GRAD, R, SH, SPACE } from '../../utils/wasel-ds';
 import { getProfileInitials } from './profileUtils';
 import {
   InsightCard as SharedInsightCard,
@@ -48,14 +48,14 @@ function showToast(message: string) {
     bottom: '24px',
     left: '50%',
     transform: 'translateX(-50%)',
-    background: '#0A1628',
-    border: '1px solid rgba(0,200,232,0.3)',
-    color: '#EFF6FF',
+    background: C.cardSolid,
+    border: `1px solid ${C.borderHov}`,
+    color: C.text,
     padding: '10px 20px',
     borderRadius: '10px',
     fontSize: '0.85rem',
     zIndex: '9999',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+    boxShadow: SH.md,
   });
   document.body.appendChild(element);
   setTimeout(() => element.remove(), 2800);
@@ -98,7 +98,7 @@ interface ProfilePageContentProps {
   isSupported: boolean;
   permission: NotificationPermission;
   requestPermission: () => Promise<NotificationPermission>;
-   photoInputRef: React.MutableRefObject<HTMLInputElement | null>;
+  photoInputRef: React.MutableRefObject<HTMLInputElement | null>;
 }
 
 function ProfilePageContent({
@@ -189,7 +189,7 @@ function ProfilePageContent({
           accent={CYAN}
           actions={
             <>
-              <Button
+              <WaselButton
                 onClick={() => {
                   setNameInput(user.name);
                   setEditingField('name');
@@ -197,21 +197,21 @@ function ProfilePageContent({
                 className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {ar ? 'تعديل الاسم' : 'Edit name'}
-              </Button>
-              <Button
+              </WaselButton>
+              <WaselButton
                 variant="outline"
                 onClick={() => nav('/app/trust')}
                 className="border-white/15 bg-white/5 text-white hover:bg-white/10"
               >
                 {ar ? 'مركز الثقة' : 'Trust Center'}
-              </Button>
-              <Button
+              </WaselButton>
+              <WaselButton
                 variant="outline"
                 onClick={() => nav('/app/settings?section=account')}
                 className="border-white/15 bg-white/5 text-white hover:bg-white/10"
               >
                 {ar ? 'الإعدادات' : 'Settings'}
-              </Button>
+              </WaselButton>
             </>
           }
           aside={
@@ -221,15 +221,15 @@ function ProfilePageContent({
                   style={{
                     width: 92,
                     height: 92,
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg,#00C8E8,#0060D8)',
+                    borderRadius: R.full,
+                    background: GRAD,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '1.9rem',
                     fontWeight: 900,
-                    color: '#040C18',
-                    boxShadow: '0 0 0 3px rgba(0,200,232,0.35), 0 8px 32px rgba(0,200,232,0.2)',
+                    color: C.bgDeep,
+                    boxShadow: SH.cyanL,
                     overflow: 'hidden',
                   }}
                 >
@@ -253,8 +253,8 @@ function ProfilePageContent({
                     right: 0,
                     width: 30,
                     height: 30,
-                    borderRadius: '50%',
-                    background: '#1E293B',
+                    borderRadius: R.full,
+                    background: C.cardSolid,
                     border: `2px solid ${BG}`,
                     display: 'flex',
                     alignItems: 'center',
@@ -304,8 +304,8 @@ function ProfilePageContent({
                   padding: '10px 12px',
                   borderRadius: 10,
                   border: `1.5px solid ${CYAN}`,
-                  background: 'rgba(0,200,232,0.07)',
-                  color: '#EFF6FF',
+                  background: C.cyanDim,
+                  color: C.text,
                   fontSize: '0.9rem',
                   fontFamily: FONT,
                   outline: 'none',
@@ -324,7 +324,7 @@ function ProfilePageContent({
                   borderRadius: 10,
                   background: CYAN,
                   border: 'none',
-                  color: '#040C18',
+                  color: C.bgDeep,
                   fontWeight: 700,
                   cursor: 'pointer',
                   fontSize: '0.8rem',
@@ -338,9 +338,9 @@ function ProfilePageContent({
                 style={{
                   padding: '10px 12px',
                   borderRadius: 10,
-                  background: 'rgba(255,255,255,0.06)',
+                  background: C.elevated,
                   border: `1px solid ${BORD}`,
-                  color: 'rgba(255,255,255,0.7)',
+                  color: C.textMuted,
                   cursor: 'pointer',
                   fontSize: '0.8rem',
                   fontFamily: FONT,
@@ -370,19 +370,19 @@ function ProfilePageContent({
             label={ar ? 'تقييم' : 'Rating'}
             value={(user.rating ?? 5).toFixed(1)}
             icon={<Star size={16} />}
-            color="#F59E0B"
+            color={C.gold}
           />
           <SharedStatCard
             label={ar ? 'الثقة' : 'Trust'}
             value={`${user.trustScore}/100`}
             icon={<Shield size={16} />}
-            color="#22C55E"
+            color={C.green}
           />
           <SharedStatCard
             label={ar ? 'الرصيد' : 'Balance'}
             value={`JOD ${(user.balance ?? 0).toFixed(1)}`}
             icon={<CreditCard size={16} />}
-            color="#A78BFA"
+            color={C.purple}
           />
         </div>
 
@@ -425,7 +425,7 @@ function ProfilePageContent({
                   ? 'كلما اكتمل الملف تحسنت الثقة وسهولة الحجز.'
                   : 'A more complete account improves trust and booking confidence.'
               }
-              color={profileCompleteness >= 80 ? '#22C55E' : CYAN}
+              color={profileCompleteness >= 80 ? C.green : CYAN}
             />
             <SharedInsightCard
               label={ar ? 'مستوى التحقق' : 'Verification level'}
@@ -435,7 +435,7 @@ function ProfilePageContent({
                   ? 'مرتبط بالبريد والهاتف والهوية أو سند.'
                   : 'Driven by email, phone, and identity completion.'
               }
-              color={user.verified || user.sanadVerified ? CYAN : '#F59E0B'}
+              color={user.verified || user.sanadVerified ? CYAN : C.gold}
             />
             <SharedInsightCard
               label={ar ? 'حالة المحفظة' : 'Wallet status'}
@@ -487,9 +487,7 @@ function ProfilePageContent({
           ))}
           <SharedRow
             label={ar ? 'الوضع التشغيلي' : 'Operational standing'}
-            value={
-              ar ? `${trustTier} - ${memberLabel}` : `${trustTier} - ${memberLabel}`
-            }
+            value={ar ? `${trustTier} - ${memberLabel}` : `${trustTier} - ${memberLabel}`}
             icon={<CheckCircle size={15} />}
             onClick={() => nav('/app/my-trips')}
           />
@@ -501,7 +499,7 @@ function ProfilePageContent({
               <div
                 style={{
                   fontSize: '0.72rem',
-                  color: 'rgba(148,163,184,0.72)',
+                  color: C.textMuted,
                   fontFamily: FONT,
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
@@ -525,8 +523,8 @@ function ProfilePageContent({
                     padding: '10px 12px',
                     borderRadius: 10,
                     border: `1px solid ${editingField === 'phone' ? CYAN : BORD}`,
-                    background: 'rgba(0,200,232,0.07)',
-                    color: '#EFF6FF',
+                    background: C.cyanDim,
+                    color: C.text,
                     fontSize: '0.88rem',
                     fontFamily: FONT,
                     outline: 'none',
@@ -540,7 +538,7 @@ function ProfilePageContent({
                     borderRadius: 10,
                     background: CYAN,
                     border: 'none',
-                    color: '#040C18',
+                    color: C.bgDeep,
                     fontWeight: 700,
                     cursor: 'pointer',
                     fontSize: '0.8rem',
@@ -550,9 +548,7 @@ function ProfilePageContent({
                   {savingField === 'phone' ? '...' : ar ? 'حفظ الهاتف' : 'Save phone'}
                 </button>
               </div>
-              <div
-                style={{ fontSize: '0.74rem', color: 'rgba(148,163,184,0.7)', fontFamily: FONT }}
-              >
+              <div style={{ fontSize: '0.74rem', color: C.textMuted, fontFamily: FONT }}>
                 {ar
                   ? 'يستخدم للتنبيهات والتحقق وتنسيق الرحلات.'
                   : 'Used for alerts, verification, and ride coordination.'}
@@ -573,7 +569,7 @@ function ProfilePageContent({
               label={ar ? 'المستندات' : 'Documents'}
               value={ar ? 'رخصة + تأمين + ترخيص' : 'License · Insurance · Registration'}
               icon={<span>DOC</span>}
-              badge={<CheckCircle size={14} color="#22C55E" />}
+              badge={<CheckCircle size={14} color={C.green} />}
               onClick={() => nav('/app/trust')}
             />
             <SharedRow
@@ -616,8 +612,8 @@ function ProfilePageContent({
               <span
                 style={{
                   fontSize: '0.65rem',
-                  color: '#F59E0B',
-                  background: 'rgba(245,158,11,0.12)',
+                  color: C.gold,
+                  background: C.goldDim,
                   padding: '2px 7px',
                   borderRadius: 999,
                   fontFamily: FONT,
@@ -684,7 +680,7 @@ function ProfilePageContent({
           style={{
             textAlign: 'center',
             fontSize: '0.72rem',
-            color: 'rgba(148,163,184,0.35)',
+            color: C.textDim,
             fontFamily: FONT,
           }}
         >
@@ -699,7 +695,7 @@ function ProfilePageContent({
             position: 'fixed',
             inset: 0,
             zIndex: 2000,
-            background: 'rgba(0,0,0,0.75)',
+            background: C.overlay,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -708,8 +704,8 @@ function ProfilePageContent({
         >
           <div
             style={{
-              background: '#0A1628',
-              border: '1px solid rgba(239,68,68,0.3)',
+              background: C.cardSolid,
+              border: `1px solid ${C.errorDim}`,
               borderRadius: 16,
               padding: 28,
               maxWidth: 360,
@@ -718,7 +714,7 @@ function ProfilePageContent({
           >
             <h3
               style={{
-                color: '#EF4444',
+                color: C.error,
                 fontFamily: FONT,
                 fontWeight: 800,
                 fontSize: '1.1rem',
@@ -729,7 +725,7 @@ function ProfilePageContent({
             </h3>
             <p
               style={{
-                color: 'rgba(148,163,184,0.8)',
+                color: C.textMuted,
                 fontFamily: FONT,
                 fontSize: '0.85rem',
                 marginBottom: 20,
@@ -747,8 +743,8 @@ function ProfilePageContent({
                   height: 40,
                   borderRadius: 10,
                   background: 'transparent',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  color: 'rgba(255,255,255,0.7)',
+                  border: `1px solid ${C.border}`,
+                  color: C.textMuted,
                   fontFamily: FONT,
                   cursor: 'pointer',
                 }}
@@ -761,9 +757,9 @@ function ProfilePageContent({
                   flex: 1,
                   height: 40,
                   borderRadius: 10,
-                  background: 'rgba(239,68,68,0.15)',
-                  border: '1px solid rgba(239,68,68,0.4)',
-                  color: '#EF4444',
+                  background: C.errorDim,
+                  border: `1px solid ${C.errorDim}`,
+                  color: C.error,
                   fontFamily: FONT,
                   fontWeight: 700,
                   cursor: 'pointer',

@@ -15,12 +15,8 @@ function Invoke-Step {
   }
 }
 
-Invoke-Step 'type-check:tests' {
-  & .\node_modules\.bin\tsc.cmd --noEmit -p tsconfig.tests.json
-}
-
 Invoke-Step 'type-check' {
-  & .\node_modules\.bin\tsc.cmd --noEmit
+  & .\node_modules\.bin\tsc.cmd --noEmit -p tsconfig.tests.json
 }
 
 Invoke-Step 'lint' {
@@ -38,13 +34,27 @@ Invoke-Step 'verify:contracts' {
 }
 
 Invoke-Step 'test:unit' {
-  & .\node_modules\.bin\vitest.cmd run
+  $testFiles = @(Get-ChildItem -Path tests -Recurse -File |
+    Where-Object { $_.Name -match '\.test\.tsx?$' } |
+    Sort-Object FullName |
+    ForEach-Object {
+      $_.FullName.Replace((Get-Location).Path + '\', '')
+    })
+
+  $chunkSize = 4
+  for ($index = 0; $index -lt $testFiles.Count; $index += $chunkSize) {
+    $end = [Math]::Min($index + $chunkSize - 1, $testFiles.Count - 1)
+    $chunk = @($testFiles[$index..$end])
+    Write-Host "[verify:ci] vitest files $($index + 1)-$($end + 1) of $($testFiles.Count)"
+    & .\node_modules\.bin\vitest.cmd run @chunk
+    if ($LASTEXITCODE -ne 0) {
+      exit $LASTEXITCODE
+    }
+  }
 }
 
 Invoke-Step 'build' {
   & node scripts/check-build-env.mjs
-  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-  & .\node_modules\.bin\tsc.cmd --noEmit
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
   & .\node_modules\.bin\vite.cmd build
   if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

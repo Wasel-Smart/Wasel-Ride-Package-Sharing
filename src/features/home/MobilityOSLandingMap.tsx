@@ -237,7 +237,6 @@ export function MobilityOSLandingMap({
       const dpr = window.devicePixelRatio || 1;
       const width = size.width;
       const height = size.height;
-      const compact = width < 480;
       const focusedRoute = routes.find(route => route.focused) ?? null;
       const focusStroke = runtimeMode === 'fallback' ? '#ffbe5c' : FLOW;
       const focusGhost = runtimeMode === 'fallback' ? '#ffd38c' : GHOST;
@@ -617,17 +616,6 @@ export function MobilityOSLandingMap({
           ctx.fillText(city.name, point.x + (city.labelDx ?? 0), point.y + (city.labelDy ?? -12));
         }
       });
-
-      if (!compact && !minimalText) {
-        const liveTextX = width * 0.075;
-        const liveTextY = height * 0.86;
-        ctx.fillStyle = 'rgba(211,245,247,0.7)';
-        ctx.font = '600 10px Inter, system-ui, sans-serif';
-        ctx.fillText('Live travel control field', liveTextX, liveTextY);
-        ctx.fillStyle = 'rgba(255,255,255,0.86)';
-        ctx.font = '700 11px Inter, system-ui, sans-serif';
-        ctx.fillText('Mercator projection + weighted corridor arcs', liveTextX, liveTextY + 18);
-      }
 
       frameRef.current = requestAnimationFrame(render);
     };

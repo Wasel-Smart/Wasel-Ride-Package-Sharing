@@ -68,34 +68,34 @@ async function readAvatarFile(file: File): Promise<string> {
 
 function getWalletStatus(user: WaselUser, ar: boolean): ProfileStatusChip {
   if (user.walletStatus === 'closed') {
-    return { label: ar ? 'مغلقة' : 'Closed', color: '#EF4444' };
+    return { label: ar ? 'مغلقة' : 'Closed', color: C.error };
   }
 
   if (user.walletStatus === 'frozen') {
-    return { label: ar ? 'مجمّد' : 'Frozen', color: '#EF4444' };
+    return { label: ar ? 'مجمّد' : 'Frozen', color: C.error };
   }
 
   if (user.walletStatus === 'limited') {
-    return { label: ar ? 'محدود' : 'Limited', color: '#F59E0B' };
+    return { label: ar ? 'محدود' : 'Limited', color: C.gold };
   }
 
-  return { label: ar ? 'نشط' : 'Active', color: '#22C55E' };
+  return { label: ar ? 'نشط' : 'Active', color: C.green };
 }
 
 function getPermissionStatus(support: NotificationSupport, ar: boolean): ProfileStatusChip {
   if (!support.isSupported) {
-    return { label: ar ? 'غير مدعوم' : 'Unsupported', color: '#94A3B8' };
+    return { label: ar ? 'غير مدعوم' : 'Unsupported', color: C.textDim };
   }
 
   if (support.permission === 'granted') {
-    return { label: ar ? 'مفعل' : 'Enabled', color: '#22C55E' };
+    return { label: ar ? 'مفعل' : 'Enabled', color: C.green };
   }
 
   if (support.permission === 'denied') {
-    return { label: ar ? 'محظور' : 'Blocked', color: '#EF4444' };
+    return { label: ar ? 'محظور' : 'Blocked', color: C.error };
   }
 
-  return { label: ar ? 'غير مفعل' : 'Not enabled', color: '#F59E0B' };
+  return { label: ar ? 'غير مفعل' : 'Not enabled', color: C.gold };
 }
 
 function getTrustTier(trustScore: number, ar: boolean) {
@@ -133,7 +133,7 @@ function buildVerificationItems(user: WaselUser, ar: boolean): ProfileVerificati
         : ar
           ? 'غير مؤكد'
           : 'Needs confirmation',
-      color: user.emailVerified ? '#22C55E' : '#F59E0B',
+      color: user.emailVerified ? C.green : C.gold,
     },
     {
       label: ar ? 'رقم الهاتف' : 'Phone',
@@ -148,7 +148,7 @@ function buildVerificationItems(user: WaselUser, ar: boolean): ProfileVerificati
           : ar
             ? 'غير مضاف'
             : 'Not added',
-      color: user.phoneVerified ? '#22C55E' : '#F59E0B',
+      color: user.phoneVerified ? C.green : C.gold,
     },
     {
       label: ar ? 'الهوية / سند' : 'Identity / Sanad',
@@ -160,7 +160,7 @@ function buildVerificationItems(user: WaselUser, ar: boolean): ProfileVerificati
           : ar
             ? 'بانتظار التحقق'
             : 'Pending verification',
-      color: user.sanadVerified || user.verified ? PROFILE_CYAN : '#F59E0B',
+      color: user.sanadVerified || user.verified ? PROFILE_CYAN : C.gold,
     },
   ];
 }
@@ -184,14 +184,14 @@ function buildQuickActions(
       label: ar ? 'المحفظة والدفع' : 'Wallet & Payments',
       detail: ar ? 'راقب الرصيد والمدفوعات وميزات واصل.' : 'Balance and payments.',
       icon: <CreditCard size={18} />,
-      color: '#F59E0B',
+      color: C.gold,
       onClick: () => nav('/app/wallet'),
     },
     {
       label: ar ? 'مركز الإشعارات' : 'Notification Center',
       detail: ar ? 'ثبت التنبيهات المهمة للحجوزات والرحلات والطرود.' : 'Trip and account alerts.',
       icon: <Bell size={18} />,
-      color: '#22C55E',
+      color: C.green,
       onClick: () => {
         void handleNotificationSetup();
       },
@@ -200,7 +200,7 @@ function buildQuickActions(
       label: ar ? 'إعدادات الحساب' : 'Account Settings',
       detail: ar ? 'حدّث لغتك وتفضيلاتك وأمان حسابك.' : 'Language, preferences, and security.',
       icon: <Settings size={18} />,
-      color: '#A78BFA',
+      color: C.purple,
       onClick: () => nav('/app/settings?section=account'),
     },
   ];
@@ -350,7 +350,8 @@ export function useProfilePageController({
     const ticket = await createSupportTicket(user.id, {
       topic: 'cancellation',
       subject: 'Account deletion request',
-      detail: 'User requested account deletion from the profile danger zone and was signed out while support reviews the request.',
+      detail:
+        'User requested account deletion from the profile danger zone and was signed out while support reviews the request.',
       relatedId: user.id,
       routeLabel: 'Profile deletion request',
       priority: 'high',
