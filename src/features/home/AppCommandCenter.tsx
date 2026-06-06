@@ -22,6 +22,9 @@ const C = {
   gold: DS.gold,
   green: DS.green,
   red: DS.error,
+  card: DS.card,
+  elevated: DS.elevated,
+  textFull: DS.text,
 } as const;
 
 type ActionCard = {
@@ -270,7 +273,7 @@ export function AppCommandCenter() {
         style={{
           borderRadius: 30,
           border: `1px solid ${nextAction.accent}22`,
-          background: `radial-gradient(circle at top left, ${nextAction.accent}18, transparent 32%), linear-gradient(145deg, rgba(15,34,53,0.96) 0%, rgba(10,24,39,0.98) 100%)`,
+          background: `radial-gradient(circle at top left, ${nextAction.accent}18, transparent 32%), ${C.card}`,
           boxShadow: SH.navy,
           padding: '24px 24px 20px',
           display: 'grid',
@@ -309,7 +312,7 @@ export function AppCommandCenter() {
             <h2
               style={{
                 margin: '14px 0 8px',
-                color: '#FFFFFF',
+                color: C.textFull,
                 fontSize: 'clamp(1.6rem, 3vw, 2.25rem)',
                 lineHeight: TYPE.lineHeight.tight,
                 fontWeight: TYPE.weight.ultra,
@@ -376,7 +379,7 @@ export function AppCommandCenter() {
                 style={{
                   borderRadius: 22,
                   border: `1px solid ${item.accent}24`,
-                  background: 'rgba(255,255,255,0.03)',
+                  background: C.elevated,
                   padding: '16px 16px 14px',
                 }}
               >
@@ -397,7 +400,7 @@ export function AppCommandCenter() {
                 <div
                   style={{
                     marginTop: 14,
-                    color: '#FFFFFF',
+                    color: C.textFull,
                     fontSize: '1.2rem',
                     fontWeight: TYPE.weight.ultra,
                     fontFamily: F,
@@ -436,7 +439,7 @@ export function AppCommandCenter() {
               borderRadius: 24,
               border: `1px solid ${C.borderSoft}`,
               background:
-                'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025))',
+                `linear-gradient(180deg, ${C.elevated}, ${C.card})`,
               padding: '18px 18px 16px',
               display: 'grid',
               gap: 14,
@@ -457,7 +460,7 @@ export function AppCommandCenter() {
               <div
                 style={{
                   marginTop: 8,
-                  color: '#FFFFFF',
+                  color: C.textFull,
                   fontSize: '1rem',
                   fontWeight: TYPE.weight.ultra,
                   fontFamily: F,
@@ -504,7 +507,7 @@ export function AppCommandCenter() {
                 >
                   {ar ? 'الرصيد والتجديد' : 'Balance and continuity'}
                 </div>
-                <div style={{ marginTop: 6, color: '#FFFFFF', fontWeight: TYPE.weight.ultra }}>
+                <div style={{ marginTop: 6, color: C.textFull, fontWeight: TYPE.weight.ultra }}>
                   {formatJod(user.balance ?? 0)}
                 </div>
                 <div style={{ marginTop: 6, color: C.soft, fontSize: TYPE.size.sm }}>
@@ -534,7 +537,7 @@ export function AppCommandCenter() {
                 >
                   {ar ? 'الثقة التشغيلية' : 'Operational trust'}
                 </div>
-                <div style={{ marginTop: 6, color: '#FFFFFF', fontWeight: TYPE.weight.ultra }}>
+                <div style={{ marginTop: 6, color: C.textFull, fontWeight: TYPE.weight.ultra }}>
                   {trustStatus?.nextStepId
                     ? nextStepLabel(trustStatus.nextStepId, ar)
                     : ar
@@ -567,8 +570,8 @@ export function AppCommandCenter() {
                     minHeight: 48,
                     borderRadius: 16,
                     border: `1px solid ${index === 0 ? `${action.accent}30` : C.borderSoft}`,
-                    background: index === 0 ? `${action.accent}10` : 'rgba(255,255,255,0.03)',
-                    color: '#FFFFFF',
+                    background: index === 0 ? `${action.accent}10` : C.elevated,
+                    color: C.textFull,
                     fontWeight: TYPE.weight.bold,
                     fontFamily: F,
                     fontSize: TYPE.size.sm,
@@ -577,7 +580,7 @@ export function AppCommandCenter() {
                     padding: '12px 14px',
                   }}
                 >
-                  <span style={{ color: index === 0 ? action.accent : '#FFFFFF' }}>
+                  <span style={{ color: index === 0 ? action.accent : C.textFull }}>
                     {action.label}
                   </span>
                   <span style={{ color: C.soft, fontSize: TYPE.size.xs, lineHeight: 1.4 }}>
