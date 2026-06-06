@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, CheckCircle, Shield } from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
+import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 
 import { GRAD, R, SH } from '../../../utils/wasel-ds';
 import { C, F, InlineCurrencySwitcher } from '../HomePageShared';
@@ -97,13 +98,15 @@ function TripModeCard({
           {options.map(option => {
             const selected = tripMode === option.key;
             return (
-              <button
+              <WaselButton
                 type="button"
                 aria-pressed={selected}
                 key={option.key}
                 onClick={() => onTripModeChange(option.key)}
+                variant="ghost"
                 style={{
                   minHeight: 76,
+                  height: 'auto',
                   padding: '12px 14px',
                   borderRadius: R.lg,
                   textAlign: 'left',
@@ -111,6 +114,8 @@ function TripModeCard({
                   border: `1px solid ${selected ? C.borderHov : 'transparent'}`,
                   color: C.text,
                   cursor: 'pointer',
+                  justifyContent: 'stretch',
+                  whiteSpace: 'normal',
                 }}
               >
                 <div
@@ -129,7 +134,7 @@ function TripModeCard({
                 >
                   {option.desc}
                 </div>
-              </button>
+              </WaselButton>
             );
           })}
         </div>

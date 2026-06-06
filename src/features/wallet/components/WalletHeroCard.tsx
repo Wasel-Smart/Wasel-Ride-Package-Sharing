@@ -2,6 +2,7 @@ import { ArrowUpRight, Clock, Eye, EyeOff, Gift, Plus, Send } from 'lucide-react
 import * as motion from 'motion/react-m';
 import { Button } from '../../../components/ui/button';
 import { WaselColors } from '../../../tokens/wasel-tokens';
+import { C } from '../../../utils/wasel-ds';
 
 type WalletHeroCardProps = {
   balance: number;
@@ -34,7 +35,7 @@ export function WalletHeroCard({
       animate={{ opacity: 1, y: 0 }}
       className="relative overflow-hidden rounded-2xl p-6"
       style={{
-        background: `linear-gradient(135deg, ${WaselColors.navyCard} 0%, #1a2744 50%, #0d2137 100%)`,
+        background: `linear-gradient(135deg, ${WaselColors.navyCard} 0%, ${C.card2} 50%, ${C.bgAlt} 100%)`,
         border: `1px solid ${WaselColors.teal}20`,
       }}
     >

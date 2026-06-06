@@ -684,7 +684,7 @@ export default function MobilityOSPage() {
                     gap: 8,
                     padding: '8px 12px',
                     borderRadius: 14,
-                    background: 'rgba(4,12,24,0.74)',
+                    background: C.overlay,
                     border: `1px solid ${C.border}`,
                     fontSize: '0.78rem',
                   }}
@@ -696,7 +696,7 @@ export default function MobilityOSPage() {
                   style={{
                     padding: '10px 12px',
                     borderRadius: 16,
-                    background: 'rgba(4,12,24,0.72)',
+                    background: C.overlay,
                     border: `1px solid ${C.borderFaint}`,
                     fontFamily: FM,
                     color: C.textSub,
@@ -730,7 +730,7 @@ export default function MobilityOSPage() {
                       <path
                         d={`M ${from.x} ${from.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${to.x} ${to.y}`}
                         fill="none"
-                        stroke="rgba(255,255,255,0.06)"
+                        stroke={C.borderFaint}
                         strokeWidth={0.85}
                         strokeLinecap="round"
                       />
@@ -750,7 +750,7 @@ export default function MobilityOSPage() {
                             width={8.6}
                             height={4.2}
                             rx={1.8}
-                            fill="rgba(4,12,24,0.78)"
+                            fill={C.overlay}
                             stroke={`${accentColor(route.accent)}30`}
                           />
                           <text
@@ -771,7 +771,7 @@ export default function MobilityOSPage() {
                   <g key={node.id}>
                     <circle cx={node.x} cy={node.y} r={7} fill={`${accentColor(node.accent)}18`} />
                     <circle cx={node.x} cy={node.y} r={3.2} fill={accentColor(node.accent)} />
-                    <circle cx={node.x} cy={node.y} r={1.1} fill="#fff" />
+                    <circle cx={node.x} cy={node.y} r={1.1} fill={C.text} />
                     <text
                       x={node.x}
                       y={node.y - 8.4}
@@ -870,7 +870,7 @@ export default function MobilityOSPage() {
                       padding: '12px 14px',
                       borderRadius: 18,
                       border: `1px solid ${accentColor(route.accent)}2a`,
-                      background: 'rgba(255,255,255,0.03)',
+                      background: C.elevated,
                     }}
                   >
                     <div
@@ -922,7 +922,7 @@ export default function MobilityOSPage() {
                               marginTop: 6,
                               height: 6,
                               borderRadius: 999,
-                              background: 'rgba(255,255,255,0.06)',
+                              background: C.borderFaint,
                             }}
                           >
                             <div
@@ -959,7 +959,7 @@ export default function MobilityOSPage() {
                       padding: '14px 16px',
                       borderRadius: 18,
                       border: `1px solid ${index === 1 ? C.purpleDim : C.border}`,
-                      background: 'rgba(255,255,255,0.03)',
+                      background: C.elevated,
                       color: C.textSub,
                       lineHeight: 1.65,
                     }}

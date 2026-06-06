@@ -5,6 +5,13 @@
  * Tests that sign in/up works without captcha blocking
  */
 
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const rootDir = path.join(__dirname, '..');
+
 console.log('🔐 WASEL AUTH FIX VERIFICATION\n');
 console.log('=' .repeat(60));
 
@@ -34,9 +41,6 @@ if (supabaseUrl && supabaseKey) {
 // Check auth file exists
 console.log('\n📁 File Check:\n');
 
-const fs = require('fs');
-const path = require('path');
-
 const files = [
   'src/pages/WaselAuth.tsx',
   'src/components/AuthCaptcha.tsx',
@@ -45,7 +49,7 @@ const files = [
 ];
 
 files.forEach(file => {
-  const filePath = path.join(process.cwd(), file);
+  const filePath = path.join(rootDir, file);
   if (fs.existsSync(filePath)) {
     console.log(`✅ ${file}`);
   } else {
@@ -56,7 +60,7 @@ files.forEach(file => {
 // Check for the fix
 console.log('\n🔧 Fix Verification:\n');
 
-const authPagePath = path.join(process.cwd(), 'src/pages/WaselAuth.tsx');
+const authPagePath = path.join(rootDir, 'src/pages/WaselAuth.tsx');
 if (fs.existsSync(authPagePath)) {
   const content = fs.readFileSync(authPagePath, 'utf-8');
   

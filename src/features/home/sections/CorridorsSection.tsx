@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { C, SectionHeader, glass } from '../HomePageShared';
+import { R, SH } from '../../../utils/wasel-ds';
 import type { CorridorCard } from './types';
 
 interface CorridorsSectionProps {
@@ -33,14 +34,14 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
             onClick={() => onNavigate(card.path)}
             style={{
               textAlign: 'left',
-              borderRadius: 26,
+              borderRadius: R.xxl,
               padding: '20px 18px 18px',
               background: card.featured
-                ? 'linear-gradient(180deg, rgba(88,221,255,0.12), rgba(255,255,255,0.03))'
+                ? `linear-gradient(180deg, ${C.cyanDim}, ${C.card})`
                 : glass(0.52),
-              border: `1px solid ${card.featured ? 'rgba(88,221,255,0.22)' : C.border}`,
+              border: `1px solid ${card.featured ? C.cyanDim : C.border}`,
               cursor: 'pointer',
-              boxShadow: card.featured ? '0 18px 36px rgba(0,0,0,0.18)' : 'none',
+              boxShadow: card.featured ? SH.card : SH.none,
             }}
           >
             <div
@@ -58,9 +59,9 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
                   gap: 8,
                   height: 30,
                   padding: '0 10px',
-                  borderRadius: 999,
-                  background: 'rgba(255,255,255,0.03)',
-                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: R.full,
+                  background: C.elevated,
+                  border: `1px solid ${C.borderFaint}`,
                   color: card.accent,
                   fontSize: '0.68rem',
                   fontWeight: 800,

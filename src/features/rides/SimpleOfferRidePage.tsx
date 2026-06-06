@@ -3,6 +3,7 @@ import { ArrowRight, MapPin, Clock, DollarSign, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { C, GRAD, GRAD_HERO } from '../../utils/wasel-ds';
 
 const CITIES = ['Amman', 'Aqaba', 'Irbid', 'Zarqa', 'Madaba'];
 const TIMES = [
@@ -56,8 +57,8 @@ export function SimpleOfferRidePage() {
     return (
       <div style={{
         minHeight: 'var(--app-min-height)',
-        background: 'linear-gradient(135deg, #0B1D2D 0%, #051218 100%)',
-        color: '#fff',
+        background: GRAD_HERO,
+        color: C.text,
         padding: '20px',
         fontFamily: 'Inter, system-ui, sans-serif',
         display: 'flex',
@@ -67,22 +68,22 @@ export function SimpleOfferRidePage() {
         <div style={{
           maxWidth: '500px',
           textAlign: 'center',
-          background: 'rgba(255,255,255,0.05)',
+          background: C.card,
           borderRadius: '24px',
           padding: '40px',
-          border: '1px solid rgba(255,255,255,0.1)'
+          border: `1px solid ${C.border}`
         }}>
           <div style={{ fontSize: '4rem', marginBottom: '20px' }}>✅</div>
           <h2 style={{
             fontSize: '2rem',
             fontWeight: '900',
             margin: '0 0 16px',
-            color: '#10B981'
+            color: C.green
           }}>
             {ar ? 'تم نشر الرحلة!' : 'Ride Posted!'}
           </h2>
           <p style={{
-            color: '#94A3B8',
+            color: C.textMuted,
             fontSize: '1.1rem',
             margin: '0 0 24px'
           }}>
@@ -93,11 +94,11 @@ export function SimpleOfferRidePage() {
           </p>
           
           <div style={{
-            background: 'rgba(16,185,129,0.1)',
+            background: C.greenDim,
             borderRadius: '16px',
             padding: '20px',
             marginBottom: '24px',
-            border: '1px solid rgba(16,185,129,0.2)'
+            border: `1px solid ${C.greenDim}`
           }}>
             <div style={{
               display: 'grid',
@@ -106,34 +107,34 @@ export function SimpleOfferRidePage() {
               textAlign: 'left'
             }}>
               <div>
-                <div style={{ color: '#94A3B8', fontSize: '0.9rem' }}>
+                <div style={{ color: C.textMuted, fontSize: '0.9rem' }}>
                   {ar ? 'المسار' : 'Route'}
                 </div>
-                <div style={{ color: '#fff', fontWeight: '700' }}>
+                <div style={{ color: C.text, fontWeight: '700' }}>
                   {from} → {to}
                 </div>
               </div>
               <div>
-                <div style={{ color: '#94A3B8', fontSize: '0.9rem' }}>
+                <div style={{ color: C.textMuted, fontSize: '0.9rem' }}>
                   {ar ? 'الوقت' : 'Time'}
                 </div>
-                <div style={{ color: '#fff', fontWeight: '700' }}>
+                <div style={{ color: C.text, fontWeight: '700' }}>
                   {time}
                 </div>
               </div>
               <div>
-                <div style={{ color: '#94A3B8', fontSize: '0.9rem' }}>
+                <div style={{ color: C.textMuted, fontSize: '0.9rem' }}>
                   {ar ? 'السعر' : 'Price'}
                 </div>
-                <div style={{ color: '#10B981', fontWeight: '700' }}>
+                <div style={{ color: C.green, fontWeight: '700' }}>
                   {price} JOD
                 </div>
               </div>
               <div>
-                <div style={{ color: '#94A3B8', fontSize: '0.9rem' }}>
+                <div style={{ color: C.textMuted, fontSize: '0.9rem' }}>
                   {ar ? 'المقاعد' : 'Seats'}
                 </div>
-                <div style={{ color: '#fff', fontWeight: '700' }}>
+                <div style={{ color: C.text, fontWeight: '700' }}>
                   {seats} {ar ? 'مقاعد' : 'available'}
                 </div>
               </div>
@@ -155,11 +156,11 @@ export function SimpleOfferRidePage() {
                 setSeats(3);
               }}
               style={{
-                background: 'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)',
+                background: GRAD,
                 border: 'none',
                 borderRadius: '12px',
                 padding: '12px 16px',
-                color: '#fff',
+                color: C.text,
                 fontSize: '0.9rem',
                 fontWeight: '700',
                 cursor: 'pointer'
@@ -170,11 +171,11 @@ export function SimpleOfferRidePage() {
             <button
               onClick={() => navigate('/app/my-trips')}
               style={{
-                background: 'rgba(255,255,255,0.1)',
-                border: '1px solid rgba(255,255,255,0.2)',
+                background: C.elevated,
+                border: `1px solid ${C.borderHov}`,
                 borderRadius: '12px',
                 padding: '12px 16px',
-                color: '#fff',
+                color: C.text,
                 fontSize: '0.9rem',
                 fontWeight: '700',
                 cursor: 'pointer'
@@ -191,8 +192,8 @@ export function SimpleOfferRidePage() {
   return (
     <div style={{
       minHeight: 'var(--app-min-height)',
-      background: 'linear-gradient(135deg, #0B1D2D 0%, #051218 100%)',
-      color: '#fff',
+      background: GRAD_HERO,
+      color: C.text,
       padding: '20px',
       fontFamily: 'Inter, system-ui, sans-serif'
     }}>
@@ -207,7 +208,7 @@ export function SimpleOfferRidePage() {
           style={{
             background: 'none',
             border: 'none',
-            color: '#94A3B8',
+            color: C.textMuted,
             fontSize: '0.9rem',
             cursor: 'pointer',
             marginBottom: '20px'
@@ -220,12 +221,12 @@ export function SimpleOfferRidePage() {
           fontSize: '2rem',
           fontWeight: '900',
           margin: '0 0 8px',
-          color: '#fff'
+          color: C.text
         }}>
           {ar ? 'اعرض رحلة' : 'Offer a Ride'}
         </h1>
         <p style={{
-          color: '#94A3B8',
+          color: C.textMuted,
           margin: 0,
           fontSize: '1rem'
         }}>
@@ -237,10 +238,10 @@ export function SimpleOfferRidePage() {
       <div style={{
         maxWidth: '600px',
         margin: '0 auto',
-        background: 'rgba(255,255,255,0.05)',
+        background: C.card,
         borderRadius: '24px',
         padding: '32px',
-        border: '1px solid rgba(255,255,255,0.1)'
+        border: `1px solid ${C.border}`
       }}>
         <div style={{
           display: 'grid',
@@ -256,7 +257,7 @@ export function SimpleOfferRidePage() {
             <div>
               <label style={{
                 display: 'block',
-                color: '#94A3B8',
+                color: C.textMuted,
                 fontSize: '0.9rem',
                 marginBottom: '8px',
                 fontWeight: '600'
@@ -267,10 +268,10 @@ export function SimpleOfferRidePage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                background: 'rgba(255,255,255,0.1)',
+                background: C.elevated,
                 borderRadius: '12px',
                 padding: '14px 16px',
-                border: '1px solid rgba(255,255,255,0.2)'
+                border: `1px solid ${C.borderHov}`
               }}>
                 <MapPin size={18} color="#10B981" />
                 <select
@@ -279,14 +280,14 @@ export function SimpleOfferRidePage() {
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: '#fff',
+                    color: C.text,
                     fontSize: '1rem',
                     flex: 1,
                     outline: 'none'
                   }}
                 >
                   {CITIES.map(city => (
-                    <option key={city} value={city} style={{ background: '#1E293B' }}>
+                    <option key={city} value={city} style={{ background: C.card2 }}>
                       {city}
                     </option>
                   ))}
@@ -298,7 +299,7 @@ export function SimpleOfferRidePage() {
             <div>
               <label style={{
                 display: 'block',
-                color: '#94A3B8',
+                color: C.textMuted,
                 fontSize: '0.9rem',
                 marginBottom: '8px',
                 fontWeight: '600'
@@ -309,10 +310,10 @@ export function SimpleOfferRidePage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                background: 'rgba(255,255,255,0.1)',
+                background: C.elevated,
                 borderRadius: '12px',
                 padding: '14px 16px',
-                border: '1px solid rgba(255,255,255,0.2)'
+                border: `1px solid ${C.borderHov}`
               }}>
                 <MapPin size={18} color="#00C8E8" />
                 <select
@@ -321,14 +322,14 @@ export function SimpleOfferRidePage() {
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: '#fff',
+                    color: C.text,
                     fontSize: '1rem',
                     flex: 1,
                     outline: 'none'
                   }}
                 >
                   {CITIES.map(city => (
-                    <option key={city} value={city} style={{ background: '#1E293B' }}>
+                    <option key={city} value={city} style={{ background: C.card2 }}>
                       {city}
                     </option>
                   ))}
@@ -347,7 +348,7 @@ export function SimpleOfferRidePage() {
             <div>
               <label style={{
                 display: 'block',
-                color: '#94A3B8',
+                color: C.textMuted,
                 fontSize: '0.9rem',
                 marginBottom: '8px',
                 fontWeight: '600'
@@ -358,10 +359,10 @@ export function SimpleOfferRidePage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                background: 'rgba(255,255,255,0.1)',
+                background: C.elevated,
                 borderRadius: '12px',
                 padding: '14px 16px',
-                border: '1px solid rgba(255,255,255,0.2)'
+                border: `1px solid ${C.borderHov}`
               }}>
                 <Clock size={18} color="#F59E0B" />
                 <select
@@ -370,14 +371,14 @@ export function SimpleOfferRidePage() {
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: '#fff',
+                    color: C.text,
                     fontSize: '1rem',
                     flex: 1,
                     outline: 'none'
                   }}
                 >
                   {TIMES.map(t => (
-                    <option key={t} value={t} style={{ background: '#1E293B' }}>
+                    <option key={t} value={t} style={{ background: C.card2 }}>
                       {t}
                     </option>
                   ))}
@@ -389,7 +390,7 @@ export function SimpleOfferRidePage() {
             <div>
               <label style={{
                 display: 'block',
-                color: '#94A3B8',
+                color: C.textMuted,
                 fontSize: '0.9rem',
                 marginBottom: '8px',
                 fontWeight: '600'
@@ -400,10 +401,10 @@ export function SimpleOfferRidePage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
-                background: 'rgba(255,255,255,0.1)',
+                background: C.elevated,
                 borderRadius: '12px',
                 padding: '14px 16px',
-                border: '1px solid rgba(255,255,255,0.2)'
+                border: `1px solid ${C.borderHov}`
               }}>
                 <DollarSign size={18} color="#10B981" />
                 <input
@@ -415,7 +416,7 @@ export function SimpleOfferRidePage() {
                   style={{
                     background: 'transparent',
                     border: 'none',
-                    color: '#fff',
+                    color: C.text,
                     fontSize: '1rem',
                     flex: 1,
                     outline: 'none'
@@ -429,7 +430,7 @@ export function SimpleOfferRidePage() {
           <div>
             <label style={{
               display: 'block',
-              color: '#94A3B8',
+              color: C.textMuted,
               fontSize: '0.9rem',
               marginBottom: '8px',
               fontWeight: '600'
@@ -440,10 +441,10 @@ export function SimpleOfferRidePage() {
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
-              background: 'rgba(255,255,255,0.1)',
+              background: C.elevated,
               borderRadius: '12px',
               padding: '14px 16px',
-              border: '1px solid rgba(255,255,255,0.2)'
+              border: `1px solid ${C.borderHov}`
             }}>
               <Users size={18} color="#8B5CF6" />
               <input
@@ -455,7 +456,7 @@ export function SimpleOfferRidePage() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#fff',
+                  color: C.text,
                   fontSize: '1rem',
                   flex: 1,
                   outline: 'none'
@@ -466,27 +467,27 @@ export function SimpleOfferRidePage() {
 
           {/* Preview */}
           <div style={{
-            background: 'rgba(0,200,232,0.1)',
+            background: C.cyanDim,
             borderRadius: '16px',
             padding: '20px',
-            border: '1px solid rgba(0,200,232,0.2)'
+            border: `1px solid ${C.cyanDim}`
           }}>
             <h3 style={{
               margin: '0 0 12px',
-              color: '#00C8E8',
+              color: C.cyan,
               fontSize: '1.1rem',
               fontWeight: '800'
             }}>
               {ar ? 'معاينة الرحلة' : 'Ride Preview'}
             </h3>
             <div style={{
-              color: '#fff',
+              color: C.text,
               fontSize: '1rem',
               lineHeight: '1.6'
             }}>
               <strong>{from}</strong> → <strong>{to}</strong><br />
               {ar ? 'الوقت:' : 'Time:'} {time}<br />
-              {ar ? 'السعر:' : 'Price:'} <span style={{ color: '#10B981', fontWeight: '700' }}>{price} JOD</span><br />
+              {ar ? 'السعر:' : 'Price:'} <span style={{ color: C.green, fontWeight: '700' }}>{price} JOD</span><br />
               {ar ? 'المقاعد:' : 'Seats:'} {seats} {ar ? 'متاح' : 'available'}
             </div>
           </div>
@@ -498,12 +499,12 @@ export function SimpleOfferRidePage() {
             style={{
               width: '100%',
               background: canPost && !posting 
-                ? 'linear-gradient(135deg, #00C8E8 0%, #0095B8 100%)'
-                : 'rgba(255,255,255,0.1)',
+                ? GRAD
+                : C.elevated,
               border: 'none',
               borderRadius: '16px',
               padding: '18px',
-              color: '#fff',
+              color: C.text,
               fontSize: '1.1rem',
               fontWeight: '800',
               cursor: canPost && !posting ? 'pointer' : 'not-allowed',
@@ -526,7 +527,7 @@ export function SimpleOfferRidePage() {
 
           {/* Help Text */}
           <p style={{
-            color: '#94A3B8',
+            color: C.textMuted,
             fontSize: '0.9rem',
             textAlign: 'center',
             margin: 0,
@@ -544,3 +545,4 @@ export function SimpleOfferRidePage() {
 }
 
 export default SimpleOfferRidePage;
+

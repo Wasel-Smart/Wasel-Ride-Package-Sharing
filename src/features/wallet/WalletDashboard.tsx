@@ -98,8 +98,7 @@ export function WalletDashboard() {
   const walletUnavailableDescription =
     t.walletUnavailableDescription ?? 'Wallet access is not available right now.';
   const loadingTitle = t.loadingTitle ?? 'Loading wallet';
-  const loadingDescription =
-    t.loadingDescription ?? 'Fetching balance, movements, and rewards.';
+  const loadingDescription = t.loadingDescription ?? 'Fetching balance, movements, and rewards.';
   const walletUnavailableTitle = t.walletUnavailableTitle ?? 'Wallet unavailable';
   const jodLabel = t.jod ?? 'JOD';
   const refreshLabel = isRTL ? 'تحديث' : 'Refresh';
@@ -202,7 +201,7 @@ export function WalletDashboard() {
                   accent={autoTopUpEnabled ? C.green : C.gold}
                 />
               </div>
-              <div style={{ color: '#FFFFFF', fontSize: '1.8rem', fontWeight: 900 }}>
+              <div style={{ color: C.text, fontSize: '1.8rem', fontWeight: 900 }}>
                 JOD {bal.toFixed(2)}
               </div>
               <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7 }}>
@@ -233,7 +232,9 @@ export function WalletDashboard() {
             label={isRTL ? 'المعلق' : 'Pending'}
             value={`JOD ${pending.toFixed(2)}`}
             detail={
-              isRTL ? 'أموال تنتظر التسوية أو السحب.' : 'Funds waiting for settlement or withdrawal.'
+              isRTL
+                ? 'أموال تنتظر التسوية أو السحب.'
+                : 'Funds waiting for settlement or withdrawal.'
             }
             icon={<RefreshCw size={18} />}
             accent={C.gold}
@@ -242,7 +243,9 @@ export function WalletDashboard() {
             label={isRTL ? 'المكافآت' : 'Rewards'}
             value={`JOD ${rewardsBal.toFixed(2)}`}
             detail={
-              isRTL ? 'مكافآت متاحة داخل الدورة الحالية.' : 'Reward value available in the current cycle.'
+              isRTL
+                ? 'مكافآت متاحة داخل الدورة الحالية.'
+                : 'Reward value available in the current cycle.'
             }
             icon={<Gift size={18} />}
             accent={C.green}

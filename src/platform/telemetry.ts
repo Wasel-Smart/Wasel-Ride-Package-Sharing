@@ -22,6 +22,21 @@ export interface TraceSpan {
   status: 'ok' | 'error';
 }
 
+const importMetaWithEnv = import.meta as ImportMeta & {
+  env?: { MODE?: string };
+};
+
+const browserWindow = globalThis as typeof globalThis & {
+  window?: {
+    addEventListener: (event: string, handler: () => void) => void;
+  };
+};
+
+const runtimeEnvironment =
+  typeof importMetaWithEnv.env?.MODE === 'string'
+    ? importMetaWithEnv.env.MODE
+    : process.env.NODE_ENV || 'development';
+
 class TelemetryCollector {
   private metrics: MetricPoint[] = [];
   private traces: Map<string, TraceSpan> = new Map();
@@ -30,7 +45,7 @@ class TelemetryCollector {
 
   constructor(endpoint?: string) {
     this.endpoint = endpoint || '/api/telemetry';
-    if (typeof window !== 'undefined') {
+    if (typeof browserWindow.window !== 'undefined') {
       this.startAutoFlush();
     }
   }
@@ -51,7 +66,7 @@ class TelemetryCollector {
       unit: resolvedUnit,
       timestamp: Date.now(),
       tags: {
-        environment: import.meta.env.MODE,
+        environment: runtimeEnvironment,
         ...resolvedTags,
       },
     });
@@ -69,7 +84,7 @@ class TelemetryCollector {
       startTime: Date.now(),
       attributes: {
         service: 'wasel-web',
-        environment: import.meta.env.MODE,
+        environment: runtimeEnvironment,
         ...attributes,
       },
       status: 'ok',
@@ -159,7 +174,7 @@ class TelemetryCollector {
     setInterval(() => this.flush(), this.flushInterval);
 
     // Flush on page unload
-    window.addEventListener('beforeunload', () => {
+    browserWindow.window?.addEventListener('beforeunload', () => {
       this.flush();
     });
   }
@@ -169,7 +184,7 @@ export const telemetry = new TelemetryCollector();
 
 // Track Web Vitals
 export function initWebVitals(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof browserWindow.window === 'undefined') return;
 
   import('web-vitals').then(({ onCLS, onLCP, onFCP, onTTFB, onINP }) => {
     onCLS((metric) => telemetry.recordMetric('web_vital.cls', metric.value, 'score'));

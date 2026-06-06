@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start:ride-matching": "node dist/services/ride-matching/service.js",
-    "start:payment": "node dist/services/payment-reconciliation/service.js",
-    "start:ops": "node dist/services/ops-analytics/service.js",
+    "start:ride-matching": "node dist/backend/services/ride-matching/service-production.js",
+    "start:payment": "node dist/backend/services/payment-reconciliation/service-production.js",
+    "start:ops": "node dist/backend/services/ops-analytics/service-production.js",
     "dev:ride-matching": "tsx backend/services/ride-matching/service.ts",
     "dev:payment": "tsx backend/services/payment-reconciliation/service.ts",
     "dev:ops": "tsx backend/services/ops-analytics/service.ts"

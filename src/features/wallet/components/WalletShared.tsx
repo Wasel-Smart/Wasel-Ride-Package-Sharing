@@ -20,6 +20,7 @@ import {
   CreditCard,
 } from 'lucide-react';
 import { WaselColors } from '../../../tokens/wasel-tokens';
+import { C } from '../../../utils/wasel-ds';
 
 // Transaction styling by wallet event type
 export const TX_ICONS: Record<string, any> = {
@@ -30,21 +31,21 @@ export const TX_ICONS: Record<string, any> = {
   refund: { icon: RefreshCw, color: WaselColors.info, bg: 'bg-blue-500/10' },
   send: { icon: Send, color: WaselColors.bronze, bg: 'bg-amber-500/10' },
   receive: { icon: ArrowDownLeft, color: WaselColors.success, bg: 'bg-green-500/10' },
-  reward: { icon: Gift, color: '#A855F7', bg: 'bg-purple-500/10' },
+  reward: { icon: Gift, color: C.purple, bg: 'bg-purple-500/10' },
   subscription: { icon: Crown, color: WaselColors.bronze, bg: 'bg-amber-500/10' },
   escrow_hold: { icon: Lock, color: WaselColors.warning, bg: 'bg-yellow-500/10' },
   escrow_release: { icon: CheckCircle, color: WaselColors.success, bg: 'bg-green-500/10' },
-  cashback: { icon: Zap, color: '#A855F7', bg: 'bg-purple-500/10' },
+  cashback: { icon: Zap, color: C.purple, bg: 'bg-purple-500/10' },
 };
 
 export const PIE_COLORS = [
-  '#04ADBF',
-  '#D9965B',
-  '#22C55E',
-  '#A855F7',
-  '#3B82F6',
-  '#F59E0B',
-  '#EF4444',
+  C.cyan,
+  C.gold,
+  C.green,
+  C.purple,
+  C.blue,
+  C.warning,
+  C.error,
 ];
 
 const TX_STATUS_META: Record<string, { label: string; className: string }> = {

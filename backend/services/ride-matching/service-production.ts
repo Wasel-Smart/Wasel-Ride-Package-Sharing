@@ -5,8 +5,10 @@
 
 import postgres from 'postgres';
 import Redis from 'ioredis';
+import { fileURLToPath } from 'node:url';
 import type { DomainEventEnvelope } from '../../../src/domain/events';
 import { eventBroker } from '../../../src/platform/event-broker-redis-production';
+import { startRuntimeHealthServer, type RuntimeHealthServer } from '../runtime/http-health';
 
 const sql = postgres(process.env.DATABASE_URL || '', {
   max: 10,
@@ -39,6 +41,16 @@ interface Driver {
   status: 'available' | 'busy';
 }
 
+interface DriverRow {
+  driverId: string;
+  vehicleId: string;
+  lng: number | string;
+  lat: number | string;
+  availableSeats: number;
+  rating: number;
+  status: 'available' | 'busy';
+}
+
 interface MatchResult {
   rideId: string;
   driverId: string;
@@ -58,7 +70,7 @@ class MatchingEngine {
   ): Promise<Driver[]> {
     try {
       // Real PostGIS query
-      const drivers = await sql<Driver[]>`
+      const drivers = await sql<DriverRow[]>`
         SELECT 
           d.driver_id as "driverId",
           d.vehicle_id as "vehicleId",
@@ -84,15 +96,19 @@ class MatchingEngine {
       `;
 
       return drivers.map(d => ({
-        ...d,
-        location: { lat: Number(d.location.lat), lng: Number(d.location.lng) },
+        driverId: d.driverId,
+        vehicleId: d.vehicleId,
+        location: { lat: Number(d.lat), lng: Number(d.lng) },
+        availableSeats: Number(d.availableSeats),
+        rating: Number(d.rating),
+        status: d.status,
       }));
     } catch (error) {
       console.error('[MatchingEngine] PostGIS query error:', error);
       
       // Fallback to Redis GEO
       try {
-        const driverIds = await redis.georadius(
+        const driverIds = (await redis.georadius(
           'drivers:locations',
           origin.lng,
           origin.lat,
@@ -102,7 +118,7 @@ class MatchingEngine {
           'ASC',
           'COUNT',
           20
-        );
+        )) as Array<[string, string]>;
 
         const drivers: Driver[] = [];
         for (const [driverId, distance] of driverIds) {
@@ -212,9 +228,17 @@ class MatchingEngine {
 export class RideMatchingService {
   private engine = new MatchingEngine();
   private unsubscribe?: () => Promise<void>;
+  private healthServer?: RuntimeHealthServer;
+  private ready = false;
 
   async start(): Promise<void> {
     console.log('[RideMatchingService] Starting service...');
+
+    this.healthServer = startRuntimeHealthServer({
+      serviceName: 'ride-matching-service',
+      isReady: () => this.ready,
+      isHealthy: () => this.healthCheck(),
+    });
 
     this.unsubscribe = await eventBroker.subscribe(
       'rides.requested',
@@ -227,12 +251,17 @@ export class RideMatchingService {
       },
     );
 
+    this.ready = true;
     console.log('[RideMatchingService] Service started');
   }
 
   async stop(): Promise<void> {
+    this.ready = false;
     if (this.unsubscribe) {
       await this.unsubscribe();
+    }
+    if (this.healthServer) {
+      await this.healthServer.close();
     }
     await sql.end();
     redis.disconnect();
@@ -295,7 +324,7 @@ export class RideMatchingService {
   }
 }
 
-if (require.main === module) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const service = new RideMatchingService();
   
   process.on('SIGTERM', async () => {
