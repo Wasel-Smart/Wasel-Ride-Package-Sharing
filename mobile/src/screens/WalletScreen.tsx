@@ -1,33 +1,44 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useStripe } from '@stripe/stripe-react-native';
 
 import {
   InfoCard,
+  MetricTile,
+  PremiumPanel,
   PrimaryButton,
   ScreenShell,
   SectionHeader,
+  StateNotice,
   StatusPill,
 } from '../components/MobilePrimitives';
 import { waselMobileConfig } from '../lib/config';
 import { createMobilePaymentSheet } from '../services/payments';
-import { colors, spacing } from '../theme';
+import { colors, radii, spacing } from '../theme';
 
-const WalletScreen = () => {
+const WalletScreen = React.memo(function WalletScreen() {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [bookingId, setBookingId] = useState('');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
 
-  const startPayment = async () => {
-    const numericAmount = Number(amount);
-    if (!bookingId.trim() || !Number.isFinite(numericAmount) || numericAmount <= 0) {
+  const numericAmount = Number(amount);
+  const paymentReady = waselMobileConfig.hasStripe && waselMobileConfig.hasFunctions;
+  const validPayment = useMemo(
+    () => bookingId.trim().length > 1 && Number.isFinite(numericAmount) && numericAmount > 0,
+    [bookingId, numericAmount],
+  );
+
+  const startPayment = useCallback(async () => {
+    if (!validPayment) {
       Alert.alert('Payment details required', 'Enter a valid booking id and amount.');
       return;
     }
 
     try {
       setLoading(true);
+      setStatus(null);
       const sheet = await createMobilePaymentSheet({
         bookingId: bookingId.trim(),
         amount: numericAmount,
@@ -55,13 +66,17 @@ const WalletScreen = () => {
         throw new Error(presentResult.error.message);
       }
 
-      Alert.alert('Payment complete', `Payment intent ${sheet.paymentIntentId} completed.`);
+      const message = `Payment intent ${sheet.paymentIntentId} completed.`;
+      setStatus(message);
+      Alert.alert('Payment complete', message);
     } catch (error) {
-      Alert.alert('Payment failed', error instanceof Error ? error.message : String(error));
+      const message = error instanceof Error ? error.message : String(error);
+      setStatus(message);
+      Alert.alert('Payment failed', message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [bookingId, initPaymentSheet, numericAmount, presentPaymentSheet, validPayment]);
 
   return (
     <ScreenShell testID="wallet-screen">
@@ -80,34 +95,62 @@ const WalletScreen = () => {
 
         <SectionHeader
           eyebrow="Wallet"
-          title="Mobile payment"
-          body="Stripe PaymentSheet is initialized from the Supabase payment function and confirms the booking payment natively."
+          title="Secure mobile payment"
+          body="Stripe PaymentSheet is initialized from the authenticated backend and confirmed inside the native app."
         />
 
-        <View style={styles.form}>
-          <TextInput
-            autoCapitalize="none"
-            placeholder="Booking ID"
-            placeholderTextColor={colors.muted}
-            style={styles.input}
-            value={bookingId}
-            onChangeText={setBookingId}
-          />
-          <TextInput
-            keyboardType="decimal-pad"
-            placeholder="Amount JOD"
-            placeholderTextColor={colors.muted}
-            style={styles.input}
-            value={amount}
-            onChangeText={setAmount}
-          />
+        <View style={styles.metrics}>
+          <MetricTile label="Currency" value="JOD" tone={colors.gold} />
+          <MetricTile label="Mode" value={paymentReady ? 'Live' : 'Setup'} tone={paymentReady ? colors.teal : colors.amber} />
         </View>
+
+        <PremiumPanel>
+          <View style={styles.form}>
+            <TextInput
+              accessibilityLabel="Booking ID"
+              autoCapitalize="none"
+              onChangeText={setBookingId}
+              placeholder="Booking ID"
+              placeholderTextColor={colors.muted}
+              returnKeyType="next"
+              style={styles.input}
+              value={bookingId}
+            />
+            <TextInput
+              accessibilityLabel="Amount in JOD"
+              keyboardType="decimal-pad"
+              onChangeText={setAmount}
+              placeholder="Amount JOD"
+              placeholderTextColor={colors.muted}
+              style={styles.input}
+              value={amount}
+            />
+          </View>
+        </PremiumPanel>
+
+        {!paymentReady ? (
+          <StateNotice
+            icon="warning"
+            title="Payment setup incomplete"
+            body="Stripe publishable key and Supabase function URL are required before native checkout can open."
+            tone={colors.amber}
+          />
+        ) : null}
+
+        {status ? (
+          <StateNotice
+            icon={status.includes('completed') ? 'checkmark-circle' : 'warning'}
+            title="Payment status"
+            body={status}
+            tone={status.includes('completed') ? colors.green : colors.red}
+          />
+        ) : null}
 
         <PrimaryButton
           label="Open Stripe PaymentSheet"
           icon="card"
           loading={loading}
-          disabled={!waselMobileConfig.hasStripe || !waselMobileConfig.hasFunctions}
+          disabled={!paymentReady || !validPayment}
           onPress={startPayment}
           testID="open-payment-sheet"
         />
@@ -121,30 +164,36 @@ const WalletScreen = () => {
       </ScrollView>
     </ScreenShell>
   );
-};
+});
 
 const styles = StyleSheet.create({
   scroll: {
     gap: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.xxl,
   },
   topRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
     justifyContent: 'space-between',
+  },
+  metrics: {
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
   form: {
     gap: spacing.sm,
   },
   input: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceAlt,
     borderColor: colors.line,
-    borderRadius: 14,
+    borderRadius: radii.lg,
     borderWidth: 1,
     color: colors.ink,
     fontSize: 16,
+    fontWeight: '700',
+    minHeight: 54,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
   },
 });
 

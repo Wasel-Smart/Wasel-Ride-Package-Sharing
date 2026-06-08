@@ -25,6 +25,8 @@ test-results/
 playwright-report/
 .playwright/e2e-build.json
 mobile/.jest-localstorage
+mobile/.jest-localstorage-shm
+mobile/.jest-localstorage-wal
 mobile/android/app/src/main/assets/*.bundle
 mobile/ios/main.jsbundle
 

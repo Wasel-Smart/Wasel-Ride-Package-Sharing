@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { authService } from '../services/auth';
 
@@ -26,28 +26,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     const session = await authService.signIn(email, password);
     setUser(session.user);
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await authService.signOut();
     setUser(null);
-  };
+  }, []);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = useCallback(async () => {
     const { error } = await authService.signInWithGoogle();
     if (error) throw error;
-  };
+  }, []);
 
-  const signInWithFacebook = async () => {
+  const signInWithFacebook = useCallback(async () => {
     const { error } = await authService.signInWithFacebook();
     if (error) throw error;
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ user, loading, signIn, signInWithGoogle, signInWithFacebook, signOut }),
+    [loading, signIn, signInWithFacebook, signInWithGoogle, signOut, user],
+  );
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signInWithGoogle, signInWithFacebook, signOut }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

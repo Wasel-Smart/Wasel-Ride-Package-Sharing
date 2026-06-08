@@ -3,9 +3,16 @@ import { StyleSheet, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 
-import { InfoCard, ScreenShell, SectionHeader, StatusPill } from '../components/MobilePrimitives';
+import {
+  InfoCard,
+  MetricTile,
+  ScreenShell,
+  SectionHeader,
+  StateNotice,
+  StatusPill,
+} from '../components/MobilePrimitives';
 import { waselMobileConfig } from '../lib/config';
-import { colors, spacing } from '../theme';
+import { colors, radii, shadows, spacing } from '../theme';
 
 type Region = {
   latitude: number;
@@ -21,31 +28,37 @@ const AMMAN_REGION: Region = {
   longitudeDelta: 0.12,
 };
 
-const MapScreen = () => {
+const MapScreen = React.memo(function MapScreen() {
   const [region, setRegion] = useState<Region>(AMMAN_REGION);
-  const [permissionState, setPermissionState] = useState<'checking' | 'granted' | 'denied'>('checking');
+  const [permissionState, setPermissionState] = useState<'checking' | 'granted' | 'denied' | 'error'>('checking');
 
   useEffect(() => {
     let mounted = true;
 
     async function loadLocation() {
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (!mounted) return;
+      try {
+        const permission = await Location.requestForegroundPermissionsAsync();
+        if (!mounted) return;
 
-      if (permission.status !== 'granted') {
-        setPermissionState('denied');
-        return;
+        if (permission.status !== 'granted') {
+          setPermissionState('denied');
+          return;
+        }
+
+        setPermissionState('granted');
+        const position = await Location.getCurrentPositionAsync({});
+        if (!mounted) return;
+        setRegion({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          latitudeDelta: 0.08,
+          longitudeDelta: 0.08,
+        });
+      } catch {
+        if (mounted) {
+          setPermissionState('error');
+        }
       }
-
-      setPermissionState('granted');
-      const position = await Location.getCurrentPositionAsync({});
-      if (!mounted) return;
-      setRegion({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        latitudeDelta: 0.08,
-        longitudeDelta: 0.08,
-      });
     }
 
     void loadLocation();
@@ -66,20 +79,37 @@ const MapScreen = () => {
           <SectionHeader
             eyebrow="Routes"
             title="Live corridor map"
-            body="Native map view for dispatch, pickup, and route context."
+            body="Dispatch, pickup context, and route health are framed for fast scanning."
           />
         </View>
 
-        <MapView
-          provider="google"
-          style={styles.map}
-          region={region}
-          onRegionChangeComplete={setRegion}
-          showsUserLocation={permissionState === 'granted'}
-          showsMyLocationButton
-        >
-          <Marker coordinate={{ latitude: region.latitude, longitude: region.longitude }} title="Wasel" />
-        </MapView>
+        <View style={styles.metrics}>
+          <MetricTile label="Center" value="Amman" tone={colors.teal} />
+          <MetricTile label="Mode" value={permissionState === 'granted' ? 'Live' : 'Fallback'} tone={colors.blue} />
+        </View>
+
+        {permissionState === 'checking' ? (
+          <StateNotice
+            icon="location"
+            title="Checking location"
+            body="Preparing the route map around the current device context."
+            loading
+            tone={colors.blue}
+          />
+        ) : null}
+
+        <View style={styles.mapFrame}>
+          <MapView
+            provider="google"
+            style={styles.map}
+            region={region}
+            onRegionChangeComplete={setRegion}
+            showsUserLocation={permissionState === 'granted'}
+            showsMyLocationButton
+          >
+            <Marker coordinate={{ latitude: region.latitude, longitude: region.longitude }} title="Wasel" />
+          </MapView>
+        </View>
 
         {permissionState === 'denied' ? (
           <InfoCard
@@ -89,10 +119,19 @@ const MapScreen = () => {
             tone={colors.amber}
           />
         ) : null}
+
+        {permissionState === 'error' ? (
+          <InfoCard
+            icon="warning"
+            title="Location unavailable"
+            body="The app is using the Amman fallback region until device location responds."
+            tone={colors.red}
+          />
+        ) : null}
       </View>
     </ScreenShell>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -102,11 +141,22 @@ const styles = StyleSheet.create({
   header: {
     gap: spacing.md,
   },
-  map: {
-    borderRadius: 14,
+  metrics: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  mapFrame: {
+    ...shadows.lift,
+    backgroundColor: colors.surface,
+    borderColor: '#FFFFFF',
+    borderRadius: radii.xl,
+    borderWidth: 1,
     flex: 1,
     minHeight: 420,
     overflow: 'hidden',
+  },
+  map: {
+    flex: 1,
   },
 });
 

@@ -22,22 +22,31 @@ export function useOffline(): UseOfflineReturn {
   const [cacheSize, setCacheSize] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const applyStats = useCallback((stats: { queueSize: number; cacheSize: number }) => {
+    setQueueSize(stats.queueSize);
+    setCacheSize(stats.cacheSize);
+  }, []);
+
+  const loadStats = useCallback(async () => {
+    const stats = await offlineService.getOfflineStats();
+    applyStats(stats);
+  }, [applyStats]);
+
   // Subscribe to network state changes
   useEffect(() => {
     const unsubscribe = offlineService.subscribeToNetworkState(setIsOnline);
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    const unsubscribe = offlineService.subscribeToStats(applyStats);
+    return unsubscribe;
+  }, [applyStats]);
+
   // Load stats on mount and when online state changes
   useEffect(() => {
-    loadStats();
-  }, [isOnline]);
-
-  const loadStats = async () => {
-    const stats = await offlineService.getOfflineStats();
-    setQueueSize(stats.queueSize);
-    setCacheSize(stats.cacheSize);
-  };
+    void loadStats();
+  }, [isOnline, loadStats]);
 
   const sync = useCallback(async () => {
     setIsSyncing(true);
@@ -47,17 +56,17 @@ export function useOffline(): UseOfflineReturn {
     } finally {
       setIsSyncing(false);
     }
-  }, []);
+  }, [loadStats]);
 
   const clearCache = useCallback(async () => {
     await offlineService.clearCache();
     await loadStats();
-  }, []);
+  }, [loadStats]);
 
   const clearQueue = useCallback(async () => {
     await offlineService.clearOfflineQueue();
     await loadStats();
-  }, []);
+  }, [loadStats]);
 
   return {
     isOnline,
