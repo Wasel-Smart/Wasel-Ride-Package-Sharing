@@ -37,6 +37,7 @@ export default function WaselRoot() {
   const navRef = useRef<HTMLElement>(null);
   const isDriverMode = user?.role === 'driver' || user?.role === 'both';
   const isAuthenticated = Boolean(user);
+  const showMobileBottomNav = !location.pathname.includes('/auth');
 
   const shellCopy = {
     notifications: ar ? 'الإشعارات' : 'Notifications',
@@ -432,9 +433,11 @@ export default function WaselRoot() {
             <Outlet />
           </main>
 
-          <Suspense fallback={null}>
-            <MobileBottomNav language={language} />
-          </Suspense>
+          {showMobileBottomNav && (
+            <Suspense fallback={null}>
+              <MobileBottomNav language={language} />
+            </Suspense>
+          )}
         </div>
       </div>
     </>

@@ -697,13 +697,12 @@ export default function WaselAuth() {
               borderBottom: `1px solid ${C.border}`,
             }}
           >
-            <WaselLogo size={38} theme="light" variant="full" />
             <h2
               style={{
                 fontSize: TYPE.size.xl,
                 fontWeight: TYPE.weight.ultra,
                 color: C.text,
-                marginTop: SPACE[4],
+                marginTop: 0,
                 marginBottom: SPACE[2],
                 letterSpacing: 0,
               }}
