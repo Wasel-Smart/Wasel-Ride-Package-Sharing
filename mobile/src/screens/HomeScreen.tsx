@@ -17,6 +17,7 @@ const readiness = [
   ['Backend', waselMobileConfig.hasSupabase ? 'Connected' : 'Needs env'],
   ['Payments', waselMobileConfig.hasStripe ? 'Ready' : 'Needs key'],
   ['Maps', waselMobileConfig.hasMaps ? 'Ready' : 'Needs key'],
+  ['Functions', waselMobileConfig.hasFunctions ? 'Ready' : 'Needs URL'],
 ] as const;
 
 const HomeScreen = () => {

@@ -5,6 +5,8 @@ type ExtraConfig = {
   supabaseAnonKey?: string;
   googleMapsKey?: string;
   stripePublishableKey?: string;
+  supabaseFunctionUrl?: string;
+  authRedirectUrl?: string;
 };
 
 const extra = (Constants.expoConfig?.extra ?? {}) as ExtraConfig;
@@ -22,13 +24,21 @@ const stripePublishableKey = readPublicEnv(
   'EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY',
   extra.stripePublishableKey,
 );
+const supabaseFunctionUrl = readPublicEnv(
+  'EXPO_PUBLIC_SUPABASE_FUNCTION_URL',
+  extra.supabaseFunctionUrl,
+);
+const authRedirectUrl = readPublicEnv('EXPO_PUBLIC_AUTH_REDIRECT_URL', extra.authRedirectUrl);
 
 export const waselMobileConfig = {
   supabaseUrl,
   supabaseAnonKey,
   googleMapsKey,
   stripePublishableKey,
+  supabaseFunctionUrl,
+  authRedirectUrl: authRedirectUrl || 'wasel://auth/callback',
   hasSupabase: Boolean(supabaseUrl && supabaseAnonKey),
   hasMaps: Boolean(googleMapsKey),
   hasStripe: Boolean(stripePublishableKey),
+  hasFunctions: Boolean(supabaseFunctionUrl),
 };
