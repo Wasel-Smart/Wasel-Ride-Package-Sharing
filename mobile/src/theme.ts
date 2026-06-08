@@ -1,16 +1,23 @@
 export const colors = {
-  bg: '#F8FAFC',
+  bg: '#F6F8FB',
   surface: '#FFFFFF',
-  surfaceMuted: '#EAF6F7',
-  ink: '#0F172A',
-  text: '#1E293B',
-  muted: '#64748B',
-  line: '#CBD5E1',
+  surfaceAlt: '#F1F5F9',
+  surfaceMuted: '#E7F4F2',
+  ink: '#07111F',
+  text: '#1C2A3A',
+  muted: '#697586',
+  line: '#D7DEE8',
+  lineStrong: '#B7C2D0',
+  navy: '#0B1220',
+  charcoal: '#111827',
   cyan: '#06B6D4',
-  teal: '#00A884',
-  green: '#16A34A',
-  amber: '#D97706',
+  teal: '#0A9B8E',
+  green: '#17A56B',
+  amber: '#C47A08',
   blue: '#2563EB',
+  gold: '#D7A928',
+  lilac: '#7C3AED',
+  rose: '#E11D48',
   red: '#DC2626',
 };
 
@@ -20,10 +27,51 @@ export const spacing = {
   md: 14,
   lg: 20,
   xl: 28,
+  xxl: 36,
 };
 
 export const radii = {
   sm: 10,
   md: 14,
   lg: 18,
+  xl: 24,
+  pill: 999,
+};
+
+export const typography = {
+  micro: 11,
+  caption: 12,
+  body: 15,
+  lead: 17,
+  title: 24,
+  hero: 34,
+};
+
+export const shadows = {
+  card: {
+    shadowColor: '#0B1220',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 3,
+  },
+  lift: {
+    shadowColor: '#0B1220',
+    shadowOffset: { width: 0, height: 14 },
+    shadowOpacity: 0.12,
+    shadowRadius: 28,
+    elevation: 6,
+  },
+};
+
+export const motion = {
+  fast: 160,
+  standard: 240,
+};
+
+export const hitSlop = {
+  top: 10,
+  right: 10,
+  bottom: 10,
+  left: 10,
 };

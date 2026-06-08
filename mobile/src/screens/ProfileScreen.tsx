@@ -1,20 +1,22 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
 import {
+  ActionRow,
   InfoCard,
   MetricTile,
+  PremiumPanel,
   PrimaryButton,
   ScreenShell,
   SectionHeader,
+  StateNotice,
   StatusPill,
 } from '../components/MobilePrimitives';
 import { useOffline } from '../hooks/useOffline';
 import { useAuth } from '../providers/AuthProvider';
 import { colors, radii, spacing } from '../theme';
 
-const ProfileScreen = () => {
+const ProfileScreen = React.memo(function ProfileScreen() {
   const { user, loading, signOut } = useAuth();
   const { cacheSize, clearCache, clearQueue, isOnline, queueSize, sync, isSyncing } = useOffline();
   const name = user?.user_metadata?.name || user?.email || (loading ? 'Loading profile' : 'Guest');
@@ -38,33 +40,47 @@ const ProfileScreen = () => {
       testID="profile-screen"
     >
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials}</Text>
+        <PremiumPanel tone="dark">
+          <View style={styles.profileHeader}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </View>
+            <StatusPill
+              label={user ? 'Verified session' : 'Guest mode'}
+              tone={user ? colors.green : colors.amber}
+              icon={user ? 'shield-checkmark' : 'person'}
+            />
           </View>
-          <StatusPill
-            label={user ? 'Signed in' : 'Guest mode'}
-            tone={user ? colors.green : colors.amber}
-            icon={user ? 'shield-checkmark' : 'person'}
-          />
+          <Text style={styles.profileName}>{name}</Text>
+          <Text style={styles.profileMeta}>Trust, session, cache, and offline controls</Text>
+        </PremiumPanel>
+
+        <View style={styles.metrics}>
+          <MetricTile label="Rating" value="4.9" tone={colors.gold} />
+          <MetricTile label="Trips" value="12" tone={colors.teal} />
+          <MetricTile label="Trust" value={user ? 'ID' : 'Guest'} tone={user ? colors.green : colors.amber} />
         </View>
+
+        <View style={styles.metrics}>
+          <MetricTile label="Cache" value={String(cacheSize)} tone={colors.blue} />
+          <MetricTile label="Queue" value={String(queueSize)} tone={queueSize ? colors.amber : colors.teal} />
+        </View>
+
+        {loading ? (
+          <StateNotice
+            icon="person-circle"
+            title="Loading profile"
+            body="Native session state is being restored."
+            loading
+            tone={colors.blue}
+          />
+        ) : null}
 
         <SectionHeader
-          eyebrow="Account"
-          title={name}
-          body="Verification, offline state, cached data, and account controls in one native profile surface."
+          eyebrow="Account readiness"
+          title="Premium trust controls"
+          body="Verification, secure session state, notification readiness, and offline recovery are grouped here."
         />
-
-        <View style={styles.metrics}>
-          <MetricTile label="Rating" value="4.9" />
-          <MetricTile label="Trips" value="12" />
-          <MetricTile label="Trust" value={user ? 'ID' : 'Guest'} />
-        </View>
-
-        <View style={styles.metrics}>
-          <MetricTile label="Cache" value={String(cacheSize)} />
-          <MetricTile label="Queue" value={String(queueSize)} />
-        </View>
 
         <InfoCard
           icon="notifications"
@@ -75,45 +91,24 @@ const ProfileScreen = () => {
         <InfoCard
           icon="lock-closed"
           title="Secure session"
-          body="Supabase sessions are persisted in native async storage with refresh-token support."
+          body="Supabase sessions are persisted in native storage with refresh-token support."
           tone={colors.green}
         />
 
         <View style={styles.actions}>
-          <ProfileAction icon="trash" label="Clear cache" onPress={clearCache} />
-          <ProfileAction icon="archive" label="Clear offline queue" onPress={clearQueue} />
-          {user ? <ProfileAction destructive icon="log-out" label="Sign out" onPress={signOut} /> : null}
+          <ActionRow icon="trash" label="Clear cache" value={`${cacheSize}`} onPress={clearCache} />
+          <ActionRow icon="archive" label="Clear offline queue" value={`${queueSize}`} onPress={clearQueue} />
+          {user ? <ActionRow destructive icon="log-out" label="Sign out" onPress={signOut} /> : null}
         </View>
       </ScrollView>
     </ScreenShell>
   );
-};
-
-function ProfileAction({
-  destructive,
-  icon,
-  label,
-  onPress,
-}: {
-  destructive?: boolean;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void | Promise<void>;
-}) {
-  return (
-    <View style={styles.action}>
-      <Ionicons name={icon} size={18} color={destructive ? colors.red : colors.text} />
-      <Text style={[styles.actionText, destructive ? styles.destructiveText : null]} onPress={onPress}>
-        {label}
-      </Text>
-    </View>
-  );
-}
+});
 
 const styles = StyleSheet.create({
   scroll: {
     gap: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.xxl,
   },
   profileHeader: {
     alignItems: 'center',
@@ -123,15 +118,29 @@ const styles = StyleSheet.create({
   avatar: {
     alignItems: 'center',
     backgroundColor: colors.teal,
-    borderRadius: 32,
-    height: 64,
+    borderRadius: 34,
+    height: 68,
     justifyContent: 'center',
-    width: 64,
+    width: 68,
   },
   avatarText: {
     color: '#FFFFFF',
+    fontSize: 28,
+    fontWeight: '900',
+  },
+  profileName: {
+    color: '#FFFFFF',
     fontSize: 26,
-    fontWeight: '800',
+    fontWeight: '900',
+    lineHeight: 32,
+    marginTop: spacing.lg,
+  },
+  profileMeta: {
+    color: '#CBD5E1',
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
+    marginTop: 5,
   },
   metrics: {
     flexDirection: 'row',
@@ -139,29 +148,10 @@ const styles = StyleSheet.create({
   },
   actions: {
     backgroundColor: colors.surface,
-    borderColor: colors.line,
-    borderRadius: radii.md,
+    borderColor: '#FFFFFF',
+    borderRadius: radii.lg,
     borderWidth: 1,
     overflow: 'hidden',
-  },
-  action: {
-    alignItems: 'center',
-    borderBottomColor: colors.line,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    gap: spacing.md,
-    minHeight: 52,
-    paddingHorizontal: spacing.md,
-  },
-  actionText: {
-    color: colors.text,
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '700',
-    paddingVertical: spacing.md,
-  },
-  destructiveText: {
-    color: colors.red,
   },
 });
 

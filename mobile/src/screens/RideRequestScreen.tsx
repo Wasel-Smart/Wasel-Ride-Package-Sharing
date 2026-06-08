@@ -1,11 +1,14 @@
-import React, { useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import {
   InfoCard,
+  PremiumPanel,
   PrimaryButton,
+  RoutePreview,
   ScreenShell,
   SectionHeader,
+  StateNotice,
   StatusPill,
 } from '../components/MobilePrimitives';
 import { useOffline } from '../hooks/useOffline';
@@ -18,7 +21,7 @@ const SAMPLE_COORDINATES = {
   aqaba: { latitude: 29.5321, longitude: 35.0063 },
 };
 
-const RideRequestScreen = () => {
+const RideRequestScreen = React.memo(function RideRequestScreen() {
   const { isOnline, queueSize } = useOffline();
   const [pickup, setPickup] = useState('Amman');
   const [destination, setDestination] = useState('Aqaba');
@@ -26,15 +29,19 @@ const RideRequestScreen = () => {
   const [loading, setLoading] = useState(false);
   const [lastResult, setLastResult] = useState<string | null>(null);
 
-  const canSubmit = useMemo(
-    () => validateRideRequest(pickup, destination, seats).valid,
+  const validation = useMemo(
+    () => validateRideRequest(pickup, destination, seats),
     [destination, pickup, seats],
   );
 
-  const submitRide = async () => {
-    const validation = validateRideRequest(pickup, destination, seats);
-    if (!validation.valid) {
-      Alert.alert('Check ride details', validation.message);
+  const canSubmit = validation.valid;
+  const routeFrom = pickup.trim() || 'Pickup';
+  const routeTo = destination.trim() || 'Destination';
+
+  const submitRide = useCallback(async () => {
+    const latestValidation = validateRideRequest(pickup, destination, seats);
+    if (!latestValidation.valid) {
+      Alert.alert('Check ride details', latestValidation.message);
       return;
     }
 
@@ -64,7 +71,7 @@ const RideRequestScreen = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [destination, pickup, seats]);
 
   return (
     <ScreenShell
@@ -82,54 +89,76 @@ const RideRequestScreen = () => {
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.statusRow}>
           <StatusPill
-            label={isOnline ? 'Live request' : 'Offline queue'}
+            label={isOnline ? 'Live matching' : 'Offline queue'}
             tone={isOnline ? colors.green : colors.amber}
             icon={isOnline ? 'radio' : 'archive'}
           />
-          <StatusPill label={`${queueSize} queued`} tone={queueSize ? colors.amber : colors.cyan} />
+          <StatusPill label={`${queueSize} queued`} tone={queueSize ? colors.amber : colors.teal} />
         </View>
 
         <SectionHeader
           eyebrow="Ride flow"
           title="Find verified shared capacity"
-          body="Submit a corridor request with offline fallback, validation, and clear user feedback."
+          body="Corridor intent, seat count, and network state remain visible before the request leaves the device."
         />
 
-        <View style={styles.form}>
-          <TextInput
-            accessibilityLabel="Pickup city"
-            onChangeText={setPickup}
-            placeholder="Pickup city"
-            placeholderTextColor={colors.muted}
-            style={styles.input}
-            testID="origin-input"
-            value={pickup}
+        <RoutePreview from={routeFrom} to={routeTo} eta="Live match" distance={`${seats || '0'} seat`} />
+
+        <PremiumPanel>
+          <View style={styles.form}>
+            <TextInput
+              accessibilityLabel="Pickup city"
+              autoCapitalize="words"
+              onChangeText={setPickup}
+              placeholder="Pickup city"
+              placeholderTextColor={colors.muted}
+              returnKeyType="next"
+              style={styles.input}
+              testID="origin-input"
+              value={pickup}
+            />
+            <TextInput
+              accessibilityLabel="Destination city"
+              autoCapitalize="words"
+              onChangeText={setDestination}
+              placeholder="Destination"
+              placeholderTextColor={colors.muted}
+              returnKeyType="next"
+              style={styles.input}
+              testID="destination-input"
+              value={destination}
+            />
+            <TextInput
+              accessibilityLabel="Seats"
+              keyboardType="number-pad"
+              onChangeText={setSeats}
+              placeholder="Seats"
+              placeholderTextColor={colors.muted}
+              style={styles.input}
+              testID="seats-input"
+              value={seats}
+            />
+          </View>
+        </PremiumPanel>
+
+        {!validation.valid ? (
+          <StateNotice
+            icon="warning"
+            title="Needs ride details"
+            body={validation.message ?? 'Complete the pickup, destination, and seat count.'}
+            tone={colors.amber}
+            testID="ride-validation-state"
           />
-          <TextInput
-            accessibilityLabel="Destination city"
-            onChangeText={setDestination}
-            placeholder="Destination"
-            placeholderTextColor={colors.muted}
-            style={styles.input}
-            testID="destination-input"
-            value={destination}
-          />
-          <TextInput
-            accessibilityLabel="Seats"
-            keyboardType="number-pad"
-            onChangeText={setSeats}
-            placeholder="Seats"
-            placeholderTextColor={colors.muted}
-            style={styles.input}
-            testID="seats-input"
-            value={seats}
-          />
-        </View>
+        ) : null}
 
         {lastResult ? (
-          <View style={styles.result} testID="ride-request-result">
-            <Text style={styles.resultText}>{lastResult}</Text>
-          </View>
+          <StateNotice
+            icon={lastResult.includes('queued') || lastResult.includes('failed') ? 'time' : 'checkmark-circle'}
+            title="Ride request status"
+            body={lastResult}
+            tone={lastResult.includes('failed') ? colors.red : colors.teal}
+            testID="ride-request-result"
+          />
         ) : null}
 
         <InfoCard
@@ -140,22 +169,23 @@ const RideRequestScreen = () => {
         />
         <InfoCard
           icon="sync"
-          title="Offline safe"
-          body="Requests are queued locally when connectivity drops and sync when the device returns online."
+          title="Poor-network resilience"
+          body="Requests queue locally when connectivity drops and sync once the device returns online."
           tone={colors.amber}
         />
       </ScrollView>
     </ScreenShell>
   );
-};
+});
 
 const styles = StyleSheet.create({
   scroll: {
     gap: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.xxl,
   },
   statusRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
     justifyContent: 'space-between',
   },
@@ -163,26 +193,15 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   input: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.surfaceAlt,
     borderColor: colors.line,
-    borderRadius: radii.md,
+    borderRadius: radii.lg,
     borderWidth: 1,
     color: colors.ink,
     fontSize: 16,
-    minHeight: 52,
+    fontWeight: '700',
+    minHeight: 54,
     paddingHorizontal: spacing.md,
-  },
-  result: {
-    backgroundColor: colors.surfaceMuted,
-    borderColor: `${colors.cyan}55`,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    padding: spacing.md,
-  },
-  resultText: {
-    color: colors.text,
-    fontSize: 14,
-    lineHeight: 20,
   },
 });
 

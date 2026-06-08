@@ -13,6 +13,17 @@ export function validatePositiveNumber(value: string, label: string): Validation
   return { valid: true };
 }
 
+export function validatePositiveInteger(value: string, label: string): ValidationResult {
+  const numberResult = validatePositiveNumber(value, label);
+  if (!numberResult.valid) return numberResult;
+
+  if (!Number.isInteger(Number(value))) {
+    return { valid: false, message: `${label} must be a whole number.` };
+  }
+
+  return { valid: true };
+}
+
 export function validateRequiredText(value: string, label: string): ValidationResult {
   if (value.trim().length < 2) {
     return { valid: false, message: `${label} is required.` };
@@ -28,7 +39,7 @@ export function validateRideRequest(pickup: string, destination: string, seats: 
   const destinationResult = validateRequiredText(destination, 'Destination');
   if (!destinationResult.valid) return destinationResult;
 
-  return validatePositiveNumber(seats, 'Seats');
+  return validatePositiveInteger(seats, 'Seats');
 }
 
 export function validatePackageRequest(

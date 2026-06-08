@@ -14,40 +14,46 @@ import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
-export const AppNavigator = () => {
+const iconByRoute: Record<string, keyof typeof Ionicons.glyphMap> = {
+  Home: 'home',
+  Rides: 'car',
+  Packages: 'cube',
+  Map: 'map',
+  Wallet: 'card',
+  Profile: 'person',
+};
+
+export const AppNavigator = React.memo(function AppNavigator() {
   return (
     <Tab.Navigator
       screenOptions={({ route }: { route: { name: string } }): BottomTabNavigationOptions => ({
         tabBarIcon: ({ color, size }: { color: string; size: number }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'home';
-          if (route.name === 'Home') iconName = 'home';
-          else if (route.name === 'Rides') iconName = 'car';
-          else if (route.name === 'Packages') iconName = 'cube';
-          else if (route.name === 'Map') iconName = 'map';
-          else if (route.name === 'Wallet') iconName = 'card';
-          else if (route.name === 'Profile') iconName = 'person';
-          
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return <Ionicons name={iconByRoute[route.name] ?? 'ellipse'} size={size} color={color} />;
         },
+        freezeOnBlur: true,
         headerStyle: {
-          backgroundColor: colors.surface,
+          backgroundColor: colors.bg,
           shadowColor: 'transparent',
         },
+        headerShadowVisible: false,
         headerTitleStyle: {
           color: colors.ink,
-          fontWeight: '800',
+          fontWeight: '900',
         },
+        lazy: true,
         tabBarActiveTintColor: colors.teal,
+        tabBarHideOnKeyboard: true,
         tabBarInactiveTintColor: colors.muted,
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '700',
+          fontWeight: '800',
         },
         tabBarStyle: {
           backgroundColor: colors.surface,
-          borderTopColor: colors.line,
-          height: 64,
-          paddingBottom: 8,
+          borderTopColor: 'transparent',
+          elevation: 6,
+          height: 70,
+          paddingBottom: 10,
           paddingTop: 8,
         },
       })}>
@@ -59,4 +65,4 @@ export const AppNavigator = () => {
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );
-};
+});

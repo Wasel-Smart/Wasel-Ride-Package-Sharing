@@ -1,87 +1,71 @@
 import { Link } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, View } from 'react-native';
+
+import {
+  InfoCard,
+  MetricTile,
+  PremiumPanel,
+  ScreenShell,
+  SectionHeader,
+  StatusPill,
+} from '../src/components/MobilePrimitives';
+import { colors, spacing } from '../src/theme';
 
 const checkpoints = [
-  ['Live rides', 'Driver and rider status cards with route context.'],
-  ['Packages', 'Pickup, custody transfer, and delivery confirmation.'],
-  ['Trust', 'Identity, safety, support, and incident escalation.'],
-  ['Notifications', 'SMS, push, and in-app delivery status surfaces.'],
-];
+  ['car-sport', 'Live rides', 'Driver and rider status cards with route context.', colors.teal],
+  ['cube', 'Packages', 'Pickup, custody transfer, and delivery confirmation.', colors.blue],
+  ['shield-checkmark', 'Trust', 'Identity, safety, support, and incident escalation.', colors.green],
+  ['notifications', 'Notifications', 'Push and in-app delivery status surfaces.', colors.amber],
+] as const;
 
 export default function OperationsPreview() {
   return (
-    <SafeAreaView style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
+    <ScreenShell testID="operations-preview-screen">
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <Link href="/" style={styles.backLink}>
-          Back
+          Back to dashboard
         </Link>
 
-        <Text style={styles.title}>Operations preview</Text>
-        <Text style={styles.copy}>
-          This native foundation is ready for screen-by-screen implementation
-          against the existing Supabase and Edge Function contracts.
-        </Text>
+        <PremiumPanel tone="dark">
+          <View style={styles.heroTop}>
+            <StatusPill label="Native foundation" tone={colors.cyan} icon="sparkles" />
+          </View>
+          <SectionHeader
+            eyebrow="Operations preview"
+            title="Ready for production workflows"
+            body="The mobile foundation is aligned to Supabase, Edge Functions, offline sync, native payments, and route operations."
+            tone="dark"
+          />
+        </PremiumPanel>
 
-        <View style={styles.list}>
-          {checkpoints.map(([title, body]) => (
-            <View key={title} style={styles.card}>
-              <Text style={styles.cardTitle}>{title}</Text>
-              <Text style={styles.cardCopy}>{body}</Text>
-            </View>
-          ))}
+        <View style={styles.metrics}>
+          <MetricTile label="Routes" value="4" tone={colors.teal} />
+          <MetricTile label="State" value="Live" tone={colors.green} />
         </View>
+
+        {checkpoints.map(([icon, title, body, tone]) => (
+          <InfoCard key={title} icon={icon} title={title} body={body} tone={tone} />
+        ))}
       </ScrollView>
-    </SafeAreaView>
+    </ScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#0F172A',
-  },
   content: {
-    padding: 20,
-    paddingBottom: 40,
+    gap: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
   backLink: {
-    color: '#67E8F9',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 24,
+    color: colors.teal,
+    fontSize: 15,
+    fontWeight: '900',
   },
-  title: {
-    color: '#FFFFFF',
-    fontSize: 30,
-    fontWeight: '800',
+  heroTop: {
+    marginBottom: spacing.lg,
   },
-  copy: {
-    color: '#CBD5E1',
-    fontSize: 16,
-    lineHeight: 24,
-    marginTop: 12,
-  },
-  list: {
-    gap: 16,
-    marginTop: 24,
-  },
-  card: {
-    backgroundColor: '#111827',
-    borderColor: '#334155',
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 20,
-  },
-  cardTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  cardCopy: {
-    color: '#CBD5E1',
-    fontSize: 16,
-    lineHeight: 24,
-    marginTop: 8,
+  metrics: {
+    flexDirection: 'row',
+    gap: spacing.sm,
   },
 });

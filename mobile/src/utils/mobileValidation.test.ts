@@ -1,5 +1,6 @@
 import {
   validatePackageRequest,
+  validatePositiveInteger,
   validatePositiveNumber,
   validateRequiredText,
   validateRideRequest,
@@ -20,6 +21,14 @@ describe('mobile validation', () => {
       message: 'Seats must be greater than zero.',
     });
     expect(validatePositiveNumber('2', 'Seats')).toEqual({ valid: true });
+  });
+
+  it('validates positive integer fields', () => {
+    expect(validatePositiveInteger('1.5', 'Seats')).toEqual({
+      valid: false,
+      message: 'Seats must be a whole number.',
+    });
+    expect(validatePositiveInteger('2', 'Seats')).toEqual({ valid: true });
   });
 
   it('validates ride requests', () => {

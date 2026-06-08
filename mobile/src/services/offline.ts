@@ -20,6 +20,12 @@ interface CachedData<T = unknown> {
   expiresIn: number; // milliseconds
 }
 
+type OfflineStats = {
+  queueSize: number;
+  cacheSize: number;
+  isOnline: boolean;
+};
+
 const STORAGE_KEYS = {
   OFFLINE_QUEUE: '@wasel:offline_queue',
   CACHED_RIDES: '@wasel:cached_rides',
@@ -32,24 +38,28 @@ export class OfflineService {
   private isOnline = true;
   private syncInProgress = false;
   private listeners = new Set<(isOnline: boolean) => void>();
+  private statsListeners = new Set<(stats: OfflineStats) => void>();
   private unsubscribeNetInfo: (() => void) | null = null;
 
   constructor() {
-    this.initializeNetworkMonitoring();
+    void this.initializeNetworkMonitoring().catch(error => {
+      console.error('[Offline] Network monitoring failed:', error);
+    });
   }
 
   private async initializeNetworkMonitoring(): Promise<void> {
     // Get initial network state
     const state = await NetInfo.fetch();
-    this.isOnline = state.isConnected ?? true;
+    this.isOnline = this.readOnlineState(state);
 
     // Listen for network changes
     this.unsubscribeNetInfo = NetInfo.addEventListener(state => {
       const wasOnline = this.isOnline;
-      this.isOnline = state.isConnected ?? true;
+      this.isOnline = this.readOnlineState(state);
 
       // Notify listeners
       this.listeners.forEach(listener => listener(this.isOnline));
+      void this.notifyStatsListeners();
 
       // Trigger sync if we just came online
       if (!wasOnline && this.isOnline) {
@@ -58,6 +68,15 @@ export class OfflineService {
 
       console.log(`[Offline] Network state: ${this.isOnline ? 'online' : 'offline'}`);
     });
+  }
+
+  private readOnlineState(state: {
+    isConnected: boolean | null;
+    isInternetReachable?: boolean | null;
+  }): boolean {
+    const connected = state.isConnected ?? true;
+    const reachable = state.isInternetReachable ?? true;
+    return connected && reachable;
   }
 
   /**
@@ -79,6 +98,17 @@ export class OfflineService {
     };
   }
 
+  subscribeToStats(listener: (stats: OfflineStats) => void): () => void {
+    this.statsListeners.add(listener);
+    void this.getOfflineStats().then(listener).catch(error => {
+      console.error('[Offline] Error reading stats:', error);
+    });
+
+    return () => {
+      this.statsListeners.delete(listener);
+    };
+  }
+
   /**
    * Queue an action for later sync when offline
    */
@@ -88,6 +118,7 @@ export class OfflineService {
     const queue = await this.getOfflineQueue();
     queue.push(offlineAction);
     await AsyncStorage.setItem(STORAGE_KEYS.OFFLINE_QUEUE, JSON.stringify(queue));
+    void this.notifyStatsListeners();
 
     console.log(`[Offline] Queued action: ${action.type}`);
   }
@@ -148,6 +179,7 @@ export class OfflineService {
       console.log(`[Offline] Sync complete: ${successful.length} synced, ${failed.length} remaining`);
     } finally {
       this.syncInProgress = false;
+      void this.notifyStatsListeners();
     }
   }
 
@@ -167,7 +199,7 @@ export class OfflineService {
 
     switch (action.type) {
       case 'RIDE_REQUEST':
-        await fetch(`${apiUrl}/v1/rides`, {
+        await this.sendQueuedRequest(`${apiUrl}/v1/rides`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -177,8 +209,9 @@ export class OfflineService {
         });
         break;
 
-      case 'RIDE_CANCEL':
-        await fetch(`${apiUrl}/v1/rides/${this.readPayloadField(action.payload, 'rideId')}/cancel`, {
+      case 'RIDE_CANCEL': {
+        const rideId = this.readPayloadPathField(action.payload, 'rideId');
+        await this.sendQueuedRequest(`${apiUrl}/v1/rides/${rideId}/cancel`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -187,9 +220,11 @@ export class OfflineService {
           body: JSON.stringify({ reason: this.readPayloadField(action.payload, 'reason') }),
         });
         break;
+      }
 
-      case 'RIDE_RATING':
-        await fetch(`${apiUrl}/v1/rides/${this.readPayloadField(action.payload, 'rideId')}/rating`, {
+      case 'RIDE_RATING': {
+        const rideId = this.readPayloadPathField(action.payload, 'rideId');
+        await this.sendQueuedRequest(`${apiUrl}/v1/rides/${rideId}/rating`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -201,9 +236,10 @@ export class OfflineService {
           }),
         });
         break;
+      }
 
       case 'PACKAGE_REQUEST':
-        await fetch(`${apiUrl}/v1/packages`, {
+        await this.sendQueuedRequest(`${apiUrl}/v1/packages`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -214,7 +250,7 @@ export class OfflineService {
         break;
 
       case 'PROFILE_UPDATE':
-        await fetch(`${apiUrl}/v1/profile`, {
+        await this.sendQueuedRequest(`${apiUrl}/v1/profile`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -229,12 +265,28 @@ export class OfflineService {
     }
   }
 
+  private async sendQueuedRequest(url: string, options: RequestInit): Promise<void> {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      throw new Error(`Queued action failed with ${response.status}`);
+    }
+  }
+
   private readPayloadField(payload: unknown, field: string): unknown {
     if (!payload || typeof payload !== 'object' || !(field in payload)) {
       return undefined;
     }
 
     return (payload as Record<string, unknown>)[field];
+  }
+
+  private readPayloadPathField(payload: unknown, field: string): string {
+    const value = this.readPayloadField(payload, field);
+    if (typeof value !== 'string' && typeof value !== 'number') {
+      throw new Error(`Queued action missing ${field}`);
+    }
+
+    return encodeURIComponent(String(value));
   }
 
   /**
@@ -249,6 +301,7 @@ export class OfflineService {
     };
 
     await AsyncStorage.setItem(`@wasel:cache:${key}`, JSON.stringify(cached));
+    void this.notifyStatsListeners();
     console.log(`[Offline] Cached: ${key}`);
   }
 
@@ -327,6 +380,7 @@ export class OfflineService {
     const keys = await AsyncStorage.getAllKeys();
     const cacheKeys = keys.filter(key => key.startsWith('@wasel:cache:'));
     await AsyncStorage.multiRemove(cacheKeys);
+    void this.notifyStatsListeners();
     console.log(`[Offline] Cleared ${cacheKeys.length} cache entries`);
   }
 
@@ -335,17 +389,14 @@ export class OfflineService {
    */
   async clearOfflineQueue(): Promise<void> {
     await AsyncStorage.removeItem(STORAGE_KEYS.OFFLINE_QUEUE);
+    void this.notifyStatsListeners();
     console.log('[Offline] Cleared offline queue');
   }
 
   /**
    * Get offline statistics
    */
-  async getOfflineStats(): Promise<{
-    queueSize: number;
-    cacheSize: number;
-    isOnline: boolean;
-  }> {
+  async getOfflineStats(): Promise<OfflineStats> {
     const queue = await this.getOfflineQueue();
     const keys = await AsyncStorage.getAllKeys();
     const cacheKeys = keys.filter(key => key.startsWith('@wasel:cache:'));
@@ -357,6 +408,15 @@ export class OfflineService {
     };
   }
 
+  private async notifyStatsListeners(): Promise<void> {
+    if (this.statsListeners.size === 0) {
+      return;
+    }
+
+    const stats = await this.getOfflineStats();
+    this.statsListeners.forEach(listener => listener(stats));
+  }
+
   /**
    * Cleanup on service shutdown
    */
@@ -366,6 +426,7 @@ export class OfflineService {
       this.unsubscribeNetInfo = null;
     }
     this.listeners.clear();
+    this.statsListeners.clear();
   }
 }
 
