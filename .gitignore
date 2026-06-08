@@ -51,6 +51,8 @@ review-artifacts/**/*.log
 review-artifacts/current-*.png
 review-artifacts/wasel-*.png
 review-artifacts/premium-redesign*/
+artifacts/local-kind-image-context/
+artifacts/live-integrations/
 infra/kubernetes/local-*.Dockerfile
 infra/kubernetes/local-*-patch.json
 scripts/local-*-runtime.py
