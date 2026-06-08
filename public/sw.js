@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'wasel-v5';
+const CACHE_VERSION = 'wasel-v6';
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -17,6 +17,8 @@ const PRECACHE_URLS = [
   '/brand/wasellogo-96.png',
   '/brand/wasellogo-160.png',
   '/brand/wasellogo-280.png',
+  '/brand/wasellogo-512.png',
+  '/brand/wasel-logo-transparent.png',
 ];
 
 self.addEventListener('install', (event) => {

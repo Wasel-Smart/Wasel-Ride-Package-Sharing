@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Bus, Car, Package, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -6,14 +6,19 @@ import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { useLiveUserStats } from '../../services/liveDataService';
 import { getCorridorDemandLeaders } from '../../services/growthEngine';
 import { CurrencyService } from '../../utils/currency';
+import { trackUserAction } from '../../utils/monitoring';
 import { C, F, POPULAR_ROUTES } from './HomePageShared';
 import {
   CorridorsSection,
   HomeHeroSection,
   HomePageStyles,
+  OnboardingDemoSection,
+  OutcomesSection,
+  ProofSection,
   QuickActionsSection,
   SignedInUtilitySection,
   SignedOutCtaSection,
+  TrustPagesSection,
   type CorridorCard,
   type QuickAction,
   type TripMode,
@@ -30,18 +35,43 @@ export function HomePage() {
   const svc = CurrencyService.getInstance();
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'performance' in window) {
+      window.performance.mark('wasel_home_visible');
+    }
+    trackUserAction('homepage.view', {
+      signedIn: Boolean(user?.id),
+      language,
+    });
+  }, [language, user?.id]);
+
+  const handleNavigate = (path: string, source = 'homepage') => {
+    trackUserAction('homepage.cta_click', {
+      source,
+      path,
+      tripMode,
+      signedIn: Boolean(user?.id),
+    });
+    navigate(path);
+  };
+
+  const handleTripModeChange = (mode: TripMode) => {
+    setTripMode(mode);
+    trackUserAction('homepage.trip_mode_select', { mode });
+  };
+
   const quickActions = useMemo<QuickAction[]>(
     () => [
       {
         icon: Search,
-        kicker: ar ? 'للحجز السريع' : 'Primary action',
-        title: ar ? 'ابحث عن رحلة' : 'Book travel',
+        kicker: ar ? 'للحجز السريع' : 'Find a seat',
+        title: ar ? 'ابحث عن رحلة' : 'Book a lower-cost route',
         desc: ar
           ? 'ابدأ من المسار وشاهد المقاعد المتاحة والسعر بوضوح قبل الحجز.'
-          : 'Start from the corridor and compare available seats before you commit.',
+          : 'Start from the corridor, compare available seats, and keep bus fallback visible.',
         outcome: ar
           ? 'عرض حي للمقاعد والأسعار على نفس المسار'
-          : 'Live seat supply and price on the same corridor',
+          : 'Outcome: price clarity before booking',
         color: C.cyan,
         dim: C.cyanDim,
         border: C.borderHov,
@@ -49,14 +79,14 @@ export function HomePage() {
       },
       {
         icon: Car,
-        kicker: ar ? 'للسائقين' : 'Guided workflow',
-        title: ar ? 'اعرض رحلتك' : 'Request approval',
+        kicker: ar ? 'للسائقين' : 'Offer seats',
+        title: ar ? 'اعرض رحلتك' : 'Turn empty seats into earnings',
         desc: ar
           ? 'افتح المقاعد الفارغة وخفف تكلفة المشوار من نفس واجهة الحركة.'
-          : 'Open empty seats and offset trip cost from the same managed travel flow.',
+          : 'Publish a route, review request context, and offset trip cost with trusted riders.',
         outcome: ar
           ? 'إدارة المقاعد والسعر والوضوح من شاشة واحدة'
-          : 'Manage seat supply, pricing, and clarity in one flow',
+          : 'Outcome: more value from the same trip',
         color: C.gold,
         dim: C.goldDim,
         border: C.goldDim,
@@ -64,14 +94,14 @@ export function HomePage() {
       },
       {
         icon: Package,
-        kicker: ar ? 'للطرود' : 'Manager workflow',
-        title: ar ? 'أرسل طردا' : 'Approve travel',
+        kicker: ar ? 'للطرود' : 'Send a parcel',
+        title: ar ? 'أرسل طردا' : 'Attach parcels to trusted movement',
         desc: ar
           ? 'حرك الطرد على نفس المسار بدون منتج منفصل أو منطق مختلف.'
-          : 'Move a parcel on the same corridor without a separate product logic.',
+          : 'Match packages to live route supply, then keep pickup proof and support attached.',
         outcome: ar
           ? 'تتبع واضح وتسليم ضمن شبكة الرحلات نفسها'
-          : 'Clear tracking inside the same route network',
+          : 'Outcome: fewer handoff gaps',
         color: C.orange,
         dim: C.orangeDim,
         border: C.orangeDim,
@@ -79,14 +109,14 @@ export function HomePage() {
       },
       {
         icon: Bus,
-        kicker: ar ? 'الخيار الاحتياطي' : 'Operations workflow',
-        title: ar ? 'احجز باص' : 'Manage movement',
+        kicker: ar ? 'الخيار الاحتياطي' : 'Scheduled fallback',
+        title: ar ? 'احجز باص' : 'Use bus when it is the better fit',
         desc: ar
           ? 'اختر المغادرة المجدولة عندما لا تكون المشاركة هي الخيار الأنسب.'
-          : 'Use scheduled departures when shared supply is not the right fit.',
+          : 'Compare scheduled departures when shared seats are thin or timing matters more.',
         outcome: ar
           ? 'استمر في الحركة حتى عندما يضعف العرض المشترك'
-          : 'Keep moving even when shared supply is thin',
+          : 'Outcome: no dead end when supply is thin',
         color: C.green,
         dim: C.greenDim,
         border: C.greenDim,
@@ -149,37 +179,31 @@ export function HomePage() {
   const primaryTripPath = tripMode === 'round' ? '/find-ride?mode=round' : '/find-ride';
 
   return (
-    <div
-      className="min-h-[var(--app-min-height)] relative"
-      dir={dir}
-      style={{ background: C.bg, color: C.text, fontFamily: F }}
-    >
+    <div className="wasel-home-shell" dir={dir} style={{ color: C.text, fontFamily: F }}>
       <HomePageStyles />
 
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          background: `radial-gradient(circle at 14% 14%, ${C.cyanDim}, transparent 24%), radial-gradient(circle at 84% 20%, ${C.goldDim}, transparent 18%), radial-gradient(circle at 72% 78%, ${C.greenDim}, transparent 22%)`,
-        }}
-      />
-
-      <div className="relative z-10 mx-auto px-4 py-8" style={{ maxWidth: 1140 }}>
+      <div className="wasel-home-container relative z-10">
         <HomeHeroSection
           ar={ar}
           user={user}
           firstName={firstName}
           tripMode={tripMode}
-          onTripModeChange={setTripMode}
-          onNavigate={navigate}
+          onTripModeChange={handleTripModeChange}
+          onNavigate={handleNavigate}
           primaryTripPath={primaryTripPath}
         />
 
-        <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={navigate} />
+        <ProofSection ar={ar} onNavigate={handleNavigate} />
 
-        <CorridorsSection ar={ar} corridorCards={corridorCards} onNavigate={navigate} />
+        <OnboardingDemoSection ar={ar} onNavigate={handleNavigate} />
+
+        <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={handleNavigate} />
+
+        <OutcomesSection ar={ar} corridorCards={corridorCards} onNavigate={handleNavigate} />
+
+        <CorridorsSection ar={ar} corridorCards={corridorCards} onNavigate={handleNavigate} />
+
+        <TrustPagesSection ar={ar} onNavigate={handleNavigate} />
 
         {user ? (
           <SignedInUtilitySection
@@ -189,7 +213,7 @@ export function HomePage() {
             trustScore={trustScore}
           />
         ) : (
-          <SignedOutCtaSection ar={ar} onNavigate={navigate} />
+          <SignedOutCtaSection ar={ar} onNavigate={handleNavigate} />
         )}
       </div>
     </div>

@@ -74,7 +74,7 @@ describe('backend fallback services', () => {
       'secret123',
       'Sara',
       'Ali',
-      '+962790000000'
+      '+962790000000',
     );
 
     expect(mockSupabaseSignUp).toHaveBeenCalledWith({
@@ -122,6 +122,30 @@ describe('backend fallback services', () => {
 
     expect(mockGetDirectProfile).toHaveBeenCalledWith('user-123');
     expect(result.profile?.full_name).toBe('Sara Ali');
+  });
+
+  it('creates the canonical profile with phone data when direct fallback is enabled', async () => {
+    mockUpdateDirectProfile.mockResolvedValue({
+      id: 'user-123',
+      full_name: 'Sara Ali',
+      email: 'sara@example.com',
+      phone_number: '+962790000000',
+    });
+
+    const result = await authAPI.createProfile(
+      'user-123',
+      'sara@example.com',
+      'Sara',
+      'Ali',
+      '+962790000000',
+    );
+
+    expect(mockUpdateDirectProfile).toHaveBeenCalledWith('user-123', {
+      email: 'sara@example.com',
+      full_name: 'Sara Ali',
+      phone_number: '+962790000000',
+    });
+    expect(result.phone_number).toBe('+962790000000');
   });
 
   it('updates the profile directly through Supabase when the edge update endpoint returns an error', async () => {
@@ -229,19 +253,9 @@ describe('backend fallback services', () => {
       },
     ]);
 
-    const result = await tripsAPI.searchTrips(
-      'Amman',
-      'Zarqa',
-      '2026-04-02',
-      2
-    );
+    const result = await tripsAPI.searchTrips('Amman', 'Zarqa', '2026-04-02', 2);
 
-    expect(mockSearchDirectTrips).toHaveBeenCalledWith(
-      'Amman',
-      'Zarqa',
-      '2026-04-02',
-      2
-    );
+    expect(mockSearchDirectTrips).toHaveBeenCalledWith('Amman', 'Zarqa', '2026-04-02', 2);
 
     expect(result).toHaveLength(1);
   });

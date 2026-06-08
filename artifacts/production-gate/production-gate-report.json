@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-06-06T15:06:14.883Z",
-  "scoreOutOf10": 7.8,
-  "certified10Of10": false,
+  "generatedAt": "2026-06-08T03:16:30.674Z",
+  "scoreOutOf10": 10,
+  "certified10Of10": true,
   "checks": [
     {
       "name": "backend-production-build",
@@ -11,14 +11,20 @@
     },
     {
       "name": "docker-runtime-available",
-      "status": "fail",
-      "evidence": "docker CLI is not installed or not on PATH",
+      "status": "pass",
+      "evidence": "Docker version 29.4.3, build 055a478",
       "details": []
     },
     {
       "name": "kubernetes-runtime-available",
-      "status": "fail",
-      "evidence": "kubectl is not installed or not on PATH",
+      "status": "pass",
+      "evidence": "current context: kind-kind-cluster",
+      "details": []
+    },
+    {
+      "name": "kubernetes-production-pods",
+      "status": "pass",
+      "evidence": "all wasel-production pods are Ready\n\nNAME                                        READY   STATUS    RESTARTS   AGE     IP            NODE                         NOMINATED NODE   READINESS GATES\nwasel-matching-worker-6f9879cbb4-bg4tg      1/1     Running   0          9m41s   10.244.0.29   kind-cluster-control-plane   <none>           <none>\nwasel-matching-worker-6f9879cbb4-cg29m      1/1     Running   0          9m6s    10.244.0.41   kind-cluster-control-plane   <none>           <none>\nwasel-notification-worker-8bf868584-5klp5   1/1     Running   0          9m4s    10.244.0.42   kind-cluster-control-plane   <none>           <none>\nwasel-notification-worker-8bf868584-gxxdc   1/1     Running   0          9m35s   10.244.0.30   kind-cluster-control-plane   <none>           <none>\nwasel-ops-worker-5d87c95b7f-v6wj7           1/1     Running   0          9m31s   10.244.0.31   kind-cluster-control-plane   <none>           <none>\nwasel-package-worker-56568ffcf-g492d        1/1     Running   0          9m26s   10.244.0.34   kind-cluster-control-plane   <none>           <none>\nwasel-package-worker-56568ffcf-j79wp        1/1     Running   0          8m36s   10.244.0.48   kind-cluster-control-plane   <none>           <none>\nwasel-payment-worker-c8bd55685-k9djj        1/1     Running   0          9m16s   10.244.0.36   kind-cluster-control-plane   <none>           <none>\nwasel-payment-worker-c8bd55685-w9mgt        1/1     Running   0          8m55s   10.244.0.45   kind-cluster-control-plane   <none>           <none>\nwasel-web-584cd88f75-5s4tl                  1/1     Running   0          9m11s   10.244.0.38   kind-cluster-control-plane   <none>           <none>\nwasel-web-584cd88f75-65qqc                  1/1     Running   0          8m41s   10.244.0.47   kind-cluster-control-plane   <none>           <none>\nwasel-web-584cd88f75-674c4                  1/1     Running   0          9m10s   10.244.0.39   kind-cluster-control-plane   <none>           <none>\nwasel-web-584cd88f75-h8wzq                  1/1     Running   0          8m45s   10.244.0.46   kind-cluster-control-plane   <none>           <none>",
       "details": []
     },
     {

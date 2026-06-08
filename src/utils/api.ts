@@ -3,6 +3,7 @@ import { createCorrelationId } from '../platform/observability';
 import { API_URL, publicAnonKey } from '../services/core';
 import { logger, trackAPICall } from './monitoring';
 import { validateApiUrl } from './sanitization';
+import { addCSRFHeader } from './csrf';
 
 export const API_BASE_URL = API_URL;
 export const REQUEST_TIMEOUT = 30_000;
@@ -70,6 +71,44 @@ function isRetryable(statusCode: number): boolean {
   return RETRY_CONFIG.retryableStatusCodes.includes(statusCode);
 }
 
+function isStateChangingMethod(method: string): boolean {
+  return ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase());
+}
+
+function createIdempotencyKey(method: string, endpoint: string, requestId: string): string {
+  const randomValue =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2);
+
+  return `${method.toLowerCase()}:${endpoint}:${requestId}:${randomValue}`;
+}
+
+function buildRequestHeaders(
+  endpoint: string,
+  method: string,
+  requestId: string,
+  headers?: HeadersInit,
+): Headers {
+  const finalHeaders = new Headers(getApiHeaders(undefined, requestId));
+  new Headers(headers ?? {}).forEach((value, key) => {
+    finalHeaders.set(key, value);
+  });
+
+  if (isStateChangingMethod(method)) {
+    const csrfHeaders = addCSRFHeader(finalHeaders);
+    csrfHeaders.forEach((value, key) => {
+      finalHeaders.set(key, value);
+    });
+
+    if (!finalHeaders.has('Idempotency-Key')) {
+      finalHeaders.set('Idempotency-Key', createIdempotencyKey(method, endpoint, requestId));
+    }
+  }
+
+  return finalHeaders;
+}
+
 async function fetchWithTimeout(
   url: string,
   options: RequestInit,
@@ -131,10 +170,7 @@ export async function apiRequest<T = unknown>(
     try {
       const response = await fetchWithTimeout(url, {
         ...options,
-        headers: {
-          ...getApiHeaders(undefined, requestId),
-          ...options.headers,
-        },
+        headers: buildRequestHeaders(endpoint, method, requestId, options.headers),
       });
 
       const duration = Math.round(performance.now() - startedAt);

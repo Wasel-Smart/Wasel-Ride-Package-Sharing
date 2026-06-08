@@ -139,18 +139,28 @@ function sendToAnalytics(vital: WebVital) {
 
   // Send to custom analytics endpoint
   if (import.meta.env.VITE_ANALYTICS_ENDPOINT) {
+    const payload = JSON.stringify({
+      type: 'web_vital',
+      name: vital.name,
+      value: vital.value,
+      rating: vital.rating,
+      timestamp: Date.now(),
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+    });
+
+    if (navigator.sendBeacon) {
+      const sent = navigator.sendBeacon(
+        import.meta.env.VITE_ANALYTICS_ENDPOINT,
+        new Blob([payload], { type: 'application/json' }),
+      );
+      if (sent) return;
+    }
+
     fetch(import.meta.env.VITE_ANALYTICS_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'web_vital',
-        name: vital.name,
-        value: vital.value,
-        rating: vital.rating,
-        timestamp: Date.now(),
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-      }),
+      body: payload,
       keepalive: true,
     }).catch(error => {
       console.error('Failed to send analytics:', error);

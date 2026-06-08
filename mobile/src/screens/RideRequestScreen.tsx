@@ -74,8 +74,10 @@ const RideRequestScreen = () => {
           label={isOnline ? 'Search available rides' : 'Queue ride request'}
           loading={loading}
           onPress={submitRide}
+          testID="submit-request-button"
         />
       }
+      testID="ride-request-screen"
     >
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.statusRow}>
@@ -100,6 +102,7 @@ const RideRequestScreen = () => {
             placeholder="Pickup city"
             placeholderTextColor={colors.muted}
             style={styles.input}
+            testID="origin-input"
             value={pickup}
           />
           <TextInput
@@ -108,6 +111,7 @@ const RideRequestScreen = () => {
             placeholder="Destination"
             placeholderTextColor={colors.muted}
             style={styles.input}
+            testID="destination-input"
             value={destination}
           />
           <TextInput
@@ -117,12 +121,13 @@ const RideRequestScreen = () => {
             placeholder="Seats"
             placeholderTextColor={colors.muted}
             style={styles.input}
+            testID="seats-input"
             value={seats}
           />
         </View>
 
         {lastResult ? (
-          <View style={styles.result}>
+          <View style={styles.result} testID="ride-request-result">
             <Text style={styles.resultText}>{lastResult}</Text>
           </View>
         ) : null}

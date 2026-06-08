@@ -1,11 +1,20 @@
 import { motion } from 'motion/react';
-import { ArrowRight, CheckCircle, Shield } from 'lucide-react';
+import {
+  ArrowRight,
+  BadgeCheck,
+  CheckCircle,
+  CircleDollarSign,
+  Clock,
+  MapPinned,
+  PackageCheck,
+  Route,
+  Shield,
+} from 'lucide-react';
 import type { User } from '@supabase/supabase-js';
 import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 
-import { R, SH } from '../../../utils/wasel-ds';
-import { C, F, InlineCurrencySwitcher } from '../HomePageShared';
+import { C, InlineCurrencySwitcher } from '../HomePageShared';
 import { MobilityOSLandingMap } from '../MobilityOSLandingMap';
 import type { TripMode } from './types';
 
@@ -15,7 +24,7 @@ interface HomeHeroSectionProps {
   firstName: string;
   tripMode: TripMode;
   onTripModeChange: (mode: TripMode) => void;
-  onNavigate: (path: string) => void;
+  onNavigate: (path: string, source?: string) => void;
   primaryTripPath: string;
 }
 
@@ -23,162 +32,199 @@ interface TripModeCardProps {
   ar: boolean;
   tripMode: TripMode;
   onTripModeChange: (mode: TripMode) => void;
-  onNavigate: (path: string) => void;
-  primaryTripPath: string;
 }
+
+const heroProof = [
+  {
+    icon: BadgeCheck,
+    label: 'Verified handoff',
+    detail: 'Identity, wallet, route, and support context stay attached.',
+    accent: C.green,
+  },
+  {
+    icon: CircleDollarSign,
+    label: 'Price discipline',
+    detail: 'Seat, parcel, and bus fallback decisions share one corridor logic.',
+    accent: C.gold,
+  },
+  {
+    icon: Clock,
+    label: 'Less coordination',
+    detail: 'Booking, approval, tracking, and escalation happen in one flow.',
+    accent: C.cyan,
+  },
+] as const;
+
+const heroProofAr = [
+  {
+    icon: BadgeCheck,
+    label: 'تسليم موثق',
+    detail: 'تبقى الهوية والمحفظة والمسار وسياق الدعم مرتبطة.',
+    accent: C.green,
+  },
+  {
+    icon: CircleDollarSign,
+    label: 'وضوح السعر',
+    detail: 'المقاعد والطرود وخيار الباص الاحتياطي تعمل بمنطق مسار واحد.',
+    accent: C.gold,
+  },
+  {
+    icon: Clock,
+    label: 'تنسيق أقل',
+    detail: 'الحجز والموافقة والتتبع والتصعيد تحدث في تدفق واحد.',
+    accent: C.cyan,
+  },
+] as const;
+
+const liveTimeline = [
+  { label: 'Seat price', value: '8.00 JOD', accent: C.cyan },
+  { label: 'Driver trust', value: '4.9 rating', accent: C.green },
+  { label: 'Parcel option', value: '1 slot', accent: C.gold },
+  { label: 'Bus fallback', value: '18:40', accent: C.blueLight },
+] as const;
+
+const liveTimelineAr = [
+  { label: 'سعر المقعد', value: '8.00 د.أ', accent: C.cyan },
+  { label: 'ثقة السائق', value: 'تقييم 4.9', accent: C.green },
+  { label: 'خيار الطرد', value: 'مكان واحد', accent: C.gold },
+  { label: 'بديل الباص', value: '18:40', accent: C.blueLight },
+] as const;
 
 function TripModeCard({
   ar,
   tripMode,
   onTripModeChange,
-  onNavigate,
-  primaryTripPath,
 }: TripModeCardProps) {
   const options = [
     {
       key: 'one-way' as const,
       title: ar ? 'ذهاب فقط' : 'One way',
-      desc: ar ? 'بحث مباشر على نفس الاتجاه' : 'Direct search on one corridor',
+      desc: ar ? 'بحث مباشر على مسار واحد' : 'Direct search on one corridor',
     },
     {
       key: 'round' as const,
       title: ar ? 'ذهاب وعودة' : 'Round trip',
-      desc: ar ? 'احتفظ بالسياق في الاتجاهين' : 'Keep both directions in one flow',
+      desc: ar ? 'احتفظ بالاتجاهين في تدفق واحد' : 'Keep both directions in one flow',
     },
   ];
 
   return (
-    <div
-      style={{
-        borderRadius: R.xxl,
-        padding: '18px',
-        background: C.elevated,
-        border: `1px solid ${C.border}`,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <div>
-          <div
-            style={{
-              fontSize: '0.72rem',
-              fontWeight: 800,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              color: C.textDim,
-            }}
-          >
-            {ar ? 'نوع الرحلة' : '30-second guided start'}
-          </div>
-          <div style={{ marginTop: 6, fontSize: '0.86rem', color: C.textMuted, lineHeight: 1.55 }}>
-            {ar
-              ? 'اختر طريقة البحث ثم افتح المسار المناسب فورا.'
-              : 'Pick one decision, then Wasel opens the right flow with route context already attached.'}
-          </div>
-        </div>
-        <div
-          style={{
-            display: 'inline-grid',
-            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-            gap: 8,
-            padding: 6,
-            borderRadius: 18,
-            background: C.elevated,
-            border: `1px solid ${C.borderFaint}`,
-            minWidth: 280,
-          }}
-        >
-          {options.map(option => {
-            const selected = tripMode === option.key;
-            return (
-              <WaselButton
-                type="button"
-                aria-pressed={selected}
-                key={option.key}
-                onClick={() => onTripModeChange(option.key)}
-                variant="ghost"
-                style={{
-                  minHeight: 76,
-                  height: 'auto',
-                  padding: '12px 14px',
-                  borderRadius: R.lg,
-                  textAlign: 'left',
-                  background: selected ? C.cyanDim : 'transparent',
-                  border: `1px solid ${selected ? C.borderHov : 'transparent'}`,
-                  color: C.text,
-                  cursor: 'pointer',
-                  justifyContent: 'stretch',
-                  whiteSpace: 'normal',
-                }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 8,
-                  }}
-                >
-                  <div style={{ fontSize: '0.84rem', fontWeight: 800 }}>{option.title}</div>
-                  {selected ? <CheckCircle size={14} color={C.cyan} /> : null}
-                </div>
-                <div
-                  style={{ marginTop: 6, color: C.textDim, fontSize: '0.72rem', lineHeight: 1.5 }}
-                >
-                  {option.desc}
-                </div>
-              </WaselButton>
-            );
-          })}
+    <div className="wasel-home-start-panel">
+      <div className="wasel-home-start-copy">
+        <div className="wasel-home-kicker">{ar ? 'نوع الرحلة' : 'Trip type'}</div>
+        <div className="wasel-home-start-text">
+          {ar
+            ? 'اختر مرة واحدة، وسيستخدم زر المسارات هذا الاختيار.'
+            : 'Choose once. The route button follows this selection.'}
         </div>
       </div>
 
-      <div
-        className="wasel-home-primary-actions"
-        style={{
-          display: 'flex',
-          gap: 10,
-          flexWrap: 'wrap',
-          marginTop: 16,
-        }}
-      >
-        <WaselButton
-          type="button"
-          onClick={() => onNavigate(primaryTripPath)}
-          variant="primary"
-          size="lg"
-          iconEnd={<ArrowRight size={16} />}
-          style={{
-            height: 50,
-            padding: '0 20px',
-            borderRadius: R.lg,
-            boxShadow: SH.cyanL,
-          }}
-        >
-          {ar ? 'ابدأ البحث' : 'Book public travel'}
-        </WaselButton>
-        <span
-          style={{
-            height: 50,
-            padding: '0 18px',
-            borderRadius: R.lg,
-            border: `1px solid ${C.border}`,
-            background: C.elevated,
-            color: C.textMuted,
-            fontWeight: 800,
-            display: 'inline-flex',
-            alignItems: 'center',
-          }}
-        >
-          {ar ? 'اعرض مقعدا' : 'Need supply? Open Manage after booking'}
-        </span>
+      <div className="wasel-home-mode-grid" role="group" aria-label="Trip mode">
+        {options.map(option => {
+          const selected = tripMode === option.key;
+          return (
+            <button
+              type="button"
+              aria-pressed={selected}
+              key={option.key}
+              onClick={() => onTripModeChange(option.key)}
+              className="wasel-home-mode-button"
+              style={{
+                background: selected ? C.cyanDim : 'transparent',
+                borderColor: selected ? C.borderHov : C.borderFaint,
+                color: C.text,
+              }}
+            >
+              <span>
+                <strong>{option.title}</strong>
+                <small>{option.desc}</small>
+              </span>
+              {selected ? <CheckCircle size={15} color={C.cyan} /> : null}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ProductCommandPreview({ ar }: { ar: boolean }) {
+  const timeline = ar ? liveTimelineAr : liveTimeline;
+
+  return (
+    <div className="wasel-home-preview-panel" aria-label="Wasel product preview">
+      <div className="wasel-home-preview-top">
+        <div>
+          <div className="wasel-home-kicker">{ar ? 'معاينة المسار' : 'Route preview'}</div>
+          <div className="wasel-home-preview-title">
+            {ar ? 'عمان إلى العقبة اليوم' : 'Amman to Aqaba today'}
+          </div>
+        </div>
+        <div className="wasel-home-live-chip">
+          <span />
+          {ar ? 'مقاعد + باص' : 'Seats + bus'}
+        </div>
+      </div>
+
+      <div className="wasel-home-map-frame">
+        <MobilityOSLandingMap
+          focusRouteId="amman-aqaba"
+          focusLabel={ar ? 'عمان إلى العقبة' : 'Amman to Aqaba'}
+          demandPressure={1.62}
+          utilization={0.78}
+          preferredHeight={330}
+          minimalText
+        />
+      </div>
+
+      <div className="wasel-home-product-stage">
+        <div className="wasel-home-product-window">
+          <div className="wasel-home-window-toolbar">
+            <span />
+            <span />
+            <span />
+            <strong>{ar ? 'الخيار الأفضل' : 'Best option'}</strong>
+          </div>
+          <div className="wasel-home-window-route">
+            <span>
+              <MapPinned size={16} color={C.cyan} />
+              {ar ? 'عمان' : 'Amman'}
+            </span>
+            <ArrowRight size={14} color={C.textDim} />
+            <span>{ar ? 'العقبة' : 'Aqaba'}</span>
+          </div>
+          <div className="wasel-home-window-grid">
+            {timeline.map(item => (
+              <div key={item.label}>
+                <small>{item.label}</small>
+                <strong style={{ color: item.accent }}>{item.value}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="wasel-home-window-progress">
+            <span style={{ width: '78%' }} />
+          </div>
+        </div>
+
+        <div className="wasel-home-phone-frame">
+          <div className="wasel-home-phone-notch" />
+          <div className="wasel-home-phone-screen">
+            <div className="wasel-home-phone-status">
+              <PackageCheck size={15} color={C.gold} />
+              {ar ? 'تمت مطابقة الطرد' : 'Parcel matched'}
+            </div>
+            <strong>{ar ? 'الاستلام خلال 22 دقيقة' : 'Pickup in 22 min'}</strong>
+            <p>
+              {ar
+                ? 'السائق والمسار والسعر وسجل الدعم مرتبطة مسبقا.'
+                : 'Driver, route, fare, and support record are already linked.'}
+            </p>
+            <div className="wasel-home-phone-tags">
+              <span>{ar ? 'المبلغ محجوز' : 'Wallet held'}</span>
+              <span>{ar ? 'الإثبات مطلوب' : 'Proof required'}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -193,191 +239,84 @@ export function HomeHeroSection({
   onNavigate,
   primaryTripPath,
 }: HomeHeroSectionProps) {
+  const proofItems = ar ? heroProofAr : heroProof;
   return (
-    <motion.section
-      className="wasel-home-hero"
-      initial={false}
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.02fr) minmax(340px, 0.98fr)',
-        gap: 18,
-        alignItems: 'stretch',
-      }}
-    >
-      <div
-        className="wasel-home-hero-copy"
-        style={{
-          borderRadius: R['3xl'],
-          padding: '30px 28px',
-          background: C.card,
-          border: `1px solid ${C.border}`,
-          boxShadow: SH.lg,
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 16,
-            flexWrap: 'wrap',
-            marginBottom: 18,
-          }}
-        >
-          <div style={{ display: 'grid', gap: 10 }}>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '6px 12px',
-                borderRadius: 999,
-                background: C.elevated,
-                border: `1px solid ${C.borderFaint}`,
-                width: 'fit-content',
-                fontSize: '0.68rem',
-                fontWeight: 800,
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                color: C.textMuted,
-              }}
-            >
-              <Shield size={12} color={C.cyan} />
-              {ar ? 'منطق واحد للحركة' : 'Public travel automation'}
+    <motion.section className="wasel-home-hero" initial={false}>
+      <div className="wasel-home-hero-copy">
+        <div className="wasel-home-identity-row">
+          <div className="wasel-home-brand-stack">
+            <div className="wasel-home-eyebrow">
+              <Shield size={13} color={C.cyan} />
+              {ar ? 'شبكة مسارات الأردن' : 'Jordan route network'}
             </div>
-            <WaselLogo size={34} theme="light" variant="full" />
+            <WaselLogo size={36} theme="light" variant="full" />
           </div>
           {user ? <InlineCurrencySwitcher ar={ar} /> : null}
         </div>
 
-        <h1
-          style={{
-            margin: 0,
-            fontSize: 'clamp(2rem, 4.5vw, 3.25rem)',
-            lineHeight: 0.98,
-            letterSpacing: '-0.05em',
-            fontWeight: 900,
-            maxWidth: 620,
-          }}
-        >
-          {ar
-            ? `اختر المسار ثم تحرك${firstName ? `، ${firstName}` : ''}`
-            : `Reduce transport cost and automate public travel${firstName ? `, ${firstName}` : ''}`}
+        <h1 className="wasel-home-title">
+          {ar ? 'تحرك في الأردن بتكلفة أقل' : 'Move across Jordan for less'}
         </h1>
 
-        <p
-          style={{
-            margin: '14px 0 0',
-            color: C.textMuted,
-            lineHeight: 1.78,
-            maxWidth: 600,
-            fontSize: '0.97rem',
-          }}
-        >
+        <p className="wasel-home-lead">
           {ar
-            ? 'سواء أردت مقعدا أو عرض مقعد أو إرسال طرد أو التحول إلى الباص، تبدأ كل خطوة من نفس منطق المسار حتى تبقى التجربة أوضح وأسرع.'
-            : 'Wasel turns public commute demand into guided booking, request approval, driver supply, and live trip management so people spend less time coordinating rides.'}
+            ? firstName
+              ? `أهلا بعودتك، ${firstName}. يحافظ Wasel على وضوح السعر والإثبات والثقة والدعم في كل مسار.`
+              : 'يجمع Wasel الركاب والسائقين والطرود وخيار الباص في تدفق مسار موثوق، لتبدأ كل حركة بوضوح السعر والإثبات وسياق الدعم.'
+            : firstName
+            ? `Welcome back, ${firstName}. Compare seats, prices, parcel handoff, and bus fallback from one trusted route flow.`
+            : 'Compare lower-cost rides, trusted drivers, parcel handoff, and scheduled bus fallback before you commit.'}
         </p>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(128px, 1fr))',
-            gap: 10,
-            marginTop: 18,
-          }}
-        >
-          {[
-            { label: 'Book', detail: 'Choose route and seats' },
-            { label: 'Request', detail: 'Send approval context' },
-            { label: 'Approve', detail: 'Clear pending travel' },
-            { label: 'Manage', detail: 'Track live movement' },
-          ].map((step, index) => (
-            <div
-              key={step.label}
-              style={{
-                borderRadius: 16,
-                border: `1px solid ${index === 0 ? C.borderHov : C.borderFaint}`,
-                background: index === 0 ? C.cyanDim : C.elevated,
-                padding: '12px 12px 11px',
-                minHeight: 88,
-              }}
-            >
-              <div
-                style={{
-                  color: index === 0 ? C.cyan : C.text,
-                  fontSize: '0.9rem',
-                  fontWeight: 900,
-                }}
-              >
-                {step.label}
+        <div className="wasel-home-proof-row">
+          {proofItems.map(item => {
+            const Icon = item.icon;
+            return (
+              <div key={item.label} className="wasel-home-proof-item">
+                <span style={{ color: item.accent, background: `${item.accent}14` }}>
+                  <Icon size={16} />
+                </span>
+                <div>
+                  <strong>{item.label}</strong>
+                  <small>{item.detail}</small>
+                </div>
               </div>
-              <div
-                style={{ marginTop: 6, color: C.textDim, fontSize: '0.74rem', lineHeight: 1.45 }}
-              >
-                {step.detail}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <div
-          style={{
-            display: 'flex',
-            gap: 10,
-            flexWrap: 'wrap',
-            marginTop: 18,
-          }}
-        >
-          {[
-            ar ? 'ثقة واضحة قبل الحجز' : 'Lower recurring commute cost',
-            ar ? 'تسعير أوضح على مستوى المسار' : 'Automated request and approval context',
-            ar ? 'الرحلات والطرود والباص في شبكة واحدة' : 'Managed travel from booking to arrival',
-          ].map(item => (
-            <div
-              key={item}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                height: 34,
-                padding: '0 12px',
-                borderRadius: 999,
-                background: C.elevated,
-                border: `1px solid ${C.borderFaint}`,
-                color: C.textSub,
-                fontSize: '0.76rem',
-                fontWeight: 600,
-                fontFamily: F,
-              }}
-            >
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: '50%',
-                  background: C.cyan,
-                  boxShadow: `0 0 12px ${C.cyan}66`,
-                }}
-              />
-              {item}
-            </div>
-          ))}
+        <div className="wasel-home-hero-actions">
+          <WaselButton
+            type="button"
+            onClick={() => onNavigate(primaryTripPath, 'hero_primary_route')}
+            variant="primary"
+            size="lg"
+            icon={<Route size={17} />}
+            iconEnd={<ArrowRight size={16} />}
+          >
+            {ar ? 'اعرض المسارات المتاحة' : 'Find a lower-cost route'}
+          </WaselButton>
+          <WaselButton
+            type="button"
+            onClick={() => onNavigate('/offer-ride', 'hero_offer_seats')}
+            variant="outline"
+            size="lg"
+            icon={<CircleDollarSign size={17} />}
+            style={{ background: C.elevated, color: C.text }}
+          >
+            {ar ? 'اعرض مقاعد فارغة' : 'Offer empty seats'}
+          </WaselButton>
         </div>
 
-        <div style={{ marginTop: 22 }}>
-          <TripModeCard
-            ar={ar}
-            tripMode={tripMode}
-            onTripModeChange={onTripModeChange}
-            onNavigate={onNavigate}
-            primaryTripPath={primaryTripPath}
-          />
-        </div>
+        <TripModeCard
+          ar={ar}
+          tripMode={tripMode}
+          onTripModeChange={onTripModeChange}
+        />
       </div>
 
       <div className="wasel-home-hero-aside">
-        <MobilityOSLandingMap />
+        <ProductCommandPreview ar={ar} />
       </div>
     </motion.section>
   );

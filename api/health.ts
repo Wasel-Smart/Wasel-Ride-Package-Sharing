@@ -1,14 +1,16 @@
 type HealthResponse = {
-  status: 'ok';
+  status: 'ok' | 'degraded';
   service: 'wasel-web';
   runtime: 'vercel-serverless';
   timestamp: string;
   traceId: string;
+  ready: boolean;
   checks: {
     web: 'ok';
     supabaseConfigured: boolean;
     twilioConfigured: boolean;
     sentryConfigured: boolean;
+    stripeConfigured: boolean;
   };
 };
 
@@ -32,30 +34,35 @@ function createTraceId(): string {
 
 export default function handler(_request: unknown, response: VercelResponse) {
   const traceId = createTraceId();
+  const checks = {
+    web: 'ok' as const,
+    supabaseConfigured: hasAnyEnv([
+      'VITE_SUPABASE_URL',
+      'SUPABASE_URL',
+      'NEXT_PUBLIC_SUPABASE_URL',
+    ]),
+    twilioConfigured: hasAnyEnv([
+      'TWILIO_ACCOUNT_SID',
+      'TWILIO_API_KEY_SID',
+      'TWILIO_VERIFY_SERVICE_SID',
+    ]),
+    sentryConfigured: hasAnyEnv(['VITE_SENTRY_DSN', 'SENTRY_DSN']),
+    stripeConfigured: hasAnyEnv(['STRIPE_SECRET_KEY', 'VITE_STRIPE_PUBLISHABLE_KEY']),
+  };
+  const ready = checks.supabaseConfigured && checks.stripeConfigured;
 
   response.setHeader('Cache-Control', 'no-store, max-age=0');
   response.setHeader('Content-Type', 'application/json; charset=utf-8');
   response.setHeader('X-Wasel-Trace-Id', traceId);
+  response.setHeader('X-Wasel-Ready', ready ? 'true' : 'false');
 
-  response.status(200).json({
-    status: 'ok',
+  response.status(ready ? 200 : 503).json({
+    status: ready ? 'ok' : 'degraded',
     service: 'wasel-web',
     runtime: 'vercel-serverless',
     timestamp: new Date().toISOString(),
     traceId,
-    checks: {
-      web: 'ok',
-      supabaseConfigured: hasAnyEnv([
-        'VITE_SUPABASE_URL',
-        'SUPABASE_URL',
-        'NEXT_PUBLIC_SUPABASE_URL',
-      ]),
-      twilioConfigured: hasAnyEnv([
-        'TWILIO_ACCOUNT_SID',
-        'TWILIO_API_KEY_SID',
-        'TWILIO_VERIFY_SERVICE_SID',
-      ]),
-      sentryConfigured: hasAnyEnv(['VITE_SENTRY_DSN', 'SENTRY_DSN']),
-    },
+    ready,
+    checks,
   });
 }

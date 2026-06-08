@@ -323,7 +323,7 @@ export function ServiceFlowPlaybook({
                 color: active.accent,
                 fontWeight: 900,
                 fontSize: '0.72rem',
-                letterSpacing: '0.08em',
+                letterSpacing: 0,
                 textTransform: 'uppercase',
                 marginBottom: 8,
               }}

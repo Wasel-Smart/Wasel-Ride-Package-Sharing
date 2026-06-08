@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react';
-import { Shield } from 'lucide-react';
+import { CheckCircle2, Shield } from 'lucide-react';
 import { CITIES } from '../../../pages/waselCoreRideData';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
 import { C, SH } from '../../../utils/wasel-ds';
@@ -51,7 +51,21 @@ export function PackageSendPanel({
   if (pkg.sent) {
     return (
       <div style={{ textAlign: 'center', padding: '40px 0' }}>
-        <div style={{ fontSize: '3rem', marginBottom: 16 }}>OK</div>
+        <div
+          style={{
+            width: 60,
+            height: 60,
+            borderRadius: r(16),
+            margin: '0 auto 16px',
+            display: 'grid',
+            placeItems: 'center',
+            background: C.greenDim,
+            border: `1px solid ${DS.green}35`,
+            color: DS.green,
+          }}
+        >
+          <CheckCircle2 size={28} />
+        </div>
         <h3 style={{ color: DS.green, fontWeight: 900, margin: '0 0 8px' }}>
           Package request created
         </h3>
@@ -73,7 +87,7 @@ export function PackageSendPanel({
         >
           <p style={{ color: DS.muted, fontSize: '0.75rem', marginBottom: 4 }}>Tracking ID</p>
           <p
-            style={{ color: DS.cyan, fontWeight: 800, fontSize: '1.2rem', letterSpacing: '0.1em' }}
+            style={{ color: DS.cyan, fontWeight: 800, fontSize: '1.2rem', letterSpacing: 0 }}
           >
             {pkg.trackingId}
           </p>
@@ -83,7 +97,7 @@ export function PackageSendPanel({
               color: DS.gold,
               fontWeight: 800,
               fontSize: '1.05rem',
-              letterSpacing: '0.08em',
+              letterSpacing: 0,
             }}
           >
             {trackedPackage?.handoffCode || 'Pending assignment'}
@@ -156,7 +170,7 @@ export function PackageSendPanel({
                 color: DS.muted,
                 fontSize: '0.7rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: 0,
                 textTransform: 'uppercase',
                 marginBottom: 6,
               }}
@@ -196,7 +210,7 @@ export function PackageSendPanel({
               color: DS.muted,
               fontSize: '0.7rem',
               fontWeight: 700,
-              letterSpacing: '0.1em',
+              letterSpacing: 0,
               textTransform: 'uppercase',
               marginBottom: 6,
             }}
@@ -233,7 +247,7 @@ export function PackageSendPanel({
               color: DS.muted,
               fontSize: '0.7rem',
               fontWeight: 700,
-              letterSpacing: '0.1em',
+              letterSpacing: 0,
               textTransform: 'uppercase',
               marginBottom: 6,
             }}
@@ -268,7 +282,7 @@ export function PackageSendPanel({
               color: DS.muted,
               fontSize: '0.7rem',
               fontWeight: 700,
-              letterSpacing: '0.1em',
+              letterSpacing: 0,
               textTransform: 'uppercase',
               marginBottom: 6,
             }}
@@ -303,7 +317,7 @@ export function PackageSendPanel({
               color: DS.muted,
               fontSize: '0.7rem',
               fontWeight: 700,
-              letterSpacing: '0.1em',
+              letterSpacing: 0,
               textTransform: 'uppercase',
               marginBottom: 6,
             }}

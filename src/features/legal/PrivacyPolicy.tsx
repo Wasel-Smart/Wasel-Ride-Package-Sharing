@@ -6,7 +6,10 @@ import {
   SectionCard,
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
+import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 
 function policyCardStyle(accent: string) {
@@ -21,6 +24,7 @@ function policyCardStyle(accent: string) {
 
 export function PrivacyPolicy() {
   const { language, dir } = useLanguage();
+  const nav = useIframeSafeNavigate();
 
   const content = {
     ar: {
@@ -112,7 +116,7 @@ export function PrivacyPolicy() {
       title: 'Privacy Policy',
       subtitle: 'Last Updated: March 16, 2026',
       intro:
-        'At Wasel, we respect your privacy and are committed to protecting your personal data. This policy explains how we collect, use, and protect your information.',
+        'At Wasel, privacy is part of movement trust. This policy explains what we collect, why it is needed for rides, parcels, support, and safety, and how users stay in control.',
 
       sections: [
         {
@@ -173,6 +177,16 @@ export function PrivacyPolicy() {
             'Withdraw: Cancel consent at any time',
           ],
         },
+        {
+          icon: Shield,
+          title: '6. Analytics & Performance',
+          content: [
+            'Web Vitals: Collected to find slow or broken experiences after analytics consent',
+            'Funnel Events: CTA clicks and route starts help improve onboarding and conversion paths',
+            'No Advertising Resale: Analytics are not sold for third-party ad targeting',
+            'Consent Controls: Analytics and improvement settings can be changed from account settings',
+          ],
+        },
       ],
 
       contact: {
@@ -206,8 +220,24 @@ export function PrivacyPolicy() {
           title={t.title}
           description={t.intro}
           accent={C.cyan}
+          actions={
+            <>
+              <WaselButton type="button" variant="primary" onClick={() => nav('/app/security')}>
+                Review security
+              </WaselButton>
+              <WaselButton
+                type="button"
+                variant="outline"
+                onClick={() => nav('/app/support')}
+                style={{ background: C.elevated, color: C.text }}
+              >
+                Contact support
+              </WaselButton>
+            </>
+          }
           aside={
             <div style={{ display: 'grid', gap: SPACE[3] }}>
+              <WaselLogo size={42} theme="light" variant="full" />
               <StatusBadge label={t.subtitle} accent={C.cyan} />
               <div
                 style={{
@@ -217,7 +247,7 @@ export function PrivacyPolicy() {
                 }}
               >
                 {[
-                  { label: 'Data groups', value: '5', accent: C.cyan },
+                  { label: 'Data groups', value: String(t.sections.length), accent: C.cyan },
                   { label: 'User rights', value: '6', accent: C.green },
                   { label: 'Ad resale', value: '0', accent: C.gold },
                   { label: 'Sensitive storage', value: 'AES-256', accent: C.blueLight },

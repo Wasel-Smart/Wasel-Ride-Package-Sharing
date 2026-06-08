@@ -454,15 +454,15 @@ export function FindRidePage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="Route"
+          emoji={<Search size={24} />}
           title="Book a Ride"
           titleAr="احجز مشوار"
-          sub="Choose route and date."
+          sub="Compare verified routes, live demand, and route-level price clarity."
           action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Compare rides for one route."
+          title="Route intelligence is part of the booking surface."
           detail="Search once and compare confirmed drivers, grouped departures, and the strongest route options for this corridor."
           tone={DS.cyan}
         />
@@ -492,10 +492,10 @@ export function FindRidePage() {
             <div
               style={{
                 background: DS.card,
-                borderRadius: r(20),
-                padding: 24,
+                borderRadius: r(16),
+                padding: 20,
                 border: `1px solid ${DS.border}`,
-                marginBottom: 24,
+                marginBottom: 22,
               }}
             >
               <div
@@ -825,7 +825,7 @@ export function FindRidePage() {
                         fontWeight: 800,
                         marginBottom: 6,
                         textTransform: 'uppercase',
-                        letterSpacing: '0.08em',
+                        letterSpacing: 0,
                       }}
                     >
                       {item.label}

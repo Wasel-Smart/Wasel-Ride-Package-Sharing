@@ -14,6 +14,7 @@ import {
   MobileDrawer,
   NavDropdown,
   OnlineToggle,
+  SocialLinks,
   UserMenu,
 } from './waselRootParts';
 
@@ -144,17 +145,21 @@ export default function WaselRoot() {
               <WaselLogo size={34} theme="light" variant="full" />
             </button>
 
-            <nav style={{ display: 'flex', alignItems: 'center', flex: 1 }} className="wrl-desk-nav">
+            <nav
+              style={{ display: 'flex', alignItems: 'center', flex: 1 }}
+              className="wrl-desk-nav"
+            >
               <style>{`
                 @media (max-width: 899px) { .wrl-desk-nav { display: none !important; } }
                 @media (max-width: 899px) { .wrl-desk-actions { display: none !important; } }
                 @media (min-width: 900px) { .wrl-mobile-burger { display: none !important; } }
               `}</style>
 
-              {PRODUCT_NAV_GROUPS.filter((group) => (
-                isVisibleNavGroup(group, isAuthenticated) &&
-                PRIMARY_HEADER_GROUP_IDS.has(group.id)
-              )).map((group, index) => {
+              {PRODUCT_NAV_GROUPS.filter(
+                group =>
+                  isVisibleNavGroup(group, isAuthenticated) &&
+                  PRIMARY_HEADER_GROUP_IDS.has(group.id),
+              ).map((group, index) => {
                 const isDirect = 'direct' in group && group.direct;
                 const isActive = activeGroup === group.id;
 
@@ -194,7 +199,7 @@ export default function WaselRoot() {
                           height: 7,
                           borderRadius: '50%',
                           background: (group as { color?: string }).color,
-                          boxShadow: `0 0 10px ${((group as { color?: string }).color ?? C.gold)}55`,
+                          boxShadow: `0 0 10px ${(group as { color?: string }).color ?? C.gold}55`,
                           flexShrink: 0,
                         }}
                       />
@@ -227,7 +232,7 @@ export default function WaselRoot() {
                     {!isDirect && isActive ? (
                       <NavDropdown
                         group={group}
-                        onNavigate={(path) => {
+                        onNavigate={path => {
                           navigate(path);
                           setActiveGroup(null);
                         }}
@@ -252,6 +257,7 @@ export default function WaselRoot() {
                 borderInlineStart: `1px solid ${C.borderFaint}`,
               }}
             >
+              <SocialLinks ar={ar} variant="header" />
               <LangToggle />
               {user ? <CurrencySwitcher ar={ar} /> : null}
               {user && isDriverMode ? <OnlineToggle ar={ar} /> : null}
@@ -349,7 +355,7 @@ export default function WaselRoot() {
 
             <button
               className="wrl-mobile-burger"
-              onClick={() => setMobileOpen((value) => !value)}
+              onClick={() => setMobileOpen(value => !value)}
               aria-label={shellCopy.openMenu}
               style={{
                 marginInlineStart: 'auto',
@@ -366,7 +372,15 @@ export default function WaselRoot() {
                 transition: 'all 0.14s',
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2" strokeLinecap="round">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={C.text}
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
                 {mobileOpen ? (
                   <>
                     <path d="M18 6 6 18" />

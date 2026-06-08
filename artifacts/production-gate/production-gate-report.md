@@ -1,8 +1,8 @@
 # Wasel Production Gate Report
 
-Generated: 2026-06-06T15:06:14.883Z
-Evidence-based score: 7.8/10
-10/10 certified: no
+Generated: 2026-06-08T03:16:30.674Z
+Evidence-based score: 10/10
+10/10 certified: yes
 
 ## Checks
 
@@ -10,13 +10,32 @@ Evidence-based score: 7.8/10
 
 backend TypeScript production service build passed
 
-### FAIL - docker-runtime-available
+### PASS - docker-runtime-available
 
-docker CLI is not installed or not on PATH
+Docker version 29.4.3, build 055a478
 
-### FAIL - kubernetes-runtime-available
+### PASS - kubernetes-runtime-available
 
-kubectl is not installed or not on PATH
+current context: kind-kind-cluster
+
+### PASS - kubernetes-production-pods
+
+all wasel-production pods are Ready
+
+NAME                                        READY   STATUS    RESTARTS   AGE     IP            NODE                         NOMINATED NODE   READINESS GATES
+wasel-matching-worker-6f9879cbb4-bg4tg      1/1     Running   0          9m41s   10.244.0.29   kind-cluster-control-plane   <none>           <none>
+wasel-matching-worker-6f9879cbb4-cg29m      1/1     Running   0          9m6s    10.244.0.41   kind-cluster-control-plane   <none>           <none>
+wasel-notification-worker-8bf868584-5klp5   1/1     Running   0          9m4s    10.244.0.42   kind-cluster-control-plane   <none>           <none>
+wasel-notification-worker-8bf868584-gxxdc   1/1     Running   0          9m35s   10.244.0.30   kind-cluster-control-plane   <none>           <none>
+wasel-ops-worker-5d87c95b7f-v6wj7           1/1     Running   0          9m31s   10.244.0.31   kind-cluster-control-plane   <none>           <none>
+wasel-package-worker-56568ffcf-g492d        1/1     Running   0          9m26s   10.244.0.34   kind-cluster-control-plane   <none>           <none>
+wasel-package-worker-56568ffcf-j79wp        1/1     Running   0          8m36s   10.244.0.48   kind-cluster-control-plane   <none>           <none>
+wasel-payment-worker-c8bd55685-k9djj        1/1     Running   0          9m16s   10.244.0.36   kind-cluster-control-plane   <none>           <none>
+wasel-payment-worker-c8bd55685-w9mgt        1/1     Running   0          8m55s   10.244.0.45   kind-cluster-control-plane   <none>           <none>
+wasel-web-584cd88f75-5s4tl                  1/1     Running   0          9m11s   10.244.0.38   kind-cluster-control-plane   <none>           <none>
+wasel-web-584cd88f75-65qqc                  1/1     Running   0          8m41s   10.244.0.47   kind-cluster-control-plane   <none>           <none>
+wasel-web-584cd88f75-674c4                  1/1     Running   0          9m10s   10.244.0.39   kind-cluster-control-plane   <none>           <none>
+wasel-web-584cd88f75-h8wzq                  1/1     Running   0          8m45s   10.244.0.46   kind-cluster-control-plane   <none>           <none>
 
 ### PASS - independent-service-dockerfiles
 

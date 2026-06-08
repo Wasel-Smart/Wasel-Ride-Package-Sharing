@@ -88,7 +88,7 @@ export default function WaselPlusPage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="Plus"
+          emoji={<Sparkles size={24} />}
           title="Wasel Plus"
           titleAr="واصل بلس"
           sub="Credits, passes, and reminders."
@@ -372,7 +372,7 @@ export default function WaselPlusPage() {
                             color: DS.muted,
                             fontSize: '0.66rem',
                             textTransform: 'uppercase',
-                            letterSpacing: '0.08em',
+                            letterSpacing: 0,
                           }}
                         >
                           {item.label}

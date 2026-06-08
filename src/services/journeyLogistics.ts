@@ -1,4 +1,5 @@
 import { API_URL, fetchWithRetry, getAuthDetails } from './core';
+import { getSecureBackendFallbackError } from './backendWorkflow';
 import {
   createDirectPackage,
   getDirectPackageByTrackingId,
@@ -6,6 +7,7 @@ import {
 } from './directSupabase';
 import { trackGrowthEvent } from './growthEngine';
 import { tripsAPI } from './trips';
+import { isFallbackAllowed } from '../utils/fallbackStrategy';
 
 export interface PostedRide {
   id: string;
@@ -387,6 +389,16 @@ function saveRides(...lists: PostedRide[][]): PostedRide[] {
   return rides;
 }
 
+function requireLocalWriteFallback(operation: string, cause: unknown): void {
+  if (isFallbackAllowed('write')) {
+    return;
+  }
+
+  const error = getSecureBackendFallbackError(operation);
+  (error as Error & { cause?: unknown }).cause = cause;
+  throw error;
+}
+
 function findBestMatchingRide(
   rides: PostedRide[],
   input: { from: string; to: string; weight: string },
@@ -445,7 +457,8 @@ export async function createConnectedRide(
       metadata: { seats: created.seats, acceptsPackages: created.acceptsPackages },
     });
     return created;
-  } catch {
+  } catch (error) {
+    requireLocalWriteFallback('Trip creation', error);
     saveRides([ride], getConnectedRides());
     void trackGrowthEvent({
       userId: input.ownerId,
@@ -499,6 +512,80 @@ function buildServerPackagePayload(pkg: PackageRequest) {
   };
 }
 
+function getPackageVerificationEndpoint(
+  trackingId: string,
+  action: PackageVerificationAction,
+): string {
+  const encodedTrackingId = encodeURIComponent(trackingId);
+
+  if (action === 'confirm_delivery') {
+    return `/packages/${encodedTrackingId}/deliver`;
+  }
+
+  if (action === 'confirm_pickup') {
+    return `/packages/${encodedTrackingId}/pickup`;
+  }
+
+  return `/packages/${encodedTrackingId}/assign`;
+}
+
+function toPersistedPackageStatus(
+  status: PackageStatus,
+): 'matched' | 'in_transit' | 'delivered' {
+  if (status === 'delivered') {
+    return 'delivered';
+  }
+
+  if (status === 'in_transit') {
+    return 'in_transit';
+  }
+
+  return 'matched';
+}
+
+async function persistPackageVerificationStatus(
+  trackingId: string,
+  action: PackageVerificationAction,
+  status: PackageStatus,
+): Promise<void> {
+  const persistedStatus = toPersistedPackageStatus(status);
+  let backendFailure: unknown;
+
+  if (API_URL) {
+    try {
+      const { token } = await getAuthDetails();
+      const response = await fetchWithRetry(
+        `${API_URL}${getPackageVerificationEndpoint(trackingId, action)}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            trackingId,
+            action,
+            status: persistedStatus,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        return;
+      }
+
+      throw new Error(`Package verification failed (${response.status})`);
+    } catch (error) {
+      backendFailure = error;
+    }
+  } else {
+    backendFailure = new Error('Package verification backend is not configured.');
+  }
+
+  requireLocalWriteFallback('Package verification', backendFailure);
+  await updateDirectPackageStatus(trackingId, persistedStatus).catch(() => undefined);
+}
+
 export async function createConnectedPackage(input: {
   from: string;
   to: string;
@@ -540,6 +627,8 @@ export async function createConnectedPackage(input: {
     timeline: buildTimeline('searching', undefined, {}),
   };
 
+  let backendFailure: unknown;
+
   try {
     const { token, userId } = await getAuthDetails();
 
@@ -572,6 +661,8 @@ export async function createConnectedPackage(input: {
         });
         return created;
       }
+
+      throw new Error(`Package creation failed (${response.status})`);
     } else {
       const createdDirect = await createDirectPackage({
         userId,
@@ -606,9 +697,11 @@ export async function createConnectedPackage(input: {
       });
       return created;
     }
-  } catch {
-    // Fall back to local storage below.
+  } catch (error) {
+    backendFailure = error;
   }
+
+  requireLocalWriteFallback('Package creation', backendFailure);
 
   const rides = getConnectedRides();
   const matchedRide = findBestMatchingRide(rides, { from, to, weight: input.weight });
@@ -723,10 +816,10 @@ export function getConnectedStats() {
 
 export type PackageVerificationAction = 'share_code' | 'confirm_pickup' | 'confirm_delivery';
 
-export function updatePackageVerification(
+export async function updatePackageVerification(
   trackingId: string,
   action: PackageVerificationAction,
-): PackageRequest | null {
+): Promise<PackageRequest | null> {
   const normalizedTrackingId = trackingId.trim().toUpperCase();
   if (!normalizedTrackingId) return null;
 
@@ -763,12 +856,11 @@ export function updatePackageVerification(
     timeline: buildTimeline(status, target.matchedRideId, verification),
   };
 
-  savePackages(packages.map(item => (item.trackingId === normalizedTrackingId ? updated : item)));
+  if (action === 'confirm_pickup' || action === 'confirm_delivery') {
+    await persistPackageVerificationStatus(normalizedTrackingId, action, status);
+  }
 
-  void updateDirectPackageStatus(
-    normalizedTrackingId,
-    status === 'searching' ? 'matched' : status,
-  ).catch(() => {});
+  savePackages(packages.map(item => (item.trackingId === normalizedTrackingId ? updated : item)));
 
   void trackGrowthEvent({
     eventName: 'package_verification_updated',

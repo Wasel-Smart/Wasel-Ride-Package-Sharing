@@ -13,7 +13,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
 import { C, GRAD, GRAD_HERO, R, SH } from '../../utils/wasel-ds';
 
-// ── Design-system shorthand ───────────────────────────────────────────────────
+// Design-system shorthand
 export const DS = PAGE_DS;
 
 export const r = (px = 12) => `${px}px`;
@@ -31,7 +31,7 @@ export const pill = (color: string) => ({
   color,
 });
 
-// ── Jordan city coordinates ───────────────────────────────────────────────────
+// Jordan city coordinates
 export const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
   Amman: { lat: 31.9539, lng: 35.9106 },
   Aqaba: { lat: 29.5321, lng: 35.006 },
@@ -77,7 +77,7 @@ export function midpoint(
   return { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 };
 }
 
-// ── localStorage helpers ──────────────────────────────────────────────────────
+// localStorage helpers
 export function readStoredStringList(key: string): string[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -106,7 +106,7 @@ export function readStoredObject<T>(key: string, fallback: T): T {
   }
 }
 
-// ── Auth guard ────────────────────────────────────────────────────────────────
+// Auth guard
 export function Protected({ children }: { children: ReactNode }) {
   const { user } = useLocalAuth();
 
@@ -116,7 +116,7 @@ export function Protected({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-// ── Page shell (responsive layout wrapper) ────────────────────────────────────
+// Page shell (responsive layout wrapper)
 export function PageShell({ children }: { children: ReactNode }) {
   const { language } = useLanguage();
   const ar = language === 'ar';
@@ -124,9 +124,10 @@ export function PageShell({ children }: { children: ReactNode }) {
     <div
       style={{
         minHeight: 'var(--app-min-height)',
-        background: `radial-gradient(circle at 12% 10%, ${C.cyanDim}, transparent 24%), radial-gradient(circle at 88% 6%, ${C.goldDim}, transparent 22%), radial-gradient(circle at 80% 86%, ${C.greenDim}, transparent 24%), ${DS.bg}`,
+        background: `linear-gradient(180deg, ${C.bgDeep} 0%, ${DS.bg} 42%, ${C.bgAlt} 100%)`,
         fontFamily: DS.F,
         direction: ar ? 'rtl' : 'ltr',
+        color: C.text,
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -177,19 +178,10 @@ export function PageShell({ children }: { children: ReactNode }) {
           position: 'fixed',
           inset: 0,
           backgroundImage: `linear-gradient(${C.borderFaint} 1px, transparent 1px), linear-gradient(90deg, ${C.borderFaint} 1px, transparent 1px)`,
-          backgroundSize: '54px 54px',
-          maskImage: 'radial-gradient(circle at center, black 0%, black 44%, transparent 82%)',
+          backgroundSize: '72px 72px',
+          maskImage: 'linear-gradient(180deg, transparent 0%, black 12%, black 78%, transparent 100%)',
           pointerEvents: 'none',
-          opacity: 0.22,
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: `radial-gradient(circle at 50% 0%, ${C.cyanDim}, transparent 38%)`,
-          pointerEvents: 'none',
+          opacity: 0.08,
         }}
       />
       <div
@@ -207,7 +199,7 @@ export function PageShell({ children }: { children: ReactNode }) {
   );
 }
 
-// ── Section header ────────────────────────────────────────────────────────────
+// Section header
 export function SectionHead({
   emoji,
   title,
@@ -216,7 +208,7 @@ export function SectionHead({
   color = DS.cyan,
   action,
 }: {
-  emoji: string;
+  emoji: ReactNode;
   title: string;
   titleAr?: string;
   sub?: string;
@@ -245,7 +237,7 @@ export function SectionHead({
         style={{
           position: 'absolute',
           inset: 0,
-          background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}14,transparent 64%)`,
+          background: `linear-gradient(120deg, ${color}12, transparent 36%, ${C.elevated})`,
           pointerEvents: 'none',
         }}
       />
@@ -269,7 +261,7 @@ export function SectionHead({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1.85rem',
+              color,
               flexShrink: 0,
             }}
           >
@@ -283,7 +275,7 @@ export function SectionHead({
                   fontWeight: 950,
                   color: C.text,
                   margin: 0,
-                  letterSpacing: '-0.03em',
+                  letterSpacing: 0,
                 }}
               >
                 {displayTitle}
@@ -320,10 +312,10 @@ export function SectionHead({
   );
 }
 
-// ── Core experience banner ────────────────────────────────────────────────────
+// Core experience banner
 export function CoreExperienceBanner({
   title,
-  detail: _detail,
+  detail,
   tone = DS.cyan,
 }: {
   title: string;
@@ -335,20 +327,23 @@ export function CoreExperienceBanner({
       style={{
         display: 'flex',
         gap: 10,
-        alignItems: 'center',
-        background: `linear-gradient(135deg, ${tone}12, rgba(255,255,255,0.02))`,
-        border: `1px solid ${tone}30`,
-        borderRadius: r(16),
-        padding: '12px 14px',
+        alignItems: 'flex-start',
+        background: `linear-gradient(135deg, ${tone}0f, ${C.elevated})`,
+        border: `1px solid ${tone}24`,
+        borderRadius: R.xl,
+        padding: '13px 14px',
         marginBottom: 18,
         boxShadow: '0 14px 34px rgba(0,0,0,0.22)',
       }}
     >
-      <span style={pill(tone)}>Info</span>
-      <div
-        style={{ color: '#fff', fontWeight: 800, fontSize: '0.92rem', letterSpacing: '-0.02em' }}
-      >
-        {title}
+      <span style={{ ...pill(tone), flexShrink: 0 }}>Live</span>
+      <div>
+        <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.9rem', letterSpacing: 0 }}>
+          {title}
+        </div>
+        <div style={{ color: DS.muted, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 3 }}>
+          {detail}
+        </div>
       </div>
     </div>
   );

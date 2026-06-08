@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Brain, Boxes, Network } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -166,23 +166,36 @@ export function PackagesPage() {
     }
   };
 
-  const handleVerificationAction = (
+  const handleVerificationAction = async (
     action: 'share_code' | 'confirm_pickup' | 'confirm_delivery',
   ) => {
     if (!trackedPackage) return;
-    const updated = updatePackageVerification(trackedPackage.trackingId, action);
-    if (!updated) return;
 
-    setTrackedPackage(updated);
-    setTrackId(updated.trackingId);
-    setTrackingMessage(
-      action === 'share_code'
-        ? `Code shared for ${updated.trackingId}.`
-        : action === 'confirm_pickup'
-          ? `Pickup confirmed for ${updated.trackingId}.`
-          : `Delivered: ${updated.trackingId}.`,
-    );
-    refreshPackageSnapshot();
+    setBusyState('tracking');
+
+    try {
+      const updated = await updatePackageVerification(trackedPackage.trackingId, action);
+      if (!updated) return;
+
+      setTrackedPackage(updated);
+      setTrackId(updated.trackingId);
+      setTrackingMessage(
+        action === 'share_code'
+          ? `Code shared for ${updated.trackingId}.`
+          : action === 'confirm_pickup'
+            ? `Pickup confirmed for ${updated.trackingId}.`
+            : `Delivered: ${updated.trackingId}.`,
+      );
+      refreshPackageSnapshot();
+    } catch (error) {
+      setTrackingMessage(
+        error instanceof Error
+          ? error.message
+          : 'Package verification is unavailable right now.',
+      );
+    } finally {
+      setBusyState('idle');
+    }
   };
 
   const handleOpenSupport = () => {
@@ -214,16 +227,16 @@ export function PackagesPage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="Goods"
+          emoji={<Boxes size={24} />}
           title="Send a Package"
           titleAr="أرسل طرداً"
-          sub="Send, track, or return a package."
+          sub="Match parcels to live routes, returns, and tracked handoffs."
           color={DS.gold}
           action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
         />
 
         <CoreExperienceBanner
-          title="Send and track packages fast."
+          title="Package flow is tied to the same live corridor graph."
           detail="Wasel matches parcels to live drivers first, then falls back to the next trusted route on the same corridor."
           tone={DS.gold}
         />
@@ -267,10 +280,10 @@ export function PackagesPage() {
               key={item.label}
               style={{
                 background: C.card,
-                borderRadius: r(18),
+                borderRadius: r(16),
                 border: `1px solid ${DS.border}`,
                 padding: '18px 18px 16px',
-                boxShadow: SH.card,
+                boxShadow: SH.sm,
               }}
             >
               <div
@@ -500,7 +513,7 @@ export function PackagesPage() {
                 fontFamily: DS.F,
                 fontWeight: activeTab === key ? 800 : 600,
                 fontSize: '0.82rem',
-                letterSpacing: '-0.01em',
+                letterSpacing: 0,
                 background: activeTab === key ? DS.gradG : 'transparent',
                 color: activeTab === key ? C.text : DS.muted,
                 transition: 'all 0.18s',

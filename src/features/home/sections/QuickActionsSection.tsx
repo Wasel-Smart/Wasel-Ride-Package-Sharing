@@ -7,19 +7,19 @@ import type { QuickAction } from './types';
 interface QuickActionsSectionProps {
   ar: boolean;
   quickActions: QuickAction[];
-  onNavigate: (path: string) => void;
+  onNavigate: (path: string, source?: string) => void;
 }
 
 export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActionsSectionProps) {
   return (
-    <motion.section initial={false} style={{ marginTop: 34 }}>
+    <motion.section initial={false} style={{ marginTop: 32 }}>
       <SectionHeader title={ar ? 'ابدأ من الخدمة المناسبة' : 'Choose the right mode'} icon="+" />
       <div
         className="wasel-home-actions"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-          gap: 14,
+          gap: 12,
         }}
       >
         {quickActions.map(action => {
@@ -28,17 +28,17 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
             <motion.button
               type="button"
               key={action.path}
-              onClick={() => onNavigate(action.path)}
+              onClick={() => onNavigate(action.path, `quick_action_${action.title.toLowerCase().replace(/\s+/g, '_')}`)}
               whileHover={{ y: -2 }}
               style={{
-                minHeight: 220,
+                minHeight: 190,
                 textAlign: 'left',
-                borderRadius: R.xxl,
-                padding: '20px 20px 18px',
-                background: `linear-gradient(180deg, ${C.card}, ${C.elevated})`,
+                borderRadius: R.xl,
+                padding: '18px 18px 16px',
+                background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.9))`,
                 border: `1px solid ${action.border}`,
                 cursor: 'pointer',
-                boxShadow: SH.card,
+                boxShadow: SH.sm,
                 display: 'flex',
                 flexDirection: 'column',
               }}
@@ -55,7 +55,7 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
                   style={{
                     width: 48,
                     height: 48,
-                    borderRadius: R.xl,
+                    borderRadius: R.md,
                     display: 'grid',
                     placeItems: 'center',
                     background: action.dim,
@@ -77,7 +77,7 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
                     color: C.textMuted,
                     fontSize: '0.68rem',
                     fontWeight: 800,
-                    letterSpacing: '0.08em',
+                    letterSpacing: 0,
                     textTransform: 'uppercase',
                   }}
                 >
@@ -99,7 +99,7 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
                   marginTop: 18,
                   fontWeight: 900,
                   fontSize: '1rem',
-                  letterSpacing: '-0.02em',
+                  letterSpacing: 0,
                   color: C.text,
                 }}
               >

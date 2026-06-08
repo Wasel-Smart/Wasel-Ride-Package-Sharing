@@ -26,7 +26,7 @@ const HomeScreen = () => {
     user?.user_metadata?.name || user?.email?.split('@')[0] || (loading ? 'Loading' : 'Guest');
 
   return (
-    <ScreenShell>
+    <ScreenShell testID="home-screen">
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.topRow}>
           <StatusPill

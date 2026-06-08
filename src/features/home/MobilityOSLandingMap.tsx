@@ -685,7 +685,7 @@ export function MobilityOSLandingMap({
         position: 'relative',
         width: '100%',
         minHeight: resolvedHeight,
-        borderRadius: R['3xl'],
+        borderRadius: R.xxl,
         overflow: 'hidden',
         background: GRAD_HERO,
         border: `1px solid ${C.borderHov}`,
@@ -712,7 +712,7 @@ export function MobilityOSLandingMap({
                 padding: '10px 12px',
                 background: C.glass,
                 border: `1px solid ${runtimeMode === 'fallback' ? C.goldDim : C.borderHov}`,
-                boxShadow: SH.card,
+                boxShadow: SH.sm,
                 backdropFilter: 'blur(12px)',
               }}
             >

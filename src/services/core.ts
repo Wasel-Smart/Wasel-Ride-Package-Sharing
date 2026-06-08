@@ -31,6 +31,15 @@ function isJwtLikeToken(token: string | null | undefined): token is string {
   return Boolean(token && token.split('.').length === 3);
 }
 
+function createClientIdempotencyKey(method: string, url: string): string {
+  const randomValue =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2);
+
+  return `${method.toLowerCase()}:${url}:${Date.now().toString(36)}:${randomValue}`;
+}
+
 export type BackendStatus = 'unknown' | 'healthy' | 'degraded' | 'offline';
 
 export interface AvailabilitySnapshot {
@@ -345,7 +354,11 @@ export async function fetchWithRetry(
 
     // Add CSRF token for state-changing operations
     if (fetchOptions.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(fetchOptions.method)) {
-      fetchOptions.headers = addCSRFHeader(fetchOptions.headers);
+      const finalHeaders = addCSRFHeader(fetchOptions.headers);
+      if (!finalHeaders.has('Idempotency-Key')) {
+        finalHeaders.set('Idempotency-Key', createClientIdempotencyKey(fetchOptions.method, url));
+      }
+      fetchOptions.headers = finalHeaders;
     }
 
     const controller = new AbortController();

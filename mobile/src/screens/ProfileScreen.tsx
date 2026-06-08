@@ -31,9 +31,11 @@ const ProfileScreen = () => {
             disabled={!isOnline}
             tone={colors.amber}
             onPress={sync}
+            testID="sync-queue-button"
           />
         ) : null
       }
+      testID="profile-screen"
     >
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.profileHeader}>

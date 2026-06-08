@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Brain, Network } from 'lucide-react';
+import { Brain, CheckCircle2, Network } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
@@ -207,10 +207,10 @@ export function OfferRidePage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="Supply"
+          emoji={<Network size={24} />}
           title="Offer a Ride"
           titleAr="اعرض مشوار"
-          sub="Route. Price. Go live."
+          sub="Publish a corridor, fare, capacity, and package option."
           color={DS.blue}
         />
 
@@ -279,13 +279,27 @@ export function OfferRidePage() {
               <div
                 style={{
                   background: DS.card,
-                  borderRadius: r(24),
-                  padding: '56px 28px',
+                  borderRadius: r(16),
+                  padding: '44px 26px',
                   textAlign: 'center',
                   border: `1px solid ${DS.border}`,
                 }}
               >
-                <div style={{ fontSize: '4rem', marginBottom: 18 }}>OK</div>
+                <div
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: r(16),
+                    margin: '0 auto 18px',
+                    display: 'grid',
+                    placeItems: 'center',
+                    background: C.greenDim,
+                    border: `1px solid ${DS.green}35`,
+                    color: DS.green,
+                  }}
+                >
+                  <CheckCircle2 size={30} />
+                </div>
                 <h2
                   style={{
                     color: DS.green,
@@ -339,7 +353,7 @@ export function OfferRidePage() {
                           color: DS.muted,
                           fontSize: '0.68rem',
                           textTransform: 'uppercase',
-                          letterSpacing: '0.08em',
+                          letterSpacing: 0,
                         }}
                       >
                         {item.label}
@@ -411,7 +425,7 @@ export function OfferRidePage() {
                   color: DS.cyan,
                   fontSize: '0.72rem',
                   fontWeight: 800,
-                  letterSpacing: '0.12em',
+                  letterSpacing: 0,
                   textTransform: 'uppercase',
                 }}
               >
@@ -479,13 +493,13 @@ export function OfferRidePage() {
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
                   selectedSignal
-                    ? `${selectedSignal.activeDemandAlerts} alerts • ${selectedSignal.liveBookings} bookings`
+                    ? `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings`
                     : `${corridorCount} live route${corridorCount === 1 ? '' : 's'} on this lane`,
                   selectedSignal
-                    ? `${selectedSignal.nextWaveWindow} • ${selectedSignal.recommendedPickupPoint}`
+                    ? `${selectedSignal.nextWaveWindow} | ${selectedSignal.recommendedPickupPoint}`
                     : (driverPlan?.corridor.autoGroupWindow ?? 'Best pickup window appears here'),
                   selectedSignal
-                    ? selectedSignal.productionSources.slice(0, 3).join(' • ')
+                    ? selectedSignal.productionSources.slice(0, 3).join(' | ')
                     : driverPlan
                       ? `${driverPlan.emptySeatCostJod} JOD lost per empty seat`
                       : 'Route intelligence appears after lane selection',

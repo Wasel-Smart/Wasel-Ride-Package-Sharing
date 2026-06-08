@@ -33,19 +33,20 @@ export function WalletHeroCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden rounded-2xl p-6"
+      className="relative overflow-hidden rounded-xl p-6"
       style={{
-        background: `linear-gradient(135deg, ${WaselColors.navyCard} 0%, ${C.card2} 50%, ${C.bgAlt} 100%)`,
+        background: `linear-gradient(135deg, ${C.cardSolid} 0%, ${C.card2} 56%, ${C.bgAlt} 100%)`,
         border: `1px solid ${WaselColors.teal}20`,
+        boxShadow: '0 14px 34px rgba(0,0,0,0.28)',
       }}
     >
       <div
-        className="absolute -top-12 -right-12 h-40 w-40 rounded-full opacity-10"
-        style={{ background: WaselColors.teal }}
-      />
-      <div
-        className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full opacity-5"
-        style={{ background: WaselColors.bronze }}
+        aria-hidden="true"
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(120deg, ${C.cyanDim}, transparent 36%, ${C.elevated})`,
+          pointerEvents: 'none',
+        }}
       />
 
       <div className="relative z-10">
@@ -61,7 +62,7 @@ export function WalletHeroCard({
         </div>
 
         <div className="mb-4 flex items-baseline gap-2">
-          <span className="text-4xl font-bold tracking-tight text-white tabular-nums">
+          <span className="text-3xl font-bold text-white tabular-nums">
             {balanceVisible ? balance.toFixed(2) : t.maskedBalance}
           </span>
           <span className="text-lg font-medium text-slate-400">{t.jod}</span>

@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "description": "Wasel Mobile - iOS and Android native app",
-  "main": "index.js",
+  "main": "expo-router/entry",
   "scripts": {
     "android": "expo run:android",
-    "ios": "expo run:ios",
+    "ios": "npm run ios:ensure-project && expo run:ios",
     "start": "expo start",
     "test": "node --localstorage-file=.jest-localstorage node_modules/jest/bin/jest.js --config jest.config.js --passWithNoTests",
     "test:e2e": "detox test --configuration ios.sim.debug",
@@ -17,9 +17,13 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"app/**/*.{ts,tsx}\"",
     "type-check": "tsc --noEmit",
     "build:android": "cd android && gradlew.bat assembleRelease",
-    "build:ios": "cd ios && xcodebuild -workspace Wasel.xcworkspace -scheme Wasel -configuration Release",
-    "bundle:android": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle",
-    "bundle:ios": "react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle"
+    "ios:ensure-project": "node scripts/ensure-ios-project.mjs",
+    "ios:prebuild": "expo prebuild --platform ios",
+    "ios:pods": "cd ios && pod install",
+    "build:ios": "npm run ios:ensure-project && cd ios && xcodebuild -workspace Wasel.xcworkspace -scheme Wasel -configuration Release",
+    "verify:ios-readiness": "node scripts/verify-ios-readiness.mjs",
+    "bundle:android": "node -e \"require('fs').mkdirSync('android/app/src/main/assets',{recursive:true})\" && react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle",
+    "bundle:ios": "node -e \"require('fs').mkdirSync('ios',{recursive:true})\" && react-native bundle --platform ios --dev false --entry-file index.js --bundle-output ios/main.jsbundle"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
@@ -41,6 +45,7 @@
     "expo-haptics": "~13.0.1",
     "expo-local-authentication": "~14.0.1",
     "expo-location": "~17.0.1",
+    "expo-modules-core": "^1.12.26",
     "expo-notifications": "~0.28.15",
     "expo-router": "~3.5.23",
     "expo-secure-store": "~13.0.2",

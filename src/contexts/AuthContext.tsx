@@ -138,7 +138,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const { firstName, lastName } = getProfileDisplayName(activeUser);
 
       try {
-        await authAPI.createProfile(activeUser.id, activeUser.email ?? '', firstName, lastName);
+        await authAPI.createProfile(
+          activeUser.id,
+          activeUser.email ?? '',
+          firstName,
+          lastName,
+          activeUser.phone ?? String(activeUser.user_metadata?.phone ?? ''),
+        );
         nextProfile = await loadProfileFromBackend();
       } catch (error) {
         if (import.meta.env?.DEV) {
@@ -277,13 +283,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const authUser = data.user ?? data.session?.user ?? null;
 
         if (authUser && data.session) {
+          await authAPI.createProfile(
+            authUser.id,
+            authUser.email ?? email,
+            firstName,
+            lastName,
+            phone ?? '',
+          );
+          const nextProfile = await fetchProfile(false, authUser);
+
+          if (!nextProfile) {
+            throw new Error('Profile creation failed. Please try signing in again.');
+          }
+
           setSession(data.session);
           setUser(authUser);
-          void fetchProfile(true, authUser).catch(error => {
-            if (import.meta.env?.DEV) {
-              console.warn('[Auth] Profile bootstrap skipped:', sanitizeLogMessage(String(error)));
-            }
-          });
         }
 
         return {

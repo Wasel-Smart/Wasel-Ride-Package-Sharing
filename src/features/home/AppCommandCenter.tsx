@@ -271,10 +271,10 @@ export function AppCommandCenter() {
     >
       <div
         style={{
-          borderRadius: 30,
+          borderRadius: 20,
           border: `1px solid ${nextAction.accent}22`,
-          background: `radial-gradient(circle at top left, ${nextAction.accent}18, transparent 32%), ${C.card}`,
-          boxShadow: SH.navy,
+          background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.94))`,
+          boxShadow: SH.sm,
           padding: '24px 24px 20px',
           display: 'grid',
           gap: 18,
@@ -313,7 +313,7 @@ export function AppCommandCenter() {
               style={{
                 margin: '14px 0 8px',
                 color: C.textFull,
-                fontSize: 'clamp(1.6rem, 3vw, 2.25rem)',
+                fontSize: '2rem',
                 lineHeight: TYPE.lineHeight.tight,
                 fontWeight: TYPE.weight.ultra,
                 fontFamily: F,
@@ -377,7 +377,7 @@ export function AppCommandCenter() {
               <div
                 key={item.label}
                 style={{
-                  borderRadius: 22,
+                  borderRadius: 16,
                   border: `1px solid ${item.accent}24`,
                   background: C.elevated,
                   padding: '16px 16px 14px',
@@ -436,7 +436,7 @@ export function AppCommandCenter() {
 
           <div
             style={{
-              borderRadius: 24,
+              borderRadius: 16,
               border: `1px solid ${C.borderSoft}`,
               background: `linear-gradient(180deg, ${C.elevated}, ${C.card})`,
               padding: '18px 18px 16px',
