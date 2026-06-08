@@ -155,6 +155,7 @@
     "verify:production-boundaries": "node scripts/validate-production-boundaries.mjs",
     "verify:oauth": "node scripts/verify-oauth-config.mjs",
     "verify:twilio": "node scripts/verify-twilio-config.mjs",
+    "verify:live-integrations": "node scripts/verify-live-integrations.mjs",
     "verify:wiring": "node scripts/verify-wiring.mjs",
     "verify:production-10": "node scripts/production-10-gate.mjs",
     "type-check": "tsc --noEmit",

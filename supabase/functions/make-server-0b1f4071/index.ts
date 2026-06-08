@@ -43,14 +43,24 @@ const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? '';
 const STRIPE_API_VERSION = Deno.env.get('STRIPE_API_VERSION') ?? '2026-02-25.clover';
 const TWILIO_VERIFY_SERVICE_SID = Deno.env.get('TWILIO_VERIFY_SERVICE_SID') ?? '';
 const APP_BASE_URL = (Deno.env.get('APP_BASE_URL') ?? 'https://wasel14.online').replace(/\/$/, '');
+const CLIQ_API_BASE_URL = (Deno.env.get('CLIQ_API_BASE_URL') ?? '').replace(/\/$/, '');
+const CLIQ_MERCHANT_ID = Deno.env.get('CLIQ_MERCHANT_ID') ?? '';
+const CLIQ_API_KEY = Deno.env.get('CLIQ_API_KEY') ?? '';
+const CLIQ_WEBHOOK_SECRET = Deno.env.get('CLIQ_WEBHOOK_SECRET') ?? '';
 const CLIQ_CHECKOUT_URL_TEMPLATE = Deno.env.get('CLIQ_CHECKOUT_URL_TEMPLATE') ?? '';
+const CLIQ_CHECKOUT_ENDPOINT = Deno.env.get('CLIQ_CHECKOUT_ENDPOINT') ?? '/payments';
+const SANAD_API_BASE_URL = (Deno.env.get('SANAD_API_BASE_URL') ?? '').replace(/\/$/, '');
+const SANAD_CLIENT_ID = Deno.env.get('SANAD_CLIENT_ID') ?? '';
+const SANAD_CLIENT_SECRET = Deno.env.get('SANAD_CLIENT_SECRET') ?? '';
+const SANAD_WEBHOOK_SECRET = Deno.env.get('SANAD_WEBHOOK_SECRET') ?? '';
+const SANAD_VERIFICATION_ENDPOINT = Deno.env.get('SANAD_VERIFICATION_ENDPOINT') ?? '/identity/verifications';
 const STRIPE_WASEL_PLUS_PRICE_ID = Deno.env.get('STRIPE_WASEL_PLUS_PRICE_ID') ?? '';
 const ADDITIONAL_ALLOWED_ORIGINS = Deno.env.get('ALLOWED_ORIGINS') ?? '';
 const RUNTIME_ADMIN_ENABLED = isRuntimeAdminEnabled(Deno.env.get('ENABLE_RUNTIME_ADMIN_ENDPOINTS'));
 const SERVICE_NAME = 'make-server-0b1f4071';
 
 const responseBaseHeaders = {
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-csrf-token, x-communication-worker-secret, stripe-signature',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-csrf-token, x-communication-worker-secret, stripe-signature, x-cliq-signature, x-cliq-timestamp, x-sanad-signature, x-sanad-timestamp, x-merchant-signature, x-merchant-timestamp',
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
   'Cache-Control': 'no-store',
   'Referrer-Policy': 'no-referrer',
@@ -1103,6 +1113,35 @@ function buildCliqCheckoutUrl(template: string, values: Record<string, string>):
   return template.replace(/\{([a-zA-Z0-9_]+)\}/g, (_, key: string) => (
     encodeURIComponent(values[key] ?? '')
   ));
+}
+
+function joinProviderUrl(baseUrl: string, endpoint: string): string {
+  if (!baseUrl) return '';
+  if (/^https?:\/\//i.test(endpoint)) return endpoint;
+  return `${baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+}
+
+function normalizeProviderStatus(value: unknown): string {
+  return String(value ?? '').trim().toLowerCase().replace(/[\s_-]+/g, '_');
+}
+
+function isSuccessfulProviderStatus(value: unknown): boolean {
+  const status = normalizeProviderStatus(value);
+  return ['success', 'succeeded', 'paid', 'posted', 'completed', 'complete', 'approved', 'verified'].includes(status);
+}
+
+function isFailedProviderStatus(value: unknown): boolean {
+  const status = normalizeProviderStatus(value);
+  return ['failed', 'failure', 'rejected', 'declined', 'cancelled', 'canceled', 'expired'].includes(status);
+}
+
+function firstStringValue(source: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+    if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  }
+  return '';
 }
 
 function mapSubscriptionPlan(planName: string): 'basic' | 'premium' | 'enterprise' {
@@ -2590,6 +2629,7 @@ async function finalizeTopUpTransaction(
   transactionId: string,
   externalReference: string,
   providerPayload: unknown,
+  provider = 'stripe',
 ) {
   if (!SUPABASE_DB_URL) {
     throw new Error('SUPABASE_DB_URL is not configured');
@@ -2633,9 +2673,9 @@ async function finalizeTopUpTransaction(
 
     const nextMetadata = {
       ...((transaction.metadata && typeof transaction.metadata === 'object') ? transaction.metadata as Record<string, unknown> : {}),
-      provider: 'stripe',
+      provider,
       provider_payload: providerPayload,
-      credited_via: 'stripe_webhook',
+      credited_via: `${provider}_webhook`,
     };
 
     await client.queryObject(
@@ -2721,6 +2761,57 @@ async function createStripeSubscriptionCheckoutSession(input: {
   return stripeApiRequest('/v1/checkout/sessions', { params });
 }
 
+async function createCliqCheckoutSession(input: {
+  transactionId: string;
+  amountJod: number;
+  currency: string;
+  request: Request;
+}): Promise<{ checkoutUrl: string; providerReference: string | null }> {
+  if (!CLIQ_API_BASE_URL || !CLIQ_MERCHANT_ID || !CLIQ_API_KEY) {
+    return { checkoutUrl: '', providerReference: null };
+  }
+
+  const endpoint = joinProviderUrl(CLIQ_API_BASE_URL, CLIQ_CHECKOUT_ENDPOINT);
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${CLIQ_API_KEY}`,
+      'Content-Type': 'application/json',
+      'Idempotency-Key': `cliq-topup-${input.transactionId}`,
+    },
+    body: JSON.stringify({
+      merchantId: CLIQ_MERCHANT_ID,
+      transactionId: input.transactionId,
+      amount: input.amountJod.toFixed(3),
+      currency: input.currency,
+      returnUrl: `${getAppBaseUrl(input.request)}/app/wallet?payment=success&tx=${encodeURIComponent(input.transactionId)}`,
+      webhookUrl: `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/provider-webhooks/cliq`,
+    }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(`CliQ checkout request failed with HTTP ${response.status}`);
+  }
+
+  const checkoutUrl = firstStringValue(payload, [
+    'checkoutUrl',
+    'checkout_url',
+    'paymentUrl',
+    'payment_url',
+    'redirectUrl',
+    'redirect_url',
+  ]);
+  if (!checkoutUrl) {
+    throw new Error('CliQ checkout response did not include a checkout URL.');
+  }
+
+  return {
+    checkoutUrl,
+    providerReference: firstStringValue(payload, ['paymentId', 'payment_id', 'reference', 'referenceId', 'id']) || null,
+  };
+}
+
 function constantTimeEquals(left: string, right: string): boolean {
   if (left.length !== right.length) return false;
   let mismatch = 0;
@@ -2731,6 +2822,10 @@ function constantTimeEquals(left: string, right: string): boolean {
 }
 
 async function computeStripeSignature(secret: string, payload: string, timestamp: string): Promise<string> {
+  return computeHmacHex(secret, `${timestamp}.${payload}`);
+}
+
+async function computeHmacHex(secret: string, payload: string): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     'raw',
@@ -2739,7 +2834,7 @@ async function computeStripeSignature(secret: string, payload: string, timestamp
     false,
     ['sign'],
   );
-  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(`${timestamp}.${payload}`));
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
   return Array.from(new Uint8Array(signature))
     .map((value) => value.toString(16).padStart(2, '0'))
     .join('');
@@ -2768,6 +2863,32 @@ async function verifyStripeWebhookSignature(payload: string, signatureHeader: st
 
   const expected = await computeStripeSignature(STRIPE_WEBHOOK_SECRET, payload, timestamp);
   return candidates.some((candidate) => constantTimeEquals(candidate, expected));
+}
+
+function normalizeSignatureHeader(value: string | null): string {
+  if (!value) return '';
+  const trimmed = value.trim();
+  if (trimmed.includes('=')) {
+    return trimmed.split(/[,\s]+/)
+      .map((segment) => segment.trim())
+      .find((segment) => segment.startsWith('v1=') || segment.startsWith('sha256='))
+      ?.replace(/^(v1|sha256)=/, '') ?? '';
+  }
+  return trimmed.replace(/^sha256=/, '');
+}
+
+async function verifyProviderWebhookSignature(args: {
+  payload: string;
+  secret: string;
+  signature: string | null;
+  timestamp?: string | null;
+}): Promise<boolean> {
+  const candidate = normalizeSignatureHeader(args.signature);
+  if (!args.secret || !candidate) return false;
+
+  const signedPayload = args.timestamp ? `${args.timestamp}.${args.payload}` : args.payload;
+  const expected = await computeHmacHex(args.secret, signedPayload);
+  return constantTimeEquals(candidate, expected);
 }
 
 async function handleHealth(request: Request) {
@@ -3258,10 +3379,22 @@ async function handleSubmitIdentityVerification(request: Request) {
     return json({ error: error.message }, 500);
   }
 
+  let providerSubmission: Awaited<ReturnType<typeof submitSanadVerificationRequest>>;
+  try {
+    providerSubmission = await submitSanadVerificationRequest({
+      userId: auth.canonicalUser.id,
+      providerReference,
+      documentReference,
+    });
+  } catch (submissionError) {
+    return json({ error: submissionError instanceof Error ? submissionError.message : String(submissionError) }, 502);
+  }
+
   return json(
     {
       submitted: true,
       verificationId: String(data ?? ''),
+      providerSubmitted: providerSubmission.submittedToProvider,
     },
     202,
   );
@@ -3864,7 +3997,7 @@ async function handleWalletTopUp(request: Request, requestedUserId: string) {
   );
 
   if (paymentMethod === 'cliq') {
-    if (!CLIQ_CHECKOUT_URL_TEMPLATE) {
+    if (!CLIQ_CHECKOUT_URL_TEMPLATE && !(CLIQ_API_BASE_URL && CLIQ_MERCHANT_ID && CLIQ_API_KEY)) {
       await markTopUpTransactionFailed(
         auth.admin,
         pending.transactionId,
@@ -3876,7 +4009,24 @@ async function handleWalletTopUp(request: Request, requestedUserId: string) {
       return json({ error: 'CliQ provider is not configured on the server.' }, 503);
     }
 
-    const checkoutUrl = buildCliqCheckoutUrl(CLIQ_CHECKOUT_URL_TEMPLATE, {
+    const cliqSession = await createCliqCheckoutSession({
+      transactionId: pending.transactionId,
+      amountJod,
+      currency: String(wallet.currency_code ?? 'JOD').toUpperCase(),
+      request,
+    }).catch(async (error) => {
+      await markTopUpTransactionFailed(
+        auth.admin,
+        pending.transactionId,
+        null,
+        'cliq',
+        error instanceof Error ? error.message : String(error),
+        { requested_method: paymentMethod },
+      );
+      throw error;
+    });
+
+    const checkoutUrl = cliqSession.checkoutUrl || buildCliqCheckoutUrl(CLIQ_CHECKOUT_URL_TEMPLATE, {
       transactionId: pending.transactionId,
       amount: amountJod.toFixed(3),
       currency: String(wallet.currency_code ?? 'JOD').toUpperCase(),
@@ -3886,6 +4036,7 @@ async function handleWalletTopUp(request: Request, requestedUserId: string) {
     await updateTopUpTransactionMetadata(auth.admin, pending.transactionId, {
       provider: 'cliq',
       checkout_url: checkoutUrl,
+      provider_reference: cliqSession.providerReference,
       provider_status: 'requires_action',
     });
 
@@ -4101,6 +4252,168 @@ async function handleStripeWebhook(request: Request) {
   }
 
   return json({ received: true, ignored: true });
+}
+
+async function handleCliqWebhook(request: Request) {
+  if (!CLIQ_WEBHOOK_SECRET) {
+    return json({ error: 'CliQ webhook secret is not configured.' }, 503);
+  }
+
+  const rawPayload = await request.text();
+  const signatureOk = await verifyProviderWebhookSignature({
+    payload: rawPayload,
+    secret: CLIQ_WEBHOOK_SECRET,
+    signature: request.headers.get('x-cliq-signature') ?? request.headers.get('x-merchant-signature'),
+    timestamp: request.headers.get('x-cliq-timestamp') ?? request.headers.get('x-merchant-timestamp'),
+  });
+
+  if (!signatureOk) {
+    return json({ error: 'Invalid CliQ signature.' }, 401);
+  }
+
+  const event = JSON.parse(rawPayload);
+  const eventObject = (event?.data && typeof event.data === 'object')
+    ? event.data as Record<string, unknown>
+    : event as Record<string, unknown>;
+  const transactionId = firstStringValue(eventObject, [
+    'transactionId',
+    'transaction_id',
+    'merchantTransactionId',
+    'merchant_transaction_id',
+    'reference',
+    'referenceId',
+  ]);
+  const providerReference = firstStringValue(eventObject, ['paymentId', 'payment_id', 'cliqPaymentId', 'id']) || transactionId;
+  const status = eventObject.status ?? eventObject.paymentStatus ?? eventObject.state ?? event?.type;
+
+  if (!transactionId) {
+    return json({ received: true, ignored: true, reason: 'missing_transaction_id' });
+  }
+
+  if (isSuccessfulProviderStatus(status)) {
+    await finalizeTopUpTransaction(transactionId, providerReference, event, 'cliq');
+    return json({ received: true, transactionId, finalized: true });
+  }
+
+  if (isFailedProviderStatus(status)) {
+    await markTopUpTransactionFailed(
+      getAdminClient(),
+      transactionId,
+      providerReference,
+      'cliq',
+      firstStringValue(eventObject, ['failureReason', 'failure_reason', 'reason', 'message']) || 'CliQ payment failed',
+      event,
+    );
+    return json({ received: true, transactionId, failed: true });
+  }
+
+  await updateTopUpTransactionMetadata(getAdminClient(), transactionId, {
+    provider: 'cliq',
+    provider_reference: providerReference,
+    provider_status: normalizeProviderStatus(status),
+    provider_payload: event,
+  });
+
+  return json({ received: true, transactionId, pending: true });
+}
+
+async function submitSanadVerificationRequest(input: {
+  userId: string;
+  providerReference: string;
+  documentReference: string | null;
+}) {
+  if (!SANAD_API_BASE_URL || !SANAD_CLIENT_ID || !SANAD_CLIENT_SECRET) {
+    return { submittedToProvider: false, providerResponse: null };
+  }
+
+  const response = await fetch(joinProviderUrl(SANAD_API_BASE_URL, SANAD_VERIFICATION_ENDPOINT), {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SANAD_CLIENT_SECRET}`,
+      'Content-Type': 'application/json',
+      'X-Sanad-Client-Id': SANAD_CLIENT_ID,
+      'Idempotency-Key': `sanad-verification-${input.userId}-${input.providerReference}`,
+    },
+    body: JSON.stringify({
+      userId: input.userId,
+      providerReference: input.providerReference,
+      documentReference: input.documentReference,
+      webhookUrl: `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1/provider-webhooks/sanad`,
+    }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(`Sanad verification request failed with HTTP ${response.status}`);
+  }
+
+  return { submittedToProvider: true, providerResponse: payload };
+}
+
+async function handleSanadWebhook(request: Request) {
+  if (!SANAD_WEBHOOK_SECRET) {
+    return json({ error: 'Sanad webhook secret is not configured.' }, 503);
+  }
+
+  const rawPayload = await request.text();
+  const signatureOk = await verifyProviderWebhookSignature({
+    payload: rawPayload,
+    secret: SANAD_WEBHOOK_SECRET,
+    signature: request.headers.get('x-sanad-signature') ?? request.headers.get('x-merchant-signature'),
+    timestamp: request.headers.get('x-sanad-timestamp') ?? request.headers.get('x-merchant-timestamp'),
+  });
+
+  if (!signatureOk) {
+    return json({ error: 'Invalid Sanad signature.' }, 401);
+  }
+
+  const event = JSON.parse(rawPayload);
+  const eventObject = (event?.data && typeof event.data === 'object')
+    ? event.data as Record<string, unknown>
+    : event as Record<string, unknown>;
+  const providerReference = firstStringValue(eventObject, ['providerReference', 'provider_reference', 'reference', 'sessionId', 'session_id', 'id']);
+  const status = eventObject.status ?? eventObject.verificationStatus ?? eventObject.state ?? event?.type;
+  if (!providerReference) {
+    return json({ received: true, ignored: true, reason: 'missing_provider_reference' });
+  }
+
+  const admin = getAdminClient();
+  const verified = isSuccessfulProviderStatus(status);
+  const failed = isFailedProviderStatus(status);
+  const sanadStatus = verified ? 'verified' : failed ? 'rejected' : 'pending';
+  const verificationLevel = verified ? 'level_2' : 'level_1';
+  const failureReason = failed
+    ? firstStringValue(eventObject, ['failureReason', 'failure_reason', 'reason', 'message']) || 'Sanad verification rejected'
+    : null;
+
+  const { data: records, error: recordError } = await admin
+    .from('verification_records')
+    .update({
+      sanad_status: sanadStatus,
+      verification_level: verificationLevel,
+      failure_reason: failureReason,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('provider_reference', providerReference)
+    .select('user_id');
+
+  if (recordError) {
+    return json({ error: recordError.message }, 500);
+  }
+
+  const userIds = [...new Set((records ?? []).map((record) => String(record.user_id)).filter(Boolean))];
+  for (const userId of userIds) {
+    await admin
+      .from('users')
+      .update({
+        sanad_verified_status: sanadStatus,
+        verification_level: verificationLevel,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+  }
+
+  return json({ received: true, providerReference, sanadStatus, updatedUsers: userIds.length });
 }
 
 async function handleResendWebhook(request: Request) {
@@ -5129,6 +5442,16 @@ Deno.serve(async (request) => {
 
     if (request.method === 'POST' && path === '/payments/webhooks/stripe') {
       response = await handleStripeWebhook(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'POST' && path === '/payments/webhooks/cliq') {
+      response = await handleCliqWebhook(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'POST' && path === '/trust/webhooks/sanad') {
+      response = await handleSanadWebhook(request);
       return finalizeResponse(request, response);
     }
 

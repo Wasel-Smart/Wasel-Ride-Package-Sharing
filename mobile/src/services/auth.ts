@@ -5,7 +5,9 @@
 
 import { createClient, SupabaseClient, Session, User, type AuthError } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Linking } from 'react-native';
 import 'react-native-url-polyfill/auto';
+import { waselMobileConfig } from '../lib/config';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -131,6 +133,30 @@ export class MobileAuthService {
     });
 
     return error ? { error } : {};
+  }
+
+  async signInWithOAuth(provider: 'google' | 'facebook'): Promise<{ error?: AuthError | Error }> {
+    const { data, error } = await this.supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: waselMobileConfig.authRedirectUrl,
+        skipBrowserRedirect: true,
+      },
+    });
+
+    if (error) return { error };
+    if (!data.url) return { error: new Error(`No ${provider} OAuth URL was returned.`) };
+
+    await Linking.openURL(data.url);
+    return {};
+  }
+
+  async signInWithGoogle(): Promise<{ error?: AuthError | Error }> {
+    return this.signInWithOAuth('google');
+  }
+
+  async signInWithFacebook(): Promise<{ error?: AuthError | Error }> {
+    return this.signInWithOAuth('facebook');
   }
 
   async verifyOtp(phone: string, token: string): Promise<{ error?: AuthError }> {

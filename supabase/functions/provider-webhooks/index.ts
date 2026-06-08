@@ -56,6 +56,14 @@ const providerRoutes: Record<string, ProviderRoute> = {
     targetPath: '/communications/webhooks/twilio',
     requiredMethod: 'POST',
   },
+  '/cliq': {
+    targetPath: '/payments/webhooks/cliq',
+    requiredMethod: 'POST',
+  },
+  '/sanad': {
+    targetPath: '/trust/webhooks/sanad',
+    requiredMethod: 'POST',
+  },
 };
 
 function json(req: Request, body: Record<string, unknown>, status = 200) {
@@ -113,12 +121,25 @@ Deno.serve(async (request) => {
     const body = await request.text();
     const headers = new Headers();
     const contentType = request.headers.get('content-type');
-    const stripeSignature = request.headers.get('stripe-signature');
+    const passthroughHeaders = [
+      'stripe-signature',
+      'x-cliq-signature',
+      'x-cliq-timestamp',
+      'x-sanad-signature',
+      'x-sanad-timestamp',
+      'x-merchant-signature',
+      'x-merchant-timestamp',
+      'x-merchant-event',
+      'x-merchant-delivery-id',
+    ];
 
     headers.set('Authorization', `Bearer ${bearerToken}`);
     headers.set('apikey', bearerToken);
     if (contentType) headers.set('Content-Type', contentType);
-    if (stripeSignature) headers.set('stripe-signature', stripeSignature);
+    for (const headerName of passthroughHeaders) {
+      const headerValue = request.headers.get(headerName);
+      if (headerValue) headers.set(headerName, headerValue);
+    }
 
     const forwarded = await fetch(buildForwardUrl(requestUrl, route), {
       method: route.requiredMethod,

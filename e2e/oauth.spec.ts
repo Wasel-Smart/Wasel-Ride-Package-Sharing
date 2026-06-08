@@ -20,9 +20,13 @@ function getRedirectTo(request: Request) {
   return new URL(redirectTo);
 }
 
+async function gotoAuth(page: Page, path = '/auth') {
+  await page.goto(path, { waitUntil: 'domcontentloaded' });
+}
+
 test.describe('OAuth Authentication', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/auth');
+    await gotoAuth(page);
   });
 
   test('displays enabled OAuth provider buttons', async ({ page }) => {
@@ -44,7 +48,7 @@ test.describe('OAuth Authentication', () => {
   });
 
   test('preserves a safe returnTo value in the Google OAuth redirect', async ({ page }) => {
-    await page.goto('/auth?returnTo=/app/wallet');
+    await gotoAuth(page, '/auth?returnTo=/app/wallet');
 
     const request = await captureGoogleAuthorizeRequest(page);
     const redirectTo = getRedirectTo(request);
@@ -54,7 +58,7 @@ test.describe('OAuth Authentication', () => {
   });
 
   test('sanitizes an external returnTo value before Google OAuth', async ({ page }) => {
-    await page.goto('/auth?returnTo=https://evil.example/login');
+    await gotoAuth(page, '/auth?returnTo=https://evil.example/login');
 
     const request = await captureGoogleAuthorizeRequest(page);
     const redirectTo = getRedirectTo(request);
