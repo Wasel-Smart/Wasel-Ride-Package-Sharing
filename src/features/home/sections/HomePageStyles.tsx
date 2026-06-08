@@ -53,35 +53,34 @@ export function HomePageStyles() {
       }
 
       .wasel-home-container {
-        width: min(100%, 1280px);
+        width: min(100%, 1360px);
         margin: 0 auto;
-        padding: 30px 24px 56px;
+        padding: 28px 28px 64px;
       }
 
       .wasel-home-hero {
         display: grid;
-        grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
-        gap: 18px;
-        align-items: stretch;
+        grid-template-columns: minmax(0, 0.82fr) minmax(520px, 1.18fr);
+        gap: 28px;
+        align-items: center;
+        min-height: min(780px, calc(100svh - 92px));
         animation: wasel-home-rise 420ms ease both;
       }
 
-      .wasel-home-hero-copy,
+      .wasel-home-hero-copy {
+        position: relative;
+        overflow: visible;
+        padding: 38px 12px 34px 0;
+      }
+
       .wasel-home-preview-panel {
         position: relative;
         overflow: hidden;
-        border-radius: 20px;
+        border-radius: 18px;
         background:
           linear-gradient(180deg, rgba(15, 35, 51, 0.9), rgba(6, 17, 27, 0.96));
         border: 1px solid rgba(156, 202, 230, 0.14);
-        box-shadow: 0 28px 70px rgba(0, 0, 0, 0.42);
-      }
-
-      .wasel-home-hero-copy {
-        padding: 30px;
-      }
-
-      .wasel-home-preview-panel {
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.44);
         min-height: 100%;
         padding: 18px;
       }
@@ -93,6 +92,10 @@ export function HomePageStyles() {
         inset: 0;
         pointer-events: none;
         background: linear-gradient(120deg, rgba(255, 255, 255, 0.06), transparent 30%, transparent 76%, rgba(88, 221, 255, 0.08));
+      }
+
+      .wasel-home-hero-copy::before {
+        display: none;
       }
 
       .wasel-home-preview-panel::after {
@@ -153,11 +156,11 @@ export function HomePageStyles() {
       .wasel-home-title {
         position: relative;
         z-index: 1;
-        margin: 26px 0 0;
+        margin: 30px 0 0;
         max-width: 720px;
         color: #f3faff;
-        font-size: 3.8rem;
-        line-height: 1;
+        font-size: clamp(3.6rem, 5.4vw, 5.4rem);
+        line-height: 0.94;
         letter-spacing: 0;
         font-weight: 900;
         text-wrap: balance;
@@ -178,19 +181,17 @@ export function HomePageStyles() {
         z-index: 1;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
-        margin-top: 20px;
+        gap: 16px;
+        margin-top: 28px;
       }
 
       .wasel-home-proof-item {
-        min-height: 86px;
+        min-height: auto;
         display: flex;
         align-items: flex-start;
         gap: 10px;
-        padding: 12px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.045);
-        border: 1px solid rgba(156, 202, 230, 0.1);
+        padding: 0 0 0 14px;
+        border-left: 1px solid rgba(156, 202, 230, 0.18);
       }
 
       .wasel-home-proof-item > span {
@@ -257,11 +258,9 @@ export function HomePageStyles() {
         z-index: 1;
         display: grid;
         gap: 12px;
-        margin-top: 18px;
-        padding: 14px;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.045);
-        border: 1px solid rgba(156, 202, 230, 0.12);
+        margin-top: 24px;
+        padding: 18px 0 0;
+        border-top: 1px solid rgba(156, 202, 230, 0.14);
       }
 
       .wasel-home-start-copy {
@@ -498,6 +497,7 @@ export function HomePageStyles() {
       @media (max-width: 1100px) {
         .wasel-home-hero {
           grid-template-columns: 1fr;
+          min-height: auto;
         }
 
         .wasel-home-preview-panel {
@@ -534,15 +534,18 @@ export function HomePageStyles() {
           grid-template-columns: 1fr !important;
         }
 
-        .wasel-home-hero-copy,
+        .wasel-home-hero-copy {
+          padding: 8px 6px 18px !important;
+        }
+
         .wasel-home-preview-panel {
-          padding: 20px !important;
+          padding: 16px !important;
           border-radius: 16px;
         }
 
         .wasel-home-title {
-          font-size: 2.35rem;
-          line-height: 1.04;
+          font-size: 2.7rem;
+          line-height: 0.98;
         }
 
         .wasel-home-lead {
@@ -582,7 +585,7 @@ export function HomePageStyles() {
         }
 
         .wasel-home-proof-item {
-          min-height: 112px;
+          min-height: auto;
         }
       }
 
