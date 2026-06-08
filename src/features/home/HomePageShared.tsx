@@ -121,47 +121,31 @@ export function SectionHeader({
         marginBottom: 18,
       }}
     >
-      <div style={{ display: 'grid', gap: 8 }}>
-        <div
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <span
+          aria-hidden="true"
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '5px 10px',
-            borderRadius: R.full,
-            background: C.elevated,
+            width: 30,
+            height: 30,
+            borderRadius: 10,
+            display: 'grid',
+            placeItems: 'center',
+            background: C.cyanDim,
             border: `1px solid ${C.borderFaint}`,
-            color: C.textMuted,
-            fontSize: TYPE.size.xs,
-            fontWeight: TYPE.weight.bold,
-            letterSpacing: TYPE.letterSpacing.wider,
-            textTransform: 'uppercase',
-            width: 'fit-content',
+            color: C.cyan,
+            fontSize: '0.72rem',
+            fontWeight: TYPE.weight.black,
+            flexShrink: 0,
           }}
         >
-          <span
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 999,
-              display: 'grid',
-              placeItems: 'center',
-              background: C.cyanDim,
-              color: C.cyan,
-              fontSize: '0.62rem',
-              fontWeight: TYPE.weight.black,
-            }}
-          >
-            {icon}
-          </span>
-          Section
-        </div>
+          {icon}
+        </span>
         <h2
           style={{
             fontWeight: TYPE.weight.black,
             color: C.text,
             fontSize: '1.12rem',
-            letterSpacing: TYPE.letterSpacing.tight,
+            letterSpacing: 0,
             margin: 0,
           }}
         >
@@ -377,11 +361,11 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
   return (
     <div
       style={{
-        borderRadius: 24,
+        borderRadius: 16,
         padding: '20px 22px',
         background: glass(0.88),
         border: `1px solid ${C.border}`,
-        boxShadow: SH.card,
+        boxShadow: SH.sm,
       }}
     >
       <div

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WalletDashboard
  *
  * Render-focused wallet screen. Runtime mode selection, demo/live data
@@ -206,7 +206,7 @@ export function WalletDashboard() {
               </div>
               <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7 }}>
                 {isRTL
-                  ? 'الأهم فوق: الرصيد المتاح والمعلق والمكافآت بدون شرح زائد.'
+                  ? 'الأرقام الأساسية تظهر أولاً: الرصيد المتاح والمعلق والمكافآت بدون شرح زائد.'
                   : 'The key numbers stay above the fold: available, pending, and rewards.'}
               </div>
             </div>

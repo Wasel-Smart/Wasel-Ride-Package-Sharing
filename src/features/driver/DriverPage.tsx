@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Brain, Network, ShieldCheck, Truck } from 'lucide-react';
+import { AlertTriangle, Brain, Network, ShieldCheck, Truck } from 'lucide-react';
 import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -67,10 +67,10 @@ export default function DriverPage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="Driver"
+          emoji={<Truck size={24} />}
           title="Driver Console"
           titleAr="واجهة السائق"
-          sub="Route, earnings, readiness."
+          sub="Own a corridor with earnings, readiness, and route proof in one view."
           color={DS.blue}
           action={{ label: 'Offer a ride', onClick: () => navigate('/app/offer-ride') }}
         />
@@ -109,7 +109,7 @@ export default function DriverPage() {
                     color: DS.cyan,
                     fontSize: '0.72rem',
                     fontWeight: 800,
-                    letterSpacing: '0.12em',
+                    letterSpacing: 0,
                     textTransform: 'uppercase',
                   }}
                 >
@@ -142,7 +142,7 @@ export default function DriverPage() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {membership.loyaltyTier} • {membership.movementCredits} credits
+                {membership.loyaltyTier} | {membership.movementCredits} credits
               </span>
             </div>
 
@@ -299,7 +299,7 @@ export default function DriverPage() {
                       flexShrink: 0,
                     }}
                   >
-                    {step.complete ? 'OK' : '!'}
+                    {step.complete ? <ShieldCheck size={15} /> : <AlertTriangle size={15} />}
                   </div>
                   <div>
                     <div style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem' }}>
@@ -346,10 +346,10 @@ export default function DriverPage() {
               {[
                 primaryCorridor?.label ?? 'No route selected yet',
                 driverPlan
-                  ? `Pickup ${driverPlan.corridor.pickupPoints[0] ?? 'Trusted point'} • ${driverPlan.corridor.autoGroupWindow}`
+                  ? `Pickup ${driverPlan.corridor.pickupPoints[0] ?? 'Trusted point'} | ${driverPlan.corridor.autoGroupWindow}`
                   : 'Choose a corridor to unlock launch timing.',
                 driverPlan
-                  ? `${driverPlan.emptySeatCostJod} JOD lost per empty seat • ${driverPlan.recommendedSeatPriceJod} JOD target`
+                  ? `${driverPlan.emptySeatCostJod} JOD lost per empty seat | ${driverPlan.recommendedSeatPriceJod} JOD target`
                   : 'Price and fill targets appear here.',
               ].map(line => (
                 <div

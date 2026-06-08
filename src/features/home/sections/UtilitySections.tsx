@@ -13,7 +13,7 @@ interface SignedInUtilitySectionProps {
 
 interface SignedOutCtaSectionProps {
   ar: boolean;
-  onNavigate: (path: string) => void;
+  onNavigate: (path: string, source?: string) => void;
 }
 
 export function SignedInUtilitySection({
@@ -23,7 +23,7 @@ export function SignedInUtilitySection({
   trustScore,
 }: SignedInUtilitySectionProps) {
   return (
-    <motion.section initial={false} style={{ marginTop: 38 }}>
+    <motion.section initial={false} style={{ marginTop: 34 }}>
       <SectionHeader title={ar ? 'الجاهزية قبل الانطلاق' : 'Readiness before you move'} icon="T" />
       <div
         className="wasel-home-utility-grid"
@@ -37,11 +37,11 @@ export function SignedInUtilitySection({
         <div style={{ display: 'grid', gap: 14 }}>
           <div
             style={{
-              borderRadius: R.xxl,
+              borderRadius: R.xl,
               padding: '20px 20px 18px',
               background: C.cyanDim,
               border: `1px solid ${C.borderHov}`,
-              boxShadow: SH.card,
+              boxShadow: SH.sm,
             }}
           >
             <div
@@ -52,7 +52,7 @@ export function SignedInUtilitySection({
                 fontSize: '0.7rem',
                 fontWeight: 800,
                 textTransform: 'uppercase',
-                letterSpacing: '0.08em',
+                letterSpacing: 0,
                 color: C.textDim,
               }}
             >
@@ -65,7 +65,7 @@ export function SignedInUtilitySection({
                 fontSize: '1.6rem',
                 fontWeight: 950,
                 color: C.text,
-                letterSpacing: '-0.03em',
+                letterSpacing: 0,
               }}
             >
               {loading ? <Skeleton w={126} h={30} radius={8} /> : walletBalance}
@@ -86,7 +86,7 @@ export function SignedInUtilitySection({
 
           <div
             style={{
-              borderRadius: R.xxl,
+              borderRadius: R.xl,
               padding: '20px 20px 18px',
               background: C.elevated,
               border: `1px solid ${C.border}`,
@@ -97,7 +97,7 @@ export function SignedInUtilitySection({
                 fontSize: '0.7rem',
                 fontWeight: 800,
                 textTransform: 'uppercase',
-                letterSpacing: '0.08em',
+                letterSpacing: 0,
                 color: C.textDim,
                 marginBottom: 10,
               }}
@@ -123,10 +123,10 @@ export function SignedInUtilitySection({
 
 export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps) {
   return (
-    <motion.section initial={false} style={{ marginTop: 40, marginBottom: 24 }}>
+    <motion.section initial={false} style={{ marginTop: 36, marginBottom: 24 }}>
       <div
         style={{
-          borderRadius: R['3xl'],
+          borderRadius: R.xxl,
           padding: '30px 26px',
           textAlign: 'center',
           background: C.card,
@@ -138,7 +138,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
           style={{
             fontSize: '0.7rem',
             fontWeight: 800,
-            letterSpacing: '0.12em',
+            letterSpacing: 0,
             textTransform: 'uppercase',
             color: C.cyan,
           }}
@@ -148,9 +148,9 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
         <h2
           style={{
             margin: '14px 0 10px',
-            fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+            fontSize: '2rem',
             lineHeight: 1.02,
-            letterSpacing: '-0.04em',
+            letterSpacing: 0,
           }}
         >
           {ar ? 'أنشئ حسابك وافتح نفس الشبكة' : 'Create an account and open the same network'}
@@ -179,7 +179,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
         >
           <WaselButton
             type="button"
-            onClick={() => onNavigate('/auth?tab=register')}
+            onClick={() => onNavigate('/auth?tab=register', 'signed_out_register')}
             variant="primary"
             size="lg"
             style={{
@@ -193,7 +193,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
           </WaselButton>
           <WaselButton
             type="button"
-            onClick={() => onNavigate('/find-ride')}
+            onClick={() => onNavigate('/find-ride', 'signed_out_browse')}
             variant="outline"
             size="lg"
             style={{

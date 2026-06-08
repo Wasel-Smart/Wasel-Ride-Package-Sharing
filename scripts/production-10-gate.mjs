@@ -28,6 +28,13 @@ const allowedFallbackPatterns = [
   /auth error/i,
 ];
 
+const allowedProductionImagePattern = /^ghcr\.io\/wasel-smart\/wasel-(web|worker)(?::|@)/;
+const disallowedRuntimeImagePatterns = [
+  /^registry\.k8s\.io\/pause(?::|@)/,
+  /^k8s\.gcr\.io\/pause(?::|@)/,
+  /(?:^|\/)kindest\/node(?::|@)/,
+];
+
 const checks = [];
 
 function record(name, status, evidence, details = []) {
@@ -99,15 +106,95 @@ async function checkRuntimeTools() {
   );
 
   if (kubectl.ok) {
-    const pods = await run(
+    const podsTable = await run(
       'kubectl',
       ['get', 'pods', '-n', 'wasel-production', '-o', 'wide'],
       { timeout: 60_000 },
     );
+
+    const podsJson = podsTable.ok
+      ? await run('kubectl', ['get', 'pods', '-n', 'wasel-production', '-o', 'json'], {
+          timeout: 60_000,
+        })
+      : podsTable;
+
+    let ready = false;
+    const details = [];
+
+    if (podsTable.ok && podsJson.ok) {
+      try {
+        const payload = JSON.parse(podsJson.stdout);
+        const pods = Array.isArray(payload.items) ? payload.items : [];
+        const notReady = pods
+          .map(pod => {
+            const readyCondition = pod.status?.conditions?.find(
+              condition => condition.type === 'Ready',
+            );
+            const phase = pod.status?.phase ?? 'Unknown';
+            const containerStatuses = pod.status?.containerStatuses ?? [];
+            const containersReady =
+              containerStatuses.length > 0 &&
+              containerStatuses.every(status => status.ready === true);
+            const podReady =
+              phase === 'Running' && readyCondition?.status === 'True' && containersReady;
+
+            return podReady
+              ? null
+              : `${pod.metadata?.name ?? 'unknown'} phase=${phase} ready=${
+                  readyCondition?.status ?? 'False'
+                }`;
+          })
+          .filter(Boolean);
+
+        const podImages = pods.flatMap(pod => {
+          const containers = [
+            ...(pod.spec?.initContainers ?? []),
+            ...(pod.spec?.containers ?? []),
+          ];
+          return containers.map(container => ({
+            pod: pod.metadata?.name ?? 'unknown',
+            container: container.name ?? 'unknown',
+            image: container.image ?? 'unknown',
+          }));
+        });
+
+        const imageFindings = podImages
+          .map(({ pod, container, image }) => {
+            const usesDisallowedRuntime = disallowedRuntimeImagePatterns.some(pattern =>
+              pattern.test(image),
+            );
+            const usesWaselRuntime = allowedProductionImagePattern.test(image);
+
+            return usesWaselRuntime && !usesDisallowedRuntime
+              ? null
+              : `${pod}/${container} image=${image} is not an approved Wasel production runtime image`;
+          })
+          .filter(Boolean);
+
+        const imageEvidence = podImages
+          .map(({ pod, container, image }) => `${pod}/${container}: ${image}`)
+          .join('\n');
+
+        ready = pods.length > 0 && notReady.length === 0 && imageFindings.length === 0;
+        details.push(...notReady.slice(0, 100), ...imageFindings.slice(0, 100));
+
+        if (imageEvidence) {
+          details.push('runtime images:', ...imageEvidence.split('\n').slice(0, 100));
+        }
+      } catch (error) {
+        details.push(`failed to parse pod JSON: ${error instanceof Error ? error.message : error}`);
+      }
+    }
+
     record(
       'kubernetes-production-pods',
-      pods.ok ? 'pass' : 'fail',
-      pods.ok ? pods.stdout : pods.stderr,
+      ready ? 'pass' : 'fail',
+      podsTable.ok
+        ? ready
+          ? `all wasel-production pods are Ready and using approved Wasel production runtime images\n\n${podsTable.stdout}`
+          : `one or more wasel-production pods are not Ready or not using approved Wasel production runtime images\n\n${podsTable.stdout}`
+        : podsTable.stderr,
+      details,
     );
   }
 }

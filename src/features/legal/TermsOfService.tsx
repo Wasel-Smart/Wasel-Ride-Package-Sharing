@@ -6,7 +6,10 @@ import {
   SectionCard,
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
+import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 
 function termsCardStyle(accent: string) {
@@ -21,6 +24,7 @@ function termsCardStyle(accent: string) {
 
 export function TermsOfService() {
   const { language, dir } = useLanguage();
+  const nav = useIframeSafeNavigate();
 
   const content = {
     ar: {
@@ -126,7 +130,7 @@ export function TermsOfService() {
       title: 'Terms of Service',
       subtitle: 'Last Updated: March 16, 2026',
       intro:
-        'By accepting these terms, you enter into a legally binding agreement with Wasel. Please read these terms carefully before using our services.',
+        'These terms explain how Wasel coordinates routes, packages, payments, trust checks, support, and safety responsibilities across the platform.',
 
       sections: [
         {
@@ -234,8 +238,24 @@ export function TermsOfService() {
           title={t.title}
           description={t.intro}
           accent={C.blueLight}
+          actions={
+            <>
+              <WaselButton type="button" variant="primary" onClick={() => nav('/app/support')}>
+                Open support
+              </WaselButton>
+              <WaselButton
+                type="button"
+                variant="outline"
+                onClick={() => nav('/app/security')}
+                style={{ background: C.elevated, color: C.text }}
+              >
+                Review security
+              </WaselButton>
+            </>
+          }
           aside={
             <div style={{ display: 'grid', gap: SPACE[3] }}>
+              <WaselLogo size={42} theme="light" variant="full" />
               <StatusBadge label={t.subtitle} accent={C.blueLight} />
               <div
                 style={{

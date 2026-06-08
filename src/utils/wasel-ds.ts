@@ -4,14 +4,14 @@
  */
 
 export const C = {
-  bg: '#071521',
-  bgAlt: '#0C1A28',
-  bgDeep: '#050B12',
-  card: 'rgba(10,24,37,0.78)',
-  cardSolid: '#122538',
-  card2: '#193249',
-  panel: 'rgba(88,221,255,0.05)',
-  elevated: 'rgba(255,255,255,0.06)',
+  bg: '#06111B',
+  bgAlt: '#0A1824',
+  bgDeep: '#03080F',
+  card: 'rgba(9,22,34,0.78)',
+  cardSolid: '#0F2333',
+  card2: '#142C3F',
+  panel: 'rgba(184,244,255,0.055)',
+  elevated: 'rgba(255,255,255,0.055)',
 
   navy: '#234763',
   navyMid: '#366786',
@@ -33,14 +33,14 @@ export const C = {
   orange: '#FF9A74',
   orangeDim: 'rgba(255,154,116,0.12)',
 
-  text: '#EEF8FF',
-  textSub: 'rgba(238,248,255,0.86)',
-  textMuted: 'rgba(196,220,238,0.68)',
-  textDim: 'rgba(149,178,201,0.56)',
+  text: '#F3FAFF',
+  textSub: 'rgba(232,244,252,0.86)',
+  textMuted: 'rgba(191,214,230,0.72)',
+  textDim: 'rgba(150,176,195,0.58)',
 
-  border: 'rgba(141,184,218,0.16)',
-  borderHov: 'rgba(88,221,255,0.26)',
-  borderFaint: 'rgba(141,184,218,0.08)',
+  border: 'rgba(156,202,230,0.14)',
+  borderHov: 'rgba(88,221,255,0.3)',
+  borderFaint: 'rgba(156,202,230,0.075)',
 
   error: '#FF7C8B',
   errorDim: 'rgba(255,124,139,0.14)',
@@ -49,7 +49,7 @@ export const C = {
   info: '#58DDFF',
 
   overlay: 'rgba(4,10,18,0.8)',
-  glass: 'rgba(8,22,35,0.9)',
+  glass: 'rgba(7,18,29,0.9)',
 } as const;
 
 export const F = "'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif";
@@ -85,12 +85,12 @@ export const TYPE = {
     loose: 1.8,
   },
   letterSpacing: {
-    tighter: '-0.04em',
-    tight: '-0.02em',
+    tighter: '0',
+    tight: '0',
     normal: '0',
-    wide: '0.03em',
-    wider: '0.06em',
-    widest: '0.1em',
+    wide: '0',
+    wider: '0',
+    widest: '0',
   },
 } as const;
 
@@ -116,38 +116,38 @@ export const SPACE = {
 export const R = {
   none: '0px',
   xs: '4px',
-  sm: '8px',
-  md: '12px',
-  lg: '14px',
-  xl: '18px',
-  xxl: '24px',
-  '3xl': '32px',
+  sm: '6px',
+  md: '8px',
+  lg: '10px',
+  xl: '12px',
+  xxl: '16px',
+  '3xl': '20px',
   full: '9999px',
 } as const;
 
 export const SH = {
   none: 'none',
   xs: '0 1px 2px rgba(0,0,0,0.25)',
-  sm: '0 2px 8px rgba(0,0,0,0.28)',
-  card: '0 10px 28px rgba(0,0,0,0.28)',
-  md: '0 14px 32px rgba(0,0,0,0.32)',
-  lg: '0 18px 42px rgba(0,0,0,0.38)',
-  xl: '0 26px 58px rgba(0,0,0,0.46)',
-  navy: '0 8px 26px rgba(0,0,0,0.28)',
-  cyan: '0 4px 18px rgba(88,221,255,0.16)',
-  cyanL: '0 10px 28px rgba(88,221,255,0.2)',
-  blue: '0 8px 20px rgba(125,231,203,0.18)',
-  green: '0 8px 20px rgba(71,214,158,0.2)',
-  gold: '0 8px 22px rgba(255,190,92,0.22)',
+  sm: '0 2px 8px rgba(0,0,0,0.24)',
+  card: '0 12px 32px rgba(0,0,0,0.28)',
+  md: '0 16px 36px rgba(0,0,0,0.3)',
+  lg: '0 22px 52px rgba(0,0,0,0.36)',
+  xl: '0 32px 72px rgba(0,0,0,0.44)',
+  navy: '0 10px 30px rgba(0,0,0,0.26)',
+  cyan: '0 5px 18px rgba(88,221,255,0.14)',
+  cyanL: '0 12px 30px rgba(88,221,255,0.18)',
+  blue: '0 10px 24px rgba(125,231,203,0.16)',
+  green: '0 10px 24px rgba(71,214,158,0.18)',
+  gold: '0 10px 26px rgba(255,190,92,0.2)',
   inner: 'inset 0 1px 3px rgba(0,0,0,0.3)',
 } as const;
 
-export const GRAD = 'linear-gradient(135deg, #67E8FF 0%, #38BEFF 52%, #32D8A6 100%)';
-export const GRAD_GOLD = 'linear-gradient(135deg, #FFD36C 0%, #FFB35C 48%, #FF936A 100%)';
+export const GRAD = 'linear-gradient(135deg, #74E9FF 0%, #40C8F6 48%, #4CE0AD 100%)';
+export const GRAD_GOLD = 'linear-gradient(135deg, #FFD780 0%, #FFB85F 50%, #FF9878 100%)';
 export const GRAD_GREEN = 'linear-gradient(135deg, #6BF0C8 0%, #34D8A7 52%, #209B7D 100%)';
 export const GRAD_NAVY = 'linear-gradient(145deg, #0B1D2D 0%, #081725 56%, #040B12 100%)';
 export const GRAD_PURPLE = 'linear-gradient(135deg, #B7ABFF 0%, #7F91FF 100%)';
-export const GRAD_HERO = 'linear-gradient(145deg, #06131F 0%, #0B1D2D 56%, #17314C 100%)';
+export const GRAD_HERO = 'linear-gradient(145deg, #06111B 0%, #0A1824 54%, #10293C 100%)';
 export const GRAD_SIGNAL = 'linear-gradient(135deg, #EEF8FF 0%, #8DEBFF 52%, #47D69E 100%)';
 export const GRAD_AURORA =
   'radial-gradient(circle at top, rgba(88,221,255,0.22), rgba(255,190,92,0.1) 42%, rgba(6,19,31,0) 74%)';

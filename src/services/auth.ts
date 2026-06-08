@@ -126,7 +126,10 @@ async function enrichProfileWithVerification(
 }
 
 async function loadProfileViaFallback(userId: string) {
-  const profile = await getDirectProfile(userId).catch(() => null) as Record<string, unknown> | null;
+  const profile = (await getDirectProfile(userId).catch(() => null)) as Record<
+    string,
+    unknown
+  > | null;
   const enrichedProfile = await enrichProfileWithVerification(
     userId,
     profile as Record<string, unknown> | null,
@@ -172,7 +175,16 @@ export const authAPI = {
     return data;
   },
 
-  async createProfile(userId: string, email: string, firstName: string, lastName: string) {
+  async createProfile(
+    userId: string,
+    email: string,
+    firstName: string,
+    lastName: string,
+    phone?: string,
+  ) {
+    const fullName = `${firstName} ${lastName}`.trim();
+    const normalizedPhone = phone?.trim();
+
     if (!hasConfiguredEdgeTransport('required')) {
       if (!getConfig().allowDirectSupabaseFallback) {
         throw getDirectFallbackError('Profile creation');
@@ -180,7 +192,8 @@ export const authAPI = {
 
       return updateDirectProfile(userId, {
         email,
-        full_name: `${firstName} ${lastName}`.trim(),
+        full_name: fullName,
+        ...(normalizedPhone ? { phone_number: normalizedPhone } : {}),
       });
     }
 
@@ -219,7 +232,8 @@ export const authAPI = {
           email,
           firstName,
           lastName,
-          fullName: `${firstName} ${lastName}`.trim(),
+          fullName,
+          ...(normalizedPhone ? { phone_number: normalizedPhone } : {}),
         }),
       });
 
@@ -247,7 +261,8 @@ export const authAPI = {
               email,
               firstName,
               lastName,
-              fullName: `${firstName} ${lastName}`.trim(),
+              fullName,
+              ...(normalizedPhone ? { phone_number: normalizedPhone } : {}),
             }),
           });
 

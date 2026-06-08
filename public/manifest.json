@@ -1,7 +1,7 @@
 {
   "name": "Wasel | Smart Mobility",
   "short_name": "Wasel",
-  "description": "Jordan's bilingual mobility network for rides, packages, and corridor-first travel across the kingdom.",
+  "description": "Jordan's trusted route network for lower-cost rides, driver supply, packages, bus fallback, and support-aware travel.",
   "id": "/",
   "start_url": "/?source=pwa",
   "display": "standalone",
@@ -43,25 +43,25 @@
     {
       "name": "Find Ride",
       "short_name": "Find",
-      "description": "Search for available rides",
+      "description": "Compare route options and available seats",
       "url": "/app/find-ride"
     },
     {
       "name": "Offer Ride",
       "short_name": "Offer",
-      "description": "Create a new trip",
+      "description": "Publish seats and review trusted requests",
       "url": "/app/offer-ride"
     },
     {
       "name": "My Trips",
       "short_name": "Trips",
-      "description": "View your trips",
+      "description": "Track movement, proof, and support context",
       "url": "/app/my-trips"
     },
     {
       "name": "Wallet",
       "short_name": "Wallet",
-      "description": "Manage your wallet",
+      "description": "Manage balances, payouts, and payment readiness",
       "url": "/app/wallet"
     }
   ],

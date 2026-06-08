@@ -17,12 +17,14 @@ type IconName = keyof typeof Ionicons.glyphMap;
 export function ScreenShell({
   children,
   footer,
+  testID,
 }: {
   children: React.ReactNode;
   footer?: React.ReactNode;
+  testID?: string;
 }) {
   return (
-    <View style={styles.shell}>
+    <View style={styles.shell} testID={testID}>
       <View style={styles.content}>{children}</View>
       {footer ? <View style={styles.footer}>{footer}</View> : null}
     </View>
@@ -106,6 +108,7 @@ export function PrimaryButton({
   disabled,
   tone = colors.teal,
   onPress,
+  testID,
 }: {
   label: string;
   icon?: IconName;
@@ -113,6 +116,7 @@ export function PrimaryButton({
   disabled?: boolean;
   tone?: string;
   onPress?: (event: GestureResponderEvent) => void;
+  testID?: string;
 }) {
   return (
     <TouchableOpacity
@@ -120,6 +124,7 @@ export function PrimaryButton({
       disabled={disabled || loading}
       onPress={onPress}
       style={[styles.button, { backgroundColor: disabled ? colors.line : tone }]}
+      testID={testID}
     >
       {loading ? (
         <ActivityIndicator color="#FFFFFF" />

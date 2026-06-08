@@ -172,7 +172,7 @@ export function FindRideTripDetailModal({
                   }}
                 />
                 <span style={{ color: DS.sub, fontSize: '0.72rem' }}>
-                  {ride.duration} · {ride.distance} km
+                  {ride.duration} | {ride.distance} km
                 </span>
               </div>
               <div style={{ textAlign: 'center' }}>
@@ -226,7 +226,7 @@ export function FindRideTripDetailModal({
                       {ride.driver.rating}
                     </span>
                     <span style={{ color: DS.muted, fontSize: '0.75rem' }}>
-                      · {ride.driver.trips} trips
+                      | {ride.driver.trips} trips
                     </span>
                   </div>
                 </div>
@@ -361,7 +361,7 @@ export function FindRideTripDetailModal({
                       color: DS.muted,
                       fontSize: '0.72rem',
                       fontWeight: 700,
-                      letterSpacing: '0.08em',
+                      letterSpacing: 0,
                       textTransform: 'uppercase',
                       margin: '0 0 4px',
                     }}
@@ -392,7 +392,7 @@ export function FindRideTripDetailModal({
                   color: DS.muted,
                   fontSize: '0.72rem',
                   fontWeight: 700,
-                  letterSpacing: '0.08em',
+                  letterSpacing: 0,
                   textTransform: 'uppercase',
                   marginBottom: 10,
                 }}
@@ -443,7 +443,7 @@ export function FindRideTripDetailModal({
                     color: DS.muted,
                     fontSize: '0.72rem',
                     fontWeight: 700,
-                    letterSpacing: '0.08em',
+                    letterSpacing: 0,
                     textTransform: 'uppercase',
                     marginBottom: 8,
                   }}
@@ -479,7 +479,7 @@ export function FindRideTripDetailModal({
                     color: DS.muted,
                     fontSize: '0.72rem',
                     fontWeight: 700,
-                    letterSpacing: '0.08em',
+                    letterSpacing: 0,
                     textTransform: 'uppercase',
                     marginBottom: 10,
                   }}

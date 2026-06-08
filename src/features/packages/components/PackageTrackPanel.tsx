@@ -170,7 +170,7 @@ export function PackageTrackPanel({
                     color: DS.muted,
                     fontSize: '0.68rem',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
+                    letterSpacing: 0,
                   }}
                 >
                   {item.label}
@@ -214,7 +214,7 @@ export function PackageTrackPanel({
                     color: DS.muted,
                     fontSize: '0.7rem',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
+                    letterSpacing: 0,
                   }}
                 >
                   {item.label}
@@ -255,7 +255,7 @@ export function PackageTrackPanel({
                     color: DS.muted,
                     fontSize: '0.7rem',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
+                    letterSpacing: 0,
                   }}
                 >
                   {item.label}

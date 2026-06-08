@@ -325,7 +325,7 @@ export function BusPage() {
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="Bus"
+          emoji={<Bus size={24} />}
           title="Book a Bus"
           sub="See schedules, fares, and seats."
           color={DS.green}
@@ -357,7 +357,7 @@ export function BusPage() {
             }}
           >
             <div>
-              <div style={{ color: C.text, fontWeight: 900, letterSpacing: '-0.02em' }}>
+              <div style={{ color: C.text, fontWeight: 900, letterSpacing: 0 }}>
                 Trip details
               </div>
               <div style={{ color: DS.sub, fontSize: '0.82rem', marginTop: 4 }}>
@@ -645,7 +645,7 @@ export function BusPage() {
                     color: activeStatus.color,
                     fontSize: '0.68rem',
                     fontWeight: 800,
-                    letterSpacing: '0.12em',
+                    letterSpacing: 0,
                     textTransform: 'uppercase',
                   }}
                 >
@@ -669,7 +669,7 @@ export function BusPage() {
                 {selectedSourceLabel}
               </span>
               <span style={{ ...pill(DS.green), fontSize: '0.68rem' }}>
-                {activeBus.serviceLevel ?? 'Standard'} · {activeBus.company}
+                {activeBus.serviceLevel ?? 'Standard'} | {activeBus.company}
               </span>
               <span style={{ ...pill(DS.gold), fontSize: '0.68rem' }}>
                 {activeBus.dep} to {activeBus.arr}
@@ -698,7 +698,7 @@ export function BusPage() {
                   color: DS.gold,
                   fontSize: '0.68rem',
                   fontWeight: 800,
-                  letterSpacing: '0.12em',
+                  letterSpacing: 0,
                   textTransform: 'uppercase',
                 }}
               >
@@ -748,7 +748,7 @@ export function BusPage() {
                     </span>
                   </div>
                   <div style={{ color: DS.sub, fontSize: '0.78rem' }}>
-                    {route.from} to {route.to} · {route.price} JOD · {route.seats} seats
+                    {route.from} to {route.to} | {route.price} JOD | {route.seats} seats
                   </div>
                 </button>
               ))
@@ -837,7 +837,7 @@ export function BusPage() {
                               color: C.text,
                               fontWeight: 900,
                               fontSize: '1.05rem',
-                              letterSpacing: '-0.02em',
+                              letterSpacing: 0,
                             }}
                           >
                             {route.from} to {route.to}
@@ -1095,7 +1095,7 @@ export function BusPage() {
                       color: DS.muted,
                       fontSize: '0.68rem',
                       fontWeight: 800,
-                      letterSpacing: '0.08em',
+                      letterSpacing: 0,
                       textTransform: 'uppercase',
                       marginBottom: 6,
                     }}

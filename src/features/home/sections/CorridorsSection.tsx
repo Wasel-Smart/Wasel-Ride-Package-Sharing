@@ -7,12 +7,12 @@ import type { CorridorCard } from './types';
 interface CorridorsSectionProps {
   ar: boolean;
   corridorCards: CorridorCard[];
-  onNavigate: (path: string) => void;
+  onNavigate: (path: string, source?: string) => void;
 }
 
 export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSectionProps) {
   return (
-    <motion.section initial={false} style={{ marginTop: 38 }}>
+    <motion.section initial={false} style={{ marginTop: 34 }}>
       <SectionHeader
         title={ar ? 'مسارات جاهزة الآن' : 'Corridors ready now'}
         icon="R"
@@ -24,24 +24,24 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-          gap: 14,
+          gap: 12,
         }}
       >
         {corridorCards.map(card => (
           <button
             type="button"
             key={card.key}
-            onClick={() => onNavigate(card.path)}
+            onClick={() => onNavigate(card.path, 'corridor_card')}
             style={{
               textAlign: 'left',
-              borderRadius: R.xxl,
+              borderRadius: R.xl,
               padding: '20px 18px 18px',
               background: card.featured
                 ? `linear-gradient(180deg, ${C.cyanDim}, ${C.card})`
                 : glass(0.52),
               border: `1px solid ${card.featured ? C.cyanDim : C.border}`,
               cursor: 'pointer',
-              boxShadow: card.featured ? SH.card : SH.none,
+              boxShadow: card.featured ? SH.sm : SH.none,
             }}
           >
             <div
@@ -65,7 +65,7 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
                   color: card.accent,
                   fontSize: '0.68rem',
                   fontWeight: 800,
-                  letterSpacing: '0.08em',
+                  letterSpacing: 0,
                   textTransform: 'uppercase',
                 }}
               >
@@ -87,7 +87,7 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
                 fontSize: '1.05rem',
                 fontWeight: 900,
                 lineHeight: 1.18,
-                letterSpacing: '-0.02em',
+                letterSpacing: 0,
                 color: C.text,
               }}
             >

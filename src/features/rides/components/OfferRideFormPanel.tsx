@@ -121,7 +121,7 @@ export function OfferRideFormPanel({
                     color: DS.muted,
                     fontSize: '0.68rem',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
+                    letterSpacing: 0,
                   }}
                 >
                   {item.label}
@@ -160,7 +160,7 @@ export function OfferRideFormPanel({
                     {ride.from} to {ride.to}
                   </div>
                   <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
-                    {ride.date} at {ride.time} · {ride.carModel || 'Vehicle pending'}
+                    {ride.date} at {ride.time} | {ride.carModel || 'Vehicle pending'}
                   </div>
                 </div>
               ))}
@@ -223,7 +223,7 @@ export function OfferRideFormPanel({
                   color: DS.muted,
                   fontSize: '0.7rem',
                   fontWeight: 700,
-                  letterSpacing: '0.1em',
+                  letterSpacing: 0,
                   textTransform: 'uppercase',
                   marginBottom: 6,
                 }}
@@ -261,7 +261,7 @@ export function OfferRideFormPanel({
                 color: DS.muted,
                 fontSize: '0.7rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: 0,
                 textTransform: 'uppercase',
                 marginBottom: 6,
               }}
@@ -294,7 +294,7 @@ export function OfferRideFormPanel({
                 color: DS.muted,
                 fontSize: '0.7rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: 0,
                 textTransform: 'uppercase',
                 marginBottom: 6,
               }}
@@ -386,7 +386,7 @@ export function OfferRideFormPanel({
                       color: DS.muted,
                       fontSize: '0.68rem',
                       textTransform: 'uppercase',
-                      letterSpacing: '0.08em',
+                      letterSpacing: 0,
                     }}
                   >
                     {item.label}
@@ -416,7 +416,7 @@ export function OfferRideFormPanel({
                   color: DS.muted,
                   fontSize: '0.7rem',
                   fontWeight: 700,
-                  letterSpacing: '0.1em',
+                  letterSpacing: 0,
                   textTransform: 'uppercase',
                   marginBottom: 6,
                 }}
@@ -473,7 +473,7 @@ export function OfferRideFormPanel({
                 color: DS.muted,
                 fontSize: '0.7rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: 0,
                 textTransform: 'uppercase',
                 marginBottom: 6,
               }}
@@ -523,7 +523,7 @@ export function OfferRideFormPanel({
                   color: DS.muted,
                   fontSize: '0.7rem',
                   fontWeight: 700,
-                  letterSpacing: '0.1em',
+                  letterSpacing: 0,
                   textTransform: 'uppercase',
                   marginBottom: 6,
                 }}
@@ -605,7 +605,7 @@ export function OfferRideFormPanel({
                 color: DS.muted,
                 fontSize: '0.7rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: 0,
                 textTransform: 'uppercase',
                 marginBottom: 8,
               }}
@@ -658,7 +658,7 @@ export function OfferRideFormPanel({
                   color: DS.muted,
                   fontSize: '0.7rem',
                   fontWeight: 700,
-                  letterSpacing: '0.1em',
+                  letterSpacing: 0,
                   textTransform: 'uppercase',
                   marginBottom: 6,
                 }}
@@ -691,7 +691,7 @@ export function OfferRideFormPanel({
                 color: DS.muted,
                 fontSize: '0.7rem',
                 fontWeight: 700,
-                letterSpacing: '0.1em',
+                letterSpacing: 0,
                 textTransform: 'uppercase',
                 marginBottom: 6,
               }}

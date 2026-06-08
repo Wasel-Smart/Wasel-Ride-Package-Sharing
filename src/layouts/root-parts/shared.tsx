@@ -1,4 +1,25 @@
+import type { CSSProperties } from 'react';
+import { Facebook, Instagram, type LucideIcon } from 'lucide-react';
 import { C, F, R } from '../../utils/wasel-ds';
+
+interface SocialLink {
+  label: string;
+  href: string;
+  Icon: LucideIcon;
+}
+
+export const WASEL_SOCIAL_LINKS: SocialLink[] = [
+  {
+    label: 'Facebook',
+    href: 'https://www.facebook.com/Wasel14',
+    Icon: Facebook,
+  },
+  {
+    label: 'Instagram',
+    href: 'https://www.instagram.com/wasel.ride/',
+    Icon: Instagram,
+  },
+];
 
 export function getDrawerSectionLabel(groupId: string, ar: boolean) {
   if (groupId === 'profile' || groupId === 'my-trips') {
@@ -72,6 +93,61 @@ export function AppPill({ ar }: { ar: boolean }) {
         }}
       />
       {ar ? 'واصل لتنقل أبسط' : 'Wasel for simpler movement'}
+    </div>
+  );
+}
+
+export function SocialLinks({
+  ar,
+  variant = 'header',
+}: {
+  ar: boolean;
+  variant?: 'header' | 'drawer';
+}) {
+  const drawer = variant === 'drawer';
+  const size = drawer ? 40 : 34;
+
+  const wrapperStyle: CSSProperties = drawer
+    ? {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+        gap: 8,
+        marginBottom: 12,
+      }
+    : {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+      };
+
+  return (
+    <div aria-label={ar ? 'روابط واصل الاجتماعية' : 'Wasel social links'} style={wrapperStyle}>
+      {WASEL_SOCIAL_LINKS.map(({ label, href, Icon }) => (
+        <a
+          key={href}
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${label}: Wasel`}
+          title={`${label}: Wasel`}
+          style={{
+            width: drawer ? '100%' : size,
+            height: size,
+            borderRadius: R.md,
+            background: C.card,
+            border: `1px solid ${C.border}`,
+            color: C.textSub,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textDecoration: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.14s ease',
+          }}
+        >
+          <Icon size={drawer ? 18 : 16} strokeWidth={2.1} aria-hidden="true" />
+        </a>
+      ))}
     </div>
   );
 }

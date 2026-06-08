@@ -1123,7 +1123,17 @@ export default function SettingsPage() {
               <div style={{ height: 1, background: C.borderFaint }} />
 
               <LinkRow label="Privacy Policy" onClick={() => nav('/app/privacy')} />
+              <LinkRow
+                label="Security Center"
+                sub="Encryption, 2FA, trust gates, and incident flow"
+                onClick={() => nav('/app/security')}
+              />
               <LinkRow label="Terms of Service" onClick={() => nav('/app/terms')} />
+              <LinkRow
+                label="Support Center"
+                sub="Routes, packages, wallet, account, and safety escalation"
+                onClick={() => nav('/app/support')}
+              />
               <LinkRow
                 label="Export My Data"
                 sub="Download your current account data as JSON"

@@ -141,15 +141,25 @@ export function PageShell({ children }: { children: ReactNode }) {
     <div
       style={{
         minHeight: 'var(--app-min-height)',
-        background: DS.bg,
+        background: `linear-gradient(180deg, ${C.bgDeep} 0%, ${DS.bg} 42%, ${C.bgAlt} 100%)`,
         fontFamily: DS.F,
         direction: ar ? 'rtl' : 'ltr',
+        color: C.text,
+        position: 'relative',
       }}
     >
       <style>{`
         :root { color-scheme: dark; }
           .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px ${C.cyanGlow}; }
           .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px ${C.goldDim}; }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
+        }
         @media(max-width:899px){
           .sp-inner{ padding:16px !important; }
           .sp-2col { grid-template-columns:1fr !important; }
@@ -180,7 +190,19 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-modal-route > div { width:100%; text-align:left !important; }
         }
       `}</style>
-      <div className="sp-inner" style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px' }}>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          pointerEvents: 'none',
+          backgroundImage: `linear-gradient(${C.borderFaint} 1px, transparent 1px), linear-gradient(90deg, ${C.borderFaint} 1px, transparent 1px)`,
+          backgroundSize: '72px 72px',
+          maskImage: 'linear-gradient(180deg, transparent 0%, black 12%, black 78%, transparent 100%)',
+          opacity: 0.08,
+        }}
+      />
+      <div className="sp-inner" style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px', position: 'relative' }}>
         <div
           className="sp-brand-row"
           style={{
@@ -234,7 +256,7 @@ export function SectionHead({
   color = DS.cyan,
   action,
 }: {
-  emoji: string;
+  emoji: ReactNode;
   title: string;
   titleAr?: string;
   sub?: string;
@@ -263,7 +285,7 @@ export function SectionHead({
         style={{
           position: 'absolute',
           inset: 0,
-          background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}12,transparent)`,
+          background: `linear-gradient(120deg, ${color}12, transparent 36%, ${C.elevated})`,
           pointerEvents: 'none',
         }}
       />
@@ -287,7 +309,7 @@ export function SectionHead({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '1.9rem',
+              color,
               flexShrink: 0,
             }}
           >
@@ -330,7 +352,7 @@ export function SectionHead({
 
 export function CoreExperienceBanner({
   title,
-  detail: _detail,
+  detail,
   tone = DS.cyan,
 }: {
   title: string;
@@ -341,17 +363,22 @@ export function CoreExperienceBanner({
     <div
       style={{
         display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        background: `linear-gradient(135deg, ${tone}10, rgba(255,255,255,0.02))`,
-        border: `1px solid ${tone}28`,
-        borderRadius: r(16),
-        padding: '12px 14px',
+        alignItems: 'flex-start',
+        gap: 12,
+        background: `linear-gradient(135deg, ${tone}0f, ${C.elevated})`,
+        border: `1px solid ${tone}24`,
+        borderRadius: R.xl,
+        padding: '13px 14px',
         marginBottom: 18,
       }}
     >
       <Shield size={16} color={tone} style={{ flexShrink: 0 }} />
-      <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>{title}</div>
+      <div>
+        <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.9rem' }}>{title}</div>
+        <div style={{ color: DS.muted, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 3 }}>
+          {detail}
+        </div>
+      </div>
     </div>
   );
 }

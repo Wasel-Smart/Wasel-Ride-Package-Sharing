@@ -1,8 +1,42 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
+const APP_ORIGIN = (Deno.env.get('APP_ORIGIN') || Deno.env.get('APP_BASE_URL') || 'https://wasel14.online').replace(/\/$/, '');
+const ADDITIONAL_ALLOWED_ORIGINS = Deno.env.get('ALLOWED_ORIGINS') || '';
+
+function allowedOrigins(): string[] {
+  return [
+    APP_ORIGIN,
+    'http://localhost:3002',
+    'http://127.0.0.1:3002',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    ...ADDITIONAL_ALLOWED_ORIGINS.split(/[,\s]+/).filter(Boolean),
+  ].map(origin => origin.replace(/\/$/, ''));
+}
+
+function resolveOrigin(req: Request): string | null {
+  const origin = req.headers.get('origin');
+  if (!origin) return null;
+
+  try {
+    const normalized = new URL(origin).origin;
+    return allowedOrigins().includes(normalized) ? normalized : null;
+  } catch {
+    return null;
+  }
+}
+
+function responseHeaders(req: Request, extra?: HeadersInit): HeadersInit {
+  const origin = resolveOrigin(req);
+  return {
+    ...(origin ? { 'Access-Control-Allow-Origin': origin } : {}),
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, stripe-signature',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Cache-Control': 'no-store',
+    'Vary': 'Origin',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    ...(extra ?? {}),
+  };
+}
 
 type ProviderRoute = {
   targetPath: string;
@@ -24,13 +58,12 @@ const providerRoutes: Record<string, ProviderRoute> = {
   },
 };
 
-function json(body: Record<string, unknown>, status = 200) {
+function json(req: Request, body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: {
-      ...corsHeaders,
+    headers: responseHeaders(req, {
       'Content-Type': 'application/json',
-    },
+    }),
   });
 }
 
@@ -42,7 +75,6 @@ function getBearerToken() {
   const candidates = [
     Deno.env.get('SUPABASE_ANON_KEY'),
     Deno.env.get('ANON_KEY'),
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
   ];
 
   return candidates.find(isJwtLikeToken) ?? '';
@@ -59,18 +91,23 @@ function buildForwardUrl(requestUrl: URL, route: ProviderRoute) {
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return new Response(null, { status: 204, headers: responseHeaders(request) });
+  }
+
+  const origin = request.headers.get('origin');
+  if (origin && !resolveOrigin(request)) {
+    return json(request, { error: 'Origin not allowed' }, 403);
   }
 
   const requestUrl = new URL(request.url);
   const routePath = requestUrl.pathname.replace(/^.*provider-webhooks/, '') || '/';
   const route = providerRoutes[routePath];
 
-  if (!route) return json({ error: 'Unknown provider webhook route' }, 404);
-  if (request.method !== route.requiredMethod) return json({ error: 'Method not allowed' }, 405);
+  if (!route) return json(request, { error: 'Unknown provider webhook route' }, 404);
+  if (request.method !== route.requiredMethod) return json(request, { error: 'Method not allowed' }, 405);
 
   const bearerToken = getBearerToken();
-  if (!bearerToken) return json({ error: 'Supabase bearer token is not configured' }, 503);
+  if (!bearerToken) return json(request, { error: 'Supabase bearer token is not configured' }, 503);
 
   try {
     const body = await request.text();
@@ -92,12 +129,12 @@ Deno.serve(async (request) => {
     const responseBody = await forwarded.text();
     return new Response(responseBody, {
       status: forwarded.status,
-      headers: {
-        ...corsHeaders,
+      headers: responseHeaders(request, {
         'Content-Type': forwarded.headers.get('content-type') || 'application/json',
-      },
+      }),
     });
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : String(error) }, 502);
+    console.error('provider webhook forwarding failed', error instanceof Error ? error.message : String(error));
+    return json(request, { error: 'Webhook forwarding failed' }, 502);
   }
 });

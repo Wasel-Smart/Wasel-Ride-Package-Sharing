@@ -60,7 +60,7 @@ export function WaselStateCard({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 24,
+        padding: 20,
       }}
     >
       <div
@@ -68,11 +68,11 @@ export function WaselStateCard({
           position: 'relative',
           width: 'min(100%, 620px)',
           overflow: 'hidden',
-          borderRadius: R['3xl'],
-          padding: 32,
-          background: `radial-gradient(circle at top left, ${theme.glow}, transparent 34%), linear-gradient(180deg, rgba(16,37,58,0.96), rgba(8,22,35,0.98))`,
+          borderRadius: R.xxl,
+          padding: 28,
+          background: `linear-gradient(180deg, rgba(15,35,51,0.96), rgba(6,17,27,0.98))`,
           border: `1px solid ${theme.border}`,
-          boxShadow: `${SH.xl}, inset 0 1px 0 rgba(255,255,255,0.04)`,
+          boxShadow: `${SH.lg}, inset 0 1px 0 rgba(255,255,255,0.04)`,
           color: C.text,
           fontFamily: F,
           textAlign: 'center',
@@ -95,7 +95,7 @@ export function WaselStateCard({
                 width: 64,
                 height: 64,
                 margin: '0 auto 18px',
-                borderRadius: 22,
+                borderRadius: R.xl,
                 display: 'grid',
                 placeItems: 'center',
                 background: `${theme.accent}14`,
@@ -126,7 +126,7 @@ export function WaselStateCard({
                 color: theme.accent,
                 fontSize: '0.72rem',
                 fontWeight: 800,
-                letterSpacing: '0.12em',
+                letterSpacing: 0,
                 textTransform: 'uppercase',
               }}
             >
@@ -146,9 +146,9 @@ export function WaselStateCard({
           <h2
             style={{
               margin: 0,
-              fontSize: 'clamp(1.55rem, 4vw, 2.15rem)',
+              fontSize: '1.95rem',
               lineHeight: 1.06,
-              letterSpacing: '-0.04em',
+              letterSpacing: 0,
               fontWeight: 900,
             }}
           >

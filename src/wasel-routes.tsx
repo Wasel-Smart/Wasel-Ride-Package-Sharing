@@ -96,8 +96,12 @@ const LEGACY_APP_ALIASES = [
   '/trust',
   '/driver',
   '/privacy',
+  '/security',
+  '/support',
   '/terms',
   '/legal/privacy',
+  '/legal/security',
+  '/legal/support',
   '/legal/terms',
   '/moderation',
 ] as const;
@@ -301,8 +305,12 @@ const buildMainChildren = () => [
 
   // -- Legal -----------------------------------------------------------------
   { path: 'privacy', lazy: lazy(() => import('./features/legal/PrivacyPolicy'), 'PrivacyPolicy') },
+  { path: 'security', lazy: lazy(() => import('./features/legal/SecurityPage'), 'SecurityPage') },
+  { path: 'support', lazy: lazy(() => import('./features/support/SupportPage'), 'SupportPage') },
   { path: 'terms', lazy: lazy(() => import('./features/legal/TermsOfService'), 'TermsOfService') },
   { path: 'legal/privacy', Component: () => <RedirectTo to="/app/privacy" /> },
+  { path: 'legal/security', Component: () => <RedirectTo to="/app/security" /> },
+  { path: 'legal/support', Component: () => <RedirectTo to="/app/support" /> },
   { path: 'legal/terms', Component: () => <RedirectTo to="/app/terms" /> },
 
   // -- 404 catch-all ---------------------------------------------------------

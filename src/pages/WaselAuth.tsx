@@ -14,7 +14,7 @@ import {
   UserRound,
   Zap,
 } from 'lucide-react';
-import { WaselHeroMark, WaselLogo } from '../components/wasel-ds/WaselLogo';
+import { WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { WaselButton } from '../components/wasel-ui/WaselButton';
 import { WaselInput } from '../components/wasel-ui/WaselInput';
 import { WaselCard } from '../components/wasel-ui/WaselCard';
@@ -28,11 +28,20 @@ import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
 
 import { C, R, TYPE, F, SPACE, GRAD, GRAD_SIGNAL } from '../utils/wasel-ds';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// Types
 type Tab = 'signin' | 'signup';
 type PhoneOtpChannel = 'sms' | 'whatsapp';
+type AuthAction =
+  | 'signin'
+  | 'signup'
+  | 'forgot-password'
+  | 'google'
+  | 'facebook'
+  | 'sms-otp'
+  | 'whatsapp-otp'
+  | 'verify-phone';
 
-// ─── Feature list for the brand panel ────────────────────────────────────────
+// Feature list for the brand panel
 const BRAND_FEATURES = [
   { icon: <Zap size={14} />, text: 'Live route graph', color: C.cyan },
   { icon: <Package size={14} />, text: 'Parcels on route', color: C.gold },
@@ -84,7 +93,7 @@ function isAccountProtectionError(error: unknown) {
   );
 }
 
-// ─── Brand panel (left column) ────────────────────────────────────────────────
+// Brand panel
 function BrandPanel() {
   return (
     <div
@@ -102,28 +111,13 @@ function BrandPanel() {
     >
       {/* Ambient glows */}
       <div
+        aria-hidden="true"
         style={{
           position: 'absolute',
-          top: -110,
-          right: -80,
-          width: 460,
-          height: 460,
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${C.cyanGlow}, transparent 66%)`,
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          bottom: -100,
-          left: -80,
-          width: 420,
-          height: 420,
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${C.blueDim}cc, transparent 66%)`,
-          filter: 'blur(80px)',
+          inset: 0,
+          backgroundImage: `linear-gradient(${C.borderFaint} 1px, transparent 1px), linear-gradient(90deg, ${C.borderFaint} 1px, transparent 1px)`,
+          backgroundSize: '68px 68px',
+          opacity: 0.1,
           pointerEvents: 'none',
         }}
       />
@@ -132,19 +126,13 @@ function BrandPanel() {
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <WaselLogo size={44} theme="light" variant="full" />
         </div>
-        <div
-          style={{ margin: `${SPACE[8]} 0 ${SPACE[6]}`, display: 'flex', justifyContent: 'center' }}
-        >
-          <WaselHeroMark size={92} />
-        </div>
-
         <h2
           style={{
             fontSize: TYPE.size['3xl'],
             fontWeight: TYPE.weight.ultra,
             color: C.text,
-            letterSpacing: '-0.04em',
-            margin: `0 0 ${SPACE[3]}`,
+            letterSpacing: 0,
+            margin: `${SPACE[8]} 0 ${SPACE[3]}`,
             lineHeight: 1.12,
           }}
         >
@@ -207,7 +195,7 @@ function BrandPanel() {
                   color: C.textMuted,
                   fontSize: TYPE.size.xs,
                   textTransform: 'uppercase',
-                  letterSpacing: TYPE.letterSpacing.wide,
+                  letterSpacing: 0,
                 }}
               >
                 {item.label}
@@ -270,7 +258,7 @@ function BrandPanel() {
   );
 }
 
-// ─── Password strength bar ────────────────────────────────────────────────────
+// Password strength bar
 function StrengthBar({ password }: { password: string }) {
   const strength = pwStrength(password);
   if (!password) return null;
@@ -299,7 +287,7 @@ function StrengthBar({ password }: { password: string }) {
   );
 }
 
-// ─── Tab switcher ─────────────────────────────────────────────────────────────
+// Tab switcher
 function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
   return (
     <div
@@ -343,7 +331,7 @@ function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// Main component
 export default function WaselAuth() {
   const [params] = useSearchParams();
   const rawTab = params.get('tab')?.toLowerCase();
@@ -365,6 +353,7 @@ export default function WaselAuth() {
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
+  const [activeAuthAction, setActiveAuthAction] = useState<AuthAction | null>(null);
 
   const { signIn, register, loading, user } = useLocalAuth();
   const { resetPassword, signInWithGoogle, signInWithFacebook, startPhoneOtp, verifyPhoneOtp } =
@@ -374,6 +363,7 @@ export default function WaselAuth() {
 
   const safeReturnTo = normalizeReturnToPath(params.get('returnTo'));
   const localCaptchaBypassActive = isLocalCaptchaBypassActive();
+  const authBusy = loading || activeAuthAction !== null;
   const resetCaptcha = () => setCaptchaResetSignal(value => value + 1);
   const handleCaptchaTokenChange = useCallback((token: string | null) => {
     setCaptchaToken(token);
@@ -422,6 +412,7 @@ export default function WaselAuth() {
   };
 
   const handleSignIn = async () => {
+    if (authBusy) return;
     setError('');
     if (!passwordResetCompleted) {
       setNotice('');
@@ -445,22 +436,28 @@ export default function WaselAuth() {
     const token = getCaptchaTokenForSubmit();
     if (token === null) return;
 
-    const { error: signInError } = await signIn(email, password, token);
-    resetCaptcha();
-    if (signInError) {
-      if (!isAuthCaptchaConfigured && isAccountProtectionError(signInError)) {
-        setError(
-          'Account protection is enabled on Supabase, but this build has no captcha site key. Configure VITE_AUTH_CAPTCHA_PROVIDER and VITE_AUTH_CAPTCHA_SITE_KEY to match your Supabase captcha settings, or disable captcha protection for this local Supabase project.',
-        );
+    setActiveAuthAction('signin');
+    try {
+      const { error: signInError } = await signIn(email, password, token);
+      resetCaptcha();
+      if (signInError) {
+        if (!isAuthCaptchaConfigured && isAccountProtectionError(signInError)) {
+          setError(
+            'Account protection is enabled on Supabase, but this build has no captcha site key. Configure VITE_AUTH_CAPTCHA_PROVIDER and VITE_AUTH_CAPTCHA_SITE_KEY to match your Supabase captcha settings, or disable captcha protection for this local Supabase project.',
+          );
+          return;
+        }
+        setError(friendlyAuthError(signInError, 'Sign in failed. Please try again.'));
         return;
       }
-      setError(friendlyAuthError(signInError, 'Sign in failed. Please try again.'));
-      return;
+      pushSuccessRedirect();
+    } finally {
+      setActiveAuthAction(null);
     }
-    pushSuccessRedirect();
   };
 
   const handleSignUp = async () => {
+    if (authBusy) return;
     setError('');
     if (!passwordResetCompleted) {
       setNotice('');
@@ -488,30 +485,36 @@ export default function WaselAuth() {
     const token = getCaptchaTokenForSubmit();
     if (token === null) return;
 
-    const registration = await register(name, email, password, phone, safeReturnTo, token);
-    resetCaptcha();
-    if (registration.error) {
-      if (!isAuthCaptchaConfigured && isAccountProtectionError(registration.error)) {
-        setError(
-          'Account protection is enabled on Supabase, but this build has no captcha site key. Configure VITE_AUTH_CAPTCHA_PROVIDER and VITE_AUTH_CAPTCHA_SITE_KEY to match your Supabase captcha settings, or disable captcha protection for this local Supabase project.',
-        );
+    setActiveAuthAction('signup');
+    try {
+      const registration = await register(name, email, password, phone, safeReturnTo, token);
+      resetCaptcha();
+      if (registration.error) {
+        if (!isAuthCaptchaConfigured && isAccountProtectionError(registration.error)) {
+          setError(
+            'Account protection is enabled on Supabase, but this build has no captcha site key. Configure VITE_AUTH_CAPTCHA_PROVIDER and VITE_AUTH_CAPTCHA_SITE_KEY to match your Supabase captcha settings, or disable captcha protection for this local Supabase project.',
+          );
+          return;
+        }
+        setError(friendlyAuthError(registration.error, 'Sign up failed. Please try again.'));
         return;
       }
-      setError(friendlyAuthError(registration.error, 'Sign up failed. Please try again.'));
-      return;
+      if (registration.requiresEmailConfirmation) {
+        setPassword('');
+        setNotice(
+          `Check ${registration.email ?? email} and confirm your email address to finish creating your account.`,
+        );
+        setTab('signin');
+        return;
+      }
+      pushSuccessRedirect();
+    } finally {
+      setActiveAuthAction(null);
     }
-    if (registration.requiresEmailConfirmation) {
-      setPassword('');
-      setNotice(
-        `Check ${registration.email ?? email} and confirm your email address to finish creating your account.`,
-      );
-      setTab('signin');
-      return;
-    }
-    pushSuccessRedirect();
   };
 
   const handleForgotPassword = async () => {
+    if (authBusy) return;
     if (!email.trim()) {
       setError('Enter your email address above first.');
       return;
@@ -523,35 +526,47 @@ export default function WaselAuth() {
     const token = getCaptchaTokenForSubmit();
     if (token === null) return;
 
-    const { error: resetError } = await resetPassword(email, safeReturnTo, token);
-    resetCaptcha();
-    if (resetError) {
-      setError(friendlyAuthError(resetError, 'Password reset failed.'));
-      return;
+    setActiveAuthAction('forgot-password');
+    try {
+      const { error: resetError } = await resetPassword(email, safeReturnTo, token);
+      resetCaptcha();
+      if (resetError) {
+        setError(friendlyAuthError(resetError, 'Password reset failed.'));
+        return;
+      }
+      setError('');
+      toast.success(`If ${email} is registered, a password reset link has been sent.`);
+    } finally {
+      setActiveAuthAction(null);
     }
-    setError('');
-    toast.success(`If ${email} is registered, a password reset link has been sent.`);
   };
 
   const handleGoogleSignIn = async () => {
+    if (authBusy) return;
     setError('');
+    setActiveAuthAction('google');
     const { error: oauthError } = await signInWithGoogle(safeReturnTo);
 
     if (oauthError) {
       setError(friendlyAuthError(oauthError, 'Google sign in failed. Please try again.'));
+      setActiveAuthAction(null);
     }
   };
 
   const handleFacebookSignIn = async () => {
+    if (authBusy) return;
     setError('');
+    setActiveAuthAction('facebook');
     const { error: oauthError } = await signInWithFacebook(safeReturnTo);
 
     if (oauthError) {
       setError(friendlyAuthError(oauthError, 'Facebook sign in failed. Please try again.'));
+      setActiveAuthAction(null);
     }
   };
 
   const handleStartPhoneOtp = async (channel: PhoneOtpChannel) => {
+    if (authBusy) return;
     setError('');
     setNotice('');
 
@@ -564,25 +579,33 @@ export default function WaselAuth() {
     const token = getCaptchaTokenForSubmit();
     if (token === null) return;
 
-    const { error: otpError } = await startPhoneOtp(normalizedPhone, channel, token);
-    resetCaptcha();
-    if (otpError) {
-      setError(
-        friendlyAuthError(
-          otpError,
-          `${channel === 'sms' ? 'SMS' : 'WhatsApp'} code failed. Please try again.`,
-        ),
-      );
-      return;
-    }
+    setActiveAuthAction(channel === 'sms' ? 'sms-otp' : 'whatsapp-otp');
+    try {
+      const { error: otpError } = await startPhoneOtp(normalizedPhone, channel, token);
+      resetCaptcha();
+      if (otpError) {
+        setError(
+          friendlyAuthError(
+            otpError,
+            `${channel === 'sms' ? 'SMS' : 'WhatsApp'} code failed. Please try again.`,
+          ),
+        );
+        return;
+      }
 
-    setPhone(normalizedPhone);
-    setPhoneOtpChannel(channel);
-    setPhoneOtpSent(true);
-    setNotice(`Code sent by ${channel === 'sms' ? 'SMS' : 'WhatsApp'}. Enter it below to finish.`);
+      setPhone(normalizedPhone);
+      setPhoneOtpChannel(channel);
+      setPhoneOtpSent(true);
+      setNotice(
+        `Code sent by ${channel === 'sms' ? 'SMS' : 'WhatsApp'}. Enter it below to finish.`,
+      );
+    } finally {
+      setActiveAuthAction(null);
+    }
   };
 
   const handleVerifyPhoneOtp = async () => {
+    if (authBusy) return;
     setError('');
 
     const normalizedPhone = normalizePhoneForOtp(phone);
@@ -599,19 +622,24 @@ export default function WaselAuth() {
     const captcha = getCaptchaTokenForSubmit();
     if (captcha === null) return;
 
-    const { error: verifyError } = await verifyPhoneOtp(
-      normalizedPhone,
-      token,
-      safeReturnTo,
-      captcha,
-    );
-    resetCaptcha();
-    if (verifyError) {
-      setError(friendlyAuthError(verifyError, 'Phone verification failed. Please try again.'));
-      return;
-    }
+    setActiveAuthAction('verify-phone');
+    try {
+      const { error: verifyError } = await verifyPhoneOtp(
+        normalizedPhone,
+        token,
+        safeReturnTo,
+        captcha,
+      );
+      resetCaptcha();
+      if (verifyError) {
+        setError(friendlyAuthError(verifyError, 'Phone verification failed. Please try again.'));
+        return;
+      }
 
-    pushSuccessRedirect();
+      pushSuccessRedirect();
+    } finally {
+      setActiveAuthAction(null);
+    }
   };
 
   const socialButtons = [
@@ -643,7 +671,7 @@ export default function WaselAuth() {
 
       <BrandPanel />
 
-      {/* ── Form panel ─────────────────────────────────────────────────── */}
+      {/* Form panel */}
       <div
         className="auth-form-panel"
         style={{
@@ -677,7 +705,7 @@ export default function WaselAuth() {
                 color: C.text,
                 marginTop: SPACE[4],
                 marginBottom: SPACE[2],
-                letterSpacing: '-0.03em',
+                letterSpacing: 0,
               }}
             >
               <span style={{ color: C.cyan }}>One identity</span>
@@ -701,8 +729,8 @@ export default function WaselAuth() {
               }}
             >
               <span style={{ fontSize: TYPE.size.xs, color: C.cyan, fontFamily: F }}>
-                Test auth is active because VITE_E2E_LOCAL_AUTH is enabled. Accounts are stored
-                only in this browser.
+                Test auth is active because VITE_E2E_LOCAL_AUTH is enabled. Accounts are stored only
+                in this browser.
               </span>
             </WaselCard>
           )}
@@ -715,7 +743,7 @@ export default function WaselAuth() {
                 fontWeight: TYPE.weight.ultra,
                 color: C.text,
                 margin: `0 0 ${SPACE[2]}`,
-                letterSpacing: '-0.02em',
+                letterSpacing: 0,
               }}
             >
               {tab === 'signin' ? 'Back into Wasel' : 'Create your Wasel account'}
@@ -901,8 +929,8 @@ export default function WaselAuth() {
                   variant="primary"
                   size="lg"
                   fullWidth
-                  loading={loading}
-                  disabled={success}
+                  loading={activeAuthAction === 'signin' || activeAuthAction === 'signup'}
+                  disabled={authBusy || success}
                   onClick={tab === 'signin' ? handleSignIn : handleSignUp}
                   aria-label={tab === 'signin' ? 'Submit sign in' : 'Submit sign up'}
                   iconEnd={<ArrowRight size={16} />}
@@ -927,7 +955,7 @@ export default function WaselAuth() {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.97 }}
                       type="button"
-                      disabled={loading || success}
+                      disabled={authBusy || success}
                       onClick={() => {
                         void social.onClick();
                       }}
@@ -941,12 +969,14 @@ export default function WaselAuth() {
                         fontWeight: TYPE.weight.black,
                         fontSize: TYPE.size.sm,
                         fontFamily: F,
-                        cursor: loading || success ? 'not-allowed' : 'pointer',
-                        opacity: loading || success ? 0.55 : 1,
+                        cursor: authBusy || success ? 'not-allowed' : 'pointer',
+                        opacity: authBusy || success ? 0.55 : 1,
                         transition: 'all 150ms ease',
                       }}
                     >
-                      {social.label}
+                      {activeAuthAction === social.label.toLowerCase()
+                        ? 'Connecting...'
+                        : social.label}
                     </motion.button>
                   ))}
                 </div>
@@ -992,7 +1022,7 @@ export default function WaselAuth() {
                   <div style={{ display: 'flex', gap: SPACE[2], flexWrap: 'wrap' }}>
                     <button
                       type="button"
-                      disabled={loading || success}
+                      disabled={authBusy || success}
                       onClick={() => {
                         void handleStartPhoneOtp('sms');
                       }}
@@ -1006,15 +1036,15 @@ export default function WaselAuth() {
                         fontWeight: TYPE.weight.black,
                         fontSize: TYPE.size.sm,
                         fontFamily: F,
-                        cursor: loading || success ? 'not-allowed' : 'pointer',
-                        opacity: loading || success ? 0.55 : 1,
+                        cursor: authBusy || success ? 'not-allowed' : 'pointer',
+                        opacity: authBusy || success ? 0.55 : 1,
                       }}
                     >
-                      Send SMS
+                      {activeAuthAction === 'sms-otp' ? 'Sending...' : 'Send SMS'}
                     </button>
                     <button
                       type="button"
-                      disabled={loading || success}
+                      disabled={authBusy || success}
                       onClick={() => {
                         void handleStartPhoneOtp('whatsapp');
                       }}
@@ -1028,16 +1058,16 @@ export default function WaselAuth() {
                         fontWeight: TYPE.weight.black,
                         fontSize: TYPE.size.sm,
                         fontFamily: F,
-                        cursor: loading || success ? 'not-allowed' : 'pointer',
-                        opacity: loading || success ? 0.55 : 1,
+                        cursor: authBusy || success ? 'not-allowed' : 'pointer',
+                        opacity: authBusy || success ? 0.55 : 1,
                       }}
                     >
-                      Send WhatsApp
+                      {activeAuthAction === 'whatsapp-otp' ? 'Sending...' : 'Send WhatsApp'}
                     </button>
                     {phoneOtpSent && (
                       <button
                         type="button"
-                        disabled={loading || success}
+                        disabled={authBusy || success}
                         onClick={() => {
                           void handleVerifyPhoneOtp();
                         }}
@@ -1051,11 +1081,11 @@ export default function WaselAuth() {
                           fontWeight: TYPE.weight.black,
                           fontSize: TYPE.size.sm,
                           fontFamily: F,
-                          cursor: loading || success ? 'not-allowed' : 'pointer',
-                          opacity: loading || success ? 0.55 : 1,
+                          cursor: authBusy || success ? 'not-allowed' : 'pointer',
+                          opacity: authBusy || success ? 0.55 : 1,
                         }}
                       >
-                        Verify phone code
+                        {activeAuthAction === 'verify-phone' ? 'Verifying...' : 'Verify phone code'}
                       </button>
                     )}
                   </div>

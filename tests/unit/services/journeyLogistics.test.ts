@@ -43,6 +43,7 @@ import {
 function response(data: any, ok = true) {
   return {
     ok,
+    status: ok ? 200 : 500,
     json: async () => data,
   };
 }
@@ -50,6 +51,9 @@ function response(data: any, ok = true) {
 describe('journeyLogistics', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubEnv('MODE', 'test');
+    vi.stubEnv('NODE_ENV', 'test');
+    vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'true');
     vi.stubGlobal('window', { localStorage: memoryStorage } as any);
     memoryStorage.clear();
     mockGetAuthDetails.mockResolvedValue({ token: 'token-123', userId: 'user-123' });
@@ -177,16 +181,16 @@ describe('journeyLogistics', () => {
       recipientPhone: '+962790000001',
     });
 
-    const codeShared = updatePackageVerification(created.trackingId, 'share_code');
+    const codeShared = await updatePackageVerification(created.trackingId, 'share_code');
     expect(codeShared?.verification.senderCodeSharedAt).toBeTruthy();
     expect(codeShared?.timeline[2]!.complete).toBe(true);
 
-    const pickedUp = updatePackageVerification(created.trackingId, 'confirm_pickup');
+    const pickedUp = await updatePackageVerification(created.trackingId, 'confirm_pickup');
     expect(pickedUp?.status).toBe('in_transit');
     expect(pickedUp?.verification.riderPickupConfirmedAt).toBeTruthy();
     expect(pickedUp?.timeline[3]!.complete).toBe(true);
 
-    const delivered = updatePackageVerification(created.trackingId, 'confirm_delivery');
+    const delivered = await updatePackageVerification(created.trackingId, 'confirm_delivery');
     expect(delivered?.status).toBe('delivered');
     expect(delivered?.verification.receiverDeliveryConfirmedAt).toBeTruthy();
     expect(delivered?.timeline[4]!.complete).toBe(true);
@@ -205,6 +209,71 @@ describe('journeyLogistics', () => {
     expect(created.trackingId).toMatch(/^PKG-/);
     expect(getConnectedPackages()).toHaveLength(1);
     expect(['searching', 'matched']).toContain(getConnectedPackages()[0]!.status);
+  });
+
+  it('fails closed for ride creation when write fallback is disabled', async () => {
+    vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'false');
+    mockCreateTrip.mockRejectedValue(new Error('edge unavailable'));
+
+    await expect(
+      createConnectedRide({
+        from: 'Amman',
+        to: 'Irbid',
+        date: '2026-04-01',
+        time: '08:00',
+        seats: 2,
+        price: 5,
+        gender: 'mixed',
+        prayer: false,
+        carModel: 'Hyundai Elantra',
+        note: 'Morning route',
+        acceptsPackages: true,
+        packageCapacity: 'medium',
+        packageNote: 'Small parcels only',
+      }),
+    ).rejects.toThrow('Trip creation is temporarily unavailable');
+
+    expect(getConnectedRides()).toHaveLength(0);
+  });
+
+  it('fails closed for package creation when write fallback is disabled', async () => {
+    vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'false');
+    mockFetchWithRetry.mockResolvedValue(response({ error: 'edge failed' }, false));
+
+    await expect(
+      createConnectedPackage({
+        from: 'Amman',
+        to: 'Irbid',
+        weight: '<1 kg',
+        note: 'Documents',
+      }),
+    ).rejects.toThrow('Package creation is temporarily unavailable');
+
+    expect(getConnectedPackages()).toHaveLength(0);
+  });
+
+  it('fails closed for package pickup verification when write fallback is disabled', async () => {
+    mockGetAuthDetails.mockRejectedValue(new Error('not signed in'));
+
+    const created = await createConnectedPackage({
+      from: 'Amman',
+      to: 'Irbid',
+      weight: '<1 kg',
+      note: 'Documents',
+    });
+
+    await updatePackageVerification(created.trackingId, 'share_code');
+
+    vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'false');
+    mockGetAuthDetails.mockResolvedValue({ token: 'token-123', userId: 'user-123' });
+    mockFetchWithRetry.mockResolvedValue(response({ error: 'edge failed' }, false));
+
+    await expect(
+      updatePackageVerification(created.trackingId, 'confirm_pickup'),
+    ).rejects.toThrow('Package verification is temporarily unavailable');
+
+    expect(getConnectedPackages()[0]?.status).not.toBe('in_transit');
+    expect(getConnectedPackages()[0]?.verification.riderPickupConfirmedAt).toBeUndefined();
   });
 
   it('rejects packages when sender and receiver cities are the same', async () => {

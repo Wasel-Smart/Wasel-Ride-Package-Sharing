@@ -69,8 +69,10 @@ const PackagesScreen = () => {
           loading={submitting}
           tone={colors.blue}
           onPress={createPackageRequest}
+          testID="submit-package-button"
         />
       }
+      testID="packages-screen"
     >
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.statusRow}>
@@ -95,6 +97,7 @@ const PackagesScreen = () => {
             placeholder="Pickup location"
             placeholderTextColor={colors.muted}
             style={styles.input}
+            testID="package-pickup-input"
             value={pickup}
           />
           <TextInput
@@ -103,6 +106,7 @@ const PackagesScreen = () => {
             placeholder="Drop-off location"
             placeholderTextColor={colors.muted}
             style={styles.input}
+            testID="package-dropoff-input"
             value={dropoff}
           />
           <TextInput
@@ -112,6 +116,7 @@ const PackagesScreen = () => {
             placeholder="Package weight kg"
             placeholderTextColor={colors.muted}
             style={styles.input}
+            testID="package-weight-input"
             value={weight}
           />
           <TextInput
@@ -121,12 +126,13 @@ const PackagesScreen = () => {
             placeholder="Package note"
             placeholderTextColor={colors.muted}
             style={[styles.input, styles.textArea]}
+            testID="package-note-input"
             value={note}
           />
         </View>
 
         {result ? (
-          <View style={styles.result}>
+          <View style={styles.result} testID="package-request-result">
             <Text style={styles.resultText}>{result}</Text>
           </View>
         ) : null}

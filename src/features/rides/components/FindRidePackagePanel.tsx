@@ -110,7 +110,7 @@ export function FindRidePackagePanel({ ar, copy, t, pkg, setPkg }: FindRidePacka
                     color: DS.muted,
                     fontSize: '0.72rem',
                     fontWeight: 700,
-                    letterSpacing: ar ? undefined : '0.08em',
+                    letterSpacing: 0,
                     textTransform: ar ? undefined : 'uppercase',
                     marginBottom: 6,
                   }}
@@ -149,7 +149,7 @@ export function FindRidePackagePanel({ ar, copy, t, pkg, setPkg }: FindRidePacka
                   color: DS.muted,
                   fontSize: '0.72rem',
                   fontWeight: 700,
-                  letterSpacing: ar ? undefined : '0.08em',
+                  letterSpacing: 0,
                   textTransform: ar ? undefined : 'uppercase',
                   marginBottom: 6,
                 }}
@@ -187,7 +187,7 @@ export function FindRidePackagePanel({ ar, copy, t, pkg, setPkg }: FindRidePacka
                   color: DS.muted,
                   fontSize: '0.72rem',
                   fontWeight: 700,
-                  letterSpacing: ar ? undefined : '0.08em',
+                  letterSpacing: 0,
                   textTransform: ar ? undefined : 'uppercase',
                   marginBottom: 6,
                 }}
