@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
 const root = process.cwd();
 const timeoutMs = Number(process.env.LIVE_INTEGRATION_TIMEOUT_MS ?? 12_000);
+const artifactsDir = path.join(root, 'artifacts', 'live-integrations');
 
 const PLACEHOLDER_PATTERNS = [
   /^$/,
@@ -172,12 +173,15 @@ async function verifySupabaseAndOAuth() {
   const supabaseUrl = env.VITE_SUPABASE_URL?.replace(/\/$/, '');
   const anonKey = env.VITE_SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_ANON_KEY;
   if (hasValue('VITE_SUPABASE_URL') && anonKey && !isPlaceholder(anonKey)) {
-    await liveProbe(provider, 'live:supabase-auth-settings', async () => {
-      const response = await fetchWithTimeout(`${supabaseUrl}/auth/v1/settings`, {
-        headers: { Authorization: `Bearer ${anonKey}` },
+    await liveProbe(provider, 'live:supabase-auth-health', async () => {
+      const response = await fetchWithTimeout(`${supabaseUrl}/auth/v1/health`, {
+        headers: {
+          apikey: anonKey,
+          Authorization: `Bearer ${anonKey}`,
+        },
       });
-      if (!response.ok) throw new Error(`Supabase auth settings returned HTTP ${response.status}`);
-      return 'auth endpoint reachable';
+      if (!response.ok) throw new Error(`Supabase auth health returned HTTP ${response.status}`);
+      return 'auth health endpoint reachable';
     });
   }
 }
@@ -405,11 +409,76 @@ verifyMobile();
 const failed = checks.filter(check => check.status === 'fail');
 const skipped = checks.filter(check => check.status === 'skip');
 const passed = checks.filter(check => check.status === 'pass');
+const scoreOutOf10 = Number(((passed.length / Math.max(passed.length + failed.length, 1)) * 10).toFixed(1));
+
+mkdirSync(artifactsDir, { recursive: true });
+
+const providerSummary = Object.values(
+  checks.reduce((summary, check) => {
+    summary[check.provider] ??= {
+      provider: check.provider,
+      passed: 0,
+      failed: 0,
+      skipped: 0,
+      blockers: [],
+    };
+
+    summary[check.provider][check.status === 'pass' ? 'passed' : check.status === 'skip' ? 'skipped' : 'failed'] += 1;
+    if (check.status === 'fail') {
+      summary[check.provider].blockers.push(`${check.name}: ${check.detail}`);
+    }
+
+    return summary;
+  }, {}),
+);
+
+const report = {
+  generatedAt: new Date().toISOString(),
+  scoreOutOf10,
+  passed: passed.length,
+  failed: failed.length,
+  skipped: skipped.length,
+  liveIntegrated: failed.length === 0,
+  providerSummary,
+  checks,
+};
+
+writeFileSync(
+  path.join(artifactsDir, 'live-integration-report.json'),
+  JSON.stringify(report, null, 2),
+);
+
+writeFileSync(
+  path.join(artifactsDir, 'live-integration-report.md'),
+  [
+    '# Wasel Live Integration Gate',
+    '',
+    `Generated: ${report.generatedAt}`,
+    `Evidence-based score: ${scoreOutOf10}/10`,
+    `Live integrated: ${report.liveIntegrated ? 'yes' : 'no'}`,
+    '',
+    '## Provider Summary',
+    '',
+    ...providerSummary.flatMap(provider => [
+      `### ${provider.provider}`,
+      '',
+      `Passed: ${provider.passed}`,
+      `Failed: ${provider.failed}`,
+      `Skipped: ${provider.skipped}`,
+      '',
+      ...(provider.blockers.length
+        ? ['Blockers:', ...provider.blockers.map(blocker => `- ${blocker}`), '']
+        : ['No blockers.', '']),
+    ]),
+  ].join('\n'),
+);
 
 console.log('\n# Live Integration Gate\n');
+console.log(`Score: ${scoreOutOf10}/10`);
 console.log(`Passed: ${passed.length}`);
 console.log(`Failed: ${failed.length}`);
 console.log(`Skipped: ${skipped.length}`);
+console.log(`Report: ${path.join('artifacts', 'live-integrations', 'live-integration-report.md')}`);
 
 for (const check of checks) {
   const marker = check.status === 'pass' ? 'PASS' : check.status === 'skip' ? 'SKIP' : 'FAIL';
