@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import {
   InfoCard,
@@ -10,11 +12,23 @@ import {
   SectionHeader,
   StateNotice,
   StatusPill,
+  PrimaryButton,
 } from '../components/MobilePrimitives';
 import { useOffline } from '../hooks/useOffline';
 import { useAuth } from '../providers/AuthProvider';
 import { waselMobileConfig } from '../lib/config';
 import { colors, spacing } from '../theme';
+
+type RootStackParamList = {
+  Tabs: undefined;
+  Safety: undefined;
+  Trips: undefined;
+  Bus: undefined;
+  Driver: undefined;
+  Notifications: undefined;
+};
+
+type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const readiness = [
   ['Backend', waselMobileConfig.hasSupabase ? 'Live' : 'Env'],
@@ -23,17 +37,18 @@ const readiness = [
   ['Functions', waselMobileConfig.hasFunctions ? 'Ready' : 'URL'],
 ] as const;
 
-const readinessRows = [
-  readiness.slice(0, 2),
-  readiness.slice(2, 4),
-];
+const readinessRows = [readiness.slice(0, 2), readiness.slice(2, 4)];
 
 const HomeScreen = React.memo(function HomeScreen() {
   const { user, loading } = useAuth();
   const { isOnline, queueSize, cacheSize } = useOffline();
+  const navigation = useNavigation<NavProp>();
 
   const displayName = useMemo(
-    () => user?.user_metadata?.name || user?.email?.split('@')[0] || (loading ? 'Loading' : 'Guest'),
+    () =>
+      user?.user_metadata?.name ||
+      user?.email?.split('@')[0] ||
+      (loading ? 'Loading' : 'Guest'),
     [loading, user?.email, user?.user_metadata?.name],
   );
 
@@ -41,6 +56,14 @@ const HomeScreen = React.memo(function HomeScreen() {
     const readyCount = readiness.filter(([, value]) => value === 'Ready' || value === 'Live').length;
     return `${Math.round((readyCount / readiness.length) * 100)}%`;
   }, []);
+
+  const QUICK_LINKS = [
+    { label: 'My trips', icon: 'time' as const, screen: 'Trips' as const, tone: colors.teal },
+    { label: 'Bus routes', icon: 'bus' as const, screen: 'Bus' as const, tone: colors.blue },
+    { label: 'Driver setup', icon: 'car' as const, screen: 'Driver' as const, tone: colors.green },
+    { label: 'Safety center', icon: 'shield-checkmark' as const, screen: 'Safety' as const, tone: colors.amber },
+    { label: 'Notifications', icon: 'notifications' as const, screen: 'Notifications' as const, tone: colors.lilac },
+  ];
 
   return (
     <ScreenShell testID="home-screen">
@@ -62,17 +85,15 @@ const HomeScreen = React.memo(function HomeScreen() {
           <SectionHeader
             eyebrow="Wasel command center"
             title={`Welcome, ${displayName}`}
-            body="Rides, package handoffs, wallet readiness, and sync health stay visible from the first frame."
+            body="Rides, packages, bus, wallet, safety, and driver setup — all from here."
             tone="dark"
           />
           <View style={styles.heroStats}>
             <View style={styles.heroStatItem}>
-              <Text style={[styles.heroStatValue, { color: colors.cyan }]}>{operationalScore}</Text>
-              <Text style={styles.heroStatLabel}>Ops score</Text>
+              <StatusPill label={operationalScore} tone={colors.cyan} icon="flash" />
             </View>
             <View style={styles.heroStatItem}>
-              <Text style={[styles.heroStatValue, { color: colors.gold }]}>{cacheSize}</Text>
-              <Text style={styles.heroStatLabel}>Cache</Text>
+              <StatusPill label={`${cacheSize} cached`} tone={colors.gold} icon="archive" />
             </View>
           </View>
         </PremiumPanel>
@@ -88,7 +109,7 @@ const HomeScreen = React.memo(function HomeScreen() {
             tone={colors.blue}
             testID="home-loading-state"
           />
-        ) : user ? null : (
+        ) : !user ? (
           <StateNotice
             icon="shield-checkmark"
             title="Guest control center"
@@ -96,7 +117,7 @@ const HomeScreen = React.memo(function HomeScreen() {
             tone={colors.amber}
             testID="home-empty-state"
           />
-        )}
+        ) : null}
 
         {readinessRows.map((row, index) => (
           <View key={index} style={styles.metrics}>
@@ -109,6 +130,23 @@ const HomeScreen = React.memo(function HomeScreen() {
               />
             ))}
           </View>
+        ))}
+
+        <SectionHeader
+          eyebrow="Quick access"
+          title="All features"
+          body="Jump directly to any section of the app."
+        />
+
+        {QUICK_LINKS.map(link => (
+          <PrimaryButton
+            key={link.screen}
+            label={link.label}
+            icon={link.icon}
+            tone={link.tone}
+            onPress={() => navigation.navigate(link.screen)}
+            testID={`quick-link-${link.screen.toLowerCase()}`}
+          />
         ))}
 
         <InfoCard
@@ -135,38 +173,11 @@ const HomeScreen = React.memo(function HomeScreen() {
 });
 
 const styles = StyleSheet.create({
-  scroll: {
-    gap: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  topRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    justifyContent: 'space-between',
-  },
-  heroStats: {
-    flexDirection: 'row',
-    gap: spacing.xl,
-    marginTop: spacing.lg,
-  },
-  heroStatItem: {
-    gap: 3,
-  },
-  heroStatValue: {
-    fontSize: 28,
-    fontWeight: '900',
-  },
-  heroStatLabel: {
-    color: '#CBD5E1',
-    fontSize: 11,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-  },
-  metrics: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
+  scroll: { gap: spacing.lg, paddingBottom: spacing.xxl },
+  topRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'space-between' },
+  heroStats: { flexDirection: 'row', gap: spacing.lg, marginTop: spacing.md, flexWrap: 'wrap' },
+  heroStatItem: { gap: 3 },
+  metrics: { flexDirection: 'row', gap: spacing.sm },
 });
 
 export default HomeScreen;
