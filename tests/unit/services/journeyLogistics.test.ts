@@ -53,6 +53,7 @@ describe('journeyLogistics', () => {
     vi.clearAllMocks();
     vi.stubEnv('MODE', 'test');
     vi.stubEnv('NODE_ENV', 'test');
+    vi.stubEnv('VITE_E2E_LOCAL_AUTH', 'false');
     vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'true');
     vi.stubGlobal('window', { localStorage: memoryStorage } as any);
     memoryStorage.clear();
@@ -209,6 +210,36 @@ describe('journeyLogistics', () => {
     expect(created.trackingId).toMatch(/^PKG-/);
     expect(getConnectedPackages()).toHaveLength(1);
     expect(['searching', 'matched']).toContain(getConnectedPackages()[0]!.status);
+  });
+
+  it('allows local e2e ride writes even when the preview bundle is production-mode', async () => {
+    vi.stubEnv('MODE', 'production');
+    vi.stubEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', 'false');
+    vi.stubEnv('VITE_E2E_LOCAL_AUTH', 'true');
+    vi.stubGlobal('window', {
+      localStorage: memoryStorage,
+      location: { hostname: '127.0.0.1' },
+    } as any);
+    mockCreateTrip.mockRejectedValue(new Error('edge unavailable'));
+
+    const created = await createConnectedRide({
+      from: 'Amman',
+      to: 'Irbid',
+      date: '2026-04-01',
+      time: '08:00',
+      seats: 2,
+      price: 5,
+      gender: 'mixed',
+      prayer: false,
+      carModel: 'Hyundai Elantra',
+      note: 'Morning route',
+      acceptsPackages: true,
+      packageCapacity: 'medium',
+      packageNote: 'Small parcels only',
+    });
+
+    expect(created.id).toMatch(/^ride-/);
+    expect(getConnectedRides()).toHaveLength(1);
   });
 
   it('fails closed for ride creation when write fallback is disabled', async () => {
