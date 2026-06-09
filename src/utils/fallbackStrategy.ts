@@ -14,11 +14,28 @@ export interface FallbackConfig {
   requireEdgeForReads: boolean;
 }
 
+function isLocalE2ERuntime(): boolean {
+  const e2eLocalAuth = import.meta.env.VITE_E2E_LOCAL_AUTH === 'true';
+  if (!e2eLocalAuth || typeof window === 'undefined') return false;
+
+  const hostname = window.location?.hostname;
+  return Boolean(hostname && ['localhost', '127.0.0.1', '0.0.0.0'].includes(hostname));
+}
+
 /**
  * Get current fallback configuration based on environment
  */
 export function getFallbackConfig(): FallbackConfig {
   const { allowDirectSupabaseFallback, isProd } = getConfig();
+
+  if (isLocalE2ERuntime()) {
+    return {
+      mode: 'always',
+      allowDirectSupabase: true,
+      requireEdgeForWrites: false,
+      requireEdgeForReads: false,
+    };
+  }
 
   // Production: strict mode, no fallbacks
   if (isProd) {
