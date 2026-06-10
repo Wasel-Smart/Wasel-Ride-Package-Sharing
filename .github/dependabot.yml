@@ -1,11 +1,88 @@
 version: 2
+
 updates:
-  - package-ecosystem: npm
-    directory: /
+  # Node.js / npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
-      interval: weekly
+      interval: "daily"
+      time: "04:00"
+      timezone: "UTC"
+
+    open-pull-requests-limit: 20
+
+    # Keep lockfile updated
+    versioning-strategy: increase
+
+    # Auto rebase stale PRs
+    rebase-strategy: auto
+
+    # Labels for filtering
+    labels:
+      - "dependencies"
+      - "npm"
+      - "security"
+
+    # Conventional commit style
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+
+    # Ignore unstable releases
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+
+    # Group updates to reduce PR spam
+    groups:
+      production-dependencies:
+        dependency-type: "production"
+
+      development-dependencies:
+        dependency-type: "development"
+
+      testing-packages:
+        patterns:
+          - "jest*"
+          - "vitest*"
+          - "@testing-library/*"
+          - "playwright*"
+          - "cypress*"
+
+      eslint-packages:
+        patterns:
+          - "eslint*"
+          - "@typescript-eslint/*"
+
+      typescript-packages:
+        patterns:
+          - "typescript"
+          - "ts-node"
+          - "@types/*"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+      timezone: "UTC"
+
     open-pull-requests-limit: 10
-  - package-ecosystem: github-actions
-    directory: /
-    schedule:
-      interval: weekly
+    rebase-strategy: auto
+
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci-cd"
+
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+    groups:
+      github-actions:
+        patterns:
+          - "*"
