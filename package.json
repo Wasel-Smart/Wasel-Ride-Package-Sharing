@@ -130,6 +130,7 @@
     ]
   },
   "scripts": {
+    "postinstall": "git config core.hooksPath .githooks || true",
     "dev": "node scripts/dev-server.mjs",
     "dev:docker": "docker-compose -f docker-compose.dev.yml up",
     "supabase:start": "supabase start",

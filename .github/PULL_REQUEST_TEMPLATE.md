@@ -1,18 +1,42 @@
 ## Summary
 
-- What changed?
-- Why was it necessary?
+**What changed?**
 
-## Verification
 
-- [ ] `npm run type-check`
-- [ ] `npm run lint`
-- [ ] `npm run test:unit`
-- [ ] `npm run build`
-- [ ] Screenshots or recordings attached for UI changes
+**Why was it necessary?**
 
-## Risk Review
 
-- User-facing impact:
-- Rollback plan:
-- Follow-up work:
+**Related issue / ticket:**
+
+---
+
+## Checklist
+
+- [ ] `npm run type-check` passes
+- [ ] `npm run lint` passes (zero warnings)
+- [ ] `npm run test:unit` passes
+- [ ] `npm run build` succeeds
+- [ ] Screenshots or recording attached for any UI change
+- [ ] `.env.example` updated if new environment variables were added
+- [ ] `CHANGELOG.md` updated under `[Unreleased]`
+- [ ] `docs/` updated if API contracts, workers, or infra were changed
+- [ ] No `.env` files, secrets, certificates, or AI tool artefacts committed
+
+---
+
+## Risk review
+
+**User-facing impact:**
+
+
+**Rollback plan:**
+
+
+**Follow-up work (intentionally deferred):**
+
+
+---
+
+## Async / event changes
+
+If this PR touches event topics, workers, or queue contracts, list them here:
