@@ -18,6 +18,12 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+PROJECT_REF=${SUPABASE_PROJECT_REF:-<YOUR_PROJECT_REF>}
+SUPABASE_URL=${VITE_SUPABASE_URL:-${SUPABASE_URL:-https://$PROJECT_REF.supabase.co}}
+EDGE_FUNCTION_NAME=${VITE_EDGE_FUNCTION_NAME:-make-server-0b1f4071}
+APP_URL=${VITE_APP_URL:-https://wasel14.online}
+EDGE_BASE_URL="$SUPABASE_URL/functions/v1/$EDGE_FUNCTION_NAME"
+
 # Counters
 TOTAL_CHECKS=0
 PASSED_CHECKS=0
@@ -74,15 +80,15 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 # Test edge function health
-run_check "Edge function health" "test_http 'https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/health'"
+run_check "Edge function health" "test_http '$EDGE_BASE_URL/health'"
 
 # Test edge function CORS
-run_check "Edge function CORS" "curl -s -X OPTIONS -H 'Origin: https://wasel14.online' 'https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/health' | grep -q 'access-control-allow-origin'"
+run_check "Edge function CORS" "curl -s -X OPTIONS -H 'Origin: $APP_URL' '$EDGE_BASE_URL/health' | grep -q 'access-control-allow-origin'"
 
 # Test edge function response time
 echo -n "  Testing response time... "
 START_TIME=$(date +%s%N)
-curl -s "https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/health" > /dev/null
+curl -s "$EDGE_BASE_URL/health" > /dev/null
 END_TIME=$(date +%s%N)
 RESPONSE_TIME=$(( (END_TIME - START_TIME) / 1000000 ))
 
@@ -103,7 +109,7 @@ run_check "Supabase CLI installed" "command -v supabase" false
 
 # Check if edge function is listed
 if command -v supabase &> /dev/null; then
-    run_check "Edge function listed" "supabase functions list 2>/dev/null | grep -q 'make-server-0b1f4071'" false
+    run_check "Edge function listed" "supabase functions list 2>/dev/null | grep -q '$EDGE_FUNCTION_NAME'" false
 fi
 
 echo ""
@@ -257,9 +263,9 @@ echo -n "  Testing edge function endpoints... "
 ENDPOINTS_OK=0
 ENDPOINTS_TOTAL=3
 
-test_http "https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/health" && ENDPOINTS_OK=$((ENDPOINTS_OK + 1))
-test_http "https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/trust/status" 401 && ENDPOINTS_OK=$((ENDPOINTS_OK + 1))
-test_http "https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/communications/preferences" 401 && ENDPOINTS_OK=$((ENDPOINTS_OK + 1))
+test_http "$EDGE_BASE_URL/health" && ENDPOINTS_OK=$((ENDPOINTS_OK + 1))
+test_http "$EDGE_BASE_URL/trust/status" 401 && ENDPOINTS_OK=$((ENDPOINTS_OK + 1))
+test_http "$EDGE_BASE_URL/communications/preferences" 401 && ENDPOINTS_OK=$((ENDPOINTS_OK + 1))
 
 if [ $ENDPOINTS_OK -eq $ENDPOINTS_TOTAL ]; then
     echo -e "${GREEN}✓${NC} ($ENDPOINTS_OK/$ENDPOINTS_TOTAL)"

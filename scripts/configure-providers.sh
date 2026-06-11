@@ -18,6 +18,12 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+PROJECT_REF=${SUPABASE_PROJECT_REF:-<YOUR_PROJECT_REF>}
+SUPABASE_URL=${SUPABASE_URL:-https://$PROJECT_REF.supabase.co}
+APP_URL=${APP_BASE_URL:-https://wasel14.online}
+EDGE_FUNCTION_NAME=${SUPABASE_EDGE_FUNCTION_NAME:-${VITE_EDGE_FUNCTION_NAME:-make-server-0b1f4071}}
+FUNCTIONS_BASE_URL="$SUPABASE_URL/functions/v1"
+
 # Function to prompt for input
 prompt_secret() {
     local var_name=$1
@@ -59,11 +65,11 @@ echo "1. Go to: https://console.cloud.google.com"
 echo "2. Create/Select project: Wasel Production"
 echo "3. Enable Google+ API and Google Maps JavaScript API"
 echo "4. Create OAuth 2.0 credentials"
-echo "5. Add authorized origins: https://wasel14.online, https://zexlxabdcsjefptmjhuq.supabase.co"
-echo "6. Add redirect URI: https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback"
+echo "5. Add authorized origins: $APP_URL, $SUPABASE_URL"
+echo "6. Add redirect URI: $SUPABASE_URL/auth/v1/callback"
 echo ""
 
-GOOGLE_CLIENT_ID=$(prompt_secret "GOOGLE_CLIENT_ID" "Google OAuth Client ID" "235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com")
+GOOGLE_CLIENT_ID=$(prompt_secret "GOOGLE_CLIENT_ID" "Google OAuth Client ID" "")
 GOOGLE_CLIENT_SECRET=$(prompt_secret "GOOGLE_CLIENT_SECRET" "Google OAuth Client Secret" "")
 
 if [ -n "$GOOGLE_CLIENT_SECRET" ]; then
@@ -87,7 +93,7 @@ echo "Setup Instructions:"
 echo "1. Go to: https://developers.facebook.com"
 echo "2. Create app: Wasel"
 echo "3. Add Facebook Login product"
-echo "4. Add redirect URI: https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback"
+echo "4. Add redirect URI: $SUPABASE_URL/auth/v1/callback"
 echo ""
 
 FACEBOOK_APP_ID=$(prompt_secret "FACEBOOK_APP_ID" "Facebook App ID" "")
@@ -115,12 +121,12 @@ echo "1. Go to: https://dashboard.stripe.com"
 echo "2. Switch to Live Mode (or use Test Mode for now)"
 echo "3. Get API keys from Developers → API keys"
 echo "4. Create webhook endpoint:"
-echo "   URL: https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/provider-webhooks/stripe"
+echo "   URL: $FUNCTIONS_BASE_URL/provider-webhooks/stripe"
 echo "   Events: checkout.session.*, customer.subscription.*, invoice.*, payment_intent.payment_failed"
 echo "5. Create Wasel Plus product (5 JOD/month) and copy Price ID"
 echo ""
 
-STRIPE_SECRET_KEY=$(prompt_secret "STRIPE_SECRET_KEY" "Stripe Secret Key (sk_live_... or sk_test_...)" "sk_live_REPLACE_WITH_YOUR_REAL_SECRET_KEY")
+STRIPE_SECRET_KEY=$(prompt_secret "STRIPE_SECRET_KEY" "Stripe Secret Key (sk_live_... or sk_test_...)" "")
 STRIPE_WEBHOOK_SECRET=$(prompt_secret "STRIPE_WEBHOOK_SECRET" "Stripe Webhook Secret (whsec_...)" "")
 STRIPE_PRICE_ID=$(prompt_secret "STRIPE_PRICE_ID" "Wasel Plus Price ID (price_...)" "")
 
@@ -156,10 +162,10 @@ echo "2. Get Account SID and Auth Token from dashboard"
 echo "3. Create Messaging Service: Wasel Notifications"
 echo "4. Buy Jordan phone number (+962)"
 echo "5. Create API Key for programmatic access"
-echo "6. Use status callback URL: https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/provider-webhooks/twilio?token=\$COMMUNICATION_WEBHOOK_TOKEN"
+echo "6. Use status callback URL: $FUNCTIONS_BASE_URL/provider-webhooks/twilio?token=\$COMMUNICATION_WEBHOOK_TOKEN"
 echo ""
 
-TWILIO_ACCOUNT_SID=$(prompt_secret "TWILIO_ACCOUNT_SID" "Twilio Account SID (AC...)" "AC1386e065d313ae43d256ca0394d0b4e6")
+TWILIO_ACCOUNT_SID=$(prompt_secret "TWILIO_ACCOUNT_SID" "Twilio Account SID (AC...)" "")
 TWILIO_AUTH_TOKEN=$(prompt_secret "TWILIO_AUTH_TOKEN" "Twilio Auth Token" "<YOUR_TWILIO_AUTH_TOKEN>")
 TWILIO_API_KEY_SID=$(prompt_secret "TWILIO_API_KEY_SID" "Twilio API Key SID (SK...)" "")
 TWILIO_API_KEY_SECRET=$(prompt_secret "TWILIO_API_KEY_SECRET" "Twilio API Key Secret" "")
@@ -213,7 +219,7 @@ case $email_choice in
         echo "1. Go to: https://resend.com"
         echo "2. Create API key: Wasel Production"
         echo "3. Verify domain: wasel14.online"
-        echo "4. Configure webhook URL: https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/provider-webhooks/resend?token=\$COMMUNICATION_WEBHOOK_TOKEN"
+        echo "4. Configure webhook URL: $FUNCTIONS_BASE_URL/provider-webhooks/resend?token=\$COMMUNICATION_WEBHOOK_TOKEN"
         echo ""
         
         RESEND_API_KEY=$(prompt_secret "RESEND_API_KEY" "Resend API Key (re_...)" "")
@@ -287,7 +293,7 @@ echo ""
 DB_PASSWORD=$(prompt_secret "DB_PASSWORD" "Database Password" "")
 
 if [ -n "$DB_PASSWORD" ]; then
-    DB_URL="postgresql://postgres.zexlxabdcsjefptmjhuq:${DB_PASSWORD}@aws-1-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+    DB_URL="postgresql://postgres.${PROJECT_REF}:${DB_PASSWORD}@aws-1-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
     supabase secrets set SUPABASE_DB_URL="$DB_URL"
     echo -e "${GREEN}✓${NC} Database connection configured"
 else

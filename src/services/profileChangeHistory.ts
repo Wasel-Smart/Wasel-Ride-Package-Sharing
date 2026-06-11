@@ -20,6 +20,14 @@ export interface ProfileChangeHistoryEntry {
   device: string;
 }
 
+interface ProfileChangeHistoryRow {
+  changed_at: string;
+  field_name: string;
+  old_value: string | null;
+  new_value: string | null;
+  user_agent: string | null;
+}
+
 const CHANGE_HISTORY_TABLE = 'profile_change_history';
 
 async function getClientMetadata() {
@@ -77,7 +85,9 @@ export async function getProfileChangeHistory(
 
     if (error) throw error;
 
-    return (data || []).map(record => ({
+    const records = (data ?? []) as ProfileChangeHistoryRow[];
+
+    return records.map(record => ({
       timestamp: record.changed_at,
       field: record.field_name,
       oldValue: record.old_value || '',

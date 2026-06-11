@@ -1,9 +1,15 @@
 #!/usr/bin/env node
 
-const SUPABASE_URL =
-  process.env.VITE_SUPABASE_URL || 'https://zexlxabdcsjefptmjhuq.supabase.co';
-const SUPABASE_KEY =
-  process.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_t2cOnKt1HH-l2KmvJIAwcg_8fpCWdN0';
+function requireEnv(key) {
+  const value = process.env[key]?.trim();
+  if (!value) {
+    throw new Error(`${key} must be set before validating production auth providers`);
+  }
+  return value;
+}
+
+const SUPABASE_URL = requireEnv('VITE_SUPABASE_URL');
+const SUPABASE_KEY = requireEnv('VITE_SUPABASE_PUBLISHABLE_KEY');
 const APP_URL = process.env.VITE_APP_URL || 'https://wasel14.online';
 const TEST_PHONE = process.env.AUTH_PROVIDER_TEST_PHONE || '+962792084333';
 

@@ -2,17 +2,14 @@
  * Public Supabase credentials.
  *
  * Environment variables stay the primary source of truth.
- * We also keep a checked-in public fallback so static builds still boot when
- * Vite env injection is unavailable. These values are public by design and are
- * limited by Supabase RLS plus the app's backend fallback policy.
+ * Static builds must receive these values from environment injection. Keeping
+ * project-specific defaults in source makes deployments easy to misroute.
  */
 
-const FORCE_LOCAL_E2E_AUTH = (import.meta.env.VITE_E2E_LOCAL_AUTH as string | undefined) === 'true';
-const ALLOW_CHECKED_IN_PUBLIC_FALLBACK = !FORCE_LOCAL_E2E_AUTH;
+const ALLOW_CHECKED_IN_PUBLIC_FALLBACK = false;
 
-const CHECKED_IN_PUBLIC_SUPABASE_URL = 'https://zexlxabdcsjefptmjhuq.supabase.co';
-const CHECKED_IN_PUBLIC_SUPABASE_PUBLISHABLE_KEY =
-  'sb_publishable_t2cOnKt1HH-l2KmvJIAwcg_8fpCWdN0';
+const CHECKED_IN_PUBLIC_SUPABASE_URL = '';
+const CHECKED_IN_PUBLIC_SUPABASE_PUBLISHABLE_KEY = '';
 const CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY = '';
 
 const BLOCKED_PUBLIC_SUPABASE_KEYS = new Set([

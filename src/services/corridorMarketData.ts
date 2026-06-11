@@ -1,9 +1,15 @@
+/**
+ * Corridor market data service.
+ * Builds pricing, demand, and ownership snapshots for active corridors
+ * across the Wasel region map, sourcing live signals where available
+ * and falling back to a launch model for pre-production markets.
+ */
 import { getAllRegions, type CityRoute, type RegionConfig } from '../utils/regionConfig';
 import { getLiveCorridorSignal } from './routeDemandIntelligence';
 
 type CorridorProofMode = 'live-production' | 'launch-model';
 
-export interface MiddleEastCorridorProofRow {
+export interface CorridorMarketRow {
   id: string;
   regionCode: string;
   regionName: string;
@@ -20,9 +26,9 @@ export interface MiddleEastCorridorProofRow {
   sourceLine: string;
 }
 
-export interface MiddleEastCorridorProofSnapshot {
+export interface CorridorMarketSnapshot {
   updatedAt: string;
-  rows: MiddleEastCorridorProofRow[];
+  rows: CorridorMarketRow[];
   liveOwnedCorridors: number;
   averageSavingsPercent: number;
   averageOwnershipScore: number;
@@ -59,7 +65,7 @@ function buildBenchmarkPrice(route: CityRoute, region: RegionConfig) {
   );
 }
 
-function buildModeledRow(route: CityRoute, region: RegionConfig): MiddleEastCorridorProofRow {
+function buildModeledRow(route: CityRoute, region: RegionConfig): CorridorMarketRow {
   const benchmarkPriceJod = buildBenchmarkPrice(route, region);
   const tierBoost = route.tier === 1 ? 8 : route.tier === 2 ? 4 : 0;
   const launchBoost =
@@ -109,7 +115,7 @@ function buildModeledRow(route: CityRoute, region: RegionConfig): MiddleEastCorr
   };
 }
 
-function buildLiveRow(route: CityRoute, region: RegionConfig): MiddleEastCorridorProofRow | null {
+function buildLiveRow(route: CityRoute, region: RegionConfig): CorridorMarketRow | null {
   const signal = getLiveCorridorSignal(route.from, route.to);
   if (!signal) return null;
 
@@ -153,7 +159,7 @@ function pickKeyRoutes(region: RegionConfig) {
     .slice(0, 2);
 }
 
-export function buildMiddleEastCorridorProof(limit = 10): MiddleEastCorridorProofSnapshot {
+export function buildCorridorMarketSnapshot(limit = 10): CorridorMarketSnapshot {
   const rows = getAllRegions()
     .filter(region => MIDDLE_EAST_REGION_CODES.has(region.iso))
     .flatMap(region =>
