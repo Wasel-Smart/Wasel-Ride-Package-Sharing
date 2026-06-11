@@ -275,10 +275,11 @@ export default function TrustCenterPage() {
       const nextStatus = await getTrustCenterStatus(user);
       setTrustStatus(nextStatus);
     } catch (error) {
+      const fallback = buildFallbackTrustCenterStatus(user);
+      setTrustStatus(fallback);
       if (!silent) {
-        toast.error(toErrorMessage(error));
+        console.warn('[Trust Center] Using fallback status:', error);
       }
-      setTrustStatus(buildFallbackTrustCenterStatus(user));
     } finally {
       if (!silent) setStatusLoading(false);
     }
@@ -289,7 +290,7 @@ export default function TrustCenterPage() {
       setTrustStatus(null);
       return;
     }
-    void reloadTrustStatus();
+    void reloadTrustStatus(true);
   }, [user?.id]);
 
   if (!user) {

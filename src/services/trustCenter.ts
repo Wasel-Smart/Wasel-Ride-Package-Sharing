@@ -42,6 +42,7 @@ export async function getTrustCenterStatus(
     return payload.status;
   } catch (error) {
     if (user) {
+      console.warn('[Trust Center] Using fallback status:', error);
       return buildFallbackTrustCenterStatus(user);
     }
     throw Object.assign(new Error(toErrorMessage(error)), { cause: error });
