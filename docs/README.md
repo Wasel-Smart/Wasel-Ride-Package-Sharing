@@ -13,6 +13,7 @@ This folder is the engineering handoff for Wasel: architecture, contracts, obser
 - [scaling-and-tradeoffs.md](./scaling-and-tradeoffs.md): architectural rationale and scale assumptions
 - [workers-and-queues.md](./workers-and-queues.md): async topology, queue ownership, and worker responsibilities
 - [testing.md](./testing.md): local verification and test-layer guidance
+- [repository-boundaries.md](./repository-boundaries.md): canonical source roots and ignored local/generated folders
 - [openapi/wasel-v1.yaml](./openapi/wasel-v1.yaml): OpenAPI scaffold for backend implementation and review
 - [adrs/](./adrs/0001-service-boundaries.md): architecture decisions for service boundaries and async workers
 

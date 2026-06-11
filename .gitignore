@@ -3,6 +3,8 @@ build/
 dist/
 .vite/
 .next/
+.playwright/
+.playwright-dist/
 
 # Dependencies
 node_modules/
@@ -44,6 +46,8 @@ codex-*.err.log
 tmp-*.log
 
 # Local verification output
+artifacts/
+review-artifacts/
 eslint-results.json
 load-test-results.json
 review-artifacts/*.log
@@ -60,6 +64,7 @@ scripts/local-*-runtime.sh
 scripts/local-http-handler.sh
 
 # Editor artifacts
+.vscode/
 .vscode/settings.json
 .idea/
 *.suo
@@ -72,11 +77,13 @@ desktop.ini
 
 # Local design and backup artifacts
 .anima/
+.agents/
 backups/
 review-screenshots/
 .codex_tmp/
 .codex/
 .kilo/
+.run/
 deno.lock
 Supabase+TIA+250314.pdf
 u4fphus5luuzlavxipwmexiwwwu2qg.html
@@ -85,8 +92,11 @@ actions-runner/
 *.vsix
 
 # Vendored SDK exports and sample apps do not belong in the web app repository
+docs/*.framework/
+docs/*.bundle/
 docs/AccountKit.framework/
 docs/FacebookSDKStrings.bundle/
+docs/DocSets/
 docs/Samples/
 
 # Security: never commit backup codes, key exports, or credential docs
@@ -129,6 +139,9 @@ vitest.config.mjs
 
 # Cleanup staging area
 _REMOVED/
+
+# Empty directory shells left after consolidation
+src/domains/
 
 .vercel
 supabase/.temp/

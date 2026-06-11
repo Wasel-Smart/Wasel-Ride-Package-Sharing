@@ -12,7 +12,6 @@ import {
 } from '../../utils/profileValidation';
 import { showSuccessToast, showErrorToast, showWarningToast } from '../../utils/advancedToast';
 import { useOptimisticUpdates } from '../../hooks/useOptimisticUpdates';
-import { getProfileInitials } from './profileUtils';
 
 export const PROFILE_BG = C.bg;
 export const PROFILE_BORDER = C.border;
@@ -237,7 +236,7 @@ export function useProfilePageController({
       const updates = { [field]: value };
       return await updateProfile(updates);
     },
-    onRollback: (field, previousValue) => {
+    onRollback: field => {
       showWarningToast(
         ar
           ? `تعذر حفظ ${field === 'name' ? 'الاسم' : 'رقم الهاتف'}. تم التراجع إلى القيمة السابقة.`

@@ -44,6 +44,7 @@ export function ValidationFeedback({ error, success, warning, ar }: ValidationFe
       }}
       role="alert"
       aria-live="polite"
+      dir={ar ? 'rtl' : 'ltr'}
     >
       <span style={{ fontSize: '0.9rem', fontWeight: '700' }}>{style.icon}</span>
       <span>{message}</span>

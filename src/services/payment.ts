@@ -1,3 +1,8 @@
+/**
+ * Supabase payment client — lightweight intent creation and refund helpers.
+ * For the full production Stripe + CliQ pipeline (rate limiting, webhooks,
+ * retry logic) see `./paymentService`.
+ */
 import { supabase, supabaseUrl } from '@/utils/supabase/client';
 import { addCSRFHeader } from '@/utils/csrf';
 

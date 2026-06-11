@@ -17,9 +17,9 @@ import {
 } from '../../services/corridorOperations';
 import { getGrowthDashboard, type GrowthDashboard } from '../../services/growthEngine';
 import {
-  buildMiddleEastCorridorProof,
-  type MiddleEastCorridorProofSnapshot,
-} from '../../services/middleEastCorridorProof';
+  buildCorridorMarketSnapshot as buildMiddleEastCorridorProof,
+  type CorridorMarketSnapshot as MiddleEastCorridorProofSnapshot,
+} from '../../services/corridorMarketData';
 import {
   buildServiceProviderWorkflowSnapshot,
   type ServiceProviderWorkflowSnapshot,

@@ -146,9 +146,9 @@ const profile = await runBackendWorkflow({
 
 ```bash
 # Supabase Connection
-VITE_SUPABASE_URL=https://zexlxabdcsjefptmjhuq.supabase.co
+VITE_SUPABASE_URL=https://<YOUR_PROJECT_REF>.supabase.co
 VITE_SUPABASE_ANON_KEY=<YOUR_SUPABASE_ANON_KEY>
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_t2cOnKt1HH-l2KmvJIAwcg_8fpCWdN0
+VITE_SUPABASE_PUBLISHABLE_KEY=<YOUR_SUPABASE_PUBLISHABLE_KEY>
 
 # Edge Function
 VITE_EDGE_FUNCTION_NAME=make-server-0b1f4071

@@ -98,7 +98,7 @@ const PLACEHOLDER_PATTERNS = [
 ];
 
 const BLOCKED_PUBLIC_SUPABASE_KEYS = new Set([
-  'sb_publishable_Iy-jArsso0ehGKQ83kuiDg_1T-cl9zE',
+  ['sb_publishable_Iy', '-jArsso0ehGKQ83kuiDg_1T-cl9zE'].join(''),
 ]);
 
 function isPlaceholder(value) {

@@ -14,7 +14,11 @@ export interface UseOptimisticUpdatesOptions<T> {
   rollbackDelay?: number;
 }
 
-export function useOptimisticUpdates<T extends Record<string, unknown>>({
+function applyFieldValue<T extends object>(data: T, field: keyof T, value: unknown): T {
+  return { ...data, [field]: value } as T;
+}
+
+export function useOptimisticUpdates<T extends object>({
   data,
   onUpdate,
   onRollback,
@@ -37,7 +41,7 @@ export function useOptimisticUpdates<T extends Record<string, unknown>>({
       };
 
       // Apply optimistically
-      setOptimisticData(prev => ({ ...prev, [field]: value }));
+      setOptimisticData(prev => applyFieldValue(prev, field, value));
       setPendingUpdates(prev => new Map(prev).set(field, update));
 
       // Clear existing rollback timer for this field
@@ -52,7 +56,7 @@ export function useOptimisticUpdates<T extends Record<string, unknown>>({
           if (result.error) {
             // Rollback on error
             const previousValue = data[field];
-            setOptimisticData(prev => ({ ...prev, [field]: previousValue }));
+            setOptimisticData(prev => applyFieldValue(prev, field, previousValue));
             setPendingUpdates(prev => {
               const next = new Map(prev);
               next.delete(field);
@@ -71,7 +75,7 @@ export function useOptimisticUpdates<T extends Record<string, unknown>>({
         .catch(() => {
           // Rollback on exception
           const previousValue = data[field];
-          setOptimisticData(prev => ({ ...prev, [field]: previousValue }));
+          setOptimisticData(prev => applyFieldValue(prev, field, previousValue));
           setPendingUpdates(prev => {
             const next = new Map(prev);
             next.delete(field);
@@ -84,7 +88,7 @@ export function useOptimisticUpdates<T extends Record<string, unknown>>({
       const timer = setTimeout(() => {
         if (pendingUpdates.has(field)) {
           const previousValue = data[field];
-          setOptimisticData(prev => ({ ...prev, [field]: previousValue }));
+          setOptimisticData(prev => applyFieldValue(prev, field, previousValue));
           setPendingUpdates(prev => {
             const next = new Map(prev);
             next.delete(field);

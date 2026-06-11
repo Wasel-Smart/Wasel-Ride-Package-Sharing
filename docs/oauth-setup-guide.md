@@ -53,12 +53,12 @@ This guide walks you through configuring Google and Facebook OAuth for Wasel aut
      http://localhost:5173
      http://localhost:4173
      https://wasel14.online
-     https://zexlxabdcsjefptmjhuq.supabase.co
+     https://<YOUR_PROJECT_REF>.supabase.co
      ```
    - **Authorized redirect URIs**:
      ```
      http://localhost:54321/auth/v1/callback
-     https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback
+     https://<YOUR_PROJECT_REF>.supabase.co/auth/v1/callback
      ```
 5. Click **Create**
 6. Copy **Client ID** and **Client Secret**
@@ -99,7 +99,7 @@ SUPABASE_AUTH_GOOGLE_CLIENT_SECRET=your-client-secret
 2. Add **Valid OAuth Redirect URIs**:
    ```
    http://localhost:54321/auth/v1/callback
-   https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback
+   https://<YOUR_PROJECT_REF>.supabase.co/auth/v1/callback
    ```
 3. Save changes
 
@@ -131,7 +131,7 @@ SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET=your-facebook-app-secret
 ### Option 1: Supabase Dashboard (Recommended for Production)
 
 1. Go to [Supabase Dashboard](https://app.supabase.com/)
-2. Select your project: `zexlxabdcsjefptmjhuq`
+2. Select your Supabase project.
 3. Navigate to **Authentication** > **Providers**
 
 #### Enable Google:
@@ -182,9 +182,9 @@ npm run supabase:start
 
 ```bash
 # Supabase
-VITE_SUPABASE_URL=https://zexlxabdcsjefptmjhuq.supabase.co
+VITE_SUPABASE_URL=https://<YOUR_PROJECT_REF>.supabase.co
 VITE_SUPABASE_ANON_KEY=<YOUR_SUPABASE_ANON_KEY>
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_t2cOnKt1HH-l2KmvJIAwcg_8fpCWdN0
+VITE_SUPABASE_PUBLISHABLE_KEY=<YOUR_SUPABASE_PUBLISHABLE_KEY>
 
 # Google OAuth
 VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
@@ -225,14 +225,14 @@ VITE_AUTH_CALLBACK_PATH=/app/auth/callback
 Add production URLs to **Authorized redirect URIs**:
 ```
 https://wasel14.online/app/auth/callback
-https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback
+https://<YOUR_PROJECT_REF>.supabase.co/auth/v1/callback
 ```
 
 #### Facebook App Settings:
 Add production URLs to **Valid OAuth Redirect URIs**:
 ```
 https://wasel14.online/app/auth/callback
-https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback
+https://<YOUR_PROJECT_REF>.supabase.co/auth/v1/callback
 ```
 
 ### Update Supabase Site URL
@@ -249,7 +249,7 @@ https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback
 
 ```bash
 VITE_APP_URL=https://wasel14.online
-VITE_SUPABASE_URL=https://zexlxabdcsjefptmjhuq.supabase.co
+VITE_SUPABASE_URL=https://<YOUR_PROJECT_REF>.supabase.co
 # ... rest of production credentials
 ```
 

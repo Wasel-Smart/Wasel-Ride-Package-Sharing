@@ -43,9 +43,9 @@ if (fs.existsSync(envPath)) {
 // All VITE_* environment variables with defaults
 const allViteVars = {
   // CRITICAL - Required for build
-  'VITE_SUPABASE_URL': existingVars['VITE_SUPABASE_URL'] || 'https://zexlxabdcsjefptmjhuq.supabase.co',
+  'VITE_SUPABASE_URL': existingVars['VITE_SUPABASE_URL'] || 'https://<YOUR_PROJECT_REF>.supabase.co',
   'VITE_SUPABASE_ANON_KEY': existingVars['VITE_SUPABASE_ANON_KEY'] || '',
-  'VITE_SUPABASE_PUBLISHABLE_KEY': existingVars['VITE_SUPABASE_PUBLISHABLE_KEY'] || 'sb_publishable_t2cOnKt1HH-l2KmvJIAwcg_8fpCWdN0',
+  'VITE_SUPABASE_PUBLISHABLE_KEY': existingVars['VITE_SUPABASE_PUBLISHABLE_KEY'] || '<YOUR_SUPABASE_PUBLISHABLE_KEY>',
   
   // App Configuration
   'VITE_APP_URL': existingVars['VITE_APP_URL'] || 'https://your-app.vercel.app',
@@ -60,7 +60,7 @@ const allViteVars = {
   'VITE_GOOGLE_MAPS_API_KEY': existingVars['VITE_GOOGLE_MAPS_API_KEY'] || '<YOUR_GOOGLE_MAPS_API_KEY>',
   
   // OAuth
-  'VITE_GOOGLE_CLIENT_ID': existingVars['VITE_GOOGLE_CLIENT_ID'] || '235290462223-slmuhn0n9nvmalq3tfdt7cl5de55fcnp.apps.googleusercontent.com',
+  'VITE_GOOGLE_CLIENT_ID': existingVars['VITE_GOOGLE_CLIENT_ID'] || '<YOUR_GOOGLE_CLIENT_ID>',
   'VITE_FACEBOOK_APP_ID': existingVars['VITE_FACEBOOK_APP_ID'] || '<YOUR_FACEBOOK_APP_ID>',
   'VITE_AUTH_CALLBACK_PATH': existingVars['VITE_AUTH_CALLBACK_PATH'] || '/app/auth/callback',
   
@@ -80,7 +80,7 @@ const allViteVars = {
   'VITE_ALLOW_DIRECT_SUPABASE_FALLBACK': existingVars['VITE_ALLOW_DIRECT_SUPABASE_FALLBACK'] || 'false',
   
   // Payments
-  'VITE_STRIPE_PUBLISHABLE_KEY': existingVars['VITE_STRIPE_PUBLISHABLE_KEY'] || 'pk_live_51Spp9LFB0YHYiEoFRyXYWELezns1SrbtXpXo7SpZh1tqs2ukNX3V0nDPlsBOvjbLYAPlRMacHYiquSYlkmFqcWxt00M1YcJqUY',
+  'VITE_STRIPE_PUBLISHABLE_KEY': existingVars['VITE_STRIPE_PUBLISHABLE_KEY'] || '<YOUR_STRIPE_PUBLISHABLE_KEY>',
   
   // Monitoring & Analytics
   'VITE_SENTRY_DSN': existingVars['VITE_SENTRY_DSN'] || 'https://your-dsn@sentry.io/project-id',
@@ -186,7 +186,7 @@ console.log('5. Click "Save"');
 console.log('6. After adding all variables, redeploy your project');
 console.log('\n💾 Variables also saved to: vercel-env-variables.txt');
 console.log('\n⚠️  IMPORTANT: Update placeholder values with your actual credentials!');
-console.log('   - Confirm VITE_SUPABASE_URL points to zexlxabdcsjefptmjhuq');
+console.log('   - Confirm VITE_SUPABASE_URL points to your Supabase project');
 console.log('   - Set VITE_SUPABASE_ANON_KEY only after copying it from Supabase');
 console.log('   - Replace "your-app.vercel.app" with your actual Vercel domain');
 console.log('   - Update all other placeholder values\n');
