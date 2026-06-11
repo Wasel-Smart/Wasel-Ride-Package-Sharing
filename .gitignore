@@ -11,8 +11,13 @@ node_modules/
 with-supabase-app/node_modules/
 mobile/node_modules/
 
-# Environment variables
+# Environment variables — NEVER commit any .env file except the committed examples
 .env
+.env.*
+!.env.example
+!.env.*.example
+!.env.production.template
+# Legacy explicit list kept for safety
 .env.local
 .env.development
 .env.development.local
@@ -99,7 +104,7 @@ docs/FacebookSDKStrings.bundle/
 docs/DocSets/
 docs/Samples/
 
-# Security: never commit backup codes, key exports, or credential docs
+# Security: never commit backup codes, key exports, credential docs, or certificates
 Backup-codes-*.txt
 backup-codes*.txt
 *-backup-codes.txt
@@ -107,10 +112,30 @@ client_secret_*.json
 *.pem
 *.p8
 *.key
+*.crt
+*.cer
+*.pfx
+*.p12
 COMPLETE_DEPLOYMENT_GUIDE.md
 DEEP_DIVE_RATING.md
 FINAL_10_OUT_OF_10_SUMMARY.md
 OFFICIAL_10_OUT_OF_10_CERTIFICATION.md
+
+# Vercel tokens and OIDC credentials
+.vercel/
+*.vercel-oidc-token
+
+# AI tool workspace artefacts — never belong in repo
+skills-lock.json
+.agents/
+.codex/
+.kilo/
+.amazonq/
+.anima/
+review-artifacts/
+artifacts/
+backups/
+*.vsix
 
 # Firebase and native mobile config not used by the web client
 src/GoogleService-Info.plist
