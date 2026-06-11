@@ -192,6 +192,10 @@
     "load:test": "bash scripts/run-load-tests.sh production https://wasel14.online",
     "load:smoke": "bash scripts/run-load-tests.sh smoke https://wasel14.online",
     "load:smoke:node": "node scripts/load-smoke-node.mjs https://wasel14.online/health",
-    "validate:10-out-of-10": "node scripts/validate-10-out-of-10.mjs"
+    "validate:10-out-of-10": "node scripts/validate-10-out-of-10.mjs",
+    "upgrade:deploy": "node scripts/deploy-to-10.mjs",
+    "upgrade:prereq": "node scripts/deploy-to-10.mjs prereq",
+    "upgrade:build": "node scripts/deploy-to-10.mjs build",
+    "upgrade:status": "node scripts/deploy-to-10.mjs verify"
   }
 }

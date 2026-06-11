@@ -25,7 +25,26 @@ Jordan-focused mobility and logistics platform — shared rides, package handoff
 | Backend services | 🔄 In progress | Skeletons complete; DB layer being wired |
 | Mobile apps | 🔄 In progress | Service layer done; UI screens in development |
 
-> Honest audit: [docs/HONEST_AUDIT_REPORT.md](./docs/HONEST_AUDIT_REPORT.md) — 8.5 / 10 with a clear path to 10.
+> **Current Rating: 8.5 / 10** — See [Honest Audit](./docs/HONEST_AUDIT_REPORT.md) | [Improvement Plan](./docs/UPGRADE_TO_10_COMPLETE_PLAN.md) | [Executive Summary](./docs/IMPROVEMENT_EXECUTIVE_SUMMARY.md)
+
+### 🎯 Path to 10/10
+
+We're **60% complete** on closing the gap to 10/10:
+
+**Completed Today:**
+- ✅ Backend service package management
+- ✅ Shared database connection layer
+- ✅ Docker build system
+- ✅ Production mobile screen template
+- ✅ Automated deployment script
+- ✅ Comprehensive upgrade roadmap
+
+**Remaining (6 weeks):**
+- 🔄 Deploy backend services to Kubernetes
+- 🔄 Implement 20+ mobile screens
+- 🔄 Activate monitoring infrastructure
+
+[View complete upgrade plan →](./docs/UPGRADE_TO_10_COMPLETE_PLAN.md)
 
 ---
 
