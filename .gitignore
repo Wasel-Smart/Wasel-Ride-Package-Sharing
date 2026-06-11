@@ -165,6 +165,9 @@ vitest.config.mjs
 # Cleanup staging area
 _REMOVED/
 
+# Local security remediation checklists (contain rotated key references)
+SECURITY_CHECKLIST.md
+
 # Empty directory shells left after consolidation
 src/domains/
 
