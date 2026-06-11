@@ -1,5 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import {
   InfoCard,
@@ -16,6 +18,17 @@ import { rideLifecycle } from '../services/ride';
 import { colors, radii, spacing } from '../theme';
 import { validateRideRequest } from '../utils/mobileValidation';
 
+type RootStackParamList = {
+  Tabs: undefined;
+  Safety: undefined;
+  Trips: undefined;
+  Bus: undefined;
+  Driver: undefined;
+  Notifications: undefined;
+};
+
+type NavProp = NativeStackNavigationProp<RootStackParamList>;
+
 const SAMPLE_COORDINATES = {
   amman: { latitude: 31.9539, longitude: 35.9106 },
   aqaba: { latitude: 29.5321, longitude: 35.0063 },
@@ -23,6 +36,7 @@ const SAMPLE_COORDINATES = {
 
 const RideRequestScreen = React.memo(function RideRequestScreen() {
   const { isOnline, queueSize } = useOffline();
+  const navigation = useNavigation<NavProp>();
   const [pickup, setPickup] = useState('Amman');
   const [destination, setDestination] = useState('Aqaba');
   const [seats, setSeats] = useState('1');
@@ -160,6 +174,20 @@ const RideRequestScreen = React.memo(function RideRequestScreen() {
             testID="ride-request-result"
           />
         ) : null}
+
+        <SectionHeader
+          eyebrow="Public transit"
+          title="Bus routes"
+          body="Looking for scheduled bus service? Browse corridors and timetables."
+        />
+
+        <PrimaryButton
+          label="View bus routes"
+          icon="bus"
+          tone={colors.blue}
+          onPress={() => navigation.navigate('Bus')}
+          testID="quick-link-bus"
+        />
 
         <InfoCard
           icon="location"
