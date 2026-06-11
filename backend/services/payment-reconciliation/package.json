@@ -1,33 +1,20 @@
 {
   "name": "@wasel/payment-reconciliation-service",
   "version": "1.0.0",
-  "private": true,
-  "description": "Wasel Payment Reconciliation Service - Stripe integration and settlement",
-  "main": "dist/service.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch service.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/service.js",
-    "test": "vitest run",
-    "lint": "eslint . --ext .ts",
-    "type-check": "tsc --noEmit"
+    "start": "node dist/index.js"
   },
   "dependencies": {
-    "pg": "^8.13.1",
-    "ioredis": "^5.4.1",
-    "stripe": "^17.5.0",
-    "@types/pg": "^8.11.10"
+    "ioredis": "^5.11.1",
+    "postgres": "^3.4.9",
+    "stripe": "^22.1.0"
   },
   "devDependencies": {
-    "tsx": "^4.19.2",
-    "typescript": "^5.9.3",
-    "vitest": "^4.1.2",
-    "eslint": "^10.4.0",
-    "@types/node": "^20.10.0"
-  },
-  "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=10.0.0"
+    "@types/node": "^20.10.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.9.3"
   }
 }
