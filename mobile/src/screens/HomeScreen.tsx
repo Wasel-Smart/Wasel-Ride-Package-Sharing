@@ -26,6 +26,11 @@ type RootStackParamList = {
   Bus: undefined;
   Driver: undefined;
   Notifications: undefined;
+  LiveTracking: { rideId: string };
+  Chat: { rideId: string; driverName: string };
+  RateRide: { rideId: string; driverName: string };
+  AdvancedSearch: undefined;
+  SignIn: undefined;
 };
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
@@ -63,6 +68,7 @@ const HomeScreen = React.memo(function HomeScreen() {
     { label: 'Driver setup', icon: 'car' as const, screen: 'Driver' as const, tone: colors.green },
     { label: 'Safety center', icon: 'shield-checkmark' as const, screen: 'Safety' as const, tone: colors.amber },
     { label: 'Notifications', icon: 'notifications' as const, screen: 'Notifications' as const, tone: colors.lilac },
+    { label: 'Smart ride search', icon: 'search' as const, screen: 'AdvancedSearch' as const, tone: colors.cyan },
   ];
 
   return (
@@ -85,7 +91,7 @@ const HomeScreen = React.memo(function HomeScreen() {
           <SectionHeader
             eyebrow="Wasel command center"
             title={`Welcome, ${displayName}`}
-            body="Rides, packages, bus, wallet, safety, and driver setup — all from here."
+            body="Rides, packages, networks, wallet, safety, and driver setup — all from here."
             tone="dark"
           />
           <View style={styles.heroStats}>
@@ -144,7 +150,7 @@ const HomeScreen = React.memo(function HomeScreen() {
             label={link.label}
             icon={link.icon}
             tone={link.tone}
-            onPress={() => navigation.navigate(link.screen)}
+            onPress={() => navigation.navigate(link.screen as any)}
             testID={`quick-link-${link.screen.toLowerCase()}`}
           />
         ))}
@@ -162,10 +168,16 @@ const HomeScreen = React.memo(function HomeScreen() {
           tone={colors.blue}
         />
         <InfoCard
+          icon="git-network"
+          title="Networks & corridors"
+          body="Browse verified ride networks, partner corridors, and operator clusters across all active routes."
+          tone={colors.green}
+        />
+        <InfoCard
           icon="shield-checkmark"
           title="Premium trust layer"
           body="Identity state, secure sessions, and payment readiness are surfaced before the user commits."
-          tone={colors.green}
+          tone={colors.lilac}
         />
       </ScrollView>
     </ScreenShell>
