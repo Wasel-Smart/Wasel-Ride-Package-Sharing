@@ -1,7 +1,6 @@
 /**
  * Supabase payment client — lightweight intent creation and refund helpers.
- * For the full production Stripe + CliQ pipeline (rate limiting, webhooks,
- * retry logic) see `./paymentService`.
+ * For wallet top-ups, use `walletApi` which delegates CliQ and Stripe checkout to the backend edge function.
  */
 import { supabase, supabaseUrl } from '@/utils/supabase/client';
 import { addCSRFHeader } from '@/utils/csrf';
