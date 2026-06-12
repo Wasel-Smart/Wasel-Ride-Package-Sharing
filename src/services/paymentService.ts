@@ -26,6 +26,11 @@ export interface RefundRequest {
   reason: string;
 }
 
+export type WebhookVerifyResult = {
+  ok: boolean;
+  error?: string;
+};
+
 class PaymentService {
    private cliqConfig: {
      merchantId: string;
@@ -46,161 +51,167 @@ class PaymentService {
     currency: string,
     metadata?: Record<string, string>,
   ): Promise<PaymentIntent> {
-    return withRateLimit(paymentLimiter, async () => {
-      try {
-        const response = await fetch('/api/payments/create-intent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount, currency, metadata }),
-        });
+    try {
+      const response = await fetch('/api/payments/create-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, currency, metadata }),
+      });
 
-        if (!response.ok) {
-          throw new Error(`Payment intent creation failed: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        logger.info('Payment intent created', { intentId: data.id, amount, currency });
-        return data;
-      } catch (error) {
-        logger.error('Failed to create payment intent', error, { amount, currency });
-        throw error;
+      if (!response.ok) {
+        const message = await response.text().catch(() => response.statusText);
+        throw new Error(`Payment intent creation failed: ${message}`);
       }
-    });
+
+      const data = (await response.json()) as PaymentIntent;
+      logger.info('Payment intent created', { intentId: data.id, amount, currency });
+      return data;
+    } catch (error) {
+      logger.error('Failed to create payment intent', error, { amount, currency });
+      throw error instanceof Error ? error : new Error('Payment intent creation failed');
+    }
   }
 
-   async confirmPayment(
-     intentId: string,
-     paymentMethod: PaymentMethod,
-   ): Promise<PaymentIntent> {
-     return withRateLimit(paymentLimiter, async () => {
-       try {
-         const response = await fetch('/api/payments/confirm', {
-           method: 'POST',
-           headers: { 'Content-Type': 'application/json' },
-           body: JSON.stringify({ intentId, paymentMethod }),
-         });
+  async confirmPayment(
+    intentId: string,
+    paymentMethod: PaymentMethod,
+  ): Promise<PaymentIntent> {
+    try {
+      const response = await fetch('/api/payments/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intentId, paymentMethod }),
+      });
 
-         if (!response.ok) {
-           throw new Error(`Payment confirmation failed: ${response.statusText}`);
-         }
+      if (!response.ok) {
+        const message = await response.text().catch(() => response.statusText);
+        throw new Error(`Payment confirmation failed: ${message}`);
+      }
 
-         const data = await response.json();
-         logger.info('Payment confirmed', { intentId, status: data.status });
-         return data;
-       } catch (error) {
-         logger.error('Failed to confirm payment', error, { intentId });
-         throw error;
-       }
-     }) as Promise<PaymentIntent>;
-   }
+      const data = (await response.json()) as PaymentIntent;
+      logger.info('Payment confirmed', { intentId, status: data.status });
+      return data;
+    } catch (error) {
+      logger.error('Failed to confirm payment', error, { intentId });
+      throw error instanceof Error ? error : new Error('Payment confirmation failed');
+    }
+  }
 
   async createCliqCheckout(
     amount: number,
     transactionId: string,
     returnUrl: string,
   ): Promise<{ checkoutUrl: string }> {
-    if (!this.cliqConfig.checkoutUrl) {
-      throw new Error('CliQ checkout not configured');
+    const trimmedAmount = Math.max(0.01, Number(amount) || 0);
+
+    const payload = {
+      merchantId: this.cliqConfig.merchantId,
+      apiKey: this.cliqConfig.apiKey,
+      transactionId,
+      amount: Number(trimmedAmount.toFixed(3)),
+      currency: 'JOD',
+      returnUrl,
+      webhookUrl: `${typeof window !== 'undefined' ? window.location.origin : ''}/api/webhooks/cliq`,
+    };
+
+    try {
+      if (this.cliqConfig.merchantId && this.cliqConfig.apiKey) {
+        const base = (this.cliqConfig.checkoutUrl || '')
+          .replace('{transactionId}', transactionId)
+          .replace('{amount}', trimmedAmount.toFixed(3))
+          .replace('{currency}', 'JOD')
+          .replace('{returnUrl}', encodeURIComponent(returnUrl))
+          .replace('{webhookUrl}', encodeURIComponent(payload.webhookUrl));
+
+        const checkoutUrl = base || buildCliqCheckoutUrl(transactionId, trimmedAmount, returnUrl);
+        logger.info('CliQ checkout created', { transactionId, amount: trimmedAmount });
+        return { checkoutUrl };
+      }
+    } catch (error) {
+      logger.error('CliQ checkout lookup failed', error, { transactionId, amount: trimmedAmount });
     }
 
-    const checkoutUrl = this.cliqConfig.checkoutUrl
-      .replace('{transactionId}', transactionId)
-      .replace('{amount}', amount.toString())
-      .replace('{currency}', 'JOD')
-      .replace('{returnUrl}', encodeURIComponent(returnUrl));
-
-    logger.info('CliQ checkout created', { transactionId, amount });
+    const checkoutUrl = buildCliqCheckoutUrl(transactionId, trimmedAmount, returnUrl);
+    logger.info('CliQ checkout created (fallback)', { transactionId, amount: trimmedAmount });
     return { checkoutUrl };
   }
 
-  async refundPayment(request: RefundRequest): Promise<{ success: boolean; refundId: string }> {
-    return withRateLimit(paymentLimiter, async () => {
-      try {
-        const response = await fetch('/api/payments/refund', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(request),
-        });
+   async refundPayment(request: RefundRequest): Promise<{ success: boolean; refundId: string }> {
+    try {
+      const response = await fetch('/api/payments/refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      });
 
-        if (!response.ok) {
-          throw new Error(`Refund failed: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        logger.info('Refund processed', {
-          paymentId: request.paymentId,
-          refundId: data.refundId,
-        });
-        return data;
-      } catch (error) {
-        logger.error('Failed to process refund', error, { paymentId: request.paymentId });
-        throw error;
+      if (!response.ok) {
+        const message = await response.text().catch(() => response.statusText);
+        throw new Error(`Refund failed: ${message}`);
       }
-    });
+
+      const data = (await response.json()) as { success: boolean; refundId: string };
+      logger.info('Refund processed', {
+        paymentId: request.paymentId,
+        refundId: data.refundId,
+      });
+      return data;
+    } catch (error) {
+      logger.error('Failed to process refund', error, { paymentId: request.paymentId });
+      throw error instanceof Error ? error : new Error('Refund failed');
+    }
   }
 
   async getPaymentStatus(paymentId: string): Promise<PaymentIntent> {
     try {
-      const response = await fetch(`/api/payments/${paymentId}`, {
+      const response = await fetch(`/api/payments/${encodeURIComponent(paymentId)}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to get payment status: ${response.statusText}`);
+        const message = await response.text().catch(() => response.statusText);
+        throw new Error(`Failed to get payment status: ${message}`);
       }
 
-      return response.json();
+      return (await response.json()) as Promise<PaymentIntent>;
     } catch (error) {
       logger.error('Failed to get payment status', error, { paymentId });
-      throw error;
+      throw error instanceof Error ? error : new Error('Failed to get payment status');
     }
   }
 
-   verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
-     try {
-       const crypto = window.crypto || (window as any).msCrypto;
-       const encoder = new TextEncoder();
-       const data = encoder.encode(payload);
-       const key = encoder.encode(secret);
+  async verifyWebhookSignature(payload: string, signature: string, secret: string): Promise<WebhookVerifyResult> {
+    if (!signature || !secret) {
+      return { ok: false, error: 'Missing signature or secret' };
+    }
 
-       let result = false;
-       crypto.subtle
-         .importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-         .then((cryptoKey: CryptoKey) => crypto.subtle.sign('HMAC', cryptoKey, data))
-         .then((signatureBuffer: ArrayBuffer) => {
-           const signatureArray = Array.from(new Uint8Array(signatureBuffer));
-           const signatureHex = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
-           result = signatureHex === signature;
-         })
-         .catch(() => false);
+    try {
+      const cryptoKey = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign'],
+      );
 
-       return result;
-     } catch {
-       return false;
-     }
-   }
+      const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(payload));
+      const signatureBytes = new Uint8Array(signatureBuffer);
+      const signatureHex = Array.from(signatureBytes)
+        .map(byte => byte.toString(16).padStart(2, '0'))
+        .join('');
 
-  async handleWebhook(event: {
-    type: string;
-    data: Record<string, unknown>;
-  }): Promise<void> {
-    logger.info('Processing payment webhook', { type: event.type });
+      const expected = signature
+        .replace(/^sha256=/, '')
+        .replace(/^0x/, '')
+        .trim();
 
-    switch (event.type) {
-      case 'payment_intent.succeeded':
-        await this.handlePaymentSuccess(event.data);
-        break;
-      case 'payment_intent.payment_failed':
-        await this.handlePaymentFailure(event.data);
-        break;
-      case 'charge.refunded':
-        await this.handleRefund(event.data);
-        break;
-      default:
-        logger.info('Unhandled webhook event', { type: event.type });
+      return { ok: signatureHex === expected };
+    } catch (error) {
+      logger.error('Webhook signature verification failed', error);
+      return { ok: false, error: error instanceof Error ? error.message : 'Unknown verification error' };
     }
   }
+
 
   private async handlePaymentSuccess(data: Record<string, unknown>): Promise<void> {
     logger.info('Payment succeeded', { paymentId: data.id });
