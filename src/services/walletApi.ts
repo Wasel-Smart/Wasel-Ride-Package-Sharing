@@ -50,6 +50,16 @@ type PaymentMethodRow = {
   updated_at?: string | null;
 };
 
+type PaymentMethod = {
+  id: string;
+  type: string;
+  provider?: string;
+  last4?: string;
+  is_default?: boolean;
+  status?: string;
+  token_reference?: string;
+};
+
 export interface WalletSummary {
   id: string | null;
   userId: string | null;
@@ -59,7 +69,7 @@ export interface WalletSummary {
   autoTopUp: boolean;
   autoTopUpAmount: number;
   autoTopUpThreshold: number;
-  paymentMethods: any[];
+  paymentMethods: PaymentMethod[];
   createdAt: string | null;
 }
 
@@ -106,7 +116,7 @@ export interface WalletData {
   pinSet: boolean;
   autoTopUp: boolean;
   transactions: WalletTransaction[];
-  activeEscrows: any[];
+  activeEscrows: unknown[];
   activeRewards: RewardItem[];
   subscription: WalletSubscription | null;
 }

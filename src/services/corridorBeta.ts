@@ -94,11 +94,15 @@ function signalForRoute(
 }
 
 function metricForRoute(
-  route: CityRoute,
-  metrics: CorridorBetaMetricCorridor[],
+   route: CityRoute,
+   metrics: CorridorBetaMetricCorridor[],
 ): CorridorBetaMetricCorridor | undefined {
   const key = `${normalizeCity(route.from)}|${normalizeCity(route.to)}`;
   return metrics.find(metric => metric.corridorId === key);
+}
+
+function getCorridorBetaMetricsData(): CorridorBetaMetricCorridor[] {
+  return getCorridorBetaMetricCorridors();
 }
 
 function isHabitRoute(route: CityRoute) {
@@ -185,39 +189,47 @@ function buildBetaCorridor(
   route: CityRoute,
   marketSnapshot: ReturnType<typeof buildCorridorMarketSnapshot>,
   intelligenceSnapshot: ReturnType<typeof buildRouteIntelligenceSnapshot>,
+  metrics: CorridorBetaMetricCorridor[],
 ): CorridorBetaCorridor {
   const marketRow = marketRowForRoute(route, marketSnapshot);
   const signal = signalForRoute(route, intelligenceSnapshot);
-  const weeklyRides = calculateWeeklyRides(signal);
-  const repeatRideRate = calculateRepeatRideRate(route, signal);
-  const supplyReliability = calculateSupplyReliability(signal);
-  const proofScore = calculateProofScore({
+  const metric = metricForRoute(route, metrics);
+  const weeklyRides = metric?.weeklyRides ?? calculateWeeklyRides(signal);
+  const repeatRideRate = metric?.repeatRideRate ?? calculateRepeatRideRate(route, signal);
+  const supplyReliability = metric?.supplyReliability ?? calculateSupplyReliability(signal);
+  const proofScore = metric?.proofScore ?? calculateProofScore({
     weeklyRides,
     repeatRideRate,
     supplyReliability,
     savingsPercent: marketRow?.savingsPercent ?? route.packageEnabled ? 28 : 22,
     signal,
   });
-  const weeksAtTarget = calculateWeeksAtTarget(weeklyRides, repeatRideRate, proofScore);
+  const weeksAtTarget = metric?.weeksAtTarget ?? calculateWeeksAtTarget(weeklyRides, repeatRideRate, proofScore);
   const gate = evaluateCorridorExpansion({
     weeklyRides,
-    weeklyRideGoal: WEEKLY_RIDE_GOAL,
+    weeklyRideGoal: metric?.weeklyRideGoal ?? WEEKLY_RIDE_GOAL,
     repeatRideRate,
-    repeatRideGoal: REPEAT_RIDE_GOAL,
+    repeatRideGoal: metric?.repeatRideGoal ?? REPEAT_RIDE_GOAL,
     supplyReliability,
-    supplyReliabilityGoal: SUPPLY_RELIABILITY_GOAL,
+    supplyReliabilityGoal: metric?.supplyReliabilityGoal ?? SUPPLY_RELIABILITY_GOAL,
     weeksAtTarget,
   });
   const reason =
-    gate.blockers.length === 0
-      ? 'This corridor is ready for controlled expansion because rides, repeat behavior, and supply are all stable.'
-      : `Narrow the beta until ${gate.blockers.join(', ')} are stronger.`;
+    metric && gate.blockers.length === 0
+      ? 'Observed ride data clears the corridor expansion gate.'
+      : metric
+        ? `Observed data is still narrowing the beta until ${gate.blockers.join(', ')} are stronger.`
+        : gate.blockers.length === 0
+          ? 'This corridor is ready for controlled expansion because rides, repeat behavior, and supply are all stable.'
+          : `Narrow the beta until ${gate.blockers.join(', ')} are stronger.`;
   const nextAction =
-    gate.stage === 'expand'
-      ? 'Open the next corridor only after the same three-week gate passes.'
-      : gate.stage === 'prove'
-        ? 'Keep supply fixed and push repeat riders until the consistency gate clears.'
-        : 'Run one route, one pickup node, and one rider segment until demand concentrates.';
+    metric && gate.stage === 'expand'
+      ? 'Observed rides, repeat behavior, supply, and consistency are strong enough to expand.'
+      : gate.stage === 'expand'
+        ? 'Open the next corridor only after the same three-week gate passes.'
+        : gate.stage === 'prove'
+          ? 'Keep supply fixed and push repeat riders until the consistency gate clears.'
+          : 'Run one route, one pickup node, and one rider segment until demand concentrates.';
 
   return {
     routeId: route.id,
@@ -225,12 +237,12 @@ function buildBetaCorridor(
     from: route.from,
     to: route.to,
     path: betaPath(route),
-    stage: gate.stage,
+    stage: metric?.stage ?? gate.stage,
     proofScore,
     weeklyRides,
-    weeklyRideGoal: WEEKLY_RIDE_GOAL,
+    weeklyRideGoal: metric?.weeklyRideGoal ?? WEEKLY_RIDE_GOAL,
     repeatRideRate,
-    repeatRideGoal: REPEAT_RIDE_GOAL,
+    repeatRideGoal: metric?.repeatRideGoal ?? REPEAT_RIDE_GOAL,
     supplyReliability,
     savingsPercent: marketRow?.savingsPercent ?? 28,
     reason,
@@ -253,8 +265,9 @@ export function buildCorridorBetaPlan(args?: { regionCode?: string; limit?: numb
     });
   const marketSnapshot = buildCorridorMarketSnapshot(10);
   const intelligenceSnapshot = buildRouteIntelligenceSnapshot();
+  const metrics = getCorridorBetaMetricsData();
   const focusCorridors = candidates.slice(0, limit).map(route =>
-    buildBetaCorridor(route, marketSnapshot, intelligenceSnapshot),
+    buildBetaCorridor(route, marketSnapshot, intelligenceSnapshot, metrics),
   );
   const expansionDecision =
     focusCorridors.length > 0 && focusCorridors.every(corridor => corridor.stage === 'expand')
