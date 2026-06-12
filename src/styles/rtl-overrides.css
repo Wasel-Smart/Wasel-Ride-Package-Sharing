@@ -1,0 +1,251 @@
+/**
+ * rtl-overrides.css – Wasel | واصل
+ *
+ * Comprehensive RTL layout fixes for Arabic UI.
+ * Applies when [dir="rtl"] is set on <html> or a parent element.
+ * Import this file in index.css after all other design-system imports.
+ *
+ * Philosophy:
+ *  – Use logical CSS properties (margin-inline-start, padding-inline-end, etc.)
+ *    in new components; use these overrides only where legacy components have
+ *    direction-sensitive hard-coded values.
+ *  – Keep specificity low: use [dir="rtl"] + class combinator.
+ *  – Font: Cairo is loaded for Arabic; we force it on RTL text nodes.
+ */
+
+/* ── Arabic font stack ────────────────────────────────────────────────────── */
+
+[dir="rtl"],
+[dir="rtl"] body,
+[dir="rtl"] input,
+[dir="rtl"] select,
+[dir="rtl"] textarea,
+[dir="rtl"] button {
+  font-family: 'Cairo', 'Tajawal', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0;       /* Arabic doesn't use letter-spacing */
+  word-spacing: normal;
+}
+
+/* Display/heading text in Arabic */
+[dir="rtl"] .ds-title,
+[dir="rtl"] .ds-section-title,
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3 {
+  font-family: 'Cairo', 'Tajawal', system-ui, sans-serif;
+  letter-spacing: 0;
+  /* Arabic headlines look better with normal weight distribution */
+  font-feature-settings: 'kern' 1;
+}
+
+/* ── Layout: directional flips ────────────────────────────────────────────── */
+
+/* Navigation / sidebar – right-aligned in RTL */
+[dir="rtl"] .ds-shell-header__inner,
+[dir="rtl"] .ds-shell-header__actions {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .ds-screen-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 18rem);
+}
+
+/* Cards with leading icons / badges */
+[dir="rtl"] .ds-list-item,
+[dir="rtl"] .ds-kpi-item {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+[dir="rtl"] .ds-route-card__header,
+[dir="rtl"] .ds-inline-row,
+[dir="rtl"] .ds-row {
+  flex-direction: row-reverse;
+}
+
+/* Bottom nav items */
+[dir="rtl"] .ds-mobile-bottom-nav {
+  flex-direction: row-reverse;
+}
+
+/* Step rail */
+[dir="rtl"] .ds-step-rail__item {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+/* Breadcrumbs / divider */
+[dir="rtl"] .ds-divider {
+  flex-direction: row-reverse;
+}
+
+/* ── Form fields ───────────────────────────────────────────────────────────── */
+
+[dir="rtl"] .ds-input,
+[dir="rtl"] .ds-select,
+[dir="rtl"] .ds-textarea {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Move select arrow to the left side */
+[dir="rtl"] .ds-select {
+  background-position:
+    calc(0% + 1.2rem) calc(50% - 0.15rem),
+    calc(0% + 0.9rem) calc(50% - 0.15rem);
+  padding-right: var(--ds-space-4);
+  padding-left: 2.5rem;
+}
+
+/* Input icons (leading/trailing swap) */
+[dir="rtl"] .input-icon-start {
+  left: auto;
+  right: var(--ds-space-4);
+}
+
+[dir="rtl"] .input-icon-end {
+  right: auto;
+  left: var(--ds-space-4);
+}
+
+[dir="rtl"] .input-with-icon-start {
+  padding-left: var(--ds-space-4);
+  padding-right: 2.75rem;
+}
+
+[dir="rtl"] .input-with-icon-end {
+  padding-right: var(--ds-space-4);
+  padding-left: 2.75rem;
+}
+
+/* ── Buttons with icons ────────────────────────────────────────────────────── */
+
+[dir="rtl"] .ds-button {
+  flex-direction: row-reverse;
+}
+
+/* ── Toast / notification ─────────────────────────────────────────────────── */
+
+[dir="rtl"] .sonner-toast {
+  direction: rtl;
+  text-align: right;
+}
+
+/* ── Auth page ────────────────────────────────────────────────────────────── */
+
+[dir="rtl"] .ds-auth-grid {
+  grid-template-columns: minmax(24rem, 0.95fr) minmax(0, 1.05fr);
+}
+
+/* ── Password requirements list ──────────────────────────────────────────── */
+
+[dir="rtl"] .password-requirements li {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+/* ── Badge / pill text ────────────────────────────────────────────────────── */
+
+[dir="rtl"] .ds-badge,
+[dir="rtl"] .ds-brand-pill,
+[dir="rtl"] .ds-eyebrow,
+[dir="rtl"] .ds-panel-kicker {
+  flex-direction: row-reverse;
+}
+
+/* ── Hero panel ───────────────────────────────────────────────────────────── */
+
+[dir="rtl"] .ds-hero-panel__signals {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .ds-hero-panel__signal-chip {
+  flex-direction: row-reverse;
+}
+
+/* ── Support / minor actions ─────────────────────────────────────────────── */
+
+[dir="rtl"] .ds-support-actions,
+[dir="rtl"] .ds-minor-actions,
+[dir="rtl"] .ds-brand-pill-row {
+  flex-direction: row-reverse;
+}
+
+/* ── Sidebar (if visible on desktop) ─────────────────────────────────────── */
+
+[dir="rtl"] .ds-sidebar {
+  border-right: none;
+  border-left: 1px solid var(--ds-border);
+}
+
+/* ── Scrollbar position ──────────────────────────────────────────────────── */
+
+[dir="rtl"] .ds-scroll-stack {
+  padding-right: 0;
+  padding-left: var(--ds-space-1);
+}
+
+/* ── Number / date inputs — keep LTR for these ───────────────────────────── */
+
+[dir="rtl"] input[type="number"],
+[dir="rtl"] input[type="date"],
+[dir="rtl"] input[type="time"],
+[dir="rtl"] input[type="tel"] {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Phone number with Jordanian prefix */
+[dir="rtl"] input[data-type="phone"] {
+  direction: ltr;
+  text-align: left;
+  padding-left: 5rem; /* room for +962 flag prefix */
+}
+
+/* ── Map controls ─────────────────────────────────────────────────────────── */
+
+[dir="rtl"] .leaflet-control-container .leaflet-top.leaflet-left {
+  left: auto;
+  right: 10px;
+}
+
+[dir="rtl"] .leaflet-control-container .leaflet-top.leaflet-right {
+  right: auto;
+  left: 10px;
+}
+
+/* ── Verification steps ──────────────────────────────────────────────────── */
+
+[dir="rtl"] .verification-step {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+/* ── Trip card ────────────────────────────────────────────────────────────── */
+
+[dir="rtl"] .trip-route-arrow {
+  transform: scaleX(-1);
+}
+
+/* ── Notification bell / dropdown ────────────────────────────────────────── */
+
+[dir="rtl"] .notification-dropdown {
+  right: auto;
+  left: 0;
+}
+
+/* ── Progress bar fill direction ─────────────────────────────────────────── */
+
+[dir="rtl"] .progress-bar-fill {
+  transform-origin: right center;
+}
+
+/* ── Tailwind RTL utilities ──────────────────────────────────────────────── */
+/* These complement Tailwind v4's built-in rtl: variant */
+
+[dir="rtl"] .rtl\:text-right { text-align: right; }
+[dir="rtl"] .rtl\:text-left  { text-align: left; }
+[dir="rtl"] .rtl\:flex-row-reverse { flex-direction: row-reverse; }
+[dir="rtl"] .rtl\:space-x-reverse > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}

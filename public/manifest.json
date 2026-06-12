@@ -1,7 +1,7 @@
 {
-  "name": "Wasel",
-  "short_name": "Wasel",
-  "description": "Wasel is the live mobility network for rides, buses, packages, and corridor-first mobility across Jordan.",
+  "name": "واصل – Wasel",
+  "short_name": "واصل",
+  "description": "واصل – شبكة التنقل الحي للرحلات والباصات والطرود عبر الأردن. Jordan's live mobility network for rides, buses, and packages.",
   "id": "/",
   "start_url": "/?source=pwa",
   "display": "standalone",
@@ -10,8 +10,8 @@
   "theme_color": "#0B0F14",
   "orientation": "portrait-primary",
   "scope": "/",
-  "lang": "en-JO",
-  "dir": "ltr",
+  "lang": "ar-JO",
+  "dir": "rtl",
   "icons": [
     {
       "src": "/icon-192.png?v=20260422-premium",
@@ -41,30 +41,30 @@
   "categories": ["travel", "navigation", "transportation"],
   "shortcuts": [
     {
-      "name": "Find Ride",
-      "short_name": "Find",
-      "description": "Search for available rides",
+      "name": "دوّر على رحلة – Find Ride",
+      "short_name": "رحلة",
+      "description": "ابحث عن رحلات متاحة",
       "url": "/app/find-ride",
       "icons": [{ "src": "/icon-192.png?v=20260422-premium", "sizes": "192x192" }]
     },
     {
-      "name": "Offer Ride",
-      "short_name": "Offer",
-      "description": "Create a new trip",
+      "name": "اعرض رحلة – Offer Ride",
+      "short_name": "عرض",
+      "description": "أنشئ رحلة جديدة",
       "url": "/app/offer-ride",
       "icons": [{ "src": "/icon-192.png?v=20260422-premium", "sizes": "192x192" }]
     },
     {
-      "name": "My Trips",
-      "short_name": "Trips",
-      "description": "View your trips",
+      "name": "رحلاتي – My Trips",
+      "short_name": "رحلاتي",
+      "description": "عرض رحلاتك",
       "url": "/app/my-trips",
       "icons": [{ "src": "/icon-192.png?v=20260422-premium", "sizes": "192x192" }]
     },
     {
-      "name": "Wallet",
-      "short_name": "Wallet",
-      "description": "Manage your wallet",
+      "name": "المحفظة – Wallet",
+      "short_name": "محفظة",
+      "description": "إدارة محفظتك",
       "url": "/app/wallet",
       "icons": [{ "src": "/icon-192.png?v=20260422-premium", "sizes": "192x192" }]
     }
@@ -93,6 +93,16 @@
       "url": "/app/find-ride?ref=%s"
     }
   ],
-  "related_applications": [],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=jo.wasel.app",
+      "id": "jo.wasel.app"
+    },
+    {
+      "platform": "itunes",
+      "url": "https://apps.apple.com/jo/app/wasel/id0000000000"
+    }
+  ],
   "prefer_related_applications": false
 }

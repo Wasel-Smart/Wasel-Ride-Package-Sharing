@@ -1,0 +1,313 @@
+/**
+ * mobile-native-feel.css – Wasel | واصل
+ *
+ * Progressive enhancements that make the PWA feel like a native app on
+ * iOS and Android.  Import after base.css in index.css.
+ *
+ * Covers:
+ *  – Safe-area insets (notch / home indicator / status bar)
+ *  – Overscroll / rubber-band control
+ *  – Touch target sizing (44 × 44 px minimum, per HIG / Material)
+ *  – Fast-tap (remove 300 ms delay)
+ *  – Momentum scrolling on iOS
+ *  – Pull-to-refresh prevention on app shell
+ *  – Text selection control
+ *  – Tap highlight removal
+ *  – Haptic-friendly animation timing
+ *  – Standalone PWA chrome adjustments
+ */
+
+/* ── Safe-area utilities ────────────────────────────────────────────────────── */
+
+.safe-area-pt  { padding-top:    env(safe-area-inset-top); }
+.safe-area-pb  { padding-bottom: env(safe-area-inset-bottom); }
+.safe-area-pl  { padding-left:   env(safe-area-inset-left); }
+.safe-area-pr  { padding-right:  env(safe-area-inset-right); }
+
+.safe-area-mt  { margin-top:    env(safe-area-inset-top); }
+.safe-area-mb  { margin-bottom: env(safe-area-inset-bottom); }
+
+/* Bottom nav — always above the home indicator */
+.ds-mobile-bottom-nav {
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+/* Top header — always below the status bar */
+.ds-shell-header {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* ── Standalone PWA tweaks ──────────────────────────────────────────────────── */
+
+@media (display-mode: standalone) {
+  /* Give the header the right background under the status bar */
+  .ds-shell-header {
+    background: var(--wasel-header-bg, rgba(3, 8, 18, 0.97));
+  }
+
+  /* Push content below the status bar */
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Bottom nav sits above the home indicator in standalone mode */
+  .ds-mobile-bottom-nav {
+    bottom: max(0.75rem, calc(env(safe-area-inset-bottom) + 0.25rem));
+  }
+}
+
+/* ── Touch interactions ────────────────────────────────────────────────────── */
+
+/* Remove tap highlight on all interactive elements */
+a,
+button,
+[role="button"],
+input,
+select,
+textarea,
+label {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fast tap — eliminates 300 ms click delay */
+html {
+  touch-action: manipulation;
+}
+
+/* Minimum touch target size */
+button,
+[role="button"],
+.ds-button,
+.ds-nav-link,
+.ds-tab-trigger,
+.ds-mobile-bottom-nav__item {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ── Scrolling ─────────────────────────────────────────────────────────────── */
+
+/* Momentum scrolling on iOS for all scroll containers */
+.overflow-y-auto,
+.overflow-y-scroll,
+.overflow-auto,
+.overflow-scroll,
+.ds-scroll-stack {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Prevent pull-to-refresh on the app shell */
+html,
+#root,
+.ds-app {
+  overscroll-behavior-y: none;
+}
+
+/* Horizontal swipe areas (ride cards, etc.) should scroll freely */
+.horizontal-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.horizontal-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Text selection ────────────────────────────────────────────────────────── */
+
+/* Prevent accidental text selection during swipe gestures */
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Always allow selection in inputs and content areas */
+input,
+textarea,
+[contenteditable],
+.selectable {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* ── Input / form native feel ────────────────────────────────────────────── */
+
+/* Prevent iOS from zooming on input focus (font-size >= 16px) */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+  font-size: max(16px, 1rem);
+}
+
+/* iOS-style rounded corners on inputs */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="password"] {
+  border-radius: var(--ds-radius-md);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ── Animation timing for haptic feel ───────────────────────────────────── */
+
+/* Buttons feel more "physical" with a quick scale on active */
+.ds-button:active,
+button:active,
+[role="button"]:active {
+  transform: scale(0.97);
+  transition: transform 80ms ease-out;
+}
+
+/* Bottom nav items get a satisfying pop */
+.ds-mobile-bottom-nav__item:active {
+  transform: scale(0.93) translateY(1px);
+}
+
+/* ── Modal / sheet backdrop ─────────────────────────────────────────────── */
+
+/* Prevent body scroll when a bottom sheet is open */
+body.sheet-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+
+/* ── Keyboard-aware layout ──────────────────────────────────────────────── */
+
+/* On iOS, the viewport shrinks when the keyboard appears.
+   Push sticky bottoms out of the way. */
+@supports (height: 100dvh) {
+  .h-screen {
+    height: 100dvh;
+  }
+
+  .min-h-screen {
+    min-height: 100dvh;
+  }
+
+  .ds-app {
+    min-height: 100dvh;
+  }
+}
+
+/* ── Bottom sheet / drawer ──────────────────────────────────────────────── */
+
+.bottom-sheet {
+  position: fixed;
+  inset-x: 0;
+  bottom: 0;
+  z-index: 50;
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
+  background: var(--ds-surface-raised);
+  border-top: 1px solid var(--ds-border);
+  padding-bottom: env(safe-area-inset-bottom);
+  transform: translateY(0);
+  transition: transform 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.bottom-sheet[data-state="closed"] {
+  transform: translateY(100%);
+}
+
+/* Drag handle */
+.bottom-sheet__handle {
+  width: 2.5rem;
+  height: 4px;
+  margin: 0.75rem auto 0;
+  border-radius: 999px;
+  background: var(--ds-border);
+}
+
+/* ── iOS-style action list ───────────────────────────────────────────────── */
+
+.action-list {
+  border-radius: 1rem;
+  overflow: hidden;
+  background: var(--ds-surface-raised);
+  border: 1px solid var(--ds-border);
+}
+
+.action-list__item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--ds-text);
+  font-size: 0.9375rem;
+  text-align: start;
+  cursor: pointer;
+  transition: background 120ms;
+  border-bottom: 1px solid var(--ds-border);
+}
+
+.action-list__item:last-child {
+  border-bottom: none;
+}
+
+.action-list__item:active {
+  background: var(--ds-surface-soft);
+}
+
+.action-list__item[data-destructive="true"] {
+  color: var(--ds-danger);
+}
+
+/* ── Loading skeleton shimmer ───────────────────────────────────────────── */
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--ds-surface-soft) 25%,
+    color-mix(in srgb, var(--ds-surface-raised) 80%, transparent) 50%,
+    var(--ds-surface-soft) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* ── Floating action button ─────────────────────────────────────────────── */
+
+.fab {
+  position: fixed;
+  bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem));
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 999px;
+  border: none;
+  background: var(--ds-accent);
+  color: var(--text-inverse);
+  font-size: 1.25rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.32), 0 2px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.fab:active {
+  transform: scale(0.93);
+}
+
+[dir="ltr"] .fab { right: 1rem; }
+[dir="rtl"] .fab { left: 1rem; }

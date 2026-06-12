@@ -34,9 +34,8 @@
     "ignoreDeprecations": "6.0"
   },
   "include": [
-    "src/main.tsx",
-    "src/App.tsx",
-    "src/wasel-routes.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     "src/**/*.d.ts",
     "shared/**/*.ts",
     "vite.config.ts",
