@@ -4,12 +4,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { useLiveUserStats } from '../../services/liveDataService';
+import { buildCorridorBetaPlan } from '../../services/corridorBeta';
 import { getCorridorDemandLeaders } from '../../services/growthEngine';
 import { CurrencyService } from '../../utils/currency';
 import { trackUserAction } from '../../utils/monitoring';
 import { C, F, POPULAR_ROUTES } from './HomePageShared';
 import {
   CorridorsSection,
+  CorridorBetaFocusSection,
   HomeHeroSection,
   HomePageStyles,
   OnboardingDemoSection,
@@ -172,6 +174,8 @@ export function HomePage() {
     }));
   }, [ar, svc]);
 
+  const corridorBetaPlan = useMemo(() => buildCorridorBetaPlan(), []);
+
   const trustScore = liveStats
     ? Math.max(78, Math.min(96, Math.round(72 + liveStats.totalTrips / 5 + liveStats.rating * 2)))
     : 87;
@@ -198,6 +202,12 @@ export function HomePage() {
         <OnboardingDemoSection ar={ar} onNavigate={handleNavigate} />
 
         <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={handleNavigate} />
+
+        <CorridorBetaFocusSection
+          ar={ar}
+          plan={corridorBetaPlan}
+          onNavigate={handleNavigate}
+        />
 
         <OutcomesSection ar={ar} corridorCards={corridorCards} onNavigate={handleNavigate} />
 
