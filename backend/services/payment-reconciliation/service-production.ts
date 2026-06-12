@@ -1,14 +1,12 @@
-/**
- * Payment Reconciliation Service - PRODUCTION IMPLEMENTATION
- * Real Stripe SDK integration with idempotency and retry logic
- */
-
 import postgres from 'postgres';
 import Stripe from 'stripe';
 import { fileURLToPath } from 'node:url';
-import type { DomainEventEnvelope } from '../../../src/domain/events';
+import type { DomainEventEnvelope, DomainEventPayloadMap } from '../../../src/domain/events';
 import { eventBroker } from '../../../src/platform/event-broker-redis-production';
 import { startRuntimeHealthServer, type RuntimeHealthServer } from '../runtime/http-health';
+import { getActiveSpan } from '../shared/opentelemetry';
+import { getLogger } from '../shared/structured-logger';
+import { SpanStatusCode } from '@opentelemetry/api';
 
 const sql = postgres(process.env.DATABASE_URL || '', {
   max: 10,
@@ -21,34 +19,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   timeout: 30000,
 });
 
-interface PaymentAuthorization {
-  paymentId: string;
-  rideId?: string;
-  packageId?: string;
-  amount: number;
-  currency: string;
-  providerId: string;
-  escrowStatus: 'held' | 'released' | 'refunded';
-  authorizedAt: string;
-}
+const logger = getLogger('payment-reconciliation');
 
-interface CaptureResult {
-  paymentId: string;
-  capturedAmount: number;
-  providerTransactionId: string;
-  capturedAt: string;
-  status: 'success' | 'failed';
-  failureReason?: string;
-}
+type PaymentsAuthorizedPayload = DomainEventPayloadMap['payments.authorized'];
+type PaymentsCapturedPayload = DomainEventPayloadMap['payments.captured'];
 
 class PaymentProviderAdapter {
-  private readonly MAX_RETRIES = 3;
-
   async capturePayment(
     providerId: string,
     amount: number,
     idempotencyKey: string,
   ): Promise<CaptureResult> {
+    const span = getActiveSpan();
+    span?.setAttribute('stripe.provider_id', providerId);
+    span?.setAttribute('payment.amount', amount);
+
     try {
       const paymentIntent = await stripe.paymentIntents.capture(
         providerId,
@@ -57,26 +42,31 @@ class PaymentProviderAdapter {
         },
         {
           idempotencyKey,
-        }
+        },
       );
 
       return {
-        paymentId: paymentIntent.metadata.paymentId || '',
+        paymentId: paymentIntent.metadata.paymentId ?? '',
         capturedAmount: paymentIntent.amount_received,
         providerTransactionId: paymentIntent.id,
         capturedAt: new Date(paymentIntent.created * 1000).toISOString(),
         status: 'success',
       };
-    } catch (error: any) {
-      console.error('[PaymentProvider] Capture failed:', error);
-      
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error({ error: message }, 'Payment capture failed');
+      if (span) {
+        span.setStatus({ code: SpanStatusCode.ERROR, message });
+        if (error instanceof Error) span.recordException(error);
+      }
+
       return {
         paymentId: '',
         capturedAmount: 0,
         providerTransactionId: providerId,
         capturedAt: new Date().toISOString(),
         status: 'failed',
-        failureReason: error.message,
+        failureReason: message,
       };
     }
   }
@@ -97,12 +87,13 @@ class PaymentProviderAdapter {
         },
         {
           idempotencyKey,
-        }
+        },
       );
-      
+
       return true;
-    } catch (error) {
-      console.error('[PaymentProvider] Refund failed:', error);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error({ error: message, providerId }, 'Refund failed');
       return false;
     }
   }
@@ -111,11 +102,20 @@ class PaymentProviderAdapter {
     try {
       const paymentIntent = await stripe.paymentIntents.retrieve(providerId);
       return paymentIntent.status;
-    } catch (error) {
-      console.error('[PaymentProvider] Status check failed:', error);
+    } catch (error: unknown) {
+      logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Status check failed');
       return 'unknown';
     }
   }
+}
+
+interface CaptureResult {
+  paymentId: string;
+  capturedAmount: number;
+  providerTransactionId: string;
+  capturedAt: string;
+  status: 'success' | 'failed';
+  failureReason?: string;
 }
 
 export class PaymentReconciliationService {
@@ -126,7 +126,7 @@ export class PaymentReconciliationService {
   private ready = false;
 
   async start(): Promise<void> {
-    console.log('[PaymentReconciliation] Starting service...');
+    logger.info('Starting payment-reconciliation service...');
 
     this.healthServer = startRuntimeHealthServer({
       serviceName: 'payment-reconciliation-service',
@@ -146,7 +146,7 @@ export class PaymentReconciliationService {
     );
 
     this.ready = true;
-    console.log('[PaymentReconciliation] Service started');
+    logger.info('Payment-reconciliation service started');
   }
 
   async stop(): Promise<void> {
@@ -158,19 +158,19 @@ export class PaymentReconciliationService {
       await this.healthServer.close();
     }
     await sql.end();
-    console.log('[PaymentReconciliation] Service stopped');
+    logger.info('Payment-reconciliation service stopped');
   }
 
   private async handlePaymentAuthorization(
     event: DomainEventEnvelope<'payments.authorized'>,
   ): Promise<void> {
-    const startTime = Date.now();
-    console.log(`[PaymentReconciliation] Processing: ${event.id}`);
+    const span = getActiveSpan();
+    span?.setAttribute('event.id', event.id);
 
-    const authorization: PaymentAuthorization = event.payload as any;
+    const authorization: PaymentsAuthorizedPayload = event.payload;
 
     if (this.processing.has(authorization.paymentId)) {
-      console.log(`[PaymentReconciliation] Already processing ${authorization.paymentId}`);
+      logger.info({ paymentId: authorization.paymentId }, 'Already processing payment');
       return;
     }
 
@@ -179,7 +179,7 @@ export class PaymentReconciliationService {
     try {
       const shouldCapture = await this.shouldCapturePayment(authorization);
       if (!shouldCapture) {
-        console.log(`[PaymentReconciliation] Payment ${authorization.paymentId} not ready`);
+        logger.info({ paymentId: authorization.paymentId }, 'Payment not ready for capture');
         return;
       }
 
@@ -191,39 +191,40 @@ export class PaymentReconciliationService {
       );
 
       if (result.status === 'failed') {
-        console.error(`[PaymentReconciliation] Capture failed: ${result.failureReason}`);
         throw new Error(`Payment capture failed: ${result.failureReason}`);
       }
 
       await this.recordCapture(authorization.paymentId, result);
 
+      const capturedPayload: PaymentsCapturedPayload = {
+        paymentId: authorization.paymentId,
+        rideId: authorization.rideId,
+        packageId: authorization.packageId,
+        capturedAmount: result.capturedAmount,
+        providerTransactionId: result.providerTransactionId,
+        capturedAt: result.capturedAt,
+      };
+
       await eventBroker.publish({
         id: `evt-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         type: 'payments.captured',
-        payload: {
-          paymentId: authorization.paymentId,
-          rideId: authorization.rideId,
-          packageId: authorization.packageId,
-          capturedAmount: result.capturedAmount,
-          providerTransactionId: result.providerTransactionId,
-          capturedAt: result.capturedAt,
-        } as any,
+        payload: capturedPayload,
         producer: 'payment-reconciliation-service',
         traceId: event.traceId,
         occurredAt: new Date().toISOString(),
       });
 
-      const duration = Date.now() - startTime;
-      console.log(`[PaymentReconciliation] Captured in ${duration}ms: ${authorization.paymentId}`);
-    } catch (error) {
-      console.error(`[PaymentReconciliation] Error:`, error);
+      logger.info({ paymentId: authorization.paymentId }, 'Payment captured successfully');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error({ error: message, paymentId: authorization.paymentId }, 'Payment processing error');
       throw error;
     } finally {
       this.processing.delete(authorization.paymentId);
     }
   }
 
-  private async shouldCapturePayment(authorization: PaymentAuthorization): Promise<boolean> {
+  private async shouldCapturePayment(authorization: PaymentsAuthorizedPayload): Promise<boolean> {
     if (authorization.escrowStatus === 'released') {
       return true;
     }
@@ -242,8 +243,8 @@ export class PaymentReconciliationService {
         `;
         return pkg.length > 0 && pkg[0].status === 'delivered';
       }
-    } catch (error) {
-      console.error('[PaymentReconciliation] Status check error:', error);
+    } catch (error: unknown) {
+      logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Status check error');
     }
 
     return false;
@@ -262,9 +263,10 @@ export class PaymentReconciliationService {
         WHERE id = ${paymentId}
       `;
 
-      console.log(`[PaymentReconciliation] Recorded capture: ${paymentId}`);
-    } catch (error) {
-      console.error('[PaymentReconciliation] Record capture error:', error);
+      logger.info({ paymentId }, 'Recorded capture');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logger.error({ error: message, paymentId }, 'Record capture error');
       throw error;
     }
   }
@@ -280,13 +282,13 @@ export class PaymentReconciliationService {
       `;
 
       if (payment.length === 0) {
-        console.error(`[PaymentReconciliation] Payment not found: ${paymentId}`);
+        logger.error({ paymentId }, 'Payment not found');
         return false;
       }
 
-      const providerId = payment[0].provider_id;
+      const providerId = payment[0].provider_id as string;
       const idempotencyKey = `refund-${paymentId}-${Date.now()}`;
-      
+
       const success = await this.provider.refundPayment(
         providerId,
         amount,
@@ -300,13 +302,13 @@ export class PaymentReconciliationService {
           SET status = 'refunded', refunded_at = NOW() 
           WHERE id = ${paymentId}
         `;
-        
-        console.log(`[PaymentReconciliation] Refund processed: ${paymentId}`);
+
+        logger.info({ paymentId }, 'Refund processed');
       }
 
       return success;
-    } catch (error) {
-      console.error('[PaymentReconciliation] Refund error:', error);
+    } catch (error: unknown) {
+      logger.error({ error: error instanceof Error ? error.message : String(error) }, 'Refund error');
       return false;
     }
   }
@@ -324,16 +326,16 @@ export class PaymentReconciliationService {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const service = new PaymentReconciliationService();
-  
+
   process.on('SIGTERM', async () => {
-    console.log('[PaymentReconciliation] SIGTERM received');
+    logger.info('SIGTERM received');
     await service.stop();
     await eventBroker.disconnect();
     process.exit(0);
   });
 
   service.start().catch(error => {
-    console.error('[PaymentReconciliation] Fatal error:', error);
+    logger.error({ error }, 'Fatal error');
     process.exit(1);
   });
 }
