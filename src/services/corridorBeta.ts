@@ -93,6 +93,14 @@ function signalForRoute(
   );
 }
 
+function metricForRoute(
+  route: CityRoute,
+  metrics: CorridorBetaMetricCorridor[],
+): CorridorBetaMetricCorridor | undefined {
+  const key = `${normalizeCity(route.from)}|${normalizeCity(route.to)}`;
+  return metrics.find(metric => metric.corridorId === key);
+}
+
 function isHabitRoute(route: CityRoute) {
   const label = `${route.useCase} ${route.useCaseAr}`.toLowerCase();
   return (
