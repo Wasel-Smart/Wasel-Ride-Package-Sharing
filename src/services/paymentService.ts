@@ -1,11 +1,10 @@
-﻿
-/**
+﻿/**
  * Production Payment Service
  * Stripe + CliQ integration with webhook verification and retry logic
  */
 
 import { logger } from '../utils/monitoring';
-import { withRateLimit, paymentLimiter } from '../utils/rateLimit';
+import { paymentLimiter } from '../utils/rateLimit';
 
 export interface PaymentIntent {
   id: string;
@@ -31,22 +30,53 @@ export type WebhookVerifyResult = {
   error?: string;
 };
 
-class PaymentService {
-   private cliqConfig: {
-     merchantId: string;
-     apiKey: string;
-     checkoutUrl: string;
-   };
+function buildCliqCheckoutUrl(transactionId: string, amount: number, returnUrl: string): string {
+  const params = new URLSearchParams({
+    transactionId,
+    amount: amount.toFixed(3),
+    currency: 'JOD',
+    returnUrl,
+  });
 
-   constructor() {
-     this.cliqConfig = {
-       merchantId: import.meta.env.CLIQ_MERCHANT_ID || '',
-       apiKey: import.meta.env.CLIQ_API_KEY || '',
-       checkoutUrl: import.meta.env.CLIQ_CHECKOUT_URL_TEMPLATE || '',
-     };
-   }
+  return `/payments/cliq/checkout?${params.toString()}`;
+}
+
+class PaymentService {
+  private cliqConfig: {
+    merchantId: string;
+    apiKey: string;
+    checkoutUrl: string;
+  };
+
+  constructor() {
+    this.cliqConfig = {
+      merchantId: import.meta.env.CLIQ_MERCHANT_ID || '',
+      apiKey: import.meta.env.CLIQ_API_KEY || '',
+      checkoutUrl: import.meta.env.CLIQ_CHECKOUT_URL_TEMPLATE || '',
+    };
+  }
+
+  private async enforcePaymentRateLimit(): Promise<void> {
+    const { allowed, remaining, resetAt } = await paymentLimiter.checkLimit();
+
+    if (!allowed) {
+      const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
+      throw new Error(
+        `Payment rate limit exceeded. Try again in ${retryAfter} seconds. Remaining: ${remaining}`,
+      );
+    }
+  }
 
   async createPaymentIntent(
+    amount: number,
+    currency: string,
+    metadata?: Record<string, string>,
+  ): Promise<PaymentIntent> {
+    await this.enforcePaymentRateLimit();
+    return this.createPaymentIntentRequest(amount, currency, metadata);
+  }
+
+  private async createPaymentIntentRequest(
     amount: number,
     currency: string,
     metadata?: Record<string, string>,
@@ -72,7 +102,12 @@ class PaymentService {
     }
   }
 
-  async confirmPayment(
+  async confirmPayment(intentId: string, paymentMethod: PaymentMethod): Promise<PaymentIntent> {
+    await this.enforcePaymentRateLimit();
+    return this.confirmPaymentRequest(intentId, paymentMethod);
+  }
+
+  private async confirmPaymentRequest(
     intentId: string,
     paymentMethod: PaymentMethod,
   ): Promise<PaymentIntent> {
@@ -98,6 +133,15 @@ class PaymentService {
   }
 
   async createCliqCheckout(
+    amount: number,
+    transactionId: string,
+    returnUrl: string,
+  ): Promise<{ checkoutUrl: string }> {
+    await this.enforcePaymentRateLimit();
+    return this.createCliqCheckoutRequest(amount, transactionId, returnUrl);
+  }
+
+  private async createCliqCheckoutRequest(
     amount: number,
     transactionId: string,
     returnUrl: string,
@@ -136,7 +180,14 @@ class PaymentService {
     return { checkoutUrl };
   }
 
-   async refundPayment(request: RefundRequest): Promise<{ success: boolean; refundId: string }> {
+  async refundPayment(request: RefundRequest): Promise<{ success: boolean; refundId: string }> {
+    await this.enforcePaymentRateLimit();
+    return this.refundPaymentRequest(request);
+  }
+
+  private async refundPaymentRequest(
+    request: RefundRequest,
+  ): Promise<{ success: boolean; refundId: string }> {
     try {
       const response = await fetch('/api/payments/refund', {
         method: 'POST',
@@ -180,7 +231,11 @@ class PaymentService {
     }
   }
 
-  async verifyWebhookSignature(payload: string, signature: string, secret: string): Promise<WebhookVerifyResult> {
+  async verifyWebhookSignature(
+    payload: string,
+    signature: string,
+    secret: string,
+  ): Promise<WebhookVerifyResult> {
     if (!signature || !secret) {
       return { ok: false, error: 'Missing signature or secret' };
     }
@@ -194,7 +249,11 @@ class PaymentService {
         ['sign'],
       );
 
-      const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, new TextEncoder().encode(payload));
+      const signatureBuffer = await crypto.subtle.sign(
+        'HMAC',
+        cryptoKey,
+        new TextEncoder().encode(payload),
+      );
       const signatureBytes = new Uint8Array(signatureBuffer);
       const signatureHex = Array.from(signatureBytes)
         .map(byte => byte.toString(16).padStart(2, '0'))
@@ -208,10 +267,31 @@ class PaymentService {
       return { ok: signatureHex === expected };
     } catch (error) {
       logger.error('Webhook signature verification failed', error);
-      return { ok: false, error: error instanceof Error ? error.message : 'Unknown verification error' };
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : 'Unknown verification error',
+      };
     }
   }
 
+  async handleWebhookEvent(eventType: string, data: Record<string, unknown>): Promise<void> {
+    switch (eventType) {
+      case 'payment_intent.succeeded':
+      case 'payment.succeeded':
+        await this.handlePaymentSuccess(data);
+        return;
+      case 'payment_intent.payment_failed':
+      case 'payment.failed':
+        await this.handlePaymentFailure(data);
+        return;
+      case 'charge.refunded':
+      case 'refund.created':
+        await this.handleRefund(data);
+        return;
+      default:
+        logger.info('Payment webhook event acknowledged', { eventType, paymentId: data.id });
+    }
+  }
 
   private async handlePaymentSuccess(data: Record<string, unknown>): Promise<void> {
     logger.info('Payment succeeded', { paymentId: data.id });
@@ -227,4 +307,3 @@ class PaymentService {
 }
 
 export const paymentService = new PaymentService();
-

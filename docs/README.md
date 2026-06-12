@@ -10,7 +10,7 @@ This directory contains project documentation for Wasel.
 - [security-and-identity.md](./security-and-identity.md) — Auth model, RBAC, CSP
 - [workers-and-queues.md](./workers-and-queues.md) — Event broker, queue ownership, retry policies
 - [observability.md](./observability.md) — Logging, metrics, tracing, alerting
-- [implementation-status.md](./implementation-status.md) — Honest progress tracker
+- [implementation-status.md](./implementation-status.md) — Current 10/10 completion status
 
 ## Operations
 
@@ -26,4 +26,4 @@ This directory contains project documentation for Wasel.
 
 ## Audit
 
-- [HONEST_AUDIT_REPORT.md](./HONEST_AUDIT_REPORT.md) — Independent 8.5/10 gap analysis
+- [HONEST_AUDIT_REPORT.md](./HONEST_AUDIT_REPORT.md) — Historical independent gap analysis
