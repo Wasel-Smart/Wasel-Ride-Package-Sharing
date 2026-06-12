@@ -8,6 +8,7 @@ import { buildCorridorBetaPlan } from '../../services/corridorBeta';
 import { getCorridorDemandLeaders } from '../../services/growthEngine';
 import { CurrencyService } from '../../utils/currency';
 import { trackUserAction } from '../../utils/monitoring';
+import { WaselErrorBoundary } from '../../components/ErrorBoundary';
 import { C, F, POPULAR_ROUTES } from './HomePageShared';
 import {
   CorridorsSection,
@@ -182,51 +183,53 @@ export function HomePage() {
 
   const primaryTripPath = tripMode === 'round' ? '/find-ride?mode=round' : '/find-ride';
 
-  return (
-    <div className="wasel-home-shell" dir={dir} style={{ color: C.text, fontFamily: F }}>
-      <HomePageStyles />
+return (
+    <WaselErrorBoundary>
+      <div className="wasel-home-shell" dir={dir} style={{ color: C.text, fontFamily: F }}>
+        <HomePageStyles />
 
-      <div className="wasel-home-container relative z-10">
-        <HomeHeroSection
-          ar={ar}
-          user={user}
-          firstName={firstName}
-          tripMode={tripMode}
-          onTripModeChange={handleTripModeChange}
-          onNavigate={handleNavigate}
-          primaryTripPath={primaryTripPath}
-        />
-
-        <ProofSection ar={ar} onNavigate={handleNavigate} />
-
-        <OnboardingDemoSection ar={ar} onNavigate={handleNavigate} />
-
-        <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={handleNavigate} />
-
-        <CorridorBetaFocusSection
-          ar={ar}
-          plan={corridorBetaPlan}
-          onNavigate={handleNavigate}
-        />
-
-        <OutcomesSection ar={ar} corridorCards={corridorCards} onNavigate={handleNavigate} />
-
-        <CorridorsSection ar={ar} corridorCards={corridorCards} onNavigate={handleNavigate} />
-
-        <TrustPagesSection ar={ar} onNavigate={handleNavigate} />
-
-        {user ? (
-          <SignedInUtilitySection
+        <div className="wasel-home-container relative z-10">
+          <HomeHeroSection
             ar={ar}
-            loading={loading}
-            walletBalance={svc.formatFromJOD(liveStats?.walletBalance ?? 0)}
-            trustScore={trustScore}
+            user={user}
+            firstName={firstName}
+            tripMode={tripMode}
+            onTripModeChange={handleTripModeChange}
+            onNavigate={handleNavigate}
+            primaryTripPath={primaryTripPath}
           />
-        ) : (
-          <SignedOutCtaSection ar={ar} onNavigate={handleNavigate} />
-        )}
+
+          <ProofSection ar={ar} onNavigate={handleNavigate} />
+
+          <OnboardingDemoSection ar={ar} onNavigate={handleNavigate} />
+
+          <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={handleNavigate} />
+
+          <CorridorBetaFocusSection
+            ar={ar}
+            plan={corridorBetaPlan}
+            onNavigate={handleNavigate}
+          />
+
+          <OutcomesSection ar={ar} corridorCards={corridorCards} onNavigate={handleNavigate} />
+
+          <CorridorsSection ar={ar} corridorCards={corridorCards} onNavigate={handleNavigate} />
+
+          <TrustPagesSection ar={ar} onNavigate={handleNavigate} />
+
+          {user ? (
+            <SignedInUtilitySection
+              ar={ar}
+              loading={loading}
+              walletBalance={svc.formatFromJOD(liveStats?.walletBalance ?? 0)}
+              trustScore={trustScore}
+            />
+          ) : (
+            <SignedOutCtaSection ar={ar} onNavigate={handleNavigate} />
+          )}
+        </div>
       </div>
-    </div>
+    </WaselErrorBoundary>
   );
 }
 

@@ -1,19 +1,22 @@
-/**
- * Ride Matching Service - PRODUCTION IMPLEMENTATION
- * Real PostGIS geospatial queries + Redis GEO + Stripe integration
- */
-
 import postgres from 'postgres';
 import { fileURLToPath } from 'node:url';
-import type { DomainEventEnvelope } from '../../../src/domain/events';
+import type { DomainEventEnvelope, DomainEventPayloadMap } from '../../../src/domain/events';
 import { eventBroker } from '../../../src/platform/event-broker-redis-production';
 import { startRuntimeHealthServer, type RuntimeHealthServer } from '../runtime/http-health';
+import { startSpan, getActiveSpan } from '../shared/opentelemetry';
+import { getLogger } from '../shared/structured-logger';
+import { SpanStatusCode, type Span } from '@opentelemetry/api';
 
 const sql = postgres(process.env.DATABASE_URL || '', {
   max: 10,
   idle_timeout: 20,
   connect_timeout: 10,
 });
+
+const logger = getLogger('ride-matching');
+
+type RidesRequestedPayload = DomainEventPayloadMap['rides.requested'];
+type RidesAssignedPayload = DomainEventPayloadMap['rides.assigned'];
 
 interface RideRequest {
   rideId: string;
@@ -61,8 +64,13 @@ class MatchingEngine {
     seats: number,
     radiusKm: number = 5,
   ): Promise<Driver[]> {
+    const span = getActiveSpan();
+    span?.setAttribute('search.origin.lat', origin.lat);
+    span?.setAttribute('search.origin.lng', origin.lng);
+    span?.setAttribute('search.radius_km', radiusKm);
+    span?.setAttribute('search.seats_required', seats);
+
     try {
-      // Real PostGIS query
       const drivers = await sql<DriverRow[]>`
         SELECT 
           d.driver_id as "driverId",
@@ -88,6 +96,10 @@ class MatchingEngine {
         LIMIT 20
       `;
 
+      if (span) {
+        span.setAttribute('search.drivers_found', drivers.length);
+      }
+
       return drivers.map(d => ({
         driverId: d.driverId,
         vehicleId: d.vehicleId,
@@ -97,7 +109,11 @@ class MatchingEngine {
         status: d.status,
       }));
     } catch (error) {
-      console.error('[MatchingEngine] PostGIS query error:', error);
+      logger.error({ error }, 'PostGIS query error');
+      if (span && error instanceof Error) {
+        span.recordException(error);
+        span.setStatus({ code: SpanStatusCode.ERROR, message: error.message });
+      }
       throw error;
     }
   }
@@ -152,7 +168,7 @@ class MatchingEngine {
 
       return result.length > 0;
     } catch (error) {
-      console.error('[MatchingEngine] Driver reservation failed:', error);
+      logger.error({ error, driverId, rideId }, 'Driver reservation failed');
       return false;
     }
   }
@@ -188,7 +204,7 @@ export class RideMatchingService {
   private ready = false;
 
   async start(): Promise<void> {
-    console.log('[RideMatchingService] Starting service...');
+    logger.info('Starting ride-matching service...');
 
     this.healthServer = startRuntimeHealthServer({
       serviceName: 'ride-matching-service',
@@ -208,7 +224,7 @@ export class RideMatchingService {
     );
 
     this.ready = true;
-    console.log('[RideMatchingService] Service started');
+    logger.info('Ride-matching service started');
   }
 
   async stop(): Promise<void> {
@@ -220,52 +236,48 @@ export class RideMatchingService {
       await this.healthServer.close();
     }
     await sql.end();
-    console.log('[RideMatchingService] Service stopped');
+    logger.info('Ride-matching service stopped');
   }
 
   private async handleRideRequest(event: DomainEventEnvelope<'rides.requested'>): Promise<void> {
-    const startTime = Date.now();
-    console.log(`[RideMatchingService] Processing: ${event.id}`);
+    const span = getActiveSpan();
+    span?.setAttribute('event.id', event.id);
 
-    try {
-      const request: RideRequest = event.payload as any;
+    const request: RidesRequestedPayload = event.payload;
 
-      const drivers = await this.engine.findNearbyDrivers(request.origin, request.seats, 5);
+    const drivers = await this.engine.findNearbyDrivers(request.origin, request.seats, 5);
 
-      if (drivers.length === 0) {
-        console.log(`[RideMatchingService] No drivers found for ${request.rideId}`);
-        return;
-      }
-
-      const scored = await this.engine.scoreDrivers(drivers, request);
-      const match = await this.engine.executeMatch(request, scored);
-
-      if (!match) {
-        console.log(`[RideMatchingService] Match failed for ${request.rideId}`);
-        return;
-      }
-
-      await eventBroker.publish({
-        id: `evt-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        type: 'rides.assigned',
-        payload: {
-          rideId: match.rideId,
-          driverId: match.driverId,
-          vehicleId: match.vehicleId,
-          matchedAt: new Date().toISOString(),
-          estimatedArrival: match.estimatedArrival,
-        } as any,
-        producer: 'ride-matching-service',
-        traceId: event.traceId,
-        occurredAt: new Date().toISOString(),
-      });
-
-      const duration = Date.now() - startTime;
-      console.log(`[RideMatchingService] Matched in ${duration}ms: ${request.rideId}`);
-    } catch (error) {
-      console.error(`[RideMatchingService] Error:`, error);
-      throw error;
+    if (drivers.length === 0) {
+      logger.info({ rideId: request.rideId }, 'No drivers found');
+      return;
     }
+
+    const scored = await this.engine.scoreDrivers(drivers, request);
+    const match = await this.engine.executeMatch(request, scored);
+
+    if (!match) {
+      logger.info({ rideId: request.rideId }, 'Match failed');
+      return;
+    }
+
+    const assignedPayload: RidesAssignedPayload = {
+      rideId: match.rideId,
+      driverId: match.driverId,
+      vehicleId: match.vehicleId,
+      matchedAt: new Date().toISOString(),
+      estimatedArrival: match.estimatedArrival,
+    };
+
+    await eventBroker.publish({
+      id: `evt-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      type: 'rides.assigned',
+      payload: assignedPayload,
+      producer: 'ride-matching-service',
+      traceId: event.traceId,
+      occurredAt: new Date().toISOString(),
+    });
+
+    logger.info({ rideId: match.rideId, driverId: match.driverId }, 'Ride matched successfully');
   }
 
   async healthCheck(): Promise<boolean> {
