@@ -5431,6 +5431,11 @@ Deno.serve(async (request) => {
       return finalizeResponse(request, response);
     }
 
+    if (request.method === 'POST' && path === '/communications/admin/send-test') {
+      response = await handleSendTestCommunication(request);
+      return finalizeResponse(request, response);
+    }
+
     if (request.method === 'POST' && path === '/communications/admin/apply-migrations') {
       response = await handleApplyCommunicationMigrations(request);
       return finalizeResponse(request, response);
@@ -5438,6 +5443,17 @@ Deno.serve(async (request) => {
 
     if (request.method === 'POST' && path === '/moderation/admin/apply-migrations') {
       response = await handleApplyModerationMigrations(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'GET' && path === '/admin/drivers/pending') {
+      response = await handleAdminListPendingDrivers(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (/^\/admin\/drivers\/[^/]+\/approve$/.test(path) && request.method === 'POST') {
+      const driverId = decodeURIComponent(path.split('/')[3]);
+      response = await handleAdminApproveDriver(request, driverId);
       return finalizeResponse(request, response);
     }
 
