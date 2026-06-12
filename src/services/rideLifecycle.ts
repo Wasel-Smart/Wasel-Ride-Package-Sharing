@@ -12,6 +12,7 @@ import {
   updateDirectBookingStatus,
 } from './directSupabase';
 import { trackGrowthEvent } from './growthEngine';
+import { recordCorridorBetaMetricsFromBookings } from './corridorBetaMetrics';
 
 export type RideBookingStatus =
   | 'pending_driver'
@@ -224,7 +225,9 @@ export function createRideBooking(input: {
     updatedAt: now,
   };
 
-  writeBookings([booking, ...readBookings()]);
+  const nextBookings = [booking, ...readBookings()];
+  writeBookings(nextBookings);
+  recordCorridorBetaMetricsFromBookings(nextBookings);
   publishLifecycleEvent(booking);
 
   void trackGrowthEvent({
@@ -324,7 +327,9 @@ export function updateRideBooking(
     updatedAt: new Date().toISOString(),
   };
 
-  writeBookings(bookings.map(booking => (booking.id === bookingId ? updated : booking)));
+  const nextBookings = bookings.map(booking => (booking.id === bookingId ? updated : booking));
+  writeBookings(nextBookings);
+  recordCorridorBetaMetricsFromBookings(nextBookings);
 
   if (
     updated.backendBookingId &&
@@ -494,5 +499,6 @@ export function syncRideBookingCompletion(referenceDate = Date.now()): RideBooki
   });
 
   writeBookings(next);
+  recordCorridorBetaMetricsFromBookings(next);
   return sortBookings(next);
 }
