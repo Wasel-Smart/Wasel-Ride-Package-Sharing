@@ -1040,7 +1040,7 @@ function isWalletTopUpConnectivityError(error: unknown): boolean {
 
 function buildWalletTopUpBackendError(): Error {
   return new Error(
-    'Secure wallet top-up is unavailable because the checkout backend is not configured. Deploy the wallet edge function and configure Stripe server secrets before adding funds.',
+    'Secure wallet top-up is unavailable because the checkout backend is not configured. Deploy the wallet edge function and configure the required environment variables (Stripe and/or CliQ) before adding funds. Treat secret values as non-Secret environment-only config — fetch them from your provider dashboard and set them in the edge function secrets. Never commit them to the codebase.',
   );
 }
 
