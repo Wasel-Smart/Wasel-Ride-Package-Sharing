@@ -24,6 +24,7 @@ interface AuthContextType {
   profile: Profile | null;
   session: Session | null;
   loading: boolean;
+  updating: boolean;
   isBackendConnected: boolean;
   signUp: (
     email: string,
@@ -67,6 +68,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   session: null,
   loading: true,
+  updating: false,
   isBackendConnected: false,
   signUp: async () => ({ error: null }),
   signIn: async () => ({ error: null }),
@@ -569,7 +571,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       user,
       profile,
       session,
-      loading: initializing || busy,
+      loading: initializing,
+      updating: busy,
       isBackendConnected,
       signUp,
       signIn,
