@@ -4,6 +4,7 @@
  * Supabase reads/RPCs so the wallet stays connected to persisted backend data.
  */
 
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { API_URL, supabase } from './core';
 import { BackendRequestError, requestEdgeJson } from './backendWorkflow';
 
@@ -12,7 +13,7 @@ const LOCAL_WALLET_KEY = 'wasel-wallet-local-v1';
 // Must match STORAGE_KEY in src/contexts/LocalAuth.tsx so balance reads stay in sync
 const LOCAL_AUTH_USER_KEY = 'wasel_user_session';
 
-type DbClient = any;
+type DbClient = SupabaseClient;
 
 type WalletRow = {
   wallet_id?: string;
@@ -162,7 +163,8 @@ type LocalWalletRecord = {
   autoTopUpAmount: number;
   autoTopUpThreshold: number;
   pinSet: boolean;
-  paymentMethods: any[];
+  pin_hash?: string;
+  paymentMethods: PaymentMethod[];
   transactions: WalletTransaction[];
   createdAt: string;
   updatedAt: string;
@@ -262,6 +264,7 @@ function normalizeLocalWalletRecord(userId: string, value: unknown): LocalWallet
     autoTopUpAmount: toNumber(record.autoTopUpAmount, 20),
     autoTopUpThreshold: toNumber(record.autoTopUpThreshold, 5),
     pinSet: Boolean(record.pinSet),
+    pin_hash: typeof record.pin_hash === 'string' ? record.pin_hash : undefined,
     paymentMethods: Array.isArray(record.paymentMethods) ? record.paymentMethods : [],
     transactions: Array.isArray(record.transactions)
       ? record.transactions.map(tx => ({
@@ -496,10 +499,18 @@ async function deletePaymentMethodLocal(
   return { success: true };
 }
 
-async function setWalletPinLocal(userId: string): Promise<{ success: true }> {
+async function setWalletPinLocal(userId: string, pin: string): Promise<{ success: true }> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(`${userId}:${pin}`);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashHex = Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+
   updateLocalWalletRecord(userId, current => ({
     ...current,
     pinSet: true,
+    pin_hash: hashHex,
   }));
 
   return { success: true };
@@ -507,7 +518,18 @@ async function setWalletPinLocal(userId: string): Promise<{ success: true }> {
 
 async function verifyWalletPinLocal(userId: string, pin: string): Promise<{ success: boolean }> {
   const wallet = readLocalWalletRecord(userId);
-  return { success: wallet.pinSet && /^\d{4}$/.test(pin) };
+  if (!wallet.pinSet || !wallet.pin_hash) {
+    return { success: false };
+  }
+
+  const encoder = new TextEncoder();
+  const data = encoder.encode(`${userId}:${pin}`);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashHex = Array.from(new Uint8Array(hashBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  return { success: hashHex === wallet.pin_hash };
 }
 
 async function getTrustScoreLocal(
@@ -1305,7 +1327,7 @@ export const walletApi = {
   async setPin(userId: string, pin: string) {
     if (!canUseEdgeApi()) {
       if (canUseLocalWalletStorage()) {
-        return setWalletPinLocal(userId);
+        return setWalletPinLocal(userId, pin);
       }
       throw new Error('Wallet PIN management requires the wallet backend.');
     }

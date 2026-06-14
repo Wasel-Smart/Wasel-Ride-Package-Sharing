@@ -47,12 +47,14 @@ function AppRuntimeCoordinator() {
         }
 
         // DEFER EVERYTHING HEAVY
+        // Init Sentry immediately so first-paint errors are captured
+        initSentry();
+
         const timeoutId = setTimeout(async () => {
           if (cancelled) return;
 
           const performance = await import('./utils/performance');
 
-          initSentry();
           performance.initPerformanceMonitoring();
 
           validation.issues.forEach((issue) => {

@@ -328,6 +328,7 @@ export function FindRidePage() {
   };
 
   const handleBook = (ride: Ride) => {
+    if (bookingInFlightId) return;
     const existingBooking = bookingByRideId.get(ride.id);
     if (existingBooking) {
       setBookingMessage(
