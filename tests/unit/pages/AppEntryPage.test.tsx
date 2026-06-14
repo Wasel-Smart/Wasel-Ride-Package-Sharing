@@ -44,6 +44,8 @@ vi.mock('@/services/liveDataService', () => ({
 
 vi.mock('@/services/growthEngine', () => ({
   getCorridorDemandLeaders: () => [],
+  getGrowthEventFeed: () => [],
+  trackGrowthEvent: () => Promise.resolve(),
 }));
 
 vi.mock('@/components/wasel-ds/WaselLogo', () => ({
