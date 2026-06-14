@@ -1,4 +1,12 @@
 import { createHmac } from 'node:crypto';
+import { Request, Response, NextFunction } from 'express';
+import { 
+  RateLimiter,
+  createApiRateLimiter,
+  createAuthRateLimiter,
+  createPaymentRateLimiter,
+  createBookingRateLimiter
+} from './rate-limiter.js';
 
 interface SignedRequest {
   payload: unknown;
@@ -9,6 +17,12 @@ interface SignedRequest {
 export class SecurityMiddleware {
   private readonly SIGNING_SECRET = process.env.REQUEST_SIGNING_SECRET || '';
   private readonly TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000; // 5 minutes
+  
+  // Rate limiters
+  private readonly apiLimiter = createApiRateLimiter();
+  private readonly authLimiter = createAuthRateLimiter();
+  private readonly paymentLimiter = createPaymentRateLimiter();
+  private readonly bookingLimiter = createBookingRateLimiter();
 
   signRequest(payload: object): SignedRequest {
     const timestamp = Date.now();
@@ -47,5 +61,37 @@ export class SecurityMiddleware {
     }
     usedNonces.add(nonce);
     return true;
+  }
+  
+  // Rate limiting middleware methods
+  getApiRateLimit() {
+    return this.apiLimiter.middleware();
+  }
+  
+  getAuthRateLimit() {
+    return this.authLimiter.middleware();
+  }
+  
+  getPaymentRateLimit() {
+    return this.paymentLimiter.middleware();
+  }
+  
+  getBookingRateLimit() {
+    return this.bookingLimiter.middleware();
+  }
+  
+  // Security headers middleware
+  securityHeaders() {
+    return (req: Request, res: Response, next: NextFunction) => {
+      res.set({
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block',
+        'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+        'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self), payment=(self)',
+      });
+      next();
+    };
   }
 }
