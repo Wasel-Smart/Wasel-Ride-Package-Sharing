@@ -1,5 +1,4 @@
-﻿
-/**
+﻿/**
  * Wallet API Service
  * Uses the shared edge-function base when available and falls back to direct
  * Supabase reads/RPCs so the wallet stays connected to persisted backend data.
@@ -255,7 +254,10 @@ function normalizeLocalWalletRecord(userId: string, value: unknown): LocalWallet
     userId,
     balance: toNumber(record.balance, fallback.balance),
     pendingBalance: toNumber(record.pendingBalance, 0),
-    currency: String(record.currency ?? fallback.currency).trim().toUpperCase() || 'JOD',
+    currency:
+      String(record.currency ?? fallback.currency)
+        .trim()
+        .toUpperCase() || 'JOD',
     autoTopUpEnabled: Boolean(record.autoTopUpEnabled),
     autoTopUpAmount: toNumber(record.autoTopUpAmount, 20),
     autoTopUpThreshold: toNumber(record.autoTopUpThreshold, 5),
@@ -482,7 +484,10 @@ async function addPaymentMethodLocal(
   return nextMethod;
 }
 
-async function deletePaymentMethodLocal(userId: string, methodId: string): Promise<{ success: true }> {
+async function deletePaymentMethodLocal(
+  userId: string,
+  methodId: string,
+): Promise<{ success: true }> {
   updateLocalWalletRecord(userId, current => ({
     ...current,
     paymentMethods: current.paymentMethods.filter(item => item?.id !== methodId),
@@ -672,6 +677,21 @@ function buildInsightsFromTransactions(transactions: WalletTransaction[]): Insig
   };
 }
 
+function toPaymentMethod(row: PaymentMethodRow): PaymentMethod {
+  const token = row.token_reference ? String(row.token_reference) : '';
+  const last4 = token.length >= 4 ? token.slice(-4) : undefined;
+
+  return {
+    id: String(row.payment_method_id || token || `payment-method-${Date.now()}`),
+    type: String(row.method_type ?? 'card'),
+    provider: row.provider ? String(row.provider) : undefined,
+    last4,
+    is_default: Boolean(row.is_default),
+    status: row.status ? String(row.status) : 'active',
+    token_reference: token || undefined,
+  };
+}
+
 function buildWalletPayload(
   wallet: WalletRow | null,
   transactions: TransactionRow[],
@@ -698,7 +718,7 @@ function buildWalletPayload(
       autoTopUp: Boolean(wallet?.auto_top_up_enabled),
       autoTopUpAmount: toNumber(wallet?.auto_top_up_amount, 20),
       autoTopUpThreshold: toNumber(wallet?.auto_top_up_threshold, 5),
-      paymentMethods,
+      paymentMethods: paymentMethods.map(toPaymentMethod),
       createdAt: wallet?.created_at ?? null,
     },
     balance: toNumber(wallet?.balance, 0),
@@ -1440,4 +1460,3 @@ export const walletApi = {
     return getTrustScoreDirect(userId);
   },
 };
-
