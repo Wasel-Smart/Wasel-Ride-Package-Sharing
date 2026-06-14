@@ -13,6 +13,7 @@ import {
 } from './directSupabase';
 import { trackGrowthEvent } from './growthEngine';
 import { recordCorridorBetaMetricsFromBookings } from './corridorBetaMetrics';
+import { logger } from '../utils/monitoring';
 
 export type RideBookingStatus =
   | 'pending_driver'
@@ -205,7 +206,7 @@ export function createRideBooking(input: {
     input.routeMode === 'live_post' ? 'requested' : 'accepted';
 
   const booking: RideBookingRecord = {
-    id: `ride-booking-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    id: `ride-booking-${crypto.randomUUID()}`,
     rideId: input.rideId,
     ownerId: input.ownerId,
     from: input.from,
@@ -283,7 +284,12 @@ export function createRideBooking(input: {
           },
         ]);
       })
-      .catch(() => undefined);
+      .catch(error => {
+        logger.warning('[rideLifecycle] Backend booking sync failed', {
+          rideId: input.rideId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
   }
 
   return booking;
@@ -347,7 +353,12 @@ export function updateRideBooking(
       .then(() => {
         upsertBookings([{ ...updated, syncedAt: new Date().toISOString() }]);
       })
-      .catch(() => undefined);
+      .catch(error => {
+        logger.warning('[rideLifecycle] Backend booking status update failed', {
+          bookingId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      });
   }
 
   if (updates.status) {
