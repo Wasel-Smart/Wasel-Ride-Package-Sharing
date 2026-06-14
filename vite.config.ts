@@ -3,6 +3,37 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import legacy from '@vitejs/plugin-legacy';
 import path from 'path';
+import { Plugin } from 'vite';
+
+// CSP nonce plugin to replace unsafe-inline
+function cspNoncePlugin(): Plugin {
+  return {
+    name: 'csp-nonce',
+    transformIndexHtml: {
+      order: 'pre',
+      handler(html: string) {
+        const nonce = `wasel-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        return {
+          html: html.replace(
+            /<script([^>]*)>/g,
+            `<script$1 nonce="${nonce}">`
+          ).replace(
+            /<style([^>]*)>/g,
+            `<style$1 nonce="${nonce}">`
+          ),
+          tags: [{
+            tag: 'meta',
+            attrs: {
+              name: 'csp-nonce',
+              content: nonce
+            },
+            injectTo: 'head'
+          }]
+        };
+      }
+    }
+  };
+}
 
 export default defineConfig({
   define: {
@@ -26,6 +57,8 @@ export default defineConfig({
         'Android >= 8',
       ],
     }),
+
+    cspNoncePlugin(),
   ],
 
   resolve: {
