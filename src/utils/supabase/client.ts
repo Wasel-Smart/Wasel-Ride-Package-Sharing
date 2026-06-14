@@ -15,17 +15,17 @@ import type { Database } from './database.types';
 import { hasSupabasePublicConfig, publicAnonKey, publicSupabaseUrl } from './info';
 
 function isPlaceholderValue(value: string | undefined): boolean {
-  if (!value) return true;
+   if (!value) return true;
 
-  const normalized = value.trim().toLowerCase();
-  return (
-    normalized.length === 0 ||
-    normalized.includes('your-project.supabase.co') ||
-    normalized.includes('your-anon-key') ||
-    normalized.includes('your-anon-key-here') ||
-    normalized.includes('replace_with') ||
-    normalized.includes('example.com')
-  );
+   const normalized = value.trim().toLowerCase();
+   return (
+     normalized.length === 0 ||
+     normalized.includes('your-project.supabase.co') ||
+     normalized.includes('your-anon-key') ||
+     normalized.includes('your-anon-key-here') ||
+     normalized.includes('replace_with') ||
+     normalized.includes('example.com')
+   );
 }
 
 // ── Credentials ───────────────────────────────────────────────────────────────
@@ -60,9 +60,9 @@ function getBrowserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | u
 
 // ── Request queue (used only if a request fires while offline) ────────────────
 const requestQueue: Array<{
-  fn: () => Promise<any>;
-  resolve: (v: any) => void;
-  reject: (e: any) => void;
+   fn: () => Promise<unknown>;
+   resolve: (v: unknown) => void;
+   reject: (e: Error) => void;
 }> = [];
 
 function getIsOnline(): boolean {
@@ -72,35 +72,46 @@ function getIsOnline(): boolean {
 
 async function processRequestQueue(): Promise<void> {
   while (requestQueue.length > 0 && getIsOnline()) {
-    const { fn, resolve, reject } = requestQueue.shift()!;
+    const item = requestQueue.shift();
+    if (!item) break;
+    const { fn, resolve, reject } = item;
     try {
       resolve(await fn());
-    } catch (e) {
-      reject(e);
+    } catch (err) {
+      reject(err instanceof Error ? err : new Error(String(err)));
     }
   }
 }
 
 // ── Retry wrapper ─────────────────────────────────────────────────────────────
 async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  retries = RETRY_CONFIG.maxRetries,
+   fn: () => Promise<T>,
+   retries = RETRY_CONFIG.maxRetries,
 ): Promise<T> {
-  let lastError: any;
-  for (let i = 0; i < retries; i++) {
-    try {
-      return await fn();
-    } catch (error: any) {
-      lastError = error;
-      if (error?.status >= 400 && error?.status < 500 && error?.status !== 429) throw error;
-      const delay = Math.min(
-        RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffMultiplier, i),
-        RETRY_CONFIG.maxDelay,
-      );
-      await new Promise(res => setTimeout(res, delay));
-    }
-  }
-  throw lastError;
+   let lastError: Error | undefined;
+   for (let i = 0; i < retries; i++) {
+     try {
+       return await fn();
+     } catch (error: unknown) {
+       lastError = error instanceof Error ? error : new Error(String(error));
+       if (
+         typeof error === 'object' &&
+         error !== null &&
+         'status' in error &&
+         typeof (error as { status: number }).status === 'number' &&
+         (error as { status: number }).status >= 400 &&
+         (error as { status: number }).status < 500 &&
+         (error as { status: number }).status !== 429
+       )
+         throw error;
+       const delay = Math.min(
+         RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffMultiplier, i),
+         RETRY_CONFIG.maxDelay,
+       );
+       await new Promise(res => setTimeout(res, delay));
+     }
+   }
+   throw lastError;
 }
 
 function queueIfOffline<T>(fn: () => Promise<T>): Promise<T> {
@@ -123,7 +134,11 @@ const getSupabaseClient = () => {
 
   const CLIENT_KEY = Symbol.for('supabase.client.instance.v4');
   const globalAny = typeof window !== 'undefined' ? window : globalThis;
-  if ((globalAny as any)[CLIENT_KEY]) return (globalAny as any)[CLIENT_KEY];
+  
+  // TypeScript type assertion for symbol-keyed storage
+  type GlobalWithClient = typeof globalAny & { [CLIENT_KEY]?: ReturnType<typeof createClient<Database>> };
+  const globalStore = globalAny as GlobalWithClient;
+  if (globalStore[CLIENT_KEY]) return globalStore[CLIENT_KEY];
 
   try {
     const client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -140,7 +155,7 @@ const getSupabaseClient = () => {
       db: { schema: 'public' },
       realtime: { params: { eventsPerSecond: 10 } },
     });
-    (globalAny as any)[CLIENT_KEY] = client;
+    globalStore[CLIENT_KEY] = client;
     return client;
   } catch (error) {
     console.error('[Supabase] Failed to create client:', error);

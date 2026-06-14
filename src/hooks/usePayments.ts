@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
-import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
-import { paymentService, PaymentIntentRequest } from '@/services/payment';
+import type { Stripe, StripeElements } from '@stripe/stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import type { PaymentIntentRequest } from '@/services/payment';
+import { paymentService } from '@/services/payment';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 

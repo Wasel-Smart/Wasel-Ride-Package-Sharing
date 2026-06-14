@@ -47,22 +47,22 @@ export interface PriceCalculationResult {
 }
 
 export const tripsAPI = {
-  async createTrip(tripData: TripCreatePayload): Promise<TripSearchResult> {
-    return runBackendWorkflow({
-      operation: 'Trip creation',
-      authMode: 'required',
-      fallbackPolicy: 'writes-if-enabled',
-      fallback: ({ userId }) => createDirectTrip(userId!, tripData),
-      edge: context =>
-        requestEdgeJson<TripSearchResult>({
-          path: '/trips',
-          method: 'POST',
-          authMode: 'required',
-          context,
-          body: tripData,
-          operation: 'Failed to create trip',
-        }),
-    });
+   async createTrip(tripData: TripCreatePayload): Promise<TripSearchResult> {
+     return runBackendWorkflow({
+       operation: 'Trip creation',
+       authMode: 'required',
+       fallbackPolicy: 'writes-if-enabled',
+       fallback: ({ userId }) => createDirectTrip(userId ?? '', tripData),
+       edge: context =>
+         requestEdgeJson<TripSearchResult>({
+           path: '/trips',
+           method: 'POST',
+           authMode: 'required',
+           context,
+           body: tripData,
+           operation: 'Failed to create trip',
+         }),
+     });
   },
 
   async searchTrips(
@@ -110,20 +110,20 @@ export const tripsAPI = {
     });
   },
 
-  async getDriverTrips(): Promise<TripSearchResult[]> {
-    return runBackendWorkflow({
-      operation: 'Driver trip loading',
-      authMode: 'required',
-      fallback: ({ userId }) => getDirectDriverTrips(userId!),
-      edge: context =>
-        requestEdgeJson<TripSearchResult[]>({
-          path: `/trips/user/${context.userId}`,
-          authMode: 'required',
-          context,
-          operation: 'Failed to fetch driver trips',
-        }),
-    });
-  },
+async getDriverTrips(): Promise<TripSearchResult[]> {
+     return runBackendWorkflow({
+       operation: 'Driver trip loading',
+       authMode: 'required',
+       fallback: ({ userId }) => getDirectDriverTrips(userId ?? ''),
+       edge: context =>
+         requestEdgeJson<TripSearchResult[]>({
+           path: `/trips/user/${context.userId}`,
+           authMode: 'required',
+           context,
+           operation: 'Failed to fetch driver trips',
+         }),
+     });
+   },
 
   async updateTrip(tripId: string, updates: TripUpdatePayload): Promise<TripSearchResult> {
     return runBackendWorkflow({

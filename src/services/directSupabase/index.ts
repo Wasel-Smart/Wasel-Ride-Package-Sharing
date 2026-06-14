@@ -1,84 +1,80 @@
-// ─── directSupabase/index.ts ──────────────────────────────────────────────────
-// Barrel re-export — all existing imports of `./directSupabase` continue to
-// resolve here without any changes to call sites.
-
 export type {
-  DbClient,
-  DriverRow,
-  RawBooking,
-  RawCommunicationDelivery,
-  RawCommunicationPreferences,
-  RawDemandAlert,
-  RawGrowthEvent,
-  RawNotification,
-  RawPackage,
-  RawProfile,
-  RawReferral,
-  RawVerificationRecord,
-  TripRow,
-  UserContext,
-  UserRow,
-  WalletRow,
+   DbClient,
+   DriverRow,
+   RawBooking,
+   RawCommunicationDelivery,
+   RawCommunicationPreferences,
+   RawDemandAlert,
+   RawGrowthEvent,
+   RawNotification,
+   RawPackage,
+   RawProfile,
+   RawReferral,
+   RawVerificationRecord,
+   TripRow,
+   UserContext,
+   UserRow,
+   WalletRow,
 } from './types';
 
-export { getDb, toNumber, mapProfileFromContext, buildTrustLikeUser } from './helpers';
+export { getDb, toNumber, mapProfileFromContext, buildTrustLikeUser } from './helpers.js';
 
-export { buildUserContext, ensureCanonicalUser, ensureDriverForUser } from './userContext';
-
-export {
-  getDirectProfile,
-  getDirectVerificationRecord,
-  updateDirectProfile,
-  searchDirectTrips,
-  getDirectTripById,
-  getDirectDriverTrips,
-  createDirectTrip,
-  updateDirectTrip,
-  deleteDirectTrip,
-  createDirectBooking,
-  getDirectUserBookings,
-  getDirectTripBookings,
-  updateDirectBookingStatus,
-  getDirectDriverBookings,
-} from './trips';
+export { buildUserContext, ensureCanonicalUser, ensureDriverForUser } from './userContext.js';
 
 export {
-  recordDirectGrowthEvent,
-  createDirectDemandAlert,
-  getDirectDemandAlerts,
-  getDirectGrowthAnalytics,
-} from './growth';
+   getDirectProfile,
+   getDirectVerificationRecord,
+   updateDirectProfile,
+   searchDirectTrips,
+   getDirectTripById,
+   getDirectDriverTrips,
+   createDirectTrip,
+   updateDirectTrip,
+   deleteDirectTrip,
+   createDirectBooking,
+   getDirectUserBookings,
+   getDirectTripBookings,
+   updateDirectBookingStatus,
+   getDirectDriverBookings,
+} from './trips.js';
 
 export {
-  processReferralConversionForPassenger,
-  getDirectReferralSnapshot,
-  redeemDirectReferralCode,
-} from './referrals';
+   recordDirectGrowthEvent,
+   createDirectDemandAlert,
+   getDirectDemandAlerts,
+   getDirectGrowthAnalytics,
+} from './growth.js';
 
 export {
-  createDirectPackage,
-  getDirectPackageByTrackingId,
-  updateDirectPackageStatus,
-  getDirectCommunicationDeliveries,
-  getDirectCommunicationPreferences,
-  getDirectNotifications,
-  markDirectNotificationAsRead,
-  createDirectNotification,
-  queueDirectCommunicationDeliveries,
-  upsertDirectCommunicationPreferences,
-} from './packagesAndNotifications';
+   processReferralConversionForPassenger,
+   getDirectReferralSnapshot,
+   redeemDirectReferralCode,
+} from './referrals.js';
 
 export {
-  createDirectSupportTicket,
-  getDirectSupportTickets,
-  getDirectUserSettings,
-  updateDirectSupportTicketStatus,
-  upsertDirectUserSettings,
-} from './accountAndSupport';
+   createDirectPackage,
+   getDirectPackageByTrackingId,
+   updateDirectPackageStatus,
+   getDirectCommunicationDeliveries,
+   getDirectCommunicationPreferences,
+   getDirectNotifications,
+   markDirectNotificationAsRead,
+   createDirectNotification,
+   queueDirectCommunicationDeliveries,
+   upsertDirectCommunicationPreferences,
+} from './packagesAndNotifications.js';
+
+export {
+   createDirectSupportTicket,
+   getDirectSupportTickets,
+   getDirectUserSettings,
+   updateDirectSupportTicketStatus,
+   upsertDirectUserSettings,
+} from './accountAndSupport.js';
 
 // Price calculator (pure, no Supabase dependency)
 import type { PriceCalculationResult } from '../trips';
-import { toNumber } from './helpers';
+import { toNumber } from './helpers.js';
 
 export function calculateDirectPrice(
   type: 'passenger' | 'package',
