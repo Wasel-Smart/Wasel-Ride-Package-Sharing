@@ -12,10 +12,6 @@ const CHECKED_IN_PUBLIC_SUPABASE_URL = '';
 const CHECKED_IN_PUBLIC_SUPABASE_PUBLISHABLE_KEY = '';
 const CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY = '';
 
-const BLOCKED_PUBLIC_SUPABASE_KEYS = new Set([
-  ['sb_publishable_Iy', '-jArsso0ehGKQ83kuiDg_1T-cl9zE'].join(''),
-]);
-
 const PLACEHOLDER_MARKERS = [
   'your-project.supabase.co',
   'your-anon-key',

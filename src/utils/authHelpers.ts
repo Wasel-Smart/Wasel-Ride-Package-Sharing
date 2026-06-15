@@ -17,7 +17,11 @@ export function friendlyAuthError(error: unknown, fallback: string): string {
 
   if (lower.includes('email not confirmed')) return 'Please confirm your email before signing in.';
 
-  if (lower.includes('already registered') || lower.includes('already been registered'))
+  if (
+    lower.includes('already registered') ||
+    lower.includes('already been registered') ||
+    lower.includes('user already exists')
+  )
     return 'This email is already registered.';
 
   if (
