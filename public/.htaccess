@@ -1,0 +1,10 @@
+Options -MultiViews
+RewriteEngine On
+
+# Keep existing files and directories working normally.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# React Router SPA fallback.
+RewriteRule ^ index.html [L]

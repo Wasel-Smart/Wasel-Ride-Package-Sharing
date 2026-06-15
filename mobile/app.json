@@ -1,0 +1,98 @@
+{
+  "expo": {
+    "name": "Wasel",
+    "slug": "wasel-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "wasel",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F172A"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.wasel.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Wasel needs your location to find nearby rides and drivers.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Wasel uses your location in the background to track your trip in real time (driver mode).",
+        "NSLocationAlwaysUsageDescription": "Wasel uses your location in the background for driver mode.",
+        "NSCameraUsageDescription": "Wasel uses the camera to scan QR codes and upload profile photos.",
+        "NSFaceIDUsageDescription": "Wasel uses Face ID for fast, secure login.",
+        "UIBackgroundModes": ["location", "fetch", "remote-notification"]
+      },
+      "entitlements": {
+        "aps-environment": "production"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
+      },
+      "package": "com.wasel.mobile",
+      "versionCode": 1,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "CAMERA",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#0F172A"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Wasel needs background location for real-time tracking in driver mode.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "expo-camera",
+        { "cameraPermission": "Wasel uses the camera to scan QR codes." }
+      ],
+      [
+        "@sentry/react-native/expo",
+        { "url": "https://sentry.io", "project": "wasel-mobile", "organization": "wasel" }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": ""
+      },
+      "router": { "origin": false }
+    },
+    "owner": "wasel-smart",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": ""
+    }
+  }
+}

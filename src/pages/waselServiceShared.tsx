@@ -1,0 +1,393 @@
+import { useEffect, useRef, type ReactNode } from 'react';
+import { useLocation } from 'react-router';
+import { Shield } from 'lucide-react';
+import { useLocalAuth } from '../contexts/LocalAuth';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import { PAGE_DS } from '../styles/wasel-page-theme';
+import { C, GRAD, GRAD_HERO, R, SH } from '../utils/wasel-ds';
+import {
+  CoreExperienceBanner as SharedCoreExperienceBanner,
+  PageShell as SharedPageShell,
+  Protected as SharedProtected,
+  SectionHead as SharedSectionHead,
+  midpoint as sharedMidpoint,
+  resolveCityCoord as sharedResolveCityCoord,
+} from '../features/shared/pageShared';
+import { WaselLogo } from '../components/wasel-ds/WaselLogo';
+
+export const DS = PAGE_DS;
+
+export const r = (px = 12) => `${px}px`;
+
+export const pill = (color: string) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 4,
+  padding: '3px 10px',
+  borderRadius: '99px',
+  background: `${color}15`,
+  border: `1px solid ${color}30`,
+  fontSize: '0.66rem',
+  fontWeight: 700,
+  color,
+});
+
+const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
+  Amman: { lat: 31.9539, lng: 35.9106 },
+  Aqaba: { lat: 29.5321, lng: 35.006 },
+  Irbid: { lat: 32.5568, lng: 35.8479 },
+  Zarqa: { lat: 32.0728, lng: 36.088 },
+  'Dead Sea': { lat: 31.559, lng: 35.4732 },
+  Karak: { lat: 31.1854, lng: 35.7048 },
+  Madaba: { lat: 31.7196, lng: 35.7939 },
+  Petra: { lat: 30.3285, lng: 35.4444 },
+  Jerash: { lat: 32.2744, lng: 35.8961 },
+  Mafraq: { lat: 32.3429, lng: 36.208 },
+};
+
+export function resolveCityCoord(city: string): { lat: number; lng: number } {
+  return CITY_COORDS[city] ?? CITY_COORDS.Amman!;
+}
+
+export function midpoint(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number },
+): { lat: number; lng: number } {
+  return { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 };
+}
+
+export function Protected({ children }: { children: ReactNode }) {
+  const { user } = useLocalAuth();
+  const nav = useIframeSafeNavigate();
+  const location = useLocation();
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!user && mountedRef.current) {
+      nav(`/app/auth?returnTo=${encodeURIComponent(location.pathname)}`);
+    }
+  }, [location.pathname, nav, user]);
+
+  if (!user) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '60vh',
+          background: DS.bg,
+          padding: '24px 16px',
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            maxWidth: 480,
+            padding: '28px 24px',
+            borderRadius: r(24),
+            background: `linear-gradient(180deg, ${DS.card} 0%, ${DS.bg} 100%)`,
+            border: `1px solid ${DS.border}`,
+            boxShadow: SH.xl,
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+            <WaselLogo size={42} theme="light" variant="full" />
+          </div>
+          <div
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: r(18),
+              margin: '0 auto 14px',
+              background: `${DS.cyan}12`,
+              border: `1px solid ${DS.cyan}24`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: DS.cyan,
+            }}
+          >
+            <Shield size={24} />
+          </div>
+          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>
+            Sign in required
+          </div>
+          <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7 }}>
+            Sign in to continue.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
+export function PageShell({ children }: { children: ReactNode }) {
+  const { language } = useLanguage();
+  const ar = language === 'ar';
+
+  return (
+    <div
+      style={{
+        minHeight: 'var(--app-min-height)',
+        background: `linear-gradient(180deg, ${C.bgDeep} 0%, ${DS.bg} 42%, ${C.bgAlt} 100%)`,
+        fontFamily: DS.F,
+        direction: ar ? 'rtl' : 'ltr',
+        color: C.text,
+        position: 'relative',
+      }}
+    >
+      <style>{`
+        :root { color-scheme: dark; }
+          .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px ${C.cyanGlow}; }
+          .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px ${C.goldDim}; }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
+        }
+        @media(max-width:899px){
+          .sp-inner{ padding:16px !important; }
+          .sp-2col { grid-template-columns:1fr !important; }
+          .sp-3col { grid-template-columns:1fr !important; }
+          .sp-4col { grid-template-columns:1fr 1fr !important; }
+          .sp-brand-row { flex-direction:column !important; align-items:flex-start !important; gap:10px !important; }
+          .sp-head  { padding:20px 16px !important; border-radius:16px !important; }
+          .sp-search-grid { grid-template-columns:1fr !important; gap:10px !important; }
+          .sp-sort-bar { overflow-x:auto !important; -webkit-overflow-scrolling:touch !important; padding-bottom:6px !important; flex-wrap:nowrap !important; scrollbar-width:none !important; }
+          .sp-sort-bar::-webkit-scrollbar { display:none; }
+          .sp-sort-btn { flex-shrink:0 !important; white-space:nowrap !important; }
+          .sp-results-header { flex-direction:column !important; align-items:flex-start !important; gap:12px !important; }
+          .sp-book-btn { min-height:44px !important; }
+          .sp-ride-card-body { padding:16px !important; }
+          .sp-summary-grid { grid-template-columns:1fr !important; }
+          .sp-bus-card-grid { grid-template-columns:1fr !important; }
+          .sp-modal-metrics { grid-template-columns:1fr !important; }
+          .sp-modal-price { flex-direction:column !important; align-items:flex-start !important; }
+          .sp-empty-actions { grid-template-columns:1fr !important; }
+          .sp-side-column { position:static !important; }
+        }
+        @media(max-width:480px){
+          .sp-4col { grid-template-columns:1fr !important; }
+          .sp-head-inner { flex-direction:column !important; gap:12px !important; align-items:flex-start !important; }
+          .sp-head-btn { width:100% !important; display:flex !important; justify-content:center !important; }
+          .sp-inner { padding:12px !important; }
+          .sp-modal-route { flex-direction:column !important; align-items:flex-start !important; }
+          .sp-modal-route > div { width:100%; text-align:left !important; }
+        }
+      `}</style>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          pointerEvents: 'none',
+          backgroundImage: `linear-gradient(${C.borderFaint} 1px, transparent 1px), linear-gradient(90deg, ${C.borderFaint} 1px, transparent 1px)`,
+          backgroundSize: '72px 72px',
+          maskImage: 'linear-gradient(180deg, transparent 0%, black 12%, black 78%, transparent 100%)',
+          opacity: 0.08,
+        }}
+      />
+      <div className="sp-inner" style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px', position: 'relative' }}>
+        <div
+          className="sp-brand-row"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            marginBottom: 18,
+          }}
+        >
+          <WaselLogo size={34} theme="light" variant="full" />
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 12px',
+              borderRadius: '999px',
+              background: C.cyanDim,
+              border: `1px solid ${C.borderHov}`,
+              color: C.textSub,
+              fontSize: '0.72rem',
+              fontWeight: 700,
+            }}
+          >
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: DS.green,
+                boxShadow: `0 0 10px ${DS.green}`,
+              }}
+            />
+            {ar
+              ? 'واصل للحركة اليومية والطرود في الأردن'
+              : 'Wasel for daily movement and parcels across Jordan'}
+          </div>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function SectionHead({
+  emoji,
+  title,
+  titleAr,
+  sub,
+  color = DS.cyan,
+  action,
+}: {
+  emoji: ReactNode;
+  title: string;
+  titleAr?: string;
+  sub?: string;
+  color?: string;
+  action?: { label: string; onClick: () => void };
+}) {
+  const { language } = useLanguage();
+  const ar = language === 'ar';
+  const displayTitle = ar && titleAr ? titleAr : title;
+
+  return (
+    <div
+      className="sp-head"
+      style={{
+        background: GRAD_HERO,
+        borderRadius: R.xxl,
+        padding: '24px 24px',
+        marginBottom: 20,
+        position: 'relative',
+        overflow: 'hidden',
+        border: `1px solid ${color}18`,
+        boxShadow: SH.lg,
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: `linear-gradient(120deg, ${color}12, transparent 36%, ${C.elevated})`,
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        className="sp-head-inner"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'relative',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: R.xl,
+              background: `${color}18`,
+              border: `1.5px solid ${color}30`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color,
+              flexShrink: 0,
+            }}
+          >
+            {emoji}
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: C.text, margin: 0 }}>
+                {displayTitle}
+              </h1>
+            </div>
+            {sub && <p style={{ fontSize: '0.78rem', color: C.textMuted, margin: 0 }}>{sub}</p>}
+          </div>
+        </div>
+        {action && (
+          <button
+            onClick={action.onClick}
+            className="sp-head-btn"
+            style={{
+              height: 44,
+              padding: '0 22px',
+              borderRadius: R.full,
+              border: 'none',
+              background: GRAD,
+              color: C.bgDeep,
+              fontWeight: 900,
+              fontSize: '0.875rem',
+              boxShadow: SH.cyanL,
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            {action.label}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function CoreExperienceBanner({
+  title,
+  detail,
+  tone = DS.cyan,
+}: {
+  title: string;
+  detail: string;
+  tone?: string;
+}) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 12,
+        background: `linear-gradient(135deg, ${tone}0f, ${C.elevated})`,
+        border: `1px solid ${tone}24`,
+        borderRadius: R.xl,
+        padding: '13px 14px',
+        marginBottom: 18,
+      }}
+    >
+      <Shield size={16} color={tone} style={{ flexShrink: 0 }} />
+      <div>
+        <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.9rem' }}>{title}</div>
+        <div style={{ color: DS.muted, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 3 }}>
+          {detail}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export const SharedPrimitives = {
+  SharedCoreExperienceBanner,
+  SharedPageShell,
+  SharedProtected,
+  SharedSectionHead,
+  sharedMidpoint,
+  sharedResolveCityCoord,
+};

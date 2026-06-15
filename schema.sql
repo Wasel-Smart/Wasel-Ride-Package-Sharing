@@ -1,0 +1,9 @@
+-- This file is intentionally left as a stub.
+-- The canonical database schema lives in supabase/schema.sql
+-- Migrations are managed via supabase/migrations/
+--
+-- To apply schema locally:
+--   npm run supabase:start
+--   npm run supabase:db:reset
+--
+-- See docs/architecture.md for the full data model overview.

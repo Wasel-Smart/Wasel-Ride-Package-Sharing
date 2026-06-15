@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wasel-web-config
+data:
+  VITE_APP_NAME: Wasel
+  VITE_ENABLE_TWO_FACTOR_AUTH: "true"
+  VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: "false"
+  VITE_ENABLE_EMAIL_NOTIFICATIONS: "true"
+  VITE_ENABLE_SMS_NOTIFICATIONS: "true"
+  VITE_ENABLE_WHATSAPP_NOTIFICATIONS: "true"

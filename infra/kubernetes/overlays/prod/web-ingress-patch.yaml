@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wasel-web
+spec:
+  tls:
+    - hosts:
+        - wasel14.online
+      secretName: wasel-web-prod-tls
+  rules:
+    - host: wasel14.online
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wasel-web
+                port:
+                  name: http
