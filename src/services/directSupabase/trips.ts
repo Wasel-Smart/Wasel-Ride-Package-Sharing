@@ -458,10 +458,13 @@ export async function updateDirectBookingStatus(
     .single();
   if (error) throw error;
 
+  const tripId = bookingRow.trip_id;
+  if (!tripId) throw new Error('Booking is missing a trip id.');
+
   const { data: trip } = await db
     .from('trips')
     .select('trip_id, available_seats, trip_status')
-    .eq('trip_id', bookingRow.trip_id)
+    .eq('trip_id', tripId)
     .maybeSingle();
 
   const availableSeats = toNumber((trip as TripRow | null)?.available_seats, 0);
@@ -477,7 +480,7 @@ export async function updateDirectBookingStatus(
             ? 'booked'
             : ((trip as TripRow).trip_status ?? 'open'),
       })
-      .eq('trip_id', bookingRow.trip_id);
+      .eq('trip_id', tripId);
     if (bookingRow.passenger_id) {
       await processReferralConversionForPassenger(String(bookingRow.passenger_id)).catch(() => {});
     }
@@ -491,7 +494,7 @@ export async function updateDirectBookingStatus(
     await db
       .from('trips')
       .update({ available_seats: availableSeats + seatsRequested, trip_status: 'open' })
-      .eq('trip_id', bookingRow.trip_id);
+      .eq('trip_id', tripId);
   }
 
   await recordDirectGrowthEvent({

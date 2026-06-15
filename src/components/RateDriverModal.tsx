@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Star } from 'lucide-react';
-import type { RatingSubmission } from '@/services/ratings';
-import { ratingsService } from '@/services/ratings';
+import { ratingsService, type RatingSubmission } from '@/services/ratings';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 

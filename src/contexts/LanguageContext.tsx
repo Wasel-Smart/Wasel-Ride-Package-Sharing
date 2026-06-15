@@ -1,15 +1,13 @@
-import type {
-  ReactNode} from 'react';
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
-  useState,
   useMemo,
-  useCallback
+  useState,
+  type ReactNode,
 } from 'react';
-import type { Language } from '../locales/translations';
-import { translations } from '../locales/translations';
+import { translations, type Language } from '../locales/translations';
 
 interface LanguageContextType {
   language: Language;

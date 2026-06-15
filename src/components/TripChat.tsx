@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, Loader2 } from 'lucide-react';
-import type { Message } from '@/services/chat';
-import { chatService } from '@/services/chat';
+import { chatService, type Message } from '@/services/chat';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
