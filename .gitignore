@@ -171,6 +171,9 @@ SECURITY_CHECKLIST.md
 # Empty directory shells left after consolidation
 src/domains/
 
+# Nested git worktrees/submodules
+wasel/
+
 .vercel
 supabase/.temp/
 .env*.local
