@@ -1,0 +1,13 @@
+{
+  "name": "@wasel/ride-matching-service",
+  "version": "1.0.0",
+  "private": true,
+  "main": "service-production.ts",
+  "scripts": {
+    "start": "tsx service-production.ts"
+  },
+  "dependencies": {
+    "ioredis": "^5.11.1",
+    "postgres": "^3.4.9"
+  }
+}

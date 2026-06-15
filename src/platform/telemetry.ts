@@ -22,20 +22,8 @@ export interface TraceSpan {
   status: 'ok' | 'error';
 }
 
-const importMetaWithEnv = import.meta as ImportMeta & {
-  env?: { MODE?: string };
-};
-
-const browserWindow = globalThis as typeof globalThis & {
-  window?: {
-    addEventListener: (event: string, handler: () => void) => void;
-  };
-};
-
 const runtimeEnvironment =
-  typeof importMetaWithEnv.env?.MODE === 'string'
-    ? importMetaWithEnv.env.MODE
-    : process.env.NODE_ENV || 'development';
+  process.env.NODE_ENV || 'development';
 
 class TelemetryCollector {
   private metrics: MetricPoint[] = [];
@@ -45,9 +33,6 @@ class TelemetryCollector {
 
   constructor(endpoint?: string) {
     this.endpoint = endpoint || '/api/telemetry';
-    if (typeof browserWindow.window !== 'undefined') {
-      this.startAutoFlush();
-    }
   }
 
   // Record a metric point
@@ -184,15 +169,7 @@ export const telemetry = new TelemetryCollector();
 
 // Track Web Vitals
 export function initWebVitals(): void {
-  if (typeof browserWindow.window === 'undefined') return;
-
-  import('web-vitals').then(({ onCLS, onLCP, onFCP, onTTFB, onINP }) => {
-    onCLS((metric) => telemetry.recordMetric('web_vital.cls', metric.value, 'score'));
-    onLCP((metric) => telemetry.recordMetric('web_vital.lcp', metric.value, 'ms'));
-    onFCP((metric) => telemetry.recordMetric('web_vital.fcp', metric.value, 'ms'));
-    onTTFB((metric) => telemetry.recordMetric('web_vital.ttfb', metric.value, 'ms'));
-    onINP((metric) => telemetry.recordMetric('web_vital.inp', metric.value, 'ms'));
-  });
+  // Browser-only function - no-op in Node.js
 }
 
 // Track route changes

@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  labels:
+    app: grafana
+data:
+  ride-metrics.json: |
+    {
+      "dashboard": {
+        "title": "Wasel Ride Metrics",
+        "panels": [
+          {
+            "title": "Active Rides",
+            "type": "graph",
+            "targets": [{"expr": "sum(rides_active)"}]
+          },
+          {
+            "title": "Driver Availability",
+            "type": "graph",
+            "targets": [{"expr": "sum(driver_available)"}]
+          }
+        ]
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:10-alpine
+          ports:
+            - containerPort: 3000
+          env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wasel-secrets
+                  key: grafana.admin.password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+  selector:
+    app: grafana
