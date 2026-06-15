@@ -1,5 +1,5 @@
 import React from 'react';
-import { PixelRatio, StyleSheet, Text, View } from 'react-native';
+import { PixelRatio, StyleSheet, Text, View, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 
 const scale = PixelRatio.getFontScale();
 
@@ -46,7 +46,7 @@ export function AccessibleText({
   accessible = true,
 }: {
   children: React.ReactNode;
-  style?: unknown[];
+  style?: StyleProp<TextStyle>;
   accessibilityLabel?: string;
   accessibilityHint?: string;
   accessible?: boolean;
@@ -72,7 +72,7 @@ export function AccessibleView({
   accessible = true,
 }: {
   children: React.ReactNode;
-  style?: unknown[];
+  style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
   accessibilityRole?: string;
   accessibilityState?: Record<string, unknown>;
@@ -83,8 +83,8 @@ export function AccessibleView({
       style={style}
       accessible={accessible}
       accessibilityLabel={accessibilityLabel}
-      accessibilityRole={accessibilityRole as never}
-      accessibilityState={accessibilityState as never}
+      accessibilityRole={accessibilityRole as unknown as never}
+      accessibilityState={accessibilityState as unknown as never}
     >
       {children}
     </View>

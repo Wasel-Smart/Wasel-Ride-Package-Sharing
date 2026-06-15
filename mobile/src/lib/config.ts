@@ -36,7 +36,7 @@ const authRedirectUrl = readPublicEnv('EXPO_PUBLIC_AUTH_REDIRECT_URL', extra.aut
 const apiUrl = readPublicEnv('EXPO_PUBLIC_API_URL', extra.apiUrl);
 const wsUrl = readPublicEnv('EXPO_PUBLIC_WS_URL', extra.wsUrl);
 
-export export const waselMobileConfig = {
+export const waselMobileConfig = {
   supabaseUrl,
   supabaseAnonKey,
   googleMapsKey,

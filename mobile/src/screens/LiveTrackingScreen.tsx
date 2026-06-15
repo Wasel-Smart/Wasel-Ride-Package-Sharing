@@ -1,23 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../lib/api';
-import {
-  InfoCard,
-  MetricTile,
-  PremiumPanel,
-  PrimaryButton,
-  ScreenShell,
-  SectionHeader,
-  StatusPill,
-} from '../components/MobilePrimitives';
+import { InfoCard, MetricTile, PrimaryButton, ScreenShell, StatusPill } from '../components/MobilePrimitives';
 import { colors, radii, shadows, spacing, typography } from '../theme';
 import type { Ride } from '../services/ride';
 
-const { width } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
 interface DriverLocation {
   latitude: number;
@@ -47,9 +39,8 @@ const fetchLiveRide = async (rideId: string): Promise<LiveRideData | null> => {
   return response.data;
 };
 
-const LiveTrackingScreen = React.memo(function LiveTrackingScreen({ route }) {
+const LiveTrackingScreen = React.memo(function LiveTrackingScreen({ route }: { route: { params: { rideId: string } } }) {
   const { rideId } = route.params as { rideId: string };
-  const queryClient = useQueryClient();
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -164,7 +155,7 @@ const LiveTrackingScreen = React.memo(function LiveTrackingScreen({ route }) {
       <View style={styles.container}>
         <MapView
           style={StyleSheet.absoluteFillObject}
-            provider="google"
+          provider="google"
           initialRegion={ride.driverLocation ? {
             latitude: ride.driverLocation.latitude,
             longitude: ride.driverLocation.longitude,

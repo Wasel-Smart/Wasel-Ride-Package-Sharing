@@ -5,7 +5,7 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { Platform, Alert } from 'react-native';
 import { apiClient } from '../lib/api';
 import { mobileAuth } from '../services/auth';
 
@@ -69,7 +69,7 @@ class PushNotificationsService {
         importance: Notifications.AndroidImportance.MAX,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#22C55E',
-        sound: true,
+        sound: 'default',
       });
     }
 
@@ -187,7 +187,7 @@ class PushNotificationsService {
         sound: true,
         badge: 1,
       },
-      trigger: delayMs > 0 ? { type: 'timeInterval', milliseconds: delayMs } : null,
+      trigger: delayMs > 0 ? { seconds: Math.ceil(delayMs / 1000) } : null,
     }).catch(console.error);
   }
 

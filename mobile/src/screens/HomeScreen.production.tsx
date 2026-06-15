@@ -19,7 +19,7 @@ interface Location {
 }
 
 export default function HomeScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [destination, setDestination] = useState('');
   const [loading, setLoading] = useState(true);
