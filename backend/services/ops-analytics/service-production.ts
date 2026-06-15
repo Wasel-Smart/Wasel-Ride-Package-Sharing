@@ -3,29 +3,37 @@
  * Event consumption, structured logging, env-driven config, input validation
  */
 import postgres from 'postgres';
-import { loadConfig } from '../shared/src/config/app.config.js';
-import { logger } from '../shared/src/logging/logger.js';
-import { ValidationError, DatabaseError } from '../shared/src/errors/app-errors.js';
-import type { RideCompletionInput, PaymentCaptureInput, CoordinateInput } from '../shared/src/validation/schemas.js';
-import { eventBroker } from '../../../src/platform/event-broker-redis-production.js';
-import { startRuntimeHealthServer } from '../runtime/http-health.js';
+import type { RideCompletionInput, PaymentCaptureInput, CoordinateInput } from './shared/src/validation/schemas.js';
+import { logger } from './shared/src/logging/logger.js';
+import { ValidationError, DatabaseError } from './shared/src/errors/app-errors.js';
+import { eventBroker } from './shared/platform/event-broker-redis-production.js';
+import { startRuntimeHealthServer } from './runtime/http-health.js';
 
-const config = loadConfig();
+const config = (() => {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) throw new Error('DATABASE_URL is required');
+  return {
+    database: {
+      url: dbUrl,
+      max: parseInt(process.env.DB_POOL_MAX ?? '10', 10),
+      idle: parseInt(process.env.DB_POOL_IDLE ?? '20', 10),
+      timeout: parseInt(process.env.DB_POOL_TIMEOUT ?? '10', 10),
+    },
+  };
+})();
 
 class PostgresPool {
   private static instance: ReturnType<typeof postgres> | null = null;
-
   static get connection() {
     if (!PostgresPool.instance) {
       PostgresPool.instance = postgres(config.database.url, {
-        max: config.database.maxConnections,
-        idle_timeout: config.database.idleTimeoutSeconds * 1000,
-        connect_timeout: config.database.connectionTimeoutSeconds * 1000,
+        max: config.database.max,
+        idle_timeout: config.database.idle * 1000,
+        connect_timeout: config.database.timeout * 1000,
       });
     }
     return PostgresPool.instance;
   }
-
   static async disconnect() {
     if (PostgresPool.instance) {
       await PostgresPool.instance.end();
@@ -35,13 +43,9 @@ class PostgresPool {
 }
 
 class AnalyticsEngine {
-  validateCoordinate(coord: CoordinateInput): void {
-    if (!Number.isFinite(coord.lat) || coord.lat < -90 || coord.lat > 90) {
-      throw new ValidationError(`Invalid latitude: ${coord.lat}`);
-    }
-    if (!Number.isFinite(coord.lng) || coord.lng < -180 || coord.lng > 180) {
-      throw new ValidationError(`Invalid longitude: ${coord.lng}`);
-    }
+  validateCoordinate(coord: CoordinateInput) {
+    if (!Number.isFinite(coord.lat) || coord.lat < -90 || coord.lat > 90) throw new ValidationError(`Invalid latitude: ${coord.lat}`);
+    if (!Number.isFinite(coord.lng) || coord.lng < -180 || coord.lng > 180) throw new ValidationError(`Invalid longitude: ${coord.lng}`);
   }
 
   async recordRideCompletion(ride: RideCompletionInput) {
@@ -50,27 +54,16 @@ class AnalyticsEngine {
       this.validateCoordinate(ride.destination);
       const sql = PostgresPool.connection;
       await sql`
-        INSERT INTO operational_metrics (
-          metric_type, entity_id, value, metadata, recorded_at
-        ) VALUES (
-          'ride_completion',
-          ${ride.rideId},
-          ${ride.fare},
-          ${sql.json({
-            driver_id: ride.driverId,
-            rider_id: ride.riderId,
-            distance: ride.distance,
-            duration: ride.duration,
-            origin: ride.origin,
-            destination: ride.destination,
-          })},
-          ${ride.completedAt}
-        )
+        INSERT INTO operational_metrics (metric_type, entity_id, value, metadata, recorded_at)
+        VALUES ('ride_completion', ${ride.rideId}, ${ride.fare}, ${sql.json({
+          driver_id: ride.driverId, rider_id: ride.riderId, distance: ride.distance,
+          duration: ride.duration, origin: ride.origin, destination: ride.destination,
+        })}, ${ride.completedAt})
       `;
       logger.info({ rideId: ride.rideId }, 'Ride completion recorded');
-    } catch (error) {
-      logger.error({ err: error, rideId: ride.rideId }, 'Ride completion error');
-      throw new DatabaseError('Failed to record ride completion', error instanceof Error ? error : undefined);
+    } catch (err) {
+      logger.error({ err, rideId: ride.rideId }, 'Ride completion error');
+      throw new DatabaseError('Failed to record ride completion', err instanceof Error ? err : undefined);
     }
   }
 
@@ -78,20 +71,13 @@ class AnalyticsEngine {
     try {
       const sql = PostgresPool.connection;
       await sql`
-        INSERT INTO financial_metrics (
-          metric_type, payment_id, entity_id, amount, recorded_at
-        ) VALUES (
-          'payment_capture',
-          ${payment.paymentId},
-          ${payment.rideId ?? payment.packageId ?? payment.paymentId},
-          ${payment.capturedAmount},
-          ${payment.capturedAt}
-        )
+        INSERT INTO financial_metrics (metric_type, payment_id, entity_id, amount, recorded_at)
+        VALUES ('payment_capture', ${payment.paymentId}, ${payment.rideId ?? payment.packageId ?? payment.paymentId}, ${payment.capturedAmount}, ${payment.capturedAt})
       `;
       logger.info({ paymentId: payment.paymentId }, 'Payment capture recorded');
-    } catch (error) {
-      logger.error({ err: error, paymentId: payment.paymentId }, 'Payment capture error');
-      throw new DatabaseError('Failed to record payment capture', error instanceof Error ? error : undefined);
+    } catch (err) {
+      logger.error({ err, paymentId: payment.paymentId }, 'Payment capture error');
+      throw new DatabaseError('Failed to record payment capture', err instanceof Error ? err : undefined);
     }
   }
 
@@ -102,27 +88,19 @@ class AnalyticsEngine {
       const corridorId = this.identifyCorridor(ride.origin, ride.destination);
       const sql = PostgresPool.connection;
       await sql`
-        INSERT INTO corridor_intelligence (
-          corridor_id, origin_lat, origin_lng, dest_lat, dest_lng,
-          ride_count, total_revenue, avg_fare, avg_duration, last_updated
-        ) VALUES (
-          ${corridorId}, ${ride.origin.lat}, ${ride.origin.lng},
-          ${ride.destination.lat}, ${ride.destination.lng},
-          1, ${ride.fare}, ${ride.fare}, ${ride.duration}, NOW()
-        )
+        INSERT INTO corridor_intelligence (corridor_id, origin_lat, origin_lng, dest_lat, dest_lng, ride_count, total_revenue, avg_fare, avg_duration, last_updated)
+        VALUES (${corridorId}, ${ride.origin.lat}, ${ride.origin.lng}, ${ride.destination.lat}, ${ride.destination.lng}, 1, ${ride.fare}, ${ride.fare}, ${ride.duration}, NOW())
         ON CONFLICT (corridor_id) DO UPDATE SET
           ride_count = corridor_intelligence.ride_count + 1,
           total_revenue = corridor_intelligence.total_revenue + EXCLUDED.total_revenue,
-          avg_fare = (corridor_intelligence.total_revenue + EXCLUDED.total_revenue) /
-                     (corridor_intelligence.ride_count + 1),
-          avg_duration = (corridor_intelligence.avg_duration * corridor_intelligence.ride_count + EXCLUDED.avg_duration) /
-                         (corridor_intelligence.ride_count + 1),
+          avg_fare = (corridor_intelligence.total_revenue + EXCLUDED.total_revenue) / (corridor_intelligence.ride_count + 1),
+          avg_duration = (corridor_intelligence.avg_duration * corridor_intelligence.ride_count + EXCLUDED.avg_duration) / (corridor_intelligence.ride_count + 1),
           last_updated = NOW()
       `;
       logger.info({ corridorId }, 'Corridor intelligence updated');
-    } catch (error) {
-      logger.error({ err: error, rideId: ride.rideId }, 'Corridor update error');
-      throw new DatabaseError('Failed to update corridor intelligence', error instanceof Error ? error : undefined);
+    } catch (err) {
+      logger.error({ err, rideId: ride.rideId }, 'Corridor update error');
+      throw new DatabaseError('Failed to update corridor', err instanceof Error ? err : undefined);
     }
   }
 
@@ -130,41 +108,22 @@ class AnalyticsEngine {
     try {
       const [startDate, endDate] = this.parsePeriod(period);
       const sql = PostgresPool.connection;
-      const result = await sql<{
-        total_rides: string;
-        total_earnings: string;
-        platform_fee: string;
-        net_payout: string;
-        driver_id: string;
-      }>`
-        SELECT
-          ${driverId} as driver_id,
-          COUNT(*) as total_rides,
-          SUM(r.fare) as total_earnings,
-          SUM(r.fare * 0.20) as platform_fee,
-          SUM(r.fare * 0.80) as net_payout
-        FROM rides r
-        WHERE r.driver_id = ${driverId}
-          AND r.completed_at >= ${startDate}
-          AND r.completed_at < ${endDate}
-          AND r.status = 'completed'
+      const result = await sql<{ total_rides: string; total_earnings: string; platform_fee: string; net_payout: string }>`
+        SELECT COUNT(*) as total_rides, SUM(r.fare) as total_earnings, SUM(r.fare * 0.20) as platform_fee, SUM(r.fare * 0.80) as net_payout
+        FROM rides r WHERE r.driver_id = ${driverId} AND r.completed_at >= ${startDate} AND r.completed_at < ${endDate} AND r.status = 'completed'
       `;
-
       if (result.length === 0 || Number(result[0].total_rides) === 0) {
         return { driverId, period, totalRides: 0, totalEarnings: 0, platformFee: 0, netPayout: 0, status: 'pending' };
       }
       return {
-        driverId: result[0].driver_id,
-        period,
-        totalRides: Number(result[0].total_rides),
-        totalEarnings: Number(result[0].total_earnings),
-        platformFee: Number(result[0].platform_fee),
-        netPayout: Number(result[0].net_payout),
+        driverId, period,
+        totalRides: Number(result[0].total_rides), totalEarnings: Number(result[0].total_earnings),
+        platformFee: Number(result[0].platform_fee), netPayout: Number(result[0].net_payout),
         status: 'pending',
       };
-    } catch (error) {
-      logger.error({ err: error, driverId, period }, 'Payout generation error');
-      throw new DatabaseError('Payout generation failed', error instanceof Error ? error : undefined);
+    } catch (err) {
+      logger.error({ err, driverId, period }, 'Payout generation error');
+      throw new DatabaseError('Payout generation failed', err instanceof Error ? err : undefined);
     }
   }
 
@@ -178,27 +137,21 @@ class AnalyticsEngine {
     const month = now.getMonth();
     if (period.startsWith('week-')) {
       const weekNum = parseInt(period.split('-')[1], 10);
-      const startDate = new Date(year, 0, 1 + (weekNum - 1) * 7);
-      const endDate = new Date(year, 0, 1 + weekNum * 7);
-      return [startDate.toISOString(), endDate.toISOString()];
+      return [new Date(year, 0, 1 + (weekNum - 1) * 7).toISOString(), new Date(year, 0, 1 + weekNum * 7).toISOString()];
     }
     if (period.startsWith('month-')) {
       const monthNum = parseInt(period.split('-')[1], 10) - 1;
-      const startDate = new Date(year, monthNum, 1);
-      const endDate = new Date(year, monthNum + 1, 1);
-      return [startDate.toISOString(), endDate.toISOString()];
+      return [new Date(year, monthNum, 1).toISOString(), new Date(year, monthNum + 1, 1).toISOString()];
     }
-    const startDate = new Date(year, month, 1);
-    const endDate = new Date(year, month + 1, 1);
-    return [startDate.toISOString(), endDate.toISOString()];
+    return [new Date(year, month, 1).toISOString(), new Date(year, month + 1, 1).toISOString()];
   }
 }
 
 export class OpsAnalyticsWorker {
-  private readonly engine: AnalyticsEngine;
+  private readonly engine = new AnalyticsEngine();
   private unsubscribeRides: (() => Promise<void>) | null = null;
   private unsubscribePayments: (() => Promise<void>) | null = null;
-  private healthServer: { close: () => Promise<void> } | null = null;
+  private healthServer: { close(): Promise<void> } | null = null;
   private ready = false;
 
   async start() {
@@ -208,26 +161,12 @@ export class OpsAnalyticsWorker {
       isReady: () => this.ready,
       isHealthy: () => this.healthCheck(),
     });
-    this.unsubscribeRides = await eventBroker.subscribe(
-      'rides.completed',
-      this.handleRideCompleted.bind(this),
-      {
-        groupName: 'ops-analytics-worker',
-        consumerName: `ops-worker-${process.env.HOSTNAME ?? 'local'}`,
-        blockMs: 10000,
-        count: 20,
-      },
-    );
-    this.unsubscribePayments = await eventBroker.subscribe(
-      'payments.captured',
-      this.handlePaymentCaptured.bind(this),
-      {
-        groupName: 'ops-analytics-worker',
-        consumerName: `ops-worker-${process.env.HOSTNAME ?? 'local'}`,
-        blockMs: 10000,
-        count: 20,
-      },
-    );
+    this.unsubscribeRides = await eventBroker.subscribe('rides.completed', this.handleRideCompleted.bind(this), {
+      groupName: 'ops-analytics-worker', consumerName: `ops-worker-${process.env.HOSTNAME ?? 'local'}`, blockMs: 10000, count: 20,
+    });
+    this.unsubscribePayments = await eventBroker.subscribe('payments.captured', this.handlePaymentCaptured.bind(this), {
+      groupName: 'ops-analytics-worker', consumerName: `ops-worker-${process.env.HOSTNAME ?? 'local'}`, blockMs: 10000, count: 20,
+    });
     this.ready = true;
     logger.info('OpsAnalyticsWorker started');
   }
@@ -242,49 +181,43 @@ export class OpsAnalyticsWorker {
   }
 
   async handleRideCompleted(event: { id: string; payload: RideCompletionInput }) {
-    logger.info({ eventId: event.id, rideId: event.payload.rideId }, 'Processing ride completion');
     try {
       const ride = event.payload;
       await this.engine.recordRideCompletion(ride);
       await this.engine.updateCorridorIntelligence(ride);
       logger.info({ eventId: event.id, rideId: ride.rideId }, 'Ride processed');
-    } catch (error) {
-      logger.error({ err: error, eventId: event.id }, 'Ride processing error');
-      throw error;
+    } catch (err) {
+      logger.error({ err, eventId: event.id }, 'Ride processing error');
+      throw err;
     }
   }
 
   async handlePaymentCaptured(event: { id: string; payload: PaymentCaptureInput }) {
-    logger.info({ eventId: event.id, paymentId: event.payload.paymentId }, 'Processing payment capture');
     try {
       const payment = event.payload;
       await this.engine.recordPaymentCapture(payment);
       logger.info({ eventId: event.id, paymentId: payment.paymentId }, 'Payment processed');
-    } catch (error) {
-      logger.error({ err: error, eventId: event.id }, 'Payment processing error');
-      throw error;
+    } catch (err) {
+      logger.error({ err, eventId: event.id }, 'Payment processing error');
+      throw err;
     }
   }
 
   async generateSettlementReport(period: string) {
     try {
       const sql = PostgresPool.connection;
-      const drivers = await sql`
-        SELECT DISTINCT driver_id FROM driver_availability WHERE status != 'inactive'
-      `;
-      const payouts = await Promise.all(
-        drivers.map(d => this.engine.generateDriverPayout(d.driver_id, period)),
-      );
+      const drivers = await sql`SELECT DISTINCT driver_id FROM driver_availability WHERE status != 'inactive'`;
+      const payouts = await Promise.all(drivers.map(d => this.engine.generateDriverPayout(d.driver_id, period)));
       return payouts.filter(p => typeof p === 'object' && p !== null && p.totalRides > 0);
-    } catch (error) {
-      logger.error({ err: error, period }, 'Settlement report error');
+    } catch (err) {
+      logger.error({ err, period }, 'Settlement report error');
       return [];
     }
   }
 
   async healthCheck() {
     try {
-      await PostgresPool.connection.sql<[{ now: string }]>`SELECT 1`;
+      await PostgresPool.connection.sql`SELECT 1`;
       return true;
     } catch {
       return false;
@@ -292,7 +225,7 @@ export class OpsAnalyticsWorker {
   }
 }
 
-if (process.argv[1].includes('service-production.ts') && process.argv[1].includes('ops-analytics')) {
+if (process.argv[1].includes('ops-analytics') && process.argv[1].includes('service-production.ts')) {
   const worker = new OpsAnalyticsWorker();
   process.on('SIGTERM', async () => {
     logger.info({ service: 'ops-analytics' }, 'SIGTERM received');
@@ -300,8 +233,8 @@ if (process.argv[1].includes('service-production.ts') && process.argv[1].include
     await eventBroker.disconnect();
     process.exit(0);
   });
-  worker.start().catch(error => {
-    logger.error({ err: error }, 'Fatal startup error');
+  worker.start().catch(err => {
+    logger.error({ err }, 'Fatal startup error');
     process.exit(1);
   });
 }

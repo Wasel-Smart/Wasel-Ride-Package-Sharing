@@ -3,7 +3,7 @@
  * Connects to backend via WebSocket for live updates
  */
 import { apiClient } from '../lib/api';
-import { mobileAuth } from '../services/auth';
+import { waselMobileConfig } from '../lib/config';
 import { Platform } from 'react-native';
 
 export interface DriverLocation {
@@ -17,9 +17,15 @@ export interface DriverLocation {
 export interface RideTracking {
   rideId: string;
   driverId: string;
+  driverName: string;
+  driverRating: number;
+  vehicleModel: string;
+  licensePlate: string;
+  status: 'matching' | 'driver_en_route' | 'driver_arrived' | 'in_progress';
+  eta: string;
+  distance: string;
+  fare: string;
   driverLocation?: DriverLocation;
-  estimatedArrival?: string; // ISO timestamp
-  status: 'matching' | 'driver_en_route' | 'driver_arrived' | 'in_progress' | 'completed';
 }
 
 interface TrackingState {
@@ -31,7 +37,6 @@ interface TrackingState {
 }
 
 class RideTrackingService {
-  private socket: WebSocket | null = null;
   private trackingStates = new Map<string, TrackingState>();
   private listeners = new Map<string, Set<(state: TrackingState) => void>>();
 
@@ -45,8 +50,7 @@ class RideTrackingService {
     };
     this.trackingStates.set(rideId, initialState);
 
-    this.fetchInitialTracking(rideId);
-    this.connectWebSocket(rideId);
+    this.fetchLiveRide(rideId);
 
     return {
       state: initialState,
@@ -62,95 +66,34 @@ class RideTrackingService {
     };
   }
 
-  private async fetchInitialTracking(rideId: string): Promise<void> {
+  private async fetchLiveRide(rideId: string): Promise<void> {
     try {
-      const response = await apiClient.get<RideTracking>(`rides/${rideId}/tracking`);
+      const response = await apiClient.get<RideTracking>(`rides/${rideId}/live`);
       if (response.data) {
         this.updateTrackingState(rideId, {
           location: response.data.driverLocation ?? null,
-          eta: response.data.estimatedArrival ?? null,
+          eta: response.data.eta ?? null,
           status: response.data.status ?? null,
           loading: false,
           error: null,
         });
       } else {
         this.updateTrackingState(rideId, {
+          location: null,
+          eta: null,
+          status: null,
           loading: false,
-          error: response.error ?? 'Failed to load tracking',
+          error: response.error ?? 'Failed to load ride data',
         });
       }
     } catch (error) {
       this.updateTrackingState(rideId, {
+        location: null,
+        eta: null,
+        status: null,
         loading: false,
         error: error instanceof Error ? error.message : 'Tracking error',
       });
-    }
-  }
-
-  private connectWebSocket(rideId: string): void {
-    const token = mobileAuth.getAccessToken();
-    if (!token) return;
-
-    const wsUrl = waselMobileConfig.wsUrl?.replace(/^http/, 'ws');
-    if (!wsUrl) return;
-
-    try {
-      this.socket = new WebSocket(`${wsUrl}/rides/${rideId}/tracking?token=${token}`);
-
-      this.socket.onopen = () => {
-        console.log(`[RideTracking] Connected for ride ${rideId}`);
-      };
-
-      this.socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data) as {
-            type: 'location_update' | 'status_change' | 'eta_update';
-            payload: Record<string, unknown>;
-          };
-
-          const currentState = this.trackingStates.get(rideId);
-          if (!currentState) return;
-
-          const newState = { ...currentState };
-
-          switch (data.type) {
-            case 'location_update':
-              newState.location = {
-                latitude: data.payload.lat as number,
-                longitude: data.payload.lng as number,
-                heading: data.payload.heading as number | undefined,
-                speed: data.payload.speed as number | undefined,
-                timestamp: new Date().toISOString(),
-              };
-              break;
-            case 'status_change':
-              newState.status = data.payload.status as RideTracking['status'];
-              break;
-            case 'eta_update':
-              newState.eta = data.payload.eta as string;
-              break;
-          }
-
-          this.updateTrackingState(rideId, newState);
-        } catch (error) {
-          console.error('[RideTracking] Failed to parse message:', error);
-        }
-      };
-
-      this.socket.onerror = (error) => {
-        console.error('[RideTracking] WebSocket error:', error);
-        this.updateTrackingState(rideId, {
-          loading: false,
-          error: 'Connection error',
-        });
-      };
-
-      this.socket.onclose = () => {
-        console.log(`[RideTracking] Disconnected for ride ${rideId}`);
-        this.socket = null;
-      };
-    } catch (error) {
-      console.error('[RideTracking] Failed to create WebSocket:', error);
     }
   }
 
@@ -162,10 +105,6 @@ class RideTrackingService {
   disconnect(rideId: string): void {
     this.trackingStates.delete(rideId);
     this.listeners.delete(rideId);
-    if (this.socket) {
-      this.socket.close();
-      this.socket = null;
-    }
   }
 }
 

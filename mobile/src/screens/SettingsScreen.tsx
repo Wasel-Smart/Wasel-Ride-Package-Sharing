@@ -3,7 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet } from 're
 import { useNavigation } from '@react-navigation/native';
 
 export default function SettingsScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [locationSharing, setLocationSharing] = React.useState(true);
 

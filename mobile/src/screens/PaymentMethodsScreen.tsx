@@ -32,7 +32,7 @@ export default function PaymentMethodsScreen({ navigation }: any) {
             <View style={styles.methodDetails}>
               <Text style={styles.methodName}>{method.name}</Text>
               {method.type === 'wallet' && (
-                <Text style={styles.balance}>Balance: JOD {method.balance.toFixed(2)}</Text>
+                <Text style={styles.balance}>Balance: JOD {(method.balance ?? 0).toFixed(2)}</Text>
               )}
               {method.primary && <Text style={styles.primaryBadge}>Primary</Text>}
             </View>
