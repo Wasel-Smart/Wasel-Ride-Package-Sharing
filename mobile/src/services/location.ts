@@ -230,6 +230,11 @@ export class LocationTrackingService {
       return false;
     }
   }
+  async getCurrentPosition(): Promise<LocationUpdate> {
+    return this.getCurrentLocation();
+  }
 }
 
 export const locationTracking = new LocationTrackingService();
+export const locationService = locationTracking;
+

@@ -33,6 +33,7 @@ class TelemetryCollector {
 
   constructor(endpoint?: string) {
     this.endpoint = endpoint || '/api/telemetry';
+    this.startAutoFlush();
   }
 
   // Record a metric point
@@ -156,10 +157,11 @@ class TelemetryCollector {
   }
 
   private startAutoFlush(): void {
+    if (typeof window === 'undefined') return;
+
     setInterval(() => this.flush(), this.flushInterval);
 
-    // Flush on page unload
-    browserWindow.window?.addEventListener('beforeunload', () => {
+    window.addEventListener('beforeunload', () => {
       this.flush();
     });
   }

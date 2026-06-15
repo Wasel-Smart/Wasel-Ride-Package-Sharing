@@ -47,6 +47,7 @@ export interface Ride {
     address: string;
   };
   status: RideStatus;
+  seats?: number;
   fare?: number;
   distance?: number;
   duration?: number;

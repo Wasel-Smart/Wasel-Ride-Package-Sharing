@@ -1,90 +1,137 @@
 /**
- * Payment Reconciliation Service - PRODUCTION IMPLEMENTATION
- * Real Stripe SDK integration with idempotency and retry logic
+ * Payment Reconciliation Service - Production Implementation
+ * Stripe idempotency, structured logging, env-driven config, Input validation
  */
 import postgres from 'postgres';
 import Stripe from 'stripe';
+import Redis from 'ioredis';
+import { loadConfig } from '../shared/src/config/app.config.js';
+import { logger } from '../shared/src/logging/logger.js';
+import { ValidationError, DatabaseError, ExternalServiceError } from '../shared/src/errors/app-errors.js';
+import type { PaymentAuthorizationInput, PaymentRefundInput } from '../shared/src/validation/schemas.js';
 import { eventBroker } from '../../../src/platform/event-broker-redis-production.js';
-import { startRuntimeHealthServer } from '../runtime/http-health.ts';
+import { startRuntimeHealthServer } from '../runtime/http-health.js';
 
-const sql = postgres(process.env.DATABASE_URL || '', {
-  max: 10,
-  idle_timeout: 20,
-  connect_timeout: 10,
-});
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+const config = loadConfig();
+const stripe = new Stripe(config.stripe.secretKey, {
   maxNetworkRetries: 3,
   timeout: 30000,
+  apiVersion: config.stripe.apiVersion,
 });
 
-class PaymentProviderAdapter {
-  MAX_RETRIES = 3;
+class PostgresPool {
+  private static instance: ReturnType<typeof postgres> | null = null;
 
-  async capturePayment(providerId, amount, idempotencyKey) {
+  static get connection() {
+    if (!PostgresPool.instance) {
+      PostgresPool.instance = postgres(config.database.url, {
+        max: config.database.maxConnections,
+        idle_timeout: config.database.idleTimeoutSeconds * 1000,
+        connect_timeout: config.database.connectionTimeoutSeconds * 1000,
+      });
+    }
+    return PostgresPool.instance;
+  }
+
+  static async disconnect() {
+    if (PostgresPool.instance) {
+      await PostgresPool.instance.end();
+      PostgresPool.instance = null;
+    }
+  }
+}
+
+class RedisPool {
+  private static instance: Redis | null = null;
+
+  static get connection() {
+    if (!RedisPool.instance) {
+      RedisPool.instance = new Redis({
+        host: config.redis.host,
+        port: config.redis.port,
+        password: config.redis.password,
+        tls: config.redis.tls ? {} : undefined,
+        maxRetries: config.redis.maxRetries,
+        retryStrategy: (times: number) => {
+          if (times > config.redis.maxRetries) return null;
+          return Math.min(times * config.redis.retryDelayMs, 5000);
+        },
+        enableReadyCheck: true,
+        enableOfflineQueue: false,
+      });
+    }
+    return RedisPool.instance;
+  }
+
+  static async disconnect() {
+    if (RedisPool.instance) {
+      await RedisPool.instance.quit();
+      RedisPool.instance = null;
+    }
+  }
+}
+
+class PaymentProviderAdapter {
+  async capturePayment(providerId: string, amount: number, idempotencyKey: string) {
     try {
       const paymentIntent = await stripe.paymentIntents.capture(providerId, {
         amount_to_capture: amount,
-      }, {
-        idempotencyKey,
-      });
+      }, { idempotencyKey });
       return {
-        paymentId: paymentIntent.metadata.paymentId || '',
+        paymentId: paymentIntent.metadata.paymentId ?? '',
         capturedAmount: paymentIntent.amount_received,
         providerTransactionId: paymentIntent.id,
         capturedAt: new Date(paymentIntent.created * 1000).toISOString(),
         status: 'success',
       };
     } catch (error) {
-      console.error('[PaymentProvider] Capture failed:', error);
+      logger.error({ err: error, providerId, amount, idempotencyKey }, 'Stripe capture failed');
       return {
         paymentId: '',
         capturedAmount: 0,
         providerTransactionId: providerId,
         capturedAt: new Date().toISOString(),
         status: 'failed',
-        failureReason: error.message,
+        failureReason: error instanceof Error ? error.message : String(error),
       };
     }
   }
 
-  async refundPayment(providerId, amount, reason, idempotencyKey) {
+  async refundPayment(providerId: string, amount: number, reason?: string, idempotencyKey?: string) {
     try {
       await stripe.refunds.create({
         payment_intent: providerId,
         amount,
         reason: 'requested_by_customer',
         metadata: { reason },
-      }, {
-        idempotencyKey,
-      });
+      }, { idempotencyKey });
       return true;
     } catch (error) {
-      console.error('[PaymentProvider] Refund failed:', error);
+      logger.error({ err: error, providerId, amount }, 'Stripe refund failed');
       return false;
     }
   }
 
-  async getPaymentStatus(providerId) {
+  async getPaymentStatus(providerId: string) {
     try {
-      const paymentIntent = await stripe.paymentIntents.retrieve(providerId);
-      return paymentIntent.status;
+      const pi = await stripe.paymentIntents.retrieve(providerId);
+      return pi.status;
     } catch (error) {
-      console.error('[PaymentProvider] Status check failed:', error);
+      logger.error({ err: error, providerId }, 'Stripe status check failed');
       return 'unknown';
     }
   }
 }
 
 export class PaymentReconciliationService {
-  provider = new PaymentProviderAdapter();
-  unsubscribe;
-  processing = new Set();
-  healthServer;
-  ready = false;
+  private readonly provider: PaymentProviderAdapter;
+  private readonly processing = new Set<string>();
+  private unsubscribe: (() => Promise<void>) | null = null;
+  private healthServer: { close: () => Promise<void> } | null = null;
+  private ready = false;
 
   async start() {
-    console.log('[PaymentReconciliation] Starting service...');
+    logger.info('PaymentReconciliationService starting');
     this.healthServer = startRuntimeHealthServer({
       serviceName: 'payment-reconciliation-service',
       isReady: () => this.ready,
@@ -95,55 +142,59 @@ export class PaymentReconciliationService {
       this.handlePaymentAuthorization.bind(this),
       {
         groupName: 'payment-reconciliation-service',
-        consumerName: `payment-worker-${process.env.HOSTNAME || 'local'}`,
+        consumerName: `payment-worker-${process.env.HOSTNAME ?? 'local'}`,
         blockMs: 5000,
         count: 5,
       },
     );
     this.ready = true;
-    console.log('[PaymentReconciliation] Service started');
+    logger.info('PaymentReconciliationService started');
   }
 
   async stop() {
     this.ready = false;
-    if (this.unsubscribe) {
-      await this.unsubscribe();
-    }
-    if (this.healthServer) {
-      await this.healthServer.close();
-    }
-    await sql.end();
-    console.log('[PaymentReconciliation] Service stopped');
+    if (this.unsubscribe) await this.unsubscribe();
+    if (this.healthServer) await this.healthServer.close();
+    await PostgresPool.disconnect();
+    await RedisPool.disconnect();
+    logger.info('PaymentReconciliationService stopped');
   }
 
-  async handlePaymentAuthorization(event) {
-    const startTime = Date.now();
-    console.log(`[PaymentReconciliation] Processing: ${event.id}`);
-    const authorization = event.payload;
-    if (this.processing.has(authorization.paymentId)) {
-      console.log(`[PaymentReconciliation] Already processing ${authorization.paymentId}`);
-      return;
-    }
-    this.processing.add(authorization.paymentId);
+  async handlePaymentAuthorization(event: { id: string; payload: PaymentAuthorizationInput; traceId?: string }) {
+    const startTimeMs = Date.now();
+    logger.info({ eventId: event.id }, 'Processing payment authorization');
     try {
-      const shouldCapture = await this.shouldCapturePayment(authorization);
-      if (!shouldCapture) {
-        console.log(`[PaymentReconciliation] Payment ${authorization.paymentId} not ready`);
+      const authorization = event.payload;
+      this.validatePaymentAuthorization(authorization);
+
+      if (this.processing.has(authorization.paymentId)) {
+        logger.info({ paymentId: authorization.paymentId }, 'Duplicate authorization — skipping');
         return;
       }
+      this.processing.add(authorization.paymentId);
+
+      const shouldCapture = await this.shouldCapturePayment(authorization);
+      if (!shouldCapture) {
+        logger.info({ paymentId: authorization.paymentId }, 'Payment not ready for capture');
+        return;
+      }
+
       const idempotencyKey = `capture-${authorization.paymentId}`;
       const result = await this.provider.capturePayment(
         authorization.providerId,
         authorization.amount,
         idempotencyKey,
       );
+
       if (result.status === 'failed') {
-        console.error(`[PaymentReconciliation] Capture failed: ${result.failureReason}`);
+        logger.error({ paymentId: authorization.paymentId, reason: result.failureReason }, 'Capture failed');
         throw new Error(`Payment capture failed: ${result.failureReason}`);
       }
+
       await this.recordCapture(authorization.paymentId, result);
+
       await eventBroker.publish({
-        id: `evt-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        id: `evt-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
         type: 'payments.captured',
         payload: {
           paymentId: authorization.paymentId,
@@ -157,21 +208,32 @@ export class PaymentReconciliationService {
         traceId: event.traceId,
         occurredAt: new Date().toISOString(),
       });
-      const duration = Date.now() - startTime;
-      console.log(`[PaymentReconciliation] Captured in ${duration}ms: ${authorization.paymentId}`);
+
+      logger.info({ eventId: event.id, paymentId: authorization.paymentId, durationMs: Date.now() - startTimeMs }, 'Payment captured');
     } catch (error) {
-      console.error(`[PaymentReconciliation] Error:`, error);
+      logger.error({ err: error, eventId: event.id }, 'Payment authorization error');
       throw error;
     } finally {
-      this.processing.delete(authorization.paymentId);
+      this.processing.delete(event.payload.paymentId);
     }
   }
 
-  async shouldCapturePayment(authorization) {
-    if (authorization.escrowStatus === 'released') {
-      return true;
+  private validatePaymentAuthorization(auth: PaymentAuthorizationInput) {
+    if (!auth.paymentId || !auth.providerId || !auth.amount || !auth.currency) {
+      throw new ValidationError('Missing required payment fields');
     }
+    if (auth.amount <= 0 || !Number.isFinite(auth.amount)) {
+      throw new ValidationError(`Invalid payment amount: ${auth.amount}`);
+    }
+    if (auth.currency.length !== 3) {
+      throw new ValidationError(`Invalid currency code: ${auth.currency}`);
+    }
+  }
+
+  private async shouldCapturePayment(authorization: PaymentAuthorizationInput) {
+    if (authorization.escrowStatus === 'released') return true;
     try {
+      const sql = PostgresPool.connection;
       if (authorization.rideId) {
         const ride = await sql`
           SELECT status FROM rides WHERE id = ${authorization.rideId}
@@ -185,83 +247,84 @@ export class PaymentReconciliationService {
         return pkg.length > 0 && pkg[0].status === 'delivered';
       }
     } catch (error) {
-      console.error('[PaymentReconciliation] Status check error:', error);
+      logger.error({ err: error, paymentId: authorization.paymentId }, 'Status check error');
     }
     return false;
   }
 
-  async recordCapture(paymentId, result) {
+  private async recordCapture(paymentId: string, result: { capturedAmount: number; providerTransactionId: string; capturedAt: string }) {
     try {
+      const sql = PostgresPool.connection;
       await sql`
         UPDATE payments
-        SET 
-          status = 'captured',
+        SET status = 'captured',
           captured_amount = ${result.capturedAmount},
           provider_transaction_id = ${result.providerTransactionId},
           captured_at = ${result.capturedAt},
           updated_at = NOW()
         WHERE id = ${paymentId}
       `;
-      console.log(`[PaymentReconciliation] Recorded capture: ${paymentId}`);
+      logger.info({ paymentId }, 'Capture recorded');
     } catch (error) {
-      console.error('[PaymentReconciliation] Record capture error:', error);
-      throw error;
+      logger.error({ err: error, paymentId }, 'Record capture error');
+      throw new DatabaseError('Failed to record payment capture', error instanceof Error ? error : undefined);
     }
   }
 
-  async processRefund(paymentId, amount, reason) {
+  async processRefund(paymentId: string, amount: number, reason?: string) {
     try {
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new ValidationError(`Invalid refund amount: ${amount}`);
+      }
+      const sql = PostgresPool.connection;
       const payment = await sql`
         SELECT provider_id FROM payments WHERE id = ${paymentId}
       `;
       if (payment.length === 0) {
-        console.error(`[PaymentReconciliation] Payment not found: ${paymentId}`);
+        logger.error({ paymentId }, 'Payment not found for refund');
         return false;
       }
+
       const providerId = payment[0].provider_id;
       const idempotencyKey = `refund-${paymentId}-${Date.now()}`;
-      const success = await this.provider.refundPayment(
-        providerId,
-        amount,
-        reason,
-        idempotencyKey,
-      );
+      const success = await this.provider.refundPayment(providerId, amount, reason, idempotencyKey);
+
       if (success) {
         await sql`
-          UPDATE payments 
-          SET status = 'refunded', refunded_at = NOW() 
-          WHERE id = ${paymentId}
+          UPDATE payments SET status = 'refunded', refunded_at = NOW() WHERE id = ${paymentId}
         `;
-        console.log(`[PaymentReconciliation] Refund processed: ${paymentId}`);
+        logger.info({ paymentId, amount }, 'Refund processed');
       }
       return success;
     } catch (error) {
-      console.error('[PaymentReconciliation] Refund error:', error);
+      if (error instanceof AppError) throw error;
+      logger.error({ err: error, paymentId, amount }, 'Refund error');
       return false;
     }
   }
 
   async healthCheck() {
     try {
-      await sql`SELECT 1`;
+      await PostgresPool.connection.sql<[{ now: string }]>`SELECT 1`;
       await stripe.balance.retrieve();
       return true;
-    } catch {
+    } catch (error) {
+      logger.warn({ err: error }, 'Health check failed');
       return false;
     }
   }
 }
 
-if (process.argv[1].endsWith('service-production.ts')) {
+if (process.argv[1].endsWith('payment-reconciliation-service.ts')) {
   const service = new PaymentReconciliationService();
   process.on('SIGTERM', async () => {
-    console.log('[PaymentReconciliation] SIGTERM received');
+    logger.info({ service: 'payment-reconciliation' }, 'SIGTERM received');
     await service.stop();
     await eventBroker.disconnect();
     process.exit(0);
   });
   service.start().catch(error => {
-    console.error('[PaymentReconciliation] Fatal error:', error);
+    logger.error({ err: error }, 'Fatal startup error');
     process.exit(1);
   });
 }

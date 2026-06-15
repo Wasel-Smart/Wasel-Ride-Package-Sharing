@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { useNavigation } from '@react-navigation/native';
 import { locationService } from '../services/location';
 import { authService } from '../services/auth';
@@ -86,7 +86,7 @@ export default function HomeScreen() {
       {/* Map View */}
       <MapView
         style={styles.map}
-        provider={PROVIDER_GOOGLE}
+            provider="google"
         initialRegion={
           currentLocation
             ? {

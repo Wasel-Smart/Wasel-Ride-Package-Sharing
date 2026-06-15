@@ -1,9 +1,10 @@
-import React, { Component, type ErrorInfo, type ReactNode } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { Component, type ReactNode } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Platform } from 'react-native';
+import { colors } from '../theme';
 
 interface Props {
   children: ReactNode;
-  onRetry?: () => void;
+  fallback?: ReactNode;
 }
 
 interface State {
@@ -21,25 +22,37 @@ export class MobileErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('Mobile error boundary caught:', { error, errorInfo });
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('[ErrorBoundary] Caught error:', error, errorInfo);
+    if (__DEV__) {
+      console.log('[ErrorBoundary] Error stack:', errorInfo.componentStack);
+    }
   }
 
-  handleRetry = (): void => {
+  handleReset = () => {
     this.setState({ hasError: false, error: null });
-    this.props.onRetry?.();
   };
 
-  render(): ReactNode {
+  render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback;
+      }
+
       return (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorTitle}>Something went wrong</Text>
-          <Text style={styles.errorMessage}>
-            {this.state.error?.message || 'Please restart the app'}
+        <View style={styles.container} accessible accessibilityLabel="Error screen">
+          <Text style={styles.title}>Something went wrong</Text>
+          <Text style={styles.message} accessible accessibilityLabel="Error message">
+            {this.state.error?.message ?? 'An unexpected error occurred'}
           </Text>
-          <TouchableOpacity style={styles.retryButton} onPress={this.handleRetry}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={this.handleReset}
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Try again"
+          >
+            <Text style={styles.buttonText}>Try Again</Text>
           </TouchableOpacity>
         </View>
       );
@@ -50,34 +63,46 @@ export class MobileErrorBoundary extends Component<Props, State> {
 }
 
 const styles = StyleSheet.create({
-  errorContainer: {
+  container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    backgroundColor: '#fef2f2',
+    backgroundColor: colors.bg,
   },
-  errorTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#dc2626',
-    marginBottom: 8,
-  },
-  errorMessage: {
-    fontSize: 14,
-    color: '#dc2626',
-    textAlign: 'center',
+  title: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: colors.red,
     marginBottom: 16,
   },
-  retryButton: {
-    backgroundColor: '#dc2626',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: '#ffffff',
+  message: {
     fontSize: 16,
-    fontWeight: '500',
+    color: colors.muted,
+    textAlign: 'center',
+    marginBottom: 24,
+    maxWidth: '80%',
+  },
+  button: {
+    backgroundColor: colors.teal,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '900',
   },
 });
