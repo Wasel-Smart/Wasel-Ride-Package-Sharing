@@ -103,7 +103,7 @@ class AnalyticsService {
     if (context?.action) {
       crashlytics().setAttribute('action', context.action);
     }
-    crashlytics().recordError(error).catch(console.error);
+    crashlytics().recordError(error);
   }
 
   async flushEvents(): Promise<void> {

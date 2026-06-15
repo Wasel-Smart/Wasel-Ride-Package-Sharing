@@ -36,7 +36,6 @@ class BiometricAuthService {
   async enable(): Promise<void> {
     const result = await LocalAuthentication.authenticateAsync({
       promptMessage: 'Enable biometric login for Wasel',
-      disableFallback: true,
     });
 
     if (result.success) {
@@ -61,7 +60,6 @@ class BiometricAuthService {
     const result = await LocalAuthentication.authenticateAsync({
       promptMessage: 'Sign in to Wasel',
       cancelLabel: 'Use password',
-      disableFallback: false,
     });
 
     if (result.success) {

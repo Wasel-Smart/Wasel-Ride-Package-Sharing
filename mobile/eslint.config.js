@@ -9,6 +9,8 @@ module.exports = tseslint.config(
       'ios/**',
       'node_modules/**',
       'coverage/**',
+      'dist/**',
+      'build/**',
     ],
   },
   {
@@ -25,6 +27,7 @@ module.exports = tseslint.config(
         fetch: 'readonly',
         process: 'readonly',
         require: 'readonly',
+        __DEV__: 'readonly',
       },
     },
     plugins: {
@@ -32,9 +35,15 @@ module.exports = tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      'react-hooks/exhaustive-deps': 'warn',
       'no-undef': 'off',
       'no-var': 'error',
       'prefer-const': 'error',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'eqeqeq': ['error', 'always'],
     },
   },
 );

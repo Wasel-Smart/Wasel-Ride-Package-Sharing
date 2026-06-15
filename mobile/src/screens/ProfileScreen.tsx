@@ -39,15 +39,14 @@ const ProfileScreen = React.memo(function ProfileScreen() {
     try {
       const trips = await rideLifecycle.getRideHistory(100);
       const completed = trips.filter(t => t.status === 'completed');
-      const totalSpent = trips
+      const totalSpent = completed
         .filter(t => t.fare != null)
         .reduce((sum, t) => sum + (t.fare ?? 0), 0);
 
-      // Average rating is derived from completed trips that have fare data as a proxy
-      // In production this would come from a dedicated profile endpoint
-      const ratings = completed.map(() => 4.5 + Math.random() * 0.5);
-      const averageRating = ratings.length > 0 
-        ? ratings.reduce((a, b) => a + b, 0) / ratings.length 
+      const ratedTrips = completed.filter(t => (t as { rating?: number }).rating != null);
+      const ratings = ratedTrips.map(t => (t as { rating: number }).rating);
+      const averageRating = ratings.length > 0
+        ? ratings.reduce((a, b) => a + b, 0) / ratings.length
         : null;
 
       setStats({
@@ -57,7 +56,12 @@ const ProfileScreen = React.memo(function ProfileScreen() {
         totalSpentJod: totalSpent,
       });
     } catch {
-      // Non-fatal — stats remain null
+      setStats({
+        totalTrips: 0,
+        completedTrips: 0,
+        averageRating: null,
+        totalSpentJod: 0,
+      });
     } finally {
       setStatsLoading(false);
     }

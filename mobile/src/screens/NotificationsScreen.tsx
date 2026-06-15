@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
 import {
   InfoCard,
   MetricTile,
@@ -10,70 +11,52 @@ import {
   StateNotice,
   StatusPill,
 } from '../components/MobilePrimitives';
+import { apiClient } from '../lib/api';
 import { useAuth } from '../providers/AuthProvider';
-import { colors, spacing } from '../theme';
+import { colors, spacing, typography } from '../theme';
+import { Ionicons } from '@expo/vector-icons';
 
-interface Notification {
+interface AppNotification {
   id: string;
+  type: 'ride' | 'package' | 'wallet' | 'system';
   title: string;
   body: string;
-  type: 'ride' | 'package' | 'wallet' | 'system';
   read: boolean;
   createdAt: string;
 }
 
-const MOCK_NOTIFICATIONS: Notification[] = [
-  {
-    id: '1',
-    title: 'Ride matched',
-    body: 'Your ride from Amman to Irbid has been matched with a driver.',
-    type: 'ride',
-    read: false,
-    createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '2',
-    title: 'Package delivered',
-    body: 'Your parcel to Zarqa has been marked as delivered.',
-    type: 'package',
-    read: false,
-    createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '3',
-    title: 'Wallet top-up',
-    body: '10.00 JOD has been added to your Wasel wallet.',
-    type: 'wallet',
-    read: true,
-    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: '4',
-    title: 'Ride reminder',
-    body: 'Your scheduled ride departs in 30 minutes. Please be ready.',
-    type: 'ride',
-    read: true,
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-  },
-];
-
-const TYPE_ICON: Record<string, string> = {
+const TYPE_ICON: Record<AppNotification['type'], keyof typeof Ionicons.glyphMap> = {
   ride: 'car-sport',
   package: 'cube',
   wallet: 'card',
   system: 'notifications',
 };
 
-const TYPE_COLOR: Record<string, string> = {
+const TYPE_COLOR: Record<AppNotification['type'], string> = {
   ride: colors.teal,
   package: colors.blue,
   wallet: colors.gold,
   system: colors.muted,
 };
 
-const NotificationsScreen = React.memo(function NotificationsScreen() {
+function NotificationsSkeleton() {
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
+      {[0, 1, 2].map(i => (
+        <View key={i} style={styles.skeletonCard}>
+          <View style={styles.skeletonIcon} />
+          <View style={styles.skeletonLines}>
+            <View style={styles.skeletonLine} />
+            <View style={[styles.skeletonLine, styles.skeletonLineShort]} />
+          </View>
+        </View>
+      ))}
+    </ScrollView>
+  );
+}
+
+export default function NotificationsScreen() {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -147,7 +130,7 @@ const NotificationsScreen = React.memo(function NotificationsScreen() {
             {notifications.map(notif => (
               <StateNotice
                 key={notif.id}
-                icon={TYPE_ICON[notif.type] as any}
+                icon={TYPE_ICON[notif.type]}
                 title={notif.read ? notif.title : `● ${notif.title}`}
                 body={`${notif.body}  ·  ${formatRelative(notif.createdAt)}`}
                 tone={notif.read ? colors.muted : TYPE_COLOR[notif.type]}

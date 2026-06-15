@@ -63,12 +63,11 @@ The browser envelope helpers live in `src/platform/api-envelope.ts`.
 ### Ride matching service
 
 - `POST /v1/rides`
-- `GET /v1/rides/{rideId}`
-- `POST /v1/rides/{rideId}/match`
-- `POST /v1/rides/{rideId}/accept`
-- `POST /v1/rides/{rideId}/start`
-- `POST /v1/rides/{rideId}/complete`
-- `POST /v1/rides/{rideId}/cancel`
+- `GET /v1/rides/search`
+- `GET /v1/rides/status/:id`
+- `POST /v1/rides/schedule`
+- `POST /v1/rides/cancel`
+- `PATCH /v1/rides/:id`
 
 ### Package delivery service
 
@@ -81,10 +80,10 @@ The browser envelope helpers live in `src/platform/api-envelope.ts`.
 
 ### Payment service
 
-- `POST /v1/payments/packages/{packageId}/authorize`
-- `POST /v1/payments/packages/{packageId}/capture`
-- `POST /v1/payments/rides/{rideId}/authorize`
-- `POST /v1/payments/rides/{rideId}/refund`
+- `GET /v1/payments/methods/:id`
+- `POST /v1/payments/charge`
+- `POST /v1/payments/refund`
+- `POST /v1/payments/verify`
 
 ### Operations and trust
 

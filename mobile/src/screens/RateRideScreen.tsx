@@ -44,7 +44,7 @@ const FEEDBACK_TAGS = [
 ];
 
 const RateRideScreen = React.memo(function RateRideScreen() {
-  const route = useRoute<any>();
+  const route = useRoute<{ params: { rideId: string; driverName: string } }>();
   const navigation = useNavigation<NavProp>();
   const { rideId, driverName } = route.params as { rideId: string; driverName: string };
 

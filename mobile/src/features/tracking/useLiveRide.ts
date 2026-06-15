@@ -27,7 +27,7 @@ export interface LiveRide {
   driverLocation?: DriverLocation;
 }
 
-export function useLiveRide(rideId: string, enabled = true) {
+export function useLiveRide(rideId: string, enabled = true, refetchInterval = 3000) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
@@ -38,7 +38,7 @@ export function useLiveRide(rideId: string, enabled = true) {
       return response.data;
     },
     enabled,
-    refetchInterval: 3000,
+    refetchInterval: refetchInterval || undefined,
     refetchIntervalInBackground: true,
     staleTime: 1000,
     retry: 3,

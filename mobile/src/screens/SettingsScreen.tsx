@@ -1,11 +1,38 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Switch, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useAuth } from '../providers/AuthProvider';
+
+type RootStackParamList = {
+  Tabs: undefined;
+  Safety: undefined;
+  Trips: undefined;
+  Bus: undefined;
+  Driver: undefined;
+  Notifications: undefined;
+  LiveTracking: { rideId: string };
+  Chat: { rideId: string; driverName: string };
+  RateRide: { rideId: string; driverName: string };
+  AdvancedSearch: undefined;
+  SignIn: undefined;
+  Settings: undefined;
+};
+
+type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function SettingsScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavProp>();
+  const { signOut } = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [locationSharing, setLocationSharing] = React.useState(true);
+
+  const handleSignOut = () => {
+    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign out', style: 'destructive', onPress: signOut },
+    ]);
+  };
 
   return (
     <ScrollView style={styles.container}>

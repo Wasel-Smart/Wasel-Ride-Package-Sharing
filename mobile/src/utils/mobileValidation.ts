@@ -55,3 +55,55 @@ export function validatePackageRequest(
 
   return validatePositiveNumber(weight, 'Package weight');
 }
+
+export function validateScheduledRide(
+  pickupLat: string,
+  pickupLng: string,
+  dropoffLat: string,
+  dropoffLng: string,
+  scheduledTime: string,
+): ValidationResult {
+  const latResult = validateCoordinate(pickupLat, 'Pickup latitude');
+  if (!latResult.valid) return latResult;
+
+  const lngResult = validateCoordinate(pickupLng, 'Pickup longitude');
+  if (!lngResult.valid) return lngResult;
+
+  const dropLatResult = validateCoordinate(dropoffLat, 'Dropoff latitude');
+  if (!dropLatResult.valid) return dropLatResult;
+
+  const dropLngResult = validateCoordinate(dropoffLng, 'Dropoff longitude');
+  if (!dropLngResult.valid) return dropLngResult;
+
+  if (!scheduledTime.trim()) {
+    return { valid: false, message: 'Scheduled time is required.' };
+  }
+
+  const scheduledDate = new Date(scheduledTime);
+  if (isNaN(scheduledDate.getTime())) {
+    return { valid: false, message: 'Scheduled time must be a valid ISO 8601 date.' };
+  }
+
+  if (scheduledDate.getTime() < Date.now() - 60000) {
+    return { valid: false, message: 'Scheduled time must be in the future.' };
+  }
+
+  return { valid: true };
+}
+
+function validateCoordinate(value: string, label: string): ValidationResult {
+  const numericValue = Number(value);
+
+  if (!Number.isFinite(numericValue)) {
+    return { valid: false, message: `${label} must be a number.` };
+  }
+
+  const isLatitude = label.toLowerCase().includes('latitude');
+  const [min, max] = isLatitude ? [-90, 90] : [-180, 180];
+
+  if (numericValue < min || numericValue > max) {
+    return { valid: false, message: `${label} must be between ${min} and ${max}.` };
+  }
+
+  return { valid: true };
+}

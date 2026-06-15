@@ -29,45 +29,62 @@ export class LocationTrackingService {
   private socket: Socket | null = null;
   private watchId: number | null = null;
   private isTracking = false;
-  private listeners = new Map<string, (location: DriverLocation) => void>();
+  private listeners: Map<string, Set<(location: DriverLocation) => void>> = new Map();
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private destroyed = false;
 
   async initialize(): Promise<void> {
     const wsUrl = process.env.EXPO_PUBLIC_WS_URL || 'wss://wasel14.online/ws';
     const token = mobileAuth.getAccessToken();
 
     if (!token) {
-      console.error('[LocationTracking] No auth token available');
       return;
     }
+
+    this.connect(wsUrl, token);
+  }
+
+  private connect(wsUrl: string, token: string): void {
+    if (this.destroyed) return;
 
     this.socket = io(wsUrl, {
       auth: { token },
       transports: ['websocket'],
       reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 2000,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 16000,
+      randomizationFactor: 0.5,
+      timeout: 20000,
     });
 
     this.socket.on('connect', () => {
-      console.log('[LocationTracking] WebSocket connected');
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('[LocationTracking] WebSocket disconnected');
+    this.socket.on('disconnect', (reason: string) => {
+      if (reason === 'io server disconnect' && !this.destroyed) {
+        void this.socket?.connect();
+      }
+    });
+
+    this.socket.on('reconnect_failed', () => {
+    });
+
+    this.socket.on('connect_error', (error: Error) => {
     });
 
     this.socket.on('driver:location', (data: DriverLocation) => {
-      const listener = this.listeners.get(data.driverId);
-      if (listener) {
-        listener(data);
+      const listeners = this.listeners.get(data.driverId);
+      if (listeners) {
+        listeners.forEach(listener => listener(data));
       }
     });
 
     this.socket.on('drivers:nearby', (drivers: DriverLocation[]) => {
       drivers.forEach(driver => {
-        const listener = this.listeners.get(driver.driverId);
-        if (listener) {
-          listener(driver);
+        const listeners = this.listeners.get(driver.driverId);
+        if (listeners) {
+          listeners.forEach(listener => listener(driver));
         }
       });
     });
@@ -177,21 +194,27 @@ export class LocationTrackingService {
     callback: (drivers: DriverLocation[]) => void,
   ): () => void {
     const areaKey = `area-${latitude}-${longitude}-${radiusKm}`;
-    
-    const handler = (drivers: DriverLocation[]) => {
-      callback(drivers);
-    };
 
-    this.listeners.set(areaKey, handler as any);
+    const listeners = this.listeners.get(areaKey);
+    if (!listeners) {
+      this.listeners.set(areaKey, new Set());
+    }
+    this.listeners.get(areaKey)!.add(callback);
 
     if (this.socket?.connected) {
       this.socket.emit('subscribe:area', { latitude, longitude, radiusKm });
     }
 
     return () => {
-      this.listeners.delete(areaKey);
-      if (this.socket?.connected) {
-        this.socket.emit('unsubscribe:area', { latitude, longitude, radiusKm });
+      const current = this.listeners.get(areaKey);
+      if (current) {
+        current.delete(callback);
+        if (current.size === 0) {
+          this.listeners.delete(areaKey);
+          if (this.socket?.connected) {
+            this.socket.emit('unsubscribe:area', { latitude, longitude, radiusKm });
+          }
+        }
       }
     };
   }

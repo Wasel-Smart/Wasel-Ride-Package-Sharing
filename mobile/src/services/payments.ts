@@ -1,5 +1,11 @@
 import { supabase } from '../lib/config';
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  return 'Unknown error';
+}
+
 export interface PaymentMethod {
   id: string;
   userId: string;
@@ -110,14 +116,14 @@ class PaymentService {
           })
           .eq('user_id', userId);
 
-        return { success: true, paymentId: data.paymentId };
-      }
-
-      return { success: false, error: data?.error ?? 'Payment failed' };
-    } catch (error: any) {
-      console.error('[PaymentService] Add funds error:', error);
-      return { success: false, error: error.message ?? 'Failed to add funds' };
+      return { success: true, paymentId: data.paymentId };
     }
+
+    return { success: false, error: data?.error ?? 'Payment failed' };
+  } catch (error) {
+    console.error('[PaymentService] Add funds error:', error);
+    return { success: false, error: getErrorMessage(error) };
+  }
   }
 
   async withdrawFunds(userId: string, amount: number): Promise<PaymentResult> {
@@ -164,9 +170,9 @@ class PaymentService {
       }
 
       return { success: false, error: data?.error ?? 'Withdrawal failed' };
-    } catch (error: any) {
+    } catch (error) {
       console.error('[PaymentService] Withdraw error:', error);
-      return { success: false, error: error.message ?? 'Failed to withdraw funds' };
+      return { success: false, error: getErrorMessage(error) };
     }
   }
 
@@ -181,9 +187,9 @@ class PaymentService {
       if (error) throw error;
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error) {
       console.error('[PaymentService] Add payment method error:', error);
-      return { success: false, error: error.message ?? 'Failed to add payment method' };
+      return { success: false, error: getErrorMessage(error) };
     }
   }
 
