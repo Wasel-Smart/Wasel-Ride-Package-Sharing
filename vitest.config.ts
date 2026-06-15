@@ -19,9 +19,9 @@ export default defineConfig({
     },
     env: {
       NODE_ENV: 'test',
-      VITE_SUPABASE_URL: 'https://djccmatubyyudeosrngm.supabase.co',
-      VITE_SUPABASE_PROJECT_URL: 'https://djccmatubyyudeosrngm.supabase.co',
-      VITE_PUBLIC_SUPABASE_URL: 'https://djccmatubyyudeosrngm.supabase.co',
+      VITE_SUPABASE_URL: 'https://zexlxabdcsjefptmjhuq.supabase.co',
+      VITE_SUPABASE_PROJECT_URL: 'https://zexlxabdcsjefptmjhuq.supabase.co',
+      VITE_PUBLIC_SUPABASE_URL: 'https://zexlxabdcsjefptmjhuq.supabase.co',
       VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test',
       VITE_SUPABASE_PUBLISHABLE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test',
       VITE_PUBLIC_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test',

@@ -60,10 +60,10 @@ describe('supabase public config', () => {
 
     const info = await importInfo();
 
-    expect(info.publicSupabaseUrl).toBe('https://djccmatubyyudeosrngm.supabase.co');
-    expect(info.projectId).toBe('djccmatubyyudeosrngm');
-    expect(info.publicAnonKey).toContain('eyJhbGciOiJIUzI1Ni');
-    expect(info.hasSupabasePublicConfig).toBe(true);
+    expect(info.publicSupabaseUrl).toBe('');
+    expect(info.projectId).toBe('');
+    expect(info.publicAnonKey).toBe('');
+    expect(info.hasSupabasePublicConfig).toBe(false);
   });
 
   it('keeps explicit Supabase env values even when e2e local auth is enabled', async () => {
