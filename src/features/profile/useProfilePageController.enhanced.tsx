@@ -1,4 +1,4 @@
-import { useState, useCallback, type ChangeEvent, type ReactNode, type RefObject } from 'react';
+﻿import { useState, useCallback, type ChangeEvent, type ReactNode, type RefObject } from 'react';
 import { Bell, Car, CreditCard, Settings } from 'lucide-react';
 import type { WaselUser } from '../../contexts/LocalAuth';
 import { createSupportTicket } from '../../services/supportInbox';
@@ -73,40 +73,40 @@ async function readAvatarFile(file: File): Promise<string> {
 
 function getWalletStatus(user: WaselUser, ar: boolean): ProfileStatusChip {
   if (user.walletStatus === 'closed') {
-    return { label: ar ? 'مغلقة' : 'Closed', color: C.error };
+    return { label: ar ? 'Ù…ØºÙ„Ù‚Ø©' : 'Closed', color: C.error };
   }
 
   if (user.walletStatus === 'frozen') {
-    return { label: ar ? 'مجمّد' : 'Frozen', color: C.error };
+    return { label: ar ? 'Ù…Ø¬Ù…Ù‘Ø¯' : 'Frozen', color: C.error };
   }
 
   if (user.walletStatus === 'limited') {
-    return { label: ar ? 'محدود' : 'Limited', color: C.gold };
+    return { label: ar ? 'Ù…Ø­Ø¯ÙˆØ¯' : 'Limited', color: C.gold };
   }
 
-  return { label: ar ? 'نشط' : 'Active', color: C.green };
+  return { label: ar ? 'Ù†Ø´Ø·' : 'Active', color: C.green };
 }
 
 function getPermissionStatus(support: NotificationSupport, ar: boolean): ProfileStatusChip {
   if (!support.isSupported) {
-    return { label: ar ? 'غير مدعوم' : 'Unsupported', color: C.textDim };
+    return { label: ar ? 'ØºÙŠØ± Ù…Ø¯Ø¹ÙˆÙ…' : 'Unsupported', color: C.textDim };
   }
 
   if (support.permission === 'granted') {
-    return { label: ar ? 'مفعل' : 'Enabled', color: C.green };
+    return { label: ar ? 'Ù…ÙØ¹Ù„' : 'Enabled', color: C.green };
   }
 
   if (support.permission === 'denied') {
-    return { label: ar ? 'محظور' : 'Blocked', color: C.error };
+    return { label: ar ? 'Ù…Ø­Ø¸ÙˆØ±' : 'Blocked', color: C.error };
   }
 
-  return { label: ar ? 'غير مفعل' : 'Not enabled', color: C.gold };
+  return { label: ar ? 'ØºÙŠØ± Ù…ÙØ¹Ù„' : 'Not enabled', color: C.gold };
 }
 
 function getTrustTier(trustScore: number, ar: boolean) {
-  if (trustScore >= 90) return ar ? 'ثقة عالية' : 'High trust';
-  if (trustScore >= 75) return ar ? 'ثقة قوية' : 'Strong trust';
-  return ar ? 'بحاجة تعزيز' : 'Needs strengthening';
+  if (trustScore >= 90) return ar ? 'Ø«Ù‚Ø© Ø¹Ø§Ù„ÙŠØ©' : 'High trust';
+  if (trustScore >= 75) return ar ? 'Ø«Ù‚Ø© Ù‚ÙˆÙŠØ©' : 'Strong trust';
+  return ar ? 'Ø¨Ø­Ø§Ø¬Ø© ØªØ¹Ø²ÙŠØ²' : 'Needs strengthening';
 }
 
 function getJoinedText(joinedAt: string | undefined, ar: boolean) {
@@ -118,52 +118,52 @@ function getJoinedText(joinedAt: string | undefined, ar: boolean) {
     });
   }
 
-  return ar ? 'حساب جديد' : 'New account';
+  return ar ? 'Ø­Ø³Ø§Ø¨ Ø¬Ø¯ÙŠØ¯' : 'New account';
 }
 
 function getRoleLabel(role: WaselUser['role'], ar: boolean) {
-  if (role === 'driver') return ar ? 'سائق' : 'Driver';
-  if (role === 'both') return ar ? 'سائق + راكب' : 'Driver + Rider';
-  return ar ? 'راكب' : 'Rider';
+  if (role === 'driver') return ar ? 'Ø³Ø§Ø¦Ù‚' : 'Driver';
+  if (role === 'both') return ar ? 'Ø³Ø§Ø¦Ù‚ + Ø±Ø§ÙƒØ¨' : 'Driver + Rider';
+  return ar ? 'Ø±Ø§ÙƒØ¨' : 'Rider';
 }
 
 function buildVerificationItems(user: WaselUser, ar: boolean): ProfileVerificationItem[] {
   return [
     {
-      label: ar ? 'البريد الإلكتروني' : 'Email',
+      label: ar ? 'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ' : 'Email',
       status: user.emailVerified
         ? ar
-          ? 'مؤكد'
+          ? 'Ù…Ø¤ÙƒØ¯'
           : 'Verified'
         : ar
-          ? 'غير مؤكد'
+          ? 'ØºÙŠØ± Ù…Ø¤ÙƒØ¯'
           : 'Needs confirmation',
       color: user.emailVerified ? C.green : C.gold,
     },
     {
-      label: ar ? 'رقم الهاتف' : 'Phone',
+      label: ar ? 'Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ' : 'Phone',
       status: user.phoneVerified
         ? ar
-          ? 'مؤكد'
+          ? 'Ù…Ø¤ÙƒØ¯'
           : 'Verified'
         : user.phone
           ? ar
-            ? 'مضاف بانتظار التأكيد'
+            ? 'Ù…Ø¶Ø§Ù Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„ØªØ£ÙƒÙŠØ¯'
             : 'Added, pending confirmation'
           : ar
-            ? 'غير مضاف'
+            ? 'ØºÙŠØ± Ù…Ø¶Ø§Ù'
             : 'Not added',
       color: user.phoneVerified ? C.green : C.gold,
     },
     {
-      label: ar ? 'الهوية / سند' : 'Identity / Sanad',
+      label: ar ? 'Ø§Ù„Ù‡ÙˆÙŠØ© / Ø³Ù†Ø¯' : 'Identity / Sanad',
       status:
         user.sanadVerified || user.verified
           ? ar
-            ? 'مكتمل'
+            ? 'Ù…ÙƒØªÙ…Ù„'
             : 'Completed'
           : ar
-            ? 'بانتظار التحقق'
+            ? 'Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø§Ù„ØªØ­Ù‚Ù‚'
             : 'Pending verification',
       color: user.sanadVerified || user.verified ? PROFILE_CYAN : C.gold,
     },
@@ -177,24 +177,24 @@ function buildQuickActions(
 ): ProfileQuickAction[] {
   return [
     {
-      label: ar ? 'مركز رحلاتي' : 'My Trips Hub',
+      label: ar ? 'Ù…Ø±ÙƒØ² Ø±Ø­Ù„Ø§ØªÙŠ' : 'My Trips Hub',
       detail: ar
-        ? 'أدر حجوزاتك والرحلات القادمة من مكان واحد.'
+        ? 'Ø£Ø¯Ø± Ø­Ø¬ÙˆØ²Ø§ØªÙƒ ÙˆØ§Ù„Ø±Ø­Ù„Ø§Øª Ø§Ù„Ù‚Ø§Ø¯Ù…Ø© Ù…Ù† Ù…ÙƒØ§Ù† ÙˆØ§Ø­Ø¯.'
         : 'Trips and bookings in one place.',
       icon: <Car size={18} />,
       color: PROFILE_CYAN,
       onClick: () => nav('/app/my-trips'),
     },
     {
-      label: ar ? 'المحفظة والدفع' : 'Wallet & Payments',
-      detail: ar ? 'راقب الرصيد والمدفوعات وميزات واصل.' : 'Balance and payments.',
+      label: ar ? 'Ø§Ù„Ù…Ø­ÙØ¸Ø© ÙˆØ§Ù„Ø¯ÙØ¹' : 'Wallet & Payments',
+      detail: ar ? 'Ø±Ø§Ù‚Ø¨ Ø§Ù„Ø±ØµÙŠØ¯ ÙˆØ§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª ÙˆÙ…ÙŠØ²Ø§Øª ÙˆØ§ØµÙ„.' : 'Balance and payments.',
       icon: <CreditCard size={18} />,
       color: C.gold,
       onClick: () => nav('/app/wallet'),
     },
     {
-      label: ar ? 'مركز الإشعارات' : 'Notification Center',
-      detail: ar ? 'ثبت التنبيهات المهمة للحجوزات والرحلات والطرود.' : 'Trip and account alerts.',
+      label: ar ? 'Ù…Ø±ÙƒØ² Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª' : 'Notification Center',
+      detail: ar ? 'Ø«Ø¨Øª Ø§Ù„ØªÙ†Ø¨ÙŠÙ‡Ø§Øª Ø§Ù„Ù…Ù‡Ù…Ø© Ù„Ù„Ø­Ø¬ÙˆØ²Ø§Øª ÙˆØ§Ù„Ø±Ø­Ù„Ø§Øª ÙˆØ§Ù„Ø·Ø±ÙˆØ¯.' : 'Trip and account alerts.',
       icon: <Bell size={18} />,
       color: C.green,
       onClick: () => {
@@ -202,8 +202,8 @@ function buildQuickActions(
       },
     },
     {
-      label: ar ? 'إعدادات الحساب' : 'Account Settings',
-      detail: ar ? 'حدّث لغتك وتفضيلاتك وأمان حسابك.' : 'Language, preferences, and security.',
+      label: ar ? 'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø­Ø³Ø§Ø¨' : 'Account Settings',
+      detail: ar ? 'Ø­Ø¯Ù‘Ø« Ù„ØºØªÙƒ ÙˆØªÙØ¶ÙŠÙ„Ø§ØªÙƒ ÙˆØ£Ù…Ø§Ù† Ø­Ø³Ø§Ø¨Ùƒ.' : 'Language, preferences, and security.',
       icon: <Settings size={18} />,
       color: C.purple,
       onClick: () => nav('/app/settings?section=account'),
@@ -238,10 +238,10 @@ export function useProfilePageController({
     onRollback: field => {
       showWarningToast(
         ar
-          ? `تعذر حفظ ${field === 'name' ? 'الاسم' : 'رقم الهاتف'}. تم التراجع إلى القيمة السابقة.`
+          ? `ØªØ¹Ø°Ø± Ø­ÙØ¸ ${field === 'name' ? 'Ø§Ù„Ø§Ø³Ù…' : 'Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ'}. ØªÙ… Ø§Ù„ØªØ±Ø§Ø¬Ø¹ Ø¥Ù„Ù‰ Ø§Ù„Ù‚ÙŠÙ…Ø© Ø§Ù„Ø³Ø§Ø¨Ù‚Ø©.`
           : `Failed to save ${field}. Rolled back to previous value.`,
         {
-          label: ar ? 'إعادة المحاولة' : 'Retry',
+          label: ar ? 'Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©' : 'Retry',
           onClick: () => applyOptimisticUpdate(field, user[field as keyof WaselUser]),
         }
       );
@@ -275,22 +275,21 @@ export function useProfilePageController({
 
     // Validate
     if (!validateField('name', clean)) {
-      showErrorToast(validationErrors.name || (ar ? 'الاسم غير صالح' : 'Invalid name'));
+      showErrorToast(validationErrors.name || (ar ? 'Ø§Ù„Ø§Ø³Ù… ØºÙŠØ± ØµØ§Ù„Ø­' : 'Invalid name'));
       return;
     }
 
     setSavingField('name');
-    const oldValue = user.name;
 
     const { error } = await updateProfile({ full_name: clean });
     setSavingField(null);
 
     if (error) {
       showErrorToast(
-        ar ? 'تعذر حفظ الاسم. يرجى التحقق من الاتصال والمحاولة مرة أخرى.' 
+        ar ? 'ØªØ¹Ø°Ø± Ø­ÙØ¸ Ø§Ù„Ø§Ø³Ù…. ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ø§ØªØµØ§Ù„ ÙˆØ§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.' 
            : 'Unable to save name. Please check your connection and try again.',
         {
-          label: ar ? 'إعادة المحاولة' : 'Retry',
+          label: ar ? 'Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©' : 'Retry',
           onClick: () => handleSaveName(),
         }
       );
@@ -298,14 +297,14 @@ export function useProfilePageController({
     }
 
     setEditingField(null);
-    showSuccessToast(ar ? 'تم حفظ الاسم بنجاح' : 'Name saved successfully');
+    showSuccessToast(ar ? 'ØªÙ… Ø­ÙØ¸ Ø§Ù„Ø§Ø³Ù… Ø¨Ù†Ø¬Ø§Ø­' : 'Name saved successfully');
   }, [nameInput, user, ar, validateField, validationErrors, updateProfile]);
 
   const handleSavePhone = useCallback(async () => {
     const normalized = normalizePhoneNumber(phoneInput);
     if (!normalized) {
       showErrorToast(
-        ar ? 'يرجى إدخال رقم هاتف صالح (مثال: +962791234567)' 
+        ar ? 'ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø±Ù‚Ù… Ù‡Ø§ØªÙ ØµØ§Ù„Ø­ (Ù…Ø«Ø§Ù„: +962791234567)' 
            : 'Please enter a valid phone number (e.g., +962791234567)'
       );
       return;
@@ -313,7 +312,7 @@ export function useProfilePageController({
 
     // Validate
     if (!validateField('phone', normalized)) {
-      showErrorToast(validationErrors.phone || (ar ? 'رقم الهاتف غير صالح' : 'Invalid phone number'));
+      showErrorToast(validationErrors.phone || (ar ? 'Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ ØºÙŠØ± ØµØ§Ù„Ø­' : 'Invalid phone number'));
       return;
     }
 
@@ -323,17 +322,16 @@ export function useProfilePageController({
     }
 
     setSavingField('phone');
-    const oldValue = user.phone;
 
     const { error } = await updateProfile({ phone_number: normalized });
     setSavingField(null);
 
     if (error) {
       showErrorToast(
-        ar ? 'تعذر حفظ رقم الهاتف. يرجى التحقق من الاتصال والمحاولة مرة أخرى.' 
+        ar ? 'ØªØ¹Ø°Ø± Ø­ÙØ¸ Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ. ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ø§ØªØµØ§Ù„ ÙˆØ§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.' 
            : 'Unable to save phone. Please check your connection and try again.',
         {
-          label: ar ? 'إعادة المحاولة' : 'Retry',
+          label: ar ? 'Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©' : 'Retry',
           onClick: () => handleSavePhone(),
         }
       );
@@ -342,7 +340,7 @@ export function useProfilePageController({
 
     setEditingField(null);
     showSuccessToast(
-      ar ? 'تم حفظ رقم الهاتف. سيتم إرسال رمز التحقق قريباً.' 
+      ar ? 'ØªÙ… Ø­ÙØ¸ Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ. Ø³ÙŠØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø±Ù…Ø² Ø§Ù„ØªØ­Ù‚Ù‚ Ù‚Ø±ÙŠØ¨Ø§Ù‹.' 
          : 'Phone saved. Verification code will be sent shortly.'
     );
   }, [phoneInput, user, ar, validateField, validationErrors, updateProfile]);
@@ -387,7 +385,7 @@ export function useProfilePageController({
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
-    showSuccessToast(ar ? 'تم تصدير بياناتك بنجاح' : 'Your data has been exported successfully');
+    showSuccessToast(ar ? 'ØªÙ… ØªØµØ¯ÙŠØ± Ø¨ÙŠØ§Ù†Ø§ØªÙƒ Ø¨Ù†Ø¬Ø§Ø­' : 'Your data has been exported successfully');
   }, [user, ar]);
 
   const handlePhotoSelection = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
@@ -408,27 +406,26 @@ export function useProfilePageController({
     try {
       const avatarUrl = await readAvatarFile(file);
       setSavingField('photo');
-      const oldValue = user.avatar;
 
       const { error } = await updateProfile({ avatar_url: avatarUrl });
       setSavingField(null);
 
       if (error) {
         showErrorToast(
-          ar ? 'تعذر تحديث الصورة. يرجى المحاولة مرة أخرى.' 
+          ar ? 'ØªØ¹Ø°Ø± ØªØ­Ø¯ÙŠØ« Ø§Ù„ØµÙˆØ±Ø©. ÙŠØ±Ø¬Ù‰ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù…Ø±Ø© Ø£Ø®Ø±Ù‰.' 
              : 'Unable to update photo. Please try again.',
           {
-            label: ar ? 'إعادة المحاولة' : 'Retry',
+            label: ar ? 'Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©' : 'Retry',
             onClick: () => photoInputRef.current?.click(),
           }
         );
         return;
       }
 
-      showSuccessToast(ar ? 'تم تحديث الصورة الشخصية بنجاح' : 'Profile photo updated successfully');
+      showSuccessToast(ar ? 'ØªÙ… ØªØ­Ø¯ÙŠØ« Ø§Ù„ØµÙˆØ±Ø© Ø§Ù„Ø´Ø®ØµÙŠØ© Ø¨Ù†Ø¬Ø§Ø­' : 'Profile photo updated successfully');
     } catch {
       showErrorToast(
-        ar ? 'تعذر معالجة الصورة. يرجى اختيار صورة أخرى.' 
+        ar ? 'ØªØ¹Ø°Ø± Ù…Ø¹Ø§Ù„Ø¬Ø© Ø§Ù„ØµÙˆØ±Ø©. ÙŠØ±Ø¬Ù‰ Ø§Ø®ØªÙŠØ§Ø± ØµÙˆØ±Ø© Ø£Ø®Ø±Ù‰.' 
            : 'Unable to process image. Please choose another one.'
       );
     } finally {
@@ -440,7 +437,7 @@ export function useProfilePageController({
     if (!notificationSupport.isSupported) {
       showWarningToast(
         ar
-          ? 'الإشعارات غير مدعومة على هذا الجهاز'
+          ? 'Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª ØºÙŠØ± Ù…Ø¯Ø¹ÙˆÙ…Ø© Ø¹Ù„Ù‰ Ù‡Ø°Ø§ Ø§Ù„Ø¬Ù‡Ø§Ø²'
           : 'Notifications are not supported on this device'
       );
       return;
@@ -453,14 +450,14 @@ export function useProfilePageController({
 
     const nextPermission = await notificationSupport.requestPermission();
     if (nextPermission === 'granted') {
-      showSuccessToast(ar ? 'تم تفعيل تنبيهات واصل بنجاح' : 'Wasel alerts are now enabled');
+      showSuccessToast(ar ? 'ØªÙ… ØªÙØ¹ÙŠÙ„ ØªÙ†Ø¨ÙŠÙ‡Ø§Øª ÙˆØ§ØµÙ„ Ø¨Ù†Ø¬Ø§Ø­' : 'Wasel alerts are now enabled');
       nav('/app/notifications');
       return;
     }
 
     showWarningToast(
       ar
-        ? 'يمكنك تفعيل الإشعارات لاحقاً من إعدادات المتصفح'
+        ? 'ÙŠÙ…ÙƒÙ†Ùƒ ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª Ù„Ø§Ø­Ù‚Ø§Ù‹ Ù…Ù† Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ØªØµÙØ­'
         : 'You can enable notifications later from your browser settings'
     );
   }, [notificationSupport, ar, nav]);
@@ -482,10 +479,10 @@ export function useProfilePageController({
     });
     showSuccessToast(
       ar
-        ? `تم تسجيل طلب الحذف عبر التذكرة ${ticket.id}. سيتم تسجيل الخروج الآن.`
+        ? `ØªÙ… ØªØ³Ø¬ÙŠÙ„ Ø·Ù„Ø¨ Ø§Ù„Ø­Ø°Ù Ø¹Ø¨Ø± Ø§Ù„ØªØ°ÙƒØ±Ø© ${ticket.id}. Ø³ÙŠØªÙ… ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬ Ø§Ù„Ø¢Ù†.`
         : `Deletion request logged as ticket ${ticket.id}. Signing you out now.`,
       {
-        label: ar ? 'حسناً' : 'OK',
+        label: ar ? 'Ø­Ø³Ù†Ø§Ù‹' : 'OK',
         onClick: () => {},
       }
     );
@@ -536,3 +533,4 @@ export function useProfilePageController({
     isPending,
   };
 }
+
