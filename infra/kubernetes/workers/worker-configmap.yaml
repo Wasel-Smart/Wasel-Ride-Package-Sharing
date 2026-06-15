@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: wasel-worker-config
-data:
-  QUEUE_BROKER_URL: redis://redis:6379
-  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
-  LOG_LEVEL: info
