@@ -21,6 +21,29 @@ export const colors = {
   red: '#DC2626',
 };
 
+export const darkColors = {
+  bg: '#0B1220',
+  surface: '#111827',
+  surfaceAlt: '#1E293B',
+  surfaceMuted: '#172032',
+  ink: '#FFFFFF',
+  text: '#E2E8F0',
+  muted: '#94A3B8',
+  line: '#334155',
+  lineStrong: '#475569',
+  navy: '#F6F8FB',
+  charcoal: '#E2E8F0',
+  cyan: '#22D3EE',
+  teal: '#2DD4BF',
+  green: '#4ADE80',
+  amber: '#FBBF24',
+  blue: '#60A5FA',
+  gold: '#FCD34D',
+  lilac: '#C084FC',
+  rose: '#FDA4AF',
+  red: '#FCA5A5',
+};
+
 export const spacing = {
   xs: 6,
   sm: 10,

@@ -1,74 +1,157 @@
-version: '3.8'
+version: '3.9'
 
 services:
   redis:
-    image: redis:7-alpine
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    command: redis-server --appendonly yes
+    image: redis:7.2-alpine
+    container_name: wasel-redis
+    command:
+      - redis-server
+      - /usr/local/etc/redis/redis.conf
     volumes:
       - redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  postgres:
-    image: postgis/postgis:15-3.3
+      - ./docker/redis.conf:/usr/local/etc/redis/redis.conf:ro
     ports:
-      - "${DATABASE_PORT:-5432}:5432"
-    environment:
-      POSTGRES_DB: wasel
-      POSTGRES_USER: ${POSTGRES_USER:-wasel}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./supabase/schema:/docker-entrypoint-initdb.d
+      - '6379:6379'
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-Shell", "pg_isready -U wasel -d wasel"]
+      test: ['CMD-SHELL', 'redis-cli ping']
       interval: 10s
       timeout: 5s
       retries: 5
 
-  ride-matching:
+  postgres:
+    image: supabase/postgres:15.1.0.117
+    container_name: wasel-postgres
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
+      POSTGRES_DB: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  supabase-studio:
+    image: supabase/studio:20231123-64a766a
+    container_name: wasel-supabase-studio
+    environment:
+      SUPABASE_URL: http://localhost:54321
+      STUDIO_PG_META_URL: http://localhost:8080
+    ports:
+      - '54323:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  ride-matching-service:
     build:
-      context: .
+      context: ..
       dockerfile: backend/services/ride-matching/Dockerfile
-    depends_on:
-      - redis
-      - postgres
+    container_name: wasel-ride-matching
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL:-postgres://postgres:your-super-secret-and-long-postgres-password@postgres:5432/postgres}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_TLS=false
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8080/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  payment-reconciliation:
+  payment-reconciliation-service:
     build:
-      context: .
+      context: ..
       dockerfile: backend/services/payment-reconciliation/Dockerfile
-    depends_on:
-      - redis
-      - postgres
+    container_name: wasel-payment-reconciliation
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL:-postgres://postgres:your-super-secret-and-long-postgres-password@postgres:5432/postgres}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_TLS=false
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - STRIPE_API_VERSION=${STRIPE_API_VERSION:-2026-02-25.clover}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8080/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  ops-analytics:
+  ops-analytics-service:
     build:
-      context: .
+      context: ..
       dockerfile: backend/services/ops-analytics/Dockerfile
-    depends_on:
-      - redis
-      - postgres
+    container_name: wasel-ops-analytics
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL:-postgres://postgres:your-super-secret-and-long-postgres-password@postgres:5432/postgres}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_TLS=false
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8080/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  wasel-web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: wasel-web
+    ports:
+      - '8080:8080'
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL:-http://localhost:54321}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - VITE_APP_URL=${VITE_APP_URL:-http://localhost:8080}
+      - NODE_ENV=production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8080/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  default:
+    name: wasel-net
 
 volumes:
-  redis-data:
   postgres-data:
+    driver: local
+  redis-data:
+    driver: local

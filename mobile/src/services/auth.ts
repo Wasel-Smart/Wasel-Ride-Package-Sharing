@@ -186,6 +186,10 @@ export class MobileAuthService {
     return this.currentState.user;
   }
 
+  getCurrentUser(): User | null {
+    return this.getUser();
+  }
+
   isAuthenticated(): boolean {
     return !!this.currentState.session;
   }

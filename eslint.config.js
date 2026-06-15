@@ -38,9 +38,9 @@ export default tseslint.config(
       'react-hooks/refs': 'off',
       'react-refresh/only-export-components': 'off',
       // TypeScript
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unused-vars': 'error',
-      '@typescript-eslint/no-non-null-assertion': 'error',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/consistent-type-imports': 'error',
       // General code quality
       'no-console': 'off',

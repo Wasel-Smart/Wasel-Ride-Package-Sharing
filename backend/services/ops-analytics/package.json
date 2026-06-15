@@ -2,12 +2,16 @@
   "name": "@wasel/ops-analytics-service",
   "version": "1.0.0",
   "private": true,
-  "main": "service-production.ts",
+  "type": "module",
   "scripts": {
-    "start": "tsx service-production.ts"
+    "start": "tsx service-production.ts",
+    "dev": "tsx watch service-production.ts"
   },
   "dependencies": {
     "ioredis": "^5.11.1",
     "postgres": "^3.4.9"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0"
   }
 }

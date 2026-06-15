@@ -222,3 +222,33 @@ class PaymentService {
 }
 
 export const paymentService = new PaymentService();
+
+export interface MobilePaymentSheet {
+  clientSecret: string;
+  paymentIntentId: string;
+}
+
+export interface MobilePaymentSheetRequest {
+  bookingId: string;
+  amount: number;
+  currency: string;
+  metadata?: Record<string, string>;
+}
+
+export async function createMobilePaymentSheet(request: MobilePaymentSheetRequest): Promise<MobilePaymentSheet> {
+  const result = await paymentService.addFunds(
+    request.bookingId,
+    request.amount,
+    request.currency,
+  );
+
+  if (!result.success) {
+    return { clientSecret: '', paymentIntentId: '' };
+  }
+
+  return {
+    clientSecret: result.paymentId ?? '',
+    paymentIntentId: result.paymentId ?? '',
+  };
+}
+

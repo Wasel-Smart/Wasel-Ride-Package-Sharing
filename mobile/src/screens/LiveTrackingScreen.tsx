@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View, Animated, Dimensions } from 'react-native';
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Alert, Animated, Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
-
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '../lib/api';
 import {
   InfoCard,
   MetricTile,
@@ -11,10 +12,10 @@ import {
   PrimaryButton,
   ScreenShell,
   SectionHeader,
-  StateNotice,
   StatusPill,
 } from '../components/MobilePrimitives';
 import { colors, radii, shadows, spacing, typography } from '../theme';
+import type { Ride } from '../services/ride';
 
 const { width } = Dimensions.get('window');
 
@@ -23,70 +24,45 @@ interface DriverLocation {
   longitude: number;
   heading?: number;
   speed?: number;
+  timestamp: string;
 }
 
-interface TripDetails {
+interface LiveRideData {
   id: string;
+  driverId: string;
   driverName: string;
+  driverRating: number;
   vehicleModel: string;
   licensePlate: string;
+  status: 'matching' | 'driver_en_route' | 'driver_arrived' | 'in_progress';
   eta: string;
   distance: string;
   fare: string;
-  status: 'matching' | 'driver_en_route' | 'driver_arrived' | 'in_progress' | 'completed';
+  driverLocation?: DriverLocation;
 }
 
-const MOCK_DRIVER_START: DriverLocation = {
-  latitude: 31.9539,
-  longitude: 35.9106,
-  heading: 45,
-  speed: 30,
+const fetchLiveRide = async (rideId: string): Promise<LiveRideData | null> => {
+  const response = await apiClient.get<LiveRideData>(`rides/${rideId}/live`);
+  if (response.error) throw new Error(response.error);
+  return response.data;
 };
 
-const MOCK_TRIP: TripDetails = {
-  id: 'trip-12345',
-  driverName: 'Ahmad Khalil',
-  vehicleModel: 'Toyota Camry 2021',
-  licensePlate: 'AMN 1234',
-  eta: '12 min',
-  distance: '4.2 km',
-  fare: '5.50 JOD',
-  status: 'driver_en_route',
-};
-
-const STATUS_CONFIG = {
-  matching: { label: 'Finding driver', color: colors.amber, icon: 'search' as const },
-  driver_en_route: { label: 'Driver on the way', color: colors.blue, icon: 'car' as const },
-  driver_arrived: { label: 'Driver arrived', color: colors.green, icon: 'checkmark-circle' as const },
-  in_progress: { label: 'Ride in progress', color: colors.teal, icon: 'navigate' as const },
-  completed: { label: 'Ride completed', color: colors.green, icon: 'checkmark-done' as const },
-};
-
-const LiveTrackingScreen = React.memo(function LiveTrackingScreen() {
-  const [driverLocation, setDriverLocation] = useState<DriverLocation>(MOCK_DRIVER_START);
+const LiveTrackingScreen = React.memo(function LiveTrackingScreen({ route }) {
+  const { rideId } = route.params as { rideId: string };
+  const queryClient = useQueryClient();
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
-  const [trip] = useState<TripDetails>(MOCK_TRIP);
-  const [showDetails, setShowDetails] = useState(true);
-  const [loading, setLoading] = useState(true);
-
-  const mapRef = useRef<MapView>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  // Simulate driver movement
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDriverLocation(prev => ({
-        ...prev,
-        latitude: prev.latitude + (Math.random() - 0.5) * 0.001,
-        longitude: prev.longitude + (Math.random() - 0.5) * 0.001,
-        heading: (prev.heading || 0) + (Math.random() - 0.5) * 10,
-      }));
-    }, 3000);
+  const { data: ride, isLoading, error, refetch } = useQuery({
+    queryKey: ['live-ride', rideId],
+    queryFn: () => fetchLiveRide(rideId),
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
+    staleTime: 1000,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
+  });
 
-    return () => clearInterval(interval);
-  }, []);
-
-  // Get user location
   useEffect(() => {
     let mounted = true;
 
@@ -94,29 +70,24 @@ const LiveTrackingScreen = React.memo(function LiveTrackingScreen() {
       try {
         const permission = await Location.requestForegroundPermissionsAsync();
         if (!mounted || permission.status !== 'granted') {
-          setLoading(false);
           return;
         }
 
-        const position = await Location.getCurrentPositionAsync({});
+        const position = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
         if (mounted) {
           setUserLocation(position);
-          setLoading(false);
         }
-      } catch {
-        if (mounted) {
-          setLoading(false);
-        }
+      } catch (e) {
+        console.error('Location error:', e);
       }
     }
 
     void loadLocation();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
-  // Pulse animation for driver marker
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -134,282 +105,189 @@ const LiveTrackingScreen = React.memo(function LiveTrackingScreen() {
     ).start();
   }, [pulseAnim]);
 
-  const centerOnDriver = useCallback(() => {
-    if (mapRef.current && driverLocation) {
-      mapRef.current.animateToRegion(
+  const centerOnDriver = useCallback((mapRef: MapView | null) => {
+    if (mapRef && ride?.driverLocation) {
+      mapRef.animateToRegion(
         {
-          latitude: driverLocation.latitude,
-          longitude: driverLocation.longitude,
+          latitude: ride.driverLocation.latitude,
+          longitude: ride.driverLocation.longitude,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         },
         500,
       );
     }
-  }, [driverLocation]);
+  }, [ride?.driverLocation]);
 
   const callDriver = useCallback(() => {
-    Alert.alert('Call Driver', `Calling ${trip.driverName}...`);
-  }, [trip.driverName]);
+    if (ride?.driverId) {
+      Alert.alert('Call Driver', `Calling ${ride.driverName}...`);
+    }
+  }, [ride]);
 
-  const shareTrip = useCallback(() => {
+  const shareLocation = useCallback(() => {
     Alert.alert('Share Trip', 'Share your live location with emergency contacts');
   }, []);
 
-  const statusConfig = STATUS_CONFIG[trip.status];
+  if (isLoading || !ride) {
+    return (
+      <ScreenShell>
+        <View style={styles.loadingContainer}>
+          <Ionicons name="car" size={48} color={colors.teal} style={{ marginBottom: 16 }} />
+          <Text style={styles.loadingText}>Finding your driver...</Text>
+        </View>
+      </ScreenShell>
+    );
+  }
 
-  const region = {
-    latitude: driverLocation.latitude,
-    longitude: driverLocation.longitude,
-    latitudeDelta: 0.02,
-    longitudeDelta: 0.02,
-  };
+  if (error) {
+    return (
+      <ScreenShell>
+        <View style={styles.errorContainer}>
+          <Ionicons name="warning" size={48} color={colors.red} />
+          <Text style={styles.errorText}>Could not load ride details</Text>
+          <PrimaryButton label="Retry" icon="refresh" tone={colors.teal} onPress={() => refetch()} />
+        </View>
+      </ScreenShell>
+    );
+  }
+
+  const statusConfig = {
+    matching: { label: 'Finding driver', color: colors.amber, icon: 'search' as const },
+    driver_en_route: { label: 'Driver on the way', color: colors.blue, icon: 'car' as const },
+    driver_arrived: { label: 'Driver arrived', color: colors.green, icon: 'checkmark-circle' as const },
+    in_progress: { label: 'Ride in progress', color: colors.teal, icon: 'navigate' as const },
+  }[ride.status];
 
   return (
-    <ScreenShell testID="live-tracking-screen">
+    <ScreenShell>
       <View style={styles.container}>
-        {/* Map View */}
-        <View style={styles.mapContainer}>
-          <MapView
-            ref={mapRef}
-            provider={PROVIDER_GOOGLE}
-            style={styles.map}
-            initialRegion={region}
-            showsUserLocation
-            showsMyLocationButton={false}
-            showsCompass
-            pitchEnabled
-            rotateEnabled
-          >
-            {/* Driver Marker */}
+        <MapView
+          style={StyleSheet.absoluteFillObject}
+            provider="google"
+          initialRegion={ride.driverLocation ? {
+            latitude: ride.driverLocation.latitude,
+            longitude: ride.driverLocation.longitude,
+            latitudeDelta: 0.02,
+            longitudeDelta: 0.02,
+          } : undefined}
+          showsUserLocation
+          showsMyLocationButton={false}
+          pitchEnabled
+          rotateEnabled
+          onTouchEnd={() => {}}
+        >
+          {ride.driverLocation && (
             <Marker
-              coordinate={driverLocation}
+              coordinate={{
+                latitude: ride.driverLocation.latitude,
+                longitude: ride.driverLocation.longitude,
+              }}
               anchor={{ x: 0.5, y: 0.5 }}
-              rotation={driverLocation.heading}
+              rotation={ride.driverLocation.heading}
             >
               <Animated.View
                 style={[
                   styles.driverMarkerPulse,
-                  {
-                    transform: [{ scale: pulseAnim }],
-                  },
+                  { transform: [{ scale: pulseAnim }] },
                 ]}
               />
               <View style={styles.driverMarker}>
                 <Ionicons name="car" size={24} color="#FFFFFF" />
               </View>
             </Marker>
+          )}
+        </MapView>
 
-            {/* Destination Marker */}
-            {userLocation && (
-              <Marker
-                coordinate={{
-                  latitude: userLocation.coords.latitude,
-                  longitude: userLocation.coords.longitude,
-                }}
-                pinColor={colors.teal}
-              />
-            )}
+        <View style={styles.overlay}>
+          <StatusPill
+            label={statusConfig.label}
+            tone={statusConfig.color}
+            icon={statusConfig.icon}
+          />
 
-            {/* Route Line */}
-            {userLocation && (
-              <Polyline
-                coordinates={[
-                  driverLocation,
-                  {
-                    latitude: userLocation.coords.latitude,
-                    longitude: userLocation.coords.longitude,
-                  },
-                ]}
-                strokeColor={colors.teal}
-                strokeWidth={4}
-                lineDashPattern={[10, 5]}
-              />
-            )}
-          </MapView>
-
-          {/* Floating Controls */}
-          <View style={styles.floatingControls}>
-            <StatusPill
-              label={statusConfig.label}
-              tone={statusConfig.color}
-              icon={statusConfig.icon}
-            />
-            <View style={styles.controlButtons}>
-              <PressableControl
-                icon="locate"
-                onPress={centerOnDriver}
-                color={colors.blue}
-              />
-              <PressableControl
-                icon="share-social"
-                onPress={shareTrip}
-                color={colors.green}
-              />
+          <View style={styles.driverCard}>
+            <View style={styles.driverHeader}>
+              <View style={styles.driverAvatar}>
+                <Text style={styles.driverAvatarText}>
+                  {ride.driverName.split(' ').map(n => n[0]).join('')}
+                </Text>
+              </View>
+              <View style={styles.driverInfo}>
+                <Text style={styles.driverName}>{ride.driverName}</Text>
+                <Text style={styles.driverVehicle}>{ride.vehicleModel}</Text>
+                <Text style={styles.driverPlate}>{ride.licensePlate}</Text>
+              </View>
+              <View style={styles.driverRating}>
+                <Ionicons name="star" size={16} color={colors.gold} />
+                <Text style={styles.ratingText}>{ride.driverRating.toFixed(1)}</Text>
+              </View>
             </View>
           </View>
 
-          {/* Toggle Details Button */}
-          <View style={styles.toggleButton}>
-            <PressableControl
-              icon={showDetails ? 'chevron-down' : 'chevron-up'}
-              onPress={() => setShowDetails(!showDetails)}
-              color={colors.ink}
-            />
+          <View style={styles.metrics}>
+            <MetricTile label="ETA" value={ride.eta} tone={colors.blue} />
+            <MetricTile label="Distance" value={ride.distance} tone={colors.teal} />
+            <MetricTile label="Fare" value={ride.fare} tone={colors.gold} />
           </View>
+
+          <PrimaryButton
+            label={`Call ${ride.driverName.split(' ')[0]}`}
+            icon="call"
+            tone={colors.green}
+            onPress={callDriver}
+          />
         </View>
 
-        {/* Trip Details Panel */}
-        {showDetails && (
-          <ScrollView
-            style={styles.detailsPanel}
-            contentContainerStyle={styles.detailsContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <PremiumPanel tone="dark" style={styles.driverCard}>
-              <View style={styles.driverHeader}>
-                <View style={styles.driverAvatar}>
-                  <Text style={styles.driverAvatarText}>
-                    {trip.driverName.split(' ').map(n => n[0]).join('')}
-                  </Text>
-                </View>
-                <View style={styles.driverInfo}>
-                  <Text style={styles.driverName}>{trip.driverName}</Text>
-                  <Text style={styles.driverVehicle}>{trip.vehicleModel}</Text>
-                  <Text style={styles.driverPlate}>{trip.licensePlate}</Text>
-                </View>
-                <View style={styles.driverRating}>
-                  <Ionicons name="star" size={16} color={colors.gold} />
-                  <Text style={styles.ratingText}>4.9</Text>
-                </View>
-              </View>
-            </PremiumPanel>
-
-            <View style={styles.metrics}>
-              <MetricTile label="ETA" value={trip.eta} tone={colors.blue} />
-              <MetricTile label="Distance" value={trip.distance} tone={colors.teal} />
-              <MetricTile label="Fare" value={trip.fare} tone={colors.gold} />
-            </View>
-
-            <PrimaryButton
-              label={`Call ${trip.driverName.split(' ')[0]}`}
-              icon="call"
-              tone={colors.green}
-              onPress={callDriver}
-              testID="call-driver-button"
-            />
-
-            <PrimaryButton
-              label="Send message"
-              icon="chatbubble"
-              tone={colors.blue}
-              testID="message-driver-button"
-            />
-
-            <InfoCard
-              icon="shield-checkmark"
-              title="Trip is being recorded"
-              body="Your route, driver details, and timestamps are securely logged for safety."
-              tone={colors.green}
-            />
-
-            <InfoCard
-              icon="share-social"
-              title="Share live location"
-              body="Emergency contacts can see your real-time location during the ride."
-              tone={colors.teal}
-            />
-          </ScrollView>
-        )}
+        <InfoCard
+          icon="shield-checkmark"
+          title="Trip is being recorded"
+          body="Your route, driver details, and timestamps are securely logged for safety."
+          tone={colors.green}
+        />
       </View>
     </ScreenShell>
   );
 });
 
-function PressableControl({
-  icon,
-  onPress,
-  color,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  onPress: () => void;
-  color: string;
-}) {
-  return (
-    <View style={[styles.control, { backgroundColor: color }]}>
-      <Ionicons name={icon} size={22} color="#FFFFFF" onPress={onPress} />
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  mapContainer: {
+  loadingContainer: {
     flex: 1,
-    position: 'relative',
-  },
-  map: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  floatingControls: {
-    position: 'absolute',
-    top: spacing.lg,
-    left: spacing.lg,
-    right: spacing.lg,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  controlButtons: {
-    gap: spacing.sm,
-  },
-  control: {
-    ...shadows.lift,
-    width: 48,
-    height: 48,
-    borderRadius: radii.pill,
-    alignItems: 'center',
     justifyContent: 'center',
-  },
-  toggleButton: {
-    position: 'absolute',
-    bottom: spacing.md,
-    right: spacing.lg,
-  },
-  driverMarkerPulse: {
-    position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: `${colors.blue}40`,
-  },
-  driverMarker: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.blue,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-    ...shadows.lift,
-  },
-  detailsPanel: {
-    maxHeight: '50%',
     backgroundColor: colors.bg,
-    borderTopLeftRadius: radii.xl,
-    borderTopRightRadius: radii.xl,
-    ...shadows.lift,
   },
-  detailsContent: {
+  loadingText: {
+    fontSize: 18,
+    color: colors.ink,
+    fontWeight: '600',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: spacing.lg,
     gap: spacing.md,
-    paddingBottom: spacing.xxl,
+  },
+  errorText: {
+    fontSize: 16,
+    color: colors.red,
+    textAlign: 'center',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
+    padding: spacing.lg,
+    gap: spacing.sm,
   },
   driverCard: {
-    marginBottom: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    ...shadows.lift,
   },
   driverHeader: {
     flexDirection: 'row',
@@ -417,34 +295,33 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   driverAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: colors.teal,
     alignItems: 'center',
     justifyContent: 'center',
   },
   driverAvatarText: {
     color: '#FFFFFF',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '900',
   },
   driverInfo: {
     flex: 1,
-    gap: 3,
   },
   driverName: {
-    color: '#FFFFFF',
+    color: colors.ink,
     fontSize: typography.lead,
     fontWeight: '900',
   },
   driverVehicle: {
-    color: '#CBD5E1',
+    color: colors.muted,
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
   },
   driverPlate: {
-    color: '#94A3B8',
+    color: colors.muted,
     fontSize: 12,
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -466,6 +343,24 @@ const styles = StyleSheet.create({
   metrics: {
     flexDirection: 'row',
     gap: spacing.sm,
+  },
+  driverMarkerPulse: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: `${colors.blue}40`,
+  },
+  driverMarker: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.blue,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    ...shadows.lift,
   },
 });
 

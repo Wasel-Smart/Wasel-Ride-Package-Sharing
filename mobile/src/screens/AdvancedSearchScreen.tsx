@@ -106,7 +106,7 @@ const AdvancedSearchScreen = React.memo(function AdvancedSearchScreen() {
   const [showFilters, setShowFilters] = useState(false);
 
   const filteredRides = useMemo(() => {
-    let result = MOCK_RIDES.filter(
+    const result = MOCK_RIDES.filter(
       ride =>
         ride.priceJod >= priceRange[0] &&
         ride.priceJod <= priceRange[1] &&

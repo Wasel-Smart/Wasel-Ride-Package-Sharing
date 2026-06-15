@@ -1,4 +1,6 @@
 import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createClient } from '@supabase/supabase-js';
 
 type ExtraConfig = {
   supabaseUrl?: string;
@@ -7,6 +9,8 @@ type ExtraConfig = {
   stripePublishableKey?: string;
   supabaseFunctionUrl?: string;
   authRedirectUrl?: string;
+  apiUrl?: string;
+  wsUrl?: string;
 };
 
 const extra = (Constants.expoConfig?.extra ?? {}) as ExtraConfig;
@@ -29,16 +33,28 @@ const supabaseFunctionUrl = readPublicEnv(
   extra.supabaseFunctionUrl,
 );
 const authRedirectUrl = readPublicEnv('EXPO_PUBLIC_AUTH_REDIRECT_URL', extra.authRedirectUrl);
+const apiUrl = readPublicEnv('EXPO_PUBLIC_API_URL', extra.apiUrl);
+const wsUrl = readPublicEnv('EXPO_PUBLIC_WS_URL', extra.wsUrl);
 
-export const waselMobileConfig = {
+export export const waselMobileConfig = {
   supabaseUrl,
   supabaseAnonKey,
   googleMapsKey,
   stripePublishableKey,
   supabaseFunctionUrl,
   authRedirectUrl: authRedirectUrl || 'wasel://auth/callback',
+  apiUrl,
+  wsUrl,
   hasSupabase: Boolean(supabaseUrl && supabaseAnonKey),
   hasMaps: Boolean(googleMapsKey),
   hasStripe: Boolean(stripePublishableKey),
   hasFunctions: Boolean(supabaseFunctionUrl),
 };
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: AsyncStorage,
+    detectSessionInUrl: false,
+  },
+});
+

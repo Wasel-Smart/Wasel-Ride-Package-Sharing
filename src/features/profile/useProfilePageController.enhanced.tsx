@@ -2,7 +2,6 @@ import { useState, useCallback, type ChangeEvent, type ReactNode, type RefObject
 import { Bell, Car, CreditCard, Settings } from 'lucide-react';
 import type { WaselUser } from '../../contexts/LocalAuth';
 import { createSupportTicket } from '../../services/supportInbox';
-import { recordProfileChange } from '../../services/profileChangeHistory';
 import { sanitizeText } from '../../utils/sanitize';
 import { C, F } from '../../utils/wasel-ds';
 import { 
@@ -283,9 +282,6 @@ export function useProfilePageController({
     setSavingField('name');
     const oldValue = user.name;
 
-    // Record change history
-    await recordProfileChange(user.id, 'full_name', oldValue, clean);
-
     const { error } = await updateProfile({ full_name: clean });
     setSavingField(null);
 
@@ -328,9 +324,6 @@ export function useProfilePageController({
 
     setSavingField('phone');
     const oldValue = user.phone;
-
-    // Record change history
-    await recordProfileChange(user.id, 'phone_number', oldValue, normalized);
 
     const { error } = await updateProfile({ phone_number: normalized });
     setSavingField(null);
@@ -416,9 +409,6 @@ export function useProfilePageController({
       const avatarUrl = await readAvatarFile(file);
       setSavingField('photo');
       const oldValue = user.avatar;
-
-      // Record change history
-      await recordProfileChange(user.id, 'avatar_url', oldValue, 'updated');
 
       const { error } = await updateProfile({ avatar_url: avatarUrl });
       setSavingField(null);

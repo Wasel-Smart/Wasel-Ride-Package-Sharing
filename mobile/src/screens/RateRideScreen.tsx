@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View, Alert } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,7 +14,7 @@ import {
 import { rideLifecycle } from '../services/ride';
 import { colors, spacing } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
-import { Text, Pressable, StyleSheet as RNStyleSheet } from 'react-native';
+import { Text, Pressable } from 'react-native';
 
 type RootStackParamList = {
   Tabs: undefined;
@@ -34,6 +34,15 @@ type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 const STARS = [1, 2, 3, 4, 5];
 
+const FEEDBACK_TAGS = [
+  { id: 'safe', label: 'Safe driving', icon: 'shield-checkmark' as const },
+  { id: 'punctual', label: 'On time', icon: 'time' as const },
+  { id: 'clean', label: 'Clean vehicle', icon: 'sparkles' as const },
+  { id: 'friendly', label: 'Friendly', icon: 'heart' as const },
+  { id: 'quiet', label: 'Quiet ride', icon: 'volume-mute' as const },
+  { id: 'music', label: 'Good music', icon: 'musical-notes' as const },
+];
+
 const RateRideScreen = React.memo(function RateRideScreen() {
   const route = useRoute<any>();
   const navigation = useNavigation<NavProp>();
@@ -43,15 +52,6 @@ const RateRideScreen = React.memo(function RateRideScreen() {
   const [feedback, setFeedback] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-
-  const FEEDBACK_TAGS = [
-    { id: 'safe', label: 'Safe driving', icon: 'shield-checkmark' as const },
-    { id: 'punctual', label: 'On time', icon: 'time' as const },
-    { id: 'clean', label: 'Clean vehicle', icon: 'sparkles' as const },
-    { id: 'friendly', label: 'Friendly', icon: 'heart' as const },
-    { id: 'quiet', label: 'Quiet ride', icon: 'volume-mute' as const },
-    { id: 'music', label: 'Good music', icon: 'musical-notes' as const },
-  ];
 
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
 
@@ -84,7 +84,7 @@ const RateRideScreen = React.memo(function RateRideScreen() {
     } finally {
       setLoading(false);
     }
-  }, [rating, rideId, feedback, selectedTags, FEEDBACK_TAGS]);
+  }, [rating, rideId, feedback, selectedTags]);
 
   if (submitted) {
     return (
