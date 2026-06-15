@@ -1,14 +1,31 @@
-import { renderHook, waitFor } from '@testing-library/react-hooks';
+import React from 'react';
+import { Button, View } from 'react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api';
 import { useLiveRide } from './useLiveRide';
 
 jest.mock('../../lib/api');
 
+function TestHarness({ onResult }: { onResult: (result: ReturnType<typeof useLiveRide>) => void }) {
+  const result = useLiveRide('ride-123');
+
+  React.useEffect(() => {
+    onResult(result);
+  }, [onResult, result]);
+
+  return (
+    <View testID="live-ride-harness">
+      <Button title="refresh" onPress={result.refresh} testID="refresh-live-ride" />
+    </View>
+  );
+}
+
 describe('useLiveRide', () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -17,10 +34,6 @@ describe('useLiveRide', () => {
         },
       },
     });
-  });
-
-  afterEach(() => {
-    jest.clearAllMocks();
   });
 
   it('fetches live ride data successfully', async () => {
@@ -43,40 +56,56 @@ describe('useLiveRide', () => {
       status: 200,
     });
 
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    const onResult = jest.fn();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TestHarness onResult={onResult} />
+      </QueryClientProvider>,
     );
 
-    const { result } = renderHook(() => useLiveRide('ride-123'), { wrapper });
+    await waitFor(() => {
+      expect(onResult).toHaveBeenCalledWith(expect.objectContaining({ isSuccess: true, ride: mockRide }));
+    });
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-    expect(result.current.ride).toEqual(mockRide);
     expect(apiClient.get).toHaveBeenCalledWith('rides/ride-123/live');
   });
 
   it('handles API errors gracefully', async () => {
     (apiClient.get as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    const onResult = jest.fn();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TestHarness onResult={onResult} />
+      </QueryClientProvider>,
     );
 
-    const { result } = renderHook(() => useLiveRide('ride-123'), { wrapper });
-
-    await waitFor(() => expect(result.current.isError).toBe(true));
-
-    expect(result.current.error).toBeInstanceOf(Error);
-  });
-
-  it('does not fetch when disabled', () => {
-    const { result } = renderHook(() => useLiveRide('ride-123', false), {
-      wrapper: ({ children }: { children: React.ReactNode }) => (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-      ),
+    await waitFor(() => {
+      expect(onResult).toHaveBeenCalledWith(expect.objectContaining({ isError: true }));
     });
 
-    expect(result.current.isLoading).toBe(true);
+    expect(onResult.mock.calls.at(-1)?.[0].error).toBeInstanceOf(Error);
+  });
+
+  it('does not fetch when disabled', async () => {
+    const DisabledHarness = () => {
+      const result = useLiveRide('ride-123', false);
+      React.useEffect(() => {
+        onResult(result);
+      }, [result]);
+      return <View testID="disabled-live-ride-harness" />;
+    };
+
+    const onResult = jest.fn();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <DisabledHarness />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => {
+      expect(onResult).toHaveBeenCalledWith(expect.objectContaining({ isLoading: true }));
+    });
     expect(apiClient.get).not.toHaveBeenCalled();
   });
 
@@ -100,16 +129,17 @@ describe('useLiveRide', () => {
       status: 200,
     });
 
-    const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    const onResult = jest.fn();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <TestHarness onResult={onResult} />
+      </QueryClientProvider>,
     );
 
-    const { result } = renderHook(() => useLiveRide('ride-123'), { wrapper });
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(1));
 
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(apiClient.get).toHaveBeenCalledTimes(1);
+    fireEvent.press(screen.getByTestId('refresh-live-ride'));
 
-    result.current.refresh();
     await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(2));
   });
 });
