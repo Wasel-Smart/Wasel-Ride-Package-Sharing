@@ -1,0 +1,13 @@
+{
+  "name": "wasel-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch backend/api-server/src/server.ts",
+    "build": "tsc -p backend/tsconfig.json",
+    "start": "node backend/api-server/dist/server.js",
+    "lint": "eslint backend/api-server/src --ext .ts",
+    "test": "vitest run"
+  }
+}
