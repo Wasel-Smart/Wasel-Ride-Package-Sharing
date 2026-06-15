@@ -60,6 +60,17 @@ function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'gen
   return message || 'Request failed.';
 }
 
+function normalizeEmailInput(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function normalizePhoneInput(phone: string): string {
+  const compact = phone.replace(/[\s().-]/g, '');
+  if (compact.startsWith('00')) return `+${compact.slice(2)}`;
+  if (compact.startsWith('0')) return `+962${compact.slice(1)}`;
+  return compact;
+}
+
 function requireSupabase() {
   if (!supabase) {
     throw new Error(
@@ -153,10 +164,11 @@ export const authAPI = {
       returnTo ? { returnTo } : undefined,
     );
 
-    const normalizedPhone = phone?.trim();
+    const normalizedEmail = normalizeEmailInput(email);
+    const normalizedPhone = normalizePhoneInput(phone ?? '');
 
     const { data, error } = await client.auth.signUp({
-      email,
+      email: normalizedEmail,
       password,
       options: {
         emailRedirectTo: redirectTo,
@@ -294,7 +306,7 @@ export const authAPI = {
   async signIn(email: string, password: string, captchaToken?: string) {
     const client = requireSupabase();
     const { data, error } = await client.auth.signInWithPassword({
-      email,
+      email: normalizeEmailInput(email),
       password,
       options: { captchaToken },
     });

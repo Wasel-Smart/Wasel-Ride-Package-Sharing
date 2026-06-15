@@ -283,21 +283,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
           returnTo,
           captchaToken,
         );
-        const authUser = data.user ?? data.session?.user ?? null;
+        const authUser = data.session?.user ?? data.user ?? null;
+        const hasActiveSession = Boolean(data.session);
 
-        if (authUser && data.session) {
+        if (authUser && hasActiveSession) {
           await authAPI.createProfile(
             authUser.id,
             authUser.email ?? email,
             firstName,
             lastName,
             phone ?? '',
-          );
-          const nextProfile = await fetchProfile(false, authUser);
+          ).catch(error => {
+            if (import.meta.env?.DEV) {
+              console.warn('[Auth] Profile bootstrap skipped:', sanitizeLogMessage(String(error)));
+            }
+          });
 
-          if (!nextProfile) {
-            throw new Error('Profile creation failed. Please try signing in again.');
-          }
+          await fetchProfile(false, authUser).catch(error => {
+            if (import.meta.env?.DEV) {
+              console.warn('[Auth] Profile refresh skipped:', sanitizeLogMessage(String(error)));
+            }
+          });
 
           setSession(data.session);
           setUser(authUser);
@@ -305,7 +311,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         return {
           error: null,
-          requiresEmailConfirmation: !authUser,
+          requiresEmailConfirmation: !hasActiveSession,
           user: authUser,
         };
       } catch (error: unknown) {

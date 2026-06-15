@@ -21,7 +21,7 @@ import { WaselCard } from '../components/wasel-ui/WaselCard';
 import { AuthCaptcha, isAuthCaptchaConfigured } from '../components/AuthCaptcha';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { checkRateLimit, validateEmail } from '../utils/security';
+import { checkRateLimit, validateEmail, validatePhone } from '../utils/security';
 import { useAuth } from '../contexts/AuthContext';
 import { normalizeReturnToPath } from '../utils/env';
 import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
@@ -74,6 +74,26 @@ function normalizePhoneForOtp(value: string) {
   if (compact.startsWith('00')) return `+${compact.slice(2)}`;
   if (compact.startsWith('0')) return `+962${compact.slice(1)}`;
   return compact;
+}
+
+function normalizeSignupPhone(value: string) {
+  return normalizePhoneForOtp(value.trim());
+}
+
+function validateSignupForm(nameValue: string, emailValue: string, passwordValue: string, phoneValue: string) {
+  const normalizedEmail = emailValue.trim().toLowerCase();
+  const normalizedPhone = normalizeSignupPhone(phoneValue);
+
+  if (!nameValue.trim()) return { error: 'Please enter your full name.' };
+  if (nameValue.trim().length < 2) return { error: 'Full name must be at least 2 characters.' };
+  if (!normalizedEmail) return { error: 'Please enter your email address.' };
+  if (!validateEmail(normalizedEmail)) return { error: 'Please enter a valid email address.' };
+  if (!meetsPasswordPolicy(passwordValue)) return { error: PASSWORD_POLICY_MESSAGE };
+  if (normalizedPhone && !validatePhone(normalizedPhone)) {
+    return { error: 'Please enter a valid phone number in international format, for example +962791234567.' };
+  }
+
+  return { email: normalizedEmail, phone: normalizedPhone };
 }
 
 function isValidOtpPhone(value: string) {
@@ -462,23 +482,14 @@ export default function WaselAuth() {
     if (!passwordResetCompleted) {
       setNotice('');
     }
-    if (!name.trim()) {
-      setError('Please enter your full name.');
+
+    const validation = validateSignupForm(name, email, password, phone);
+    if ('error' in validation) {
+      setError(validation.error);
       return;
     }
-    if (!email.trim()) {
-      setError('Please enter your email address.');
-      return;
-    }
-    if (!validateEmail(email)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    if (!meetsPasswordPolicy(password)) {
-      setError(PASSWORD_POLICY_MESSAGE);
-      return;
-    }
-    if (!checkRateLimit(`signup:${email}`, { maxRequests: 3, windowMs: 60_000 })) {
+
+    if (!checkRateLimit(`signup:${validation.email}`, { maxRequests: 3, windowMs: 60_000 })) {
       setError('Too many attempts. Please wait a minute and try again.');
       return;
     }
@@ -487,7 +498,14 @@ export default function WaselAuth() {
 
     setActiveAuthAction('signup');
     try {
-      const registration = await register(name, email, password, phone, safeReturnTo, token);
+      const registration = await register(
+        name,
+        validation.email,
+        password,
+        validation.phone || undefined,
+        safeReturnTo,
+        token,
+      );
       resetCaptcha();
       if (registration.error) {
         if (!isAuthCaptchaConfigured && isAccountProtectionError(registration.error)) {
@@ -502,7 +520,7 @@ export default function WaselAuth() {
       if (registration.requiresEmailConfirmation) {
         setPassword('');
         setNotice(
-          `Check ${registration.email ?? email} and confirm your email address to finish creating your account.`,
+          `Check ${registration.email ?? validation.email} and confirm your email address to finish creating your account.`,
         );
         setTab('signin');
         return;
@@ -544,11 +562,15 @@ export default function WaselAuth() {
   const handleGoogleSignIn = async () => {
     if (authBusy) return;
     setError('');
+    resetCaptcha();
     setActiveAuthAction('google');
-    const { error: oauthError } = await signInWithGoogle(safeReturnTo);
+    try {
+      const { error: oauthError } = await signInWithGoogle(safeReturnTo);
 
-    if (oauthError) {
-      setError(friendlyAuthError(oauthError, 'Google sign in failed. Please try again.'));
+      if (oauthError) {
+        setError(friendlyAuthError(oauthError, 'Google sign in failed. Please try again.'));
+      }
+    } finally {
       setActiveAuthAction(null);
     }
   };
@@ -556,11 +578,15 @@ export default function WaselAuth() {
   const handleFacebookSignIn = async () => {
     if (authBusy) return;
     setError('');
+    resetCaptcha();
     setActiveAuthAction('facebook');
-    const { error: oauthError } = await signInWithFacebook(safeReturnTo);
+    try {
+      const { error: oauthError } = await signInWithFacebook(safeReturnTo);
 
-    if (oauthError) {
-      setError(friendlyAuthError(oauthError, 'Facebook sign in failed. Please try again.'));
+      if (oauthError) {
+        setError(friendlyAuthError(oauthError, 'Facebook sign in failed. Please try again.'));
+      }
+    } finally {
       setActiveAuthAction(null);
     }
   };
@@ -931,7 +957,7 @@ export default function WaselAuth() {
                   loading={activeAuthAction === 'signin' || activeAuthAction === 'signup'}
                   disabled={authBusy || success}
                   onClick={tab === 'signin' ? handleSignIn : handleSignUp}
-                  aria-label={tab === 'signin' ? 'Submit sign in' : 'Submit sign up'}
+                  aria-label={tab === 'signin' ? 'Submit sign in' : 'Submit create account'}
                   iconEnd={<ArrowRight size={16} />}
                 >
                   {tab === 'signin' ? 'Sign in' : 'Create account'}

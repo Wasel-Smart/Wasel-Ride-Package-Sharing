@@ -4,10 +4,22 @@
  */
 
 import { User, type AuthError, type Session } from '@supabase/supabase-js';
-import { Linking } from 'react-native';
+import { Linking, type EmitterSubscription } from 'react-native';
 import { supabase as sharedSupabase, waselMobileConfig } from '../lib/config';
 
 export type AuthMetadata = Record<string, string | number | boolean | null | undefined>;
+type OAuthProvider = 'google' | 'facebook';
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function normalizePhone(phone: string): string {
+  const compact = phone.replace(/[\s().-]/g, '');
+  if (compact.startsWith('00')) return `+${compact.slice(2)}`;
+  if (compact.startsWith('0')) return `+962${compact.slice(1)}`;
+  return compact;
+}
 
 interface AuthState {
   session: Session | null;
@@ -18,6 +30,7 @@ interface AuthState {
 export class MobileAuthService {
   private supabase = sharedSupabase;
   private listeners = new Set<(state: AuthState) => void>();
+  private urlSubscription: EmitterSubscription | null = null;
   private currentState: AuthState = {
     session: null,
     user: null,
@@ -36,6 +49,23 @@ export class MobileAuthService {
       user: session?.user || null,
       loading: false,
     });
+
+    this.urlSubscription = Linking.addEventListener('url', event => {
+      void this.completeAuthFromUrl(event.url).catch(error => {
+        if (__DEV__) {
+          console.warn('[Auth] Deep link session restore failed:', error);
+        }
+      });
+    });
+
+    const initialUrl = await Linking.getInitialURL();
+    if (initialUrl) {
+      await this.completeAuthFromUrl(initialUrl).catch(error => {
+        if (__DEV__) {
+          console.warn('[Auth] Initial deep link session restore failed:', error);
+        }
+      });
+    }
 
     this.supabase.auth.onAuthStateChange((_event, session) => {
       this.updateState({
@@ -70,7 +100,7 @@ export class MobileAuthService {
 
   async signIn(email: string, password: string): Promise<Session> {
     const { data, error } = await this.supabase.auth.signInWithPassword({
-      email,
+      email: normalizeEmail(email),
       password,
     });
 
@@ -92,7 +122,7 @@ export class MobileAuthService {
 
   async signInWithEmail(email: string, password: string): Promise<{ error?: AuthError }> {
     const { error } = await this.supabase.auth.signInWithPassword({
-      email,
+      email: normalizeEmail(email),
       password,
     });
 
@@ -104,13 +134,15 @@ export class MobileAuthService {
     password: string,
     metadata?: AuthMetadata,
   ): Promise<{ error?: AuthError }> {
-    const options: { data?: AuthMetadata } = {};
+    const options: { data?: AuthMetadata; emailRedirectTo?: string } = {
+      emailRedirectTo: waselMobileConfig.authRedirectUrl,
+    };
     if (metadata) {
       options.data = metadata;
     }
 
     const { error } = await this.supabase.auth.signUp({
-      email,
+      email: normalizeEmail(email),
       password,
       options,
     });
@@ -120,13 +152,13 @@ export class MobileAuthService {
 
   async signInWithPhone(phone: string): Promise<{ error?: AuthError }> {
     const { error } = await this.supabase.auth.signInWithOtp({
-      phone,
+      phone: normalizePhone(phone),
     });
 
     return error ? { error } : {};
   }
 
-  async signInWithOAuth(provider: 'google' | 'facebook'): Promise<{ error?: AuthError | Error }> {
+  async signInWithOAuth(provider: OAuthProvider): Promise<{ error?: AuthError | Error }> {
     const { data, error } = await this.supabase.auth.signInWithOAuth({
       provider,
       options: {
@@ -140,6 +172,41 @@ export class MobileAuthService {
 
     await Linking.openURL(data.url);
     return {};
+  }
+
+  async completeAuthFromUrl(url: string): Promise<boolean> {
+    const parsedUrl = new URL(url);
+    const params = new URLSearchParams(
+      [parsedUrl.searchParams.toString(), parsedUrl.hash.replace(/^#/, '')].filter(Boolean).join('&'),
+    );
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+    const errorCode = params.get('error') || params.get('error_code');
+    const errorDescription = params.get('error_description') || params.get('error') || '';
+
+    if (errorCode) {
+      throw new Error(errorDescription || 'Authentication failed.');
+    }
+
+    if (!accessToken || !refreshToken) {
+      return false;
+    }
+
+    const { data, error } = await this.supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (error) throw error;
+    if (!data.session) return false;
+
+    this.updateState({
+      session: data.session,
+      user: data.session.user,
+      loading: false,
+    });
+
+    return true;
   }
 
   async signInWithGoogle(): Promise<{ error?: AuthError | Error }> {

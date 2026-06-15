@@ -43,7 +43,7 @@ if (fs.existsSync(envPath)) {
 // All VITE_* environment variables with defaults
 const allViteVars = {
   // CRITICAL - Required for build
-  'VITE_SUPABASE_URL': existingVars['VITE_SUPABASE_URL'] || 'https://<YOUR_PROJECT_REF>.supabase.co',
+  'VITE_SUPABASE_URL': existingVars['VITE_SUPABASE_URL'] || 'https://zexlxabdcsjefptmjhuq.supabase.co',
   'VITE_SUPABASE_ANON_KEY': existingVars['VITE_SUPABASE_ANON_KEY'] || '',
   'VITE_SUPABASE_PUBLISHABLE_KEY': existingVars['VITE_SUPABASE_PUBLISHABLE_KEY'] || '<YOUR_SUPABASE_PUBLISHABLE_KEY>',
   

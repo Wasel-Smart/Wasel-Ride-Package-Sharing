@@ -99,16 +99,16 @@ auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_VERIFY_AUTH_TOKEN)"
 # OAuth Providers - Google and Facebook
 [auth.external.google]
 enabled = true
-client_id = "235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com"
-secret = "hash:1b4f86adb9b0e691ecc27e66d6e09ca8020c1a7316e49d1577f148d49e073757"
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_CLIENT_SECRET)"
 redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
 skip_nonce_check = true
 email_optional = true
 
 [auth.external.facebook]
 enabled = true
-client_id = "939540775374132"
-secret = "hash:b60e9f8acdd2a2149b4580f70b8760a1802266cbd521368559ed89396a26ba70"
+client_id = "env(SUPABASE_AUTH_FACEBOOK_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET)"
 redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
 email_optional = true
 
