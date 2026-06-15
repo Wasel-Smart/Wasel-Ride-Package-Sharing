@@ -75,7 +75,7 @@ test.describe('OAuth Authentication', () => {
     await expect(page.getByLabel(/^password$/i)).toBeVisible();
     await expect(page.getByLabel(/phone number/i)).toBeVisible();
 
-    const createAccountButton = page.getByRole('button', { name: /submit sign up/i });
+    const createAccountButton = page.getByRole('button', { name: /submit create account/i });
     await expect(createAccountButton).toBeVisible();
     await expect(createAccountButton).toBeEnabled();
 

@@ -4,7 +4,7 @@
  */
 
 import { User, type AuthError, type Session } from '@supabase/supabase-js';
-import { Linking, type EmitterSubscription } from 'react-native';
+import { Linking } from 'react-native';
 import { supabase as sharedSupabase, waselMobileConfig } from '../lib/config';
 
 export type AuthMetadata = Record<string, string | number | boolean | null | undefined>;
@@ -99,6 +99,10 @@ export class MobileAuthService {
   }
 
   async signIn(email: string, password: string): Promise<Session> {
+    if (!waselMobileConfig.hasSupabase) {
+      throw new Error('Supabase auth is not configured.');
+    }
+
     const { data, error } = await this.supabase.auth.signInWithPassword({
       email: normalizeEmail(email),
       password,
@@ -134,6 +138,10 @@ export class MobileAuthService {
     password: string,
     metadata?: AuthMetadata,
   ): Promise<{ error?: AuthError }> {
+    if (!waselMobileConfig.hasSupabase) {
+      return { error: new Error('Supabase auth is not configured.') as AuthError };
+    }
+
     const options: { data?: AuthMetadata; emailRedirectTo?: string } = {
       emailRedirectTo: waselMobileConfig.authRedirectUrl,
     };
@@ -159,6 +167,10 @@ export class MobileAuthService {
   }
 
   async signInWithOAuth(provider: OAuthProvider): Promise<{ error?: AuthError | Error }> {
+    if (!waselMobileConfig.hasSupabase) {
+      return { error: new Error('Supabase auth is not configured.') };
+    }
+
     const { data, error } = await this.supabase.auth.signInWithOAuth({
       provider,
       options: {

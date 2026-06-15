@@ -31,6 +31,7 @@ import { C, R, TYPE, F, SPACE, GRAD, GRAD_SIGNAL } from '../utils/wasel-ds';
 // Types
 type Tab = 'signin' | 'signup';
 type PhoneOtpChannel = 'sms' | 'whatsapp';
+type SignupValidationResult = { error: string } | { email: string; phone: string };
 type AuthAction =
   | 'signin'
   | 'signup'
@@ -80,7 +81,7 @@ function normalizeSignupPhone(value: string) {
   return normalizePhoneForOtp(value.trim());
 }
 
-function validateSignupForm(nameValue: string, emailValue: string, passwordValue: string, phoneValue: string) {
+function validateSignupForm(nameValue: string, emailValue: string, passwordValue: string, phoneValue: string): SignupValidationResult {
   const normalizedEmail = emailValue.trim().toLowerCase();
   const normalizedPhone = normalizeSignupPhone(phoneValue);
 
