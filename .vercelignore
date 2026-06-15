@@ -1,0 +1,54 @@
+# Vercel ignore file
+# Keep source/config/scripts available because Vercel runs the production build remotely.
+
+# Files not needed for the Vercel web build
+tests/
+/supabase/
+playwright.config.ts
+vitest.config.ts
+
+# Development files
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build artifacts (except dist)
+.vite/
+coverage/
+dist/
+build/
+.vercel/*
+!.vercel/output/
+!.vercel/output/**
+.codex/
+.kilo/
+.agents/
+actions-runner/
+Wasel-Ride-Package-Sharing/
+*.tgz
+*.zip
+*.pdf
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Git
+.git/
+.github/
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+docker/
+Dockerfile
+docker-compose*.yml
+
+# Kubernetes
+infra/
