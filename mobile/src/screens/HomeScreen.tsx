@@ -31,6 +31,9 @@ type RootStackParamList = {
   RateRide: { rideId: string; driverName: string };
   AdvancedSearch: undefined;
   SignIn: undefined;
+  Map: undefined;
+  Wallet: undefined;
+  Operations: undefined;
 };
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
@@ -62,13 +65,18 @@ const HomeScreen = React.memo(function HomeScreen() {
     return `${Math.round((readyCount / readiness.length) * 100)}%`;
   }, []);
 
-  const QUICK_LINKS = [
-    { label: 'My trips', icon: 'time' as const, screen: 'Trips' as const, tone: colors.teal },
-    { label: 'Bus routes', icon: 'bus' as const, screen: 'Bus' as const, tone: colors.blue },
-    { label: 'Driver setup', icon: 'car' as const, screen: 'Driver' as const, tone: colors.green },
-    { label: 'Safety center', icon: 'shield-checkmark' as const, screen: 'Safety' as const, tone: colors.amber },
-    { label: 'Notifications', icon: 'notifications' as const, screen: 'Notifications' as const, tone: colors.lilac },
-    { label: 'Smart ride search', icon: 'search' as const, screen: 'AdvancedSearch' as const, tone: colors.cyan },
+  const QUICK_LINKS: Array<{
+    label: string;
+    icon: keyof typeof Ionicons.glyphMap;
+    screen: keyof RootStackParamList;
+    tone: string;
+  }> = [
+    { label: 'My trips', icon: 'time', screen: 'Trips', tone: colors.teal },
+    { label: 'Bus routes', icon: 'bus', screen: 'Bus', tone: colors.blue },
+    { label: 'Driver setup', icon: 'car', screen: 'Driver', tone: colors.green },
+    { label: 'Safety center', icon: 'shield-checkmark', screen: 'Safety', tone: colors.amber },
+    { label: 'Notifications', icon: 'notifications', screen: 'Notifications', tone: colors.lilac },
+    { label: 'Smart ride search', icon: 'search', screen: 'AdvancedSearch', tone: colors.cyan },
   ];
 
   return (
@@ -150,7 +158,7 @@ const HomeScreen = React.memo(function HomeScreen() {
             label={link.label}
             icon={link.icon}
             tone={link.tone}
-            onPress={() => navigation.navigate(link.screen as any)}
+            onPress={() => navigation.navigate(link.screen)}
             testID={`quick-link-${link.screen.toLowerCase()}`}
           />
         ))}

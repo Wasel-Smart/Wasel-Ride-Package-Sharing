@@ -3,7 +3,8 @@ export type OfflineActionType =
   | 'RIDE_CANCEL'
   | 'RIDE_RATING'
   | 'PACKAGE_REQUEST'
-  | 'PROFILE_UPDATE';
+  | 'PROFILE_UPDATE'
+  | 'SCHEDULED_RIDE_CREATE';
 
 export type OfflineAction<TPayload = unknown> = {
   id: string;

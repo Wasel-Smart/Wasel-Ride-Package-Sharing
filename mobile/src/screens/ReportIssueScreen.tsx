@@ -1,7 +1,31 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
 
-export default function ReportIssueScreen({ route, navigation }: any) {
+type RootStackParamList = {
+  Tabs: undefined;
+  Safety: undefined;
+  Trips: undefined;
+  Bus: undefined;
+  Driver: undefined;
+  Notifications: undefined;
+  LiveTracking: { rideId: string };
+  Chat: { rideId: string; driverName: string };
+  RateRide: { rideId: string; driverName: string };
+  AdvancedSearch: undefined;
+  SignIn: undefined;
+};
+
+type NavProp = NativeStackNavigationProp<RootStackParamList>;
+type ReportRouteProp = RouteProp<RootStackParamList, keyof RootStackParamList>;
+
+interface ReportIssueProps {
+  route: ReportRouteProp;
+  navigation: NavProp;
+}
+
+export default function ReportIssueScreen({ route, navigation }: ReportIssueProps) {
   const { rideId } = route.params || {};
   const [selectedIssue, setSelectedIssue] = useState('');
   const [description, setDescription] = useState('');

@@ -3,14 +3,11 @@
  * React Native implementation with Supabase Auth
  */
 
-import { createClient, SupabaseClient, Session, User, type AuthError } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { User, type AuthError, type Session } from '@supabase/supabase-js';
 import { Linking } from 'react-native';
-import 'react-native-url-polyfill/auto';
-import { waselMobileConfig } from '../lib/config';
+import { supabase as sharedSupabase, waselMobileConfig } from '../lib/config';
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
+export type AuthMetadata = Record<string, string | number | boolean | null | undefined>;
 
 interface AuthState {
   session: Session | null;
@@ -19,8 +16,8 @@ interface AuthState {
 }
 
 export class MobileAuthService {
-  private supabase: SupabaseClient;
-  private listeners: Set<(state: AuthState) => void> = new Set();
+  private supabase = sharedSupabase;
+  private listeners = new Set<(state: AuthState) => void>();
   private currentState: AuthState = {
     session: null,
     user: null,
@@ -28,29 +25,18 @@ export class MobileAuthService {
   };
 
   constructor() {
-    this.supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        storage: AsyncStorage,
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: false,
-      },
-    });
-
     this.initialize();
   }
 
   private async initialize(): Promise<void> {
-    // Get initial session
     const { data: { session } } = await this.supabase.auth.getSession();
-    
+
     this.updateState({
       session,
       user: session?.user || null,
       loading: false,
     });
 
-    // Listen for auth changes
     this.supabase.auth.onAuthStateChange((_event, session) => {
       this.updateState({
         session,
@@ -67,8 +53,8 @@ export class MobileAuthService {
 
   subscribe(listener: (state: AuthState) => void): () => void {
     this.listeners.add(listener);
-    listener(this.currentState); // Immediate call with current state
-    
+    listener(this.currentState);
+
     return () => {
       this.listeners.delete(listener);
     };
@@ -96,6 +82,11 @@ export class MobileAuthService {
       throw new Error('Sign in did not return a session.');
     }
 
+    this.updateState({
+      session: data.session,
+      user: data.session.user,
+    });
+
     return data.session;
   }
 
@@ -111,9 +102,9 @@ export class MobileAuthService {
   async signUpWithEmail(
     email: string,
     password: string,
-    metadata?: Record<string, any>,
+    metadata?: AuthMetadata,
   ): Promise<{ error?: AuthError }> {
-    const options: { data?: object } = {};
+    const options: { data?: AuthMetadata } = {};
     if (metadata) {
       options.data = metadata;
     }
@@ -176,6 +167,14 @@ export class MobileAuthService {
   async refreshSession(): Promise<Session | null> {
     const { data: { session } } = await this.supabase.auth.refreshSession();
     return session;
+  }
+
+  async restoreSession(token: { accessToken: string; refreshToken: string }): Promise<boolean> {
+    const { error } = await this.supabase.auth.setSession({
+      access_token: token.accessToken,
+      refresh_token: token.refreshToken,
+    });
+    return !error;
   }
 
   getAccessToken(): string | null {

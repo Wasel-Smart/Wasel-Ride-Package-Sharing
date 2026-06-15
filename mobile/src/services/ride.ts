@@ -331,7 +331,30 @@ export class RideLifecycleService {
     this.listeners.forEach(listener => listener(ride));
   }
 
-  private mapDatabaseRide(data: any): Ride {
+export interface DatabaseRide {
+  id: string;
+  rider_id: string;
+  driver_id?: string;
+  vehicle_id?: string;
+  origin_lat: number;
+  origin_lng: number;
+  origin_address: string;
+  dest_lat: number;
+  dest_lng: number;
+  dest_address: string;
+  status: RideStatus;
+  fare?: number;
+  distance?: number;
+  duration?: number;
+  created_at: string;
+  matched_at?: string;
+  started_at?: string;
+  completed_at?: string;
+  cancelled_at?: string;
+  seats?: number;
+}
+
+  private mapDatabaseRide(data: DatabaseRide): Ride {
     return {
       id: data.id,
       riderId: data.rider_id,

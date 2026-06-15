@@ -2,6 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View, Pressable, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useQuery } from '@tanstack/react-query';
 
 import {
   InfoCard,
@@ -14,6 +15,7 @@ import {
   StateNotice,
   StatusPill,
 } from '../components/MobilePrimitives';
+import { apiClient } from '../lib/api';
 import { colors, hitSlop, radii, shadows, spacing, typography } from '../theme';
 
 interface RideOption {
@@ -31,70 +33,11 @@ interface RideOption {
   distance: string;
 }
 
-const MOCK_RIDES: RideOption[] = [
-  {
-    id: '1',
-    driverName: 'Ahmad K.',
-    rating: 4.9,
-    vehicleType: 'Toyota Camry',
-    priceJod: 5.5,
-    departureTime: '14:30',
-    seatsAvailable: 3,
-    verified: true,
-    instantBook: true,
-    from: 'Amman',
-    to: 'Irbid',
-    distance: '85 km',
-  },
-  {
-    id: '2',
-    driverName: 'Fatima S.',
-    rating: 5.0,
-    vehicleType: 'Honda Accord',
-    priceJod: 6.0,
-    departureTime: '15:00',
-    seatsAvailable: 2,
-    verified: true,
-    instantBook: true,
-    from: 'Amman',
-    to: 'Irbid',
-    distance: '85 km',
-  },
-  {
-    id: '3',
-    driverName: 'Khaled M.',
-    rating: 4.7,
-    vehicleType: 'Hyundai Elantra',
-    priceJod: 4.5,
-    departureTime: '16:30',
-    seatsAvailable: 4,
-    verified: true,
-    instantBook: false,
-    from: 'Amman',
-    to: 'Irbid',
-    distance: '85 km',
-  },
-  {
-    id: '4',
-    driverName: 'Sara L.',
-    rating: 4.8,
-    vehicleType: 'Kia Optima',
-    priceJod: 7.0,
-    departureTime: '14:00',
-    seatsAvailable: 1,
-    verified: true,
-    instantBook: true,
-    from: 'Amman',
-    to: 'Irbid',
-    distance: '85 km',
-  },
-];
-
 type SortOption = 'price' | 'rating' | 'time' | 'seats';
 
 const AdvancedSearchScreen = React.memo(function AdvancedSearchScreen() {
-  const [from, setFrom] = useState('Amman');
-  const [to, setTo] = useState('Irbid');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 20]);
@@ -105,8 +48,48 @@ const AdvancedSearchScreen = React.memo(function AdvancedSearchScreen() {
   const [sortBy, setSortBy] = useState<SortOption>('price');
   const [showFilters, setShowFilters] = useState(false);
 
+  const searchParams = useMemo(
+    () => ({
+      from: from.trim(),
+      to: to.trim(),
+      date: date.toISOString(),
+      minPrice: priceRange[0],
+      maxPrice: priceRange[1],
+      minRating,
+      minSeats,
+      verifiedOnly,
+      instantBookOnly,
+      sortBy,
+    }),
+    [from, to, date, priceRange, minRating, minSeats, verifiedOnly, instantBookOnly, sortBy],
+  );
+
+  const { data: searchResults, isLoading, error, refetch } = useQuery({
+    queryKey: ['rides-search', searchParams],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (from.trim()) params.set('from', from.trim());
+      if (to.trim()) params.set('to', to.trim());
+      params.set('date', date.toISOString());
+      params.set('minPrice', String(priceRange[0]));
+      params.set('maxPrice', String(priceRange[1]));
+      params.set('minRating', String(minRating));
+      params.set('minSeats', String(minSeats));
+      params.set('verified', String(verifiedOnly));
+      params.set('instantBook', String(instantBookOnly));
+      params.set('sort', sortBy);
+
+      const response = await apiClient.get<RideOption[]>(`rides/search?${params.toString()}`);
+      if (response.error) throw new Error(response.error);
+      return response.data ?? [];
+    },
+    enabled: Boolean(from.trim() || to.trim()),
+    staleTime: 30 * 1000,
+  });
+
   const filteredRides = useMemo(() => {
-    const result = MOCK_RIDES.filter(
+    const rides = searchResults ?? [];
+    const result = rides.filter(
       ride =>
         ride.priceJod >= priceRange[0] &&
         ride.priceJod <= priceRange[1] &&
@@ -116,8 +99,23 @@ const AdvancedSearchScreen = React.memo(function AdvancedSearchScreen() {
         (!instantBookOnly || ride.instantBook),
     );
 
-    // Sort
     result.sort((a, b) => {
+      switch (sortBy) {
+        case 'price':
+          return a.priceJod - b.priceJod;
+        case 'rating':
+          return b.rating - a.rating;
+        case 'time':
+          return a.departureTime.localeCompare(b.departureTime);
+        case 'seats':
+          return b.seatsAvailable - a.seatsAvailable;
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [searchResults, priceRange, minRating, minSeats, verifiedOnly, instantBookOnly, sortBy]);
       switch (sortBy) {
         case 'price':
           return a.priceJod - b.priceJod;
@@ -143,7 +141,7 @@ const AdvancedSearchScreen = React.memo(function AdvancedSearchScreen() {
     priceRange[0] > 0 || priceRange[1] < 20,
   ].filter(Boolean).length;
 
-  const handleDateChange = useCallback((event: any, selectedDate?: Date) => {
+  const handleDateChange = useCallback((_event: { type: string }, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
       setDate(selectedDate);

@@ -1,8 +1,47 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import type { RouteProp } from '@react-navigation/native';
 
-export default function ReceiptScreen({ route }: any) {
-  const { receiptData } = route.params || {};
+type RootStackParamList = {
+  Tabs: undefined;
+  Safety: undefined;
+  Trips: undefined;
+  Bus: undefined;
+  Driver: undefined;
+  Notifications: undefined;
+  LiveTracking: { rideId: string };
+  Chat: { rideId: string; driverName: string };
+  RateRide: { rideId: string; driverName: string };
+  AdvancedSearch: undefined;
+  SignIn: undefined;
+};
+
+interface ReceiptData {
+  rideId?: string;
+  date?: string;
+  origin?: string;
+  destination?: string;
+  baseFare?: string | number;
+  distanceFare?: string | number;
+  timeFare?: string | number;
+  total?: string | number;
+  paymentMethod?: string;
+}
+
+type ReceiptRouteProp = RouteProp<RootStackParamList, keyof RootStackParamList>;
+
+interface ReceiptScreenProps {
+  route: ReceiptRouteProp;
+}
+
+function formatCurrency(value: string | number | undefined): string {
+  if (typeof value === 'number') return `JOD ${value.toFixed(2)}`;
+  if (typeof value === 'string') return `JOD ${value}`;
+  return 'JOD 0.00';
+}
+
+export default function ReceiptScreen({ route }: ReceiptScreenProps) {
+  const receiptData = (route.params as { receiptData?: ReceiptData } | undefined)?.receiptData;
 
   return (
     <ScrollView style={styles.container}>
