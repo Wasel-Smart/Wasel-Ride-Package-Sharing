@@ -1,0 +1,94 @@
+name: Production Deployment
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+
+concurrency:
+  group: production-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: wasel.azurecr.io
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: npm://
+
+      - name: Log in to Azure Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push ride-matching
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./backend/services/ride-matching/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/ride-matching-service:latest
+
+      - name: Build and push payment-reconciliation
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./backend/services/payment-reconciliation/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/payment-reconciliation-service:latest
+
+      - name: Build and push ops-analytics
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./backend/services/ops-analytics/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/ops-analytics-service:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.30.0'
+
+      - name: Deploy to Kubernetes
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kubeconfig
+          export KUBECONFIG=$HOME/.kubeconfig
+          kubectl apply -f infra/kubernetes/
+        env:
+          - name: KUBECONFIG
+            value: ${{ secrets.KUBECONFIG }}
+
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/ride-matching-service -n wasel-production --timeout=300s
+          kubectl rollout status deployment/payment-reconciliation-service -n wasel-production --timeout=300s
+          kubectl rollout status deployment/ops-analytics-service -n wasel-production --timeout=300s

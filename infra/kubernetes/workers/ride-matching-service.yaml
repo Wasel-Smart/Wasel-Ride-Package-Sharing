@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ride-matching-service
+  labels:
+    app: ride-matching-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ride-matching-service
+  template:
+    metadata:
+      labels:
+        app: ride-matching-service
+    spec:
+      containers:
+        - name: ride-matching
+          image: wasel.azurecr.io/ride-matching-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: health
+          env:
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: wasel-config
+                  key: redis.host
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: wasel-config
+                  key: redis.port
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: wasel-secrets
+                  key: database.url
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: wasel-secrets
+                  key: stripe.secret.key
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 5
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ride-matching-service-hpa
+  labels:
+    app: ride-matching-service
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ride-matching-service
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

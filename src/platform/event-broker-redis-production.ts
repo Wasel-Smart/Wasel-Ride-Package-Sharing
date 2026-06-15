@@ -92,7 +92,7 @@ class RedisStreamsBroker implements EventBrokerAdapter {
       telemetry.recordMetric('event_broker_connected', 1, { broker: 'redis-streams' });
     } catch (error) {
       telemetry.recordMetric('event_broker_connection_error', 1);
-      throw new Error(`Failed to connect to Redis Streams: ${error}`, { cause: error });
+      throw new Error(`Failed to connect to Redis Streams: ${error}`);
     }
   }
 

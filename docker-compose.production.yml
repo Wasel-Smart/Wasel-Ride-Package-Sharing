@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  postgres:
+    image: postgis/postgis:15-3.3
+    ports:
+      - "${DATABASE_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: wasel
+      POSTGRES_USER: ${POSTGRES_USER:-wasel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./supabase/schema:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-Shell", "pg_isready -U wasel -d wasel"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ride-matching:
+    build:
+      context: .
+      dockerfile: backend/services/ride-matching/Dockerfile
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+
+  payment-reconciliation:
+    build:
+      context: .
+      dockerfile: backend/services/payment-reconciliation/Dockerfile
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+
+  ops-analytics:
+    build:
+      context: .
+      dockerfile: backend/services/ops-analytics/Dockerfile
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+volumes:
+  redis-data:
+  postgres-data:
