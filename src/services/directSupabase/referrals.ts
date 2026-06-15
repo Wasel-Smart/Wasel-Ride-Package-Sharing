@@ -20,6 +20,7 @@ export async function processReferralConversionForPassenger(passengerCanonicalUs
 
   const row = data as RawReferral;
   const reward = toNumber(row.referrer_reward_jod, 2);
+  if (!row.id) throw new Error('Referral record is missing an id.');
   await db
     .from('referrals')
     .update({

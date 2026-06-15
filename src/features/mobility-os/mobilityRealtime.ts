@@ -1,17 +1,18 @@
 import { supabase } from '../../services/core';
 
 export function subscribeToMobilityCorridorChanges(onChange: () => void): () => void {
-  if (!supabase) {
+  const client = supabase;
+  if (!client) {
     return () => undefined;
   }
 
-  const channel = supabase
+  const channel = client
     .channel('mobility-os-server-state')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'mobility_corridors' }, onChange)
     .subscribe();
 
   return () => {
-    void supabase.removeChannel(channel);
+    void client.removeChannel(channel);
   };
 }
 

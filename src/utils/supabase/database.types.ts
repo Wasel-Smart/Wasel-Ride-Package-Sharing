@@ -11,10 +11,17 @@
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-type RowSet<Row, Insert = Partial<Row>, Update = Partial<Insert>> = {
+type RowSet<Row, Insert = Record<string, unknown>, Update = Record<string, unknown>> = {
   Row: Row;
   Insert: Insert;
   Update: Update;
+  Relationships: Array<{
+    foreignKeyName: string;
+    columns: string[];
+    isOneToOne?: boolean;
+    referencedRelation: string;
+    referencedColumns: string[];
+  }>;
 };
 
 export interface Database {
@@ -22,6 +29,7 @@ export interface Database {
     Tables: {
       bookings: RowSet<{
         id: string;
+        booking_id: string;
         trip_id: string;
         passenger_id: string;
         seats_requested: number | null;
@@ -35,6 +43,8 @@ export interface Database {
         total_price: number | null;
         amount: number | null;
         payment_transaction_id: string | null;
+        payment_intent_id: string | null;
+        payment_status: string | null;
         status: string | null;
         booking_status: string | null;
         confirmed_by_driver: boolean | null;
@@ -341,6 +351,7 @@ export interface Database {
         two_factor_enabled: boolean | null;
         two_factor_secret: string | null;
         two_factor_backup_codes: string[] | null;
+        referral_code: string | null;
         created_at: string;
         updated_at: string;
       }>;
@@ -385,6 +396,95 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
+
+      referrals: RowSet<{
+        id?: string;
+        referrer_id?: string | null;
+        referee_id?: string | null;
+        referral_code?: string | null;
+        referrer_reward_jod?: number | string | null;
+        referee_reward_jod?: number | string | null;
+        referee_completed_first_trip?: boolean | null;
+        referrer_rewarded?: boolean | null;
+        redeemed_at?: string | null;
+        completed_at?: string | null;
+        rewarded_at?: string | null;
+        created_at?: string | null;
+      }>;
+
+      growth_events: RowSet<{
+        id?: string;
+        user_id?: string | null;
+        event_name?: string | null;
+        funnel_stage?: string | null;
+        service_type?: string | null;
+        route_from?: string | null;
+        route_to?: string | null;
+        monetary_value_jod?: number | string | null;
+        metadata?: Json | null;
+        created_at?: string | null;
+      }>;
+
+      demand_alerts: RowSet<{
+        id?: string;
+        user_id?: string | null;
+        origin_city?: string | null;
+        destination_city?: string | null;
+        service_type?: string | null;
+        requested_date?: string | null;
+        seats_or_slots?: number | string | null;
+        status?: string | null;
+        created_at?: string | null;
+      }>;
+
+      support_tickets: RowSet<{
+        id?: string;
+        user_id?: string;
+        topic?: string | null;
+        subject?: string | null;
+        detail?: string | null;
+        related_id?: string | null;
+        route_label?: string | null;
+        status?: string | null;
+        priority?: string | null;
+        channel?: string | null;
+        resolution_summary?: string | null;
+        created_at?: string | null;
+        updated_at?: string | null;
+      }>;
+
+      support_ticket_events: RowSet<{
+        id?: string;
+        ticket_id?: string;
+        status?: string | null;
+        note?: string | null;
+        created_at?: string | null;
+      }>;
+
+      user_settings: RowSet<{
+        user_id?: string;
+        locale?: string | null;
+        currency?: string | null;
+        theme?: string | null;
+        profile_visible?: boolean | null;
+        photo_hidden?: boolean | null;
+        location_sharing_enabled?: boolean | null;
+        analytics_enabled?: boolean | null;
+        created_at?: string | null;
+        updated_at?: string | null;
+      }>;
+
+      profile_change_history: RowSet<{
+        id?: string;
+        user_id?: string;
+        field_name?: string | null;
+        old_value?: string | null;
+        new_value?: string | null;
+        changed_at?: string | null;
+        changed_by?: string | null;
+        ip_address?: string | null;
+        user_agent?: string | null;
+      }>;
     };
 
     Views: {
@@ -413,6 +513,20 @@ export interface Database {
           debit_transaction_id: string;
           credit_transaction_id: string;
         }[];
+      };
+
+      request_data_export: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: void;
+      };
+
+      request_account_deletion: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: void;
       };
     };
 
