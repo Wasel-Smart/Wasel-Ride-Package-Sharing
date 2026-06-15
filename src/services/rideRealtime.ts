@@ -13,7 +13,8 @@ export function subscribeToRideBookingRealtime({
   rides = [],
   onBookingsChange,
 }: RideBookingRealtimeOptions): () => void {
-  if (!supabase || !userId) {
+  const client = supabase;
+  if (!client || !userId) {
     return () => {};
   }
 
@@ -50,7 +51,7 @@ export function subscribeToRideBookingRealtime({
 
   refresh();
 
-  const channel = supabase
+  const channel = client
     .channel(`ride-bookings-live-${userId}`)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, refresh)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'trips' }, refresh)
@@ -58,6 +59,6 @@ export function subscribeToRideBookingRealtime({
 
   return () => {
     active = false;
-    void supabase.removeChannel(channel);
+    void client.removeChannel(channel);
   };
 }

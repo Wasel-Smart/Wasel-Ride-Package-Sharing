@@ -61,8 +61,8 @@ function getBrowserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | u
 // ── Request queue (used only if a request fires while offline) ────────────────
 const requestQueue: Array<{
    fn: () => Promise<unknown>;
-   resolve: (v: unknown) => void;
-   reject: (e: Error) => void;
+   resolve: (value: unknown) => void;
+   reject: (error: unknown) => void;
 }> = [];
 
 function getIsOnline(): boolean {
@@ -116,8 +116,8 @@ async function retryWithBackoff<T>(
 
 function queueIfOffline<T>(fn: () => Promise<T>): Promise<T> {
   if (!getIsOnline()) {
-    return new Promise((resolve, reject) => {
-      requestQueue.push({ fn, resolve, reject });
+    return new Promise<T>((resolve, reject) => {
+      requestQueue.push({ fn, resolve: value => resolve(value as T), reject });
     });
   }
   return fn();
@@ -134,9 +134,7 @@ const getSupabaseClient = () => {
 
   const CLIENT_KEY = Symbol.for('supabase.client.instance.v4');
   const globalAny = typeof window !== 'undefined' ? window : globalThis;
-  
-  // TypeScript type assertion for symbol-keyed storage
-  type GlobalWithClient = typeof globalAny & { [CLIENT_KEY]?: ReturnType<typeof createClient<Database>> };
+  type GlobalWithClient = typeof globalAny & Record<symbol, ReturnType<typeof createClient<Database>> | undefined>;
   const globalStore = globalAny as GlobalWithClient;
   if (globalStore[CLIENT_KEY]) return globalStore[CLIENT_KEY];
 

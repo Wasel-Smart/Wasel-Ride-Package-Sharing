@@ -90,7 +90,9 @@ async function checkDatabaseHealth(): Promise<boolean> {
 
   try {
     // `pg_catalog.version()` is always accessible to the anon role.
-    const rpc = supabase.rpc as (fn: string) => Promise<{ error: { code?: string } | null }>;
+    const rpc = supabase.rpc as unknown as (
+      fn: string,
+    ) => Promise<{ error: { code?: string } | null }>;
     const { error } = await rpc('version');
     // `error.code === 'PGRST202'` means the RPC doesn't exist in the
     // public schema — the database is still reachable, treat as healthy.
