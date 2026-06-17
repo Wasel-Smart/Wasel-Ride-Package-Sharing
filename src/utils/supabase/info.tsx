@@ -21,14 +21,20 @@ const PLACEHOLDER_MARKERS = [
   'example.com',
 ];
 
+const BLOCKED_PUBLIC_SUPABASE_KEYS = new Set([
+  'your-anon-key',
+  'your-publishable-key-or-anon-key',
+  'replace_with',
+]);
+
 type EnvCandidate = {
   value: string | undefined;
   explicit: boolean;
 };
 
 function getProcessEnvValue(key: string): EnvCandidate | null {
-  const processEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process
-    ?.env;
+  const processEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } })
+    .process?.env;
 
   if (!processEnv || !Object.prototype.hasOwnProperty.call(processEnv, key)) {
     return null;
@@ -38,10 +44,12 @@ function getProcessEnvValue(key: string): EnvCandidate | null {
 }
 
 function getEnvCandidate(key: string): EnvCandidate {
-  return getProcessEnvValue(key) ?? {
-    value: (import.meta.env as Record<string, string | undefined>)[key],
-    explicit: false,
-  };
+  return (
+    getProcessEnvValue(key) ?? {
+      value: (import.meta.env as Record<string, string | undefined>)[key],
+      explicit: false,
+    }
+  );
 }
 
 function isConfiguredValue(value: string | undefined): value is string {
@@ -95,7 +103,10 @@ function getProjectRefFromJwt(value: string | undefined): string | null {
 }
 
 function getProjectRefFromUrl(value: string): string {
-  return value.replace(/^https?:\/\//, '').replace(/\/$/, '').replace(/\.supabase\.co$/, '');
+  return value
+    .replace(/^https?:\/\//, '')
+    .replace(/\/$/, '')
+    .replace(/\.supabase\.co$/, '');
 }
 
 function pickConfiguredUrl(
@@ -130,16 +141,19 @@ function pickConfiguredKey(
     .map(candidate => candidate.value)
     .filter((candidate): candidate is string => isConfiguredValue(candidate));
 
-  const configuredFallbacks = explicitCandidates.length > 0
-    ? []
-    : fallbackCandidates.filter((candidate): candidate is string => isConfiguredValue(candidate));
+  const configuredFallbacks =
+    explicitCandidates.length > 0
+      ? []
+      : fallbackCandidates.filter((candidate): candidate is string => isConfiguredValue(candidate));
 
   if (configured.length === 0) return configuredFallbacks[0] ?? '';
 
   const urlProjectRef = url ? getProjectRefFromUrl(url) : '';
   if (!urlProjectRef) return configured[0] ?? '';
 
-  const matchingJwtCandidate = configured.find(candidate => getProjectRefFromJwt(candidate) === urlProjectRef);
+  const matchingJwtCandidate = configured.find(
+    candidate => getProjectRefFromJwt(candidate) === urlProjectRef,
+  );
   if (matchingJwtCandidate) return matchingJwtCandidate;
 
   const opaqueCandidate = configured.find(candidate => !getProjectRefFromJwt(candidate));

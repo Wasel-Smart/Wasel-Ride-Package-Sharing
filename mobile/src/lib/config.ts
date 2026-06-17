@@ -15,8 +15,8 @@ type ExtraConfig = {
 };
 
 const extra = (Constants.expoConfig?.extra ?? {}) as ExtraConfig;
-const processEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } })
-  .process?.env ?? {};
+const processEnv =
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
 
 function readPublicEnv(key: string, fallback?: string): string {
   return processEnv[key] ?? fallback ?? '';
@@ -58,4 +58,3 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 });
-
