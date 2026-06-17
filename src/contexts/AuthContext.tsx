@@ -287,17 +287,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const hasActiveSession = Boolean(data.session);
 
         if (authUser && hasActiveSession) {
-          await authAPI.createProfile(
-            authUser.id,
-            authUser.email ?? email,
-            firstName,
-            lastName,
-            phone ?? '',
-          ).catch(error => {
-            if (import.meta.env?.DEV) {
-              console.warn('[Auth] Profile bootstrap skipped:', sanitizeLogMessage(String(error)));
-            }
-          });
+          await authAPI
+            .createProfile(authUser.id, authUser.email ?? email, firstName, lastName, phone ?? '')
+            .catch(error => {
+              if (import.meta.env?.DEV) {
+                console.warn(
+                  '[Auth] Profile bootstrap skipped:',
+                  sanitizeLogMessage(String(error)),
+                );
+              }
+            });
 
           await fetchProfile(false, authUser).catch(error => {
             if (import.meta.env?.DEV) {

@@ -2,7 +2,9 @@ import { expect, test, type Page, type Request } from '@playwright/test';
 
 function isGoogleAuthorizeRequest(request: Request) {
   const url = new URL(request.url());
-  return url.pathname.endsWith('/auth/v1/authorize') && url.searchParams.get('provider') === 'google';
+  return (
+    url.pathname.endsWith('/auth/v1/authorize') && url.searchParams.get('provider') === 'google'
+  );
 }
 
 async function captureGoogleAuthorizeRequest(page: Page) {

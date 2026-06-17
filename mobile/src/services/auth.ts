@@ -30,7 +30,6 @@ interface AuthState {
 export class MobileAuthService {
   private supabase = sharedSupabase;
   private listeners = new Set<(state: AuthState) => void>();
-  private urlSubscription: EmitterSubscription | null = null;
   private currentState: AuthState = {
     session: null,
     user: null,
@@ -42,7 +41,9 @@ export class MobileAuthService {
   }
 
   private async initialize(): Promise<void> {
-    const { data: { session } } = await this.supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await this.supabase.auth.getSession();
 
     this.updateState({
       session,
@@ -50,7 +51,7 @@ export class MobileAuthService {
       loading: false,
     });
 
-    this.urlSubscription = Linking.addEventListener('url', event => {
+    Linking.addEventListener('url', event => {
       void this.completeAuthFromUrl(event.url).catch(error => {
         if (__DEV__) {
           console.warn('[Auth] Deep link session restore failed:', error);
@@ -189,7 +190,9 @@ export class MobileAuthService {
   async completeAuthFromUrl(url: string): Promise<boolean> {
     const parsedUrl = new URL(url);
     const params = new URLSearchParams(
-      [parsedUrl.searchParams.toString(), parsedUrl.hash.replace(/^#/, '')].filter(Boolean).join('&'),
+      [parsedUrl.searchParams.toString(), parsedUrl.hash.replace(/^#/, '')]
+        .filter(Boolean)
+        .join('&'),
     );
     const accessToken = params.get('access_token');
     const refreshToken = params.get('refresh_token');
@@ -244,7 +247,9 @@ export class MobileAuthService {
   }
 
   async refreshSession(): Promise<Session | null> {
-    const { data: { session } } = await this.supabase.auth.refreshSession();
+    const {
+      data: { session },
+    } = await this.supabase.auth.refreshSession();
     return session;
   }
 

@@ -81,7 +81,12 @@ function normalizeSignupPhone(value: string) {
   return normalizePhoneForOtp(value.trim());
 }
 
-function validateSignupForm(nameValue: string, emailValue: string, passwordValue: string, phoneValue: string): SignupValidationResult {
+function validateSignupForm(
+  nameValue: string,
+  emailValue: string,
+  passwordValue: string,
+  phoneValue: string,
+): SignupValidationResult {
   const normalizedEmail = emailValue.trim().toLowerCase();
   const normalizedPhone = normalizeSignupPhone(phoneValue);
 
@@ -91,7 +96,10 @@ function validateSignupForm(nameValue: string, emailValue: string, passwordValue
   if (!validateEmail(normalizedEmail)) return { error: 'Please enter a valid email address.' };
   if (!meetsPasswordPolicy(passwordValue)) return { error: PASSWORD_POLICY_MESSAGE };
   if (normalizedPhone && !validatePhone(normalizedPhone)) {
-    return { error: 'Please enter a valid phone number in international format, for example +962791234567.' };
+    return {
+      error:
+        'Please enter a valid phone number in international format, for example +962791234567.',
+    };
   }
 
   return { email: normalizedEmail, phone: normalizedPhone };
