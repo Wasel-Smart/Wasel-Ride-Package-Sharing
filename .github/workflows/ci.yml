@@ -8,6 +8,9 @@ on:
       - 'codex/**'
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
