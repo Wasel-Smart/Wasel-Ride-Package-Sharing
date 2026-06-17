@@ -64,7 +64,10 @@ class WaselLogger {
   }
 
   private generateSessionId(): string {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const randomBytes = new Uint8Array(16);
+    globalThis.crypto.getRandomValues(randomBytes);
+    const randomToken = Array.from(randomBytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    return `session_${Date.now()}_${randomToken}`;
   }
 
   private getLoggerConfig(): LoggerConfig {
