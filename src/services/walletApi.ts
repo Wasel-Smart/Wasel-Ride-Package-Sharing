@@ -380,7 +380,9 @@ export const walletApi = {
         return await fetchFreshSnapshot(uid);
       } catch (error) {
         logger.error('[walletApi] wallet snapshot fetch failed', error, { userId: uid });
-        throw new Error('Wallet data is unavailable right now. Please try again.');
+        const walletSnapshotError = new Error('Wallet data is unavailable right now. Please try again.');
+        (walletSnapshotError as Error & { cause: unknown }).cause = error;
+        throw walletSnapshotError;
       }
     });
   },

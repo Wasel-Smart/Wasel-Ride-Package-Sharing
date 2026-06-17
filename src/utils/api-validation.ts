@@ -179,7 +179,9 @@ export function validateResponse<T extends z.ZodTypeAny>(
         message: err.message,
         code: err.code,
       }));
-      throw new Error(`Response validation failed: ${JSON.stringify(details)}`);
+      const validationError = new Error(`Response validation failed: ${JSON.stringify(details)}`);
+      (validationError as Error & { cause: unknown }).cause = error;
+      throw validationError;
     }
     throw error;
   }

@@ -567,7 +567,9 @@ export async function createConnectedRide(
     }
 
     const message = error instanceof Error ? error.message : 'Ride could not be created right now. Please try again.';
-    throw new Error(message);
+    const createRideError = new Error(message);
+    (createRideError as Error & { cause: unknown }).cause = error;
+    throw createRideError;
   }
 }
 
@@ -775,7 +777,9 @@ export async function createConnectedPackage(input: {
       preferredRideId: input.preferredRideId ?? null,
       matchedRideCandidateId: matchedRide?.id ?? null,
     });
-    throw new Error('Package request could not be created right now. Please try again.');
+    const packageCreateError = new Error('Package request could not be created right now. Please try again.');
+    (packageCreateError as Error & { cause: unknown }).cause = error;
+    throw packageCreateError;
   }
 }
 
@@ -951,6 +955,8 @@ export async function updatePackageVerification(
       trackingId: normalizedTrackingId,
       nextStatus: status,
     });
-    throw new Error('Package status could not be updated right now. Please try again.');
+    const packageStatusError = new Error('Package status could not be updated right now. Please try again.');
+    (packageStatusError as Error & { cause: unknown }).cause = error;
+    throw packageStatusError;
   }
 }

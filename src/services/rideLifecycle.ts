@@ -452,7 +452,9 @@ export async function createRideBooking(input: {
       routeMode: input.routeMode,
       seatsRequested: booking.seatsRequested,
     });
-    throw new Error('Ride could not be booked right now. Please try again.');
+    const bookingError = new Error('Ride could not be booked right now. Please try again.');
+    (bookingError as Error & { cause: unknown }).cause = error;
+    throw bookingError;
   }
 
 }

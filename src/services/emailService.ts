@@ -62,14 +62,9 @@ async function sendEmail(opts: {
     return { success: false, error: 'Email function is not configured' };
   }
 
-  let authToken: string | null = null;
-  try {
-    const auth = await getAuthDetails();
-    authToken = auth.token;
-  } catch {
-    // No session available — use anon key if set
-    authToken = import.meta.env.VITE_SUPABASE_ANON_KEY ?? null;
-  }
+  let authToken = await getAuthDetails()
+    .then(auth => auth.token)
+    .catch(() => import.meta.env.VITE_SUPABASE_ANON_KEY ?? null);
 
   // Also try Supabase session directly as fallback
   if (!authToken && supabase) {

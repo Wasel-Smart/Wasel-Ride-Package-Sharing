@@ -221,7 +221,7 @@ function toRideResultFromPostedRide(ride: ReturnType<typeof getConnectedRides>[n
       phone: ride.ownerPhone,
       email: ride.ownerEmail,
     },
-    routeMode: 'shared_route',
+    routeMode: 'live_post',
     ownerId: ride.ownerId,
     vehicleType: vehicleLabel,
     carModel: vehicleLabel,
@@ -377,7 +377,9 @@ export const rideService = {
         });
         return searchCatalogRides(params);
       }
-      throw new Error('Unable to search rides right now.');
+      const searchError = new Error('Unable to search rides right now.');
+      (searchError as Error & { cause: unknown }).cause = error;
+      throw searchError;
     }
   },
 

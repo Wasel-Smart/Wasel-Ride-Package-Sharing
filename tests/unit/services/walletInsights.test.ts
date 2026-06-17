@@ -56,7 +56,7 @@ const walletPayload = {
       type: 'deposit',
       description: 'Wallet deposit',
       amount: 40,
-      createdAt: '2026-04-01T10:00:00.000Z',
+      createdAt: new Date().toISOString(),
       status: 'completed',
     },
     {
@@ -64,7 +64,7 @@ const walletPayload = {
       type: 'payment',
       description: 'Subscription payment',
       amount: -10,
-      createdAt: '2026-04-02T10:00:00.000Z',
+      createdAt: new Date().toISOString(),
       status: 'completed',
     },
     {
@@ -72,7 +72,7 @@ const walletPayload = {
       type: 'transfer',
       description: 'Wallet transfer',
       amount: -12,
-      createdAt: '2026-04-03T10:00:00.000Z',
+      createdAt: new Date().toISOString(),
       status: 'completed',
     },
     {

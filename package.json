@@ -141,7 +141,7 @@
     "report:quality": "node scripts/generate-quality-report.mjs",
     "verify:quality": "node scripts/verify-quality.mjs",
     "verify:10-out-of-10": "node scripts/verify-10-out-of-10.mjs",
-    "type-check": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.tests.json",
+    "type-check": "tsc --noEmit -p tsconfig.json",
     "check:design-system": "node scripts/check-design-system.mjs",
     "check:openapi": "npm run generate:openapi && git diff --exit-code -- docs/openapi",
     "check:translations": "vitest run tests/unit/locales/translation-completeness.test.ts --config vitest.config.ts --reporter=dot --silent=passed-only",

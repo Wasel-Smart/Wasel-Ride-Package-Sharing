@@ -23,10 +23,10 @@ describe('Supabase rollout guardrails', () => {
       'src/supabase/migrations/20260324005540_kv_store.sql',
     );
     expect(rolloutMigrations.slice(-4)).toEqual([
-      'src/supabase/migrations/20260421100000_stripe_subscriptions.sql',
-      'src/supabase/migrations/20260422120000_safety_and_user_settings.sql',
-      'src/supabase/migrations/20260424140000_harden_user_owned_rpc_boundaries.sql',
       'src/supabase/migrations/20260424153000_database_governance_and_rls_hardening.sql',
+      'src/supabase/migrations/20260531070000_harden_public_security_definer_boundaries.sql',
+      'src/supabase/migrations/20260531083000_restrict_private_rpc_execute_grants.sql',
+      'src/supabase/migrations/20260531084000_user_settings_notifications_contract.sql',
     ]);
   });
 

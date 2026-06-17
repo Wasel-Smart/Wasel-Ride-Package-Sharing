@@ -683,7 +683,7 @@ export default function WaselAuth() {
     }
     setError('');
     setPendingAction('google');
-    let oauthError: unknown = null;
+    let oauthError: unknown;
     try {
       ({ error: oauthError } = await signInWithGoogle(safeReturnTo));
     } finally {
@@ -706,7 +706,7 @@ export default function WaselAuth() {
     }
     setError('');
     setPendingAction('facebook');
-    let oauthError: unknown = null;
+    let oauthError: unknown;
     try {
       ({ error: oauthError } = await signInWithFacebook(safeReturnTo));
     } finally {
