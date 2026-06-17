@@ -36,8 +36,12 @@
     "@stripe/stripe-react-native": "0.37.2",
     "@supabase/supabase-js": "^2.43.4",
     "@tanstack/react-query": "^5.51.21",
+<<<<<<< HEAD
     "@testing-library/react-hooks": "^8.0.1",
     "expo": "~51.0.28",
+=======
+    "expo": "~56.0.11",
+>>>>>>> a39df7725c3a555a1c5d7ccfdb74e31832c43de1
     "expo-camera": "~15.0.16",
     "expo-constants": "~16.0.2",
     "expo-dev-client": "~4.0.26",
@@ -58,7 +62,7 @@
     "metro": "0.80.12",
     "nativewind": "^4.0.1",
     "react": "18.2.0",
-    "react-native": "0.74.5",
+    "react-native": "0.86.0",
     "react-native-geolocation-service": "^5.3.1",
     "react-native-gesture-handler": "~2.17.1",
     "react-native-maps": "1.14.0",
