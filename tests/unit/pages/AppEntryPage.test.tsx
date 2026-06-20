@@ -73,11 +73,11 @@ describe('AppEntryPage', () => {
 
     renderWithProviders(<AppEntryPage />);
 
-    expect(screen.getByText(/Reduce transport cost and automate public travel/i)).toBeInTheDocument();
+    expect(screen.getByText(/Move across Jordan for less/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Wasel turns public commute demand into guided booking/i),
+      screen.getByText(/Compare lower-cost rides, trusted drivers, parcel handoff, and scheduled bus fallback/i),
     ).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /Book public travel/i }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: /Find a lower-cost route/i }).length).toBeGreaterThan(0);
   });
 
   it('navigates authenticated users into the live rides flow', () => {
@@ -91,7 +91,7 @@ describe('AppEntryPage', () => {
 
     renderWithProviders(<AppEntryPage />);
 
-    screen.getAllByRole('button', { name: /Book public travel/i })[0]!.click();
+    screen.getAllByRole('button', { name: /Find a lower-cost route/i })[0]!.click();
 
     expect(mockNavigate).toHaveBeenCalledWith('/find-ride');
   });
