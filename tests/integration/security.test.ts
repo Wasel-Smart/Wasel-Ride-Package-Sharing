@@ -93,6 +93,12 @@ describe('SSRF Protection Integration', () => {
     expect(validateApiUrl('http://localhost:3000/api', allowedDomains)).toBe(true);
   });
 
+  it('should allow explicit local development loopback URLs only when allowlisted', () => {
+    expect(validateApiUrl('http://127.0.0.1:54321/functions/v1/health', ['127.0.0.1'])).toBe(true);
+    expect(validateApiUrl('http://0.0.0.0:54321/functions/v1/health', ['0.0.0.0'])).toBe(true);
+    expect(validateApiUrl('http://127.0.0.1:54321/functions/v1/health', ['localhost'])).toBe(false);
+  });
+
   it('should reject malicious URLs', () => {
     expect(validateApiUrl('https://evil.com/api', allowedDomains)).toBe(false);
     expect(validateApiUrl('http://192.168.1.1/admin', allowedDomains)).toBe(false);

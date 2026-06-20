@@ -118,6 +118,11 @@ function getTrustedApiDomains(): string[] {
   return Array.from(new Set(domains));
 }
 
+function buildEdgeRequestUrl(path: string): string {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_URL}${normalizedPath}`;
+}
+
 async function resolveContext(authMode: BackendAuthMode): Promise<BackendWorkflowContext> {
   if (authMode !== 'required') {
     return {};
@@ -198,7 +203,7 @@ export async function requestEdgeJson<T>({
   }
 
   const response = await fetchWithRetry(
-    `${API_URL}${path}`,
+    buildEdgeRequestUrl(path),
     {
       method,
       headers: finalHeaders,
@@ -224,7 +229,23 @@ export async function requestEdgeJson<T>({
     return undefined as T;
   }
 
-  return response.json() as Promise<T>;
+  if (typeof response.text !== 'function') {
+    return response.json() as Promise<T>;
+  }
+
+  const text = await response.text();
+  if (!text.trim()) {
+    return undefined as T;
+  }
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new BackendRequestError(`${operation} returned an invalid JSON response`, {
+      status: response.status,
+      recoverable: true,
+    });
+  }
 }
 
 export async function runBackendWorkflow<T>({

@@ -7,16 +7,13 @@ import {
 import { validateApiUrl } from '../utils/sanitization';
 import { addCSRFHeader } from '../utils/csrf';
 import { circuitBreakers, CircuitState } from '../utils/circuitBreaker';
+import { getEnv } from '../utils/env';
 
 export { projectId, publicAnonKey };
 
-const configuredApiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
-const configuredFunctionsBaseUrl = (
-  import.meta.env.VITE_EDGE_FUNCTIONS_BASE_URL as string | undefined
-)?.trim();
-const configuredFunctionName = (
-  import.meta.env.VITE_EDGE_FUNCTION_NAME as string | undefined
-)?.trim();
+const configuredApiUrl = getEnv('VITE_API_URL').trim();
+const configuredFunctionsBaseUrl = getEnv('VITE_EDGE_FUNCTIONS_BASE_URL').trim();
+const configuredFunctionName = getEnv('VITE_EDGE_FUNCTION_NAME').trim();
 const defaultFunctionsBaseUrl = supabaseUrl ? `${supabaseUrl}/functions/v1` : '';
 const resolvedFunctionsBaseUrl = configuredFunctionsBaseUrl || defaultFunctionsBaseUrl;
 const resolvedFunctionName = configuredFunctionName || 'make-server-0b1f4071';
@@ -26,6 +23,29 @@ export const API_URL = configuredApiUrl
   : resolvedFunctionsBaseUrl
     ? `${resolvedFunctionsBaseUrl.replace(/\/$/, '')}/${resolvedFunctionName}`
     : '';
+
+function getAllowedBackendDomains(url: string): string[] {
+  const domains = [
+    'supabase.co',
+    'supabase.net',
+    'wasel14.online',
+    'localhost',
+    '127.0.0.1',
+    '0.0.0.0',
+    getEnv('VITE_ALLOWED_API_DOMAIN').trim(),
+  ].filter(Boolean);
+
+  try {
+    const hostname = new URL(url).hostname;
+    if (hostname) {
+      domains.push(hostname);
+    }
+  } catch {
+    // Let validateApiUrl surface invalid URLs to callers.
+  }
+
+  return Array.from(new Set(domains));
+}
 
 function isJwtLikeToken(token: string | null | undefined): token is string {
   return Boolean(token && token.split('.').length === 3);
@@ -331,13 +351,7 @@ export async function fetchWithRetry(
   }
 
   // Validate URL to prevent SSRF attacks
-  const allowedDomains = [
-    'supabase.co',
-    'supabase.net',
-    'wasel14.online',
-    'localhost',
-    '127.0.0.1',
-  ];
+  const allowedDomains = getAllowedBackendDomains(url);
 
   if (!validateApiUrl(url, allowedDomains)) {
     throw new Error('Invalid or unauthorized URL');
