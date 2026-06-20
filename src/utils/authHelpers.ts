@@ -29,7 +29,7 @@ export function friendlyAuthError(error: unknown, fallback: string): string {
     lower.includes('account protection') ||
     lower.includes('request disallowed')
   )
-    return 'Complete the account protection check and try again.';
+    return 'Authentication is blocked by account protection settings.';
 
   return message || fallback;
 }
