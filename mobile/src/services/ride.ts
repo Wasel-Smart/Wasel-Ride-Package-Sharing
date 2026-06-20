@@ -145,8 +145,8 @@ export class RideLifecycleService {
     }
 
     try {
-      // Call backend API
-      const response = await fetch(this.getApiUrl('/v1/rides'), {
+      // Call backend API - aligned to /trips endpoint
+      const response = await fetch(this.getApiUrl('/trips'), {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -157,9 +157,9 @@ export class RideLifecycleService {
       }
 
       const data = await response.json();
-      const ride = this.mapDatabaseRide(data.ride);
+      const ride = this.mapBackendTrip(data.trip ?? data.ride);
       this.setActiveRide(ride);
-      
+
       // Cache the ride
       await offlineService.cacheActiveRide(ride);
 
@@ -181,12 +181,13 @@ export class RideLifecycleService {
     }
 
     try {
+      // Call backend API - aligned to /cancellations/trips endpoint
       const response = await fetch(
-        this.getApiUrl(`/v1/rides/${encodeURIComponent(rideId)}/cancel`),
+        this.getApiUrl('/cancellations/trips'),
         {
           method: 'POST',
           headers: this.getAuthHeaders(),
-          body: JSON.stringify({ reason }),
+          body: JSON.stringify({ tripId: rideId, reason }),
         },
       );
 
@@ -212,9 +213,10 @@ export class RideLifecycleService {
     }
 
     try {
-      await this.request<void>(`/v1/rides/${encodeURIComponent(rideId)}/rating`, {
+      // Call backend API - aligned to /ratings endpoint
+      await this.request<void>('/ratings', {
         method: 'POST',
-        body: JSON.stringify({ rating, feedback }),
+        body: JSON.stringify({ tripId: rideId, rating, feedback }),
       });
       return {};
     } catch (error) {
