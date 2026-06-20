@@ -42,16 +42,20 @@ export function sanitizeEventPayload<T extends Record<string, unknown>>(payload:
 export function validateApiUrl(url: string, allowedDomains: string[]): boolean {
   try {
     const parsed = new URL(url);
-    
-    // Allow both HTTP and HTTPS for localhost development
-    const isLocalhost = parsed.hostname === 'localhost';
+    const hostname = parsed.hostname;
+    const normalizedAllowedDomains = allowedDomains
+      .map(domain => domain.trim().toLowerCase())
+      .filter(Boolean);
+    const localHosts = new Set(['localhost', '127.0.0.1', '0.0.0.0']);
+
+    // Allow both HTTP and HTTPS for local development runtimes only.
+    const isLocalhost = localHosts.has(hostname);
     if (!isLocalhost && parsed.protocol !== 'https:') {
       return false;
     }
-    
+
     // Block private IP ranges (except localhost which we handle above)
-    const hostname = parsed.hostname;
-    if (hostname !== 'localhost') {
+    if (!isLocalhost) {
       const privateIpPatterns = [
         /^127\./,
         /^10\./,
@@ -66,7 +70,9 @@ export function validateApiUrl(url: string, allowedDomains: string[]): boolean {
     }
 
     // Check against allowlist
-    return allowedDomains.some(domain => hostname.endsWith(domain));
+    return normalizedAllowedDomains.some(
+      domain => hostname === domain || hostname.endsWith(`.${domain}`),
+    );
   } catch {
     return false;
   }
