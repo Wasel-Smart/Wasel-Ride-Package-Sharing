@@ -91,8 +91,8 @@ async function loadProfileFromBackend(): Promise<Profile | null> {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+  if (context === null) {
+    throw new Error('useAuth must be used within an AuthProvider. Ensure AuthProvider wraps your component tree.');
   }
   return context;
 };
