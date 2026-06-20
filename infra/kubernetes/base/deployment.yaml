@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: ghcr.io/wasel-smart/wasel-web:latest
+          image: ghcr.io/wasel-smart/wasel-web:2.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
