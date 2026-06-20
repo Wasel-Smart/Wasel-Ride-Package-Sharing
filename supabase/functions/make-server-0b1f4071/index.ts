@@ -4768,6 +4768,84 @@ async function handleCanCancelBooking(request: Request, path: string) {
   return json({ canCancel: true });
 }
 
+async function handleRecordProfileChange(request: Request) {
+  const auth = await authenticateRequest(request);
+  if (auth.error) return auth.error;
+
+  const body = await request.json().catch(() => ({}));
+  const userId = String(body.userId ?? auth.canonicalUser.id);
+  if (userId !== auth.canonicalUser.id) return json({ error: 'Unauthorized' }, 403);
+
+  const fieldName = String(body.fieldName ?? '').trim();
+  if (!fieldName) return json({ error: 'fieldName is required' }, 400);
+
+  const { error } = await auth.admin.from('profile_change_history').insert({
+    user_id: userId,
+    field_name: fieldName,
+    old_value: body.oldValue == null ? null : String(body.oldValue),
+    new_value: body.newValue == null ? null : String(body.newValue),
+    changed_at: new Date().toISOString(),
+    changed_by: userId,
+    user_agent: typeof body.userAgent === 'string' ? body.userAgent : request.headers.get('user-agent'),
+  });
+
+  if (error) return json({ error: error.message }, 500);
+  return json({ ok: true }, 201);
+}
+
+async function handleGetProfileChangeHistory(request: Request) {
+  const auth = await authenticateRequest(request);
+  if (auth.error) return auth.error;
+
+  const url = new URL(request.url);
+  const userId = url.searchParams.get('userId') ?? auth.canonicalUser.id;
+  if (userId !== auth.canonicalUser.id) return json({ error: 'Unauthorized' }, 403);
+
+  const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? 50), 1), 100);
+  const { data, error } = await auth.admin
+    .from('profile_change_history')
+    .select('changed_at, field_name, old_value, new_value, user_agent')
+    .eq('user_id', userId)
+    .order('changed_at', { ascending: false })
+    .limit(limit);
+
+  if (error) return json({ error: error.message }, 500);
+
+  return json({
+    history: (data ?? []).map((record) => ({
+      timestamp: String(record.changed_at),
+      field: String(record.field_name),
+      oldValue: record.old_value == null ? '' : String(record.old_value),
+      newValue: record.new_value == null ? '' : String(record.new_value),
+      device: record.user_agent == null ? 'Unknown device' : String(record.user_agent),
+    })),
+  });
+}
+
+async function handleRevertProfileChange(request: Request) {
+  const auth = await authenticateRequest(request);
+  if (auth.error) return auth.error;
+
+  const body = await request.json().catch(() => ({}));
+  const userId = String(body.userId ?? auth.canonicalUser.id);
+  if (userId !== auth.canonicalUser.id) return json({ success: false, error: 'Unauthorized' }, 403);
+
+  const changeId = String(body.changeId ?? '').trim();
+  if (!changeId) return json({ success: false, error: 'changeId is required' }, 400);
+
+  const { data: change, error } = await auth.admin
+    .from('profile_change_history')
+    .select('id')
+    .eq('id', changeId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) return json({ success: false, error: error.message }, 500);
+  if (!change) return json({ success: false, error: 'Change record not found' }, 404);
+
+  return json({ success: true });
+}
+
 async function handleRecordConsent(request: Request) {
   const auth = await authenticateRequest(request);
   if (auth.error) return auth.error;
@@ -5218,6 +5296,21 @@ Deno.serve(async (request) => {
 
     if (request.method === 'GET' && /^\/cancellations\/bookings\/[^/]+\/eligibility$/.test(path)) {
       response = await handleCanCancelBooking(request, path);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'POST' && path === '/profile/change-history') {
+      response = await handleRecordProfileChange(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'GET' && path === '/profile/change-history') {
+      response = await handleGetProfileChangeHistory(request);
+      return finalizeResponse(request, response);
+    }
+
+    if (request.method === 'POST' && path === '/profile/change-history/revert') {
+      response = await handleRevertProfileChange(request);
       return finalizeResponse(request, response);
     }
 
