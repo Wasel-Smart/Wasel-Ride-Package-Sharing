@@ -5421,11 +5421,6 @@ Deno.serve(async (request) => {
       return finalizeResponse(request, response);
     }
 
-    if (request.method === 'POST' && path === '/communications/admin/send-test') {
-      response = await handleSendTestCommunication(request);
-      return finalizeResponse(request, response);
-    }
-
     if (request.method === 'GET' && path === '/communications/admin/provider-diagnostics') {
       response = await handleProviderDiagnostics(request);
       return finalizeResponse(request, response);

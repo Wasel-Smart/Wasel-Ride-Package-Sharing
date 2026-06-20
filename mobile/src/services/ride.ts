@@ -328,33 +328,40 @@ export class RideLifecycleService {
     };
   }
 
-  private setActiveRide(ride: Ride | null): void {
+private setActiveRide(ride: Ride | null): void {
     this.activeRide = ride;
     this.listeners.forEach(listener => listener(ride));
   }
 
-export interface DatabaseRide {
-  id: string;
-  rider_id: string;
-  driver_id?: string;
-  vehicle_id?: string;
-  origin_lat: number;
-  origin_lng: number;
-  origin_address: string;
-  dest_lat: number;
-  dest_lng: number;
-  dest_address: string;
-  status: RideStatus;
-  fare?: number;
-  distance?: number;
-  duration?: number;
-  created_at: string;
-  matched_at?: string;
-  started_at?: string;
-  completed_at?: string;
-  cancelled_at?: string;
-  seats?: number;
-}
+  private mapBackendTrip(data: BackendTrip): Ride {
+    const now = new Date().toISOString();
+    return {
+      id: data.id,
+      riderId: '',
+      driverId: data.driver?.id,
+      vehicleId: null,
+      origin: {
+        latitude: 0,
+        longitude: 0,
+        address: data.from,
+      },
+      destination: {
+        latitude: 0,
+        longitude: 0,
+        address: data.to,
+      },
+      status: 'requested' as RideStatus,
+      seats: data.seats,
+      fare: data.price,
+      distance: 0,
+      duration: 0,
+      requestedAt: now,
+      matchedAt: null,
+      startedAt: null,
+      completedAt: null,
+      cancelledAt: null,
+    };
+  }
 
   private mapDatabaseRide(data: DatabaseRide): Ride {
     return {
@@ -383,6 +390,45 @@ export interface DatabaseRide {
       cancelledAt: data.cancelled_at,
     };
   }
+}
+
+export interface BackendTrip {
+  id: string;
+  from: string;
+  to: string;
+  date: string;
+  time: string;
+  seats?: number;
+  price?: number;
+  driver?: {
+    id: string;
+    name: string;
+    rating?: number;
+    verified?: boolean;
+  };
+}
+
+export interface DatabaseRide {
+  id: string;
+  rider_id: string;
+  driver_id?: string;
+  vehicle_id?: string;
+  origin_lat: number;
+  origin_lng: number;
+  origin_address: string;
+  dest_lat: number;
+  dest_lng: number;
+  dest_address: string;
+  status: RideStatus;
+  fare?: number;
+  distance?: number;
+  duration?: number;
+  created_at: string;
+  matched_at?: string;
+  started_at?: string;
+  completed_at?: string;
+  cancelled_at?: string;
+  seats?: number;
 }
 
 export const rideLifecycle = new RideLifecycleService();
