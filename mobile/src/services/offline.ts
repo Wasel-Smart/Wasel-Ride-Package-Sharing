@@ -186,6 +186,21 @@ export class OfflineService {
   /**
    * Execute a single offline action
    */
+  private normalizeRideRequestPayload(payload: Record<string, unknown>): Record<string, unknown> {
+    return {
+      origin_lat: payload.origin_lat,
+      origin_lng: payload.origin_lng,
+      origin_address: payload.origin_address,
+      dest_lat: payload.dest_lat,
+      dest_lng: payload.dest_lng,
+      dest_address: payload.dest_address,
+      seats: payload.seats,
+      scheduled_for: payload.scheduled_for,
+      preferred_vehicle_type: payload.preferred_vehicle_type,
+      notes: payload.notes,
+    };
+  }
+
   private async executeOfflineAction(action: OfflineAction): Promise<void> {
     const token = mobileAuth.getAccessToken();
     if (!token) {
@@ -198,39 +213,41 @@ export class OfflineService {
     }
 
     switch (action.type) {
-      case 'RIDE_REQUEST':
-        await this.sendQueuedRequest(`${apiUrl}/v1/rides`, {
+      case 'RIDE_REQUEST': {
+        const normalizedPayload = this.normalizeRideRequestPayload(action.payload as Record<string, unknown>);
+        await this.sendQueuedRequest(`${apiUrl}/trips`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(action.payload),
+          body: JSON.stringify(normalizedPayload),
         });
         break;
+      }
 
       case 'RIDE_CANCEL': {
-        const rideId = this.readPayloadPathField(action.payload, 'rideId');
-        await this.sendQueuedRequest(`${apiUrl}/v1/rides/${rideId}/cancel`, {
+        await this.sendQueuedRequest(`${apiUrl}/cancellations/trips`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ reason: this.readPayloadField(action.payload, 'reason') }),
+          body: JSON.stringify({ tripId: this.readPayloadField(action.payload, 'rideId') }),
         });
         break;
       }
 
       case 'RIDE_RATING': {
-        const rideId = this.readPayloadPathField(action.payload, 'rideId');
-        await this.sendQueuedRequest(`${apiUrl}/v1/rides/${rideId}/rating`, {
+        const rideId = this.readPayloadField(action.payload, 'rideId');
+        await this.sendQueuedRequest(`${apiUrl}/ratings`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
+            tripId: rideId,
             rating: this.readPayloadField(action.payload, 'rating'),
             feedback: this.readPayloadField(action.payload, 'feedback'),
           }),
@@ -249,8 +266,9 @@ export class OfflineService {
         });
         break;
 
-      case 'PROFILE_UPDATE':
-        await this.sendQueuedRequest(`${apiUrl}/v1/profile`, {
+      case 'PROFILE_UPDATE': {
+        const userId = this.readPayloadField(action.payload, 'userId') ?? 'me';
+        await this.sendQueuedRequest(`${apiUrl}/profile/${encodeURIComponent(String(userId))}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -259,6 +277,7 @@ export class OfflineService {
           body: JSON.stringify(action.payload),
         });
         break;
+      }
 
       default:
         throw new Error(`Unknown action type: ${String((action as { type?: string }).type)}`);
