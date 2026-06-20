@@ -21,7 +21,21 @@ declare global {
 const provider = (import.meta.env.VITE_AUTH_CAPTCHA_PROVIDER as string | undefined)
   ?.trim()
   .toLowerCase();
-const siteKey = (import.meta.env.VITE_AUTH_CAPTCHA_SITE_KEY as string | undefined)?.trim();
+const rawSiteKey = (import.meta.env.VITE_AUTH_CAPTCHA_SITE_KEY as string | undefined)?.trim();
+
+function isPlaceholderSiteKey(value: string | undefined): boolean {
+  if (!value) return true;
+
+  const normalized = value.toLowerCase();
+  return (
+    normalized.startsWith('<') ||
+    normalized.includes('replace') ||
+    normalized.includes('your_') ||
+    normalized.includes('captcha_site_key')
+  );
+}
+
+const siteKey = isPlaceholderSiteKey(rawSiteKey) ? undefined : rawSiteKey;
 
 export const authCaptchaProvider: CaptchaProvider | null =
   provider === 'hcaptcha' || provider === 'turnstile' ? provider : null;

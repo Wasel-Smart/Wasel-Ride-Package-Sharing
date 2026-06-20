@@ -173,7 +173,7 @@ SECURITY_CHECKLIST.md
 src/domains/
 
 # Nested git worktrees/submodules
-wasel/
+# wasel/
 
 .vercel
 supabase/.temp/

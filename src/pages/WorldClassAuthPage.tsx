@@ -1,9 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { ArrowRight, Phone, Mail, Lock, Check } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { AuthCaptcha, isAuthCaptchaConfigured } from '../components/AuthCaptcha';
 
 /**
  * WORLD-CLASS AUTH PAGE - 10/10 UX
@@ -38,23 +37,6 @@ export function WorldClassAuthPage() {
   const [useEmail, setUseEmail] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
-
-  const handleCaptchaTokenChange = useCallback((token: string | null) => {
-    setCaptchaToken(token);
-  }, []);
-
-  const resetCaptcha = () => setCaptchaResetSignal(value => value + 1);
-
-  const getCaptchaTokenForSubmit = () => {
-    if (isAuthCaptchaConfigured && !captchaToken) {
-      setError(ar ? 'Ø£ÙƒÙ…Ù„ ÙØ­Øµ Ø­Ù…Ø§ÙŠØ© Ø§Ù„Ø­Ø³Ø§Ø¨ Ø£ÙˆÙ„Ø§Ù‹' : 'Complete the account protection check first');
-      return null;
-    }
-
-    return captchaToken ?? undefined;
-  };
 
   // Format phone number as user types
   const formatPhone = (value: string) => {
@@ -112,21 +94,13 @@ export function WorldClassAuthPage() {
 
     setLoading(true);
     
-    const token = getCaptchaTokenForSubmit();
-    if (token === null) {
-      setLoading(false);
-      return;
-    }
-
     const result = await signUp(
       email || `${phone}@wasel.app`,
       password || 'TempPass123!',
       name,
       phone,
       '/app',
-      token,
     );
-    resetCaptcha();
     
     if (result.error) {
       setError(ar ? 'حدث خطأ. حاول مرة أخرى' : 'Something went wrong. Try again');
@@ -148,14 +122,7 @@ export function WorldClassAuthPage() {
 
     setLoading(true);
     
-    const token = getCaptchaTokenForSubmit();
-    if (token === null) {
-      setLoading(false);
-      return;
-    }
-
-    const result = await signIn(email, password, token);
-    resetCaptcha();
+    const result = await signIn(email, password);
     
     if (result.error) {
       setError(ar ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة' : 'Invalid email or password');
@@ -550,13 +517,6 @@ export function WorldClassAuthPage() {
                 </div>
               )}
 
-              <div style={{ marginBottom: '16px' }}>
-                <AuthCaptcha
-                  onTokenChange={handleCaptchaTokenChange}
-                  resetSignal={captchaResetSignal}
-                />
-              </div>
-
               <button
                 onClick={handleComplete}
                 disabled={loading || !name.trim()}
@@ -681,13 +641,6 @@ export function WorldClassAuthPage() {
                   {error}
                 </div>
               )}
-
-              <div style={{ marginBottom: '16px' }}>
-                <AuthCaptcha
-                  onTokenChange={handleCaptchaTokenChange}
-                  resetSignal={captchaResetSignal}
-                />
-              </div>
 
               <button
                 onClick={handleEmailAuth}

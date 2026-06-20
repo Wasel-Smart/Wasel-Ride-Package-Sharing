@@ -44,7 +44,7 @@ function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'gen
     lower.includes('request disallowed') ||
     lower.includes('account protection')
   ) {
-    return 'Complete the account protection check and try again.';
+    return 'Authentication is blocked by account protection settings.';
   }
 
   if (

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import { toast } from 'sonner';
@@ -18,7 +18,6 @@ import { WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { WaselButton } from '../components/wasel-ui/WaselButton';
 import { WaselInput } from '../components/wasel-ui/WaselInput';
 import { WaselCard } from '../components/wasel-ui/WaselCard';
-import { AuthCaptcha, isAuthCaptchaConfigured } from '../components/AuthCaptcha';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { checkRateLimit, validateEmail, validatePhone } from '../utils/security';
@@ -380,8 +379,6 @@ export default function WaselAuth() {
   const [phoneOtpChannel, setPhoneOtpChannel] = useState<PhoneOtpChannel | null>(null);
   const [phoneOtpCode, setPhoneOtpCode] = useState('');
   const [phoneOtpSent, setPhoneOtpSent] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
   const [activeAuthAction, setActiveAuthAction] = useState<AuthAction | null>(null);
 
   const { signIn, register, loading, user } = useLocalAuth();
@@ -393,21 +390,6 @@ export default function WaselAuth() {
   const safeReturnTo = normalizeReturnToPath(params.get('returnTo'));
   const localCaptchaBypassActive = isLocalCaptchaBypassActive();
   const authBusy = loading || activeAuthAction !== null;
-  const resetCaptcha = () => setCaptchaResetSignal(value => value + 1);
-  const handleCaptchaTokenChange = useCallback((token: string | null) => {
-    setCaptchaToken(token);
-  }, []);
-
-  const getCaptchaTokenForSubmit = () => {
-    // Only require captcha if it's actually configured
-    if (isAuthCaptchaConfigured && !captchaToken) {
-      setError('Please complete the verification check below.');
-      return null;
-    }
-
-    // If captcha is not configured, proceed without token
-    return isAuthCaptchaConfigured ? captchaToken : undefined;
-  };
 
   useEffect(() => {
     mountedRef.current = true;
@@ -434,7 +416,6 @@ export default function WaselAuth() {
     setPhoneOtpChannel(null);
     setPhoneOtpSent(false);
     setPhoneOtpCode('');
-    resetCaptcha();
     if (!passwordResetCompleted) {
       setNotice('');
     }
@@ -462,18 +443,12 @@ export default function WaselAuth() {
       setError('Too many attempts. Please wait a minute and try again.');
       return;
     }
-    const token = getCaptchaTokenForSubmit();
-    if (token === null) return;
-
     setActiveAuthAction('signin');
     try {
-      const { error: signInError } = await signIn(email, password, token);
-      resetCaptcha();
+      const { error: signInError } = await signIn(email, password);
       if (signInError) {
-        if (!isAuthCaptchaConfigured && isAccountProtectionError(signInError)) {
-          setError(
-            'Account protection is enabled on Supabase, but this build has no captcha site key. Configure VITE_AUTH_CAPTCHA_PROVIDER and VITE_AUTH_CAPTCHA_SITE_KEY to match your Supabase captcha settings, or disable captcha protection for this local Supabase project.',
-          );
+        if (isAccountProtectionError(signInError)) {
+          setError('Sign in is blocked by account protection settings.');
           return;
         }
         setError(friendlyAuthError(signInError, 'Sign in failed. Please try again.'));
@@ -502,9 +477,6 @@ export default function WaselAuth() {
       setError('Too many attempts. Please wait a minute and try again.');
       return;
     }
-    const token = getCaptchaTokenForSubmit();
-    if (token === null) return;
-
     setActiveAuthAction('signup');
     try {
       const registration = await register(
@@ -513,14 +485,10 @@ export default function WaselAuth() {
         password,
         validation.phone || undefined,
         safeReturnTo,
-        token,
       );
-      resetCaptcha();
       if (registration.error) {
-        if (!isAuthCaptchaConfigured && isAccountProtectionError(registration.error)) {
-          setError(
-            'Account protection is enabled on Supabase, but this build has no captcha site key. Configure VITE_AUTH_CAPTCHA_PROVIDER and VITE_AUTH_CAPTCHA_SITE_KEY to match your Supabase captcha settings, or disable captcha protection for this local Supabase project.',
-          );
+        if (isAccountProtectionError(registration.error)) {
+          setError('Create account is blocked by account protection settings.');
           return;
         }
         setError(friendlyAuthError(registration.error, 'Sign up failed. Please try again.'));
@@ -550,13 +518,9 @@ export default function WaselAuth() {
       setError('Please enter a valid email address.');
       return;
     }
-    const token = getCaptchaTokenForSubmit();
-    if (token === null) return;
-
     setActiveAuthAction('forgot-password');
     try {
-      const { error: resetError } = await resetPassword(email, safeReturnTo, token);
-      resetCaptcha();
+      const { error: resetError } = await resetPassword(email, safeReturnTo);
       if (resetError) {
         setError(friendlyAuthError(resetError, 'Password reset failed.'));
         return;
@@ -571,7 +535,6 @@ export default function WaselAuth() {
   const handleGoogleSignIn = async () => {
     if (authBusy) return;
     setError('');
-    resetCaptcha();
     setActiveAuthAction('google');
     try {
       const { error: oauthError } = await signInWithGoogle(safeReturnTo);
@@ -587,7 +550,6 @@ export default function WaselAuth() {
   const handleFacebookSignIn = async () => {
     if (authBusy) return;
     setError('');
-    resetCaptcha();
     setActiveAuthAction('facebook');
     try {
       const { error: oauthError } = await signInWithFacebook(safeReturnTo);
@@ -611,13 +573,9 @@ export default function WaselAuth() {
       return;
     }
 
-    const token = getCaptchaTokenForSubmit();
-    if (token === null) return;
-
     setActiveAuthAction(channel === 'sms' ? 'sms-otp' : 'whatsapp-otp');
     try {
-      const { error: otpError } = await startPhoneOtp(normalizedPhone, channel, token);
-      resetCaptcha();
+      const { error: otpError } = await startPhoneOtp(normalizedPhone, channel);
       if (otpError) {
         setError(
           friendlyAuthError(
@@ -654,18 +612,13 @@ export default function WaselAuth() {
       return;
     }
 
-    const captcha = getCaptchaTokenForSubmit();
-    if (captcha === null) return;
-
     setActiveAuthAction('verify-phone');
     try {
       const { error: verifyError } = await verifyPhoneOtp(
         normalizedPhone,
         token,
         safeReturnTo,
-        captcha,
       );
-      resetCaptcha();
       if (verifyError) {
         setError(friendlyAuthError(verifyError, 'Phone verification failed. Please try again.'));
         return;
@@ -953,11 +906,6 @@ export default function WaselAuth() {
                     </button>
                   </div>
                 )}
-
-                <AuthCaptcha
-                  onTokenChange={handleCaptchaTokenChange}
-                  resetSignal={captchaResetSignal}
-                />
 
                 <WaselButton
                   variant="primary"
