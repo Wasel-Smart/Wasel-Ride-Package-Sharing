@@ -51,6 +51,9 @@ function response(data: any, ok = true) {
 describe('journeyLogistics', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockCreateTrip.mockReset();
+    mockFetchWithRetry.mockReset();
+    mockGetAuthDetails.mockReset();
     vi.stubEnv('MODE', 'test');
     vi.stubEnv('NODE_ENV', 'test');
     vi.stubEnv('VITE_E2E_LOCAL_AUTH', 'false');
@@ -58,6 +61,7 @@ describe('journeyLogistics', () => {
     vi.stubGlobal('window', { localStorage: memoryStorage } as any);
     memoryStorage.clear();
     mockGetAuthDetails.mockResolvedValue({ token: 'token-123', userId: 'user-123' });
+    mockFetchWithRetry.mockResolvedValue({ ok: false, status: 500, json: async () => ({}) });
   });
 
   it('creates a ride through the server and stores the normalized result locally', async () => {

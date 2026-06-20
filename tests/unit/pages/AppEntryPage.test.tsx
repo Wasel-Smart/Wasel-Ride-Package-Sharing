@@ -75,9 +75,9 @@ describe('AppEntryPage', () => {
 
     expect(screen.getByText(/Move across Jordan for less/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Compare lower-cost rides, trusted drivers, parcel handoff/i),
+      screen.getByText(/Compare lower-cost rides, trusted drivers, parcel handoff, and scheduled bus fallback/i),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Find a lower-cost route/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Find a lower-cost route/i }).length).toBeGreaterThan(0);
   });
 
   it('navigates authenticated users into the live rides flow', () => {
@@ -91,7 +91,7 @@ describe('AppEntryPage', () => {
 
     renderWithProviders(<AppEntryPage />);
 
-    screen.getByRole('button', { name: /Find a lower-cost route/i }).click();
+    screen.getAllByRole('button', { name: /Find a lower-cost route/i })[0]!.click();
 
     expect(mockNavigate).toHaveBeenCalledWith('/find-ride');
   });
