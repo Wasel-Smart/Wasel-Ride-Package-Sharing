@@ -583,7 +583,7 @@ async function persistPackageVerificationStatus(
   }
 
   requireLocalWriteFallback('Package verification', backendFailure);
-  await updateDirectPackageStatus(trackingId, persistedStatus).catch(() => undefined);
+  void updateDirectPackageStatus(trackingId, persistedStatus).catch(() => undefined);
 }
 
 export async function createConnectedPackage(input: {
