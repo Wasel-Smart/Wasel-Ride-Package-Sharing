@@ -433,9 +433,9 @@ export function propagateFlow(
 ): CityMap {
   const next = cloneCities(cities);
 
-  const deltaIn: Partial<Record<City, number>> = {};
-  const deltaOut: Partial<Record<City, number>> = {};
-  const deltaCong: Partial<Record<City, number>> = {};
+  const deltaIn: Record<City, number> = {};
+  const deltaOut: Record<City, number> = {};
+  const deltaCong: Record<City, number> = {};
 
   for (const c of Object.keys(cities) as City[]) {
     deltaIn[c] = 0;
@@ -457,12 +457,12 @@ export function propagateFlow(
       for (const n of Object.keys(neighbors) as City[]) {
         const w = neighbors[n] / total;
 
-        deltaIn[n] += spill * w;
-        deltaCong[n] += spill * 0.02;
+        deltaIn[n] = (deltaIn[n] ?? 0) + spill * w;
+        deltaCong[n] = (deltaCong[n] ?? 0) + spill * 0.02;
       }
     }
 
-    deltaOut[city] -= spill;
+    deltaOut[city] = (deltaOut[city] ?? 0) - spill;
   }
 
   for (const city of Object.keys(cities) as City[]) {
@@ -470,9 +470,9 @@ export function propagateFlow(
 
     next[city] = {
       ...c,
-      incomingDemand: c.incomingDemand + deltaIn[city],
-      outgoingDemand: Math.max(0, c.outgoingDemand + deltaOut[city]),
-      congestion: clamp01(c.congestion + deltaCong[city]),
+      incomingDemand: c.incomingDemand + (deltaIn[city] ?? 0),
+      outgoingDemand: Math.max(0, c.outgoingDemand + (deltaOut[city] ?? 0)),
+      congestion: clamp01(c.congestion + (deltaCong[city] ?? 0)),
     };
   }
 
@@ -627,7 +627,7 @@ export function validateBooking(
   }
 
   for (const pkg of packages) {
-    const arrival = driver.departureTime + (JORDAN_DISTANCES[driver.destination]?.[pkg.destinationCity] ?? 0) * 60_000;
+    const arrival = driver.departureTime + (JORDAN_DISTANCES[driver.destinationCity]?.[pkg.destinationCity] ?? 0) * 60_000;
     if (arrival > pkg.neededBy) {
       issues.push(`Package ${pkg.id}: trip arrives after deadline`);
     }
@@ -694,7 +694,7 @@ export function runMobilityStep(input: {
 
   const afterFlow = propagateFlow(input.cities, input.adjacency);
 
-  const corridorMetrics = dispatch.routes.map(route => {
+  const corridorMetrics: CorridorMetrics[] = dispatch.routes.map(route => {
     const city = afterFlow[route.origin];
 
     return {
@@ -763,16 +763,14 @@ export function initializeJordanCities(): CityMap {
 // -------------------------------------------------------
 
 export function buildCorridorAdjacency(): Record<City, Record<City, number>> {
-  const adjacency: Partial<Record<City, Record<City, number>>> = {};
+  const adjacency: Record<City, Record<City, number>> = {};
 
   for (const corridor of FIXED_CORRIDORS) {
-    if (!adjacency[corridor.origin]) {
-      adjacency[corridor.origin] = {};
-    }
+    adjacency[corridor.origin] = adjacency[corridor.origin] ?? {};
     adjacency[corridor.origin][corridor.destination] = corridor.baseSeatCapacity;
   }
 
-  return adjacency as Record<City, Record<City, number>>;
+  return adjacency;
 }
 
 // -------------------------------------------------------
