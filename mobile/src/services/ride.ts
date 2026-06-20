@@ -82,6 +82,21 @@ export class RideLifecycleService {
     return `${baseUrl.replace(/\/$/, '')}${path}`;
   }
 
+  private toTripCreatePayload(request: RideRequest): Record<string, unknown> {
+    const scheduledAt = request.scheduledFor
+      ? new Date(request.scheduledFor)
+      : new Date(Date.now() + 60 * 60 * 1000);
+
+    return {
+      from: request.origin.address,
+      to: request.destination.address,
+      date: scheduledAt.toISOString().slice(0, 10),
+      time: scheduledAt.toISOString().slice(11, 16),
+      seats: request.seats,
+      notes: request.notes,
+    };
+  }
+
   private getAuthHeaders(): HeadersInit {
     const token = mobileAuth.getAccessToken();
     if (!token) {
@@ -120,7 +135,8 @@ export class RideLifecycleService {
       return { error: new Error('User not authenticated') };
     }
 
-    const payload = {
+    const payload = this.toTripCreatePayload(request);
+    const queuedPayload = {
       rider_id: user.id,
       origin_lat: request.origin.latitude,
       origin_lng: request.origin.longitude,
@@ -138,14 +154,14 @@ export class RideLifecycleService {
     if (!offlineService.isDeviceOnline()) {
       await offlineService.queueOfflineAction({
         type: 'RIDE_REQUEST',
-        payload,
+        payload: queuedPayload,
       });
       return { error: new Error('Ride request queued for sync when online') };
     }
 
     try {
       // Call backend API
-      const response = await fetch(this.getApiUrl('/v1/rides'), {
+      const response = await fetch(this.getApiUrl('/trips'), {
         method: 'POST',
         headers: this.getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -155,8 +171,8 @@ export class RideLifecycleService {
         throw new Error(`Request failed: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      const ride = this.mapDatabaseRide(data.ride);
+      const data = await response.json() as { ride?: unknown } & Record<string, unknown>;
+      const ride = this.mapDatabaseRide(data.ride ?? data);
       this.setActiveRide(ride);
       
       // Cache the ride
@@ -181,11 +197,11 @@ export class RideLifecycleService {
 
     try {
       const response = await fetch(
-        this.getApiUrl(`/v1/rides/${encodeURIComponent(rideId)}/cancel`),
+        this.getApiUrl('/cancellations/bookings'),
         {
           method: 'POST',
           headers: this.getAuthHeaders(),
-          body: JSON.stringify({ reason }),
+          body: JSON.stringify({ bookingId: rideId, reason: reason ?? 'Cancelled from mobile' }),
         },
       );
 
@@ -211,9 +227,9 @@ export class RideLifecycleService {
     }
 
     try {
-      await this.request<void>(`/v1/rides/${encodeURIComponent(rideId)}/rating`, {
+      await this.request<void>('/ratings', {
         method: 'POST',
-        body: JSON.stringify({ rating, feedback }),
+        body: JSON.stringify({ bookingId: rideId, rating, feedback }),
       });
       return {};
     } catch (error) {
@@ -331,26 +347,29 @@ export class RideLifecycleService {
   }
 
   private mapDatabaseRide(data: any): Ride {
+    const originAddress = data.origin_address ?? data.origin_city ?? data.from ?? '';
+    const destinationAddress = data.dest_address ?? data.destination_city ?? data.to ?? '';
+    const status = data.status ?? data.trip_status ?? 'requested';
     return {
-      id: data.id,
-      riderId: data.rider_id,
+      id: data.id ?? data.trip_id,
+      riderId: data.rider_id ?? mobileAuth.getUser()?.id ?? '',
       driverId: data.driver_id,
       vehicleId: data.vehicle_id,
       origin: {
-        latitude: data.origin_lat,
-        longitude: data.origin_lng,
-        address: data.origin_address,
+        latitude: data.origin_lat ?? 0,
+        longitude: data.origin_lng ?? 0,
+        address: originAddress,
       },
       destination: {
-        latitude: data.dest_lat,
-        longitude: data.dest_lng,
-        address: data.dest_address,
+        latitude: data.dest_lat ?? 0,
+        longitude: data.dest_lng ?? 0,
+        address: destinationAddress,
       },
-      status: data.status,
-      fare: data.fare,
+      status,
+      fare: data.fare ?? data.price_per_seat,
       distance: data.distance,
       duration: data.duration,
-      requestedAt: data.created_at,
+      requestedAt: data.created_at ?? data.departure_time ?? new Date().toISOString(),
       matchedAt: data.matched_at,
       startedAt: data.started_at,
       completedAt: data.completed_at,
