@@ -168,9 +168,10 @@ _REMOVED/
 # Local security remediation checklists (contain rotated key references)
 SECURITY_CHECKLIST.md
 
-# Empty directory shells left after consolidation
-src/domains/
 
 .vercel
 supabase/.temp/
 .env*.local
+
+# Yarn local install state
+.yarn/install-state.gz
