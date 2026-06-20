@@ -39,7 +39,7 @@ export async function processReferralConversionForPassenger(passengerCanonicalUs
       serviceType: 'referral',
       valueJod: reward,
       metadata: { refereeId: passengerCanonicalUserId, referralId: row.id },
-    }).catch(() => {});
+    }).catch((error) => { void console.error?.(error); });
   }
   return row;
 }
@@ -121,7 +121,7 @@ export async function redeemDirectReferralCode(userId: string, referralCode: str
     serviceType: 'referral',
     valueJod: reward,
     metadata: { code: normalizedCode },
-  }).catch(() => {});
+  }).catch((error) => { void console.error?.(error); });
 
   return data as RawReferral;
 }

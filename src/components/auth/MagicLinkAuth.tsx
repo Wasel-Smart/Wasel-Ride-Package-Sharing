@@ -6,6 +6,19 @@ import { authAPI } from '../../services/auth';
 import { validateEmail } from '../../utils/security';
 import { normalizeEmailInput } from '../../utils/authHelpers';
 
+function resolveSafeReturnTo(returnTo?: string): string {
+  const candidate = returnTo?.trim();
+  if (!candidate) return `${window.location.origin}/app`;
+  if (candidate.startsWith('/') && !candidate.startsWith('//')) return new URL(candidate, window.location.origin).toString();
+  try {
+    const url = new URL(candidate);
+    if (url.origin === window.location.origin) return url.toString();
+  } catch {
+    // fall through
+  }
+  return `${window.location.origin}/app`;
+}
+
 interface MagicLinkAuthProps {
   onSuccess: (email: string) => void;
   returnTo?: string;
@@ -29,7 +42,7 @@ export function MagicLinkAuth({ onSuccess, returnTo }: MagicLinkAuthProps) {
 
     setLoading(true);
     try {
-      await authAPI.sendMagicLink(normalized, returnTo || window.location.origin + '/app');
+      await authAPI.sendMagicLink(normalized, resolveSafeReturnTo(returnTo));
       onSuccess(normalized);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send magic link');

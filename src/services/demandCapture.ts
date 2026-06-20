@@ -155,7 +155,7 @@ export function createDemandAlert(input: {
         syncedAt: new Date().toISOString(),
       });
     })
-    .catch(() => {});
+    .catch((error) => { void console.error?.(error); });
   void trackGrowthEvent({
     userId: input.userId,
     eventName: 'demand_alert_created',

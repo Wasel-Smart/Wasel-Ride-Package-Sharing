@@ -306,9 +306,9 @@ export function upsertRouteReminder(args: {
             frequency: args.frequency,
             preferredTime: args.preferredTime,
           },
-        }).catch(() => {});
+        }).catch((error) => { void console.error?.(error); });
       })
-      .catch(() => {});
+      .catch((error) => { void console.error?.(error); });
   }
 
   return nextReminder;
@@ -374,13 +374,13 @@ export async function syncRouteReminders(user?: Pick<WaselUser, 'id' | 'email' |
         email: user?.email,
         phone: user?.phone,
       },
-    }).catch(() => {});
+    }).catch((error) => { void console.error?.(error); });
 
     if (reminder.backendId) {
       void markDirectRouteReminderDelivered(reminder.backendId, {
         nextReminderAt,
         lastSentAt: now.toISOString(),
-      }).catch(() => {});
+      }).catch((error) => { void console.error?.(error); });
     }
 
     delivered.push(reminder.id);

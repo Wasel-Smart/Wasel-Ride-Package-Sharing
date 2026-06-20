@@ -273,7 +273,7 @@ export function createSupportTicket(input: {
         });
         upsertTickets([{ ...synced, id: synced.id || ticket.id }]);
       })
-      .catch(() => {});
+      .catch((error) => { void console.error?.(error); });
   }
 
   return ticket;
@@ -324,7 +324,7 @@ export function updateSupportTicketStatus(
           }),
         ]);
       })
-      .catch(() => {});
+      .catch((error) => { void console.error?.(error); });
   }
 
   return updated;

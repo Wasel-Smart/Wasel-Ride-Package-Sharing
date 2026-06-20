@@ -339,10 +339,10 @@ export async function createDirectBooking(input: {
           seatsRequested: payload.seatsRequested,
           seatNumber: resolvedSeatNumber,
         },
-      }).catch(() => {});
+      }).catch((error) => { void console.error?.(error); });
 
       if (bookingStatus !== 'pending_driver') {
-        await processReferralConversionForPassenger(passenger.user.id).catch(() => {});
+        await processReferralConversionForPassenger(passenger.user.id).catch((error) => { void console.error?.(error); });
       }
 
       return {
@@ -402,7 +402,7 @@ export async function updateDirectBookingStatus(bookingId: string, status: 'acce
   if (error) {throw error;}
 
   if (nextRuntimeStatus === 'confirmed' && previousStatus === 'pending_driver' && bookingRow.passenger_id) {
-    await processReferralConversionForPassenger(String(bookingRow.passenger_id)).catch(() => {});
+    await processReferralConversionForPassenger(String(bookingRow.passenger_id)).catch((error) => { void console.error?.(error); });
   }
 
   await recordDirectGrowthEvent({
@@ -417,7 +417,7 @@ export async function updateDirectBookingStatus(bookingId: string, status: 'acce
       previousStatus,
       nextStatus: nextRuntimeStatus,
     },
-  }).catch(() => {});
+  }).catch((error) => { void console.error?.(error); });
 
   return mapBookingRow(data as RawBooking);
 }

@@ -97,7 +97,7 @@ export function usePushNotifications() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ enabled: perm === 'granted' }),
-      }).catch(() => {}); // intentionally fire-and-forget
+      }).catch((error) => { void console.error?.(error); }); // intentionally fire-and-forget
     } catch {
       // Not critical — ignore silently
     }

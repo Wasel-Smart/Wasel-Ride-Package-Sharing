@@ -259,7 +259,7 @@ export async function trackGrowthEvent(input: {
           priceQuote: (input.metadata?.priceQuote as Record<string, unknown> | undefined) ?? null,
         },
         runAfter: getAutomationJobRunAfter(jobType),
-      }).catch(() => {});
+      }).catch((error) => { void console.error?.(error); });
     }
 
     const priceQuote = input.metadata?.priceQuote as Record<string, unknown> | undefined;
@@ -281,7 +281,7 @@ export async function trackGrowthEvent(input: {
           funnelStage: input.funnelStage,
           serviceType: input.serviceType,
         },
-      }).catch(() => {});
+      }).catch((error) => { void console.error?.(error); });
     }
   } catch {
     // Protected environments fail closed by skipping local analytics fallback.
@@ -359,7 +359,7 @@ export async function applyReferralCode(user: { id?: string; name?: string } | n
       funnelStage: 'redeemed',
       serviceType: 'referral',
       metadata: { code: normalizedCode },
-    }).catch(() => {});
+    }).catch((error) => { void console.error?.(error); });
   }
 
   return getReferralSnapshot(user);

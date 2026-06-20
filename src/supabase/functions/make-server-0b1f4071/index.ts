@@ -25,12 +25,29 @@ type Route = {
   handler: RouteHandler;
 };
 
-const jsonHeaders = {
-  'Access-Control-Allow-Headers': 'authorization, content-type, x-wasel-request-id, x-wasel-signature, idempotency-key',
-  'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-  'Access-Control-Allow-Origin': '*',
-  'Content-Type': 'application/json',
-};
+const allowedOrigins = ['https://wasel-smart.vercel.app'];
+
+function corsHeaders(request: Request) {
+  const origin = request.headers.get('origin') ?? '*';
+  const allowed = allowedOrigins;
+  const matched = allowed.some((candidate) => origin === candidate || origin.endsWith(`.${candidate}`));
+  if (origin !== '*' && !matched) {
+    return {
+      'Access-Control-Allow-Headers': 'authorization, content-type, x-wasel-request-id, x-wasel-signature, idempotency-key',
+      'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+      'Access-Control-Allow-Origin': allowed[0],
+      'Vary': 'Origin',
+      'Content-Type': 'application/json',
+    };
+  }
+  return {
+    'Access-Control-Allow-Headers': 'authorization, content-type, x-wasel-request-id, x-wasel-signature, idempotency-key',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+    'Access-Control-Allow-Origin': origin === '*' ? allowed[0] : origin,
+    'Vary': 'Origin',
+    'Content-Type': 'application/json',
+  };
+}
 
 const DEFAULT_SETTINGS = {
   display: { currency: 'JOD', direction: 'ltr', language: 'en', theme: 'dark' },
@@ -44,8 +61,8 @@ const DEFAULT_SAFETY_SETTINGS = {
   emergencyContacts: [],
 };
 
-function json(status: number, body: Record<string, unknown>) {
-  return new Response(JSON.stringify(body), { headers: jsonHeaders, status });
+function json(request: Request, status: number, body: Record<string, unknown>) {
+  return new Response(JSON.stringify(body), { headers: corsHeaders(request), status });
 }
 
 function readEnvironment() {
@@ -78,11 +95,11 @@ function bearerToken(request: Request): string | null {
 
 async function requireAuth(request: Request): Promise<AuthContext | Response> {
   const token = bearerToken(request);
-  if (!token) return json(401, { error: 'Missing bearer token.' });
+  if (!token) return json(request, 401, { error: 'Missing bearer token.' });
 
   const supabase = serviceClient();
   const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data.user) return json(401, { error: 'Invalid or expired bearer token.' });
+  if (error || !data.user) return json(request, 401, { error: 'Invalid or expired bearer token.' });
 
   const { data: profile, error: profileError } = await supabase
     .from('users')
@@ -90,8 +107,8 @@ async function requireAuth(request: Request): Promise<AuthContext | Response> {
     .eq('auth_user_id', data.user.id)
     .maybeSingle();
 
-  if (profileError) return json(500, { error: profileError.message });
-  if (!profile) return json(404, { error: 'User profile has not been created yet.' });
+  if (profileError) return json(request, 500, { error: profileError.message });
+  if (!profile) return json(request, 404, { error: 'User profile has not been created yet.' });
 
   return { authUser: data.user, profile, supabase };
 }
@@ -254,7 +271,7 @@ async function sha256(value: string): Promise<string> {
 
 async function requireAdmin(context: AuthContext): Promise<Response | null> {
   if (context.profile.role === 'admin') return null;
-  return json(403, { error: 'Admin role is required.' });
+  return json(request, 403, { error: 'Admin role is required.' });
 }
 
 async function ensureWallet(context: AuthContext) {
@@ -282,10 +299,10 @@ async function getProfileDriver(context: AuthContext, profileId: string) {
 
 async function handleCreateProfile(request: Request) {
   const token = bearerToken(request);
-  if (!token) return json(401, { error: 'Missing bearer token.' });
+  if (!token) return json(request, 401, { error: 'Missing bearer token.' });
   const supabase = serviceClient();
   const { data: userData, error: userError } = await supabase.auth.getUser(token);
-  if (userError || !userData.user) return json(401, { error: 'Invalid or expired bearer token.' });
+  if (userError || !userData.user) return json(request, 401, { error: 'Invalid or expired bearer token.' });
 
   const body = await readJson(request);
   const metadata = userData.user.user_metadata ?? {};
@@ -308,8 +325,8 @@ async function handleCreateProfile(request: Request) {
     .select('*')
     .single();
 
-  if (error) return json(400, { error: error.message });
-  return json(200, { profile: toProfile(data as Record<string, unknown>) });
+  if (error) return json(request, 400, { error: error.message });
+  return json(request, 200, { profile: toProfile(data as Record<string, unknown>) });
 }
 
 async function handleGetProfile(request: Request, params: Record<string, string>) {
@@ -317,16 +334,16 @@ async function handleGetProfile(request: Request, params: Record<string, string>
   if (!isAuthContext(context)) return context;
   const target = decodeURIComponent(params.userId ?? '');
   const ownProfile = target === context.authUser.id || target === context.profile.id;
-  if (!ownProfile && context.profile.role !== 'admin') return json(403, { error: 'Cannot read another user profile.' });
+  if (!ownProfile && context.profile.role !== 'admin') return json(request, 403, { error: 'Cannot read another user profile.' });
 
   const query = context.supabase.from('users').select('*');
   const { data, error } = await (target === context.authUser.id
     ? query.eq('auth_user_id', target).maybeSingle()
     : query.eq('id', target).maybeSingle());
-  if (error) return json(500, { error: error.message });
-  if (!data) return json(404, { error: 'Profile not found.' });
+  if (error) return json(request, 500, { error: error.message });
+  if (!data) return json(request, 404, { error: 'Profile not found.' });
   const driver = await getProfileDriver(context, String((data as Record<string, unknown>).id));
-  return json(200, { profile: toProfile(data as Record<string, unknown>, driver), ...toProfile(data as Record<string, unknown>, driver) });
+  return json(request, 200, { profile: toProfile(data as Record<string, unknown>, driver), ...toProfile(data as Record<string, unknown>, driver) });
 }
 
 async function handleUpdateProfile(request: Request, params: Record<string, string>) {
@@ -334,7 +351,7 @@ async function handleUpdateProfile(request: Request, params: Record<string, stri
   if (!isAuthContext(context)) return context;
   const target = decodeURIComponent(params.userId ?? '');
   const ownProfile = target === context.authUser.id || target === context.profile.id;
-  if (!ownProfile && context.profile.role !== 'admin') return json(403, { error: 'Cannot update another user profile.' });
+  if (!ownProfile && context.profile.role !== 'admin') return json(request, 403, { error: 'Cannot update another user profile.' });
 
   const body = await readJson(request);
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -346,9 +363,9 @@ async function handleUpdateProfile(request: Request, params: Record<string, stri
   const { data, error } = await (target === context.authUser.id
     ? query.eq('auth_user_id', target).single()
     : query.eq('id', target).single());
-  if (error) return json(400, { error: error.message });
+  if (error) return json(request, 400, { error: error.message });
   const driver = await getProfileDriver(context, String((data as Record<string, unknown>).id));
-  return json(200, { profile: toProfile(data as Record<string, unknown>, driver), ...toProfile(data as Record<string, unknown>, driver) });
+  return json(request, 200, { profile: toProfile(data as Record<string, unknown>, driver), ...toProfile(data as Record<string, unknown>, driver) });
 }
 
 async function handleWalletSnapshot(request: Request) {
@@ -392,7 +409,7 @@ async function handleWalletSnapshot(request: Request) {
     subscription: null,
   };
 
-  return json(200, response);
+  return json(request, 200, response);
 }
 
 async function handleCreateIntent(request: Request) {
@@ -407,11 +424,11 @@ async function handleCreateIntent(request: Request) {
       .select('*')
       .eq('idempotency_key', idempotencyKey)
       .maybeSingle();
-    if (data) return json(200, mapPaymentIntent(data as Record<string, unknown>));
+    if (data) return json(request, 200, mapPaymentIntent(data as Record<string, unknown>));
   }
 
   const amount = numberValue(body.amount);
-  if (amount <= 0) return json(400, { error: 'Amount must be greater than zero.' });
+  if (amount <= 0) return json(request, 400, { error: 'Amount must be greater than zero.' });
 
   const methodType = normalizeMethodType(body.paymentMethodType);
   const provider = methodType === 'wallet' ? 'wallet' : normalizeProvider(body.providerName ?? body.provider);
@@ -434,8 +451,8 @@ async function handleCreateIntent(request: Request) {
     .select('*')
     .single();
 
-  if (error) return json(400, { error: error.message });
-  return json(200, mapPaymentIntent(data as Record<string, unknown>));
+  if (error) return json(request, 400, { error: error.message });
+  return json(request, 200, mapPaymentIntent(data as Record<string, unknown>));
 }
 
 async function handleConfirmIntent(request: Request) {
@@ -443,7 +460,7 @@ async function handleConfirmIntent(request: Request) {
   if (!isAuthContext(context)) return context;
   const body = await readJson(request);
   const intentId = textValue(body.paymentIntentId, textValue(body.intentId, textValue(body.id)));
-  if (!intentId) return json(400, { error: 'paymentIntentId is required.' });
+  if (!intentId) return json(request, 400, { error: 'paymentIntentId is required.' });
 
   const { data, error } = await context.supabase
     .from('wallet_payment_intents')
@@ -453,8 +470,8 @@ async function handleConfirmIntent(request: Request) {
     .select('*')
     .single();
 
-  if (error) return json(400, { error: error.message });
-  return json(200, { id: intentId, status: (data as Record<string, unknown>).status ?? 'processing', settled: false, clientSecret: (data as Record<string, unknown>).provider_client_secret ?? null });
+  if (error) return json(request, 400, { error: error.message });
+  return json(request, 200, { id: intentId, status: (data as Record<string, unknown>).status ?? 'processing', settled: false, clientSecret: (data as Record<string, unknown>).provider_client_secret ?? null });
 }
 
 async function handlePaymentStatus(request: Request) {
@@ -462,15 +479,15 @@ async function handlePaymentStatus(request: Request) {
   if (!isAuthContext(context)) return context;
   const body = await readJson(request);
   const intentId = textValue(body.paymentIntentId, textValue(body.intentId, textValue(body.id)));
-  if (!intentId) return json(400, { error: 'paymentIntentId is required.' });
+  if (!intentId) return json(request, 400, { error: 'paymentIntentId is required.' });
   const { data, error } = await context.supabase
     .from('wallet_payment_intents')
     .select('*')
     .eq('payment_intent_id', intentId)
     .eq('user_id', context.profile.id)
     .single();
-  if (error) return json(404, { error: 'Payment intent not found.' });
-  return json(200, mapPaymentIntent(data as Record<string, unknown>));
+  if (error) return json(request, 404, { error: 'Payment intent not found.' });
+  return json(request, 200, mapPaymentIntent(data as Record<string, unknown>));
 }
 
 async function handlePaymentMethods(request: Request) {
@@ -482,16 +499,16 @@ async function handlePaymentMethods(request: Request) {
   if (action === 'remove') {
     const id = textValue(body.paymentMethodId);
     const { error } = await context.supabase.from('wallet_payment_methods').update({ status: 'disabled', updated_at: new Date().toISOString() }).eq('payment_method_id', id).eq('user_id', context.profile.id);
-    if (error) return json(400, { error: error.message });
-    return json(200, { ok: true });
+    if (error) return json(request, 400, { error: error.message });
+    return json(request, 200, { ok: true });
   }
 
   if (action === 'default') {
     const id = textValue(body.paymentMethodId);
     await context.supabase.from('wallet_payment_methods').update({ is_default: false }).eq('user_id', context.profile.id);
     const { error } = await context.supabase.from('wallet_payment_methods').update({ is_default: true, updated_at: new Date().toISOString() }).eq('payment_method_id', id).eq('user_id', context.profile.id);
-    if (error) return json(400, { error: error.message });
-    return json(200, { ok: true });
+    if (error) return json(request, 400, { error: error.message });
+    return json(request, 200, { ok: true });
   }
 
   const providerReference = textValue(body.providerReference, textValue(body.tokenReference, crypto.randomUUID()));
@@ -511,8 +528,8 @@ async function handlePaymentMethods(request: Request) {
     })
     .select('*')
     .single();
-  if (error) return json(400, { error: error.message });
-  return json(200, { paymentMethod: mapPaymentMethod(data as Record<string, unknown>) });
+  if (error) return json(request, 400, { error: error.message });
+  return json(request, 200, { paymentMethod: mapPaymentMethod(data as Record<string, unknown>) });
 }
 
 async function handleSetPin(request: Request) {
@@ -520,14 +537,14 @@ async function handleSetPin(request: Request) {
   if (!isAuthContext(context)) return context;
   const body = await readJson(request);
   const pin = textValue(body.pin);
-  if (!/^\d{4,8}$/.test(pin)) return json(400, { error: 'PIN must be 4 to 8 digits.' });
+  if (!/^\d{4,8}$/.test(pin)) return json(request, 400, { error: 'PIN must be 4 to 8 digits.' });
   const pinHash = await sha256(`${context.profile.id}:${pin}`);
   const { error } = await context.supabase
     .schema('private')
     .from('wallet_pin_secrets')
     .upsert({ user_id: context.profile.id, pin_hash: pinHash, failed_attempts: 0, locked_until: null, pin_updated_at: new Date().toISOString(), updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-  if (error) return json(400, { error: error.message });
-  return json(200, { ok: true });
+  if (error) return json(request, 400, { error: error.message });
+  return json(request, 200, { ok: true });
 }
 
 async function handleVerifyPin(request: Request) {
@@ -539,13 +556,13 @@ async function handleVerifyPin(request: Request) {
   const pinHash = await sha256(`${context.profile.id}:${pin}`);
   const { data } = await context.supabase.schema('private').from('wallet_pin_secrets').select('*').eq('user_id', context.profile.id).maybeSingle();
   if (!data || (data as Record<string, unknown>).pin_hash !== pinHash) {
-    return json(401, { purpose, verified: false, otpRequired: false });
+    return json(request, 401, { purpose, verified: false, otpRequired: false });
   }
   const token = crypto.randomUUID();
   const tokenHash = await sha256(token);
   const expiresAt = new Date(Date.now() + 10 * 60_000).toISOString();
   await context.supabase.schema('private').from('wallet_step_up_tokens').insert({ user_id: context.profile.id, purpose, token_hash: tokenHash, expires_at: expiresAt });
-  return json(200, { purpose, verified: true, otpRequired: false, verificationToken: token, expiresAt });
+  return json(request, 200, { purpose, verified: true, otpRequired: false, verificationToken: token, expiresAt });
 }
 
 async function handleWalletSettings(request: Request) {
@@ -559,8 +576,8 @@ async function handleWalletSettings(request: Request) {
     auto_top_up_threshold: numberValue(body.autoTopUpThreshold, 5),
     updated_at: new Date().toISOString(),
   }).eq('user_id', context.profile.id);
-  if (error) return json(400, { error: error.message });
-  return json(200, { ok: true });
+  if (error) return json(request, 400, { error: error.message });
+  return json(request, 200, { ok: true });
 }
 
 async function handleWalletMutation(request: Request, type: 'withdrawal' | 'transfer') {
@@ -568,7 +585,7 @@ async function handleWalletMutation(request: Request, type: 'withdrawal' | 'tran
   if (!isAuthContext(context)) return context;
   const body = await readJson(request);
   const amount = numberValue(body.amount);
-  if (amount <= 0) return json(400, { error: 'Amount must be greater than zero.' });
+  if (amount <= 0) return json(request, 400, { error: 'Amount must be greater than zero.' });
   const { data, error } = await context.supabase.from('wallet_transactions').insert({
     amount,
     currency_code: 'JOD',
@@ -579,8 +596,8 @@ async function handleWalletMutation(request: Request, type: 'withdrawal' | 'tran
     transaction_status: 'pending',
     transaction_type: type,
   }).select('*').single();
-  if (error) return json(400, { error: error.message });
-  return json(202, { transaction: mapWalletTransaction(data as Record<string, unknown>) });
+  if (error) return json(request, 400, { error: error.message });
+  return json(request, 202, { transaction: mapWalletTransaction(data as Record<string, unknown>) });
 }
 
 async function handlePendingDrivers(request: Request) {
@@ -593,9 +610,9 @@ async function handlePendingDrivers(request: Request) {
     .select('*, users(*)')
     .eq('driver_status', 'pending_approval')
     .order('updated_at', { ascending: true });
-  if (error) return json(500, { error: error.message });
+  if (error) return json(request, 500, { error: error.message });
 
-  return json(200, {
+  return json(request, 200, {
     drivers: (data ?? []).map((driver: Record<string, unknown>) => {
       const user = jsonObject(driver.users);
       const ready = Boolean(user.email) && Boolean(user.phone_number) && ['level_2', 'level_3'].includes(String(driver.verification_level ?? user.verification_level));
@@ -628,8 +645,8 @@ async function handleApproveDriver(request: Request, params: Record<string, stri
     .eq('driver_id', driverId)
     .select('*, users(*)')
     .single();
-  if (error) return json(400, { error: error.message });
-  return json(200, { driver: data, ok: true });
+  if (error) return json(request, 400, { error: error.message });
+  return json(request, 200, { driver: data, ok: true });
 }
 
 async function handleSafetyDashboard(request: Request) {
@@ -639,7 +656,7 @@ async function handleSafetyDashboard(request: Request) {
     context.supabase.from('safety_settings').select('*').eq('user_id', context.profile.id).maybeSingle(),
     context.supabase.from('safety_incidents').select('*').eq('user_id', context.profile.id).order('submitted_at', { ascending: false }).limit(20),
   ]);
-  return json(200, { dashboard: { settings: mapSafetySettings(settings as Record<string, unknown> | null), incidents: (incidents ?? []).map((row: Record<string, unknown>) => mapIncident(row)) } });
+  return json(request, 200, { dashboard: { settings: mapSafetySettings(settings as Record<string, unknown> | null), incidents: (incidents ?? []).map((row: Record<string, unknown>) => mapIncident(row)) } });
 }
 
 async function handleUpdateSafetySettings(request: Request) {
@@ -657,8 +674,8 @@ async function handleUpdateSafetySettings(request: Request) {
     user_id: context.profile.id,
   };
   const { data, error } = await context.supabase.from('safety_settings').upsert(payload, { onConflict: 'user_id' }).select('*').single();
-  if (error) return json(400, { error: error.message });
-  return json(200, { settings: mapSafetySettings(data as Record<string, unknown>) });
+  if (error) return json(request, 400, { error: error.message });
+  return json(request, 200, { settings: mapSafetySettings(data as Record<string, unknown>) });
 }
 
 async function handleSafetyIncident(request: Request) {
@@ -667,10 +684,10 @@ async function handleSafetyIncident(request: Request) {
   const body = await readJson(request);
   const incidentType = textValue(body.type, 'other');
   const description = textValue(body.description);
-  if (!description) return json(400, { error: 'description is required.' });
+  if (!description) return json(request, 400, { error: 'description is required.' });
   const { data, error } = await context.supabase.from('safety_incidents').insert({ user_id: context.profile.id, incident_type: incidentType, description, metadata: jsonObject(body.metadata) }).select('*').single();
-  if (error) return json(400, { error: error.message });
-  return json(200, { incident: mapIncident(data as Record<string, unknown>) });
+  if (error) return json(request, 400, { error: error.message });
+  return json(request, 200, { incident: mapIncident(data as Record<string, unknown>) });
 }
 
 async function handleSos(request: Request) {
@@ -686,16 +703,16 @@ async function handleSos(request: Request) {
     user_context: { activeTripId: body.activeTripId ?? null },
     user_id: context.profile.id,
   }).select('*').single();
-  if (error) return json(400, { error: error.message });
+  if (error) return json(request, 400, { error: error.message });
   const alert = data as Record<string, unknown>;
-  return json(200, { alertId: String(alert.alert_id), createdAt: String(alert.created_at), notified: true, status: alert.alert_status ?? 'notified' });
+  return json(request, 200, { alertId: String(alert.alert_id), createdAt: String(alert.created_at), notified: true, status: alert.alert_status ?? 'notified' });
 }
 
 async function handleGetSettings(request: Request) {
   const context = await requireAuth(request);
   if (!isAuthContext(context)) return context;
   const { data } = await context.supabase.from('user_settings').select('*').eq('user_id', context.profile.id).maybeSingle();
-  return json(200, { settings: mapSettings(data as Record<string, unknown> | null) });
+  return json(request, 200, { settings: mapSettings(data as Record<string, unknown> | null) });
 }
 
 async function handlePutSettings(request: Request) {
@@ -710,12 +727,12 @@ async function handlePutSettings(request: Request) {
     privacy: { ...merged.privacy, ...jsonObject(body.privacy) },
   };
   const { data, error } = await context.supabase.from('user_settings').upsert({ ...settings, updated_at: new Date().toISOString(), user_id: context.profile.id }, { onConflict: 'user_id' }).select('*').single();
-  if (error) return json(400, { error: error.message });
-  return json(200, { settings: mapSettings(data as Record<string, unknown>) });
+  if (error) return json(request, 400, { error: error.message });
+  return json(request, 200, { settings: mapSettings(data as Record<string, unknown>) });
 }
 
 const routes: Route[] = [
-  { method: 'GET', pattern: /^\/health$/, handler: () => json(200, { ok: true, service: 'wasel-edge', version: 'tracked-v2' }) },
+  { method: 'GET', pattern: /^\/health$/, handler: () => json(request, 200, { ok: true, service: 'wasel-edge', version: 'tracked-v2' }) },
   { method: 'POST', pattern: /^\/profile$/, handler: handleCreateProfile },
   { method: 'GET', pattern: /^\/profile\/([^/]+)$/, params: ['userId'], handler: handleGetProfile },
   { method: 'PATCH', pattern: /^\/profile\/([^/]+)$/, params: ['userId'], handler: handleUpdateProfile },
@@ -755,11 +772,11 @@ Deno.serve(async (request) => {
 
   const url = new URL(request.url);
   const matched = matchRoute(request.method, url.pathname);
-  if (!matched) return json(404, { error: 'Route not found.', path: url.pathname });
+  if (!matched) return json(request, 404, { error: 'Route not found.', path: url.pathname });
 
   try {
     return await matched.route.handler(request, matched.params);
   } catch (error) {
-    return json(500, { error: error instanceof Error ? error.message : 'Unexpected Edge Function error.' });
+    return json(request, 500, { error: error instanceof Error ? error.message : 'Unexpected Edge Function error.' });
   }
 });

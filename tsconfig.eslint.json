@@ -9,6 +9,7 @@
     "src/App.tsx",
     "src/wasel-routes.tsx",
     "src/**/*.d.ts",
+    "shared/**/*.ts",
     "vite.config.ts"
   ],
   "exclude": [
