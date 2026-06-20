@@ -5431,11 +5431,6 @@ Deno.serve(async (request) => {
       return finalizeResponse(request, response);
     }
 
-    if (request.method === 'POST' && path === '/communications/admin/send-test') {
-      response = await handleSendTestCommunication(request);
-      return finalizeResponse(request, response);
-    }
-
     if (request.method === 'POST' && path === '/communications/admin/apply-migrations') {
       response = await handleApplyCommunicationMigrations(request);
       return finalizeResponse(request, response);
@@ -5484,9 +5479,12 @@ Deno.serve(async (request) => {
 
     response = json({ error: 'Route not found', path }, 404);
   } catch (error) {
+    const requestId = crypto.randomUUID();
+    console.error(`[Server Error] ${requestId}`, error);
     response = json(
       {
-        error: error instanceof Error ? error.message : String(error),
+        error: 'Internal server error',
+        requestId,
       },
       500,
     );

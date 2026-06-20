@@ -63,25 +63,7 @@ interface AuthContextType {
   changePassword: (nextPassword: string) => Promise<{ error: AuthOperationError }>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  profile: null,
-  session: null,
-  loading: true,
-  updating: false,
-  isBackendConnected: false,
-  signUp: async () => ({ error: null }),
-  signIn: async () => ({ error: null }),
-  signInWithGoogle: async () => ({ error: null }),
-  signInWithFacebook: async () => ({ error: null }),
-  startPhoneOtp: async () => ({ error: null }),
-  verifyPhoneOtp: async () => ({ error: null }),
-  signOut: async () => {},
-  updateProfile: async () => ({ error: null }),
-  refreshProfile: async () => {},
-  resetPassword: async () => ({ error: null }),
-  changePassword: async () => ({ error: null }),
-});
+const AuthContext = createContext<AuthContextType | null>(null);
 
 function splitFullName(fullName: string) {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
