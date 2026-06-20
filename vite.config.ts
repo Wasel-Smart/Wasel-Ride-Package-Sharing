@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,17 +8,14 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   plugins: [
     react(),
-    tailwindcss(),
   ],
-
-  define: {
-    __DEV__: JSON.stringify(process.env.NODE_ENV === 'development'),
-  },
 
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js', '.json'],
     alias: {
       '@': path.resolve(rootDir, './src'),
+      '@domains': path.resolve(rootDir, './src/domains'),
+      '@platform': path.resolve(rootDir, './src/platform'),
     },
   },
 
@@ -29,8 +25,7 @@ export default defineConfig({
     sourcemap: 'hidden',
     minify: 'esbuild',
     chunkSizeWarningLimit: 200,
-    cssCodeSplit: true,
-    reportCompressedSize: false,
+    cssMinify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks(id) {

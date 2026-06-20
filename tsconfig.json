@@ -40,7 +40,8 @@
     "shared/**/*.ts",
     "vite.config.ts",
     "vitest.config.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "src/services/**/*.ts"
   ],
   "exclude": [
     "node_modules",

@@ -194,17 +194,21 @@ export function initSupabaseListeners(): () => void {
   listenersInitialised = true;
 
   const onOnline = () => { processRequestQueue(); };
+  const onOffline = () => {};
 
   window.addEventListener('online',  onOnline,  { passive: true });
-  window.addEventListener('offline', () => {}, { passive: true });
+  window.addEventListener('offline', onOffline, { passive: true });
 
   healthCheckTimer = setInterval(() => {
     if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {return;}
-    checkSupabaseConnection(false).catch(() => {});
+    checkSupabaseConnection(false).catch((error) => {
+      console.debug('[Wasel] Supabase health check failed:', error);
+    });
   }, HEALTH_CHECK_INTERVAL);
 
   return () => {
     window.removeEventListener('online', onOnline);
+    window.removeEventListener('offline', onOffline);
     if (healthCheckTimer) { clearInterval(healthCheckTimer); healthCheckTimer = null; }
     listenersInitialised = false;
   };
