@@ -174,3 +174,6 @@ src/domains/
 .vercel
 supabase/.temp/
 .env*.local
+
+# Yarn local install state
+.yarn/install-state.gz
