@@ -456,6 +456,78 @@ async function setAutoTopUpLocal(
   }));
 }
 
+async function payWithWalletDirect(
+  userId: string,
+  amount: number,
+  referenceType: string,
+  referenceId?: string,
+  metadata?: Record<string, unknown>,
+): Promise<WalletData> {
+  const db = getDb();
+  const transactionType = mapReferenceTypeToTransactionType(referenceType);
+
+  const { data, error } = await db.rpc('app_pay_with_wallet', {
+    p_user_id: userId,
+    p_amount: amount,
+    p_transaction_type: transactionType,
+    p_payment_method: 'wallet_balance',
+    p_reference_type: referenceType,
+    p_reference_id: referenceId ?? null,
+    p_metadata: metadata ?? {},
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return fetchWalletDirect(userId);
+}
+
+async function payWithWalletLocal(
+  userId: string,
+  amount: number,
+  referenceType: string,
+): Promise<{ success: true; wallet: WalletData }> {
+  const wallet = updateLocalWalletRecord(userId, current => {
+    if (current.balance < amount) {
+      throw new Error('Insufficient wallet balance');
+    }
+
+    return {
+      ...current,
+      balance: current.balance - amount,
+      transactions: [
+        createLocalWalletTransaction(
+          'purchase',
+          referenceType ? `Payment for ${referenceType}` : 'Wallet checkout payment',
+          -Math.abs(amount),
+        ),
+        ...current.transactions,
+      ],
+    };
+  });
+
+  return {
+    success: true,
+    wallet,
+  };
+}
+
+function mapReferenceTypeToTransactionType(referenceType: string): string {
+  switch (referenceType) {
+    case 'ride_booking':
+      return 'ride_payment';
+    case 'package_delivery':
+      return 'package_payment';
+    case 'bus_booking':
+      return 'bus_payment';
+    case 'subscription':
+      return 'subscription_payment';
+    default:
+      return 'purchase';
+  }
+}
+
 async function getPaymentMethodsLocal(userId: string): Promise<{ methods: any[] }> {
   const wallet = readLocalWalletRecord(userId);
   return {
@@ -1239,6 +1311,40 @@ export const walletApi = {
       note,
       wallet,
     };
+  },
+
+  async pay(
+    userId: string,
+    amount: number,
+    referenceType: string,
+    referenceId?: string,
+    metadata?: Record<string, unknown>,
+  ) {
+    if (canUseEdgeApi()) {
+      try {
+        return await requestWalletJson(
+          userId,
+          '/pay',
+          'Wallet checkout payment',
+          {
+            method: 'POST',
+            body: { amount, referenceType, referenceId, metadata },
+          },
+        );
+      } catch {
+        // Fall back to direct Supabase below.
+      }
+    }
+
+    if (canUseLocalWalletStorage()) {
+      try {
+        return await payWithWalletDirect(userId, amount, referenceType, referenceId, metadata);
+      } catch {
+        return payWithWalletLocal(userId, amount, referenceType);
+      }
+    }
+
+    return payWithWalletDirect(userId, amount, referenceType, referenceId, metadata);
   },
 
   async getRewards(userId: string) {

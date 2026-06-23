@@ -3,6 +3,7 @@
  * Implements retry, dead-letter, and circuit breaker patterns
  */
 
+import Redis from 'ioredis';
 import { createStructuredLogEntry } from './observability';
 import { telemetry } from './telemetry';
 
@@ -56,7 +57,6 @@ export abstract class BaseWorker<T = unknown> {
       ),
     );
 
-    // Subscribe to topics
     for (const topic of this.config.topics) {
       this.subscribe(topic);
     }
@@ -78,7 +78,6 @@ export abstract class BaseWorker<T = unknown> {
     const startTime = Date.now();
 
     try {
-      // Check circuit breaker
       if (this.circuitBreakerState === 'open') {
         if (
           this.config.circuitBreaker &&
@@ -92,11 +91,9 @@ export abstract class BaseWorker<T = unknown> {
 
       await this.process(message);
 
-      // Record success
       telemetry.recordSLO(this.config.name, 'process', Date.now() - startTime, true);
       telemetry.endSpan(spanId, 'ok');
 
-      // Reset circuit breaker on success
       if (this.circuitBreakerState === 'half-open') {
         this.circuitBreakerState = 'closed';
         this.failureCount = 0;
@@ -120,7 +117,6 @@ export abstract class BaseWorker<T = unknown> {
         ),
       );
 
-      // Handle circuit breaker
       if (this.config.circuitBreaker) {
         this.failureCount++;
         this.lastFailureTime = Date.now();
@@ -137,7 +133,6 @@ export abstract class BaseWorker<T = unknown> {
         }
       }
 
-      // Retry logic
       if (message.retryCount < message.maxRetries) {
         await this.scheduleRetry(message);
       } else {
@@ -150,7 +145,7 @@ export abstract class BaseWorker<T = unknown> {
 
   protected async scheduleRetry(message: QueueMessage<T>): Promise<void> {
     const retryDelay =
-      this.config.retryPolicy.backoffMs * Math.pow(2, message.retryCount); // Exponential backoff
+      this.config.retryPolicy.backoffMs * Math.pow(2, message.retryCount);
 
     setTimeout(() => {
       this.handleMessage({
@@ -161,26 +156,6 @@ export abstract class BaseWorker<T = unknown> {
   }
 
   protected async sendToDeadLetter(message: QueueMessage<T>, error: unknown): Promise<void> {
-    console.error(
-      createStructuredLogEntry(
-        'error',
-        `Message sent to dead letter queue`,
-        this.config.name,
-        {
-          messageId: message.id,
-          topic: message.topic,
-          error: error instanceof Error ? error.message : String(error),
-        },
-        message.correlationId,
-      ),
-    );
-
-    telemetry.recordMetric('worker.dead_letter', 1, 'count', {
-      worker: this.config.name,
-      topic: message.topic,
-    });
-
-protected async sendToDeadLetter(message: QueueMessage<T>, error: unknown): Promise<void> {
     const dlqPayload = {
       originalId: message.id,
       topic: message.topic,
@@ -193,13 +168,10 @@ protected async sendToDeadLetter(message: QueueMessage<T>, error: unknown): Prom
     };
 
     try {
-      const dlqKeys = [
-        `dlq:${message.topic}:${message.id}`,
-        `dlq:by_worker:${this.config.name}:${Date.now()}`,
-      ];
+      const redis = await this.getRedisConnection();
+      const dlqKey = `dlq:${message.topic}:${message.id}`;
 
-      const redis = RedisPool?.connection ?? await this.getRedisConnection();
-      await redis.sadd('dlq:all', ...dlqKeys);
+      await redis.sadd('dlq:all', dlqKey);
       await redis.hset(`dlq:message:${message.id}`, dlqPayload);
       await redis.expire(`dlq:message:${message.id}`, 7 * 24 * 60 * 60);
 
@@ -212,7 +184,7 @@ protected async sendToDeadLetter(message: QueueMessage<T>, error: unknown): Prom
             messageId: message.id,
             topic: message.topic,
             error: error instanceof Error ? error.message : String(error),
-            dlqKeys,
+            dlqKey,
           },
           message.correlationId,
         ),
@@ -236,6 +208,7 @@ protected async sendToDeadLetter(message: QueueMessage<T>, error: unknown): Prom
       tls: process.env.REDIS_TLS === 'true' ? {} : undefined,
     });
   }
+}
 
 /**
  * In-memory worker implementation (development/staging)
@@ -245,7 +218,6 @@ export class InMemoryWorker<T = unknown> extends BaseWorker<T> {
 
   async process(message: QueueMessage<T>): Promise<void> {
     void message;
-    // Override in subclass
     throw new Error('process() must be implemented');
   }
 
@@ -262,7 +234,6 @@ export class InMemoryWorker<T = unknown> extends BaseWorker<T> {
 
     this.subscriptions.get(topic)!.add(handler);
 
-    // Register with global event bus
     if (typeof window !== 'undefined') {
       (window as any).__WASEL_EVENT_BUS__?.subscribe(topic, handler);
     }
