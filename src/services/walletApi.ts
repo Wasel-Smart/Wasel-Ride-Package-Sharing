@@ -466,7 +466,7 @@ async function payWithWalletDirect(
   const db = getDb();
   const transactionType = mapReferenceTypeToTransactionType(referenceType);
 
-  const { data, error } = await db.rpc('app_pay_with_wallet', {
+  const { error } = await db.rpc('app_pay_with_wallet', {
     p_user_id: userId,
     p_amount: amount,
     p_transaction_type: transactionType,
