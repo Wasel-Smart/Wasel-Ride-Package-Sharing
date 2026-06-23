@@ -19,6 +19,7 @@ const APP_ROUTE_PREFIXES = [
   '/routes',
   '/bus',
   '/packages',
+  '/schedule',
   '/awasel',
   '/raje3',
   '/services',

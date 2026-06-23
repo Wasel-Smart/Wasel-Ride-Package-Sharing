@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Bus, Car, Package, Search } from 'lucide-react';
+import { Bus, Calendar, Car, Package, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -124,6 +124,21 @@ export function HomePage() {
         dim: C.greenDim,
         border: C.greenDim,
         path: '/bus',
+      },
+      {
+        icon: Calendar,
+        kicker: ar ? 'مسبقاً' : 'Plan ahead',
+        title: ar ? 'جدولة' : 'Schedule rides & pickups',
+        desc: ar
+          ? 'خطط لرحلاتك وتوصيلاتك مسبقاً مع تذكيرات ذكية.'
+          : 'Pre-book rides and deliveries with smart reminders.',
+        outcome: ar
+          ? 'لا تفوت رحلة أو توصيل بعد اليوم'
+          : 'Never miss a ride or delivery again',
+        color: C.blue,
+        dim: C.blueDim,
+        border: C.blueDim,
+        path: '/schedule',
       },
     ],
     [ar],
