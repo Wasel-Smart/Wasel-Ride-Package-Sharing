@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Calendar, Clock, MapPin, Plus, Trash2, X, ArrowRight, Car, Package } from 'lucide-react';
+import { supabase } from '../../utils/supabase/client';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useLocalAuth } from '../../contexts/LocalAuth';
 import { C, F, R, TYPE } from '../../utils/wasel-ds';
 import { PageShell, SectionCard } from '../../components/wasel-ui/WaselPagePrimitives';
 
@@ -13,17 +15,42 @@ type ScheduleItem = {
   scheduled_at: string;
   recurring_pattern: string;
   notes?: string;
+  user_id?: string;
 };
 
+const LOCAL_KEY = 'wasel-scheduled-items-v1';
+
 export function SchedulePage() {
+  const { user } = useLocalAuth();
   const { language } = useLanguage();
   const ar = language === 'ar';
 
   const [showForm, setShowForm] = useState(false);
   const [items, setItems] = useState<ScheduleItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('wasel-scheduled-items-v1');
+  const loadItems = async () => {
+    setLoading(true);
+    try {
+      if (supabase && user?.id) {
+        const { data, error } = await supabase
+          .from('scheduled_pickups')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('scheduled_at', { ascending: true });
+
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setItems(data as ScheduleItem[]);
+          localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+          return;
+        }
+      }
+    } catch {
+      // table may not exist yet or network issue; fall back to local
+    }
+
+    const stored = localStorage.getItem(LOCAL_KEY);
     if (stored) {
       try {
         setItems(JSON.parse(stored));
@@ -31,11 +58,44 @@ export function SchedulePage() {
         // ignore
       }
     }
-  }, []);
+    setLoading(false);
+  };
 
-  const persist = (next: ScheduleItem[]) => {
+  useEffect(() => {
+    void loadItems();
+  }, [user?.id]);
+
+  const persist = async (next: ScheduleItem[]) => {
     setItems(next);
-    localStorage.setItem('wasel-scheduled-items-v1', JSON.stringify(next));
+
+    if (supabase && user?.id) {
+      try {
+        const payload = next.map(item => ({
+          id: item.id,
+          user_id: user.id,
+          item_type: item.item_type,
+          status: item.status,
+          pickup_location: item.pickup_location,
+          dropoff_location: item.dropoff_location ?? null,
+          scheduled_at: item.scheduled_at,
+          recurring_pattern: item.recurring_pattern,
+          notes: item.notes ?? null,
+        }));
+
+        const { error } = await supabase
+          .from('scheduled_pickups')
+          .upsert(payload, { onConflict: 'id' });
+
+        if (!error) {
+          localStorage.setItem(LOCAL_KEY, JSON.stringify(next));
+          return;
+        }
+      } catch {
+        // fall back to local
+      }
+    }
+
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(next));
   };
 
   const [form, setForm] = useState({
@@ -63,7 +123,7 @@ export function SchedulePage() {
     [items],
   );
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!form.pickup_location || !form.scheduled_at) return;
 
     const newItem: ScheduleItem = {
@@ -75,9 +135,10 @@ export function SchedulePage() {
       scheduled_at: form.scheduled_at,
       recurring_pattern: form.recurring_pattern,
       notes: form.notes,
+      user_id: user?.id,
     };
 
-    persist([newItem, ...items]);
+    await persist([newItem, ...items]);
     setShowForm(false);
     setForm({
       item_type: 'ride',
@@ -89,8 +150,8 @@ export function SchedulePage() {
     });
   };
 
-  const handleCancel = (id: string) => {
-    persist(
+  const handleCancel = async (id: string) => {
+    await persist(
       items.map(i => (i.id === id ? { ...i, status: 'cancelled' } : i)),
     );
   };
@@ -389,7 +450,22 @@ export function SchedulePage() {
         </SectionCard>
       )}
 
-      {upcoming.length > 0 && (
+      {loading && upcoming.length === 0 ? (
+        <SectionCard>
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '40px 20px',
+              color: C.textMuted,
+            }}
+          >
+            <Calendar size={32} color={C.textDim} />
+            <div style={{ marginTop: 12, fontFamily: F, fontSize: TYPE.size.base }}>
+              {ar ? 'جاري التحميل...' : 'Loading...'}
+            </div>
+          </div>
+        </SectionCard>
+      ) : upcoming.length > 0 ? (
         <SectionCard
           title={ar ? 'قادمة' : 'Upcoming'}
           contentPadding="0"
@@ -530,7 +606,7 @@ export function SchedulePage() {
             })}
           </div>
         </SectionCard>
-      )}
+      ) : null}
 
       {past.length > 0 && (
         <SectionCard
