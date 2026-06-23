@@ -3,10 +3,9 @@
  * Bridges worker framework to actual infrastructure (Kubernetes, Cloud Functions, etc.)
  */
 
-import { WorkerRegistry, createWorker } from './worker-framework';
-import { domainEventBus } from './event-bus';
+import { WorkerRegistry, createWorker, type QueueMessage } from './worker-framework';
+import { domainEventBus, eventBroker } from './event-bus';
 import { telemetry } from './telemetry';
-import { createStructuredLogEntry } from './observability';
 
 // ============================================================================
 // MATCHING WORKER
@@ -33,65 +32,44 @@ const matchingWorker = createWorker<RideMatchRequest>(
     const { payload } = message;
     const startTime = Date.now();
 
-    console.log(
-      createStructuredLogEntry(
-        'info',
-        'Processing ride match request',
-        'matching-worker',
-        { bookingId: payload.bookingId, rideId: payload.rideId },
-        message.correlationId,
-      ),
-    );
+    // Find drivers via event bus in browser, or would connect to Redis Streams in Node
+    if (typeof window !== 'undefined') {
+      const nearbyDrivers = [
+        { id: 'driver-1', name: 'Ahmed', distance: 2.5 },
+        { id: 'driver-2', name: 'Mohammed', distance: 4.1 },
+      ];
 
-    // Simulate driver matching logic
-    // In production, this would query PostGIS for nearby drivers
-    const nearbyDrivers = await findNearbyDrivers(
-      payload.origin.lat,
-      payload.origin.lng,
-      10, // 10km radius
-    );
+      if (nearbyDrivers.length === 0) {
+        throw new Error('No drivers available in area');
+      }
 
-    if (nearbyDrivers.length === 0) {
-      throw new Error('No drivers available in area');
-    }
+      const bestDriver = nearbyDrivers[0];
+      if (!bestDriver) {
+        throw new Error('No drivers available after ranking');
+      }
 
-    // Score and rank drivers
-    const bestDriver = nearbyDrivers[0];
-    if (!bestDriver) {
-      throw new Error('No drivers available after ranking');
-    }
-
-    // Publish driver assignment event
-    domainEventBus.publish({
-      id: `evt-${Date.now()}`,
-      type: 'DriverAssigned',
-      occurredAt: new Date().toISOString(),
-      traceId: message.correlationId,
-      producer: 'matching-worker',
-      payload: {
-        bookingId: payload.bookingId,
-        rideId: payload.rideId,
-        driverId: bestDriver.id,
-        driverName: bestDriver.name,
-      },
-    });
-
-    const latency = Date.now() - startTime;
-    telemetry.recordSLO('matching-worker', 'ride-matching', latency, true);
-
-    console.log(
-      createStructuredLogEntry(
-        'info',
-        'Ride matched successfully',
-        'matching-worker',
-        {
+      domainEventBus.publish({
+        id: `evt-${Date.now()}`,
+        type: 'DriverAssigned',
+        occurredAt: new Date().toISOString(),
+        traceId: message.correlationId,
+        producer: 'matching-worker',
+        payload: {
           bookingId: payload.bookingId,
+          rideId: payload.rideId,
           driverId: bestDriver.id,
-          latencyMs: latency,
+          driverName: bestDriver.name,
         },
-        message.correlationId,
-      ),
-    );
+      });
+
+      telemetry.recordSLO('matching-worker', 'ride-matching', Date.now() - startTime, true);
+    } else {
+      // Node.js environment - connect to Redis Streams
+      await eventBroker.subscribe('rides.requested', async (event) => {
+        const rideEvent = event.payload as { rideId: string; origin: { lat: number; lng: number }; seats: number };
+        // This would be handled by the backend ride-matching service
+      }, { groupName: 'matching-worker', consumerName: `worker-${process.env.HOSTNAME ?? 'local'}` });
+    }
   },
 );
 
@@ -119,8 +97,8 @@ const packageWorker = createWorker<PackageRequest>(
     const { payload } = message;
 
     if (message.topic === 'packages.created') {
-      // Assign package to available courier
-      const couriers = await findAvailableCouriers(payload.pickup.lat, payload.pickup.lng, 15);
+      // Mock courier finding (would be real DB query in backend)
+      const couriers = [{ id: 'courier-1', currentRideId: 'ride-123' }];
       const courier = couriers[0];
 
       if (courier) {
@@ -138,7 +116,6 @@ const packageWorker = createWorker<PackageRequest>(
         });
       }
     } else if (message.topic === 'packages.location-updated') {
-      // Track package location in real-time
       telemetry.recordMetric('package.location_update', 1, 'count', {
         packageId: payload.packageId,
       });
@@ -170,8 +147,8 @@ const paymentWorker = createWorker<PaymentAuthorization>(
     const { payload } = message;
     const startTime = Date.now();
 
-    // Simulate payment capture (Stripe API call)
-    const captured = await capturePayment(payload.entityId, payload.amount);
+    // Simulate payment capture (would be Stripe API in backend)
+    const captured = true;
 
     if (captured) {
       domainEventBus.publish({
@@ -187,8 +164,7 @@ const paymentWorker = createWorker<PaymentAuthorization>(
         },
       });
 
-      const latency = Date.now() - startTime;
-      telemetry.recordSLO('payment-worker', 'payment-capture', latency, true);
+      telemetry.recordSLO('payment-worker', 'payment-capture', Date.now() - startTime, true);
     }
   },
 );
@@ -216,21 +192,8 @@ const notificationWorker = createWorker<NotificationDispatch>(
     const { payload } = message;
     const startTime = Date.now();
 
-    // Route to appropriate channel
-    switch (payload.channel) {
-      case 'push':
-        await sendPushNotification(payload.userId, payload.template, payload.data);
-        break;
-      case 'sms':
-        await sendSMS(payload.userId, payload.template, payload.data);
-        break;
-      case 'email':
-        await sendEmail(payload.userId, payload.template, payload.data);
-        break;
-      case 'whatsapp':
-        await sendWhatsApp(payload.userId, payload.template, payload.data);
-        break;
-    }
+    // Route to appropriate channel (browser simulation)
+    console.log(`Notification to ${payload.userId} via ${payload.channel}: ${payload.template}`);
 
     const latency = Date.now() - startTime;
     telemetry.recordSLO('notification-worker', 'dispatch', latency, true);
@@ -260,98 +223,9 @@ const opsWorker = createWorker<RideCompletionEvent>(
   },
   async (message) => {
     const { payload } = message;
-
-    // Aggregate metrics for dashboards
-    await updateCorridorAnalytics(payload.origin, payload.destination, payload.revenue);
-    await updateRevenueMetrics(payload.revenue);
-
     telemetry.recordMetric('ops.analytics_updated', 1, 'count');
   },
 );
-
-// ============================================================================
-// HELPER FUNCTIONS (Mock implementations)
-// ============================================================================
-
-async function findNearbyDrivers(
-  lat: number,
-  lng: number,
-  radiusKm: number,
-): Promise<Array<{ id: string; name: string; distance: number }>> {
-  void lat;
-  void lng;
-  void radiusKm;
-  // In production: PostGIS query
-  // SELECT * FROM drivers WHERE status = 'available' 
-  // AND ST_DWithin(location, ST_MakePoint($1, $2)::geography, $3 * 1000)
-  return [
-    { id: 'driver-1', name: 'Ahmed', distance: 2.5 },
-    { id: 'driver-2', name: 'Mohammed', distance: 4.1 },
-  ];
-}
-
-async function findAvailableCouriers(
-  lat: number,
-  lng: number,
-  radiusKm: number,
-): Promise<Array<{ id: string; currentRideId: string }>> {
-  void lat;
-  void lng;
-  void radiusKm;
-  return [{ id: 'courier-1', currentRideId: 'ride-123' }];
-}
-
-async function capturePayment(entityId: string, amount: number): Promise<boolean> {
-  void entityId;
-  void amount;
-  // In production: Stripe API call
-  // await stripe.paymentIntents.capture(paymentIntentId);
-  return true;
-}
-
-async function sendPushNotification(
-  userId: string,
-  template: string,
-  _data: Record<string, unknown>,
-): Promise<void> {
-  console.log(`📱 Push notification to ${userId}: ${template}`);
-}
-
-async function sendSMS(
-  userId: string,
-  template: string,
-  _data: Record<string, unknown>,
-): Promise<void> {
-  console.log(`📨 SMS to ${userId}: ${template}`);
-}
-
-async function sendEmail(
-  userId: string,
-  template: string,
-  _data: Record<string, unknown>,
-): Promise<void> {
-  console.log(`📧 Email to ${userId}: ${template}`);
-}
-
-async function sendWhatsApp(
-  userId: string,
-  template: string,
-  _data: Record<string, unknown>,
-): Promise<void> {
-  console.log(`💬 WhatsApp to ${userId}: ${template}`);
-}
-
-async function updateCorridorAnalytics(
-  _origin: string,
-  _destination: string,
-  _revenue: number,
-): Promise<void> {
-  // Update analytics database
-}
-
-async function updateRevenueMetrics(_revenue: number): Promise<void> {
-  // Update revenue tracking
-}
 
 // ============================================================================
 // WORKER REGISTRY & LIFECYCLE
@@ -369,8 +243,8 @@ productionWorkerRegistry.register(opsWorker);
 // Export individual workers for testing
 export { matchingWorker, packageWorker, paymentWorker, notificationWorker, opsWorker };
 
-// Auto-start workers in production
-if (import.meta.env.MODE === 'production' && typeof window === 'undefined') {
+// Auto-start workers in production (Node.js environment only)
+if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
   productionWorkerRegistry
     .startAll()
     .then(() => {
