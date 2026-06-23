@@ -85,7 +85,7 @@ export function ActivityPage() {
         time: b.departureTime,
         amount: Number(b.totalPrice ?? 0),
         status: b.status,
-        statusColor: b.status === 'confirmed' ? C.green : b.status === 'cancelled' ? C.error : C.gold,
+        statusColor: b.status === 'confirmed' || b.status === 'completed' ? C.green : b.status === 'cancelled' ? C.error : C.gold,
         Icon: Bus,
         path: '/app/bus',
       });
