@@ -3,31 +3,26 @@
  * Shared with the app's core navigation model for consistent UX.
  */
 
-import { Bus, Clock, Package, PlusCircle, Search } from 'lucide-react';
+import { Car, Clock, Home, Package, Plus, Wallet } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router';
-import { CORE_NAV_ITEMS } from '../config/user-navigation';
+import { SUPER_APP_NAV_ITEMS } from '../config/super-app-nav';
 import { useLanguage } from '../contexts/LanguageContext';
-import { C, F, GRAD_GOLD } from '../utils/wasel-ds';
+import { C, F, GRAD } from '../utils/wasel-ds';
 
 const BG = 'rgba(6,19,31,0.96)';
-const CYAN = C.cyan;
-const GOLD = C.gold;
 const INACTIVE = C.textDim;
 const BORDER = C.border;
 
 const ICONS = {
-  find: Search,
-  post: PlusCircle,
-  packages: Package,
-  trips: Clock,
-  bus: Bus,
+  home: Home,
+  ride: Car,
+  offer: Plus,
+  delivery: Package,
+  activity: Clock,
+  wallet: Wallet,
 } as const;
 
-interface MobileBottomNavProps {
-  language?: 'en' | 'ar';
-}
-
-export function MobileBottomNav({ language }: MobileBottomNavProps) {
+export function MobileBottomNav({ language }: { language?: 'en' | 'ar' }) {
   const { language: activeLanguage } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
@@ -35,11 +30,13 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
   const isArabic = resolvedLanguage === 'ar';
 
   const isActive = (path: string) => {
-    if (path === '/')
-      return (
-        location.pathname === '/' || location.pathname === '/app' || location.pathname === '/app/'
-      );
-    return location.pathname.startsWith(path) || location.pathname.startsWith('/app' + path);
+    if (path === '/app') return location.pathname === '/app' || location.pathname === '/app/';
+    if (path === '/app/my-trips') return location.pathname.startsWith('/app/my-trips');
+    if (path === '/app/wallet') return location.pathname.startsWith('/app/wallet');
+    if (path === '/app/find-ride') return location.pathname.startsWith('/app/find-ride');
+    if (path === '/app/offer-ride') return location.pathname.startsWith('/app/offer-ride');
+    if (path === '/app/packages') return location.pathname.startsWith('/app/packages');
+    return false;
   };
 
   return (
@@ -72,11 +69,12 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
           transform: 'translateZ(0)',
         }}
       >
-        {CORE_NAV_ITEMS.map(item => {
+        {SUPER_APP_NAV_ITEMS.map(item => {
           const active = isActive(item.path);
-          const Icon = ICONS[item.id as keyof typeof ICONS];
-          const isPost = item.id === 'post';
-          const itemColor = item.accent === 'gold' ? GOLD : CYAN;
+          const accent = item.accent === 'gold' ? C.gold : C.cyan;
+          const isOffer = item.id === 'offer';
+
+          const IconComponent = ICONS[item.id];
 
           return (
             <button
@@ -104,7 +102,7 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
                 transition: 'transform 0.15s ease',
               }}
             >
-              {active && !isPost && (
+              {active && !isOffer && (
                 <div
                   style={{
                     position: 'absolute',
@@ -113,36 +111,28 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
                     right: '25%',
                     height: 2,
                     borderRadius: '0 0 2px 2px',
-                    background: itemColor,
-                    boxShadow: `0 2px 8px ${itemColor}80`,
+                    background: accent,
+                    boxShadow: `0 2px 8px ${accent}80`,
                   }}
                 />
               )}
 
-              {isPost ? (
+              {isOffer ? (
                 <div
                   style={{
                     width: 48,
                     height: 48,
                     borderRadius: 16,
-                    background: active
-                      ? GRAD_GOLD
-                      : 'linear-gradient(135deg,rgba(255,190,92,0.2),rgba(255,147,106,0.16))',
-                    border: `1.5px solid ${active ? GOLD : 'rgba(255,190,92,0.34)'}`,
+                    background: active ? GRAD : 'linear-gradient(135deg,rgba(88,221,255,0.2),rgba(71,214,158,0.16))',
+                    border: `1.5px solid ${active ? C.cyan : 'rgba(88,221,255,0.34)'}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: active
-                      ? '0 10px 24px rgba(255,190,92,0.28)'
-                      : '0 4px 14px rgba(255,190,92,0.14)',
+                    boxShadow: active ? '0 10px 24px rgba(88,221,255,0.28)' : '0 4px 14px rgba(88,221,255,0.14)',
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  <Icon
-                    size={22}
-                    strokeWidth={active ? 2.5 : 2}
-                    color={active ? '#111316' : GOLD}
-                  />
+                  {IconComponent && <IconComponent size={22} strokeWidth={active ? 2.5 : 2} color={active ? '#111316' : C.cyan} />}
                 </div>
               ) : (
                 <div
@@ -153,12 +143,12 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
                     justifyContent: 'center',
                   }}
                 >
-                  {Icon && (
-                    <Icon
+                  {IconComponent && (
+                    <IconComponent
                       size={22}
                       strokeWidth={active ? 2.5 : 1.8}
                       style={{
-                        color: active ? itemColor : INACTIVE,
+                        color: active ? accent : INACTIVE,
                         transition: 'color 0.18s ease',
                       }}
                     />
@@ -170,7 +160,7 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
                 style={{
                   fontSize: 10,
                   fontWeight: active ? 700 : 500,
-                  color: active ? (isPost ? GOLD : itemColor) : INACTIVE,
+                  color: active ? accent : INACTIVE,
                   fontFamily: F,
                   lineHeight: 1,
                   whiteSpace: 'nowrap',
