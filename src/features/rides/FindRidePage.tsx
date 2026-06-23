@@ -328,7 +328,7 @@ export function FindRidePage() {
     });
   };
 
-  const handleBook = (ride: Ride) => {
+  const handleBook = async (ride: Ride) => {
     if (bookingInFlightId) return;
     const existingBooking = bookingByRideId.get(ride.id);
     if (existingBooking) {
@@ -358,6 +358,7 @@ export function FindRidePage() {
       forecastDemandScore: rideSignal?.forecastDemandScore,
       membership: routeIntelligence.membership,
     });
+    const finalPrice = ridePriceQuote.finalPriceJod;
 
     setBookingInFlightId(ride.id);
 
@@ -373,7 +374,7 @@ export function FindRidePage() {
         driverName: ride.driver.name,
         passengerName: user.name,
         seatsRequested: 1,
-        pricePerSeatJod: ridePriceQuote.finalPriceJod,
+        pricePerSeatJod: finalPrice,
         routeMode: ride.routeMode === 'live_post' ? 'live_post' : 'network_inventory',
       });
 
@@ -382,7 +383,7 @@ export function FindRidePage() {
         status: booking.status === 'pending_driver' ? 'pending_driver' : 'confirmed',
         routeLabel: `${ride.from} to ${ride.to}`,
         driverName: ride.driver.name,
-        priceJod: ridePriceQuote.finalPriceJod,
+        priceJod: finalPrice,
         ticketCode: booking.ticketCode,
       });
       setBookingMessage(
@@ -391,13 +392,27 @@ export function FindRidePage() {
           : `Seat confirmed for ${ride.from} to ${ride.to}.`,
       );
 
+      try {
+        await walletApi.pay(user.id, finalPrice, 'ride_booking', booking.id, {
+          rideId: ride.id,
+          from: ride.from,
+          to: ride.to,
+          seats: 1,
+        });
+      } catch (paymentError) {
+        console.error('[Wallet] ride booking payment failed:', paymentError);
+        setBookingMessage(
+          `${booking.status === 'pending_driver' ? 'Request sent' : 'Seat confirmed'} for ${ride.from} to ${ride.to}. Payment will be collected by the driver (wallet unavailable).`,
+        );
+      }
+
       notificationsAPI
         .createNotification({
           title: booking.status === 'pending_driver' ? 'Route request sent' : t.bookingStarted,
           message:
             booking.status === 'pending_driver'
-              ? `${ride.from} to ${ride.to} is waiting for driver approval at ${ridePriceQuote.finalPriceJod} JOD.`
-              : `${ride.from} to ${ride.to} at ${ride.time} is now in your trips at ${ridePriceQuote.finalPriceJod} JOD with boarding reminders.`,
+              ? `${ride.from} to ${ride.to} is waiting for driver approval at ${finalPrice} JOD.`
+              : `${ride.from} to ${ride.to} at ${ride.time} is now in your trips at ${finalPrice} JOD with boarding reminders.`,
           type: 'booking',
           priority: 'high',
           action_url: '/app/my-trips?tab=rides',

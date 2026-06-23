@@ -24,6 +24,8 @@ import {
 import { notificationsAPI } from '../../services/notifications.js';
 import { recordMovementActivity } from '../../services/movementMembership';
 import { createSupportTicket } from '../../services/supportInbox';
+import { walletApi } from '../../services/walletApi';
+import { calculateDirectPrice } from '../../services/directSupabase';
 import {
   getCorridorOpportunity,
   getFeaturedCorridors,
@@ -101,6 +103,9 @@ export function PackagesPage() {
     setCreateError(null);
 
     try {
+      const weightKg = parseFloat(pkg.weight.match(/\d+(?:\.\d+)?/)?.[0] || '0.5');
+      const priceResult = calculateDirectPrice('package', weightKg, 8);
+
       const created = await createConnectedPackage({
         from: pkg.from,
         to: pkg.to,
@@ -117,6 +122,22 @@ export function PackagesPage() {
       setTrackingMessage(`Tracking live: ${created.trackingId}.`);
       refreshPackageSnapshot();
       void recordMovementActivity('package_created', corridorPlan?.id ?? null);
+
+      if (user?.id) {
+        try {
+          await walletApi.pay(user.id, priceResult.price, 'package_delivery', created.id, {
+            trackingId: created.trackingId,
+            from: created.from,
+            to: created.to,
+            weight: pkg.weight,
+          });
+        } catch (paymentError) {
+          console.error('[Wallet] package payment failed:', paymentError);
+          setTrackingMessage(
+            `Tracking live: ${created.trackingId}. Payment will be settled on delivery (wallet unavailable).`,
+          );
+        }
+      }
 
       notificationsAPI
         .createNotification({

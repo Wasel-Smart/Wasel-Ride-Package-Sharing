@@ -9,6 +9,7 @@ import { getCorridorDemandLeaders } from '../../services/growthEngine';
 import { CurrencyService } from '../../utils/currency';
 import { trackUserAction } from '../../utils/monitoring';
 import { WaselErrorBoundary } from '../../components/ErrorBoundary';
+import { ActiveTripsBanner } from '../../components/TripProgressCard';
 import { C, F, POPULAR_ROUTES } from './HomePageShared';
 import {
   CorridorsSection,
@@ -219,6 +220,10 @@ return (
           <OnboardingDemoSection ar={ar} onNavigate={handleNavigate} />
 
           <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={handleNavigate} />
+
+          {user && (
+            <ActiveTripsBanner onNavigate={handleNavigate} />
+          )}
 
           <CorridorBetaFocusSection
             ar={ar}
