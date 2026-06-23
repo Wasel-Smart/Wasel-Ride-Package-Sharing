@@ -328,7 +328,7 @@ export class RideLifecycleService {
     };
   }
 
-private setActiveRide(ride: Ride | null): void {
+  private setActiveRide(ride: Ride | null): void {
     this.activeRide = ride;
     this.listeners.forEach(listener => listener(ride));
   }
