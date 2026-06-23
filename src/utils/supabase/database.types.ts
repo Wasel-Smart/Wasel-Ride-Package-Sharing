@@ -485,6 +485,37 @@ export interface Database {
         ip_address?: string | null;
         user_agent?: string | null;
       }>;
+
+      scheduled_pickups: RowSet<{
+        id: string;
+        user_id: string;
+        item_type: 'ride' | 'package_delivery' | 'package_return';
+        status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'missed';
+        pickup_location: string;
+        pickup_lat: number;
+        pickup_lng: number;
+        dropoff_location?: string | null;
+        dropoff_lat?: number | null;
+        dropoff_lng?: number | null;
+        pickup_location_geom?: unknown | null;
+        dropoff_location_geom?: unknown | null;
+        scheduled_at: string;
+        recurring_pattern?: string | null;
+        recurring_until?: string | null;
+        trip_id?: string | null;
+        booking_id?: string | null;
+        package_id?: string | null;
+        notes?: string | null;
+        contact_name?: string | null;
+        contact_phone?: string | null;
+        estimated_price?: number | null;
+        reminder_24h_sent?: boolean;
+        reminder_1h_sent?: boolean;
+        created_at: string;
+        updated_at?: string | null;
+        cancelled_at?: string | null;
+        cancellation_reason?: string | null;
+      }>;
     };
 
     Views: {

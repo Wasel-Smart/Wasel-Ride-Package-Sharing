@@ -451,7 +451,10 @@ export function SchedulePage() {
       )}
 
       {loading && upcoming.length === 0 ? (
-        <SectionCard>
+        <SectionCard
+          title={ar ? 'الجدولة' : 'Scheduling'}
+          subtitle={ar ? 'جاري تحميل جدولك' : 'Loading your schedule'}
+        >
           <div
             style={{
               textAlign: 'center',
