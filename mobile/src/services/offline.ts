@@ -186,21 +186,6 @@ export class OfflineService {
   /**
    * Execute a single offline action
    */
-  private normalizeRideRequestPayload(payload: Record<string, unknown>): Record<string, unknown> {
-    return {
-      origin_lat: payload.origin_lat,
-      origin_lng: payload.origin_lng,
-      origin_address: payload.origin_address,
-      dest_lat: payload.dest_lat,
-      dest_lng: payload.dest_lng,
-      dest_address: payload.dest_address,
-      seats: payload.seats,
-      scheduled_for: payload.scheduled_for,
-      preferred_vehicle_type: payload.preferred_vehicle_type,
-      notes: payload.notes,
-    };
-  }
-
   private async executeOfflineAction(action: OfflineAction): Promise<void> {
     const token = mobileAuth.getAccessToken();
     if (!token) {
@@ -213,33 +198,35 @@ export class OfflineService {
     }
 
     switch (action.type) {
-      case 'RIDE_REQUEST': {
-        const normalizedPayload = this.normalizeRideRequestPayload(action.payload as Record<string, unknown>);
+      case 'RIDE_REQUEST':
         await this.sendQueuedRequest(`${apiUrl}/trips`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(normalizedPayload),
+          body: JSON.stringify(this.toTripCreatePayload(action.payload)),
         });
         break;
-      }
 
       case 'RIDE_CANCEL': {
-        await this.sendQueuedRequest(`${apiUrl}/cancellations/trips`, {
+        const bookingId = this.readPayloadString(action.payload, ['bookingId', 'rideId']);
+        await this.sendQueuedRequest(`${apiUrl}/cancellations/bookings`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ tripId: this.readPayloadField(action.payload, 'rideId') }),
+          body: JSON.stringify({
+            bookingId,
+            reason: this.readPayloadField(action.payload, 'reason') ?? 'Cancelled from mobile offline sync',
+          }),
         });
         break;
       }
 
       case 'RIDE_RATING': {
-        const rideId = this.readPayloadField(action.payload, 'rideId');
+        const bookingId = this.readPayloadString(action.payload, ['bookingId', 'rideId']);
         await this.sendQueuedRequest(`${apiUrl}/ratings`, {
           method: 'POST',
           headers: {
@@ -247,7 +234,7 @@ export class OfflineService {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            tripId: rideId,
+            bookingId,
             rating: this.readPayloadField(action.payload, 'rating'),
             feedback: this.readPayloadField(action.payload, 'feedback'),
           }),
@@ -266,18 +253,19 @@ export class OfflineService {
         });
         break;
 
-      case 'PROFILE_UPDATE': {
-        const userId = this.readPayloadField(action.payload, 'userId') ?? 'me';
-        await this.sendQueuedRequest(`${apiUrl}/profile/${encodeURIComponent(String(userId))}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+      case 'PROFILE_UPDATE':
+        await this.sendQueuedRequest(
+          `${apiUrl}/profile/${encodeURIComponent(this.requireCurrentUserId())}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(action.payload),
           },
-          body: JSON.stringify(action.payload),
-        });
+        );
         break;
-      }
 
       default:
         throw new Error(`Unknown action type: ${String((action as { type?: string }).type)}`);
@@ -299,13 +287,52 @@ export class OfflineService {
     return (payload as Record<string, unknown>)[field];
   }
 
-  private readPayloadPathField(payload: unknown, field: string): string {
-    const value = this.readPayloadField(payload, field);
+  private readPayloadString(payload: unknown, fields: string[]): string {
+    const value = fields.map(field => this.readPayloadField(payload, field)).find(candidate => candidate !== undefined);
     if (typeof value !== 'string' && typeof value !== 'number') {
-      throw new Error(`Queued action missing ${field}`);
+      throw new Error(`Queued action missing one of: ${fields.join(', ')}`);
     }
 
-    return encodeURIComponent(String(value));
+    return String(value);
+  }
+
+  private requireCurrentUserId(): string {
+    const userId = mobileAuth.getUser()?.id;
+    if (!userId) {
+      throw new Error('Queued profile update requires an authenticated user');
+    }
+
+    return userId;
+  }
+
+  private toTripCreatePayload(payload: unknown): Record<string, unknown> {
+    if (!payload || typeof payload !== 'object') {
+      return {};
+    }
+
+    const source = payload as Record<string, unknown>;
+    if ('from' in source || 'to' in source) {
+      return source;
+    }
+
+    const origin = source.origin && typeof source.origin === 'object'
+      ? source.origin as Record<string, unknown>
+      : {};
+    const destination = source.destination && typeof source.destination === 'object'
+      ? source.destination as Record<string, unknown>
+      : {};
+    const scheduledAt = typeof source.scheduled_for === 'string'
+      ? new Date(source.scheduled_for)
+      : new Date(Date.now() + 60 * 60 * 1000);
+
+    return {
+      from: source.origin_address ?? origin.address,
+      to: source.dest_address ?? destination.address,
+      date: scheduledAt.toISOString().slice(0, 10),
+      time: scheduledAt.toISOString().slice(11, 16),
+      seats: source.seats,
+      notes: source.notes,
+    };
   }
 
   /**

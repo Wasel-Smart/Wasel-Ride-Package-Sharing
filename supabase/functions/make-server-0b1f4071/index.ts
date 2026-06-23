@@ -308,6 +308,25 @@ function finalizeResponse(request: Request, response: Response | undefined): Res
   });
 }
 
+function logUnhandledRouteError(error: unknown, request: Request): void {
+  const { pathname } = new URL(request.url);
+  console.error('[Edge] Unhandled request error', {
+    path: pathname,
+    method: request.method,
+    message: error instanceof Error ? error.message : String(error),
+  });
+}
+
+function sanitizedUnhandledErrorResponse(): Response {
+  return json(
+    {
+      error: 'Internal server error',
+      requestId: crypto.randomUUID(),
+    },
+    500,
+  );
+}
+
 function isOriginAllowed(request: Request): boolean {
   const origin = request.headers.get('origin');
   return !origin || Boolean(resolveAllowedOrigin(origin, APP_BASE_URL, ADDITIONAL_ALLOWED_ORIGINS));
@@ -5421,6 +5440,11 @@ Deno.serve(async (request) => {
       return finalizeResponse(request, response);
     }
 
+    if (request.method === 'POST' && path === '/communications/admin/send-test') {
+      response = await handleSendTestCommunication(request);
+      return finalizeResponse(request, response);
+    }
+
     if (request.method === 'GET' && path === '/communications/admin/provider-diagnostics') {
       response = await handleProviderDiagnostics(request);
       return finalizeResponse(request, response);
@@ -5474,15 +5498,8 @@ Deno.serve(async (request) => {
 
     response = json({ error: 'Route not found', path }, 404);
   } catch (error) {
-    const requestId = crypto.randomUUID();
-    console.error(`[Server Error] ${requestId}`, error);
-    response = json(
-      {
-        error: 'Internal server error',
-        requestId,
-      },
-      500,
-    );
+    logUnhandledRouteError(error, request);
+    response = sanitizedUnhandledErrorResponse();
   }
 
   return finalizeResponse(request, response ?? json({ error: 'Route not found' }, 404));

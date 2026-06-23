@@ -47,7 +47,6 @@ export interface Ride {
     address: string;
   };
   status: RideStatus;
-  seats?: number;
   fare?: number;
   distance?: number;
   duration?: number;
@@ -81,6 +80,21 @@ export class RideLifecycleService {
       throw new Error('Mobile API URL is not configured');
     }
     return `${baseUrl.replace(/\/$/, '')}${path}`;
+  }
+
+  private toTripCreatePayload(request: RideRequest): Record<string, unknown> {
+    const scheduledAt = request.scheduledFor
+      ? new Date(request.scheduledFor)
+      : new Date(Date.now() + 60 * 60 * 1000);
+
+    return {
+      from: request.origin.address,
+      to: request.destination.address,
+      date: scheduledAt.toISOString().slice(0, 10),
+      time: scheduledAt.toISOString().slice(11, 16),
+      seats: request.seats,
+      notes: request.notes,
+    };
   }
 
   private getAuthHeaders(): HeadersInit {
@@ -121,7 +135,8 @@ export class RideLifecycleService {
       return { error: new Error('User not authenticated') };
     }
 
-    const payload = {
+    const payload = this.toTripCreatePayload(request);
+    const queuedPayload = {
       rider_id: user.id,
       origin_lat: request.origin.latitude,
       origin_lng: request.origin.longitude,
@@ -139,13 +154,13 @@ export class RideLifecycleService {
     if (!offlineService.isDeviceOnline()) {
       await offlineService.queueOfflineAction({
         type: 'RIDE_REQUEST',
-        payload,
+        payload: queuedPayload,
       });
       return { error: new Error('Ride request queued for sync when online') };
     }
 
     try {
-      // Call backend API - aligned to /trips endpoint
+      // Call backend API
       const response = await fetch(this.getApiUrl('/trips'), {
         method: 'POST',
         headers: this.getAuthHeaders(),
@@ -156,8 +171,8 @@ export class RideLifecycleService {
         throw new Error(`Request failed: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      const ride = this.mapBackendTrip(data.trip ?? data.ride);
+      const data = await response.json() as { ride?: unknown } & Record<string, unknown>;
+      const ride = this.mapDatabaseRide(data.ride ?? data);
       this.setActiveRide(ride);
 
       // Cache the ride
@@ -181,13 +196,12 @@ export class RideLifecycleService {
     }
 
     try {
-      // Call backend API - aligned to /cancellations/trips endpoint
       const response = await fetch(
-        this.getApiUrl('/cancellations/trips'),
+        this.getApiUrl('/cancellations/bookings'),
         {
           method: 'POST',
           headers: this.getAuthHeaders(),
-          body: JSON.stringify({ tripId: rideId, reason }),
+          body: JSON.stringify({ bookingId: rideId, reason: reason ?? 'Cancelled from mobile' }),
         },
       );
 
@@ -213,10 +227,9 @@ export class RideLifecycleService {
     }
 
     try {
-      // Call backend API - aligned to /ratings endpoint
       await this.request<void>('/ratings', {
         method: 'POST',
-        body: JSON.stringify({ tripId: rideId, rating, feedback }),
+        body: JSON.stringify({ bookingId: rideId, rating, feedback }),
       });
       return {};
     } catch (error) {
@@ -333,102 +346,36 @@ export class RideLifecycleService {
     this.listeners.forEach(listener => listener(ride));
   }
 
-  private mapBackendTrip(data: BackendTrip): Ride {
-    const now = new Date().toISOString();
+  private mapDatabaseRide(data: any): Ride {
+    const originAddress = data.origin_address ?? data.origin_city ?? data.from ?? '';
+    const destinationAddress = data.dest_address ?? data.destination_city ?? data.to ?? '';
+    const status = data.status ?? data.trip_status ?? 'requested';
     return {
-      id: data.id,
-      riderId: '',
-      driverId: data.driver?.id,
-      vehicleId: null,
-      origin: {
-        latitude: 0,
-        longitude: 0,
-        address: data.from,
-      },
-      destination: {
-        latitude: 0,
-        longitude: 0,
-        address: data.to,
-      },
-      status: 'requested' as RideStatus,
-      seats: data.seats,
-      fare: data.price,
-      distance: 0,
-      duration: 0,
-      requestedAt: now,
-      matchedAt: null,
-      startedAt: null,
-      completedAt: null,
-      cancelledAt: null,
-    };
-  }
-
-  private mapDatabaseRide(data: DatabaseRide): Ride {
-    return {
-      id: data.id,
-      riderId: data.rider_id,
+      id: data.id ?? data.trip_id,
+      riderId: data.rider_id ?? mobileAuth.getUser()?.id ?? '',
       driverId: data.driver_id,
       vehicleId: data.vehicle_id,
       origin: {
-        latitude: data.origin_lat,
-        longitude: data.origin_lng,
-        address: data.origin_address,
+        latitude: data.origin_lat ?? 0,
+        longitude: data.origin_lng ?? 0,
+        address: originAddress,
       },
       destination: {
-        latitude: data.dest_lat,
-        longitude: data.dest_lng,
-        address: data.dest_address,
+        latitude: data.dest_lat ?? 0,
+        longitude: data.dest_lng ?? 0,
+        address: destinationAddress,
       },
-      status: data.status,
-      fare: data.fare,
+      status,
+      fare: data.fare ?? data.price_per_seat,
       distance: data.distance,
       duration: data.duration,
-      requestedAt: data.created_at,
+      requestedAt: data.created_at ?? data.departure_time ?? new Date().toISOString(),
       matchedAt: data.matched_at,
       startedAt: data.started_at,
       completedAt: data.completed_at,
       cancelledAt: data.cancelled_at,
     };
   }
-}
-
-export interface BackendTrip {
-  id: string;
-  from: string;
-  to: string;
-  date: string;
-  time: string;
-  seats?: number;
-  price?: number;
-  driver?: {
-    id: string;
-    name: string;
-    rating?: number;
-    verified?: boolean;
-  };
-}
-
-export interface DatabaseRide {
-  id: string;
-  rider_id: string;
-  driver_id?: string;
-  vehicle_id?: string;
-  origin_lat: number;
-  origin_lng: number;
-  origin_address: string;
-  dest_lat: number;
-  dest_lng: number;
-  dest_address: string;
-  status: RideStatus;
-  fare?: number;
-  distance?: number;
-  duration?: number;
-  created_at: string;
-  matched_at?: string;
-  started_at?: string;
-  completed_at?: string;
-  cancelled_at?: string;
-  seats?: number;
 }
 
 export const rideLifecycle = new RideLifecycleService();
