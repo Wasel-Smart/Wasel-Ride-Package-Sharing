@@ -433,9 +433,15 @@ export function propagateFlow(
 ): CityMap {
   const next = cloneCities(cities);
 
-  const deltaIn: Record<City, number> = {};
-  const deltaOut: Record<City, number> = {};
-  const deltaCong: Record<City, number> = {};
+  const deltaIn = {} as Record<City, number>;
+  const deltaOut = {} as Record<City, number>;
+  const deltaCong = {} as Record<City, number>;
+
+  for (const c of Object.keys(cities) as City[]) {
+    deltaIn[c] = 0;
+    deltaOut[c] = 0;
+    deltaCong[c] = 0;
+  }
 
   for (const c of Object.keys(cities) as City[]) {
     deltaIn[c] = 0;
@@ -763,7 +769,7 @@ export function initializeJordanCities(): CityMap {
 // -------------------------------------------------------
 
 export function buildCorridorAdjacency(): Record<City, Record<City, number>> {
-  const adjacency: Record<City, Record<City, number>> = {};
+  const adjacency = {} as Record<City, Record<City, number>>;
 
   for (const corridor of FIXED_CORRIDORS) {
     adjacency[corridor.origin] = adjacency[corridor.origin] ?? {};
