@@ -1,0 +1,418 @@
+openapi: 3.1.0
+info:
+  title: Wasel Mobility Platform API
+  version: 2.0.0
+  description: Jordan-focused mobility and logistics platform API
+  contact:
+    name: Wasel Support
+    url: https://wasel14.online/support
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.wasel14.online/v1
+    description: Production server
+  - url: https://staging-api.wasel14.online/v1
+    description: Staging server
+
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT Authorization header using the Bearer scheme
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for server-to-server communication
+
+  schemas:
+    Error:
+      type: object
+      required: [error, code]
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        context:
+          type: object
+          additionalProperties: true
+          description: Additional error context
+
+    RideRequest:
+      type: object
+      required: [origin, destination, seats]
+      properties:
+        rideId:
+          type: string
+          format: uuid
+        origin:
+          $ref: '#/components/schemas/Coordinate'
+        destination:
+          $ref: '#/components/schemas/Coordinate'
+        seats:
+          type: integer
+          minimum: 1
+          maximum: 8
+        riderId:
+          type: string
+          format: uuid
+
+    Coordinate:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        lng:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+
+    Package:
+      type: object
+      required: [senderId, recipientName, origin, destination]
+      properties:
+        id:
+          type: string
+          format: uuid
+        trackingCode:
+          type: string
+        senderId:
+          type: string
+          format: uuid
+        recipientName:
+          type: string
+        recipientPhone:
+          type: string
+        origin:
+          type: string
+        destination:
+          type: string
+        status:
+          type: string
+          enum: [created, assigned, picked_up, in_transit, delivered, cancelled]
+        escrowStatus:
+          type: string
+          enum: [pending, held, released, refunded]
+        priceJod:
+          type: number
+          format: double
+
+    PaymentIntent:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: integer
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        clientSecret:
+          type: string
+
+    Session:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /v1/auth/session:
+    post:
+      summary: Create user session
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                deviceId:
+                  type: string
+      responses:
+        '200':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v1/auth/session/refresh:
+    post:
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+        responses:
+          '200':
+            description: Token refreshed
+          '401':
+            description: Invalid refresh token
+
+  /v1/2fa/setup:
+    post:
+      summary: Setup two-factor authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 2FA setup initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  secret:
+                    type: string
+                  qrCode:
+                    type: string
+                  backupCodes:
+                    type: array
+                    items:
+                      type: string
+
+  /v1/2fa/verify:
+    post:
+      summary: Verify two-factor authentication code
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  minLength: 6
+                  maxLength: 6
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+
+  /v1/packages:
+    post:
+      summary: Create package delivery request
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [senderId, recipientName, origin, destination]
+              properties:
+                senderId:
+                  type: string
+                  format: uuid
+                recipientName:
+                  type: string
+                recipientPhone:
+                  type: string
+                origin:
+                  type: string
+                destination:
+                  type: string
+                priceJod:
+                  type: number
+      responses:
+        '201':
+          description: Package created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  package:
+                    $ref: '#/components/schemas/Package'
+
+  /v1/packages/{id}:
+    get:
+      summary: Get package by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Package found
+
+  /v1/packages/{id}/assign:
+    post:
+      summary: Assign package to courier
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                driverId:
+                  type: string
+      responses:
+        '200':
+          description: Assignment successful
+
+  /v1/rides:
+    post:
+      summary: Request a ride
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RideRequest'
+      responses:
+        '202':
+          description: Ride request accepted
+
+  /v1/payments/intents:
+    post:
+      summary: Create payment intent
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, currency]
+              properties:
+                amount:
+                  type: integer
+                currency:
+                  type: string
+                  enum: [jod, usd]
+                customerId:
+                  type: string
+      responses:
+        '201':
+          description: Payment intent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntent'
+
+  /v1/notifications:
+    post:
+      summary: Send notification
+      security:
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                channel:
+                  type: string
+                  enum: [push, sms, email, whatsapp]
+                recipient:
+                  type: string
+                template:
+                  type: string
+                variables:
+                  type: object
+      responses:
+        '202':
+          description: Notification dispatched
