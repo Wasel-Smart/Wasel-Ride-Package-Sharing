@@ -18,7 +18,7 @@ import {
   UserMenu,
 } from './waselRootParts';
 
-const PRIMARY_HEADER_GROUP_IDS = new Set(['find', 'offer', 'packages', 'bus', 'mobility-os']);
+const PRIMARY_HEADER_GROUP_IDS = new Set(['find', 'offer', 'packages', 'schedule', 'my-trips', 'bus', 'mobility-os']);
 const AvailabilityBanner = lazy(() => import('../components/system/AvailabilityBanner'));
 const MobileBottomNav = lazy(async () => {
   const module = await import('../components/MobileBottomNav');

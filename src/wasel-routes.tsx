@@ -197,8 +197,10 @@ const buildMainChildren = () => [
       { path: 'find-ride', lazy: lazy(() => import('./features/rides/FindRidePage')) },
       { path: 'offer-ride', lazy: lazy(() => import('./features/rides/OfferRidePage')) },
       { path: 'post-ride', Component: () => <RedirectTo to="/app/offer-ride" /> },
-      { path: 'my-trips', lazy: lazy(() => import('./features/trips/MyTripsPage')) },
-      { path: 'booking-requests', Component: () => <RedirectTo to="/app/my-trips?tab=rides" /> },
+      { path: 'my-trips', Component: () => <RedirectTo to="/app/activity" /> },
+      { path: 'booking-requests', Component: () => <RedirectTo to="/app/activity" /> },
+      { path: 'activity', lazy: lazy(() => import('./features/activity/ActivityPage')) },
+      { path: 'schedule', lazy: lazy(() => import('./features/schedule/SchedulePage')) },
       {
         path: 'live-trip',
         lazy: lazy(() => import('./components/LiveTripTracking'), 'LiveTripTracking'),
