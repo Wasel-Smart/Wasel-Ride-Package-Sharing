@@ -29,7 +29,7 @@ export function SchedulePage() {
   const [items, setItems] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadItems = async () => {
+  const loadItems = useCallback(async () => {
     setLoading(true);
     try {
       if (supabase && user?.id) {
@@ -59,11 +59,11 @@ export function SchedulePage() {
       }
     }
     setLoading(false);
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     void loadItems();
-  }, [user?.id]);
+  }, [loadItems]);
 
   const persist = async (next: ScheduleItem[]) => {
     setItems(next);
