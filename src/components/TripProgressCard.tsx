@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { Car, Clock, MapPin, Package } from 'lucide-react';
-import { getRideBookings, type RideBookingRecord } from '../services/rideLifecycle';
-import { getConnectedPackages, type PackageRequest } from '../services/journeyLogistics';
+import { Car, Clock, Package } from 'lucide-react';
+import { getRideBookings } from '../services/rideLifecycle';
+import { getConnectedPackages } from '../services/journeyLogistics';
 import { C, F, R, TYPE } from '../utils/wasel-ds';
 
 type ActiveItem = {
@@ -29,11 +29,11 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
         items.push({
           kind: 'ride',
           id: b.id,
-          title: b.trip?.from_location ? `${b.trip.from_location} → ${b.trip.to_location}` : 'Ride',
-          subtitle: `Seats: ${b.seats_requested}`,
-          eta: b.trip?.departure_time ?? '--',
-          timeLeftMinutes: b.trip?.departure_time
-            ? Math.max(1, Math.round((new Date(b.trip.departure_time).getTime() - Date.now()) / 60000))
+          title: `${b.from} → ${b.to}`,
+          subtitle: `Seats: ${b.seatsRequested}`,
+          eta: b.time,
+          timeLeftMinutes: b.time
+            ? Math.max(1, Math.round((new Date(b.time).getTime() - Date.now()) / 60000))
             : 0,
           status: b.status,
           statusColor: b.status === 'confirmed' ? C.green : C.gold,
