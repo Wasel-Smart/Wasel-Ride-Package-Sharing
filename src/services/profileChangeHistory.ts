@@ -1,4 +1,4 @@
-import { supabase } from '../utils/supabase/client';
+import { requestEdgeJson } from './backendWorkflow';
 
 export interface ProfileChangeRecord {
   id: string;
@@ -20,23 +20,13 @@ export interface ProfileChangeHistoryEntry {
   device: string;
 }
 
-interface ProfileChangeHistoryRow {
-  changed_at: string;
-  field_name: string;
-  old_value: string | null;
-  new_value: string | null;
-  user_agent: string | null;
+interface ProfileChangeHistoryResponse {
+  history?: ProfileChangeHistoryEntry[];
 }
-
-const CHANGE_HISTORY_TABLE = 'profile_change_history';
 
 async function getClientMetadata() {
   return {
     userAgent: navigator.userAgent,
-    ipAddress: await fetch('https://api.ipify.org?format=json')
-      .then(r => r.json())
-      .then(d => d.ip)
-      .catch(() => 'unknown'),
   };
 }
 
@@ -44,25 +34,27 @@ export async function recordProfileChange(
   userId: string,
   fieldName: string,
   oldValue: unknown,
-  newValue: unknown
+  newValue: unknown,
 ): Promise<void> {
-  if (!supabase) return;
-
   try {
     const metadata = await getClientMetadata();
-    
-    await supabase.from(CHANGE_HISTORY_TABLE).insert({
-      user_id: userId,
-      field_name: fieldName,
-      old_value: String(oldValue ?? ''),
-      new_value: String(newValue ?? ''),
-      changed_at: new Date().toISOString(),
-      changed_by: userId,
-      ip_address: metadata.ipAddress,
-      user_agent: metadata.userAgent,
+
+    await requestEdgeJson({
+      path: '/profile/change-history',
+      operation: 'Profile change history recording',
+      authMode: 'required',
+      method: 'POST',
+      body: {
+        userId,
+        fieldName,
+        oldValue: oldValue ?? null,
+        newValue: newValue ?? null,
+        userAgent: metadata.userAgent,
+      },
+      retries: 0,
     });
   } catch (error) {
-    // Silent fail - don't block profile updates if history recording fails
+    // Silent fail - don't block profile updates if history recording fails.
     if (import.meta.env?.DEV) {
       console.warn('[ProfileHistory] Failed to record change:', error);
     }
@@ -71,29 +63,22 @@ export async function recordProfileChange(
 
 export async function getProfileChangeHistory(
   userId: string,
-  limit = 50
+  limit = 50,
 ): Promise<ProfileChangeHistoryEntry[]> {
-  if (!supabase) return [];
-
   try {
-    const { data, error } = await supabase
-      .from(CHANGE_HISTORY_TABLE)
-      .select('*')
-      .eq('user_id', userId)
-      .order('changed_at', { ascending: false })
-      .limit(limit);
+    const params = new URLSearchParams({
+      userId,
+      limit: String(limit),
+    });
 
-    if (error) throw error;
+    const response = await requestEdgeJson<ProfileChangeHistoryResponse>({
+      path: `/profile/change-history?${params.toString()}`,
+      operation: 'Profile change history retrieval',
+      authMode: 'required',
+      method: 'GET',
+    });
 
-    const records = (data ?? []) as ProfileChangeHistoryRow[];
-
-    return records.map(record => ({
-      timestamp: record.changed_at,
-      field: record.field_name,
-      oldValue: record.old_value || '',
-      newValue: record.new_value || '',
-      device: record.user_agent || 'Unknown device',
-    }));
+    return response.history ?? [];
   } catch (error) {
     if (import.meta.env?.DEV) {
       console.error('[ProfileHistory] Failed to fetch history:', error);
@@ -104,27 +89,17 @@ export async function getProfileChangeHistory(
 
 export async function revertProfileChange(
   userId: string,
-  changeId: string
+  changeId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  if (!supabase) {
-    return { success: false, error: 'Backend not configured' };
-  }
-
   try {
-    const { data: change, error: fetchError } = await supabase
-      .from(CHANGE_HISTORY_TABLE)
-      .select('*')
-      .eq('id', changeId)
-      .eq('user_id', userId)
-      .single();
-
-    if (fetchError || !change) {
-      return { success: false, error: 'Change record not found' };
-    }
-
-    // This would trigger the normal update flow with the old value
-    // Implementation depends on your profile update service
-    return { success: true };
+    return await requestEdgeJson<{ success: boolean; error?: string }>({
+      path: '/profile/change-history/revert',
+      operation: 'Profile change revert',
+      authMode: 'required',
+      method: 'POST',
+      body: { userId, changeId },
+      retries: 0,
+    });
   } catch (error) {
     return {
       success: false,
