@@ -180,9 +180,62 @@ export abstract class BaseWorker<T = unknown> {
       topic: message.topic,
     });
 
-    // TODO: Send to actual dead-letter storage (Supabase table, S3, etc.)
+protected async sendToDeadLetter(message: QueueMessage<T>, error: unknown): Promise<void> {
+    const dlqPayload = {
+      originalId: message.id,
+      topic: message.topic,
+      payload: message.payload,
+      error: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
+      failedAt: Date.now(),
+      retryCount: message.retryCount,
+      correlationId: message.correlationId,
+    };
+
+    try {
+      const dlqKeys = [
+        `dlq:${message.topic}:${message.id}`,
+        `dlq:by_worker:${this.config.name}:${Date.now()}`,
+      ];
+
+      const redis = RedisPool?.connection ?? await this.getRedisConnection();
+      await redis.sadd('dlq:all', ...dlqKeys);
+      await redis.hset(`dlq:message:${message.id}`, dlqPayload);
+      await redis.expire(`dlq:message:${message.id}`, 7 * 24 * 60 * 60);
+
+      console.error(
+        createStructuredLogEntry(
+          'error',
+          `Message sent to dead letter queue`,
+          this.config.name,
+          {
+            messageId: message.id,
+            topic: message.topic,
+            error: error instanceof Error ? error.message : String(error),
+            dlqKeys,
+          },
+          message.correlationId,
+        ),
+      );
+
+      telemetry.recordMetric('worker.dead_letter', 1, 'count', {
+        worker: this.config.name,
+        topic: message.topic,
+      });
+    } catch (dlqError) {
+      console.error('Failed to write to DLQ:', dlqError);
+    }
   }
-}
+
+  protected async getRedisConnection(): Promise<Redis> {
+    const Redis = (await import('ioredis')).default;
+    return new Redis({
+      host: process.env.REDIS_HOST ?? 'localhost',
+      port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
+      password: process.env.REDIS_PASSWORD,
+      tls: process.env.REDIS_TLS === 'true' ? {} : undefined,
+    });
+  }
 
 /**
  * In-memory worker implementation (development/staging)

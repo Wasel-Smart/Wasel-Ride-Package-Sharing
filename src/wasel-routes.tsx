@@ -12,12 +12,17 @@
  */
 import { Suspense } from 'react';
 import { AlertTriangle, LoaderCircle, SearchX } from 'lucide-react';
-import { createBrowserRouter, isRouteErrorResponse, Navigate, useRouteError } from 'react-router';
+import { createBrowserRouter, isRouteErrorResponse, Navigate, useLocation, useRouteError } from 'react-router';
 import { Button } from './components/ui/button';
 import { WaselStateCard } from './components/system/WaselStateCard';
 import { useLanguage } from './contexts/LanguageContext';
 import WaselRoot from './layouts/WaselRoot';
 import ProtectedOutlet from './router/ProtectedOutlet';
+
+function QueryParamsRedirect({ to }: { to: string }) {
+  const { search } = useLocation();
+  return <Navigate to={`${to}${search}`} replace />;
+}
 
 // -- Page loader fallback ------------------------------------------------------
 function PageLoader() {
@@ -180,7 +185,7 @@ const buildMainChildren = () => [
   // -- Landing --------------------------------------------------------------
   {
     index: true,
-    lazy: lazy(() => import('./features/home/HomePage'), 'HomePage'),
+    lazy: lazy(() => import('./features/home/AppEntryPage'), 'AppEntryPage'),
   },
 
   // -- Auth -----------------------------------------------------------------
@@ -197,8 +202,8 @@ const buildMainChildren = () => [
       { path: 'find-ride', lazy: lazy(() => import('./features/rides/FindRidePage')) },
       { path: 'offer-ride', lazy: lazy(() => import('./features/rides/OfferRidePage')) },
       { path: 'post-ride', Component: () => <RedirectTo to="/app/offer-ride" /> },
-      { path: 'my-trips', Component: () => <RedirectTo to="/app/activity" /> },
-      { path: 'booking-requests', Component: () => <RedirectTo to="/app/activity" /> },
+      { path: 'my-trips', Component: QueryParamsRedirect, props: { to: '/app/activity' } },
+      { path: 'booking-requests', Component: QueryParamsRedirect, props: { to: '/app/activity' } },
       { path: 'activity', lazy: lazy(() => import('./features/activity/ActivityPage')) },
       { path: 'schedule', lazy: lazy(() => import('./features/schedule/SchedulePage')) },
       {
@@ -329,7 +334,7 @@ const buildLegacyAliases = () =>
 export const waselRouter = createBrowserRouter([
   {
     path: '/',
-    lazy: lazy(() => import('./features/home/HomePage'), 'HomePage'),
+    lazy: lazy(() => import('./features/home/AppEntryPage'), 'AppEntryPage'),
     HydrateFallback: PageLoader,
   },
   ...buildLegacyAliases(),
