@@ -3,8 +3,6 @@
  * Connects to backend via WebSocket for live updates
  */
 import { apiClient } from '../lib/api';
-import { waselMobileConfig } from '../lib/config';
-import { Platform } from 'react-native';
 
 export interface DriverLocation {
   latitude: number;

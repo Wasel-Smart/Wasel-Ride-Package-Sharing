@@ -13,6 +13,7 @@ import busRoutes from './routes/v1/bus.js';
 import walletRoutes from './routes/v1/wallet.js';
 import ratingRoutes from './routes/v1/ratings.js';
 import notificationRoutes from './routes/v1/notifications.js';
+import driverRoutes from './routes/v1/driver.js';
 import adminRoutes from './routes/v1/admin.js';
 import corporateRoutes from './routes/v1/corporate.js';
 
@@ -29,7 +30,7 @@ function createApp(): express.Application {
     max: config.rateLimit.maxRequests,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.ip,
+    keyGenerator: (req) => req.ip || 'unknown',
   });
 
   app.use('/v1', limiter);
@@ -50,6 +51,7 @@ function createApp(): express.Application {
   app.use('/v1/wallet', walletRoutes);
   app.use('/v1/ratings', ratingRoutes);
   app.use('/v1/notifications', notificationRoutes);
+  app.use('/v1/driver', driverRoutes);
   app.use('/v1/admin', adminRoutes);
   app.use('/v1/corporate', corporateRoutes);
 

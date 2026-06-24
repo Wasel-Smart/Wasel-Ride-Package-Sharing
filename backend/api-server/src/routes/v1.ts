@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import tripRoutes from './v1/trips';
-import packageRoutes from './v1/packages';
-import busRoutes from './v1/bus';
-import walletRoutes from './v1/wallet';
-import ratingRoutes from './v1/ratings';
-import notificationRoutes from './v1/notifications';
-import adminRoutes from './v1/admin';
-import corporateRoutes from './v1/corporate';
+import tripRoutes from './v1/trips.js';
+import packageRoutes from './v1/packages.js';
+import busRoutes from './v1/bus.js';
+import walletRoutes from './v1/wallet.js';
+import ratingRoutes from './v1/ratings.js';
+import notificationRoutes from './v1/notifications.js';
+import driverRoutes from './v1/driver.js';
+import adminRoutes from './v1/admin.js';
+import corporateRoutes from './v1/corporate.js';
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.use('/bus', busRoutes);
 router.use('/wallet', walletRoutes);
 router.use('/ratings', ratingRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/driver', driverRoutes);
 router.use('/admin', adminRoutes);
 router.use('/corporate', corporateRoutes);
 
