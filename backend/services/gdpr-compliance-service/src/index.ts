@@ -77,7 +77,54 @@ function createApp(): express.Application {
     }),
   );
 
-  app.get('/health', () => ({ status: 'ok' }));
+  app.get('/health', async (_req, res) => {
+    const redisHealthy = await RedisPool.connection.ping().then(() => true).catch(() => false);
+    const dbHealthy = await PostgresPool.connection`SELECT 1`.then(() => true).catch(() => false);
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      checks: { redis: redisHealthy, database: dbHealthy },
+    });
+  });
+
+  app.get('/ready', async (_req, res) => ({ status: 'ready' }));
+
+  app.get('/metrics', async (_req, res) => ({
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  }));
+
+  app.post('/v1/gdpr/consents', async (req, res) => {
+    const { userId, consentType, granted } = req.body;
+    if (!userId || !consentType) {
+      throw new ValidationError('User ID and consent type required');
+    }
+
+    const sql = PostgresPool.connection;
+    const now = new Date().toISOString();
+
+    const [consent] = await sql`
+      INSERT INTO user_consents (user_id, consent_type, granted, granted_at, updated_at)
+      VALUES (${userId}, ${consentType}, ${granted ?? true}, ${now}, ${now})
+      ON CONFLICT (user_id, consent_type) DO UPDATE
+      SET granted = ${granted ?? true}, granted_at = ${now}, updated_at = ${now}
+      RETURNING *
+    `;
+
+    res.status(201).json({ consent });
+  });
+
+  app.get('/v1/gdpr/consents/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const sql = PostgresPool.connection;
+
+    const [consents] = await sql`
+      SELECT * FROM user_consents WHERE user_id = ${userId}
+      ORDER BY granted_at DESC
+    `;
+
+    res.json({ consents });
+  });
 
   app.post('/v1/gdpr/deletion/request', async (req, res) => {
     const { userId } = req.body;
@@ -94,7 +141,6 @@ function createApp(): express.Application {
       RETURNING *
     `;
 
-    // Schedule deletion via cron (would integrate with actual scheduler)
     logger.info({ userId, requestId: request.id }, 'GDPR deletion request scheduled');
 
     res.status(201).json({ request });
@@ -102,9 +148,8 @@ function createApp(): express.Application {
 
   app.get('/v1/gdpr/deletion/:userId', async (req, res) => {
     const { userId } = req.params;
-    const sql = PostgresPool.connection;
 
-    const [request] = await sql`
+    const [request] = await PostgresPool.connection`
       SELECT * FROM data_deletion_requests WHERE user_id = ${userId}
       ORDER BY requested_at DESC
       LIMIT 1
@@ -117,7 +162,6 @@ function createApp(): express.Application {
     const { requestId } = req.params;
     const sql = PostgresPool.connection;
 
-    // Get request
     const [request] = await sql`
       SELECT * FROM data_deletion_requests WHERE id = ${requestId}
     `;
@@ -128,13 +172,12 @@ function createApp(): express.Application {
 
     const userId = request.user_id;
 
-    // Delete user data in transaction
     await sql.begin(async (trx: postgres.TransactionClient) => {
       await trx`DELETE FROM bookings WHERE passenger_id = ${userId}`;
       await trx`DELETE FROM trips WHERE driver_id = ${userId}`;
       await trx`DELETE FROM payments WHERE user_id = ${userId}`;
       await trx`DELETE FROM wallets WHERE user_id = ${userId}`;
-      await trx`DELETE FROM FROM verification_records WHERE user_id = ${userId}`;
+      await trx`DELETE FROM verification_records WHERE user_id = ${userId}`;
       await trx`UPDATE data_deletion_requests SET status = 'completed', completed_at = NOW() WHERE id = ${requestId}`;
     });
 
@@ -161,7 +204,9 @@ function createApp(): express.Application {
       exportedAt: new Date().toISOString(),
     };
 
-    res.json({ export: exportData });
+    const downloadUrl = `data:application/json;base64,${Buffer.from(JSON.stringify(exportData)).toString('base64')}`;
+
+    res.json({ export: { ...exportData, downloadUrl } });
   });
 
   app.use((error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

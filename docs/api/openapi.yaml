@@ -171,6 +171,25 @@ paths:
                     type: string
                     format: date-time
 
+  /ready:
+    get:
+      summary: Readiness check endpoint
+      security: []
+      responses:
+        '200':
+          description: Service is ready
+        '503':
+          description: Service not ready
+
+  /metrics:
+    get:
+      summary: Prometheus metrics endpoint
+      security: []
+      responses:
+        '200':
+          description: Metrics in Prometheus format
+
+  # Auth endpoints
   /v1/auth/session:
     post:
       summary: Create user session
@@ -197,222 +216,346 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Session'
-        '401':
-          description: Invalid credentials
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
 
   /v1/auth/session/refresh:
     post:
       summary: Refresh access token
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [refreshToken]
-              properties:
-                refreshToken:
-                  type: string
-        responses:
-          '200':
-            description: Token refreshed
-          '401':
-            description: Invalid refresh token
 
   /v1/2fa/setup:
     post:
       summary: Setup two-factor authentication
       security:
         - bearerAuth: []
-      responses:
-        '200':
-          description: 2FA setup initiated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  secret:
-                    type: string
-                  qrCode:
-                    type: string
-                  backupCodes:
-                    type: array
-                    items:
-                      type: string
 
   /v1/2fa/verify:
     post:
       summary: Verify two-factor authentication code
       security:
         - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [code]
-              properties:
-                code:
-                  type: string
-                  minLength: 6
-                  maxLength: 6
-      responses:
-        '200':
-          description: Verification result
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  valid:
-                    type: boolean
 
+  /v1/2fa/disable:
+    post:
+      summary: Disable two-factor authentication
+      security:
+        - bearerAuth: []
+
+  /v1/recovery/request:
+    post:
+      summary: Request password recovery
+
+  /v1/recovery/reset:
+    post:
+      summary: Reset password with token
+
+  # Trust endpoints
+  /v1/trust/status/{userId}:
+    get:
+      summary: Get trust verification status
+      security:
+        - bearerAuth: []
+
+  /v1/trust/phone/start:
+    post:
+      summary: Start phone verification
+      security:
+        - bearerAuth: []
+
+  /v1/trust/phone/confirm:
+    post:
+      summary: Confirm phone verification
+      security:
+        - bearerAuth: []
+
+  /v1/trust/identity/submit:
+    post:
+      summary: Submit identity verification
+      security:
+        - bearerAuth: []
+
+  /v1/trust/driver-mode/enable:
+    post:
+      summary: Enable driver mode
+
+  /v1/trust/driver-documents/submit:
+    post:
+      summary: Submit driver documents
+
+  /v1/trust/webhooks/sanad:
+    post:
+      summary: Sanad webhook endpoint
+      security: []
+
+  # Admin endpoints
+  /v1/admin/drivers/pending:
+    get:
+      summary: List pending driver approvals
+
+  /v1/admin/drivers/{driverId}/approve:
+    post:
+      summary: Approve/reject driver
+
+  # Wallet endpoints
+  /v1/{userId}/wallet:
+    get:
+      summary: Get user wallet
+      security:
+        - bearerAuth: []
+
+  /v1/{userId}/wallet/transactions:
+    get:
+      summary: Get wallet transactions
+
+  /v1/{userId}/wallet/insights:
+    get:
+      summary: Get wallet insights
+
+  /v1/{userId}/wallet/withdraw:
+    post:
+      summary: Withdraw from wallet
+
+  /v1/{userId}/wallet/send:
+    post:
+      summary: Send money to another user
+
+  /v1/{userId}/wallet/pin/set:
+    post:
+      summary: Set wallet PIN
+
+  /v1/{userId}/wallet/pin/verify:
+    post:
+      summary: Verify wallet PIN
+
+  /v1/{userId}/wallet/auto-topup:
+    post:
+      summary: Configure auto top-up
+
+  /v1/{userId}/wallet/payment-methods:
+    get:
+      summary: Get payment methods
+    post:
+      summary: Add payment method
+
+  /v1/payment-methods/{resourceId}:
+    delete:
+      summary: Delete payment method
+
+  /v1/{userId}/wallet/trust-score:
+    get:
+      summary: Get wallet trust score
+
+  /v1/{userId}/wallet/rewards:
+    get:
+      summary: Get available rewards
+    post:
+      summary: Claim reward
+
+  /v1/{userId}/wallet/subscription:
+    get:
+      summary: Get wallet subscription
+    post:
+      summary: Subscribe to wallet plan
+
+  /v1/{userId}/wallet/top-up:
+    post:
+      summary: Top up wallet
+
+  # Payment webhooks
+  /v1/payments/webhooks/stripe:
+    post:
+      summary: Stripe webhook endpoint
+      security: []
+
+  /v1/payments/webhooks/cliq:
+    post:
+      summary: CliQ webhook endpoint
+      security: []
+
+  # Package endpoints
   /v1/packages:
     post:
       summary: Create package delivery request
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [senderId, recipientName, origin, destination]
-              properties:
-                senderId:
-                  type: string
-                  format: uuid
-                recipientName:
-                  type: string
-                recipientPhone:
-                  type: string
-                origin:
-                  type: string
-                destination:
-                  type: string
-                priceJod:
-                  type: number
-      responses:
-        '201':
-          description: Package created
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  package:
-                    $ref: '#/components/schemas/Package'
 
   /v1/packages/{id}:
     get:
       summary: Get package by ID
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Package found
 
   /v1/packages/{id}/assign:
     post:
       summary: Assign package to courier
-      security:
-        - apiKeyAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                driverId:
-                  type: string
-      responses:
-        '200':
-          description: Assignment successful
 
-  /v1/rides:
+  /v1/packages/{id}/location:
     post:
-      summary: Request a ride
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RideRequest'
-      responses:
-        '202':
-          description: Ride request accepted
+      summary: Update package location
 
-  /v1/payments/intents:
+  /v1/packages/{id}/deliver:
     post:
-      summary: Create payment intent
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [amount, currency]
-              properties:
-                amount:
-                  type: integer
-                currency:
-                  type: string
-                  enum: [jod, usd]
-                customerId:
-                  type: string
-      responses:
-        '201':
-          description: Payment intent created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaymentIntent'
+      summary: Mark package delivered
 
+  /v1/packages/{id}/cancel:
+    post:
+      summary: Cancel package
+
+  # Trip endpoints
+  /v1/trips/search:
+    get:
+      summary: Search trips
+
+  /v1/trips/calculate-price:
+    post:
+      summary: Calculate trip price
+
+  /v1/trips:
+    post:
+      summary: Create trip
+
+  /v1/trips/user/{userId}:
+    get:
+      summary: Get user trips
+
+  /v1/trips/{id}/bookings:
+    get:
+      summary: Get trip bookings
+
+  /v1/trips/{tripId}:
+    get:
+      summary: Get trip by ID
+
+  # Booking endpoints
+  /v1/bookings:
+    post:
+      summary: Create booking
+
+  /v1/bookings/user/{userId}:
+    get:
+      summary: Get user bookings
+
+  /v1/bookings/{id}:
+    put:
+      summary: Update booking
+
+  # Cancellation endpoints
+  /v1/cancellations/bookings:
+    post:
+      summary: Cancel booking
+
+  /v1/cancellations/trips:
+    post:
+      summary: Cancel trip
+
+  /v1/cancellations/bookings/{bookingId}/eligibility:
+    get:
+      summary: Check booking cancellation eligibility
+
+  # Communication endpoints
+  /v1/communications/preferences:
+    get:
+      summary: Get communication preferences
+    patch:
+      summary: Update communication preferences
+
+  /v1/communications/deliver:
+    post:
+      summary: Queue communication delivery
+
+  /v1/communications/process:
+    post:
+      summary: Process communication queue
+
+  /v1/communications/admin/send-test:
+    post:
+      summary: Send test communication
+
+  /v1/communications/admin/provider-diagnostics:
+    get:
+      summary: Get provider diagnostics
+
+  /v1/communications/webhooks/resend:
+    post:
+      summary: Resend webhook endpoint
+
+  /v1/communications/webhooks/twilio:
+    post:
+      summary: Twilio webhook endpoint
+
+  # Notification endpoints
   /v1/notifications:
     post:
       summary: Send notification
-      security:
-        - apiKeyAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                channel:
-                  type: string
-                  enum: [push, sms, email, whatsapp]
-                recipient:
-                  type: string
-                template:
-                  type: string
-                variables:
-                  type: object
-      responses:
-        '202':
-          description: Notification dispatched
+
+  /v1/devices/register:
+    post:
+      summary: Register device token
+
+  /v1/devices/{token}:
+    delete:
+      summary: Unregister device
+
+  # Rating endpoints
+  /v1/ratings:
+    post:
+      summary: Submit rating
+
+  /v1/ratings/drivers/{driverId}:
+    get:
+      summary: Get driver ratings
+
+  /v1/ratings/bookings/{bookingId}/eligibility:
+    get:
+      summary: Check rating eligibility
+
+  # Chat endpoints
+  /v1/chat/trips/{tripId}/messages:
+    get:
+      summary: Get trip messages
+    post:
+      summary: Send trip message
+
+  /v1/chat/messages/read:
+    post:
+      summary: Mark messages as read
+
+  /v1/chat/trips/{tripId}/unread-count:
+    get:
+      summary: Get unread message count
+
+  # Mobility OS endpoints
+  /v1/mobility-os/snapshot:
+    get:
+      summary: Get mobility snapshot
+
+  /v1/mobility-os/booking/create:
+    post:
+      summary: Create mobility booking
+
+  /v1/mobility-os/live-rows:
+    get:
+      summary: Get live mobility rows
+
+  # GDPR endpoints
+  /v1/gdpr/consents:
+    post:
+      summary: Record consent
+
+  /v1/gdpr/consents/{userId}:
+    get:
+      summary: Get user consents
+
+  /v1/gdpr/data-exports:
+    post:
+      summary: Request data export
+
+  /v1/gdpr/deletion/request:
+    post:
+      summary: Request data deletion
+
+  /v1/gdpr/deletion/{userId}:
+    get:
+      summary: Get deletion status
+
+  /v1/gdpr/deletion/{requestId}/process:
+    post:
+      summary: Process deletion
+
+  /v1/gdpr/export/{userId}:
+    get:
+      summary: Get data export

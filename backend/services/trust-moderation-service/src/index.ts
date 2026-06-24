@@ -327,6 +327,68 @@ function createApp(): express.Application {
     res.json(result);
   });
 
+  app.post('/v1/trust/webhooks/sanad', async (req, res) => {
+    const payload = req.body;
+    const signature = req.headers['x-sanad-signature'] as string;
+
+    logger.info({ payload, hasSignature: !!signature }, 'Sanad webhook received');
+
+    const status = payload?.status ?? payload?.verification_status ?? 'unknown';
+    const userId = payload?.user_id ?? payload?.userId;
+
+    if (userId) {
+      const now = new Date().toISOString();
+      await PostgresPool.connection`
+        UPDATE users SET sanad_verified_status = ${status}, updated_at = ${now} WHERE id = ${userId}
+      `;
+      await PostgresPool.connection`
+        INSERT INTO verification_records (user_id, sanad_status, document_status, created_at, updated_at)
+        VALUES (${userId}, ${status}, 'completed', ${now}, ${now})
+        ON CONFLICT DO NOTHING
+      `;
+    }
+
+    res.json({ received: true, status });
+  });
+
+  app.post('/v1/payments/webhooks/stripe', async (req, res) => {
+    const payload = req.body;
+    const event = payload?.type ?? 'unknown';
+
+    logger.info({ event, payload }, 'Stripe webhook received');
+
+    if (event === 'checkout.session.completed') {
+      const session = payload?.data?.object;
+      const transactionId = session?.metadata?.transaction_id;
+
+      if (transactionId) {
+        await PostgresPool.connection`
+          UPDATE transactions SET transaction_status = 'posted', updated_at = ${new Date().toISOString()} WHERE transaction_id = ${transactionId}
+        `;
+      }
+    }
+
+    res.json({ received: true });
+  });
+
+  app.post('/v1/payments/webhooks/cliq', async (req, res) => {
+    const payload = req.body;
+    const signature = req.headers['x-cliq-signature'] as string;
+
+    logger.info({ payload, hasSignature: !!signature }, 'CliQ webhook received');
+
+    const status = payload?.status ?? payload?.payment_status ?? 'unknown';
+    const transactionId = payload?.transaction_id ?? payload?.transactionId;
+
+    if (transactionId) {
+      await PostgresPool.connection`
+        UPDATE transactions SET transaction_status = ${status}, updated_at = ${new Date().toISOString()} WHERE transaction_id = ${transactionId}
+      `;
+    }
+
+    res.json({ received: true, status });
+  });
+
   app.use((error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     if (error instanceof AppError) {
       res.status(error.statusCode).json({ error: error.message, code: error.code });
