@@ -1,3 +1,4 @@
+import postgres from 'postgres';
 import Redis from 'ioredis';
 import express from 'express';
 import { loadConfig, type AppConfig } from '@wasel/backend-shared';
@@ -35,6 +36,26 @@ class RedisPool {
     if (RedisPool.instance) {
       await RedisPool.instance.quit();
       RedisPool.instance = null;
+    }
+  }
+}
+
+class PostgresPool {
+  private static instance: ReturnType<typeof postgres> | null = null;
+  static get connection() {
+    if (!PostgresPool.instance) {
+      PostgresPool.instance = postgres(config.database.url, {
+        max: config.database.maxConnections,
+        idle_timeout: config.database.idleTimeoutSeconds * 1000,
+        connect_timeout: config.database.connectionTimeoutSeconds * 1000,
+      });
+    }
+    return PostgresPool.instance;
+  }
+  static async disconnect() {
+    if (PostgresPool.instance) {
+      await PostgresPool.instance.end();
+      PostgresPool.instance = null;
     }
   }
 }
