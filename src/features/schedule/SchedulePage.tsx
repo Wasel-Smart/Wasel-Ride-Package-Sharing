@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Calendar, Clock, MapPin, Plus, Trash2, X, ArrowRight, Car, Package } from 'lucide-react';
+import { Calendar, Clock, MapPin, Navigation2, Plus, Trash2, X, ArrowRight, Car, Package, RefreshCw } from 'lucide-react';
 import { supabase } from '../../utils/supabase/client';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
@@ -11,14 +11,35 @@ type ScheduleItem = {
   item_type: 'ride' | 'package_delivery' | 'package_return';
   status: string;
   pickup_location: string;
+  pickup_lat?: number;
+  pickup_lng?: number;
   dropoff_location?: string;
+  dropoff_lat?: number;
+  dropoff_lng?: number;
   scheduled_at: string;
   recurring_pattern: string;
   notes?: string;
   user_id?: string;
+  contact_name?: string;
+  contact_phone?: string;
+  estimated_price?: number;
 };
 
 const LOCAL_KEY = 'wasel-scheduled-items-v1';
+
+function getCurrentPosition(): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation not supported'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 300000,
+    });
+  });
+}
 
 export function SchedulePage() {
   const { user } = useLocalAuth();
@@ -28,21 +49,43 @@ export function SchedulePage() {
   const [showForm, setShowForm] = useState(false);
   const [items, setItems] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [locating, setLocating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const loadItems = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       if (supabase && user?.id) {
-        const { data, error } = await supabase
+        const { data, error: supabaseError } = await supabase
           .from('scheduled_pickups')
           .select('*')
           .eq('user_id', user.id)
           .order('scheduled_at', { ascending: true });
 
-        if (error) throw error;
+        if (supabaseError) throw supabaseError;
         if (data && data.length > 0) {
-          setItems(data as ScheduleItem[]);
-          localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+          const mapped: ScheduleItem[] = data.map((row: Record<string, unknown>) => ({
+            id: row.id as string,
+            item_type: row.item_type as ScheduleItem['item_type'],
+            status: row.status as string,
+            pickup_location: row.pickup_location as string,
+            pickup_lat: row.pickup_lat as number | undefined,
+            pickup_lng: row.pickup_lng as number | undefined,
+            dropoff_location: row.dropoff_location as string | undefined,
+            dropoff_lat: row.dropoff_lat as number | undefined,
+            dropoff_lng: row.dropoff_lng as number | undefined,
+            scheduled_at: row.scheduled_at as string,
+            recurring_pattern: row.recurring_pattern as string,
+            notes: row.notes as string | undefined,
+            user_id: row.user_id as string | undefined,
+            contact_name: row.contact_name as string | undefined,
+            contact_phone: row.contact_phone as string | undefined,
+            estimated_price: row.estimated_price as number | undefined,
+          }));
+          setItems(mapped);
+          localStorage.setItem(LOCAL_KEY, JSON.stringify(mapped));
+          setLoading(false);
           return;
         }
       }
@@ -61,10 +104,6 @@ export function SchedulePage() {
     setLoading(false);
   }, [user?.id]);
 
-  useEffect(() => {
-    void loadItems();
-  }, [loadItems]);
-
   const persist = async (next: ScheduleItem[]) => {
     setItems(next);
 
@@ -76,10 +115,18 @@ export function SchedulePage() {
           item_type: item.item_type,
           status: item.status,
           pickup_location: item.pickup_location,
+          pickup_lat: item.pickup_lat ?? 0,
+          pickup_lng: item.pickup_lng ?? 0,
           dropoff_location: item.dropoff_location ?? null,
+          dropoff_lat: item.dropoff_lat ?? null,
+          dropoff_lng: item.dropoff_lng ?? null,
           scheduled_at: item.scheduled_at,
           recurring_pattern: item.recurring_pattern,
           notes: item.notes ?? null,
+          contact_name: item.contact_name ?? null,
+          contact_phone: item.contact_phone ?? null,
+          estimated_price: item.estimated_price ?? null,
+          updated_at: new Date().toISOString(),
         }));
 
         const { error } = await supabase
@@ -98,14 +145,99 @@ export function SchedulePage() {
     localStorage.setItem(LOCAL_KEY, JSON.stringify(next));
   };
 
-  const [form, setForm] = useState({
-    item_type: 'ride' as ScheduleItem['item_type'],
+  const [form, setForm] = useState<ScheduleItem>({
+    id: '',
+    item_type: 'ride',
+    status: 'scheduled',
     pickup_location: '',
+    pickup_lat: undefined,
+    pickup_lng: undefined,
     dropoff_location: '',
+    dropoff_lat: undefined,
+    dropoff_lng: undefined,
     scheduled_at: '',
     recurring_pattern: 'none',
     notes: '',
+    user_id: undefined,
+    contact_name: '',
+    contact_phone: '',
+    estimated_price: undefined,
   });
+
+  const handleGeolocate = async () => {
+    setLocating(true);
+    try {
+      const pos = await getCurrentPosition();
+      setForm(f => ({
+        ...f,
+        pickup_lat: pos.coords.latitude,
+        pickup_lng: pos.coords.longitude,
+      }));
+    } catch {
+      // location unavailable; leave coordinates empty so user can enter manually
+    }
+    setLocating(false);
+  };
+
+  const handleCreate = async () => {
+    if (!form.pickup_location || !form.scheduled_at) return;
+
+    const newItem: ScheduleItem = {
+      id: crypto.randomUUID(),
+      item_type: form.item_type,
+      status: 'scheduled',
+      pickup_location: form.pickup_location,
+      pickup_lat: form.pickup_lat ?? 0,
+      pickup_lng: form.pickup_lng ?? 0,
+      dropoff_location: form.dropoff_location || undefined,
+      dropoff_lat: form.dropoff_lat,
+      dropoff_lng: form.dropoff_lng,
+      scheduled_at: form.scheduled_at,
+      recurring_pattern: form.recurring_pattern,
+      notes: form.notes || undefined,
+      user_id: user?.id,
+      contact_name: form.contact_name || undefined,
+      contact_phone: form.contact_phone || undefined,
+      estimated_price: form.estimated_price,
+    };
+
+    await persist([newItem, ...items]);
+    setShowForm(false);
+    setForm({
+      id: '',
+      item_type: 'ride',
+      status: 'scheduled',
+      pickup_location: '',
+      pickup_lat: undefined,
+      pickup_lng: undefined,
+      dropoff_location: '',
+      dropoff_lat: undefined,
+      dropoff_lng: undefined,
+      scheduled_at: '',
+      recurring_pattern: 'none',
+      notes: '',
+      user_id: user?.id,
+      contact_name: '',
+      contact_phone: '',
+      estimated_price: undefined,
+    });
+  };
+
+  const handleCancel = async (id: string) => {
+    await persist(
+      items.map(i => (i.id === id ? { ...i, status: 'cancelled' } : i)),
+    );
+  };
+
+  const handleUpdate = async (id: string, updates: Partial<ScheduleItem>) => {
+    await persist(
+      items.map(i => (i.id === id ? { ...i, ...updates } : i)),
+    );
+  };
+
+  useEffect(() => {
+    void loadItems();
+  }, [loadItems]);
 
   const upcoming = useMemo(
     () =>
@@ -122,39 +254,6 @@ export function SchedulePage() {
         .sort((a, b) => b.scheduled_at.localeCompare(a.scheduled_at)),
     [items],
   );
-
-  const handleCreate = async () => {
-    if (!form.pickup_location || !form.scheduled_at) return;
-
-    const newItem: ScheduleItem = {
-      id: crypto.randomUUID(),
-      item_type: form.item_type,
-      status: 'scheduled',
-      pickup_location: form.pickup_location,
-      dropoff_location: form.dropoff_location,
-      scheduled_at: form.scheduled_at,
-      recurring_pattern: form.recurring_pattern,
-      notes: form.notes,
-      user_id: user?.id,
-    };
-
-    await persist([newItem, ...items]);
-    setShowForm(false);
-    setForm({
-      item_type: 'ride',
-      pickup_location: '',
-      dropoff_location: '',
-      scheduled_at: '',
-      recurring_pattern: 'none',
-      notes: '',
-    });
-  };
-
-  const handleCancel = async (id: string) => {
-    await persist(
-      items.map(i => (i.id === id ? { ...i, status: 'cancelled' } : i)),
-    );
-  };
 
   const typeLabel = (t: ScheduleItem['item_type']) => {
     if (t === 'ride') return ar ? 'رحلة' : 'Ride';
@@ -174,31 +273,65 @@ export function SchedulePage() {
         title={ar ? 'الجدولة' : 'Schedule'}
         subtitle={ar ? 'خطط رحلاتك وتوصيلاتك مسبقاً' : 'Plan trips and pickups in advance'}
         action={
-          <button
-            onClick={() => setShowForm(true)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '10px 18px',
-              borderRadius: R.md,
-              background: C.cyan,
-              border: 'none',
-              color: C.bg,
-              fontWeight: TYPE.weight.bold,
-              fontFamily: F,
-              fontSize: TYPE.size.sm,
-              cursor: 'pointer',
-              boxShadow: `0 10px 24px ${C.cyan}24`,
-            }}
-          >
-            <Plus size={16} />
-            {ar ? 'جدولة جديدة' : 'New schedule'}
-          </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              onClick={() => void loadItems()}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '10px 14px',
+                borderRadius: R.md,
+                background: C.elevated,
+                border: `1px solid ${C.border}`,
+                color: C.text,
+                cursor: 'pointer',
+              }}
+            >
+              <RefreshCw size={14} />
+            </button>
+            <button
+              onClick={() => setShowForm(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 18px',
+                borderRadius: R.md,
+                background: C.cyan,
+                border: 'none',
+                color: C.bg,
+                fontWeight: TYPE.weight.bold,
+                fontFamily: F,
+                fontSize: TYPE.size.sm,
+                cursor: 'pointer',
+                boxShadow: `0 10px 24px ${C.cyan}24`,
+              }}
+            >
+              <Plus size={16} />
+              {ar ? 'جدولة جديدة' : 'New schedule'}
+            </button>
+          </div>
         }
       >
         <div style={{ height: 4 }} />
       </SectionCard>
+
+      {error && (
+        <div
+          style={{
+            padding: '12px 16px',
+            borderRadius: R.md,
+            background: `${C.error}14`,
+            border: `1px solid ${C.error}30`,
+            color: C.error,
+            fontSize: TYPE.size.sm,
+            fontFamily: F,
+          }}
+        >
+          {error}
+        </div>
+      )}
 
       {showForm && (
         <SectionCard
@@ -273,7 +406,7 @@ export function SchedulePage() {
                   fontFamily: F,
                 }}
               >
-                {ar ? 'من' : 'Pickup location'}
+                {ar ? 'موقع الاستلام' : 'Pickup location'}
               </label>
               <input
                 value={form.pickup_location}
@@ -290,6 +423,71 @@ export function SchedulePage() {
                   fontSize: TYPE.size.base,
                 }}
               />
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: 8,
+                  marginTop: 8,
+                }}
+              >
+                <input
+                  type="number"
+                  step="any"
+                  value={form.pickup_lat ?? ''}
+                  onChange={e => setForm({ ...form, pickup_lat: parseFloat(e.target.value) || undefined })}
+                  placeholder={ar ? 'خط العرض' : 'Latitude'}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: R.sm,
+                    background: C.elevated,
+                    border: `1px solid ${C.border}`,
+                    color: C.text,
+                    fontFamily: F,
+                    fontSize: TYPE.size.sm,
+                  }}
+                />
+                <input
+                  type="number"
+                  step="any"
+                  value={form.pickup_lng ?? ''}
+                  onChange={e => setForm({ ...form, pickup_lng: parseFloat(e.target.value) || undefined })}
+                  placeholder={ar ? 'خط الطول' : 'Longitude'}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: R.sm,
+                    background: C.elevated,
+                    border: `1px solid ${C.border}`,
+                    color: C.text,
+                    fontFamily: F,
+                    fontSize: TYPE.size.sm,
+                  }}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => void handleGeolocate()}
+                disabled={locating}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  marginTop: 6,
+                  padding: '6px 12px',
+                  borderRadius: R.sm,
+                  background: C.elevated,
+                  border: `1px solid ${C.border}`,
+                  color: locating ? C.textMuted : C.cyan,
+                  cursor: locating ? 'not-allowed' : 'pointer',
+                  fontFamily: F,
+                  fontSize: TYPE.size.xs,
+                }}
+              >
+                <Navigation2 size={12} />
+                {locating ? (ar ? 'جارٍ التحديد...' : 'Locating...') : (ar ? 'استخدام موقعي الحالي' : 'Use my location')}
+              </button>
             </div>
 
             <div>
@@ -305,7 +503,7 @@ export function SchedulePage() {
                   fontFamily: F,
                 }}
               >
-                {ar ? 'إلى' : 'Dropoff location'}
+                {ar ? 'الوجهة' : 'Dropoff location'}
               </label>
               <input
                 value={form.dropoff_location}
@@ -412,6 +610,7 @@ export function SchedulePage() {
                 value={form.notes}
                 onChange={e => setForm({ ...form, notes: e.target.value })}
                 rows={2}
+                placeholder={ar ? 'ملاحظات إضافية (اختياري)' : 'Additional notes (optional)'}
                 style={{
                   width: '100%',
                   padding: '10px 14px',
@@ -438,8 +637,7 @@ export function SchedulePage() {
                 fontWeight: TYPE.weight.ultra,
                 fontFamily: F,
                 fontSize: TYPE.size.base,
-                cursor:
-                  !form.pickup_location || !form.scheduled_at ? 'not-allowed' : 'pointer',
+                cursor: !form.pickup_location || !form.scheduled_at ? 'not-allowed' : 'pointer',
                 opacity: !form.pickup_location || !form.scheduled_at ? 0.5 : 1,
                 boxShadow: `0 10px 24px ${C.cyan}24`,
               }}
@@ -586,27 +784,74 @@ export function SchedulePage() {
                           minute: '2-digit',
                         })}
                       </span>
+                      {item.pickup_lat !== undefined && item.pickup_lng !== undefined && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <Navigation2 size={10} />
+                          {item.pickup_lat.toFixed(4)}, {item.pickup_lng.toFixed(4)}
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => handleCancel(item.id)}
-                    style={{
-                      background: 'transparent',
-                      border: `1px solid ${C.error}40`,
-                      borderRadius: R.sm,
-                      color: C.error,
-                      cursor: 'pointer',
-                      padding: '8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      onClick={() => {
+                        const r = prompt(ar ? 'تأكيد الإلغاء؟' : 'Confirm cancellation?');
+                        if (r === null) return;
+                        void handleCancel(item.id);
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: `1px solid ${C.error}40`,
+                        borderRadius: R.sm,
+                        color: C.error,
+                        cursor: 'pointer',
+                        padding: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                    <button
+                      onClick={() => void handleUpdate(item.id, { status: 'confirmed' })}
+                      style={{
+                        background: `${C.green}14`,
+                        border: `1px solid ${C.green}30`,
+                        borderRadius: R.sm,
+                        color: C.green,
+                        cursor: 'pointer',
+                        padding: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        fontSize: TYPE.size.xs,
+                        fontWeight: TYPE.weight.bold,
+                      }}
+                    >
+                      {ar ? 'تأكيد' : 'Confirm'}
+                    </button>
+                  </div>
                 </div>
               );
             })}
+          </div>
+        </SectionCard>
+      ) : !loading ? (
+        <SectionCard
+          title={ar ? 'الجدولة' : 'Scheduling'}
+          subtitle={ar ? 'لا توجد عناصر مجدولة بعد' : 'No scheduled items yet'}
+        >
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '40px 20px',
+              color: C.textMuted,
+            }}
+          >
+            <Calendar size={32} color={C.textDim} />
+            <div style={{ marginTop: 12, fontFamily: F, fontSize: TYPE.size.base }}>
+              {ar ? 'لا توجد رحلات أو توصيلات مجدولة.' : 'No scheduled rides or deliveries.'}
+            </div>
           </div>
         </SectionCard>
       ) : null}

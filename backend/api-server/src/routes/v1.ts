@@ -492,7 +492,7 @@ router.get('/activity', authenticate, validateQuery(ActivityQuerySchema), async 
         type: 'ride',
         status: ride.status,
         title: 'Ride',
-        subtitle: `${ride.origin?.address ?? 'Unknown'} → ${ride.destination?.address ?? 'Unknown'}`,
+        subtitle: `${(ride.origin as Record<string, unknown>)?.address ?? 'Unknown'} → ${(ride.destination as Record<string, unknown>)?.address ?? 'Unknown'}`,
         date: requestedAt.split('T')[0],
         time: requestedAt.split('T')[1].slice(0, 5),
         amount: ride.fare ?? 0,
