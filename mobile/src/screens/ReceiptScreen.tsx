@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
-import type { RouteProp } from '@react-navigation/native';
 
 type RootStackParamList = {
   Tabs: undefined;
@@ -28,10 +27,8 @@ interface ReceiptData {
   paymentMethod?: string;
 }
 
-type ReceiptRouteProp = RouteProp<RootStackParamList, keyof RootStackParamList>;
-
 interface ReceiptScreenProps {
-  route: ReceiptRouteProp;
+  route: { params: Partial<RootStackParamList[keyof RootStackParamList]> };
 }
 
 function formatCurrency(value: string | number | undefined): string {

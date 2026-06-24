@@ -1,4 +1,4 @@
-import { walletRepository } from '../repositories/walletRepository';
+import { walletRepository } from '../repositories/walletRepository.js';
 import { NotFoundError, ValidationError, InternalError } from '@wasel/backend-shared/errors/app-errors';
 
 export class WalletService {

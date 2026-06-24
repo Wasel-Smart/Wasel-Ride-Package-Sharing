@@ -75,7 +75,7 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.section}>
-        <TouchableOpacity style={[styles.item, styles.dangerItem]}>
+        <TouchableOpacity style={[styles.item, styles.dangerItem]} onPress={handleSignOut}>
           <Text style={styles.dangerText}>Sign Out</Text>
         </TouchableOpacity>
       </View>

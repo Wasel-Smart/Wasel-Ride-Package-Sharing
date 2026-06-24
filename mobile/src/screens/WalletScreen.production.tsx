@@ -44,7 +44,7 @@ const WalletScreen = React.memo(function WalletScreen() {
   });
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(false);
-  const [topUpAmount, setTopUpAmount] = useState(50);
+  const [topUpAmount] = useState(50);
 
   const loadWalletData = useCallback(async () => {
     if (!user) return;

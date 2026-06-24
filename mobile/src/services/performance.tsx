@@ -27,7 +27,7 @@ class PerformanceService {
       name,
       value: duration,
       unit: 'ms',
-      tags,
+      tags: tags ?? {},
     });
 
     this.startTime = null;

@@ -14,25 +14,31 @@ import {
 } from '../components/MobilePrimitives';
 import { waselMobileConfig } from '../lib/config';
 import { createMobilePaymentSheet } from '../services/payments';
+import { mobileAuth } from '../services/auth';
 import { colors, radii, spacing } from '../theme';
 
 const WalletScreen = React.memo(function WalletScreen() {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
-  const [bookingId, setBookingId] = useState('');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
+  const userId = mobileAuth.getUser()?.id ?? '';
   const numericAmount = Number(amount);
   const paymentReady = waselMobileConfig.hasStripe && waselMobileConfig.hasFunctions;
   const validPayment = useMemo(
-    () => bookingId.trim().length > 1 && Number.isFinite(numericAmount) && numericAmount > 0,
-    [bookingId, numericAmount],
+    () => Number.isFinite(numericAmount) && numericAmount > 0,
+    [numericAmount],
   );
 
   const startPayment = useCallback(async () => {
     if (!validPayment) {
-      Alert.alert('Payment details required', 'Enter a valid booking id and amount.');
+      Alert.alert('Payment details required', 'Enter a valid amount.');
+      return;
+    }
+
+    if (!userId) {
+      Alert.alert('Sign in required', 'Please sign in to add funds.');
       return;
     }
 
@@ -40,7 +46,7 @@ const WalletScreen = React.memo(function WalletScreen() {
       setLoading(true);
       setStatus(null);
       const sheet = await createMobilePaymentSheet({
-        bookingId: bookingId.trim(),
+        userId,
         amount: numericAmount,
         currency: 'jod',
         metadata: { source: 'wasel-mobile' },

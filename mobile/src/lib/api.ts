@@ -79,12 +79,15 @@ class ApiClient {
           ...config.headers,
         };
 
-        const response = await fetch(url, {
+        const fetchOptions: RequestInit = {
           method: config.method ?? 'GET',
           headers,
-          body: config.body ? JSON.stringify(config.body) : undefined,
           signal: controller.signal,
-        });
+        };
+        if (config.body) {
+          fetchOptions.body = JSON.stringify(config.body);
+        }
+        const response = await fetch(url, fetchOptions);
 
         const data = response.status === 204 ? null : await response.json().catch(() => null);
 

@@ -1,9 +1,8 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import {
   InfoCard,
   MetricTile,
-  PremiumPanel,
   PrimaryButton,
   ScreenShell,
   SectionHeader,

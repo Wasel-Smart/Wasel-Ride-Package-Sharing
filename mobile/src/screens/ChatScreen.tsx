@@ -14,10 +14,7 @@ import * as Haptics from 'expo-haptics';
 
 import {
   ScreenShell,
-  SectionHeader,
-  StateNotice,
   StatusPill,
-  PremiumPanel,
 } from '../components/MobilePrimitives';
 import { useAuth } from '../providers/AuthProvider';
 import { colors, hitSlop, radii, shadows, spacing, typography } from '../theme';

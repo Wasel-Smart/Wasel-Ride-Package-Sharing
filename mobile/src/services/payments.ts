@@ -1,4 +1,5 @@
 import { supabase } from '../lib/config';
+import { mobileAuth } from './auth';
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -95,7 +96,7 @@ class PaymentService {
         body: {
           action: 'add_funds',
           userId,
-          amount: Math.round(amount * 100), // Convert to cents
+          amount: Math.round(amount * 100),
           currency: currency.toLowerCase(),
         },
         headers: {
@@ -106,24 +107,23 @@ class PaymentService {
       if (error) throw error;
 
       if (data?.success) {
-        await supabase
-          .from('wallet_balances')
-          .update({
-            available_balance: supabase.rpc('increment_balance', {
-              user_id: userId,
-              amount_cents: Math.round(amount * 100),
-            }),
-          })
-          .eq('user_id', userId);
+        const { error: rpcError } = await supabase.rpc('increment_balance', {
+          user_id: userId,
+          amount_cents: Math.round(amount * 100),
+        });
 
-      return { success: true, paymentId: data.paymentId };
+        if (rpcError) {
+          console.error('[PaymentService] RPC increment_balance failed:', rpcError);
+        }
+
+        return { success: true, paymentId: data.paymentId };
+      }
+
+      return { success: false, error: data?.error ?? 'Payment failed' };
+    } catch (error) {
+      console.error('[PaymentService] Add funds error:', error);
+      return { success: false, error: getErrorMessage(error) };
     }
-
-    return { success: false, error: data?.error ?? 'Payment failed' };
-  } catch (error) {
-    console.error('[PaymentService] Add funds error:', error);
-    return { success: false, error: getErrorMessage(error) };
-  }
   }
 
   async withdrawFunds(userId: string, amount: number): Promise<PaymentResult> {
@@ -152,19 +152,23 @@ class PaymentService {
       if (error) throw error;
 
       if (data?.success) {
-        await supabase
-          .from('wallet_balances')
-          .update({
-            available_balance: supabase.rpc('decrement_balance', {
-              user_id: userId,
-              amount_cents: Math.round(amount * 100),
-            }),
-            pending_balance: supabase.rpc('increment_balance', {
-              user_id: userId,
-              amount_cents: Math.round(amount * 100),
-            }),
-          })
-          .eq('user_id', userId);
+        const { error: decrementError } = await supabase.rpc('decrement_balance', {
+          user_id: userId,
+          amount_cents: Math.round(amount * 100),
+        });
+
+        if (decrementError) {
+          console.error('[PaymentService] RPC decrement_balance failed:', decrementError);
+        }
+
+        const { error: pendingError } = await supabase.rpc('increment_pending_balance', {
+          user_id: userId,
+          amount_cents: Math.round(amount * 100),
+        });
+
+        if (pendingError) {
+          console.error('[PaymentService] RPC increment_pending_balance failed:', pendingError);
+        }
 
         return { success: true, paymentId: data.transferId };
       }
@@ -178,7 +182,7 @@ class PaymentService {
 
   async addPaymentMethod(userId: string, paymentMethodId: string): Promise<PaymentResult> {
     try {
-      const { data, error } = await supabase.from('payment_methods').insert({
+      const { error } = await supabase.from('payment_methods').insert({
         user_id: userId,
         stripe_payment_method_id: paymentMethodId,
         is_default: false,
@@ -235,15 +239,16 @@ export interface MobilePaymentSheet {
 }
 
 export interface MobilePaymentSheetRequest {
-  bookingId: string;
+  userId?: string;
   amount: number;
   currency: string;
   metadata?: Record<string, string>;
 }
 
 export async function createMobilePaymentSheet(request: MobilePaymentSheetRequest): Promise<MobilePaymentSheet> {
+  const userId = request.userId ?? mobileAuth.getUser()?.id ?? '';
   const result = await paymentService.addFunds(
-    request.bookingId,
+    userId,
     request.amount,
     request.currency,
   );
@@ -257,4 +262,3 @@ export async function createMobilePaymentSheet(request: MobilePaymentSheetReques
     paymentIntentId: result.paymentId ?? '',
   };
 }
-

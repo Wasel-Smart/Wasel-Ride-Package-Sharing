@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View, Alert } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -44,14 +44,14 @@ const FEEDBACK_TAGS = [
 ];
 
 const RateRideScreen = React.memo(function RateRideScreen() {
-  const route = useRoute<{ params: { rideId: string; driverName: string } }>();
+  const route = useRoute();
   const navigation = useNavigation<NavProp>();
-  const { rideId, driverName } = route.params as { rideId: string; driverName: string };
+  const { rideId = '', driverName = '' } = (route.params as { rideId?: string; driverName?: string } | undefined) ?? {};
 
   const [rating, setRating] = useState(0);
-  const [feedback, setFeedback] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [feedback] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
 

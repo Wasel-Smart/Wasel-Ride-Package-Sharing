@@ -6,6 +6,7 @@
 import { User, type AuthError, type Session } from '@supabase/supabase-js';
 import { Linking } from 'react-native';
 import { supabase as sharedSupabase, waselMobileConfig } from '../lib/config';
+import { biometricAuth } from './biometricAuth';
 
 export type AuthMetadata = Record<string, string | number | boolean | null | undefined>;
 type OAuthProvider = 'google' | 'facebook';
@@ -99,6 +100,10 @@ export class MobileAuthService {
     return this.currentState.session;
   }
 
+  private persistSessionForBiometrics(session: Session): void {
+    void biometricAuth.storeSessionForBiometric(session.access_token, session.refresh_token);
+  }
+
   async signIn(email: string, password: string): Promise<Session> {
     if (!waselMobileConfig.hasSupabase) {
       throw new Error('Supabase auth is not configured.');
@@ -117,6 +122,8 @@ export class MobileAuthService {
       throw new Error('Sign in did not return a session.');
     }
 
+    this.persistSessionForBiometrics(data.session);
+
     this.updateState({
       session: data.session,
       user: data.session.user,
@@ -126,12 +133,25 @@ export class MobileAuthService {
   }
 
   async signInWithEmail(email: string, password: string): Promise<{ error?: AuthError }> {
-    const { error } = await this.supabase.auth.signInWithPassword({
-      email: normalizeEmail(email),
-      password,
-    });
+    try {
+      const { data, error } = await this.supabase.auth.signInWithPassword({
+        email: normalizeEmail(email),
+        password,
+      });
 
-    return error ? { error } : {};
+      if (error) return { error };
+      if (!data.session) return { error: new Error('Sign in did not return a session.') as AuthError };
+
+      this.persistSessionForBiometrics(data.session);
+      this.updateState({
+        session: data.session,
+        user: data.session.user,
+      });
+
+      return {};
+    } catch (err) {
+      return { error: err as AuthError };
+    }
   }
 
   async signUpWithEmail(

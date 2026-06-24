@@ -42,7 +42,7 @@ export default function PaymentMethodsScreen() {
     queryKey: ['payment-methods', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const response = await apiClient.get<LocalPaymentMethod[]>(payments/methods/);
+      const response = await apiClient.get<LocalPaymentMethod[]>('payments/methods/');
       if (response.error || !response.data) throw new Error(response.error || 'Failed to load');
       return response.data;
     },
@@ -58,7 +58,7 @@ export default function PaymentMethodsScreen() {
     Alert.alert('Add Payment Method', 'Connect to Stripe or other payment provider');
   };
 
-  const handleSetPrimary = (id: string) => {
+  const handleSetPrimary = (_id: string) => {
     Alert.alert('Success', 'Primary payment method updated');
   };
 

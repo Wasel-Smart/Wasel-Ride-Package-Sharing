@@ -5,7 +5,7 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
-import { Platform, Alert } from 'react-native';
+import { Platform, Alert, Linking } from 'react-native';
 import { apiClient } from '../lib/api';
 import { mobileAuth } from '../services/auth';
 
@@ -110,6 +110,16 @@ class PushNotificationsService {
 
   private navigateToScreen(screen: string, params?: Record<string, unknown>) {
     if (Platform.OS === 'web') return;
+    const query = params
+      ? Object.entries(params)
+          .filter(([, value]) => value !== undefined && value !== null)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+          .join('&')
+      : '';
+    const url = `wasel://${screen}${query ? '?' + query : ''}`;
+    Linking.openURL(url).catch(error => {
+      console.error('[PushNotifications] Navigation failed:', error);
+    });
   }
 
   async saveTokenToServer(token: string): Promise<void> {
@@ -183,7 +193,7 @@ class PushNotificationsService {
       content: {
         title,
         body,
-        data,
+        data: (data ?? {}) as Record<string, any>,
         sound: true,
         badge: 1,
       },

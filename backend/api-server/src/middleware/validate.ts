@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { ValidationError } from './errors.js';
+import { ValidationError } from '@wasel/backend-shared/errors/app-errors';
 
 export function validate(schema: { parse: (input: unknown) => unknown }) {
   return (req: Request, res: Response, next: NextFunction) => {

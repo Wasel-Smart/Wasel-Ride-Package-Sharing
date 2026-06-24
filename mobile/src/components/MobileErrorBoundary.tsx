@@ -1,10 +1,12 @@
 import React, { Component, type ReactNode } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Platform } from 'react-native';
+import * as Sentry from '@sentry/react-native';
 import { colors } from '../theme';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
 }
 
 interface State {
@@ -27,6 +29,14 @@ export class MobileErrorBoundary extends Component<Props, State> {
     if (__DEV__) {
       console.log('[ErrorBoundary] Error stack:', errorInfo.componentStack);
     }
+
+    Sentry.captureException(error, {
+      extra: {
+        componentStack: errorInfo.componentStack,
+      },
+    });
+
+    this.props.onError?.(error, errorInfo);
   }
 
   handleReset = () => {

@@ -1,10 +1,8 @@
-import { packageRepository } from '../repositories/packageRepository';
-import { NotificationService } from './notificationService';
+import { packageRepository } from '../repositories/packageRepository.js';
+import { notificationRepository } from '../repositories/notificationRepository.js';
 import { NotFoundError, ValidationError, InternalError } from '@wasel/backend-shared/errors/app-errors';
 
 export class PackageService {
-  constructor(private notificationService: NotificationService) {}
-
   async createPackage(input: {
     senderId: string;
     originCity: string;
@@ -21,7 +19,7 @@ export class PackageService {
   }) {
     const pkg = await packageRepository.createPackage(input);
 
-    await this.notificationService.notifyUser(input.senderId, {
+    await notificationRepository.create(input.senderId, {
       type: 'package_created',
       title: 'Package Request Created',
       titleAr: 'تم إنشاء طلب الطرد',
@@ -55,7 +53,7 @@ export class PackageService {
     const pkg = await packageRepository.updatePackageStatus(id, status, carrierId);
 
     if (status === 'delivered') {
-      await this.notificationService.notifyUser(pkg.sender_id, {
+      await notificationRepository.create(pkg.sender_id, {
         type: 'package_delivered',
         title: 'Package Delivered',
         titleAr: 'تم توصيل الطرد',
@@ -72,7 +70,7 @@ export class PackageService {
   async assignToTrip(packageId: string, tripId: string, carrierId: string) {
     const pkg = await packageRepository.assignPackageToTrip(packageId, tripId, carrierId);
 
-    await this.notificationService.notifyUser(carrierId, {
+    await notificationRepository.create(carrierId, {
       type: 'package_assigned',
       title: 'Package Assigned to You',
       titleAr: 'تم تعيين طرد لك',
@@ -86,4 +84,4 @@ export class PackageService {
   }
 }
 
-export const packageService = new PackageService(new NotificationService());
+export const packageService = new PackageService();

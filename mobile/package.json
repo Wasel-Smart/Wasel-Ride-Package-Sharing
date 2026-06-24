@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Wasel Mobile - iOS and Android native app",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "scripts": {
     "android": "expo run:android",
     "ios": "npm run ios:ensure-project && expo run:ios",

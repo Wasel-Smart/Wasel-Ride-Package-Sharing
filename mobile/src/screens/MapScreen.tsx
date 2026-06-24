@@ -7,10 +7,9 @@ import {
   PremiumPanel,
   ScreenShell,
   SectionHeader,
-  StateNotice,
   StatusPill,
 } from '../components/MobilePrimitives';
-import { colors, radii, spacing, typography } from '../theme';
+import { colors, radii, shadows, spacing, typography } from '../theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const MAP_WIDTH = SCREEN_WIDTH - spacing.lg * 2;
@@ -84,18 +83,11 @@ const ACTIVE_CORRIDORS = CORRIDORS.filter(c => c.demand === 'high').length;
 function MapScreen() {
   const [selectedCity, setSelectedCity] = useState<CityId | null>(null);
   const [hoveredCorridor, setHoveredCorridor] = useState<string | null>(null);
-  const [flowParticles, setFlowParticles] = useState<FlowParticle[]>([]);
 
   const cityMap = useMemo(() => {
-    const map: Record<CityId, CityNode> = {};
+    const map: Partial<Record<CityId, CityNode>> = {};
     CITIES.forEach(city => { map[city.id] = city; });
-    return map;
-  }, []);
-
-  const corridorMap = useMemo(() => {
-    const map: Record<string, Corridor> = {};
-    CORRIDORS.forEach(c => { map[c.id] = c; });
-    return map;
+    return map as Record<CityId, CityNode>;
   }, []);
 
   const selectedCorridors = useMemo(() => {
@@ -194,7 +186,7 @@ function MapScreen() {
                           height: Math.abs(path.y2 - path.y1) || 1,
                           opacity: isDimmed ? 0.15 : 1,
                         },
-                        pressed && styles.corridorPressed,
+                        pressed && styles.corridorPressable,
                       ]}
                       onPressIn={() => setHoveredCorridor(corridor.id)}
                       onPressOut={() => setHoveredCorridor(null)}
@@ -701,7 +693,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.text,
   },
-  corridorPrice: {
+  corridorCardPrice: {
     fontSize: typography.caption,
     fontWeight: '900',
   },

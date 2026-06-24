@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
-  ActionRow,
   InfoCard,
   MetricTile,
   PremiumPanel,
@@ -96,7 +95,7 @@ const TripsScreen = React.memo(function TripsScreen() {
             <SectionHeader
               eyebrow="Active ride"
               title={`${activeRide.origin.address} → ${activeRide.destination.address}`}
-              body={`Status: ${activeRide.status} · ${activeRide.seats ?? 1} seat(s)`}
+               body={`Status: ${activeRide.status} · ${(activeRide as unknown as { seats?: number }).seats ?? 1} seat(s)`}
             />
             <PremiumPanel tone="dark">
               <StateNotice

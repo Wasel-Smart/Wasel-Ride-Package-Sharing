@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { walletService } from '../services/walletService';
-import { authenticate } from '../middleware/auth';
+import walletService from '../services/walletService.js';
+import { authenticate } from '../middleware/auth.js';
+import { validate } from '../middleware/validate.js';
 import { z } from 'zod';
 
 const router = Router();
@@ -30,7 +31,7 @@ router.get('/:userId/balance', authenticate, async (req: Request, res: Response)
   }
 });
 
-router.post('/:userId/topup', authenticate, validate('body', TopUpSchema), async (req: Request, res: Response) => {
+router.post('/:userId/topup', authenticate, validate(TopUpSchema), async (req: Request, res: Response) => {
   try {
     const { amount } = TopUpSchema.parse(req.body);
     const userId = req.params.userId;
@@ -40,7 +41,7 @@ router.post('/:userId/topup', authenticate, validate('body', TopUpSchema), async
       return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Access denied' } });
     }
 
-    const tx = await walletService.topUp(userId, amount, `Wallet top-up via ${req.body.method || 'card'}`);
+    const tx = await walletService.topUp(userId, amount, `Wallet top-up`);
     res.status(201).json({ success: true, data: tx });
   } catch (error) {
     res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: (error as Error).message } });

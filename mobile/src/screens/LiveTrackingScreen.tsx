@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, StyleSheet, Text, View } from 'react-native';
+import { Alert, Animated, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,9 +7,6 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../lib/api';
 import { InfoCard, MetricTile, PrimaryButton, ScreenShell, StatusPill } from '../components/MobilePrimitives';
 import { colors, radii, shadows, spacing, typography } from '../theme';
-import type { Ride } from '../services/ride';
-
-const { width: screenWidth } = Dimensions.get('window');
 
 interface DriverLocation {
   latitude: number;
@@ -41,7 +38,7 @@ const fetchLiveRide = async (rideId: string): Promise<LiveRideData | null> => {
 
 const LiveTrackingScreen = React.memo(function LiveTrackingScreen({ route }: { route: { params: { rideId: string } } }) {
   const { rideId } = route.params as { rideId: string };
-  const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
+  const [, setUserLocation] = useState<Location.LocationObject | null>(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   const { data: ride, isLoading, error, refetch } = useQuery({
@@ -96,29 +93,11 @@ const LiveTrackingScreen = React.memo(function LiveTrackingScreen({ route }: { r
     ).start();
   }, [pulseAnim]);
 
-  const centerOnDriver = useCallback((mapRef: MapView | null) => {
-    if (mapRef && ride?.driverLocation) {
-      mapRef.animateToRegion(
-        {
-          latitude: ride.driverLocation.latitude,
-          longitude: ride.driverLocation.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        500,
-      );
-    }
-  }, [ride?.driverLocation]);
-
   const callDriver = useCallback(() => {
     if (ride?.driverId) {
       Alert.alert('Call Driver', `Calling ${ride.driverName}...`);
     }
   }, [ride]);
-
-  const shareLocation = useCallback(() => {
-    Alert.alert('Share Trip', 'Share your live location with emergency contacts');
-  }, []);
 
   if (isLoading || !ride) {
     return (
@@ -154,14 +133,19 @@ const LiveTrackingScreen = React.memo(function LiveTrackingScreen({ route }: { r
     <ScreenShell>
       <View style={styles.container}>
         <MapView
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
           provider="google"
           initialRegion={ride.driverLocation ? {
             latitude: ride.driverLocation.latitude,
             longitude: ride.driverLocation.longitude,
             latitudeDelta: 0.02,
             longitudeDelta: 0.02,
-          } : undefined}
+          } : {
+            latitude: 31.9539,
+            longitude: 35.9106,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1,
+          }}
           showsUserLocation
           showsMyLocationButton={false}
           pitchEnabled
@@ -175,7 +159,7 @@ const LiveTrackingScreen = React.memo(function LiveTrackingScreen({ route }: { r
                 longitude: ride.driverLocation.longitude,
               }}
               anchor={{ x: 0.5, y: 0.5 }}
-              rotation={ride.driverLocation.heading}
+              rotation={ride.driverLocation.heading ?? 0}
             >
               <Animated.View
                 style={[
@@ -269,7 +253,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'flex-end',
     padding: spacing.lg,
     gap: spacing.sm,

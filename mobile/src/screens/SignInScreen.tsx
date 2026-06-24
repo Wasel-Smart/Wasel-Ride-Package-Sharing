@@ -7,7 +7,6 @@ import {
   ScreenShell,
   SectionHeader,
   StateNotice,
-  StatusPill,
 } from '../components/MobilePrimitives';
 import { useAuth } from '../providers/AuthProvider';
 import { colors, radii, spacing } from '../theme';
