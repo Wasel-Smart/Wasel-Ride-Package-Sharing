@@ -33,9 +33,9 @@ export function createLogger(options: LoggerOptions): pino.LoggerOptions {
         timestamp: new Date().toISOString(),
       });
     },
-    redact: (path, _removedValue) => {
-      const key = path.join('.');
-      return sensitiveFields.some(f => key.toLowerCase().includes(f)) ? '[REDACTED]' : undefined;
+    redact: (path: string, _removedValue: unknown) => {
+      const key = path.split('.');
+      return sensitiveFields.some(f => key.some(k => k.toLowerCase().includes(f))) ? '[REDACTED]' : undefined;
     },
   };
 }
@@ -43,13 +43,6 @@ export function createLogger(options: LoggerOptions): pino.LoggerOptions {
 export const logger = pino({
   name: 'wasel-backend',
   level: process.env.LOG_LEVEL ?? (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
-  transport:
-    process.env.NODE_ENV !== 'production'
-      ? {
-          target: 'pino-pretty',
-          options: { colorize: true, translateTime: 'SYS:standard' },
-        }
-      : undefined,
   redact: ['password', 'secret', 'token', 'api_key', 'authorization', 'cookie'],
 });
 
