@@ -1,5 +1,7 @@
 import postgres, { type Sql } from 'postgres';
-import { config } from './config';
+import { loadConfig } from './config/app.config.js';
+
+const config = loadConfig();
 
 let dbInstance: Sql | null = null;
 
