@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router';
 import { ArrowRight, MapPin, Clock, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -44,23 +44,8 @@ export function SimpleFindRidePage() {
   const [loading, setLoading] = useState(false);
   const [selectedRide, setSelectedRide] = useState<string | null>(null);
 
-  // Get URL params for quick booking
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const urlFrom = params.get('from');
-    const urlTo = params.get('to');
-    const isQuick = params.get('quick') === '1';
-
-    if (urlFrom && CITIES.includes(urlFrom)) setFrom(urlFrom);
-    if (urlTo && CITIES.includes(urlTo)) setTo(urlTo);
-
-    if (isQuick && urlFrom && urlTo) {
-      handleSearch();
-    }
-  }, [location.search]);
-
   // Simple search - just filter by route
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     if (from === to) {
       alert(ar ? 'اختر مدن مختلفة' : 'Choose different cities');
       return;
@@ -74,10 +59,10 @@ export function SimpleFindRidePage() {
       setRides(filteredRides);
       setLoading(false);
     }, 500);
-  };
+  }, [from, to, ar]);
 
   // Simple booking - just navigate to confirmation
-  const handleBook = (ride: SimpleRide) => {
+  const handleBook = useCallback((ride: SimpleRide) => {
     if (!user) {
       navigate(`/app/auth?returnTo=/app/find-ride?from=${from}&to=${to}&book=${ride.id}`);
       return;
@@ -94,7 +79,22 @@ export function SimpleFindRidePage() {
       alert(ar ? 'تم حجز الرحلة بنجاح!' : 'Ride booked successfully!');
       navigate('/app/my-trips');
     }
-  };
+  }, [user, navigate, from, to, ar]);
+
+  // Get URL params for quick booking
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const urlFrom = params.get('from');
+    const urlTo = params.get('to');
+    const isQuick = params.get('quick') === '1';
+
+    if (urlFrom && CITIES.includes(urlFrom)) setFrom(urlFrom);
+    if (urlTo && CITIES.includes(urlTo)) setTo(urlTo);
+
+    if (isQuick && urlFrom && urlTo) {
+      handleSearch();
+    }
+  }, [location.search, handleSearch]);
 
   return (
     <div
