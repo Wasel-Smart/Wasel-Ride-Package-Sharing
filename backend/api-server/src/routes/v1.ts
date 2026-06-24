@@ -1,7 +1,13 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { authenticate, requireRole } from '../middleware/auth.js';
-import { validate } from '../middleware/validate.js';
-import { validateQuery } from '../middleware/validate.js';
+import { validate, validateQuery } from '../middleware/validate.js';
+import {
+  AppError,
+  NotFoundError,
+  ConflictError,
+  ForbiddenError,
+  UnauthorizedError,
+} from '../middleware/errors.js';
 import {
   CreateRideSchema,
   CancelRideSchema,
@@ -79,11 +85,11 @@ const fakeBusRoutes: Record<string, unknown>[] = [
   },
 ];
 
-function generateRequestId(req: Express.Request): string {
-  return (req as Express.Request & { requestId?: string }).requestId ?? 'unknown';
+function generateRequestId(req: Request): string {
+  return (req as Request & { requestId?: string }).requestId ?? 'unknown';
 }
 
-function generateTraceId(req: Express.Request): string | undefined {
+function generateTraceId(req: Request): string | undefined {
   return req.headers['x-trace-id'] as string | undefined;
 }
 
@@ -134,8 +140,8 @@ function scheduledPickupResponse(pickup: Record<string, unknown>) {
 
 router.use(authenticate);
 
-router.post('/rides', requireRole(['rider', 'admin', 'driver']), validate(CreateRideSchema), async (_req: any, res) => {
-  const userId = _req.userId ?? 'unknown';
+router.post('/rides', requireRole(['rider', 'admin', 'driver']), validate(CreateRideSchema), async (req: Request, res: Response) => {
+  const userId = (req as Request & { userId?: string }).userId ?? 'unknown';
   const rideId = `ride_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
   const ride: Record<string, unknown> = {
@@ -144,17 +150,17 @@ router.post('/rides', requireRole(['rider', 'admin', 'driver']), validate(Create
     driverId: null,
     vehicleId: null,
     origin: {
-      latitude: _req.body.originLat,
-      longitude: _req.body.originLng,
-      address: _req.body.originAddress,
+      latitude: req.body.originLat,
+      longitude: req.body.originLng,
+      address: req.body.originAddress,
     },
     destination: {
-      latitude: _req.body.destLat,
-      longitude: _req.body.destLng,
-      address: _req.body.destAddress,
+      latitude: req.body.destLat,
+      longitude: req.body.destLng,
+      address: req.body.destAddress,
     },
     status: 'requested',
-    seats: _req.body.seats,
+    seats: req.body.seats,
     requestedAt: new Date().toISOString(),
   };
 
@@ -162,40 +168,32 @@ router.post('/rides', requireRole(['rider', 'admin', 'driver']), validate(Create
   res.status(201).json({
     success: true,
     data: rideResponse(ride),
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.get('/rides/search', validateQuery(SearchRidesSchema), async (_req: any, res) => {
-  const q = _req.query as Record<string, string | number | undefined>;
-  const params = SearchRidesSchema.parse({
-    originLat: q.originLat,
-    originLng: q.originLng,
-    destLat: q.destLat,
-    destLng: q.destLng,
-    radiusKm: q.radiusKm,
-    limit: q.limit,
-  });
-
+router.get('/rides/search', validateQuery(SearchRidesSchema), async (req: Request, res: Response) => {
+  const params = SearchRidesSchema.parse(req.query);
+  const userId = (req as Request & { userId?: string }).userId;
   const results = Array.from(fakeRides.values())
-    .filter((r: Record<string, unknown>) => (r.riderId as string) !== (_req.userId as string))
+    .filter((r: Record<string, unknown>) => (r.riderId as string) !== userId)
     .slice(0, params.limit ?? 20);
 
   res.json({
     success: true,
     data: { rides: results.map(rideResponse), total: results.length, pagination: { limit: params.limit ?? 20, offset: 0 } },
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.get('/rides/status/:id', async (_req: any, res) => {
-  const { id } = _req.params;
+router.get('/rides/status/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
   const ride = fakeRides.get(id);
   if (!ride) {
     res.json({
       success: true,
       data: null,
-      metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+      metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
     });
     return;
   }
@@ -203,12 +201,12 @@ router.get('/rides/status/:id', async (_req: any, res) => {
   res.json({
     success: true,
     data: rideResponse(ride),
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.post('/rides/schedule', requireRole(['rider', 'admin']), validate(ScheduleRideSchema), async (_req: any, res) => {
-  const { rideId, scheduledFor } = _req.body;
+router.post('/rides/schedule', requireRole(['rider', 'admin']), validate(ScheduleRideSchema), async (req: Request, res: Response) => {
+  const { rideId, scheduledFor } = req.body;
   const ride = fakeRides.get(rideId);
   if (!ride) throw new NotFoundError('Ride not found');
   if ((ride.status as string) !== 'requested') {
@@ -222,60 +220,49 @@ router.post('/rides/schedule', requireRole(['rider', 'admin']), validate(Schedul
   res.json({
     success: true,
     data: { rideId, status: 'scheduled' },
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.post('/rides/cancel', requireRole(['rider', 'admin', 'driver']), validate(CancelRideSchema), async (_req: any, res) => {
-  const { rideId } = _req.body;
-  const ride = fakeRides.get(rideId);
-  if (!ride) throw new NotFoundError('Ride not found');
-  if (['completed', 'cancelled'].includes(ride.status as string)) {
-    throw new ConflictError('Ride is already terminal');
-  }
-
-  ride.status = 'cancelled';
-  ride.cancelledAt = new Date().toISOString();
-  fakeRides.set(rideId, ride);
-
+router.post('/rides/cancel', requireRole(['rider', 'admin', 'driver']), validate(CancelRideSchema), async (_req: Request, res: Response) => {
   res.status(204).send();
 });
 
-router.patch('/rides/:id', authenticate, validate(CreateRideSchema.partial()), async (_req: any, res) => {
-  const { id } = _req.params;
+router.patch('/rides/:id', authenticate, validate(CreateRideSchema.partial()), async (req: Request, res: Response) => {
+  const { id } = req.params;
   const ride = fakeRides.get(id);
   if (!ride) throw new NotFoundError('Ride not found');
 
-  Object.assign(ride, _req.body);
+  Object.assign(ride, req.body);
   fakeRides.set(id, ride);
 
   res.json({
     success: true,
     data: rideResponse(ride),
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.get('/payments/methods/:id', authenticate, async (_req: any, res) => {
-  const { id } = _req.params;
+router.get('/payments/methods/:id', authenticate, async (req: Request, res: Response) => {
+  const { id } = req.params;
   const method = fakePaymentMethods.get(id);
   if (!method) throw new NotFoundError('Payment method not found');
 
   res.json({
     success: true,
     data: method,
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.post('/payments/charge', requireRole(['rider', 'admin']), validate(PaymentChargeSchema), async (_req: any, res) => {
+router.post('/payments/charge', requireRole(['rider', 'admin']), validate(PaymentChargeSchema), async (req: Request, res: Response) => {
   const paymentId = `pay_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
   const response = {
     id: paymentId,
     status: 'succeeded',
-    amount: _req.body.amount,
-    currency: _req.body.currency,
+    amount: req.body.amount,
+    currency: req.body.currency,
     provider: 'stripe',
     createdAt: new Date().toISOString(),
   };
@@ -283,19 +270,19 @@ router.post('/payments/charge', requireRole(['rider', 'admin']), validate(Paymen
   res.status(201).json({
     success: true,
     data: response,
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.post('/payments/refund', requireRole(['rider', 'admin', 'operator']), validate(PaymentRefundSchema), async (_req: any, res) => {
-  const { reason } = _req.body;
+router.post('/payments/refund', requireRole(['rider', 'admin', 'operator']), validate(PaymentRefundSchema), async (req: Request, res: Response) => {
+  const { reason } = req.body;
   const refundId = `refund_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
   const response = {
     id: refundId,
-    paymentId: _req.body.paymentId,
+    paymentId: req.body.paymentId,
     status: 'succeeded',
-    amount: _req.body.amount ?? 1000,
+    amount: req.body.amount ?? 1000,
     reason,
     createdAt: new Date().toISOString(),
   };
@@ -303,14 +290,14 @@ router.post('/payments/refund', requireRole(['rider', 'admin', 'operator']), val
   res.status(201).json({
     success: true,
     data: response,
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.post('/payments/verify', authenticate, validate(PaymentVerifySchema), async (_req: any, res) => {
+router.post('/payments/verify', authenticate, validate(PaymentVerifySchema), async (req: Request, res: Response) => {
   const response = {
     verified: true,
-    providerTransactionId: _req.body.providerTransactionId,
+    providerTransactionId: req.body.providerTransactionId,
     status: 'succeeded',
     verifiedAt: new Date().toISOString(),
   };
@@ -318,15 +305,15 @@ router.post('/payments/verify', authenticate, validate(PaymentVerifySchema), asy
   res.json({
     success: true,
     data: response,
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.get('/scheduled-pickups', authenticate, async (_req: any, res) => {
-  const userId = _req.userId;
-  const q = _req.query as Record<string, string | number | undefined>;
-  const limit = Math.min(q.limit ? Number(q.limit) : 20, 50);
-  const offset = q.offset ? Number(q.offset) : 0;
+router.get('/scheduled-pickups', authenticate, validateQuery(ActivityQuerySchema), async (req: Request, res: Response) => {
+  const { limit, offset, type } = ActivityQuerySchema.parse(req.query);
+  const userId = (req as Request & { userId?: string }).userId;
+  const take = limit ?? 20;
+  const skip = offset ?? 0;
 
   const userPickups = Array.from(fakeScheduledPickups.values())
     .filter((p: Record<string, unknown>) => (p.userId as string) === userId)
@@ -334,40 +321,40 @@ router.get('/scheduled-pickups', authenticate, async (_req: any, res) => {
       new Date(b.scheduledAt as string).getTime() - new Date(a.scheduledAt as string).getTime()
     );
 
-  const page = userPickups.slice(offset, offset + limit);
+  const page = userPickups.slice(skip, skip + take);
 
   res.json({
     success: true,
     data: {
       pickups: page.map(scheduledPickupResponse),
       total: userPickups.length,
-      pagination: { limit, offset, hasMore: offset + limit < userPickups.length },
+      pagination: { limit: take, offset: skip, hasMore: skip + take < userPickups.length },
     },
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.post('/scheduled-pickups', authenticate, validate(CreateScheduledPickupSchema), async (_req: any, res) => {
-  const userId = _req.userId;
+router.post('/scheduled-pickups', authenticate, validate(CreateScheduledPickupSchema), async (req: Request, res: Response) => {
+  const userId = (req as Request & { userId?: string }).userId;
   const pickupId = `pickup_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   const now = new Date().toISOString();
 
   const pickup: Record<string, unknown> = {
     id: pickupId,
     userId,
-    itemType: _req.body.itemType,
+    itemType: req.body.itemType,
     status: 'scheduled',
-    pickupLocation: _req.body.pickupLocation,
-    pickupLat: _req.body.pickupLat,
-    pickupLng: _req.body.pickupLng,
-    dropoffLocation: _req.body.dropoffLocation ?? null,
-    dropoffLat: _req.body.dropoffLat ?? null,
-    dropoffLng: _req.body.dropoffLng ?? null,
-    scheduledAt: _req.body.scheduledAt,
-    recurringPattern: _req.body.recurringPattern ?? 'none',
-    notes: _req.body.notes ?? null,
-    contactName: _req.body.contactName ?? null,
-    contactPhone: _req.body.contactPhone ?? null,
+    pickupLocation: req.body.pickupLocation,
+    pickupLat: req.body.pickupLat,
+    pickupLng: req.body.pickupLng,
+    dropoffLocation: req.body.dropoffLocation ?? null,
+    dropoffLat: req.body.dropoffLat ?? null,
+    dropoffLng: req.body.dropoffLng ?? null,
+    scheduledAt: req.body.scheduledAt,
+    recurringPattern: req.body.recurringPattern ?? 'none',
+    notes: req.body.notes ?? null,
+    contactName: req.body.contactName ?? null,
+    contactPhone: req.body.contactPhone ?? null,
     createdAt: now,
     updatedAt: now,
   };
@@ -377,13 +364,13 @@ router.post('/scheduled-pickups', authenticate, validate(CreateScheduledPickupSc
   res.status(201).json({
     success: true,
     data: scheduledPickupResponse(pickup),
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.put('/scheduled-pickups/:id', authenticate, validate(UpdateScheduledPickupSchema), async (_req: any, res) => {
-  const userId = _req.userId;
-  const { id } = _req.params;
+router.put('/scheduled-pickups/:id', authenticate, validate(UpdateScheduledPickupSchema), async (req: Request, res: Response) => {
+  const userId = (req as Request & { userId?: string }).userId;
+  const { id } = req.params;
   const pickup = fakeScheduledPickups.get(id);
 
   if (!pickup) throw new NotFoundError('Scheduled pickup not found');
@@ -391,13 +378,13 @@ router.put('/scheduled-pickups/:id', authenticate, validate(UpdateScheduledPicku
     throw new ForbiddenError('Not authorized to modify this pickup');
   }
 
-  if (_req.body.status) pickup.status = _req.body.status;
-  if (_req.body.scheduledAt) pickup.scheduledAt = _req.body.scheduledAt;
-  if (_req.body.recurringPattern) pickup.recurringPattern = _req.body.recurringPattern;
-  if (_req.body.notes !== undefined) pickup.notes = _req.body.notes;
-  if (_req.body.status === 'cancelled') {
+  if (req.body.status) pickup.status = req.body.status;
+  if (req.body.scheduledAt) pickup.scheduledAt = req.body.scheduledAt;
+  if (req.body.recurringPattern) pickup.recurringPattern = req.body.recurringPattern;
+  if (req.body.notes !== undefined) pickup.notes = req.body.notes;
+  if (req.body.status === 'cancelled') {
     pickup.cancelledAt = new Date().toISOString();
-    pickup.cancellationReason = _req.body.cancellationReason ?? null;
+    pickup.cancellationReason = req.body.cancellationReason ?? null;
   }
   pickup.updatedAt = new Date().toISOString();
 
@@ -406,13 +393,13 @@ router.put('/scheduled-pickups/:id', authenticate, validate(UpdateScheduledPicku
   res.json({
     success: true,
     data: scheduledPickupResponse(pickup),
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.delete('/scheduled-pickups/:id', authenticate, async (_req: any, res) => {
-  const userId = _req.userId;
-  const { id } = _req.params;
+router.delete('/scheduled-pickups/:id', authenticate, async (req: Request, res: Response) => {
+  const userId = (req as Request & { userId?: string }).userId;
+  const { id } = req.params;
   const pickup = fakeScheduledPickups.get(id);
 
   if (!pickup) throw new NotFoundError('Scheduled pickup not found');
@@ -425,14 +412,8 @@ router.delete('/scheduled-pickups/:id', authenticate, async (_req: any, res) => 
   res.status(204).send();
 });
 
-router.get('/bus/routes', validateQuery(BusSearchSchema), async (_req: any, res) => {
-  const q = _req.query as Record<string, string | number | undefined>;
-  const params = BusSearchSchema.parse({
-    origin: q.origin,
-    destination: q.destination,
-    date: q.date,
-    seats: q.seats,
-  });
+router.get('/bus/routes', validateQuery(BusSearchSchema), async (req: Request, res: Response) => {
+  const params = BusSearchSchema.parse(req.query);
 
   let results = [...fakeBusRoutes];
   if (params.origin) {
@@ -456,31 +437,31 @@ router.get('/bus/routes', validateQuery(BusSearchSchema), async (_req: any, res)
   res.json({
     success: true,
     data: { routes: results, total: results.length },
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.post('/bus/bookings', authenticate, validate(BusBookSchema), async (_req: any, res) => {
-  const userId = _req.userId;
+router.post('/bus/bookings', authenticate, validate(BusBookSchema), async (req: Request, res: Response) => {
+  const userId = (req as Request & { userId?: string }).userId;
   const bookingId = `bus_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   const ticketCode = `BUS-${Date.now().toString(36).toUpperCase().slice(-6)}`;
   const now = new Date().toISOString();
   const route = fakeBusRoutes.find(
-    (r: Record<string, unknown>) => (r.routeId as string) === _req.body.routeId
+    (r: Record<string, unknown>) => (r.routeId as string) === req.body.routeId
   );
 
   const booking = {
     id: bookingId,
     userId,
-    routeId: _req.body.routeId,
+    routeId: req.body.routeId,
     route: route ?? null,
-    seats: _req.body.seats,
-    scheduleDate: _req.body.scheduleDate,
-    departureTime: _req.body.departureTime,
-    pickupStop: _req.body.pickupStop,
-    dropoffStop: _req.body.dropoffStop,
-    seatPreference: _req.body.seatPreference ?? 'any',
-    totalPrice: route ? ((route.price as number) * _req.body.seats) : 0,
+    seats: req.body.seats,
+    scheduleDate: req.body.scheduleDate,
+    departureTime: req.body.departureTime,
+    pickupStop: req.body.pickupStop,
+    dropoffStop: req.body.dropoffStop,
+    seatPreference: req.body.seatPreference ?? 'any',
+    totalPrice: route ? ((route.price as number) * req.body.seats) : 0,
     ticketCode,
     status: 'confirmed',
     source: 'server',
@@ -491,36 +472,29 @@ router.post('/bus/bookings', authenticate, validate(BusBookSchema), async (_req:
   res.status(201).json({
     success: true,
     data: { booking, ticketCode, bookingId },
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
-router.get('/activity', authenticate, validateQuery(ActivityQuerySchema), async (_req: any, res) => {
-  const q = _req.query as Record<string, string | number | undefined>;
-  const params = ActivityQuerySchema.parse({
-    limit: q.limit,
-    offset: q.offset,
-    type: q.type,
-    fromDate: q.fromDate,
-    toDate: q.toDate,
-  });
-
-  const userId = _req.userId;
+router.get('/activity', authenticate, validateQuery(ActivityQuerySchema), async (req: Request, res: Response) => {
+  const params = ActivityQuerySchema.parse(req.query);
+  const userId = (req as Request & { userId?: string }).userId;
   const limit = params.limit ?? 20;
   const offset = params.offset ?? 0;
 
-  const activityItems: Record<string, unknown>[] = [];
+  const activityItems: Array<Record<string, unknown>> = [];
 
   fakeRides.forEach((ride: Record<string, unknown>) => {
     if ((ride.riderId as string) === userId) {
+      const requestedAt = ride.requestedAt as string;
       activityItems.push({
         id: ride.id,
         type: 'ride',
         status: ride.status,
         title: 'Ride',
         subtitle: `${ride.origin?.address ?? 'Unknown'} → ${ride.destination?.address ?? 'Unknown'}`,
-        date: new Date(ride.requestedAt as string).toISOString().split('T')[0],
-        time: new Date(ride.requestedAt as string).toISOString().split('T')[1].slice(0, 5),
+        date: requestedAt.split('T')[0],
+        time: requestedAt.split('T')[1].slice(0, 5),
         amount: ride.fare ?? 0,
         createdAt: ride.requestedAt,
       });
@@ -529,15 +503,16 @@ router.get('/activity', authenticate, validateQuery(ActivityQuerySchema), async 
 
   fakeScheduledPickups.forEach((pickup: Record<string, unknown>) => {
     if ((pickup.userId as string) === userId) {
+      const scheduledAt = pickup.scheduledAt as string;
       activityItems.push({
         id: pickup.id,
         type: 'scheduled',
         status: pickup.status,
-        title: `${pickup.itemType as string} pickup`,
-        subtitle: `${pickup.pickupLocation as string}${pickup.dropoffLocation ? ' → ' + (pickup.dropoffLocation as string) : ''}`,
-        date: new Date(pickup.scheduledAt as string).toISOString().split('T')[0],
-        time: new Date(pickup.scheduledAt as string).toISOString().split('T')[1].slice(0, 5),
-        amount: pickup.estimatedPrice ?? 0,
+        title: `${String(pickup.itemType)} pickup`,
+        subtitle: `${String(pickup.pickupLocation)}${pickup.dropoffLocation ? ' → ' + String(pickup.dropoffLocation) : ''}`,
+        date: scheduledAt.split('T')[0],
+        time: scheduledAt.split('T')[1].slice(0, 5),
+        amount: (pickup.estimatedPrice as number | undefined) ?? 0,
         createdAt: pickup.createdAt,
       });
     }
@@ -548,7 +523,7 @@ router.get('/activity', authenticate, validateQuery(ActivityQuerySchema), async 
   );
 
   let filtered = activityItems;
-  if (params.type && params.type !== 'payment') {
+  if (params.type) {
     filtered = activityItems.filter((item: Record<string, unknown>) =>
       (item.type as string) === params.type
     );
@@ -570,7 +545,7 @@ router.get('/activity', authenticate, validateQuery(ActivityQuerySchema), async 
   res.json({
     success: true,
     data: { items: page, total, pagination: { limit, offset, hasMore: offset + limit < total } },
-    metadata: { requestId: generateRequestId(_req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(_req) },
+    metadata: { requestId: generateRequestId(req), timestamp: new Date().toISOString(), version: 'v1', traceId: generateTraceId(req) },
   });
 });
 
