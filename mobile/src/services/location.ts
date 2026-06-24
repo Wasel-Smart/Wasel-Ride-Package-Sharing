@@ -4,6 +4,7 @@
  */
 
 import Geolocation from 'react-native-geolocation-service';
+import { PermissionsAndroid, Platform } from 'react-native';
 import { io, Socket } from 'socket.io-client';
 import { mobileAuth } from './auth';
 
@@ -70,7 +71,7 @@ export class LocationTrackingService {
     this.socket.on('reconnect_failed', () => {
     });
 
-    this.socket.on('connect_error', (error: Error) => {
+    this.socket.on('connect_error', () => {
     });
 
     this.socket.on('driver:location', (data: DriverLocation) => {
@@ -173,14 +174,25 @@ export class LocationTrackingService {
   }
 
   subscribeToDriver(driverId: string, callback: (location: DriverLocation) => void): () => void {
-    this.listeners.set(driverId, callback);
+    const existing = this.listeners.get(driverId);
+    if (!existing) {
+      this.listeners.set(driverId, new Set([callback]));
+    } else {
+      existing.add(callback);
+    }
 
     if (this.socket?.connected) {
       this.socket.emit('subscribe:driver', { driverId });
     }
 
     return () => {
-      this.listeners.delete(driverId);
+      const current = this.listeners.get(driverId);
+      if (current) {
+        current.delete(callback);
+        if (current.size === 0) {
+          this.listeners.delete(driverId);
+        }
+      }
       if (this.socket?.connected) {
         this.socket.emit('unsubscribe:driver', { driverId });
       }
@@ -191,7 +203,7 @@ export class LocationTrackingService {
     latitude: number,
     longitude: number,
     radiusKm: number,
-    callback: (drivers: DriverLocation[]) => void,
+    callback: (driver: DriverLocation) => void,
   ): () => void {
     const areaKey = `area-${latitude}-${longitude}-${radiusKm}`;
 
@@ -230,8 +242,6 @@ export class LocationTrackingService {
 
   private async requestLocationPermission(): Promise<boolean> {
     try {
-      const { PermissionsAndroid, Platform } = require('react-native');
-      
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -246,7 +256,6 @@ export class LocationTrackingService {
         return granted === PermissionsAndroid.RESULTS.GRANTED;
       }
 
-      // iOS: Permissions handled via Info.plist
       return true;
     } catch (error) {
       console.error('[LocationTracking] Permission error:', error);

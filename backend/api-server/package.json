@@ -16,12 +16,14 @@
     "express": "^4.21.0",
     "express-rate-limit": "^7.4.0",
     "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
     "pino-http": "^11.0.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.20.0",
     "@types/pino-http": "^5.8.4",
     "@typescript-eslint/eslint-plugin": "^8.18.0",

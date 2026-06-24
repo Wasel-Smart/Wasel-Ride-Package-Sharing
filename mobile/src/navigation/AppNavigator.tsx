@@ -81,7 +81,6 @@ function TabNavigator() {
 export const AppNavigator = React.memo(function AppNavigator() {
   const { user, loading } = useAuth();
 
-  // While session is being restored, render nothing (or a splash could go here)
   if (loading) return null;
 
   return (
@@ -94,7 +93,6 @@ export const AppNavigator = React.memo(function AppNavigator() {
         contentStyle: { backgroundColor: colors.bg },
       }}
     >
-      {/* Auth gate — show sign-in if no session */}
       {!user ? (
         <Stack.Screen
           name="SignIn"
@@ -103,41 +101,24 @@ export const AppNavigator = React.memo(function AppNavigator() {
         />
       ) : (
         <>
-          {/* Main app */}
           <Stack.Screen name="Tabs" component={TabNavigator} options={{ headerShown: false }} />
-
-          {/* Utility screens */}
           <Stack.Screen name="Safety" component={SafetyScreen} options={{ title: 'Safety center' }} />
           <Stack.Screen name="Trips" component={TripsScreen} options={{ title: 'My trips' }} />
           <Stack.Screen name="Bus" component={BusScreen} options={{ title: 'Bus routes' }} />
           <Stack.Screen name="Driver" component={DriverScreen} options={{ title: 'Driver setup' }} />
           <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'Notifications' }} />
-
-          {/* Ride lifecycle screens — previously orphaned, now wired */}
           <Stack.Screen
             name="LiveTracking"
             component={LiveTrackingScreen}
             options={{ title: 'Live tracking', headerShown: false }}
           />
-          <Stack.Screen
-            name="Chat"
-            component={ChatScreen}
-            options={{ title: 'Message driver' }}
-          />
-          <Stack.Screen
-            name="RateRide"
-            component={RateRideScreen}
-            options={{ title: 'Rate your ride' }}
-          />
-
-          {/* Advanced search — previously orphaned, now wired */}
+          <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Message driver' }} />
+          <Stack.Screen name="RateRide" component={RateRideScreen} options={{ title: 'Rate your ride' }} />
           <Stack.Screen
             name="AdvancedSearch"
             component={AdvancedSearchScreen}
             options={{ title: 'Smart ride search' }}
           />
-
-          {/* Scheduled rides — new screen */}
           <Stack.Screen
             name="ScheduledRide"
             component={ScheduledRideScreen}

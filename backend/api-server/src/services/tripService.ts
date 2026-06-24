@@ -1,7 +1,12 @@
-import { tripRepository } from '../repositories/tripRepository';
-import { packageRepository } from '../repositories/packageRepository';
-import { notificationRepository } from '../repositories/notificationRepository';
-import { NotFoundError, ValidationError, ConflictError, InternalError } from '@wasel/backend-shared/errors/app-errors';
+import { tripRepository } from '../repositories/tripRepository.js';
+import { packageRepository } from '../repositories/packageRepository.js';
+import { notificationRepository } from '../repositories/notificationRepository.js';
+import {
+  NotFoundError,
+  ValidationError,
+  ConflictError,
+  InternalError,
+} from '@wasel/backend-shared/errors/app-errors';
 
 export class TripService {
   async searchTrips(filters: {
@@ -78,16 +83,6 @@ export class TripService {
       pricePaid,
     });
 
-    await notificationRepository.create(passengerId, {
-      type: 'trip_booked',
-      title: 'Trip Booked',
-      titleAr: 'تم حجز الرحلة',
-      message: `Your booking for ${seatsBooked} seat(s) has been confirmed.`,
-      messageAr: `تم تأكيد حجزك لـ ${seatsBooked} مقعد.`,
-      channel: 'in_app',
-      data: { tripId, bookingId: booking.id },
-    });
-
     return booking;
   }
 
@@ -130,8 +125,6 @@ export class TripService {
     }
 
     const cancelledBooking = await tripRepository.updateBookingStatus(bookingId, 'cancelled');
-
-    await tripRepository.updateTripStatus(booking.trip_id, '', 'open');
 
     return cancelledBooking;
   }

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { ratingService } from '../services/ratingService';
-import { authenticate } from '../middleware/auth';
-import { validate } from '../middleware/validate';
+import ratingService from '../services/ratingService.js';
+import { authenticate } from '../middleware/auth.js';
+import { validate } from '../middleware/validate.js';
 import { z } from 'zod';
 
 const router = Router();
@@ -15,7 +15,7 @@ const CreateRatingSchema = z.object({
   tags: z.array(z.string()).optional(),
 });
 
-router.post('/', authenticate, validate('body', CreateRatingSchema), async (req: Request, res: Response) => {
+router.post('/', authenticate, validate(CreateRatingSchema), async (req: Request, res: Response) => {
   try {
     const input = CreateRatingSchema.parse(req.body);
     const userId = (req as unknown as { user: { id: string } }).user.id;

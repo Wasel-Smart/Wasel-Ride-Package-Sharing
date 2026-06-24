@@ -12,8 +12,6 @@ import {
 import { useAuth } from '../providers/AuthProvider';
 import { colors, radii, spacing } from '../theme';
 
-const CONTACTS_KEY = 'safety_contacts';
-
 interface EmergencyContact {
   id: string;
   name: string;
@@ -63,13 +61,6 @@ const SafetyScreen = React.memo(function SafetyScreen() {
     setNewPhone('');
     setAddingContact(false);
   }, [newName, newPhone]);
-
-  const removeContact = useCallback((id: string) => {
-    Alert.alert('Remove contact', 'Remove this emergency contact?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => setContacts(prev => prev.filter(c => c.id !== id)) },
-    ]);
-  }, []);
 
   const toggleChecklist = useCallback((id: string) => {
     setChecklistDone(prev => ({ ...prev, [id]: !prev[id] }));

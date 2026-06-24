@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RouteProp } from '@react-navigation/native';
 
 type RootStackParamList = {
   Tabs: undefined;
@@ -18,10 +17,9 @@ type RootStackParamList = {
 };
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
-type ReportRouteProp = RouteProp<RootStackParamList, keyof RootStackParamList>;
 
 interface ReportIssueProps {
-  route: ReportRouteProp;
+  route: { params?: Partial<RootStackParamList[keyof RootStackParamList]> };
   navigation: NavProp;
 }
 

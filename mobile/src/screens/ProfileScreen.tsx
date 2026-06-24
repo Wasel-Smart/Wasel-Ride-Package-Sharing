@@ -44,7 +44,7 @@ const ProfileScreen = React.memo(function ProfileScreen() {
         .reduce((sum, t) => sum + (t.fare ?? 0), 0);
 
       const ratedTrips = completed.filter(t => (t as { rating?: number }).rating != null);
-      const ratings = ratedTrips.map(t => (t as { rating: number }).rating);
+      const ratings = ratedTrips.map(t => (t as unknown as { rating: number }).rating);
       const averageRating = ratings.length > 0
         ? ratings.reduce((a, b) => a + b, 0) / ratings.length
         : null;

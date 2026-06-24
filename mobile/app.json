@@ -83,7 +83,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "wasel-mobile-production"
       },
       "router": { "origin": false }
     },
@@ -92,7 +92,7 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": ""
+      "url": "https://u.expo.dev/wasel-mobile-production"
     }
   }
 }

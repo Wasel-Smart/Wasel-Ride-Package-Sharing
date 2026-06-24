@@ -1,4 +1,4 @@
-import { notificationRepository } from '../repositories/notificationRepository';
+import { notificationRepository } from '../repositories/notificationRepository.js';
 import { getRedis } from '@wasel/backend-shared/redis';
 import { logger } from '@wasel/backend-shared/logging/logger';
 
@@ -46,7 +46,7 @@ export class NotificationService {
     try {
       await this.redis.xadd('notifications:dispatch', '*',
         'notificationId', notification.id,
-        'userId', notification.userId,
+        'userId', notification.user_id,
         'title', notification.title,
         'message', notification.message,
         'data', JSON.stringify(notification.data || {})

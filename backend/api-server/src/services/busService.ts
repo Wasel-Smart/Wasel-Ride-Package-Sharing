@@ -1,4 +1,4 @@
-import { busRepository } from '../repositories/busRepository';
+import { busRepository } from '../repositories/busRepository.js';
 import { NotFoundError, ValidationError, InternalError } from '@wasel/backend-shared/errors/app-errors';
 
 export class BusService {

@@ -7,7 +7,7 @@ import { Platform } from 'react-native';
 
 interface AnalyticsEvent {
   name: string;
-  params?: Record<string, string | number | boolean | null>;
+  params?: Record<string, string | number | boolean | null> | undefined;
 }
 
 interface CrashContext {

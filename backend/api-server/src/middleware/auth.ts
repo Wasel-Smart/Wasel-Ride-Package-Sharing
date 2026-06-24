@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import { UnauthorizedError, ForbiddenError } from './errors.js';
+import { UnauthorizedError, ForbiddenError } from '@wasel/backend-shared/errors/app-errors';
 import jwt from 'jsonwebtoken';
 import { config } from '@wasel/backend-shared/config';
 

@@ -7,7 +7,7 @@ import {
   AppError,
   ValidationError,
 } from '@wasel/backend-shared/errors/app-errors';
-import { startRuntimeHealthServer } from '../../../runtime/http-health';
+import { startRuntimeHealthServer } from '../../runtime/http-health';
 import { logger } from '@wasel/backend-shared/logging/logger';
 
 const config = loadConfig();

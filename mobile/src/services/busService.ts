@@ -28,9 +28,9 @@ class BusService {
     return `${baseUrl.replace(/\/$/, '')}${path}`;
   }
 
-  private getAuthHeaders(): HeadersInit {
+  private getAuthHeaders(): Record<string, string> {
     const token = mobileAuth.getAccessToken();
-    const headers: HeadersInit = { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
     return headers;
   }

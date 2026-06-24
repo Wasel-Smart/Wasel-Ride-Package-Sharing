@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { packageService } from '../services/packageService';
-import { authenticate } from '../middleware/auth';
-import { validate } from '../middleware/validate';
+import packageService from '../services/packageService.js';
+import { authenticate } from '../middleware/auth.js';
+import { validate } from '../middleware/validate.js';
 import { z } from 'zod';
 
 const router = Router();
@@ -25,7 +25,7 @@ const UpdateStatusSchema = z.object({
   carrierId: z.string().uuid().optional(),
 });
 
-router.post('/', authenticate, validate('body', CreatePackageSchema), async (req: Request, res: Response) => {
+router.post('/', authenticate, validate(CreatePackageSchema), async (req: Request, res: Response) => {
   try {
     const input = CreatePackageSchema.parse(req.body);
     const userId = (req as unknown as { user: { id: string } }).user.id;
@@ -72,7 +72,7 @@ router.post('/:id/assign-to-trip', authenticate, async (req: Request, res: Respo
   }
 });
 
-router.post('/:id/status', authenticate, validate('body', UpdateStatusSchema), async (req: Request, res: Response) => {
+router.post('/:id/status', authenticate, validate(UpdateStatusSchema), async (req: Request, res: Response) => {
   try {
     const { status, carrierId } = UpdateStatusSchema.parse(req.body);
     const userId = (req as unknown as { user: { id: string } }).user.id;

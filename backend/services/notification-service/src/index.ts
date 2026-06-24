@@ -7,8 +7,8 @@ import {
   AppError,
   ValidationError,
 } from '@wasel/backend-shared/errors/app-errors';
-import { startRuntimeHealthServer } from '../../../runtime/http-health';
-import { eventBroker } from '../../../src/platform/event-broker-redis-production.js';
+import { startRuntimeHealthServer } from '../../runtime/http-health';
+import { eventBroker } from '../../../../src/platform/event-broker-redis-production.js';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { z } from 'zod';
 

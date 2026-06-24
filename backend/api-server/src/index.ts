@@ -5,16 +5,16 @@ import rateLimit from 'express-rate-limit';
 import pinoHttp from 'pino-http';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { config } from '@wasel/backend-shared/config';
-import { authenticate } from './middleware/auth';
-import { errorHandler } from './middleware/errors';
-import tripRoutes from './routes/v1/trips';
-import packageRoutes from './routes/v1/packages';
-import busRoutes from './routes/v1/bus';
-import walletRoutes from './routes/v1/wallet';
-import ratingRoutes from './routes/v1/ratings';
-import notificationRoutes from './routes/v1/notifications';
-import adminRoutes from './routes/v1/admin';
-import corporateRoutes from './routes/v1/corporate';
+import authenticate from './middleware/auth.js';
+import errorHandler from './middleware/errors.js';
+import tripRoutes from './routes/v1/trips.js';
+import packageRoutes from './routes/v1/packages.js';
+import busRoutes from './routes/v1/bus.js';
+import walletRoutes from './routes/v1/wallet.js';
+import ratingRoutes from './routes/v1/ratings.js';
+import notificationRoutes from './routes/v1/notifications.js';
+import adminRoutes from './routes/v1/admin.js';
+import corporateRoutes from './routes/v1/corporate.js';
 
 function createApp(): express.Application {
   const app = express();
@@ -61,7 +61,7 @@ function createApp(): express.Application {
     });
   });
 
-  app.use(errorHandler);
+  app.use(errorHandler as express.ErrorRequestHandler);
 
   return app;
 }

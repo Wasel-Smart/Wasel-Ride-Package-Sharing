@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { busService } from '../services/busService';
-import { authenticate } from '../middleware/auth';
-import { validate } from '../middleware/validate';
+import busService from '../services/busService.js';
+import { authenticate } from '../middleware/auth.js';
+import { validate, validateQuery } from '../middleware/validate.js';
 import { z } from 'zod';
 
 const router = Router();
@@ -12,10 +12,11 @@ const BusSearchSchema = z.object({
 });
 
 const BusBookSchema = z.object({
+  scheduleId: z.string().uuid(),
   seats: z.number().int().min(1).max(10),
 });
 
-router.get('/routes', validate('query', BusSearchSchema), async (req: Request, res: Response) => {
+router.get('/routes', validateQuery(BusSearchSchema), async (req: Request, res: Response) => {
   try {
     const filters = BusSearchSchema.parse(req.query);
     const routes = await busService.searchRoutes(filters.originCity, filters.destinationCity);
@@ -38,16 +39,10 @@ router.get('/routes/:routeId/schedules', async (req: Request, res: Response) => 
   }
 });
 
-router.post('/bookings', authenticate, validate('body', BusBookSchema), async (req: Request, res: Response) => {
+router.post('/bookings', authenticate, validate(BusBookSchema), async (req: Request, res: Response) => {
   try {
-    const { seats } = BusBookSchema.parse(req.body);
-    const { scheduleId } = req.body;
+    const { scheduleId, seats } = BusBookSchema.parse(req.body);
     const userId = (req as unknown as { user: { id: string } }).user.id;
-
-    if (!scheduleId) {
-      return res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'scheduleId is required' } });
-    }
-
     const booking = await busService.bookSeat(scheduleId, userId, seats);
     res.status(201).json({ success: true, data: booking });
   } catch (error) {

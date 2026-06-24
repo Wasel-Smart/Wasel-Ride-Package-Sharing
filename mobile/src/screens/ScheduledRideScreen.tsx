@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
 import {
   InfoCard,
   PremiumPanel,
@@ -195,7 +194,7 @@ const ScheduledRideScreen = React.memo(function ScheduledRideScreen() {
           <StateNotice
             icon="warning"
             title="Needs valid details"
-            body={validation.message}
+            body={validation.message ?? 'Please check your inputs'}
             tone={colors.amber}
             testID="schedule-validation-state"
           />

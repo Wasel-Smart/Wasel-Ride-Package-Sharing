@@ -14,7 +14,7 @@ import {
 import authRouter from './routes/v1/auth';
 import twoFactorRouter from './routes/v1/2fa';
 import recoveryRouter from './routes/v1/recovery';
-import { startRuntimeHealthServer } from '../../../runtime/http-health';
+import { startRuntimeHealthServer } from '../../runtime/http-health';
 
 const config = loadConfig();
 const redis = new Redis({

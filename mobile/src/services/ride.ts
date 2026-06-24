@@ -97,7 +97,7 @@ export class RideLifecycleService {
     };
   }
 
-  private getAuthHeaders(): HeadersInit {
+  private getAuthHeaders(): Record<string, string> {
     const token = mobileAuth.getAccessToken();
     if (!token) {
       throw new Error('User not authenticated');

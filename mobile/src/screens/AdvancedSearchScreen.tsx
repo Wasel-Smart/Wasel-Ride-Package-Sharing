@@ -9,7 +9,6 @@ import {
   MetricTile,
   PremiumPanel,
   PrimaryButton,
-  RoutePreview,
   ScreenShell,
   SectionHeader,
   StateNotice,
@@ -64,7 +63,7 @@ const AdvancedSearchScreen = React.memo(function AdvancedSearchScreen() {
     [from, to, date, priceRange, minRating, minSeats, verifiedOnly, instantBookOnly, sortBy],
   );
 
-  const { data: searchResults, isLoading, error, refetch } = useQuery({
+  const { data: searchResults } = useQuery({
     queryKey: ['rides-search', searchParams],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -116,22 +115,6 @@ const AdvancedSearchScreen = React.memo(function AdvancedSearchScreen() {
 
     return result;
   }, [searchResults, priceRange, minRating, minSeats, verifiedOnly, instantBookOnly, sortBy]);
-      switch (sortBy) {
-        case 'price':
-          return a.priceJod - b.priceJod;
-        case 'rating':
-          return b.rating - a.rating;
-        case 'time':
-          return a.departureTime.localeCompare(b.departureTime);
-        case 'seats':
-          return b.seatsAvailable - a.seatsAvailable;
-        default:
-          return 0;
-      }
-    });
-
-    return result;
-  }, [priceRange, minRating, minSeats, verifiedOnly, instantBookOnly, sortBy]);
 
   const activeFiltersCount = [
     verifiedOnly,

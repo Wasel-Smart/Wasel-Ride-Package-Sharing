@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { tripService } from '../services/tripService';
-import { authenticate, requireRole } from '../middleware/auth';
-import { validate } from '../middleware/validate';
+import tripService from '../services/tripService.js';
+import { authenticate, requireRole } from '../middleware/auth.js';
+import { validate } from '../middleware/validate.js';
 import { z } from 'zod';
 
 const router = Router();
@@ -34,7 +34,7 @@ const BookTripSchema = z.object({
   pricePaid: z.number().positive(),
 });
 
-router.get('/search', validate('query', SearchTripsSchema), async (req: Request, res: Response) => {
+router.get('/search', validateQuery(SearchTripsSchema), async (req: Request, res: Response) => {
   try {
     const filters = SearchTripsSchema.parse(req.query);
     const result = await tripService.searchTrips(filters);
@@ -56,7 +56,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
   }
 });
 
-router.post('/', authenticate, requireRole(['driver', 'admin']), validate('body', CreateTripSchema), async (req: Request, res: Response) => {
+router.post('/', authenticate, requireRole(['driver', 'admin']), validate(CreateTripSchema), async (req: Request, res: Response) => {
   try {
     const input = CreateTripSchema.parse(req.body);
     const userId = (req as unknown as { user: { id: string } }).user.id;
@@ -66,23 +66,17 @@ router.post('/', authenticate, requireRole(['driver', 'admin']), validate('body'
     });
     res.status(201).json({ success: true, data: trip });
   } catch (error) {
-    if ((error as Error).message === 'Trip not found') {
-      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Trip not found' } });
-    }
     res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: (error as Error).message } });
   }
 });
 
-router.post('/:id/book', authenticate, validate('body', BookTripSchema), async (req: Request, res: Response) => {
+router.post('/:id/book', authenticate, validate(BookTripSchema), async (req: Request, res: Response) => {
   try {
     const { seats, pricePaid } = BookTripSchema.parse(req.body);
     const userId = (req as unknown as { user: { id: string } }).user.id;
     const booking = await tripService.bookTrip(req.params.id, userId, seats, pricePaid);
     res.status(201).json({ success: true, data: booking });
   } catch (error) {
-    if ((error as Error).message === 'Trip not found') {
-      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Trip not found' } });
-    }
     res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: (error as Error).message } });
   }
 });
@@ -94,9 +88,6 @@ router.patch('/:id/status', authenticate, async (req: Request, res: Response) =>
     const trip = await tripService.updateTripStatus(req.params.id, userId, status);
     res.json({ success: true, data: trip });
   } catch (error) {
-    if ((error as Error).message === 'Trip not found') {
-      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Trip not found' } });
-    }
     res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: (error as Error).message } });
   }
 });

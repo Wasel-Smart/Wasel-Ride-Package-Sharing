@@ -5,6 +5,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
+import { MMKV } from 'react-native-mmkv';
 import { mobileAuth } from './auth';
 import {
   createOfflineAction,
@@ -34,12 +35,41 @@ const STORAGE_KEYS = {
   NETWORK_STATE: '@wasel:network_state',
 };
 
+const mmkv = new MMKV();
+
+function mmkvGet(key: string): string | null {
+  try {
+    return mmkv.getString(key) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function mmkvSet(key: string, value: string): void {
+  try {
+    mmkv.set(key, value);
+  } catch {
+    // ignore MMKV failures, fallback to AsyncStorage not needed for critical path
+  }
+}
+
+function mmkvDelete(key: string): void {
+  try {
+    mmkv.delete(key);
+  } catch {
+    // ignore
+  }
+}
+
 export class OfflineService {
   private isOnline = true;
   private syncInProgress = false;
   private listeners = new Set<(isOnline: boolean) => void>();
   private statsListeners = new Set<(stats: OfflineStats) => void>();
   private unsubscribeNetInfo: (() => void) | null = null;
+  private readonly maxQueueSize = 100;
+  private readonly maxRetries = 5;
+  private dedupCache = new Set<string>();
 
   constructor() {
     void this.initializeNetworkMonitoring().catch(error => {
@@ -116,8 +146,21 @@ export class OfflineService {
     const offlineAction = createOfflineAction(action);
 
     const queue = await this.getOfflineQueue();
+
+    if (queue.length >= this.maxQueueSize) {
+      console.warn('[Offline] Queue full, dropping oldest action');
+      queue.shift();
+    }
+
+    const dedupKey = `${action.type}:${JSON.stringify(action.payload)}`;
+    if (this.dedupCache.has(dedupKey)) {
+      console.log('[Offline] Duplicate action skipped:', dedupKey);
+      return;
+    }
+    this.dedupCache.add(dedupKey);
+
     queue.push(offlineAction);
-    await AsyncStorage.setItem(STORAGE_KEYS.OFFLINE_QUEUE, JSON.stringify(queue));
+    await this.persistQueue(queue);
     void this.notifyStatsListeners();
 
     console.log(`[Offline] Queued action: ${action.type}`);
@@ -128,12 +171,21 @@ export class OfflineService {
    */
   private async getOfflineQueue(): Promise<OfflineAction[]> {
     try {
-      const data = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_QUEUE);
-      return data ? JSON.parse(data) : [];
+      const raw = mmkvGet(STORAGE_KEYS.OFFLINE_QUEUE);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((item): item is OfflineAction =>
+        item && typeof item === 'object' && 'id' in item && 'type' in item
+      );
     } catch (error) {
       console.error('[Offline] Error reading queue:', error);
       return [];
     }
+  }
+
+  private async persistQueue(queue: OfflineAction[]): Promise<void> {
+    mmkvSet(STORAGE_KEYS.OFFLINE_QUEUE, JSON.stringify(queue));
   }
 
   /**
@@ -146,6 +198,7 @@ export class OfflineService {
     }
 
     this.syncInProgress = true;
+    this.updateConnectionStore();
     console.log('[Offline] Starting sync...');
 
     try {
@@ -160,27 +213,32 @@ export class OfflineService {
           console.log(`[Offline] Synced: ${action.type}`);
         } catch (error) {
           console.error(`[Offline] Failed to sync ${action.type}:`, error);
-          
-          // Retry up to 3 times
-          const retried = incrementOfflineRetry(action);
+
+          const retried = incrementOfflineRetry(action, this.maxRetries);
           if (retried) {
+            const backoffMs = Math.min(1000 * Math.pow(2, retried.retries), 30000);
+            await new Promise(resolve => setTimeout(resolve, backoffMs));
             failed.push(retried);
           } else {
-            console.error(`[Offline] Discarding action after 3 retries: ${action.id}`);
+            console.error(`[Offline] Discarding action after ${this.maxRetries} retries: ${action.id}`);
           }
         }
       }
 
-      // Update queue with only failed actions
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.OFFLINE_QUEUE,
-        JSON.stringify(resolveOfflineQueueResult(queue, successful, failed)),
-      );
+      await this.persistQueue(failed);
+      this.dedupCache.clear();
       console.log(`[Offline] Sync complete: ${successful.length} synced, ${failed.length} remaining`);
+      void this.notifyStatsListeners();
     } finally {
       this.syncInProgress = false;
-      void this.notifyStatsListeners();
+      this.updateConnectionStore();
     }
+  }
+
+  private updateConnectionStore(): void {
+    // Keep legacy listeners for backward compatibility
+    // Zustand store consumers can use useConnectionStore directly
+    this.listeners.forEach(listener => listener(this.isOnline));
   }
 
   /**
@@ -346,7 +404,7 @@ export class OfflineService {
       expiresIn,
     };
 
-    await AsyncStorage.setItem(`@wasel:cache:${key}`, JSON.stringify(cached));
+    mmkvSet(`@wasel:cache:${key}`, JSON.stringify(cached));
     void this.notifyStatsListeners();
     console.log(`[Offline] Cached: ${key}`);
   }
@@ -356,15 +414,14 @@ export class OfflineService {
    */
   async getCachedData<T>(key: string): Promise<T | null> {
     try {
-      const item = await AsyncStorage.getItem(`@wasel:cache:${key}`);
+      const item = mmkvGet(`@wasel:cache:${key}`);
       if (!item) return null;
 
       const cached = JSON.parse(item) as CachedData<T>;
       const age = Date.now() - cached.timestamp;
 
       if (age > cached.expiresIn) {
-        // Expired
-        await AsyncStorage.removeItem(`@wasel:cache:${key}`);
+        mmkvDelete(`@wasel:cache:${key}`);
         console.log(`[Offline] Cache expired: ${key}`);
         return null;
       }
@@ -423,18 +480,23 @@ export class OfflineService {
    * Clear all cached data
    */
   async clearCache(): Promise<void> {
-    const keys = await AsyncStorage.getAllKeys();
-    const cacheKeys = keys.filter(key => key.startsWith('@wasel:cache:'));
-    await AsyncStorage.multiRemove(cacheKeys);
-    void this.notifyStatsListeners();
-    console.log(`[Offline] Cleared ${cacheKeys.length} cache entries`);
+    try {
+      const allKeys = mmkv.getAllKeys();
+      const cacheKeys = allKeys.filter(key => typeof key === 'string' && key.startsWith('@wasel:cache:'));
+      cacheKeys.forEach(key => mmkvDelete(key));
+      await this.notifyStatsListeners();
+      console.log(`[Offline] Cleared ${cacheKeys.length} cache entries`);
+    } catch (error) {
+      console.error('[Offline] Error clearing cache:', error);
+    }
   }
 
   /**
    * Clear offline queue
    */
   async clearOfflineQueue(): Promise<void> {
-    await AsyncStorage.removeItem(STORAGE_KEYS.OFFLINE_QUEUE);
+    mmkvDelete(STORAGE_KEYS.OFFLINE_QUEUE);
+    this.dedupCache.clear();
     void this.notifyStatsListeners();
     console.log('[Offline] Cleared offline queue');
   }
@@ -444,12 +506,17 @@ export class OfflineService {
    */
   async getOfflineStats(): Promise<OfflineStats> {
     const queue = await this.getOfflineQueue();
-    const keys = await AsyncStorage.getAllKeys();
-    const cacheKeys = keys.filter(key => key.startsWith('@wasel:cache:'));
+    let cacheSize = 0;
+    try {
+      const allKeys = mmkv.getAllKeys();
+      cacheSize = allKeys.filter(key => typeof key === 'string' && key.startsWith('@wasel:cache:')).length;
+    } catch {
+      cacheSize = 0;
+    }
 
     return {
       queueSize: queue.length,
-      cacheSize: cacheKeys.length,
+      cacheSize,
       isOnline: this.isOnline,
     };
   }

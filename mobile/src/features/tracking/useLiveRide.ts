@@ -30,7 +30,7 @@ export interface LiveRide {
 export function useLiveRide(rideId: string, enabled = true, refetchInterval = 3000) {
   const queryClient = useQueryClient();
 
-  const query = useQuery({
+  const queryOptions: Parameters<typeof useQuery<LiveRide | null>>[0] = {
     queryKey: ['live-ride', rideId],
     queryFn: async () => {
       const response = await apiClient.get<LiveRide>(`rides/${rideId}/live`);
@@ -38,12 +38,17 @@ export function useLiveRide(rideId: string, enabled = true, refetchInterval = 30
       return response.data;
     },
     enabled,
-    refetchInterval: refetchInterval || undefined,
-    refetchIntervalInBackground: true,
     staleTime: 1000,
     retry: 3,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
-  });
+  };
+
+  if (refetchInterval && refetchInterval > 0) {
+    queryOptions.refetchInterval = refetchInterval;
+  }
+  queryOptions.refetchIntervalInBackground = true;
+
+  const query = useQuery(queryOptions);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['live-ride', rideId] });
 

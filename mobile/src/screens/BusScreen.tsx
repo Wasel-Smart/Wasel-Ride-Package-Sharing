@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import {
   InfoCard,
   MetricTile,
@@ -15,9 +15,7 @@ import { useOffline } from '../hooks/useOffline';
 import { offlineService } from '../services/offline';
 import { mobileAuth } from '../services/auth';
 import { waselMobileConfig } from '../lib/config';
-import { colors, radii, spacing, typography } from '../theme';
-
-import { busService } from '../services/busService';
+import { colors, radii, spacing } from '../theme';
 
 interface BusRoute {
   id: string;
@@ -52,7 +50,7 @@ async function fetchBusRoutes(): Promise<BusRoute[]> {
   if (!apiUrl) throw new Error('API URL not configured');
 
   const token = mobileAuth.getAccessToken();
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   const response = await fetch(`${apiUrl.replace(/\/$/, '')}/v1/bus/routes`, {

@@ -1,10 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, View, Pressable } from 'react-native';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   InfoCard,
-  MetricTile,
-  PremiumPanel,
   PrimaryButton,
   ScreenShell,
   SectionHeader,
@@ -13,7 +11,7 @@ import {
 } from '../components/MobilePrimitives';
 import { apiClient } from '../lib/api';
 import { useAuth } from '../providers/AuthProvider';
-import { colors, spacing, typography } from '../theme';
+import { colors, spacing } from '../theme';
 import { Ionicons } from '@expo/vector-icons';
 
 interface AppNotification {
@@ -57,18 +55,56 @@ function NotificationsSkeleton() {
 
 export default function NotificationsScreen() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+
+  const { data: fetchedNotifications, isLoading, error } = useQuery({
+    queryKey: ['notifications', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const response = await apiClient.get<AppNotification[]>('notifications');
+      if (response.error || !response.data) throw new Error(response.error || 'Failed to load');
+      return response.data;
+    },
+    enabled: Boolean(user?.id),
+    staleTime: 30 * 1000,
+  });
+
+  useEffect(() => {
+    if (fetchedNotifications) {
+      setNotifications(fetchedNotifications);
+    }
+  }, [fetchedNotifications]);
+
+  const markAllReadMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.id) return;
+      await apiClient.post('notifications/mark-all-read', { userId: user.id });
+    },
+    onSuccess: () => {
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    },
+  });
+
+  const markReadMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.post(`notifications/${id}/mark-read`, {});
+    },
+    onSuccess: (_, id) => {
+      setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
+    },
+  });
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
+  const markAllRead = useCallback(() => {
+    markAllReadMutation.mutate();
+  }, [markAllReadMutation]);
 
-  const markRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => (n.id === id ? { ...n, read: true } : n)),
-    );
-  };
+  const markRead = useCallback((id: string) => {
+    markReadMutation.mutate(id);
+  }, [markReadMutation]);
 
   const formatRelative = (iso: string) => {
     const diff = Date.now() - new Date(iso).getTime();
@@ -78,6 +114,8 @@ export default function NotificationsScreen() {
     if (hours < 24) return `${hours}h ago`;
     return `${Math.floor(hours / 24)}d ago`;
   };
+
+  if (isLoading) return <NotificationsSkeleton />;
 
   return (
     <ScreenShell testID="notifications-screen">
@@ -108,6 +146,13 @@ export default function NotificationsScreen() {
             body="Your notifications appear here after signing in."
             tone={colors.amber}
           />
+        ) : error ? (
+          <StateNotice
+            icon="alert-circle"
+            title="Failed to load notifications"
+            body="Please check your connection and try again."
+            tone={colors.red}
+          />
         ) : notifications.length === 0 ? (
           <StateNotice
             icon="notifications-off"
@@ -124,18 +169,24 @@ export default function NotificationsScreen() {
                 tone={colors.blue}
                 onPress={markAllRead}
                 testID="mark-all-read-button"
+                disabled={markAllReadMutation.isPending}
               />
             )}
 
             {notifications.map(notif => (
-              <StateNotice
+              <Pressable
                 key={notif.id}
-                icon={TYPE_ICON[notif.type]}
-                title={notif.read ? notif.title : `● ${notif.title}`}
-                body={`${notif.body}  ·  ${formatRelative(notif.createdAt)}`}
-                tone={notif.read ? colors.muted : TYPE_COLOR[notif.type]}
-                testID={`notification-${notif.id}`}
-              />
+                onPress={() => !notif.read && markRead(notif.id)}
+                disabled={notif.read}
+              >
+                <StateNotice
+                  icon={TYPE_ICON[notif.type]}
+                  title={notif.read ? notif.title : `● ${notif.title}`}
+                  body={`${notif.body}  ·  ${formatRelative(notif.createdAt)}`}
+                  tone={notif.read ? colors.muted : TYPE_COLOR[notif.type]}
+                  testID={`notification-${notif.id}`}
+                />
+              </Pressable>
             ))}
           </>
         )}
@@ -149,11 +200,28 @@ export default function NotificationsScreen() {
       </ScrollView>
     </ScreenShell>
   );
-});
+}
 
 const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.bg },
   scroll: { gap: spacing.lg, paddingBottom: spacing.xxl },
   statusRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'space-between' },
+  skeletonCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    marginBottom: spacing.sm,
+  },
+  skeletonIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.surfaceAlt,
+  },
+  skeletonLines: { flex: 1, gap: 8 },
+  skeletonLine: { height: 14, backgroundColor: colors.surfaceAlt, borderRadius: 6, width: '80%' },
+  skeletonLineShort: { width: '50%' },
 });
-
-export default NotificationsScreen;

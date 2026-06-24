@@ -1,7 +1,7 @@
 import React from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { colors, spacing, typography } from '../theme';
+import { colors, spacing } from '../theme';
 import { apiClient } from '../lib/api';
 import { useAuth } from '../providers/AuthProvider';
 
@@ -41,7 +41,7 @@ function DriverProfileSkeleton() {
 
 export default function DriverProfileScreen({ route }: { route: { params: { driverId: string } } }) {
   const { driverId } = route.params || {};
-  const { user, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
 
   const { data: driver, isLoading, error } = useQuery({
     queryKey: ['driver', driverId],
