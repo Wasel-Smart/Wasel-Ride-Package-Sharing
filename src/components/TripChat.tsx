@@ -39,10 +39,6 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
     }
   }, [tripId, user?.id]);
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
-
   useEffect(() => {
     loadMessages();
     const unsubscribe = chatService.subscribeToTrip(
