@@ -39,15 +39,6 @@ interface Corridor {
   demand: 'high' | 'medium' | 'low';
 }
 
-interface FlowParticle {
-  id: string;
-  from: CityId;
-  to: CityId;
-  type: 'ride' | 'package';
-  progress: number;
-  speed: number;
-}
-
 const CITIES: CityNode[] = [
   { id: 'amman', name: 'Amman', shortName: 'AMM', x: 0.52, y: 0.28, isCapital: true, population: '4M', region: 'central' },
   { id: 'irbid', name: 'Irbid', shortName: 'IRB', x: 0.68, y: 0.12, isCapital: false, population: '750K', region: 'north' },

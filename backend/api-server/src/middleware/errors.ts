@@ -1,13 +1,18 @@
 import type { Request, Response, NextFunction } from 'express';
 
+export interface ApiError extends Error {
+  statusCode?: number;
+  code?: string;
+}
+
 export function errorHandler(
-  err: Error,
+  err: ApiError,
   _req: Request,
   res: Response,
   _next: NextFunction
 ): void {
-  const statusCode = (err as unknown as { statusCode?: number }).statusCode || 500;
-  const code = (err as unknown as { code?: string }).code || 'internal_error';
+  const statusCode = err.statusCode || 500;
+  const code = err.code || 'internal_error';
   const message = err.message || 'Internal server error';
 
   res.status(statusCode).json({
@@ -16,3 +21,5 @@ export function errorHandler(
     meta: { timestamp: new Date().toISOString() },
   });
 }
+
+export default errorHandler;

@@ -19,12 +19,6 @@ Notifications.setNotificationHandler({
   }),
 });
 
-interface NotificationToken {
-  token: string;
-  type: 'ios' | 'android';
-  saved: boolean;
-}
-
 interface NotificationPreferences {
   rideUpdates: boolean;
   promotions: boolean;

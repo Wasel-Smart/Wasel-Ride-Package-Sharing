@@ -82,7 +82,7 @@ const WalletScreen = React.memo(function WalletScreen() {
     } finally {
       setLoading(false);
     }
-  }, [bookingId, initPaymentSheet, numericAmount, presentPaymentSheet, validPayment]);
+  }, [initPaymentSheet, numericAmount, presentPaymentSheet, validPayment]);
 
   return (
     <ScreenShell testID="wallet-screen">
@@ -113,21 +113,12 @@ const WalletScreen = React.memo(function WalletScreen() {
         <PremiumPanel>
           <View style={styles.form}>
             <TextInput
-              accessibilityLabel="Booking ID"
-              autoCapitalize="none"
-              onChangeText={setBookingId}
-              placeholder="Booking ID"
-              placeholderTextColor={colors.muted}
-              returnKeyType="next"
-              style={styles.input}
-              value={bookingId}
-            />
-            <TextInput
               accessibilityLabel="Amount in JOD"
               keyboardType="decimal-pad"
               onChangeText={setAmount}
               placeholder="Amount JOD"
               placeholderTextColor={colors.muted}
+              returnKeyType="next"
               style={styles.input}
               value={amount}
             />
