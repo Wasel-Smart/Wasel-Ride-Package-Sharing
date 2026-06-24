@@ -3,8 +3,8 @@
  * Bridges worker framework to actual infrastructure (Kubernetes, Cloud Functions, etc.)
  */
 
-import { WorkerRegistry, createWorker, type QueueMessage } from './worker-framework';
-import { domainEventBus, eventBroker } from './event-bus';
+import { WorkerRegistry, createWorker } from './worker-framework';
+import { domainEventBus } from './event-bus';
 import { telemetry } from './telemetry';
 
 // ============================================================================
@@ -63,12 +63,6 @@ const matchingWorker = createWorker<RideMatchRequest>(
       });
 
       telemetry.recordSLO('matching-worker', 'ride-matching', Date.now() - startTime, true);
-    } else {
-      // Node.js environment - connect to Redis Streams
-      await eventBroker.subscribe('rides.requested', async (event) => {
-        const rideEvent = event.payload as { rideId: string; origin: { lat: number; lng: number }; seats: number };
-        // This would be handled by the backend ride-matching service
-      }, { groupName: 'matching-worker', consumerName: `worker-${process.env.HOSTNAME ?? 'local'}` });
     }
   },
 );
@@ -221,8 +215,7 @@ const opsWorker = createWorker<RideCompletionEvent>(
     concurrency: 5,
     retryPolicy: { maxRetries: 3, backoffMs: 5000 },
   },
-  async (message) => {
-    const { payload } = message;
+  async (_message) => {
     telemetry.recordMetric('ops.analytics_updated', 1, 'count');
   },
 );

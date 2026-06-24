@@ -3,3 +3,4 @@ export * from './config/app.config';
 export * from './logging/logger';
 export * from './validation/schemas';
 export * from './rate-limiter';
+export * from './payment-cliq/gateway';
