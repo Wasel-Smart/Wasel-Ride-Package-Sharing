@@ -3,7 +3,7 @@
  * Implements retry, dead-letter, and circuit breaker patterns
  */
 
-import Redis from 'ioredis';
+import type Redis from 'ioredis';
 import { createStructuredLogEntry } from './observability';
 import { telemetry } from './telemetry';
 
