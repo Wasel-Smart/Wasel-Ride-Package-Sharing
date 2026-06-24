@@ -1,20 +1,25 @@
-import { getDb } from '../db.js';
-import { logger, NotFoundError, InternalError } from '../db.js';
+import { getDb } from '@wasel/backend-shared/db';
+import { logger } from '@wasel/backend-shared/logging/logger';
+import {
+  NotFoundError,
+  ConflictError,
+  ValidationError,
+  InternalError,
+} from '@wasel/backend-shared/errors/app-errors';
 
 export interface TripRow {
   id: string;
   mode: 'carpooling' | 'on_demand' | 'scheduled' | 'package' | 'return';
-  status: 'posted' | 'requested' | 'matched' | 'accepted' | 'booked' | 'confirmed' | 'pickup' | 'in_progress' | 'completed' | 'cancelled' | 'disputed';
+  status: string;
   driver_id: string | null;
   created_by: string;
   origin_name: string;
-  origin_location: unknown;
+  origin_location: string;
   destination_name: string;
-  destination_location: unknown;
+  destination_location: string;
   distance_km: number | null;
   duration_minutes: number | null;
-  route_polyline: string | null;
-  departure_time: string | null;
+  departure_time: string;
   scheduled_pickup_time: string | null;
   actual_pickup_time: string | null;
   actual_dropoff_time: string | null;
@@ -24,9 +29,9 @@ export interface TripRow {
   price_per_seat: number | null;
   total_price: number | null;
   surge_multiplier: number;
-  gender_preference: 'mixed' | 'women_only' | 'men_only' | 'family_only';
+  gender_preference: string;
   prayer_stop_enabled: boolean;
-  prayer_stop_location: unknown;
+  prayer_stop_location: string | null;
   prayer_stop_duration_min: number;
   allows_packages: boolean;
   package_capacity_kg: number | null;
@@ -46,11 +51,11 @@ export interface TripBookingRow {
   passenger_id: string;
   seats_booked: number;
   price_paid: number;
-  pickup_location: unknown;
+  pickup_location: string | null;
   pickup_name: string | null;
-  dropoff_location: unknown;
+  dropoff_location: string | null;
   dropoff_name: string | null;
-  status: 'posted' | 'requested' | 'matched' | 'accepted' | 'booked' | 'confirmed' | 'pickup' | 'in_progress' | 'completed' | 'cancelled' | 'disputed';
+  status: string;
   confirmed_by_driver: boolean;
   driver_rating: number | null;
   passenger_rating: number | null;
@@ -62,36 +67,34 @@ export interface TripBookingRow {
 
 export interface CreateTripInput {
   mode: 'carpooling' | 'on_demand' | 'scheduled' | 'package' | 'return';
-  created_by: string;
-  origin_name: string;
-  origin_location: unknown;
-  destination_name: string;
-  destination_location: unknown;
-  departure_time?: string;
-  total_seats?: number;
-  price_per_seat?: number;
-  gender_preference?: 'mixed' | 'women_only' | 'men_only' | 'family_only';
-  allows_packages?: boolean;
+  driverId?: string;
+  createdBy: string;
+  originCity: string;
+  originCoords: { lat: number; lng: number };
+  destinationCity: string;
+  destinationCoords: { lat: number; lng: number };
+  departureTime: string;
+  availableSeats: number;
+  pricePerSeat?: number;
+  allowPackages?: boolean;
+  packageCapacityKg?: number;
   notes?: string;
 }
 
 export interface CreateBookingInput {
-  trip_id: string;
-  passenger_id: string;
-  seats_booked?: number;
-  price_paid: number;
-  pickup_location?: unknown;
-  pickup_name?: string;
-  dropoff_location?: unknown;
-  dropoff_name?: string;
+  tripId: string;
+  passengerId: string;
+  seatsBooked: number;
+  pricePaid: number;
+  pickupCity?: string;
+  pickupCoords?: { lat: number; lng: number };
+  dropoffCity?: string;
+  dropoffCoords?: { lat: number; lng: number };
 }
 
-class TripRepository {
+export class TripRepository {
   private db = getDb();
 
-  /**
-   * Find available trips with optional filters and pagination
-   */
   async findAvailableTrips(filters: {
     originCity?: string;
     destinationCity?: string;
@@ -100,285 +103,205 @@ class TripRepository {
     page: number;
     limit: number;
   }): Promise<{ data: TripRow[]; meta: { total: number; page: number; limit: number } }> {
-    try {
-      const offset = (filters.page - 1) * filters.limit;
+    const { originCity, destinationCity, departureDate, seats, page, limit } = filters;
+    const offset = (page - 1) * limit;
 
-      const countResult = await this.db`
-        SELECT COUNT(*) as total
-        FROM trips t
-        WHERE t.status IN (${'posted'}, ${'requested'}) AND t.available_seats > 0
-          ${filters.originCity ? this.db`AND LOWER(t.origin_name) LIKE ${`%${filters.originCity.toLowerCase()}%`}` : this.db``}
-          ${filters.destinationCity ? this.db`AND LOWER(t.destination_name) LIKE ${`%${filters.destinationCity.toLowerCase()}%`}` : this.db``}
-          ${filters.departureDate ? this.db`AND DATE(t.departure_time) = ${filters.departureDate}` : this.db``}
-          ${filters.seats ? this.db`AND t.available_seats >= ${filters.seats}` : this.db``}
-      ` as unknown as { total: number }[];
+    let whereClause = 'WHERE t.status IN (\'posted\', \'open\') AND t.departure_time > NOW()';
+    const params: unknown[] = [];
+    let paramIndex = 1;
 
-      const total = countResult[0]?.total ?? 0;
-
-      const trips = await this.db`
-        SELECT
-          t.id, t.mode, t.status, t.driver_id, t.created_by,
-          t.origin_name, t.origin_location, t.destination_name, t.destination_location,
-          t.distance_km, t.duration_minutes, t.route_polyline,
-          t.departure_time, t.scheduled_pickup_time, t.actual_pickup_time,
-          t.actual_dropoff_time, t.completed_at,
-          t.total_seats, t.available_seats, t.price_per_seat, t.total_price,
-          t.surge_multiplier, t.gender_preference, t.prayer_stop_enabled,
-          t.prayer_stop_location, t.prayer_stop_duration_min,
-          t.allows_packages, t.package_capacity_kg, t.predicted_demand,
-          t.corridor_id, t.cluster_id, t.notes, t.cancelled_by, t.cancellation_reason,
-          t.created_at, t.updated_at
-        FROM trips t
-        WHERE t.status IN (${'posted'}, ${'requested'}) AND t.available_seats > 0
-          ${filters.originCity ? this.db`AND LOWER(t.origin_name) LIKE ${`%${filters.originCity.toLowerCase()}%`}` : this.db``}
-          ${filters.destinationCity ? this.db`AND LOWER(t.destination_name) LIKE ${`%${filters.destinationCity.toLowerCase()}%`}` : this.db``}
-          ${filters.departureDate ? this.db`AND DATE(t.departure_time) = ${filters.departureDate}` : this.db``}
-          ${filters.seats ? this.db`AND t.available_seats >= ${filters.seats}` : this.db``}
-        ORDER BY t.departure_time ASC
-        LIMIT ${filters.limit} OFFSET ${offset}
-      ` as unknown as TripRow[];
-
-      return {
-        data: trips,
-        meta: { total, page: filters.page, limit: filters.limit },
-      };
-    } catch (error) {
-      logger.error({ err: error }, 'Error finding available trips');
-      throw new InternalError('Failed to find available trips');
+    if (originCity) {
+      whereClause += ` AND t.origin_name ILIKE $${paramIndex}`;
+      params.push(`%${originCity}%`);
+      paramIndex++;
     }
+
+    if (destinationCity) {
+      whereClause += ` AND t.destination_name ILIKE $${paramIndex}`;
+      params.push(`%${destinationCity}%`);
+      paramIndex++;
+    }
+
+    if (departureDate) {
+      whereClause += ` AND DATE(t.departure_time) = $${paramIndex}`;
+      params.push(departureDate);
+      paramIndex++;
+    }
+
+    if (seats && seats > 0) {
+      whereClause += ` AND t.available_seats >= $${paramIndex}`;
+      params.push(seats);
+      paramIndex++;
+    }
+
+    const countQuery = `SELECT COUNT(*) as total FROM trips t ${whereClause}`;
+    const countResult = await this.db.unsafe(countQuery, params);
+    const total = Number(countResult[0]?.total || 0);
+
+    const dataQuery = `
+      SELECT t.*, u.full_name as driver_name, u.avatar_url as driver_avatar,
+             dp.vehicle_make, dp.vehicle_model, dp.vehicle_type, dp.average_rating as driver_rating
+      FROM trips t
+      LEFT JOIN users u ON t.driver_id = u.id
+      LEFT JOIN driver_profiles dp ON t.driver_id = dp.user_id
+      ${whereClause}
+      ORDER BY t.departure_time ASC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    params.push(limit, offset);
+
+    const data = await this.db.unsafe<TripRow & { driver_name: string; driver_avatar: string | null; vehicle_make: string | null; vehicle_model: string | null; vehicle_type: string | null; driver_rating: number | null }>(dataQuery, params);
+
+    return {
+      data: data.map((row) => ({ ...row })) as TripRow[],
+      meta: { total, page, limit },
+    };
   }
 
-  /**
-   * Find a trip by its ID
-   */
-  async findTripById(id: string): Promise<TripRow | null> {
-    try {
-      const [trip] = await this.db`
-        SELECT
-          id, mode, status, driver_id, created_by,
-          origin_name, origin_location, destination_name, destination_location,
-          distance_km, duration_minutes, route_polyline,
-          departure_time, scheduled_pickup_time, actual_pickup_time,
-          actual_dropoff_time, completed_at,
-          total_seats, available_seats, price_per_seat, total_price,
-          surge_multiplier, gender_preference, prayer_stop_enabled,
-          prayer_stop_location, prayer_stop_duration_min,
-          allows_packages, package_capacity_kg, predicted_demand,
-          corridor_id, cluster_id, notes, cancelled_by, cancellation_reason,
-          created_at, updated_at
-        FROM trips
-        WHERE id = ${id}
-      ` as unknown as TripRow[];
-
-      return trip ?? null;
-    } catch (error) {
-      logger.error({ err: error }, 'Error finding trip by ID');
-      throw new InternalError('Failed to find trip');
-    }
+  async findTripById(id: string): Promise<(TripRow & { driver_name: string; driver_avatar: string | null }) | null> {
+    const result = await this.db.unsafe(
+      `SELECT t.*, u.full_name as driver_name, u.avatar_url as driver_avatar
+       FROM trips t
+       LEFT JOIN users u ON t.driver_id = u.id
+       WHERE t.id = $1`,
+      [id]
+    );
+    return (result[0] as TripRow & { driver_name: string; driver_avatar: string | null }) || null;
   }
 
-  /**
-   * Create a new trip
-   */
   async createTrip(input: CreateTripInput): Promise<TripRow> {
     try {
-      const now = new Date().toISOString();
-      const [trip] = await this.db`
-        INSERT INTO trips (
-          mode, status, created_by, origin_name, origin_location,
-          destination_name, destination_location, departure_time,
-          total_seats, available_seats, price_per_seat,
-          gender_preference, allows_packages, notes, created_at, updated_at
-        ) VALUES (
-          ${input.mode}, ${'posted'}, ${input.created_by}, ${input.origin_name}, ${input.origin_location as string},
-          ${input.destination_name}, ${input.destination_location as string}, ${input.departure_time ?? null},
-          ${input.total_seats ?? 1}, ${input.total_seats ?? 1}, ${input.price_per_seat ?? null},
-          ${input.gender_preference ?? 'mixed'}, ${input.allows_packages ?? false}, ${input.notes ?? null}, ${now}, ${now}
-        )
-        RETURNING
-          id, mode, status, driver_id, created_by,
-          origin_name, origin_location, destination_name, destination_location,
-          distance_km, duration_minutes, route_polyline,
-          departure_time, scheduled_pickup_time, actual_pickup_time,
-          actual_dropoff_time, completed_at,
-          total_seats, available_seats, price_per_seat, total_price,
-          surge_multiplier, gender_preference, prayer_stop_enabled,
-          prayer_stop_location, prayer_stop_duration_min,
-          allows_packages, package_capacity_kg, predicted_demand,
-          corridor_id, cluster_id, notes, cancelled_by, cancellation_reason,
-          created_at, updated_at
-      ` as unknown as TripRow[];
+      const originPoint = `SRID=4326;POINT(${input.originCoords.lng} ${input.originCoords.lat})`;
+      const destinationPoint = `SRID=4326;POINT(${input.destinationCoords.lng} ${input.destinationCoords.lat})`;
 
-      return trip;
+      const result = await this.db.unsafe<TripRow>(
+        `INSERT INTO trips (
+          mode, created_by, origin_name, origin_location, destination_name, destination_location,
+          departure_time, total_seats, available_seats, price_per_seat, allows_packages,
+          package_capacity_kg, notes, status
+        ) VALUES ($1, $2, $3, ST_GeogFromText($4), $5, ST_GeogFromText($6), $7, $8, $9, $10, $11, $12, $13, 'posted')
+        RETURNING *`,
+        [
+          input.mode,
+          input.createdBy,
+          input.originCity,
+          originPoint,
+          input.destinationCity,
+          destinationPoint,
+          input.departureTime,
+          input.availableSeats,
+          input.availableSeats,
+          input.pricePerSeat || null,
+          input.allowPackages ?? false,
+          input.packageCapacityKg || null,
+          input.notes || null,
+        ]
+      );
+      return result[0] as TripRow;
     } catch (error) {
-      logger.error({ err: error }, 'Error creating trip');
-      throw new InternalError('Failed to create trip');
+      logger.error({ error, input }, 'Failed to create trip');
+      throw new InternalError('Failed to create trip', error as Error);
     }
   }
 
-  /**
-   * Update trip status and optionally assign driver
-   */
-  async updateTripStatus(id: string, status: string, driverId?: string): Promise<TripRow> {
+  async updateTripStatus(id: string, status: string, driverId: string): Promise<TripRow> {
     try {
-      const now = new Date().toISOString();
-
-      if (driverId) {
-        const [trip] = await this.db`
-          UPDATE trips
-          SET status = ${status}, driver_id = ${driverId}, updated_at = ${now}
-          WHERE id = ${id}
-          RETURNING
-            id, mode, status, driver_id, created_by,
-            origin_name, origin_location, destination_name, destination_location,
-            distance_km, duration_minutes, route_polyline,
-            departure_time, scheduled_pickup_time, actual_pickup_time,
-            actual_dropoff_time, completed_at,
-            total_seats, available_seats, price_per_seat, total_price,
-            surge_multiplier, gender_preference, prayer_stop_enabled,
-            prayer_stop_location, prayer_stop_duration_min,
-            allows_packages, package_capacity_kg, predicted_demand,
-            corridor_id, cluster_id, notes, cancelled_by, cancellation_reason,
-            created_at, updated_at
-        ` as unknown as TripRow[];
-
-        if (!trip) {
-          throw new NotFoundError('Trip');
-        }
-
-        return trip;
+      const result = await this.db.unsafe<TripRow>(
+        `UPDATE trips SET status = $1, updated_at = NOW() WHERE id = $2 AND driver_id = $3 RETURNING *`,
+        [status, id, driverId]
+      );
+      if (!result[0]) {
+        throw new NotFoundError('Trip');
       }
+      return result[0] as TripRow;
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      logger.error({ error, id, status }, 'Failed to update trip status');
+      throw new InternalError('Failed to update trip status', error as Error);
+    }
+  }
 
-      const [trip] = await this.db`
-        UPDATE trips
-        SET status = ${status}, updated_at = ${now}
-        WHERE id = ${id}
-        RETURNING
-          id, mode, status, driver_id, created_by,
-          origin_name, origin_location, destination_name, destination_location,
-          distance_km, duration_minutes, route_polyline,
-          departure_time, scheduled_pickup_time, actual_pickup_time,
-          actual_dropoff_time, completed_at,
-          total_seats, available_seats, price_per_seat, total_price,
-          surge_multiplier, gender_preference, prayer_stop_enabled,
-          prayer_stop_location, prayer_stop_duration_min,
-          allows_packages, package_capacity_kg, predicted_demand,
-          corridor_id, cluster_id, notes, cancelled_by, cancellation_reason,
-          created_at, updated_at
-      ` as unknown as TripRow[];
+  async createBooking(input: CreateBookingInput): Promise<TripBookingRow> {
+    try {
+      const tripResult = await this.db.unsafe(
+        'SELECT available_seats, status FROM trips WHERE id = $1 FOR UPDATE',
+        [input.tripId]
+      );
 
-      if (!trip) {
+      if (!tripResult[0]) {
         throw new NotFoundError('Trip');
       }
 
-      return trip;
-    } catch (error) {
-      logger.error({ err: error }, 'Error updating trip status');
-      throw error instanceof NotFoundError ? error : new InternalError('Failed to update trip status');
-    }
-  }
-
-  /**
-   * Create a booking for a trip
-   */
-  async createBooking(input: CreateBookingInput): Promise<TripBookingRow> {
-    try {
-      const now = new Date().toISOString();
-      const [booking] = await this.db`
-        INSERT INTO trip_bookings (
-          trip_id, passenger_id, seats_booked, price_paid,
-          pickup_location, pickup_name, dropoff_location, dropoff_name,
-          status, created_at, updated_at
-        ) VALUES (
-          ${input.trip_id}, ${input.passenger_id}, ${input.seats_booked ?? 1}, ${input.price_paid},
-          ${input.pickup_location as string ?? null}, ${input.pickup_name ?? null},
-          ${input.dropoff_location as string ?? null}, ${input.dropoff_name ?? null},
-          ${'booked'}, ${now}, ${now}
-        )
-        RETURNING
-          id, trip_id, passenger_id, seats_booked, price_paid,
-          pickup_location, pickup_name, dropoff_location, dropoff_name,
-          status, confirmed_by_driver, driver_rating, passenger_rating,
-          driver_review, passenger_review, created_at, updated_at
-      ` as unknown as TripBookingRow[];
-
-      return booking;
-    } catch (error) {
-      logger.error({ err: error }, 'Error creating booking');
-      throw new InternalError('Failed to create booking');
-    }
-  }
-
-  /**
-   * Find a booking by its ID
-   */
-  async findBookingById(id: string): Promise<TripBookingRow | null> {
-    try {
-      const [booking] = await this.db`
-        SELECT
-          id, trip_id, passenger_id, seats_booked, price_paid,
-          pickup_location, pickup_name, dropoff_location, dropoff_name,
-          status, confirmed_by_driver, driver_rating, passenger_rating,
-          driver_review, passenger_review, created_at, updated_at
-        FROM trip_bookings
-        WHERE id = ${id}
-      ` as unknown as TripBookingRow[];
-
-      return booking ?? null;
-    } catch (error) {
-      logger.error({ err: error }, 'Error finding booking by ID');
-      throw new InternalError('Failed to find booking');
-    }
-  }
-
-  /**
-   * Find all bookings for a trip
-   */
-  async findBookingsByTripId(tripId: string): Promise<TripBookingRow[]> {
-    try {
-      const bookings = await this.db`
-        SELECT
-          id, trip_id, passenger_id, seats_booked, price_paid,
-          pickup_location, pickup_name, dropoff_location, dropoff_name,
-          status, confirmed_by_driver, driver_rating, passenger_rating,
-          driver_review, passenger_review, created_at, updated_at
-        FROM trip_bookings
-        WHERE trip_id = ${tripId}
-        ORDER BY created_at DESC
-      ` as unknown as TripBookingRow[];
-
-      return bookings;
-    } catch (error) {
-      logger.error({ err: error }, 'Error finding bookings by trip ID');
-      throw new InternalError('Failed to find bookings');
-    }
-  }
-
-  /**
-   * Update booking status
-   */
-  async updateBookingStatus(id: string, status: string): Promise<TripBookingRow> {
-    try {
-      const now = new Date().toISOString();
-      const [booking] = await this.db`
-        UPDATE trip_bookings
-        SET status = ${status}, updated_at = ${now}
-        WHERE id = ${id}
-        RETURNING
-          id, trip_id, passenger_id, seats_booked, price_paid,
-          pickup_location, pickup_name, dropoff_location, dropoff_name,
-          status, confirmed_by_driver, driver_rating, passenger_rating,
-          driver_review, passenger_review, created_at, updated_at
-      ` as unknown as TripBookingRow[];
-
-      if (!booking) {
-        throw new NotFoundError('Booking');
+      const trip = tripResult[0] as { available_seats: number; status: string };
+      if (trip.status !== 'posted' && trip.status !== 'open') {
+        throw new ValidationError('Trip is not available for booking');
+      }
+      if (trip.available_seats < input.seatsBooked) {
+        throw new ValidationError('Not enough seats available');
       }
 
-      return booking;
+      const pkLocation = input.pickupCoords
+        ? `SRID=4326;POINT(${input.pickupCoords.lng} ${input.pickupCoords.lat})`
+        : null;
+      const doLocation = input.dropoffCoords
+        ? `SRID=4326;POINT(${input.dropoffCoords.lng} ${input.dropoffCoords.lat})`
+        : null;
+
+      const bookingResult = await this.db.unsafe<TripBookingRow>(
+        `INSERT INTO trip_bookings (
+          trip_id, passenger_id, seats_booked, price_paid, status,
+          pickup_location, pickup_name, dropoff_location, dropoff_name
+        ) VALUES ($1, $2, $3, $4, 'booked', $5, $6, $7, $8)
+        RETURNING *`,
+        [
+          input.tripId,
+          input.passengerId,
+          input.seatsBooked,
+          input.pricePaid,
+          pkLocation,
+          input.pickupCity || null,
+          doLocation,
+          input.dropoffCity || null,
+        ]
+      );
+
+      await this.db.unsafe(
+        'UPDATE trips SET available_seats = available_seats - $1 WHERE id = $2',
+        [input.seatsBooked, input.tripId]
+      );
+
+      return bookingResult[0] as TripBookingRow;
     } catch (error) {
-      logger.error({ err: error }, 'Error updating booking status');
-      throw error instanceof NotFoundError ? error : new InternalError('Failed to update booking status');
+      if (error instanceof NotFoundError || error instanceof ValidationError) throw error;
+      logger.error({ error, input }, 'Failed to create booking');
+      throw new InternalError('Failed to create booking', error as Error);
+    }
+  }
+
+  async findBookingById(id: string): Promise<TripBookingRow | null> {
+    const result = await this.db.unsafe<TripBookingRow>('SELECT * FROM trip_bookings WHERE id = $1', [id]);
+    return result[0] || null;
+  }
+
+  async findBookingsByTripId(tripId: string): Promise<TripBookingRow[]> {
+    const result = await this.db.unsafe<TripBookingRow>('SELECT * FROM trip_bookings WHERE trip_id = $1', [tripId]);
+    return result as TripBookingRow[];
+  }
+
+  async updateBookingStatus(id: string, status: string): Promise<TripBookingRow> {
+    try {
+      const result = await this.db.unsafe<TripBookingRow>(
+        `UPDATE trip_bookings SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+        [status, id]
+      );
+      if (!result[0]) {
+        throw new NotFoundError('Booking');
+      }
+      return result[0] as TripBookingRow;
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      logger.error({ error, id, status }, 'Failed to update booking status');
+      throw new InternalError('Failed to update booking status', error as Error);
     }
   }
 }
