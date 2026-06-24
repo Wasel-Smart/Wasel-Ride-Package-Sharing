@@ -183,7 +183,7 @@ export class CliQClient {
   }
 }
 
-export function createCliQClient(env: Record<string, string> = process.env): CliQClient {
+export function createCliQClient(env: Record<string, string> = process.env as Record<string, string>): CliQClient {
   return new CliQClient({
     apiBaseUrl: env.CLIQ_API_BASE_URL ?? env.JOPACC_API_BASE_URL ?? '',
     merchantId: env.CLIQ_MERCHANT_ID ?? env.JOPACC_MERCHANT_ID ?? '',
