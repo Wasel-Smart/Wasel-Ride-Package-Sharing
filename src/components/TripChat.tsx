@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 import { chatService, type Message } from '@/services/chat';
 import { Button } from '@/components/ui/button';
@@ -20,28 +20,7 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    loadMessages();
-    const unsubscribe = chatService.subscribeToTrip(
-      tripId,
-      (message) => {
-        setMessages((prev) => [...prev, message]);
-        if (message.sender_id !== user?.id) {
-          chatService.markAsRead([message.id]);
-        }
-      }
-    );
-
-    return () => {
-      unsubscribe();
-    };
-  }, [tripId, user?.id]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const loadMessages = async () => {
+  const loadMessages = useCallback(async () => {
     try {
       const data = await chatService.getMessages(tripId);
       setMessages(data);
@@ -58,11 +37,28 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tripId, user?.id]);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
+
+  useEffect(() => {
+    loadMessages();
+    const unsubscribe = chatService.subscribeToTrip(
+      tripId,
+      (message) => {
+        setMessages((prev) => [...prev, message]);
+        if (message.sender_id !== user?.id) {
+          chatService.markAsRead([message.id]);
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [tripId, user?.id, loadMessages]);
 
   const handleSend = async () => {
     if (!newMessage.trim() || sending) return;
