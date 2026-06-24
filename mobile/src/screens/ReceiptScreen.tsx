@@ -31,12 +31,6 @@ interface ReceiptScreenProps {
   route: { params: Partial<RootStackParamList[keyof RootStackParamList]> };
 }
 
-function formatCurrency(value: string | number | undefined): string {
-  if (typeof value === 'number') return `JOD ${value.toFixed(2)}`;
-  if (typeof value === 'string') return `JOD ${value}`;
-  return 'JOD 0.00';
-}
-
 export default function ReceiptScreen({ route }: ReceiptScreenProps) {
   const receiptData = (route.params as { receiptData?: ReceiptData } | undefined)?.receiptData;
 

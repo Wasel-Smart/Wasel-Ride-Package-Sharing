@@ -3,14 +3,12 @@
  * Manages offline data persistence, sync queue, and network state
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { MMKV } from 'react-native-mmkv';
 import { mobileAuth } from './auth';
 import {
   createOfflineAction,
   incrementOfflineRetry,
-  resolveOfflineQueueResult,
   type OfflineAction,
 } from '../utils/offlineQueue';
 

@@ -3,7 +3,6 @@
  */
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
 import { mobileAuth } from './auth';
 import { analyticsService } from './analytics';
 
