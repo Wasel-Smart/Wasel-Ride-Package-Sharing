@@ -150,10 +150,10 @@ export class TripRepository {
     `;
     params.push(limit, offset);
 
-    const data = await this.db.unsafe<TripRow & { driver_name: string; driver_avatar: string | null; vehicle_make: string | null; vehicle_model: string | null; vehicle_type: string | null; driver_rating: number | null }>(dataQuery, params);
+    const data = await this.db.unsafe<TripRow>(dataQuery, params);
 
     return {
-      data: data.map((row) => ({ ...row })) as TripRow[],
+      data: data.map((row: Record<string, unknown>) => ({ ...row } as TripRow)),
       meta: { total, page, limit },
     };
   }
