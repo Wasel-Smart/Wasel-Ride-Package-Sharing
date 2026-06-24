@@ -6,9 +6,12 @@ import { createRateLimitMiddleware } from '@wasel/backend-shared/rate-limiter';
 import {
   AppError,
   ValidationError,
+  NotFoundError,
 } from '@wasel/backend-shared/errors/app-errors';
 import { startRuntimeHealthServer } from '../../../runtime/http-health';
 import { logger } from '@wasel/backend-shared/logging/logger';
+import { z } from 'zod';
+import { eventBroker } from '../../../src/platform/event-broker-redis-production.js';
 
 const config = loadConfig();
 
@@ -126,28 +129,37 @@ function createApp(): express.Application {
     }),
   );
 
-  app.get('/health', () => ({ status: 'ok' }));
+  app.get('/health', async (_req, res) => {
+    const redisHealthy = await RedisPool.connection.ping().then(() => true).catch(() => false);
+    const dbHealthy = await PostgresPool.connection`SELECT 1`.then(() => true).catch(() => false);
+    res.json({ status: 'ok', timestamp: new Date().toISOString(), checks: { redis: redisHealthy, database: dbHealthy } });
+  });
+
+  app.get('/ready', async (_req, res) => ({ status: 'ready' }));
+
+  app.get('/metrics', async (_req, res) => ({
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  }));
 
   app.get('/v1/mobility-os/snapshot', async (req, res) => {
     const sql = PostgresPool.connection;
-    const { data: corridors, error } = await sql.query(
-      'SELECT * FROM mobility_corridors ORDER BY demand_index DESC',
-    );
 
-    if (error) {
-      throw new Error(error.message);
-    }
+    const [corridors] = await sql`
+      SELECT * FROM mobility_corridors ORDER BY demand_index DESC
+    `;
 
-    res.json(buildMobilitySnapshot(corridors as unknown as MobilityCorridor[]));
+    res.json(buildMobilitySnapshot((corridors ?? []) as unknown as MobilityCorridor[]));
   });
 
   app.post('/v1/mobility-os/booking/create', async (req, res) => {
-    const { corridorId, type, quantity, timestamp, userId } = req.body;
+    const { corridorId, type, quantity, userId } = req.body;
     if (!corridorId || !type || quantity <= 0) {
       throw new ValidationError('Invalid booking request');
     }
 
     const sql = PostgresPool.connection;
+    const now = new Date().toISOString();
 
     const [corridor] = await sql`
       SELECT * FROM mobility_corridors WHERE id = ${corridorId}
@@ -161,7 +173,7 @@ function createApp(): express.Application {
       corridor: corridor as unknown as MobilityCorridor,
       type: type === 'cargo' ? 'cargo' : 'seat',
       quantity,
-      timestamp: timestamp ?? new Date().toISOString(),
+      timestamp: now,
     });
 
     await sql`
@@ -174,7 +186,147 @@ function createApp(): express.Application {
       WHERE id = ${corridorId}
     `;
 
+    await eventBroker.publish({
+      id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+      type: 'mobility.booking-created',
+      payload: { corridorId, type, quantity, userId },
+      producer: 'mobility-os-service',
+      occurredAt: now,
+    });
+
     res.status(201).json({ success: true, corridor: updated });
+  });
+
+  app.get('/v1/mobility-os/live-rows', async (req, res) => {
+    const sql = PostgresPool.connection;
+
+    const [trips, bookings, packages] = await Promise.all([
+      sql`SELECT trip_id as id, origin_city as origin, destination_city as destination, available_seats, price_per_seat, trip_status as status FROM trips WHERE trip_status IN ('open', 'in_progress')`,
+      sql`SELECT booking_id as id, passenger_id as passenger, driver_id as driver, status, amount FROM bookings WHERE status = 'confirmed'`,
+      sql`SELECT id, sender_id as sender, recipient_name as recipient, status, price_jod as amount FROM packages WHERE status IN ('created', 'in_transit')`,
+    ]);
+
+    res.json({
+      trips: trips ?? [],
+      bookings: bookings ?? [],
+      packages: packages ?? [],
+      fetchedAt: new Date().toISOString(),
+    });
+  });
+
+  app.get('/v1/trips/search', async (req, res) => {
+    const sql = PostgresPool.connection;
+    const { from, to, date, seats } = req.query as Record<string, string>;
+
+    let query = sql`
+      SELECT trip_id, driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity
+      FROM trips WHERE trip_status IN ('open', 'in_progress') AND deleted_at IS NULL
+    `;
+
+    if (from) query = sql`SELECT * FROM (${query}) WHERE origin_city ILIKE ${'%' + from + '%'}`;
+    if (to) query = sql`SELECT * FROM (${query}) WHERE destination_city ILIKE ${'%' + to + '%'}`;
+    if (seats) query = sql`SELECT * FROM (${query}) WHERE available_seats >= ${Number(seats)}`;
+    if (date) {
+      const fromDate = `${date}T00:00:00`;
+      const toDate = `${date}T23:59:59.999`;
+      query = sql`SELECT * FROM (${query}) WHERE departure_time >= ${fromDate} AND departure_time <= ${toDate}`;
+    }
+
+    const [trips] = await query;
+
+    res.json(trips ?? []);
+  });
+
+  app.post('/v1/trips/calculate-price', async (req, res) => {
+    const { type, distance_km, base_price, weight } = req.body;
+    const distance = Math.max(1, Number(distance_km ?? 8));
+    const base = Math.max(1, Number(base_price ?? (type === 'package' ? 3.5 : 2.5)));
+    const packageCharge = type === 'package' ? Math.max(0, Number(weight ?? 0.5) - 1) * 0.35 : 0;
+    const distanceCharge = distance * (type === 'package' ? 0.22 : 0.18);
+
+    res.json({
+      price: Number((base + distanceCharge + packageCharge).toFixed(3)),
+      currency: 'JOD',
+      breakdown: {
+        base,
+        distance: Number(distanceCharge.toFixed(3)),
+        package: Number(packageCharge.toFixed(3)),
+      },
+    });
+  });
+
+  app.post('/v1/trips', async (req, res) => {
+    const { driverId, from, to, date, time, seats, price, acceptsPackages, packageCapacity } = req.body;
+    const sql = PostgresPool.connection;
+    const now = new Date().toISOString();
+    const departureTime = new Date(`${date}T${time}:00`).toISOString();
+
+    const [trip] = await sql`
+      INSERT INTO trips (driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity, created_at, updated_at)
+      VALUES (${driverId}, ${from}, ${to}, ${departureTime}, ${seats ?? 1}, ${price ?? 0}, 'open', ${acceptsPackages ?? false}, ${packageCapacity ? (packageCapacity === 'large' ? 3 : packageCapacity === 'medium' ? 2 : 1) : 0}, ${now}, ${now})
+      RETURNING *
+    `;
+
+    res.status(201).json({ trip });
+  });
+
+  app.get('/v1/trips/user/{userId}', async (req, res) => {
+    const { userId } = req.params;
+    const sql = PostgresPool.connection;
+
+    const [trips] = await sql`
+      SELECT * FROM trips WHERE driver_id = ${userId} AND deleted_at IS NULL ORDER BY departure_time DESC
+    `;
+
+    res.json(trips ?? []);
+  });
+
+  app.get('/v1/trips/{tripId}/bookings', async (req, res) => {
+    const { tripId } = req.params;
+    const sql = PostgresPool.connection;
+
+    const [bookings] = await sql`
+      SELECT * FROM bookings WHERE trip_id = ${tripId} ORDER BY created_at DESC
+    `;
+
+    res.json(bookings ?? []);
+  });
+
+  app.get('/v1/trips/{tripId}', async (req, res) => {
+    const { tripId } = req.params;
+    const sql = PostgresPool.connection;
+
+    const [trip] = await sql`
+      SELECT * FROM trips WHERE trip_id = ${tripId} AND deleted_at IS NULL
+    `;
+
+    if (!trip) throw new NotFoundError('Trip not found');
+    res.json(trip);
+  });
+
+  app.post('/v1/bookings', async (req, res) => {
+    const { tripId, passengerId, seatsRequested, totalPrice, status } = req.body;
+    const sql = PostgresPool.connection;
+    const now = new Date().toISOString();
+
+    const [booking] = await sql`
+      INSERT INTO bookings (trip_id, passenger_id, seats_requested, total_price, status, created_at, updated_at)
+      VALUES (${tripId}, ${passengerId}, ${seatsRequested ?? 1}, ${totalPrice}, ${status ?? 'confirmed'}, ${now}, ${now})
+      RETURNING *
+    `;
+
+    res.status(201).json({ booking });
+  });
+
+  app.get('/v1/bookings/user/{userId}', async (req, res) => {
+    const { userId } = req.params;
+    const sql = PostgresPool.connection;
+
+    const [bookings] = await sql`
+      SELECT * FROM bookings WHERE passenger_id = ${userId} ORDER BY created_at DESC
+    `;
+
+    res.json(bookings ?? []);
   });
 
   app.use((error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

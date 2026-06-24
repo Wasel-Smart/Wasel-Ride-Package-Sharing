@@ -1,16 +1,18 @@
-import { useMemo, useState } from 'react';
-import { ArrowRight, Bus, Car, Package, Wallet } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowRight, Bus, Car, Package, Wallet, Calendar } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { getStoredBusBookings, type StoredBusBooking } from '../../services/bus';
 import { getConnectedPackages, type PackageRequest } from '../../services/journeyLogistics';
 import { getRideBookings, type RideBookingRecord } from '../../services/rideLifecycle';
+import { supabase } from '../../utils/supabase/client';
 import { C, F, R, TYPE } from '../../utils/wasel-ds';
 import { PageShell, SectionCard, StatusBadge } from '../../components/wasel-ui/WaselPagePrimitives';
 
 type TimelineItem = {
   id: string;
-  kind: 'ride' | 'package' | 'bus';
+  kind: 'ride' | 'package' | 'bus' | 'scheduled';
   title: string;
   subtitle: string;
   date: string;
@@ -22,15 +24,49 @@ type TimelineItem = {
   path: string;
 };
 
+type ScheduledPickupRow = {
+  id: string;
+  item_type: 'ride' | 'package_delivery' | 'package_return';
+  status: string;
+  pickup_location: string;
+  dropoff_location?: string;
+  scheduled_at: string;
+  estimated_price?: number;
+};
+
 export function ActivityPage() {
+  const { user } = useLocalAuth();
   const { language } = useLanguage();
   const nav = useIframeSafeNavigate();
   const ar = language === 'ar';
-  const [filter, setFilter] = useState<'all' | 'ride' | 'package' | 'bus'>('all');
+  const [filter, setFilter] = useState<'all' | 'ride' | 'package' | 'bus' | 'scheduled'>('all');
+  const [scheduledItems, setScheduledItems] = useState<ScheduledPickupRow[]>([]);
 
   const rides = useMemo(() => getRideBookings(), []);
   const packages = useMemo(() => getConnectedPackages(), []);
   const buses = useMemo(() => getStoredBusBookings(), []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadScheduled() {
+      if (!supabase || !user?.id) return;
+      const { data } = await supabase
+        .from('scheduled_pickups')
+        .select('id,item_type,status,pickup_location,dropoff_location,scheduled_at,estimated_price')
+        .eq('user_id', user.id)
+        .order('scheduled_at', { ascending: false });
+
+      if (!cancelled && data) {
+        setScheduledItems(data as ScheduledPickupRow[]);
+      }
+    }
+
+    void loadScheduled();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const items: TimelineItem[] = useMemo(() => {
     const mapped: TimelineItem[] = [];
@@ -79,7 +115,7 @@ export function ActivityPage() {
       mapped.push({
         id: b.id,
         kind: 'bus',
-        title: ar ? `باص` : `Bus`,
+        title: ar ? 'باص' : 'Bus',
         subtitle: `${b.pickupStop} → ${b.dropoffStop}`,
         date: b.scheduleDate,
         time: b.departureTime,
@@ -91,10 +127,28 @@ export function ActivityPage() {
       });
     });
 
-    mapped.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
+    scheduledItems.forEach(s => {
+      const typeCol = s.item_type === 'ride' ? C.cyan : s.item_type === 'package_delivery' ? C.gold : C.green;
+      const typeLabel = s.item_type === 'ride' ? (ar ? 'رحلة مجدولة' : 'Scheduled ride') : s.item_type === 'package_delivery' ? (ar ? 'توصيل مجدولة' : 'Scheduled delivery') : (ar ? 'إرجاع مجدول' : 'Scheduled return');
+      mapped.push({
+        id: s.id,
+        kind: 'scheduled',
+        title: typeLabel,
+        subtitle: `${s.pickup_location}${s.dropoff_location ? ' → ' + s.dropoff_location : ''}`,
+        date: (s.scheduled_at ?? '').split('T')[0] ?? '',
+        time: (s.scheduled_at ?? '').split('T')[1]?.slice(0, 5) ?? '',
+        amount: s.estimated_price ?? 0,
+        status: s.status,
+        statusColor: typeCol,
+        Icon: Calendar,
+        path: '/app/schedule',
+      });
+    });
+
+    mapped.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(b.time));
 
     return mapped;
-  }, [rides, packages, buses, ar]);
+  }, [rides, packages, buses, scheduledItems, ar]);
 
   const filtered = useMemo(
     () => (filter === 'all' ? items : items.filter(i => i.kind === filter)),
@@ -111,6 +165,7 @@ export function ActivityPage() {
     { key: 'ride', label: 'Rides', labelAr: 'رحلات' },
     { key: 'package', label: 'Delivery', labelAr: 'توصيل' },
     { key: 'bus', label: 'Bus', labelAr: 'باص' },
+    { key: 'scheduled', label: 'Scheduled', labelAr: 'مجدول' },
   ];
 
   return (
@@ -213,14 +268,14 @@ export function ActivityPage() {
                                 ? ar
                                   ? 'في الطريق'
                                   : 'In transit'
-                                : item.status === 'searching'
+                                : item.status === 'scheduled'
                                   ? ar
-                                    ? 'يبحث'
-                                    : 'Searching'
-                                  : item.status === 'matched'
+                                    ? 'مجدول'
+                                    : 'Scheduled'
+                                  : item.status === 'missed'
                                     ? ar
-                                      ? 'مطابق'
-                                      : 'Matched'
+                                      ? 'فائت'
+                                      : 'Missed'
                                     : item.status;
 
               return (

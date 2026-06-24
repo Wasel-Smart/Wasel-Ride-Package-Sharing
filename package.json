@@ -2,6 +2,20 @@
   "name": "wasel",
   "version": "2.0.0",
   "private": true,
+  "workspaces": [
+    "backend/services/shared",
+    "backend/services/notification-service",
+    "backend/services/package-delivery-service",
+    "backend/services/wallet-service",
+    "backend/services/trust-moderation-service",
+    "backend/services/gdpr-compliance-service",
+    "backend/services/mobility-os-service",
+    "backend/services/identity-service",
+    "backend/services/ride-matching",
+    "backend/services/payment-reconciliation",
+    "backend/services/ops-analytics",
+    "backend/api-server"
+  ],
   "type": "module",
   "engines": {
     "node": ">=20.10.0",

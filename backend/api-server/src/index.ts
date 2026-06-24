@@ -16,7 +16,7 @@ function createApp() {
   app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(',') ?? ['http://localhost:5173', 'http://localhost:8080'], credentials: true }));
   app.use(express.json({ limit: '1mb' }));
 
-  app.use(pinoHttp({ logger }));
+  app.use((pinoHttp as any)({ logger }));
 
   const limiter = rateLimit({
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? '900000', 10),

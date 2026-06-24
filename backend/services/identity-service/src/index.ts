@@ -50,6 +50,13 @@ function createApp(): express.Application {
     });
   });
 
+  app.get('/ready', async (_req, res) => ({ status: 'ready' }));
+
+  app.get('/metrics', async (_req, res) => ({
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  }));
+
   app.use('/v1/auth', authRouter);
   app.use('/v1/2fa', twoFactorRouter);
   app.use('/v1/recovery', recoveryRouter);
