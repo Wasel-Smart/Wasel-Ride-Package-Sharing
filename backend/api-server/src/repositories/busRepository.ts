@@ -1,17 +1,17 @@
 import { getDb } from '@wasel/backend-shared/db';
 import { logger } from '@wasel/backend-shared/logging/logger';
-import { NotFoundError, InternalError } from '@wasel/backend-shared/errors/app-errors';
+import { NotFoundError, ValidationError, InternalError } from '@wasel/backend-shared/errors/app-errors';
 
 export interface BusRouteRow {
   id: string;
   operator_id: string | null;
-  corridor_id: string | null;
   name: string;
   origin_city: string;
   destination_city: string;
-  stops: string[] | null;
-  estimated_duration: number | null;
+  intermediate_stops: string[] | null;
+  estimated_duration_min: number | null;
   amenities: string[] | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -22,9 +22,11 @@ export interface BusScheduleRow {
   departure_time: string;
   arrival_time: string;
   available_seats: number;
-  price: number;
-  vehicle_id: string | null;
+  price_jod: number;
+  vehicle_info: string | null;
+  is_active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 export interface BusBookingRow {
@@ -33,152 +35,115 @@ export interface BusBookingRow {
   passenger_id: string;
   seats: number;
   total_amount: number;
-  status: 'confirmed' | 'cancelled' | 'completed' | 'checked_in';
+  status: 'confirmed' | 'cancelled' | 'completed';
   qr_code: string | null;
   share_code: string | null;
   created_at: string;
   updated_at: string;
 }
 
-class BusRepository {
+export class BusRepository {
   private db = getDb();
 
-  /**
-   * Find bus routes by origin/destination filters
-   */
   async findRoutes(originCity?: string, destinationCity?: string): Promise<BusRouteRow[]> {
-    try {
-      const routes = await this.db`
-        SELECT
-          id, operator_id, corridor_id, name, origin_city, destination_city,
-          stops, estimated_duration, amenities, created_at, updated_at
-        FROM bus_routes
-        ${originCity && destinationCity
-          ? this.db`WHERE LOWER(origin_city) = ${originCity.toLowerCase()} AND LOWER(destination_city) = ${destinationCity.toLowerCase()}`
-          : originCity
-            ? this.db`WHERE LOWER(origin_city) = ${originCity.toLowerCase()}`
-            : destinationCity
-              ? this.db`WHERE LOWER(destination_city) = ${destinationCity.toLowerCase()}`
-              : this.db``}
-        ORDER BY corridor_id, name
-      ` as unknown as BusRouteRow[];
+    let query = 'SELECT * FROM bus_routes WHERE is_active = true';
+    const params: unknown[] = [];
+    let paramIndex = 1;
 
-      return routes;
-    } catch (error) {
-      logger.error('Error finding bus routes', error);
-      throw new InternalError('Failed to find bus routes');
+    if (originCity) {
+      query += ` AND origin_city ILIKE $${paramIndex}`;
+      params.push(`%${originCity}%`);
+      paramIndex++;
     }
+
+    if (destinationCity) {
+      query += ` AND destination_city ILIKE $${paramIndex}`;
+      params.push(`%${destinationCity}%`);
+      paramIndex++;
+    }
+
+    query += ' ORDER BY name ASC';
+    const result = await this.db.unsafe<BusRouteRow>(query, params);
+    return result as BusRouteRow[];
   }
 
-  /**
-   * Find a bus route by its ID
-   */
   async findRouteById(id: string): Promise<BusRouteRow | null> {
-    try {
-      const [route] = await this.db`
-        SELECT
-          id, operator_id, corridor_id, name, origin_city, destination_city,
-          stops, estimated_duration, amenities, created_at, updated_at
-        FROM bus_routes
-        WHERE id = ${id}
-      ` as unknown as BusRouteRow[];
-
-      return route ?? null;
-    } catch (error) {
-      logger.error('Error finding bus route by ID', error);
-      throw new InternalError('Failed to find bus route');
-    }
+    const result = await this.db.unsafe<BusRouteRow>('SELECT * FROM bus_routes WHERE id = $1', [id]);
+    return result[0] || null;
   }
 
-  /**
-   * Find schedules for a route, optionally filtered by date
-   */
   async findSchedules(routeId: string, date?: string): Promise<BusScheduleRow[]> {
-    try {
-      const schedules = await this.db`
-        SELECT
-          id, route_id, departure_time, arrival_time, available_seats, price, vehicle_id, created_at
-        FROM bus_schedules
-        WHERE route_id = ${routeId}
-          AND available_seats > 0
-          ${date ? this.db`AND DATE(departure_time) = ${date}` : this.db``}
-        ORDER BY departure_time ASC
-      ` as unknown as BusScheduleRow[];
+    let query = 'SELECT * FROM bus_schedules WHERE route_id = $1 AND is_active = true';
+    const params: unknown[] = [routeId];
 
-      return schedules;
-    } catch (error) {
-      logger.error('Error finding bus schedules', error);
-      throw new InternalError('Failed to find bus schedules');
+    if (date) {
+      query += ` AND DATE(departure_time) = $2`;
+      params.push(date);
     }
+
+    query += ' ORDER BY departure_time ASC';
+    const result = await this.db.unsafe<BusScheduleRow>(query, params);
+    return result as BusScheduleRow[];
   }
 
-  /**
-   * Create a bus booking
-   */
   async createBooking(scheduleId: string, passengerId: string, seats: number): Promise<BusBookingRow> {
     try {
-      const now = new Date().toISOString();
-      const qrCode = `BUS-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-      const shareCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+      const scheduleResult = await this.db.unsafe(
+        'SELECT available_seats, price_jod FROM bus_schedules WHERE id = $1 FOR UPDATE',
+        [scheduleId]
+      );
 
-      const [booking] = await this.db`
-        INSERT INTO bus_bookings (
-          schedule_id, passenger_id, seats, total_amount, status, qr_code, share_code, created_at, updated_at
-        ) VALUES (
-          ${scheduleId}, ${passengerId}, ${seats}, 0, 'confirmed', ${qrCode}, ${shareCode}, ${now}, ${now}
-        )
-        RETURNING
-          id, schedule_id, passenger_id, seats, total_amount, status, qr_code, share_code, created_at, updated_at
-      ` as unknown as BusBookingRow[];
-
-      return booking;
-    } catch (error) {
-      logger.error('Error creating bus booking', error);
-      throw new InternalError('Failed to create bus booking');
-    }
-  }
-
-  /**
-   * Find a bus booking by its ID
-   */
-  async findBookingById(id: string): Promise<BusBookingRow | null> {
-    try {
-      const [booking] = await this.db`
-        SELECT
-          id, schedule_id, passenger_id, seats, total_amount, status, qr_code, share_code, created_at, updated_at
-        FROM bus_bookings
-        WHERE id = ${id}
-      ` as unknown as BusBookingRow[];
-
-      return booking ?? null;
-    } catch (error) {
-      logger.error('Error finding bus booking by ID', error);
-      throw new InternalError('Failed to find bus booking');
-    }
-  }
-
-  /**
-   * Update bus booking status
-   */
-  async updateBookingStatus(id: string, status: string): Promise<BusBookingRow> {
-    try {
-      const now = new Date().toISOString();
-      const [booking] = await this.db`
-        UPDATE bus_bookings
-        SET status = ${status}, updated_at = ${now}
-        WHERE id = ${id}
-        RETURNING
-          id, schedule_id, passenger_id, seats, total_amount, status, qr_code, share_code, created_at, updated_at
-      ` as unknown as BusBookingRow[];
-
-      if (!booking) {
-        throw new NotFoundError('Bus booking');
+      if (!scheduleResult[0]) {
+        throw new NotFoundError('Bus schedule');
       }
 
-      return booking;
+      const schedule = scheduleResult[0] as { available_seats: number; price_jod: number };
+      if (schedule.available_seats < seats) {
+        throw new ValidationError('Not enough seats available');
+      }
+
+      const shareCode = `BUS-${Date.now().toString(36).toUpperCase()}`;
+      const totalAmount = Math.round(schedule.price_jod * seats * 100) / 100;
+
+      const bookingResult = await this.db.unsafe<BusBookingRow>(
+        `INSERT INTO bus_bookings (schedule_id, passenger_id, seats, total_amount, status, share_code)
+         VALUES ($1, $2, $3, $4, 'confirmed', $5)
+         RETURNING *`,
+        [scheduleId, passengerId, seats, totalAmount, shareCode]
+      );
+
+      await this.db.unsafe(
+        'UPDATE bus_schedules SET available_seats = available_seats - $1 WHERE id = $2',
+        [seats, scheduleId]
+      );
+
+      return bookingResult[0] as BusBookingRow;
     } catch (error) {
-      logger.error('Error updating bus booking status', error);
-      throw error instanceof NotFoundError ? error : new InternalError('Failed to update bus booking status');
+      if (error instanceof NotFoundError || error instanceof ValidationError) throw error;
+      logger.error({ error, scheduleId, passengerId }, 'Failed to create bus booking');
+      throw new InternalError('Failed to create bus booking', error as Error);
+    }
+  }
+
+  async findBookingById(id: string): Promise<BusBookingRow | null> {
+    const result = await this.db.unsafe<BusBookingRow>('SELECT * FROM bus_bookings WHERE id = $1', [id]);
+    return result[0] || null;
+  }
+
+  async updateBookingStatus(id: string, status: 'confirmed' | 'cancelled' | 'completed'): Promise<BusBookingRow> {
+    try {
+      const result = await this.db.unsafe<BusBookingRow>(
+        `UPDATE bus_bookings SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+        [status, id]
+      );
+      if (!result[0]) {
+        throw new NotFoundError('Bus booking');
+      }
+      return result[0] as BusBookingRow;
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      logger.error({ error, id, status }, 'Failed to update bus booking status');
+      throw new InternalError('Failed to update bus booking status', error as Error);
     }
   }
 }

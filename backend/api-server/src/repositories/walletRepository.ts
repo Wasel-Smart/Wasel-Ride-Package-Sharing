@@ -1,13 +1,15 @@
 import { getDb } from '@wasel/backend-shared/db';
 import { logger } from '@wasel/backend-shared/logging/logger';
-import { NotFoundError, InternalError, ValidationError } from '@wasel/backend-shared/errors/app-errors';
+import { NotFoundError, ValidationError, InternalError } from '@wasel/backend-shared/errors/app-errors';
 
 export interface WalletRow {
-  id: string;
+  wallet_id: string;
   user_id: string;
-  balance: number;
-  currency: string;
-  is_active: boolean;
+  balance_jod: number;
+  currency_code: string;
+  wallet_status: string;
+  auto_topup_enabled: boolean;
+  auto_topup_threshold: number;
   created_at: string;
   updated_at: string;
 }
@@ -15,219 +17,145 @@ export interface WalletRow {
 export interface TransactionRow {
   id: string;
   wallet_id: string;
-  user_id: string | null;
-  trip_id: string | null;
-  type: string;
+  user_id: string;
+  type: 'topup' | 'payment' | 'refund' | 'payout' | 'commission' | 'adjustment' | 'credit';
   amount: number;
   currency: string;
-  status: string;
-  payment_method: string | null;
-  payment_intent_id: string | null;
-  stripe_charge_id: string | null;
+  status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  reference_type: string | null;
+  reference_id: string | null;
+  provider: string | null;
+  provider_txn_id: string | null;
   description: string | null;
-  metadata: unknown;
+  metadata: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
 
-class WalletRepository {
+export class WalletRepository {
   private db = getDb();
 
-  /**
-   * Get wallet for a user
-   */
   async getWallet(userId: string): Promise<WalletRow | null> {
-    try {
-      const [wallet] = await this.db`
-        SELECT
-          id, user_id, balance, currency, is_active, created_at, updated_at
-        FROM wallets
-        WHERE user_id = ${userId}
-      ` as unknown as WalletRow[];
-
-      return wallet ?? null;
-    } catch (error) {
-      logger.error('Error getting wallet', error);
-      throw new InternalError('Failed to get wallet');
-    }
+    const result = await this.db.unsafe<WalletRow>('SELECT * FROM wallets WHERE user_id = $1', [userId]);
+    return result[0] || null;
   }
 
-  /**
-   * Create a wallet for a user
-   */
-  async createWallet(userId: string): Promise<WalletRow> {
-    try {
-      const now = new Date().toISOString();
-      const [wallet] = await this.db`
-        INSERT INTO wallets (user_id, balance, currency, is_active, created_at, updated_at)
-        VALUES (${userId}, 0, 'JOD', true, ${now}, ${now})
-        RETURNING id, user_id, balance, currency, is_active, created_at, updated_at
-      ` as unknown as WalletRow[];
-
-      return wallet;
-    } catch (error) {
-      logger.error('Error creating wallet', error);
-      throw new InternalError('Failed to create wallet');
+  async getOrCreateWallet(userId: string): Promise<WalletRow> {
+    let wallet = await this.getWallet(userId);
+    if (!wallet) {
+      const result = await this.db.unsafe<WalletRow>(
+        `INSERT INTO wallets (user_id, balance_jod, currency_code, wallet_status)
+         VALUES ($1, 0.00, 'JOD', 'active')
+         RETURNING *`,
+        [userId]
+      );
+      wallet = result[0] as WalletRow;
     }
+    return wallet;
   }
 
-  /**
-   * Credit wallet (add funds)
-   */
+  async getBalance(userId: string): Promise<{ balance: number; currency: string }> {
+    const wallet = await this.getOrCreateWallet(userId);
+    return { balance: wallet.balance_jod, currency: wallet.currency_code };
+  }
+
   async credit(
     userId: string,
     amount: number,
-    type: string,
+    type: 'topup' | 'refund' | 'credit' | 'payout',
+    description: string,
     refType?: string,
-    refId?: string,
+    refId?: string
   ): Promise<TransactionRow> {
+    if (amount <= 0) {
+      throw new ValidationError('Credit amount must be positive');
+    }
+
+    const wallet = await this.getOrCreateWallet(userId);
+
     try {
-      const now = new Date().toISOString();
+      const txResult = await this.db.unsafe<TransactionRow>(
+        `INSERT INTO transactions (wallet_id, user_id, type, amount, currency, status, reference_type, reference_id, description)
+         VALUES ($1, $2, $3, $4, $5, 'completed', $6, $7, $8)
+         RETURNING *`,
+        [wallet.wallet_id, userId, type, amount, wallet.currency_code, refType || null, refId || null, description]
+      );
 
-      const [result] = await this.db`
-        WITH wallet_upsert AS (
-          INSERT INTO wallets (user_id, balance, currency, is_active, created_at, updated_at)
-          VALUES (${userId}, 0, 'JOD', true, ${now}, ${now})
-          ON CONFLICT (user_id) DO UPDATE
-          SET balance = wallets.balance + ${amount}, updated_at = ${now}
-          RETURNING id
-        )
-        INSERT INTO transactions (
-          wallet_id, user_id, amount, currency, type, payment_method,
-          metadata, created_at, updated_at
-        )
-        SELECT
-          id, ${userId}, ${amount}, 'JOD', ${type}, 'wallet',
-          ${JSON.stringify({ reference_type: refType, reference_id: refId })}::jsonb,
-          ${now}, ${now}
-        FROM wallet_upsert
-        RETURNING
-          id, wallet_id, user_id, trip_id, type, amount, currency, status,
-          payment_method, payment_intent_id, stripe_charge_id, description, metadata, created_at, updated_at
-      ` as unknown as TransactionRow[];
+      await this.db.unsafe(
+        'UPDATE wallets SET balance_jod = balance_jod + $1, updated_at = NOW() WHERE wallet_id = $2',
+        [amount, wallet.wallet_id]
+      );
 
-      return result;
+      return txResult[0] as TransactionRow;
     } catch (error) {
-      logger.error('Error crediting wallet', error);
-      throw new InternalError('Failed to credit wallet');
+      logger.error({ error, userId, amount, type }, 'Failed to credit wallet');
+      throw new InternalError('Failed to credit wallet', error as Error);
     }
   }
 
-  /**
-   * Debit wallet (remove funds)
-   */
   async debit(
     userId: string,
     amount: number,
-    type: string,
+    type: 'payment' | 'commission' | 'adjustment',
+    description: string,
     refType?: string,
-    refId?: string,
+    refId?: string
   ): Promise<TransactionRow> {
+    if (amount <= 0) {
+      throw new ValidationError('Debit amount must be positive');
+    }
+
+    const wallet = await this.getOrCreateWallet(userId);
+
+    if (wallet.balance_jod < amount) {
+      throw new ValidationError('Insufficient wallet balance');
+    }
+
     try {
-      const now = new Date().toISOString();
+      const txResult = await this.db.unsafe<TransactionRow>(
+        `INSERT INTO transactions (wallet_id, user_id, type, amount, currency, status, reference_type, reference_id, description)
+         VALUES ($1, $2, $3, $4, $5, 'completed', $6, $7, $8)
+         RETURNING *`,
+        [wallet.wallet_id, userId, type, -amount, wallet.currency_code, refType || null, refId || null, description]
+      );
 
-      const [wallet] = await this.db`
-        SELECT id, balance FROM wallets WHERE user_id = ${userId} FOR UPDATE
-      ` as unknown as { id: string; balance: number }[];
+      await this.db.unsafe(
+        'UPDATE wallets SET balance_jod = balance_jod - $1, updated_at = NOW() WHERE wallet_id = $2',
+        [amount, wallet.wallet_id]
+      );
 
-      if (!wallet) {
-        throw new NotFoundError('Wallet');
-      }
-
-      if (Number(wallet.balance) < amount) {
-        throw new ValidationError('Insufficient balance');
-      }
-
-      await this.db`
-        UPDATE wallets
-        SET balance = balance - ${amount}, updated_at = ${now}
-        WHERE id = ${wallet.id}
-      `;
-
-      const [transaction] = await this.db`
-        INSERT INTO transactions (
-          wallet_id, user_id, amount, currency, type, payment_method,
-          metadata, created_at, updated_at
-        )
-        VALUES (
-          ${wallet.id}, ${userId}, ${-amount}, 'JOD', ${type}, 'wallet',
-          ${JSON.stringify({ reference_type: refType, reference_id: refId })}::jsonb,
-          ${now}, ${now}
-        )
-        RETURNING
-          id, wallet_id, user_id, trip_id, type, amount, currency, status,
-          payment_method, payment_intent_id, stripe_charge_id, description, metadata, created_at, updated_at
-      ` as unknown as TransactionRow[];
-
-      return transaction;
+      return txResult[0] as TransactionRow;
     } catch (error) {
-      logger.error('Error debiting wallet', error);
-      throw error instanceof NotFoundError || error instanceof ValidationError
-        ? error
-        : new InternalError('Failed to debit wallet');
+      if (error instanceof ValidationError) throw error;
+      logger.error({ error, userId, amount, type }, 'Failed to debit wallet');
+      throw new InternalError('Failed to debit wallet', error as Error);
     }
   }
 
-  /**
-   * Get paginated transactions for a user
-   */
   async getTransactions(
     userId: string,
     page: number,
-    limit: number,
+    limit: number
   ): Promise<{ data: TransactionRow[]; meta: { total: number; page: number; limit: number } }> {
-    try {
-      const offset = (page - 1) * limit;
+    const offset = (page - 1) * limit;
 
-      const [countResult] = await this.db`
-        SELECT COUNT(*) as total
-        FROM transactions t
-        JOIN wallets w ON t.wallet_id = w.id
-        WHERE w.user_id = ${userId}
-      ` as unknown as { total: number }[];
+    const countResult = await this.db.unsafe(
+      'SELECT COUNT(*) as total FROM transactions WHERE user_id = $1',
+      [userId]
+    );
+    const total = Number(countResult[0]?.total || 0);
 
-      const transactions = await this.db`
-        SELECT
-          t.id, t.wallet_id, t.user_id, t.trip_id, t.type, t.amount, t.currency, t.status,
-          t.payment_method, t.payment_intent_id, t.stripe_charge_id, t.description, t.metadata,
-          t.created_at, t.updated_at
-        FROM transactions t
-        JOIN wallets w ON t.wallet_id = w.id
-        WHERE w.user_id = ${userId}
-        ORDER BY t.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      ` as unknown as TransactionRow[];
+    const data = await this.db.unsafe<TransactionRow>(
+      `SELECT * FROM transactions WHERE user_id = $1
+       ORDER BY created_at DESC
+       LIMIT $2 OFFSET $3`,
+      [userId, limit, offset]
+    );
 
-      return {
-        data: transactions,
-        meta: {
-          total: countResult?.total ?? 0,
-          page,
-          limit,
-        },
-      };
-    } catch (error) {
-      logger.error('Error getting transactions', error);
-      throw new InternalError('Failed to get transactions');
-    }
-  }
-
-  /**
-   * Get current wallet balance for a user
-   */
-  async getBalance(userId: string): Promise<{ balance: number }> {
-    try {
-      const [result] = await this.db`
-        SELECT COALESCE(balance, 0) as balance
-        FROM wallets
-        WHERE user_id = ${userId}
-      ` as unknown as { balance: number }[];
-
-      return { balance: Number(result?.balance ?? 0) };
-    } catch (error) {
-      logger.error('Error getting wallet balance', error);
-      throw new InternalError('Failed to get wallet balance');
-    }
+    return {
+      data: data as TransactionRow[],
+      meta: { total, page, limit },
+    };
   }
 }
 

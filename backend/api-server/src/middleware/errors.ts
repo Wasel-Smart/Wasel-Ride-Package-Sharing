@@ -1,47 +1,18 @@
-export class AppError extends Error {
-  constructor(
-    public code: string,
-    message: string,
-    public statusCode: number = 500,
-    public details?: Record<string, unknown>,
-  ) {
-    super(message);
-    this.name = 'AppError';
-  }
-}
+import type { Request, Response, NextFunction } from 'express';
 
-export class ValidationError extends AppError {
-  constructor(message: string, details?: Record<string, unknown>) {
-    super('validation_error', message, 400, details);
-  }
-}
+export function errorHandler(
+  err: Error,
+  _req: Request,
+  res: Response,
+  _next: NextFunction
+): void {
+  const statusCode = (err as unknown as { statusCode?: number }).statusCode || 500;
+  const code = (err as unknown as { code?: string }).code || 'internal_error';
+  const message = err.message || 'Internal server error';
 
-export class UnauthorizedError extends AppError {
-  constructor(message: string = 'Unauthorized') {
-    super('unauthorized', message, 401);
-  }
-}
-
-export class ForbiddenError extends AppError {
-  constructor(message: string = 'Forbidden') {
-    super('forbidden', message, 403);
-  }
-}
-
-export class NotFoundError extends AppError {
-  constructor(message: string = 'Not Found') {
-    super('not_found', message, 404);
-  }
-}
-
-export class ConflictError extends AppError {
-  constructor(message: string, details?: Record<string, unknown>) {
-    super('conflict', message, 409, details);
-  }
-}
-
-export class DatabaseError extends AppError {
-  constructor(message: string, cause?: unknown) {
-    super('database_error', message, 500, { cause: cause instanceof Error ? cause.message : String(cause) });
-  }
+  res.status(statusCode).json({
+    success: false,
+    error: { code, message },
+    meta: { timestamp: new Date().toISOString() },
+  });
 }
