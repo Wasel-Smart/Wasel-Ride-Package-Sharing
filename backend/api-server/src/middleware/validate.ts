@@ -12,3 +12,15 @@ export function validate(schema: { parse: (input: unknown) => unknown }) {
     }
   };
 }
+
+export function validateQuery(schema: { parse: (input: unknown) => unknown }) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    try {
+      req.query = schema.parse(req.query) as typeof req.query;
+      next();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Invalid query parameters';
+      next(new ValidationError(message, { cause: err instanceof Error ? err.message : String(err) }));
+    }
+  };
+}
