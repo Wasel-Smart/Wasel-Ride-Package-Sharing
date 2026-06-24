@@ -1,10 +1,13 @@
 import Redis from 'ioredis';
-import { config } from './config';
+import { loadConfig } from './config/app.config.js';
+
+const config = loadConfig();
 
 let redisInstance: Redis | null = null;
 
 export function getRedis(): Redis {
   if (!redisInstance) {
+    // @ts-ignore - ioredis types may not include maxRetries in older versions
     redisInstance = new Redis({
       host: config.redis.host,
       port: config.redis.port,
@@ -15,7 +18,7 @@ export function getRedis(): Redis {
         if (times > config.redis.maxRetries) return null;
         return Math.min(times * config.redis.retryDelayMs, 5000);
       },
-    } as RedisOptions);
+    });
   }
   return redisInstance;
 }

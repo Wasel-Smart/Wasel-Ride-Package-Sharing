@@ -5,6 +5,16 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" },
+    "./db": { "import": "./dist/db.js", "types": "./dist/db.d.ts" },
+    "./redis": { "import": "./dist/redis.js", "types": "./dist/redis.d.ts" },
+    "./logging/logger": { "import": "./dist/logging/logger.js", "types": "./dist/logging/logger.d.ts" },
+    "./errors/app-errors": { "import": "./dist/errors/app-errors.js", "types": "./dist/errors/app-errors.d.ts" },
+    "./config": { "import": "./dist/config/app.config.js", "types": "./dist/config/app.config.d.ts" },
+    "./validation/schemas": { "import": "./dist/validation/schemas.js", "types": "./dist/validation/schemas.d.ts" },
+    "./rate-limiter": { "import": "./dist/rate-limiter/index.js", "types": "./dist/rate-limiter/index.d.ts" }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
