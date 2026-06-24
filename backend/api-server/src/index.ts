@@ -6,7 +6,7 @@ import pinoHttp from 'pino-http';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { config } from '@wasel/backend-shared/config';
 import authenticate from './middleware/auth.js';
-import errorHandler from './middleware/errors.js';
+import { errorHandler } from './middleware/errors.js';
 import tripRoutes from './routes/v1/trips.js';
 import packageRoutes from './routes/v1/packages.js';
 import busRoutes from './routes/v1/bus.js';

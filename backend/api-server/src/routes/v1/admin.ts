@@ -3,9 +3,9 @@ import { authenticate, requireRole } from '../middleware/auth.js';
 import { tripRepository } from '../repositories/tripRepository.js';
 import { packageRepository } from '../repositories/packageRepository.js';
 import { ratingRepository } from '../repositories/ratingRepository.js';
-import { notificationRepository } from '../repositories/notificationRepository.js';
 import { walletRepository } from '../repositories/walletRepository.js';
-import { busRepository } from '../repositories/busRepository.js';
+import { notificationRepository } from '../repositories/notificationRepository.js';
+import { notificationGateway } from '../services/notificationGateway.js';
 import { z } from 'zod';
 
 const router = Router();
@@ -37,9 +37,9 @@ router.get('/packages/pending', authenticate, requireRole(['admin', 'operator'])
 
 router.get('/users', authenticate, requireRole(['admin']), async (req: Request, res: Response) => {
   try {
-    const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
     const { page = 1, limit = 20 } = req.query as { page?: number; limit?: number };
     const offset = (page - 1) * limit;
+    const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
 
     const countResult = await db.unsafe('SELECT COUNT(*) as total FROM users');
     const total = Number(countResult[0]?.total || 0);
@@ -104,7 +104,7 @@ router.get('/disputes', authenticate, requireRole(['admin', 'operator']), async 
     const { page = 1, limit = 20 } = req.query as { page?: number; limit?: number };
     const offset = (page - 1) * limit;
 
-    const countResult = await db.unsafe('SELECT COUNT(*) as total FROM safety_incidents WHERE status = \'pending\'');
+    const countResult = await db.unsafe("SELECT COUNT(*) as total FROM safety_incidents WHERE status = 'pending'");
     const total = Number(countResult[0]?.total || 0);
 
     const incidents = await db.unsafe(
