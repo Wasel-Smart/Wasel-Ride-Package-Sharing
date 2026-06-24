@@ -10,6 +10,7 @@ import {
 } from '@wasel/backend-shared/errors/app-errors';
 import { startRuntimeHealthServer } from '../../../runtime/http-health';
 import { logger } from '@wasel/backend-shared/logging/logger';
+import { z } from 'zod';
 
 const config = loadConfig();
 
@@ -90,29 +91,47 @@ function createApp(): express.Application {
 
   app.get('/health', async () => ({ status: 'ok' }));
 
-  app.post('/v1/moderate/text', async (req, res) => {
-    const { text } = req.body;
-    if (!text || typeof text !== 'string') {
-      throw new ValidationError('Text is required');
-    }
+  app.get('/ready', async () => ({ status: 'ready' }));
 
-    const result = moderateText(text);
-    res.json(result);
-  });
+  app.get('/metrics', async () => ({
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+  }));
 
-  app.post('/v1/trust/status/:userId', async (req, res) => {
+  app.get('/v1/trust/status/:userId', async (req, res) => {
     const { userId } = req.params;
     const sql = PostgresPool.connection;
 
-    const [{ data: wallet }] = await Promise.all([
-      sql`SELECT wallet_status FROM wallets WHERE user_id = ${userId}`,
+    const [{ data: user }, { data: wallet }, { data: verifications }] = await Promise.all([
+      sql`SELECT id, email, phone_number, phone_verified_at, verification_level, sanad_verified_status FROM users WHERE id = ${userId}`,
+      sql`SELECT wallet_id, wallet_status FROM wallets WHERE user_id = ${userId}`,
+      sql`SELECT id, verification_level, document_status, sanad_status, created_at FROM verification_records WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 5`,
     ]);
 
     const steps = {
-      identity: { id: 'identity', state: 'not_started', detail: 'Submit ID verification' },
-      email: { id: 'email', state: 'completed', detail: 'Email verified' },
-      phone: { id: 'phone', state: 'not_started', detail: 'Add and verify phone' },
-      driverDocuments: { id: 'driver_documents', state: 'not_started', detail: 'Submit driver documents' },
+      identity: {
+        id: 'identity',
+        state: verifications?.[0]?.document_status === 'pending' ? 'in_progress' :
+          (verifications?.[0]?.document_status === 'verified' ? 'completed' :
+            user?.sanad_verified_status === 'verified' ? 'completed' : 'not_started'),
+        detail: verifications?.[0]?.document_status === 'verified' ? 'Identity verified' :
+          user?.sanad_verified_status ? `Sanad status: ${user.sanad_verified_status}` : 'Submit ID verification',
+      },
+      email: {
+        id: 'email',
+        state: user?.email ? 'completed' : 'not_started',
+        detail: user?.email ? 'Email verified' : 'Add email',
+      },
+      phone: {
+        id: 'phone',
+        state: user?.phone_verified_at ? 'completed' : 'not_started',
+        detail: user?.phone_verified_at ? `Phone verified: ${user.phone_number}` : 'Add and verify phone',
+      },
+      driverDocuments: {
+        id: 'driver_documents',
+        state: 'not_started',
+        detail: 'Submit driver documents',
+      },
       walletStanding: {
         id: 'wallet_standing',
         state: wallet?.wallet_status === 'active' ? 'completed' : 'failed',
@@ -121,6 +140,191 @@ function createApp(): express.Application {
     };
 
     res.json({ steps, fetchedAt: new Date().toISOString() });
+  });
+
+  const PhoneVerificationSchema = z.object({
+    phoneNumber: z.string().regex(/^\+962\d{9}$/, 'Invalid Jordanian phone number'),
+    userId: z.string().uuid(),
+  });
+
+  const IdentityVerificationSchema = z.object({
+    userId: z.string().uuid(),
+    providerReference: z.string().min(4),
+    documentReference: z.string().optional(),
+  });
+
+  app.post('/v1/trust/phone/start', async (req, res) => {
+    const parsed = PhoneVerificationSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new ValidationError('Invalid phone verification request', { issues: parsed.error.issues });
+    }
+
+    const { phoneNumber, userId } = parsed.data;
+    const sql = PostgresPool.connection;
+    const now = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await sql`
+      INSERT INTO otp_sessions (user_id, phone_number, otp_hash, purpose, attempts, max_attempts, expires_at, created_at, updated_at)
+      VALUES (${userId}, ${phoneNumber}, ${require('crypto').createHash('sha256').update(code).digest('hex')}, 'driver_action', 0, 5, ${expiresAt}, ${now}, ${now})
+    `;
+
+    logger.info({ userId, phoneNumber }, 'Phone verification started');
+
+    res.status(202).json({
+      started: true,
+      phoneNumber,
+      expiresAt,
+      provider: 'twilio_sms',
+    });
+  });
+
+  const ConfirmPhoneSchema = z.object({
+    userId: z.string().uuid(),
+    code: z.string().length(6),
+  });
+
+  app.post('/v1/trust/phone/confirm', async (req, res) => {
+    const parsed = ConfirmPhoneSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new ValidationError('Invalid confirmation request', { issues: parsed.error.issues });
+    }
+
+    const { userId, code } = parsed.data;
+    const sql = PostgresPool.connection;
+
+    const [otpSession] = await sql`
+      SELECT * FROM otp_sessions
+      WHERE user_id = ${userId} AND purpose = 'driver_action'
+      ORDER BY created_at DESC
+      LIMIT 1
+    `;
+
+    if (!otpSession || otpSession.consumed_at) {
+      throw new ValidationError('No active verification session');
+    }
+
+    const expectedHash = require('crypto').createHash('sha256').update(code).digest('hex');
+    if (otpSession.otp_hash !== expectedHash) {
+      await sql`UPDATE otp_sessions SET attempts = attempts + 1 WHERE otp_session_id = ${otpSession.otp_session_id}`;
+      return res.status(400).json({ valid: false, error: 'Invalid code' });
+    }
+
+    const now = new Date().toISOString();
+    await sql.begin(async (tx) => {
+      await tx`UPDATE otp_sessions SET consumed_at = ${now}, attempts = attempts + 1 WHERE otp_session_id = ${otpSession.otp_session_id}`;
+      await tx`UPDATE users SET phone_number = ${otpSession.phone_number}, phone_verified_at = ${now} WHERE id = ${userId}`;
+    });
+
+    res.json({ verified: true, phoneNumber: otpSession.phone_number });
+  });
+
+  app.post('/v1/trust/identity/submit', async (req, res) => {
+    const parsed = IdentityVerificationSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new ValidationError('Invalid identity verification request', { issues: parsed.error.issues });
+    }
+
+    const { userId, providerReference, documentReference } = parsed.data;
+    const sql = PostgresPool.connection;
+    const now = new Date().toISOString();
+
+    const [record] = await sql`
+      INSERT INTO verification_records
+        (user_id, provider_reference, document_reference, document_status, verification_level, created_at, updated_at)
+      VALUES
+        (${userId}, ${providerReference}, ${documentReference ?? null}, 'pending', 'level_1', ${now}, ${now})
+      RETURNING *
+    `;
+
+    logger.info({ userId, verificationId: record.id }, 'Identity verification submitted');
+
+    res.status(202).json({
+      submitted: true,
+      verificationId: record.id,
+    });
+  });
+
+  app.post('/v1/trust/driver-mode/enable', async (req, res) => {
+    const { userId } = req.body;
+    if (!userId) throw new ValidationError('User ID required');
+
+    const sql = PostgresPool.connection;
+    const now = new Date().toISOString();
+
+    await sql`
+      UPDATE users SET role = 'driver', updated_at = ${now}
+      WHERE id = ${userId}
+    `;
+
+    res.json({ enabled: true, role: 'driver' });
+  });
+
+  app.post('/v1/trust/driver-documents/submit', async (req, res) => {
+    const { userId, licenseNumber, documentReference } = req.body;
+    if (!userId || !licenseNumber) {
+      throw new ValidationError('User ID and license number required');
+    }
+
+    const sql = PostgresPool.connection;
+    const now = new Date().toISOString();
+
+    const [driver] = await sql`
+      INSERT INTO drivers (user_id, license_number, driver_status, background_check_status, verification_level, sanad_identity_linked, created_at, updated_at)
+      VALUES (${userId}, ${licenseNumber}, 'pending_approval', 'pending', 'level_0', false, ${now}, ${now})
+      ON CONFLICT (user_id) DO UPDATE
+      SET license_number = ${licenseNumber}, driver_status = 'pending_approval', updated_at = ${now}
+      RETURNING *
+    `;
+
+    res.status(202).json({
+      submitted: true,
+      driverId: driver.driver_id,
+    });
+  });
+
+  app.get('/v1/admin/drivers/pending', async (req, res) => {
+    const sql = PostgresPool.connection;
+
+    const [drivers] = await sql`
+      SELECT d.*, u.full_name, u.phone_number
+      FROM drivers d
+      JOIN users u ON d.user_id = u.id
+      WHERE d.driver_status = 'pending_approval'
+      ORDER BY d.created_at DESC
+      LIMIT 100
+    `;
+
+    res.json({ drivers: drivers ?? [] });
+  });
+
+  app.post('/v1/admin/drivers/:driverId/approve', async (req, res) => {
+    const { driverId } = req.params;
+    const { approved } = req.body;
+    const sql = PostgresPool.connection;
+    const now = new Date().toISOString();
+
+    const [driver] = await sql`
+      UPDATE drivers
+      SET driver_status = ${approved ? 'approved' : 'rejected'}, approved_at = ${now}, approved_by = 'admin'
+      WHERE driver_id = ${driverId} AND driver_status = 'pending_approval'
+      RETURNING *
+    `;
+
+    if (!driver) throw new NotFoundError('Driver not found or already processed');
+
+    res.json({ approved: true, driver });
+  });
+
+  app.post('/v1/moderate/text', async (req, res) => {
+    const { text } = req.body;
+    if (!text || typeof text !== 'string') {
+      throw new ValidationError('Text is required');
+    }
+
+    const result = moderateText(text);
+    res.json(result);
   });
 
   app.use((error: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

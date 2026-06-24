@@ -9,6 +9,7 @@ import {
 import { startRuntimeHealthServer } from '../../../runtime/http-health';
 import { eventBroker } from '../../../src/platform/event-broker-redis-production.js';
 import { logger } from '@wasel/backend-shared/logging/logger';
+import { z } from 'zod';
 
 const config = loadConfig();
 
