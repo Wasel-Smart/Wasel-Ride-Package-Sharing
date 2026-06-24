@@ -37,50 +37,97 @@ export default defineConfig({
             return undefined;
           }
 
-          // Keep route-level chunks intact and split only stable vendor groups.
-          if (id.includes('/node_modules/react/') || id.includes('/node_modules/scheduler/')) return 'react-core';
+          // ── React ecosystem (split granularly to stay under 80 KB gzip) ──────
+          if (id.includes('/node_modules/scheduler/')) return 'react-scheduler';
+          if (id.includes('/node_modules/react/')) return 'react-core';
           if (id.includes('/node_modules/react-dom/client')) return 'react-dom-client';
+          if (id.includes('/node_modules/react-dom/server')) return 'react-dom-server';
           if (id.includes('/node_modules/react-dom/')) return 'react-dom';
+
+          // ── Router ───────────────────────────────────────────────────────────
           if (id.includes('/node_modules/react-router/')) return 'react-router';
 
-          if (id.includes('/node_modules/@supabase/')) return 'supabase';
+          // ── Supabase (split into auth + realtime + storage + postgrest) ──────
+          if (id.includes('/node_modules/@supabase/auth-js')) return 'supabase-auth';
+          if (id.includes('/node_modules/@supabase/realtime-js')) return 'supabase-realtime';
+          if (id.includes('/node_modules/@supabase/storage-js')) return 'supabase-storage';
+          if (id.includes('/node_modules/@supabase/postgrest-js')) return 'supabase-postgrest';
+          if (id.includes('/node_modules/@supabase/functions-js')) return 'supabase-functions';
+          if (id.includes('/node_modules/@supabase/')) return 'supabase-core';
 
+          // ── TanStack Query ───────────────────────────────────────────────────
           if (id.includes('/node_modules/@tanstack/query-core')) return 'tanstack-core';
           if (id.includes('/node_modules/@tanstack/react-query')) return 'tanstack-react';
 
-          if (id.includes('/node_modules/@radix-ui/')) return 'radix-primitives';
-          if (id.includes('/node_modules/lucide-react/')) return 'icons';
-          if (id.includes('/node_modules/sonner/')) return 'ui-toast';
-
+          // ── Radix UI (split by component family) ─────────────────────────────
           if (
-            id.includes('/node_modules/vaul/')
-            || id.includes('/node_modules/cmdk/')
-            || id.includes('/node_modules/embla-carousel')
-          ) {
-            return 'ui-interactions';
-          }
+            id.includes('/node_modules/@radix-ui/react-dialog') ||
+            id.includes('/node_modules/@radix-ui/react-alert-dialog') ||
+            id.includes('/node_modules/@radix-ui/react-popover') ||
+            id.includes('/node_modules/@radix-ui/react-tooltip')
+          ) return 'radix-overlays';
+          if (
+            id.includes('/node_modules/@radix-ui/react-dropdown-menu') ||
+            id.includes('/node_modules/@radix-ui/react-context-menu') ||
+            id.includes('/node_modules/@radix-ui/react-menubar') ||
+            id.includes('/node_modules/@radix-ui/react-navigation-menu')
+          ) return 'radix-menus';
+          if (
+            id.includes('/node_modules/@radix-ui/react-select') ||
+            id.includes('/node_modules/@radix-ui/react-radio-group') ||
+            id.includes('/node_modules/@radix-ui/react-checkbox') ||
+            id.includes('/node_modules/@radix-ui/react-switch') ||
+            id.includes('/node_modules/@radix-ui/react-slider') ||
+            id.includes('/node_modules/@radix-ui/react-toggle') ||
+            id.includes('/node_modules/@radix-ui/react-toggle-group')
+          ) return 'radix-forms';
+          if (id.includes('/node_modules/@radix-ui/')) return 'radix-misc';
 
+          // ── Icons ─────────────────────────────────────────────────────────────
+          if (id.includes('/node_modules/lucide-react/')) return 'icons';
+
+          // ── UI utilities ─────────────────────────────────────────────────────
+          if (id.includes('/node_modules/sonner/')) return 'ui-toast';
+          if (id.includes('/node_modules/vaul/')) return 'ui-drawer';
+          if (id.includes('/node_modules/cmdk/')) return 'ui-command';
+          if (id.includes('/node_modules/embla-carousel')) return 'ui-carousel';
+          if (id.includes('/node_modules/input-otp/')) return 'ui-otp';
+          if (id.includes('/node_modules/react-resizable-panels/')) return 'ui-panels';
+
+          // ── Animation ────────────────────────────────────────────────────────
           if (id.includes('/node_modules/motion/')) return 'motion';
+
+          // ── Maps ─────────────────────────────────────────────────────────────
           if (id.includes('/node_modules/leaflet/')) return 'maps';
 
+          // ── Charts / D3 ──────────────────────────────────────────────────────
           if (
-            id.includes('/node_modules/recharts/')
-            || id.includes('/node_modules/d3-')
-            || id.includes('/node_modules/internmap/')
-            || id.includes('/node_modules/react-smooth/')
-            || id.includes('/node_modules/recharts-scale/')
-          ) {
-            return 'charts';
-          }
+            id.includes('/node_modules/recharts/') ||
+            id.includes('/node_modules/react-smooth/')
+          ) return 'recharts';
+          if (
+            id.includes('/node_modules/d3-') ||
+            id.includes('/node_modules/internmap/') ||
+            id.includes('/node_modules/recharts-scale/')
+          ) return 'd3-core';
 
-          if (id.includes('/node_modules/react-hook-form/') || id.includes('/node_modules/react-day-picker/')) {
-            return 'forms';
-          }
-
-          if (id.includes('/node_modules/@sentry/')) return 'monitoring';
-          if (id.includes('/node_modules/@stripe/')) return 'payments';
-          if (id.includes('/node_modules/@opentelemetry/')) return 'otel';
+          // ── Forms ─────────────────────────────────────────────────────────────
+          if (id.includes('/node_modules/react-hook-form/')) return 'react-hook-form';
+          if (id.includes('/node_modules/react-day-picker/')) return 'react-day-picker';
           if (id.includes('/node_modules/zod/')) return 'validation';
+
+          // ── Monitoring / payments ─────────────────────────────────────────────
+          if (id.includes('/node_modules/@sentry/browser')) return 'sentry-browser';
+          if (id.includes('/node_modules/@sentry/core')) return 'sentry-core';
+          if (id.includes('/node_modules/@sentry/')) return 'sentry-misc';
+          if (id.includes('/node_modules/@stripe/')) return 'payments';
+
+          // ── OpenTelemetry ─────────────────────────────────────────────────────
+          if (id.includes('/node_modules/@opentelemetry/sdk-trace')) return 'otel-sdk';
+          if (id.includes('/node_modules/@opentelemetry/exporter')) return 'otel-exporter';
+          if (id.includes('/node_modules/@opentelemetry/')) return 'otel-core';
+
+          // ── Style utilities ───────────────────────────────────────────────────
           if (id.includes('/node_modules/clsx') || id.includes('/node_modules/tailwind-merge')) return 'css-utils';
           if (id.includes('/node_modules/class-variance-authority')) return 'cva';
 
