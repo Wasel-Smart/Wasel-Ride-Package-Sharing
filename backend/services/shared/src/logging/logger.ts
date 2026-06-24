@@ -25,18 +25,7 @@ export function createLogger(options: LoggerOptions): pino.LoggerOptions {
   return {
     name: options.service,
     level: options.level ?? (options.env === 'production' ? 'info' : 'debug'),
-    formatter: (log) => {
-      return JSON.stringify({
-        ...log,
-        service: options.service,
-        environment: options.env,
-        timestamp: new Date().toISOString(),
-      });
-    },
-    redact: (path: string, _removedValue: unknown) => {
-      const key = path.split('.');
-      return sensitiveFields.some(f => key.some(k => k.toLowerCase().includes(f))) ? '[REDACTED]' : undefined;
-    },
+    redact: sensitiveFields,
   };
 }
 
