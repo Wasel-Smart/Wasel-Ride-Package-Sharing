@@ -2,7 +2,6 @@
  * Performance Monitoring Service
  */
 import React from 'react';
-import { Platform } from 'react-native';
 
 interface PerformanceMetric {
   name: string;
@@ -15,16 +14,16 @@ class PerformanceService {
   private metrics: PerformanceMetric[] = [];
   private startTime: number | null = null;
 
-  markStart(name: string): void {
+  markStart(): void {
     this.startTime = Date.now();
   }
 
-  markEnd(name: string, tags?: Record<string, string>): number {
+  markEnd(tags?: Record<string, string>): number {
     if (!this.startTime) return 0;
 
     const duration = Date.now() - this.startTime;
     this.recordMetric({
-      name,
+      name: 'performance',
       value: duration,
       unit: 'ms',
       tags: tags ?? {},

@@ -2,7 +2,6 @@
  * Haptics Service - Native tactile feedback
  */
 import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
 
 export type HapticType =
   | 'selection'

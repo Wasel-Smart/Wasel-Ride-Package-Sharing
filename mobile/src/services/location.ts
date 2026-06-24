@@ -31,7 +31,6 @@ export class LocationTrackingService {
   private watchId: number | null = null;
   private isTracking = false;
   private listeners: Map<string, Set<(location: DriverLocation) => void>> = new Map();
-  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private destroyed = false;
 
   async initialize(): Promise<void> {
