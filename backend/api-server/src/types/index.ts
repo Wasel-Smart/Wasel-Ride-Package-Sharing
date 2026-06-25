@@ -1,2 +1,2 @@
-export * from './ride-schemas.js';
-export * from './payment-schemas.js';
+export * from './ride-schemas.ts';
+export * from './payment-schemas.ts';
