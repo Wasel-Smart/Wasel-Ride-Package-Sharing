@@ -4,17 +4,17 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { loadConfig } from '@wasel/backend-shared/config';
-import { authenticate } from './middleware/auth.js';
-import { errorHandler } from './middleware/errors.js';
-import tripRoutes from './routes/v1/trips.js';
-import packageRoutes from './routes/v1/packages.js';
-import busRoutes from './routes/v1/bus.js';
-import walletRoutes from './routes/v1/wallet.js';
-import ratingRoutes from './routes/v1/ratings.js';
-import notificationRoutes from './routes/v1/notifications.js';
-import driverRoutes from './routes/v1/driver.js';
-import adminRoutes from './routes/v1/admin.js';
-import corporateRoutes from './routes/v1/corporate.js';
+import { authenticate } from './middleware/auth.ts';
+import { errorHandler } from './middleware/errors.ts';
+import tripRoutes from './routes/v1/trips.ts';
+import packageRoutes from './routes/v1/packages.ts';
+import busRoutes from './routes/v1/bus.ts';
+import walletRoutes from './routes/v1/wallet.ts';
+import ratingRoutes from './routes/v1/ratings.ts';
+import notificationRoutes from './routes/v1/notifications.ts';
+import driverRoutes from './routes/v1/driver.ts';
+import adminRoutes from './routes/v1/admin.ts';
+import corporateRoutes from './routes/v1/corporate.ts';
 
 const config = loadConfig();
 

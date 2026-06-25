@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import tripRoutes from './v1/trips.js';
-import packageRoutes from './v1/packages.js';
-import busRoutes from './v1/bus.js';
-import walletRoutes from './v1/wallet.js';
-import ratingRoutes from './v1/ratings.js';
-import notificationRoutes from './v1/notifications.js';
-import driverRoutes from './v1/driver.js';
-import adminRoutes from './v1/admin.js';
-import corporateRoutes from './v1/corporate.js';
+import tripRoutes from './v1/trips.ts';
+import packageRoutes from './v1/packages.ts';
+import busRoutes from './v1/bus.ts';
+import walletRoutes from './v1/wallet.ts';
+import ratingRoutes from './v1/ratings.ts';
+import notificationRoutes from './v1/notifications.ts';
+import driverRoutes from './v1/driver.ts';
+import adminRoutes from './v1/admin.ts';
+import corporateRoutes from './v1/corporate.ts';
 
 const router = Router();
 
