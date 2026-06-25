@@ -61,7 +61,7 @@ export class RatingRepository {
           input.score,
         ]
       );
-      return result[0] as RatingRow;
+      return result[0] as unknown as RatingRow;
     } catch (error) {
       logger.error({ error, input }, 'Failed to create rating');
       throw new InternalError('Failed to create rating', error as Error);

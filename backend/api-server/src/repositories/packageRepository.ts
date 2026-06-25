@@ -91,7 +91,7 @@ export class PackageRepository {
           0.50,
         ]
       );
-      return result[0] as PackageRow;
+      return result[0] as unknown as PackageRow;
     } catch (error) {
       logger.error({ error, input }, 'Failed to create package');
       throw new InternalError('Failed to create package', error as Error);
@@ -100,7 +100,7 @@ export class PackageRepository {
 
   async findPackageById(id: string): Promise<PackageRow | null> {
     const result = await this.db.unsafe('SELECT * FROM packages WHERE id = $1', [id]);
-    return (result[0] as PackageRow) || null;
+    return (result[0] as unknown as PackageRow) || null;
   }
 
   async findPackagesBySender(senderId: string): Promise<PackageRow[]> {
@@ -142,7 +142,7 @@ export class PackageRepository {
       if (!result[0]) {
         throw new NotFoundError('Package');
       }
-      return result[0] as PackageRow;
+      return result[0] as unknown as PackageRow;
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
       logger.error({ error, id, status }, 'Failed to update package status');
@@ -171,7 +171,7 @@ export class PackageRepository {
         [tripId, carrierId, packageId]
       );
 
-      return result[0] as PackageRow;
+      return result[0] as unknown as PackageRow;
     } catch (error) {
       if (error instanceof NotFoundError || error instanceof ValidationError) throw error;
       logger.error({ error, packageId, tripId }, 'Failed to assign package to trip');

@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import pinoHttp from 'pino-http';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { loadConfig } from '@wasel/backend-shared/config';
 import { authenticate } from './middleware/auth.js';
@@ -25,7 +24,6 @@ function createApp(): express.Application {
   app.use(helmet());
   app.use(cors({ origin: config.cors.origin, credentials: config.cors.credentials }));
   app.use(express.json({ limit: '1mb' }));
-  app.use((pinoHttp as unknown as express.RequestHandler)({ logger }));
 
   const limiter = rateLimit({
     windowMs: config.rateLimit.windowMs,
