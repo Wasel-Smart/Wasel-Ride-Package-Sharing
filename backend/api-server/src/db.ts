@@ -3,6 +3,7 @@ import pino from 'pino';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
+  // @ts-ignore - pino transport option for pretty printing in dev
   transport:
     process.env.NODE_ENV === 'development'
       ? {

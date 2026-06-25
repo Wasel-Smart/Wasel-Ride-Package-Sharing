@@ -45,7 +45,7 @@ export class RatingRepository {
     }
 
     try {
-      const result = await this.db.unsafe<RatingRow>(
+      const result = await this.db.unsafe(
         `INSERT INTO reviews (reviewer_id, reviewee_id, trip_id, rating, review, driver_rating)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id, reviewer_id as rater_id, reviewee_id as target_id,
@@ -77,7 +77,7 @@ export class RatingRepository {
     );
     const total = Number(countResult[0]?.total || 0);
 
-    const data = await this.db.unsafe<RatingRow>(
+    const data = await this.db.unsafe(
       `SELECT id, reviewer_id as rater_id, reviewee_id as target_id,
               'driver' as target_type, trip_id, rating as score,
               ARRAY[]::text[] as tags, review as comment,
@@ -89,7 +89,7 @@ export class RatingRepository {
     );
 
     return {
-      data: data as RatingRow[],
+      data: data as unknown as RatingRow[],
       meta: { total, page, limit },
     };
   }

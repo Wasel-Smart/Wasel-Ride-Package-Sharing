@@ -36,14 +36,14 @@ export class WalletRepository {
   private db = getDb();
 
   async getWallet(userId: string): Promise<WalletRow | null> {
-    const result = await this.db.unsafe<WalletRow>('SELECT * FROM wallets WHERE user_id = $1', [userId]);
-    return result[0] || null;
+    const result = await this.db.unsafe('SELECT * FROM wallets WHERE user_id = $1', [userId]);
+    return (result[0] as WalletRow) || null;
   }
 
   async getOrCreateWallet(userId: string): Promise<WalletRow> {
     let wallet = await this.getWallet(userId);
     if (!wallet) {
-      const result = await this.db.unsafe<WalletRow>(
+      const result = await this.db.unsafe(
         `INSERT INTO wallets (user_id, balance_jod, currency_code, wallet_status)
          VALUES ($1, 0.00, 'JOD', 'active')
          RETURNING *`,
@@ -74,7 +74,7 @@ export class WalletRepository {
     const wallet = await this.getOrCreateWallet(userId);
 
     try {
-      const txResult = await this.db.unsafe<TransactionRow>(
+      const txResult = await this.db.unsafe(
         `INSERT INTO transactions (wallet_id, user_id, type, amount, currency, status, reference_type, reference_id, description)
          VALUES ($1, $2, $3, $4, $5, 'completed', $6, $7, $8)
          RETURNING *`,
@@ -112,7 +112,7 @@ export class WalletRepository {
     }
 
     try {
-      const txResult = await this.db.unsafe<TransactionRow>(
+      const txResult = await this.db.unsafe(
         `INSERT INTO transactions (wallet_id, user_id, type, amount, currency, status, reference_type, reference_id, description)
          VALUES ($1, $2, $3, $4, $5, 'completed', $6, $7, $8)
          RETURNING *`,
@@ -145,7 +145,7 @@ export class WalletRepository {
     );
     const total = Number(countResult[0]?.total || 0);
 
-    const data = await this.db.unsafe<TransactionRow>(
+    const data = await this.db.unsafe(
       `SELECT * FROM transactions WHERE user_id = $1
        ORDER BY created_at DESC
        LIMIT $2 OFFSET $3`,
@@ -153,7 +153,7 @@ export class WalletRepository {
     );
 
     return {
-      data: data as TransactionRow[],
+      data: data as unknown as TransactionRow[],
       meta: { total, page, limit },
     };
   }
