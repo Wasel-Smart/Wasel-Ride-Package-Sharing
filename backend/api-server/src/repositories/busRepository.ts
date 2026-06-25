@@ -47,7 +47,7 @@ export class BusRepository {
 
   async findRoutes(originCity?: string, destinationCity?: string): Promise<BusRouteRow[]> {
     let query = 'SELECT * FROM bus_routes WHERE is_active = true';
-    const params: unknown[] = [];
+    const params: any[] = [];
     let paramIndex = 1;
 
     if (originCity) {
@@ -63,18 +63,18 @@ export class BusRepository {
     }
 
     query += ' ORDER BY name ASC';
-    const result = await this.db.unsafe<BusRouteRow>(query, params);
-    return result as BusRouteRow[];
+    const result = await this.db.unsafe(query, params);
+    return result as unknown as BusRouteRow[];
   }
 
   async findRouteById(id: string): Promise<BusRouteRow | null> {
-    const result = await this.db.unsafe<BusRouteRow>('SELECT * FROM bus_routes WHERE id = $1', [id]);
-    return result[0] || null;
+    const result = await this.db.unsafe('SELECT * FROM bus_routes WHERE id = $1', [id]);
+    return (result[0] as unknown as BusRouteRow) || null;
   }
 
   async findSchedules(routeId: string, date?: string): Promise<BusScheduleRow[]> {
     let query = 'SELECT * FROM bus_schedules WHERE route_id = $1 AND is_active = true';
-    const params: unknown[] = [routeId];
+    const params: any[] = [routeId];
 
     if (date) {
       query += ` AND DATE(departure_time) = $2`;
@@ -82,8 +82,8 @@ export class BusRepository {
     }
 
     query += ' ORDER BY departure_time ASC';
-    const result = await this.db.unsafe<BusScheduleRow>(query, params);
-    return result as BusScheduleRow[];
+    const result = await this.db.unsafe(query, params);
+    return result as unknown as BusScheduleRow[];
   }
 
   async createBooking(scheduleId: string, passengerId: string, seats: number): Promise<BusBookingRow> {
@@ -97,7 +97,7 @@ export class BusRepository {
         throw new NotFoundError('Bus schedule');
       }
 
-      const schedule = scheduleResult[0] as { available_seats: number; price_jod: number };
+      const schedule = scheduleResult[0] as unknown as { available_seats: number; price_jod: number };
       if (schedule.available_seats < seats) {
         throw new ValidationError('Not enough seats available');
       }
@@ -105,7 +105,7 @@ export class BusRepository {
       const shareCode = `BUS-${Date.now().toString(36).toUpperCase()}`;
       const totalAmount = Math.round(schedule.price_jod * seats * 100) / 100;
 
-      const bookingResult = await this.db.unsafe<BusBookingRow>(
+      const bookingResult = await this.db.unsafe(
         `INSERT INTO bus_bookings (schedule_id, passenger_id, seats, total_amount, status, share_code)
          VALUES ($1, $2, $3, $4, 'confirmed', $5)
          RETURNING *`,
@@ -117,7 +117,7 @@ export class BusRepository {
         [seats, scheduleId]
       );
 
-      return bookingResult[0] as BusBookingRow;
+      return bookingResult[0] as unknown as BusBookingRow;
     } catch (error) {
       if (error instanceof NotFoundError || error instanceof ValidationError) throw error;
       logger.error({ error, scheduleId, passengerId }, 'Failed to create bus booking');
@@ -126,20 +126,20 @@ export class BusRepository {
   }
 
   async findBookingById(id: string): Promise<BusBookingRow | null> {
-    const result = await this.db.unsafe<BusBookingRow>('SELECT * FROM bus_bookings WHERE id = $1', [id]);
-    return result[0] || null;
+    const result = await this.db.unsafe('SELECT * FROM bus_bookings WHERE id = $1', [id]);
+    return (result[0] as unknown as BusBookingRow) || null;
   }
 
   async updateBookingStatus(id: string, status: 'confirmed' | 'cancelled' | 'completed'): Promise<BusBookingRow> {
     try {
-      const result = await this.db.unsafe<BusBookingRow>(
+      const result = await this.db.unsafe(
         `UPDATE bus_bookings SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
         [status, id]
       );
       if (!result[0]) {
         throw new NotFoundError('Bus booking');
       }
-      return result[0] as BusBookingRow;
+      return result[0] as unknown as BusBookingRow;
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
       logger.error({ error, id, status }, 'Failed to update bus booking status');

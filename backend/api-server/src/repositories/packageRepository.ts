@@ -64,7 +64,7 @@ export class PackageRepository {
       const distanceKm = await this.estimateDistance(input.originCoords, input.destinationCoords);
       const deliveryFee = this.calculateFee(input.size, distanceKm);
 
-      const result = await this.db.unsafe<PackageRow>(
+      const result = await this.db.unsafe(
         `INSERT INTO packages (
           tracking_number, qr_code, sender_id, receiver_name, receiver_phone,
           origin_name, origin_location, destination_name, destination_location,
@@ -99,24 +99,24 @@ export class PackageRepository {
   }
 
   async findPackageById(id: string): Promise<PackageRow | null> {
-    const result = await this.db.unsafe<PackageRow>('SELECT * FROM packages WHERE id = $1', [id]);
-    return result[0] || null;
+    const result = await this.db.unsafe('SELECT * FROM packages WHERE id = $1', [id]);
+    return (result[0] as PackageRow) || null;
   }
 
   async findPackagesBySender(senderId: string): Promise<PackageRow[]> {
-    const result = await this.db.unsafe<PackageRow>(
+    const result = await this.db.unsafe(
       'SELECT * FROM packages WHERE sender_id = $1 ORDER BY created_at DESC',
       [senderId]
     );
-    return result as PackageRow[];
+    return result as unknown as PackageRow[];
   }
 
   async findPackagesByStatus(status: string): Promise<PackageRow[]> {
-    const result = await this.db.unsafe<PackageRow>(
+    const result = await this.db.unsafe(
       'SELECT * FROM packages WHERE status = $1 ORDER BY created_at DESC',
       [status]
     );
-    return result as PackageRow[];
+    return result as unknown as PackageRow[];
   }
 
   async updatePackageStatus(id: string, status: string, carrierId?: string): Promise<PackageRow> {
@@ -138,7 +138,7 @@ export class PackageRepository {
       }
 
       query += ' WHERE id = $2 RETURNING *';
-      const result = await this.db.unsafe<PackageRow>(query, params);
+      const result = await this.db.unsafe(query, params as any[]);
       if (!result[0]) {
         throw new NotFoundError('Package');
       }
@@ -166,7 +166,7 @@ export class PackageRepository {
         throw new ValidationError('This trip does not allow packages');
       }
 
-      const result = await this.db.unsafe<PackageRow>(
+      const result = await this.db.unsafe(
         `UPDATE packages SET trip_id = $1, carrier_id = $2, status = 'matched', updated_at = NOW() WHERE id = $3 RETURNING *`,
         [tripId, carrierId, packageId]
       );
@@ -180,7 +180,7 @@ export class PackageRepository {
   }
 
   async findPackagesForRoute(originCity: string, destinationCity: string): Promise<PackageRow[]> {
-    const result = await this.db.unsafe<PackageRow>(
+    const result = await this.db.unsafe(
       `SELECT p.* FROM packages p
        JOIN trips t ON p.trip_id = t.id
        WHERE p.origin_name ILIKE $1 AND p.destination_name ILIKE $2
@@ -189,7 +189,7 @@ export class PackageRepository {
        ORDER BY p.created_at DESC`,
       [`%${originCity}%`, `%${destinationCity}%`]
     );
-    return result as PackageRow[];
+    return result as unknown as PackageRow[];
   }
 
   private async estimateDistance(

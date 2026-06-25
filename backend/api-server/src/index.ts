@@ -4,8 +4,8 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import pinoHttp from 'pino-http';
 import { logger } from '@wasel/backend-shared/logging/logger';
-import { config } from '@wasel/backend-shared/config';
-import authenticate from './middleware/auth.js';
+import { loadConfig } from '@wasel/backend-shared/config';
+import { authenticate } from './middleware/auth.js';
 import { errorHandler } from './middleware/errors.js';
 import tripRoutes from './routes/v1/trips.js';
 import packageRoutes from './routes/v1/packages.js';
@@ -16,6 +16,8 @@ import notificationRoutes from './routes/v1/notifications.js';
 import driverRoutes from './routes/v1/driver.js';
 import adminRoutes from './routes/v1/admin.js';
 import corporateRoutes from './routes/v1/corporate.js';
+
+const config = loadConfig();
 
 function createApp(): express.Application {
   const app = express();

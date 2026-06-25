@@ -15,6 +15,9 @@ export interface AppConfig {
     maxRetries: number;
     retryDelayMs: number;
   };
+  jwt: {
+    secret: string;
+  };
   stripe: {
     secretKey: string;
     apiVersion: string;
@@ -67,6 +70,9 @@ export function loadConfig(): AppConfig {
       tls: process.env.REDIS_TLS === 'true',
       maxRetries: parseInt(process.env.REDIS_MAX_RETRIES ?? '10', 10),
       retryDelayMs: parseInt(process.env.REDIS_RETRY_DELAY_MS ?? '1000', 10),
+    },
+    jwt: {
+      secret: process.env.JWT_SECRET ?? 'default-secret',
     },
     stripe: {
       secretKey: process.env.STRIPE_SECRET_KEY ?? '',

@@ -150,7 +150,7 @@ export class TripRepository {
     `;
     params.push(limit, offset);
 
-    const data = await this.db.unsafe<TripRow>(dataQuery, params);
+    const data = await this.db.unsafe(dataQuery, params as any[]);
 
     return {
       data: data.map((row: Record<string, unknown>) => ({ ...row } as TripRow)),
@@ -174,7 +174,7 @@ export class TripRepository {
       const originPoint = `SRID=4326;POINT(${input.originCoords.lng} ${input.originCoords.lat})`;
       const destinationPoint = `SRID=4326;POINT(${input.destinationCoords.lng} ${input.destinationCoords.lat})`;
 
-      const result = await this.db.unsafe<TripRow>(
+      const result = await this.db.unsafe(
         `INSERT INTO trips (
           mode, created_by, origin_name, origin_location, destination_name, destination_location,
           departure_time, total_seats, available_seats, price_per_seat, allows_packages,
@@ -206,7 +206,7 @@ export class TripRepository {
 
   async updateTripStatus(id: string, status: string, driverId: string): Promise<TripRow> {
     try {
-      const result = await this.db.unsafe<TripRow>(
+      const result = await this.db.unsafe(
         `UPDATE trips SET status = $1, updated_at = NOW() WHERE id = $2 AND driver_id = $3 RETURNING *`,
         [status, id, driverId]
       );
@@ -247,7 +247,7 @@ export class TripRepository {
         ? `SRID=4326;POINT(${input.dropoffCoords.lng} ${input.dropoffCoords.lat})`
         : null;
 
-      const bookingResult = await this.db.unsafe<TripBookingRow>(
+      const bookingResult = await this.db.unsafe(
         `INSERT INTO trip_bookings (
           trip_id, passenger_id, seats_booked, price_paid, status,
           pickup_location, pickup_name, dropoff_location, dropoff_name
@@ -279,18 +279,18 @@ export class TripRepository {
   }
 
   async findBookingById(id: string): Promise<TripBookingRow | null> {
-    const result = await this.db.unsafe<TripBookingRow>('SELECT * FROM trip_bookings WHERE id = $1', [id]);
-    return result[0] || null;
+    const result = await this.db.unsafe('SELECT * FROM trip_bookings WHERE id = $1', [id]);
+    return (result[0] as TripBookingRow) || null;
   }
 
   async findBookingsByTripId(tripId: string): Promise<TripBookingRow[]> {
-    const result = await this.db.unsafe<TripBookingRow>('SELECT * FROM trip_bookings WHERE trip_id = $1', [tripId]);
-    return result as TripBookingRow[];
+    const result = await this.db.unsafe('SELECT * FROM trip_bookings WHERE trip_id = $1', [tripId]);
+    return result as unknown as TripBookingRow[];
   }
 
   async updateBookingStatus(id: string, status: string): Promise<TripBookingRow> {
     try {
-      const result = await this.db.unsafe<TripBookingRow>(
+      const result = await this.db.unsafe(
         `UPDATE trip_bookings SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
         [status, id]
       );

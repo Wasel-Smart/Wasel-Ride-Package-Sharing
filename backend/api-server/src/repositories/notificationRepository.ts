@@ -30,7 +30,7 @@ export class NotificationRepository {
     channel?: string;
   }): Promise<NotificationRow> {
     try {
-      const result = await this.db.unsafe<NotificationRow>(
+      const result = await this.db.unsafe(
         `INSERT INTO notifications (user_id, type, title, title_ar, message, message_ar, data, status, channel)
          VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending', $8)
          RETURNING *`,
@@ -45,7 +45,7 @@ export class NotificationRepository {
           input.channel || 'in_app',
         ]
       );
-      return result[0] as NotificationRow;
+      return result[0] as unknown as NotificationRow;
     } catch (error) {
       logger.error({ error, userId, input }, 'Failed to create notification');
       throw new InternalError('Failed to create notification', error as Error);
@@ -61,7 +61,7 @@ export class NotificationRepository {
     );
     const total = Number(countResult[0]?.total || 0);
 
-    const data = await this.db.unsafe<NotificationRow>(
+    const data = await this.db.unsafe(
       `SELECT * FROM notifications WHERE user_id = $1
        ORDER BY created_at DESC
        LIMIT $2 OFFSET $3`,
@@ -69,18 +69,18 @@ export class NotificationRepository {
     );
 
     return {
-      data: data as NotificationRow[],
+      data: data as unknown as NotificationRow[],
       meta: { total, page, limit },
     };
   }
 
   async markAsRead(id: string, userId: string): Promise<NotificationRow | null> {
-    const result = await this.db.unsafe<NotificationRow>(
+    const result = await this.db.unsafe(
       `UPDATE notifications SET read = true, read_at = NOW(), updated_at = NOW()
        WHERE id = $1 AND user_id = $2 RETURNING *`,
       [id, userId]
     );
-    return result[0] || null;
+    return (result[0] as unknown as NotificationRow) || null;
   }
 }
 
