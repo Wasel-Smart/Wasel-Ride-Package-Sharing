@@ -107,7 +107,7 @@ export class TripRepository {
     const offset = (page - 1) * limit;
 
     let whereClause = 'WHERE t.status IN (\'posted\', \'open\') AND t.departure_time > NOW()';
-    const params: unknown[] = [];
+    const params: any[] = [];
     let paramIndex = 1;
 
     if (originCity) {
@@ -166,7 +166,7 @@ export class TripRepository {
        WHERE t.id = $1`,
       [id]
     );
-    return (result[0] as TripRow & { driver_name: string; driver_avatar: string | null }) || null;
+    return (result[0] as unknown as TripRow & { driver_name: string; driver_avatar: string | null }) || null;
   }
 
   async createTrip(input: CreateTripInput): Promise<TripRow> {
@@ -197,7 +197,7 @@ export class TripRepository {
           input.notes || null,
         ]
       );
-      return result[0] as TripRow;
+      return result[0] as unknown as TripRow;
     } catch (error) {
       logger.error({ error, input }, 'Failed to create trip');
       throw new InternalError('Failed to create trip', error as Error);
@@ -213,7 +213,7 @@ export class TripRepository {
       if (!result[0]) {
         throw new NotFoundError('Trip');
       }
-      return result[0] as TripRow;
+      return result[0] as unknown as TripRow;
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
       logger.error({ error, id, status }, 'Failed to update trip status');
@@ -280,7 +280,7 @@ export class TripRepository {
 
   async findBookingById(id: string): Promise<TripBookingRow | null> {
     const result = await this.db.unsafe('SELECT * FROM trip_bookings WHERE id = $1', [id]);
-    return (result[0] as TripBookingRow) || null;
+    return (result[0] as unknown as TripBookingRow) || null;
   }
 
   async findBookingsByTripId(tripId: string): Promise<TripBookingRow[]> {
@@ -297,7 +297,7 @@ export class TripRepository {
       if (!result[0]) {
         throw new NotFoundError('Booking');
       }
-      return result[0] as TripBookingRow;
+      return result[0] as unknown as TripBookingRow;
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
       logger.error({ error, id, status }, 'Failed to update booking status');

@@ -37,7 +37,7 @@ export class WalletRepository {
 
   async getWallet(userId: string): Promise<WalletRow | null> {
     const result = await this.db.unsafe('SELECT * FROM wallets WHERE user_id = $1', [userId]);
-    return (result[0] as WalletRow) || null;
+    return (result[0] as unknown as WalletRow) || null;
   }
 
   async getOrCreateWallet(userId: string): Promise<WalletRow> {
@@ -49,7 +49,7 @@ export class WalletRepository {
          RETURNING *`,
         [userId]
       );
-      wallet = result[0] as WalletRow;
+      wallet = result[0] as unknown as WalletRow;
     }
     return wallet;
   }
