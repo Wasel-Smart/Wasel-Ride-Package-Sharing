@@ -9,9 +9,9 @@ interface WaselLogoProps {
   framed?: boolean;
 }
 
-const WASEL_FULL_SRC = '/brand/wasellogo-512.png';
+const WASEL_FULL_SRC = '/brand/Wasel June.png';
 const WASEL_FULL_SRCSET =
-  '/brand/wasellogo-64.png 64w, /brand/wasellogo-96.png 96w, /brand/wasellogo-160.png 160w, /brand/wasellogo-280.png 280w, /brand/wasellogo-512.png 512w';
+  '/brand/Wasel June.png 512w';
 const WASEL_FULL_RATIO = 1005 / 316;
 
 const WASEL_W_SRC = '/brand/wasel-w-mark.png';

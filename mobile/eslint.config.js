@@ -1,7 +1,8 @@
 const reactHooks = require('eslint-plugin-react-hooks');
-const tseslint = require('typescript-eslint');
+const tseslint = require('@typescript-eslint/eslint-plugin');
+const tsParser = require('@typescript-eslint/parser');
 
-module.exports = tseslint.config(
+module.exports = [
   {
     ignores: [
       '.expo/**',
@@ -17,7 +18,7 @@ module.exports = tseslint.config(
     files: ['src/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
-      parser: tseslint.parser,
+      parser: tsParser,
       parserOptions: {
         ecmaFeatures: { jsx: true },
         sourceType: 'module',
@@ -32,6 +33,7 @@ module.exports = tseslint.config(
     },
     plugins: {
       'react-hooks': reactHooks,
+      '@typescript-eslint': tseslint,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
@@ -46,4 +48,4 @@ module.exports = tseslint.config(
       'eqeqeq': ['error', 'always'],
     },
   },
-);
+];
