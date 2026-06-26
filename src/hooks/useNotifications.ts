@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
-import { notificationsAPI } from '../services/notifications.js';
+import { api } from '../utils/api';
 
 export interface Notification {
   id: string;
@@ -88,11 +88,9 @@ export function useNotifications() {
   } = useQuery({
     queryKey: notificationsQueryKey(effectiveUserId),
     queryFn: async () => {
-      const response = await notificationsAPI.getNotifications();
-      const items = Array.isArray(response.notifications)
-        ? (response.notifications as RawNotification[])
-        : [];
-      return items.map(normalizeNotification);
+      const response = await api.get('/notifications');
+      const data = response as { data: Notification[]; meta: { total: number } };
+      return data.data.map(normalizeNotification);
     },
     enabled: Boolean(effectiveUserId),
     staleTime: 30 * 1000,
@@ -138,7 +136,7 @@ export function useNotifications() {
     );
 
     try {
-      await notificationsAPI.markAsRead(notificationId);
+      await api.patch(`/notifications/${notificationId}/read`, {});
     } catch (error) {
       queryClient.setQueryData(queryKey, previous);
       toast.error('Failed to update notification');
@@ -161,7 +159,7 @@ export function useNotifications() {
     );
 
     try {
-      await Promise.all(unread.map(notification => notificationsAPI.markAsRead(notification.id)));
+      await Promise.all(unread.map(notification => api.patch(`/notifications/${notification.id}/read`, {})));
       toast.success('All notifications marked as read');
     } catch (error) {
       queryClient.setQueryData(queryKey, previous);
@@ -187,13 +185,19 @@ export function useNotifications() {
     toast.success('Archived notifications restored');
   };
 
-  const createNotification = async (
-    data: Parameters<typeof notificationsAPI.createNotification>[0],
-  ) => {
+  const createNotification = async (data: {
+    type: string;
+    title: string;
+    titleAr?: string;
+    message: string;
+    messageAr?: string;
+    data?: Record<string, unknown>;
+    channel?: string;
+  }) => {
     if (!effectiveUserId) return;
 
     try {
-      await notificationsAPI.createNotification(data);
+      await api.post('/notifications', { ...data, userId: effectiveUserId });
       await queryClient.invalidateQueries({ queryKey: notificationsQueryKey(effectiveUserId) });
     } catch (error) {
       toast.error('Failed to send notification');
