@@ -1,4 +1,4 @@
-import { notificationRepository } from '../repositories/notificationRepository.js';
+import { notificationRepository } from '../repositories/notificationRepository.ts';
 import { getRedis } from '@wasel/backend-shared/redis';
 import { logger } from '@wasel/backend-shared/logging/logger';
 
@@ -58,3 +58,4 @@ export class NotificationService {
 }
 
 export const notificationService = new NotificationService();
+

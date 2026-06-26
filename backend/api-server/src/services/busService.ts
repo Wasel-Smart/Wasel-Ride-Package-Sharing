@@ -1,4 +1,4 @@
-import { busRepository } from '../repositories/busRepository.js';
+import { busRepository } from '../repositories/busRepository.ts';
 import { NotFoundError, ValidationError, InternalError } from '@wasel/backend-shared/errors/app-errors';
 
 export class BusService {
@@ -39,3 +39,4 @@ export class BusService {
 }
 
 export const busService = new BusService();
+

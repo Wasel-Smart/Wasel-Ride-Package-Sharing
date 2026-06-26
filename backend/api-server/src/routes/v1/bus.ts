@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import busService from '../services/busService.js';
-import { authenticate } from '../middleware/auth.js';
-import { validate, validateQuery } from '../middleware/validate.js';
+import busService from '../services/busService.ts';
+import { authenticate } from '../middleware/auth.ts';
+import { validate, validateQuery } from '../middleware/validate.ts';
 import { z } from 'zod';
 
 const router = Router();
@@ -63,3 +63,4 @@ router.patch('/bookings/:id/cancel', authenticate, async (req: Request, res: Res
 });
 
 export default router;
+

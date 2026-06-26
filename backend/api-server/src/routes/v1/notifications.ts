@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import notificationService from '../services/notificationService.js';
-import { authenticate } from '../middleware/auth.js';
+import notificationService from '../services/notificationService.ts';
+import { authenticate } from '../middleware/auth.ts';
 
 const router = Router();
 
@@ -26,3 +26,4 @@ router.patch('/:id/read', authenticate, async (req: Request, res: Response) => {
 });
 
 export default router;
+
