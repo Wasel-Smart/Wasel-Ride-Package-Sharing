@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-server-ingress
+  namespace: wasel
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://wasel14.online,https://www.wasel14.online"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization,Content-Type"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: api.wasel14.online
+    http:
+      paths:
+      - path: /v1
+        pathType: Prefix
+        backend:
+          service:
+            name: api-server
+            port:
+              number: 8080
+      - path: /health
+        pathType: Exact
+        backend:
+          service:
+            name: api-server
+            port:
+              number: 8080
+      - path: /ready
+        pathType: Exact
+        backend:
+          service:
+            name: api-server
+            port:
+              number: 8080
+  tls:
+  - hosts:
+    - api.wasel14.online
+    secretName: wasel-tls
