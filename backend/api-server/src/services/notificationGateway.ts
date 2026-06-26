@@ -1,6 +1,8 @@
 import { getRedis } from '@wasel/backend-shared/redis';
 import { logger } from '@wasel/backend-shared/logging/logger';
-import { config } from '@wasel/backend-shared/config';
+import { loadConfig } from '@wasel/backend-shared/config';
+
+const config = loadConfig();
 
 export interface PushNotificationPayload {
   token: string;
