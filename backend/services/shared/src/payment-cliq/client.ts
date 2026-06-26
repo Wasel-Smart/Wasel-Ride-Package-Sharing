@@ -173,7 +173,7 @@ export class CliQClient {
       false,
       ['sign'],
     );
-    const signedPayload = `${payload}${timestamp}`;
+    const signedPayload = timestamp ? `${timestamp}.${payload}` : payload;
     const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(signedPayload));
     return Array.from(new Uint8Array(signature))
       .map(b => b.toString(16).padStart(2, '0'))

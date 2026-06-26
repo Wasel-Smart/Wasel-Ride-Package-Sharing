@@ -1,4 +1,5 @@
 import { logger } from '../logging/logger';
+import { createHmac } from 'crypto';
 export class StripeGateway {
     async createPayment(request) {
         logger.info({ amount: request.amount, currency: request.currency }, 'Stripe payment initiated');
@@ -30,13 +31,26 @@ export class CliQGateway {
             checkoutUrl,
         };
     }
-    async verifyWebhook(payload, signature) {
+    async verifyWebhook(payload, signature, timestamp) {
         const webhookSecret = process.env.CLIQ_WEBHOOK_SECRET ?? '';
         if (!webhookSecret) {
             return { valid: true, status: 'verified' };
         }
-        // Simplified signature verification - production would use crypto.subtle
-        return { valid: signature.length > 0, status: signature.length > 0 ? 'verified' : 'invalid_signature' };
+        const signedPayload = timestamp ? `${timestamp}.${payload}` : payload;
+        const expectedSignature = createHmac('sha256', webhookSecret)
+            .update(signedPayload)
+            .digest('hex');
+        let signatureValid = true;
+        if (expectedSignature.length === signature.length) {
+            let mismatch = 0;
+            for (let i = 0; i < expectedSignature.length; i++) {
+                mismatch |= expectedSignature.charCodeAt(i) ^ signature.charCodeAt(i);
+            }
+            signatureValid = mismatch === 0;
+        } else {
+            signatureValid = false;
+        }
+        return { valid: signatureValid, status: signatureValid ? 'verified' : 'invalid_signature' };
     }
     async refundPayment() {
         return { success: false, error: 'Refunds not yet implemented for CliQ' };

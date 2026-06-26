@@ -1,5 +1,9 @@
 const API_BASE = import.meta.env.VITE_API_URL || '/v1';
 
+export function generateId(prefix: string): string {
+  return `${prefix}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
 async function request(path: string, options: RequestInit = {}) {
   const token = localStorage.getItem('wasel_access_token');
   
