@@ -168,12 +168,13 @@ export class CliQClient {
     const encoder = new TextEncoder();
     const key = await crypto.subtle.importKey(
       'raw',
-      encoder.encode(this.config.secretKey),
+      encoder.encode(this.config.webhookSecret),
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign'],
     );
-    const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(`${payload}${timestamp}`));
+    const signedPayload = `${payload}${timestamp}`;
+    const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(signedPayload));
     return Array.from(new Uint8Array(signature))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
