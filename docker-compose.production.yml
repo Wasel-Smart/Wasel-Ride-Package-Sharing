@@ -124,6 +124,34 @@ services:
       timeout: 10s
       retries: 3
 
+  api-server:
+    build:
+      context: ..
+      dockerfile: backend/api-server/Dockerfile
+    container_name: wasel-api-server
+    ports:
+      - '3000:8080'
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL:-postgres://postgres:your-super-secret-and-long-postgres-password@postgres:5432/postgres}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_TLS=false
+      - JWT_SECRET=${JWT_SECRET:-your-jwt-secret-key-here}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:8080}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:8080/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   wasel-web:
     build:
       context: ..
