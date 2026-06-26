@@ -23,6 +23,15 @@ export interface AppConfig {
     apiVersion: string;
     webhookSecret: string;
   };
+  twilio: {
+    accountSid: string;
+    authToken: string;
+    fromNumber: string;
+  };
+  sendgrid: {
+    apiKey: string;
+    fromEmail: string;
+  };
   cors: {
     origin: string[];
     credentials: boolean;
@@ -78,6 +87,15 @@ export function loadConfig(): AppConfig {
       secretKey: process.env.STRIPE_SECRET_KEY ?? '',
       apiVersion: process.env.STRIPE_API_VERSION ?? '2026-02-25.clover',
       webhookSecret: process.env.STRIPE_WEBHOOK_SECRET ?? '',
+    },
+    twilio: {
+      accountSid: process.env.TWILIO_ACCOUNT_SID ?? '',
+      authToken: process.env.TWILIO_AUTH_TOKEN ?? '',
+      fromNumber: process.env.TWILIO_FROM_NUMBER ?? '',
+    },
+    sendgrid: {
+      apiKey: process.env.SENDGRID_API_KEY ?? '',
+      fromEmail: process.env.SENDGRID_FROM_EMAIL ?? '',
     },
     cors: {
       origin: corsOrigins,
