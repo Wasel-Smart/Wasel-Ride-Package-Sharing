@@ -1,8 +1,9 @@
 import { logger } from '../logging/logger';
+import { createHmac } from 'crypto';
 
 export interface PaymentGateway {
   createPayment(request: PaymentRequest): Promise<PaymentResponse>;
-  verifyWebhook(payload: string, signature: string): Promise<{ valid: boolean; status: string }>;
+  verifyWebhook(payload: string, signature: string, timestamp?: string): Promise<{ valid: boolean; status: string }>;
   refundPayment(paymentId: string, amount?: number): Promise<RefundResponse>;
 }
 
@@ -68,13 +69,28 @@ export class CliQGateway implements PaymentGateway {
     };
   }
 
-  async verifyWebhook(payload: string, signature: string): Promise<{ valid: boolean; status: string }> {
+  async verifyWebhook(payload: string, signature: string, timestamp?: string): Promise<{ valid: boolean; status: string }> {
     const webhookSecret = process.env.CLIQ_WEBHOOK_SECRET ?? '';
     if (!webhookSecret) {
       return { valid: true, status: 'verified' };
     }
-    // Simplified signature verification - production would use crypto.subtle
-    return { valid: signature.length > 0, status: signature.length > 0 ? 'verified' : 'invalid_signature' };
+    const signedPayload = timestamp ? `${timestamp}.${payload}` : payload;
+    const expectedSignature = createHmac('sha256', webhookSecret)
+      .update(signedPayload)
+      .digest('hex');
+
+    let signatureValid = true;
+    if (expectedSignature.length === signature.length) {
+      let mismatch = 0;
+      for (let i = 0; i < expectedSignature.length; i++) {
+        mismatch |= expectedSignature.charCodeAt(i) ^ signature.charCodeAt(i);
+      }
+      signatureValid = mismatch === 0;
+    } else {
+      signatureValid = false;
+    }
+
+    return { valid: signatureValid, status: signatureValid ? 'verified' : 'invalid_signature' };
   }
 
   async refundPayment(): Promise<RefundResponse> {

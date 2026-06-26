@@ -15,7 +15,7 @@ export interface WaselUser {
   name: string;
   email: string;
   phone?: string;
-  role: 'rider' | 'driver' | 'both';
+  role: 'rider' | 'driver' | 'both' | 'admin';
   balance: number;
   rating: number;
   trips: number;
