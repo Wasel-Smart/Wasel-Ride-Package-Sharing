@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1005" height="316" viewBox="0 0 1005 316" fill="none">
+  <defs>
+    <linearGradient id="logoLight-route" x1="22" y1="76" x2="480" y2="205" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1478F2"/>
+      <stop offset="0.46" stop-color="#19BCE4"/>
+      <stop offset="1" stop-color="#38CE62"/>
+    </linearGradient>
+    <filter id="logoLight-shadow" x="-8%" y="-16%" width="116%" height="132%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#06133F" flood-opacity="0.14"/>
+    </filter></defs>
+  <g transform="translate(34 38) scale(0.88)">
+
+    <g filter="url(#logoLight-shadow)">
+      <path d="M44 76C78 136 91 232 149 232C191 232 202 164 225 111C239 80 263 80 277 111C300 164 311 232 353 232C411 232 424 136 458 76" fill="none" stroke="url(#logoLight-route)" stroke-width="31" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+  <text x="480" y="213" fill="#FFFFFF" font-family="'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif" font-size="155" font-weight="800" letter-spacing="0">wasel</text>
+</svg>

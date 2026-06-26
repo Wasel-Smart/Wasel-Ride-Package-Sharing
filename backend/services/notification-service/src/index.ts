@@ -6,6 +6,7 @@ import { createRateLimitMiddleware } from '@wasel/backend-shared/rate-limiter';
 import {
   AppError,
   ValidationError,
+  NotFoundError,
 } from '@wasel/backend-shared/errors/app-errors';
 import { startRuntimeHealthServer } from '../../runtime/http-health';
 import { eventBroker } from '../../../../src/platform/event-broker-redis-production.js';
