@@ -1,11 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { authenticate, requireRole } from '../middleware/auth.js';
-import { tripRepository } from '../repositories/tripRepository.js';
-import { packageRepository } from '../repositories/packageRepository.js';
-import { ratingRepository } from '../repositories/ratingRepository.js';
-import { walletRepository } from '../repositories/walletRepository.js';
-import { notificationRepository } from '../repositories/notificationRepository.js';
-import { notificationGateway } from '../services/notificationGateway.js';
+import { authenticate, requireRole } from '../../middleware/auth.ts';
+import { tripRepository } from '../../repositories/tripRepository.ts';
+import { packageRepository } from '../../repositories/packageRepository.ts';
+import { ratingRepository } from '../../repositories/ratingRepository.ts';
+import { walletRepository } from '../../repositories/walletRepository.ts';
+import { notificationRepository } from '../../repositories/notificationRepository.ts';
+import { notificationGateway } from '../../services/notificationGateway.ts';
 import { z } from 'zod';
 
 const router = Router();

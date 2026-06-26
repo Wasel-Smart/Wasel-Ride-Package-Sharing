@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import busService from '../services/busService.ts';
-import { authenticate } from '../middleware/auth.ts';
-import { validate, validateQuery } from '../middleware/validate.ts';
+import { busService } from '../../services/busService.ts';
+import { authenticate } from '../../middleware/auth.ts';
+import { validate, validateQuery } from '../../middleware/validate.ts';
 import { z } from 'zod';
 
 const router = Router();

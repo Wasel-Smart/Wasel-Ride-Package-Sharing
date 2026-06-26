@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import tripService from '../services/tripService.ts';
-import { authenticate, requireRole } from '../middleware/auth.ts';
-import { validate } from '../middleware/validate.ts';
+import tripService from '../../services/tripService.ts';
+import { authenticate, requireRole } from '../../middleware/auth.ts';
+import { validate } from '../../middleware/validate.ts';
 import { z } from 'zod';
 
 const router = Router();
@@ -93,4 +93,5 @@ router.patch('/:id/status', authenticate, async (req: Request, res: Response) =>
 });
 
 export default router;
+
 

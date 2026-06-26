@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { authenticate, requireRole } from '../middleware/auth.ts';
-import { validate } from '../middleware/validate.ts';
+import { authenticate, requireRole } from '../../middleware/auth.ts';
+import { validate } from '../../middleware/validate.ts';
 import { z } from 'zod';
 
 const router = Router();
@@ -41,7 +41,7 @@ router.post('/organizations', authenticate, requireRole(['admin']), validate(Cre
       `INSERT INTO organizations (name, contact_email, contact_phone, billing_address, tax_id, owner_id)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [input.name, input.contactEmail, input.contactPhone, input.billingAddress, input.taxId, ownerId]
+      [input.name, input.contactEmail, input.contactPhone ?? null, input.billingAddress ?? null, input.taxId ?? null, ownerId]
     );
 
     res.status(201).json({ success: true, data: result[0] });
@@ -59,7 +59,7 @@ router.post('/organizations/:id/members', authenticate, requireRole(['admin', 'b
       `INSERT INTO organization_members (organization_id, user_id, employee_id, cost_center)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [req.params.id, input.userId, input.employeeId, input.costCenter]
+      [req.params.id, input.userId, input.employeeId ?? null, input.costCenter ?? null]
     );
 
     res.status(201).json({ success: true, data: result[0] });

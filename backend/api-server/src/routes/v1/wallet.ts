@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import walletService from '../services/walletService.ts';
-import { authenticate } from '../middleware/auth.ts';
-import { validate } from '../middleware/validate.ts';
+import walletService from '../../services/walletService.ts';
+import { authenticate } from '../../middleware/auth.ts';
+import { validate } from '../../middleware/validate.ts';
 import { z } from 'zod';
 
 const router = Router();
@@ -66,4 +66,5 @@ router.get('/:userId/transactions', authenticate, async (req: Request, res: Resp
 });
 
 export default router;
+
 

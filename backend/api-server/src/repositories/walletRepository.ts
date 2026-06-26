@@ -86,7 +86,7 @@ export class WalletRepository {
         [amount, wallet.wallet_id]
       );
 
-      return txResult[0] as TransactionRow;
+      return txResult[0] as unknown as TransactionRow;
     } catch (error) {
       logger.error({ error, userId, amount, type }, 'Failed to credit wallet');
       throw new InternalError('Failed to credit wallet', error as Error);
@@ -124,7 +124,7 @@ export class WalletRepository {
         [amount, wallet.wallet_id]
       );
 
-      return txResult[0] as TransactionRow;
+      return txResult[0] as unknown as TransactionRow;
     } catch (error) {
       if (error instanceof ValidationError) throw error;
       logger.error({ error, userId, amount, type }, 'Failed to debit wallet');

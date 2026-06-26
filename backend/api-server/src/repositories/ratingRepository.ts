@@ -100,7 +100,7 @@ export class RatingRepository {
        FROM reviews WHERE reviewee_id = $1`,
       [userId]
     );
-    const row = result[0] as { average: string | null; count: string };
+    const row = result[0] as unknown as { average: string | null; count: string };
     return {
       average: Number(row.average) || 0,
       count: Number(row.count) || 0,
