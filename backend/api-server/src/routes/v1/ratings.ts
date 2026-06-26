@@ -26,7 +26,7 @@ router.post('/', authenticate, validate(CreateRatingSchema), async (req: Request
       if (!bookingCheck) {
         return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Trip booking not found' } });
       }
-      if (bookingCheck.passenger_id !== userId && bookingCheck.driver_id !== userId) {
+      if (bookingCheck.passenger_id !== userId) {
         return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'You can only rate trips you participated in' } });
       }
     }

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import walletService from '../../services/walletService.ts';
+import { walletService } from '../../services/walletService.ts';
 import { authenticate } from '../../middleware/auth.ts';
 import { validate } from '../../middleware/validate.ts';
 import { z } from 'zod';

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import tripService from '../../services/tripService.ts';
+import { tripService } from '../../services/tripService.ts';
 import { authenticate, requireRole } from '../../middleware/auth.ts';
-import { validate } from '../../middleware/validate.ts';
+import { validate, validateQuery } from '../../middleware/validate.ts';
 import { z } from 'zod';
 
 const router = Router();
