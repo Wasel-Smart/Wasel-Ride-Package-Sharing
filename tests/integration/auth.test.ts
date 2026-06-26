@@ -1,48 +1,22 @@
-/**
- * Authentication Flow Integration Tests
- */
+import { describe, it, expect, vi } from 'vitest';
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+const API_BASE = 'http://localhost:3000';
 
-describe('Authentication Flow Integration', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+describe('Auth Integration', () => {
+  it('rejects request without Authorization header', async () => {
+    const res = await fetch(`${API_BASE}/v1/trips/search`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect(res.status).toBe(401);
   });
 
-  it('should handle sign up flow', async () => {
-    const mockSignUp = vi.fn().mockResolvedValue({
-      user: { id: 'test-user-id', email: 'test@example.com' },
-      session: null,
+  it('rejects request with invalid Bearer token', async () => {
+    const res = await fetch(`${API_BASE}/v1/trips/search`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer invalid-token',
+      },
     });
-
-    expect(mockSignUp).toBeDefined();
-  });
-
-  it('should handle sign in flow', async () => {
-    const mockSignIn = vi.fn().mockResolvedValue({
-      user: { id: 'test-user-id', email: 'test@example.com' },
-      session: { access_token: 'test-token' },
-    });
-
-    expect(mockSignIn).toBeDefined();
-  });
-
-  it('should handle profile creation', async () => {
-    const mockCreateProfile = vi.fn().mockResolvedValue({
-      id: 'test-user-id',
-      email: 'test@example.com',
-      full_name: 'Test User',
-    });
-
-    expect(mockCreateProfile).toBeDefined();
-  });
-
-  it('should handle profile updates', async () => {
-    const mockUpdateProfile = vi.fn().mockResolvedValue({
-      success: true,
-      profile: { id: 'test-user-id', full_name: 'Updated Name' },
-    });
-
-    expect(mockUpdateProfile).toBeDefined();
+    expect(res.status).toBe(401);
   });
 });
