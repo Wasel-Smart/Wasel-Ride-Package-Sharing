@@ -74,6 +74,7 @@
     "release:patch": "node scripts/release.mjs patch",
     "release:minor": "node scripts/release.mjs minor",
     "release:major": "node scripts/release.mjs major",
+    "brand:assets": "node scripts/generate-wasel-brand-assets.mjs",
     "workers:start": "node -e \"import('./src/platform/worker-framework.ts').then(m => m.workerRegistry.startAll())\"",
     "observability:dashboard": "npm run dev -- --open /ops/observability",
     "telemetry:init": "node -e \"import('./src/platform/telemetry.ts').then(m => m.initWebVitals())\"",

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="260" viewBox="0 0 500 260" fill="none">
+  <defs>
+    <linearGradient id="mark-route" x1="22" y1="76" x2="480" y2="205" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1478F2"/>
+      <stop offset="0.46" stop-color="#19BCE4"/>
+      <stop offset="1" stop-color="#38CE62"/>
+    </linearGradient>
+    <filter id="mark-shadow" x="-8%" y="-16%" width="116%" height="132%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#06133F" flood-opacity="0.14"/>
+    </filter></defs>
+
+    <g filter="url(#mark-shadow)">
+      <path d="M44 76C78 136 91 232 149 232C191 232 202 164 225 111C239 80 263 80 277 111C300 164 311 232 353 232C411 232 424 136 458 76" fill="none" stroke="url(#mark-route)" stroke-width="31" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+</svg>

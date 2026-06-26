@@ -3,7 +3,7 @@ import Redis from 'ioredis';
 import express from 'express';
 import { loadConfig } from '@wasel/backend-shared';
 import { createRateLimitMiddleware } from '@wasel/backend-shared/rate-limiter';
-import { AppError, ValidationError, } from '@wasel/backend-shared/errors/app-errors';
+import { AppError, ValidationError, NotFoundError, } from '@wasel/backend-shared/errors/app-errors';
 import { startRuntimeHealthServer } from '../../runtime/http-health';
 import { eventBroker } from '../../../../src/platform/event-broker-redis-production.js';
 import { logger } from '@wasel/backend-shared/logging/logger';
