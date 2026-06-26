@@ -1,6 +1,7 @@
 import postgres from 'postgres';
 import Redis from 'ioredis';
 import express from 'express';
+import { createHmac } from 'crypto';
 import { loadConfig } from '@wasel/backend-shared';
 import { createRateLimitMiddleware } from '@wasel/backend-shared/rate-limiter';
 import {
@@ -372,13 +373,39 @@ function createApp(): express.Application {
   });
 
   app.post('/v1/payments/webhooks/cliq', async (req, res) => {
-    const payload = req.body;
-    const signature = req.headers['x-cliq-signature'] as string;
+    const rawPayload = JSON.stringify(req.body);
+    const signature = req.headers['x-cliq-signature'] as string | undefined;
+    const timestamp = req.headers['x-cliq-timestamp'] as string | undefined;
+    const webhookSecret = process.env.CLIQ_WEBHOOK_SECRET;
 
-    logger.info({ payload, hasSignature: !!signature }, 'CliQ webhook received');
+    if (webhookSecret && signature && timestamp) {
+      const expectedSignature = createHmac('sha256', webhookSecret)
+        .update(`${timestamp}.${rawPayload}`)
+        .digest('hex');
 
-    const status = payload?.status ?? payload?.payment_status ?? 'unknown';
-    const transactionId = payload?.transaction_id ?? payload?.transactionId;
+      let signatureValid = true;
+      if (expectedSignature.length === signature.length) {
+        let mismatch = 0;
+        for (let i = 0; i < expectedSignature.length; i++) {
+          mismatch |= expectedSignature.charCodeAt(i) ^ signature.charCodeAt(i);
+        }
+        signatureValid = mismatch === 0;
+      } else {
+        signatureValid = false;
+      }
+
+      if (!signatureValid) {
+        logger.warn({ signature }, 'CliQ webhook signature verification failed');
+        return res.status(401).json({ error: 'Invalid signature' });
+      }
+    } else if (webhookSecret) {
+      return res.status(401).json({ error: 'Missing signature or timestamp' });
+    }
+
+    logger.info({ hasSignature: !!signature }, 'CliQ webhook received');
+
+    const status = req.body?.status ?? req.body?.payment_status ?? 'unknown';
+    const transactionId = req.body?.transaction_id ?? req.body?.transactionId;
 
     if (transactionId) {
       await PostgresPool.connection`

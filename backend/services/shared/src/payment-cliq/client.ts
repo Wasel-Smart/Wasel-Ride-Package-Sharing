@@ -166,9 +166,15 @@ export class CliQClient {
 
   private async generateSignature(payload: string, timestamp: string): Promise<string> {
     const encoder = new TextEncoder();
-    const data = encoder.encode(`${payload}${timestamp}${this.config.secretKey}`);
-    const buffer = await crypto.subtle.digest('SHA-256', data);
-    return Array.from(new Uint8Array(buffer))
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(this.config.secretKey),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
+    const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(`${payload}${timestamp}`));
+    return Array.from(new Uint8Array(signature))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
   }
