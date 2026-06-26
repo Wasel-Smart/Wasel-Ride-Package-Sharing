@@ -153,7 +153,7 @@ export class TripRepository {
     const data = await this.db.unsafe(dataQuery, params as any[]);
 
     return {
-      data: data.map((row: Record<string, unknown>) => ({ ...row } as TripRow)),
+      data: data.map((row: Record<string, unknown>) => ({ ...row } as unknown as TripRow)),
       meta: { total, page, limit },
     };
   }
@@ -232,7 +232,7 @@ export class TripRepository {
         throw new NotFoundError('Trip');
       }
 
-      const trip = tripResult[0] as { available_seats: number; status: string };
+      const trip = tripResult[0] as unknown as { available_seats: number; status: string };
       if (trip.status !== 'posted' && trip.status !== 'open') {
         throw new ValidationError('Trip is not available for booking');
       }
@@ -270,7 +270,7 @@ export class TripRepository {
         [input.seatsBooked, input.tripId]
       );
 
-      return bookingResult[0] as TripBookingRow;
+      return bookingResult[0] as unknown as TripBookingRow;
     } catch (error) {
       if (error instanceof NotFoundError || error instanceof ValidationError) throw error;
       logger.error({ error, input }, 'Failed to create booking');

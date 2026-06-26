@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { authenticate, requireRole } from '../middleware/auth.ts';
-import { validate } from '../middleware/validate.ts';
-import { tripRepository } from '../repositories/tripRepository.ts';
-import { ratingRepository } from '../repositories/ratingRepository.ts';
+import { authenticate, requireRole } from '../../middleware/auth.ts';
+import { validate } from '../../middleware/validate.ts';
+import { tripRepository } from '../../repositories/tripRepository.ts';
+import { ratingRepository } from '../../repositories/ratingRepository.ts';
 import { z } from 'zod';
 
 const router = Router();
@@ -65,4 +65,5 @@ router.get('/trip/:tripId', authenticate, async (req: Request, res: Response) =>
 });
 
 export default router;
+
 

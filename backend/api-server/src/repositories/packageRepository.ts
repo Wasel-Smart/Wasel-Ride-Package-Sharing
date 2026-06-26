@@ -161,7 +161,7 @@ export class PackageRepository {
         throw new NotFoundError('Trip');
       }
 
-      const trip = tripResult[0] as { allows_packages: boolean };
+      const trip = tripResult[0] as unknown as { allows_packages: boolean };
       if (!trip.allows_packages) {
         throw new ValidationError('This trip does not allow packages');
       }

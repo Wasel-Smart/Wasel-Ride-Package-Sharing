@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import packageService from '../services/packageService.ts';
-import { authenticate } from '../middleware/auth.ts';
-import { validate } from '../middleware/validate.ts';
+import { packageService } from '../../services/packageService.ts';
+import { authenticate } from '../../middleware/auth.ts';
+import { validate } from '../../middleware/validate.ts';
 import { z } from 'zod';
 
 const router = Router();
@@ -84,4 +84,5 @@ router.post('/:id/status', authenticate, validate(UpdateStatusSchema), async (re
 });
 
 export default router;
+
 
