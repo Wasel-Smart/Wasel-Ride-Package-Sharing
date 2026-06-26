@@ -1,5 +1,5 @@
-import { packageRepository } from '../repositories/packageRepository.js';
-import { notificationRepository } from '../repositories/notificationRepository.js';
+import { packageRepository } from '../repositories/packageRepository.ts';
+import { notificationRepository } from '../repositories/notificationRepository.ts';
 import { NotFoundError, ValidationError, InternalError } from '@wasel/backend-shared/errors/app-errors';
 
 export class PackageService {
@@ -85,3 +85,4 @@ export class PackageService {
 }
 
 export const packageService = new PackageService();
+

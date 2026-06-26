@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
-import { authenticate } from '../middleware/auth.js';
-import { tripRepository } from '../repositories/tripRepository.js';
-import { packageRepository } from '../repositories/packageRepository.js';
-import { ratingRepository } from '../repositories/ratingRepository.js';
-import { walletRepository } from '../repositories/walletRepository.js';
+import { authenticate } from '../middleware/auth.ts';
+import { tripRepository } from '../repositories/tripRepository.ts';
+import { packageRepository } from '../repositories/packageRepository.ts';
+import { ratingRepository } from '../repositories/ratingRepository.ts';
+import { walletRepository } from '../repositories/walletRepository.ts';
 import { z } from 'zod';
 
 const router = Router();
@@ -82,3 +82,4 @@ router.get('/ratings', authenticate, async (req: Request, res: Response) => {
 });
 
 export default router;
+

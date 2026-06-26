@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { authenticate, requireRole } from '../middleware/auth.js';
-import { validate } from '../middleware/validate.js';
+import { authenticate, requireRole } from '../middleware/auth.ts';
+import { validate } from '../middleware/validate.ts';
 import { z } from 'zod';
 
 const router = Router();
@@ -134,3 +134,4 @@ router.get('/organizations/:id/invoices', authenticate, requireRole(['admin', 'b
 });
 
 export default router;
+

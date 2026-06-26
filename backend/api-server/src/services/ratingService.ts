@@ -1,4 +1,4 @@
-import { ratingRepository } from '../repositories/ratingRepository.js';
+import { ratingRepository } from '../repositories/ratingRepository.ts';
 import { NotFoundError, ValidationError, InternalError } from '@wasel/backend-shared/errors/app-errors';
 
 export class RatingService {
@@ -36,3 +36,4 @@ export class RatingService {
 }
 
 export const ratingService = new RatingService();
+

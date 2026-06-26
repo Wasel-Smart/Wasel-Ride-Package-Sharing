@@ -1,6 +1,6 @@
-import { tripRepository } from '../repositories/tripRepository.js';
-import { packageRepository } from '../repositories/packageRepository.js';
-import { notificationRepository } from '../repositories/notificationRepository.js';
+import { tripRepository } from '../repositories/tripRepository.ts';
+import { packageRepository } from '../repositories/packageRepository.ts';
+import { notificationRepository } from '../repositories/notificationRepository.ts';
 import {
   NotFoundError,
   ValidationError,
@@ -131,3 +131,4 @@ export class TripService {
 }
 
 export const tripService = new TripService();
+
