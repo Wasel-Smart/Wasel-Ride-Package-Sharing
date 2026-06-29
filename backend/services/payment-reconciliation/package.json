@@ -10,7 +10,7 @@
   "dependencies": {
     "ioredis": "^5.11.1",
     "postgres": "^3.4.9",
-    "stripe": "^22.1.0"
+    "stripe": "^22.3.0"
   },
   "devDependencies": {
     "tsx": "^4.7.0"
