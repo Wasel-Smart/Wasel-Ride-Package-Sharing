@@ -13,6 +13,6 @@
     "stripe": "^22.1.0"
   },
   "devDependencies": {
-    "tsx": "^4.7.0"
+    "tsx": "^4.22.4"
   }
 }
