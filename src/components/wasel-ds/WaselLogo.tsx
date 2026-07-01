@@ -9,13 +9,12 @@ interface WaselLogoProps {
   framed?: boolean;
 }
 
-const WASEL_FULL_SRC = '/brand/Wasel June.jpeg';
-const WASEL_FULL_SRCSET =
-  '/brand/Wasel June.jpeg 512w';
-const WASEL_FULL_RATIO = 1005 / 316;
+const WASEL_FULL_LIGHT_SRC = '/brand/wasel-logo-light.svg';
+const WASEL_FULL_DARK_SRC = '/brand/wasel-logo.svg';
+const WASEL_FULL_RATIO = 1120 / 360;
 
-const WASEL_W_SRC = '/brand/wasel-w-mark.jpeg';
-const WASEL_W_RATIO = 400 / 316;
+const WASEL_W_SRC = '/brand/wasel-mark.svg';
+const WASEL_W_RATIO = 720 / 300;
 
 function getImageFilter(theme: 'dark' | 'light', framed: boolean) {
   if (theme === 'dark') {
@@ -31,7 +30,6 @@ function getImageFilter(theme: 'dark' | 'light', framed: boolean) {
 
 function BrandImage({
   src,
-  srcSet,
   alt,
   size,
   ratio,
@@ -39,7 +37,6 @@ function BrandImage({
   theme,
 }: {
   src: string;
-  srcSet?: string;
   alt: string;
   size: number;
   ratio: number;
@@ -49,8 +46,6 @@ function BrandImage({
   return (
     <img
       src={src}
-      srcSet={srcSet}
-      sizes={`${Math.round(size * ratio)}px`}
       alt={alt}
       width={Math.round(size * ratio)}
       height={Math.round(size)}
@@ -99,14 +94,15 @@ function LogoWordmark({
   theme: 'dark' | 'light';
   framed?: boolean;
 }) {
+  const src = theme === 'light' ? WASEL_FULL_LIGHT_SRC : WASEL_FULL_DARK_SRC;
+
   return (
     <span
       aria-label="Wasel"
       style={{ display: 'inline-flex', alignItems: 'center', lineHeight: 0 }}
     >
       <BrandImage
-        src={WASEL_FULL_SRC}
-        srcSet={WASEL_FULL_SRCSET}
+        src={src}
         alt="Wasel"
         size={size}
         ratio={WASEL_FULL_RATIO}
