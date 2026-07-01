@@ -47,7 +47,8 @@ export class CliQGateway {
                 mismatch |= expectedSignature.charCodeAt(i) ^ signature.charCodeAt(i);
             }
             signatureValid = mismatch === 0;
-        } else {
+        }
+        else {
             signatureValid = false;
         }
         return { valid: signatureValid, status: signatureValid ? 'verified' : 'invalid_signature' };

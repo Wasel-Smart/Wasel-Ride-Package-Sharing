@@ -12,8 +12,8 @@ const PRECACHE_URLS = [
   '/apple-touch-icon.png',
   '/icon-192.png',
   '/icon-512.png',
-  '/brand/Wasel June.png',
-  '/brand/wasel-w-mark.png',
+  '/brand/Wasel June.jpeg',
+  '/brand/wasel-w-mark.jpeg',
 ];
 
 self.addEventListener('install', (event) => {

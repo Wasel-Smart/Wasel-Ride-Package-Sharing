@@ -1,1 +1,2 @@
-export * from './index.ts';
+export * from './ride-schemas.ts';
+export * from './payment-schemas.ts';

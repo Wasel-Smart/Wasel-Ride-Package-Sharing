@@ -93,3 +93,14 @@ export class DatabaseError extends AppError {
         });
     }
 }
+export class InternalError extends AppError {
+    constructor(message = 'Internal server error', cause) {
+        super({
+            message,
+            statusCode: 500,
+            code: 'INTERNAL_ERROR',
+            isOperational: false,
+            cause,
+        });
+    }
+}

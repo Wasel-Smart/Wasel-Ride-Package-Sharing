@@ -9,12 +9,12 @@ interface WaselLogoProps {
   framed?: boolean;
 }
 
-const WASEL_FULL_SRC = '/brand/Wasel June.png';
+const WASEL_FULL_SRC = '/brand/Wasel June.jpeg';
 const WASEL_FULL_SRCSET =
-  '/brand/Wasel June.png 512w';
+  '/brand/Wasel June.jpeg 512w';
 const WASEL_FULL_RATIO = 1005 / 316;
 
-const WASEL_W_SRC = '/brand/wasel-w-mark.png';
+const WASEL_W_SRC = '/brand/wasel-w-mark.jpeg';
 const WASEL_W_RATIO = 400 / 316;
 
 function getImageFilter(theme: 'dark' | 'light', framed: boolean) {

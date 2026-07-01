@@ -1,30 +1,109 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" width="512" height="512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" width="512" height="512" role="img" aria-labelledby="wasel-icon-title">
+  <title id="wasel-icon-title">Wasel app icon</title>
   <defs>
 
-    <linearGradient id="icon-route" x1="22" y1="76" x2="480" y2="205" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#1478F2"/>
-      <stop offset="0.46" stop-color="#19BCE4"/>
-      <stop offset="1" stop-color="#38CE62"/>
+    <linearGradient id="icon-left" x1="74" y1="102" x2="374" y2="260" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1EA1FF"/>
+      <stop offset="0.48" stop-color="#55E9FF"/>
+      <stop offset="1" stop-color="#1EA1FF"/>
     </linearGradient>
-    <filter id="icon-shadow" x="-8%" y="-16%" width="116%" height="132%" color-interpolation-filters="sRGB">
-      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#06133F" flood-opacity="0.14"/>
+    <linearGradient id="icon-center" x1="338" y1="78" x2="456" y2="278" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF6A1F"/>
+      <stop offset="0.54" stop-color="#FFB23A"/>
+      <stop offset="1" stop-color="#FF6A1F"/>
+    </linearGradient>
+    <linearGradient id="icon-right" x1="398" y1="260" x2="646" y2="102" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2FEA7A"/>
+      <stop offset="0.52" stop-color="#7AF5B2"/>
+      <stop offset="1" stop-color="#2FEA7A"/>
+    </linearGradient>
+    <radialGradient id="icon-hub" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(360 150) rotate(90) scale(68)">
+      <stop offset="0" stop-color="#FFF7B1"/>
+      <stop offset="0.42" stop-color="#FFB23A"/>
+      <stop offset="1" stop-color="#FF6A1F"/>
+    </radialGradient>
+    <filter id="icon-glow-blue" x="-28%" y="-45%" width="156%" height="190%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#1EA1FF" flood-opacity="0.38"/>
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#03101D" flood-opacity="0.18"/>
     </filter>
-    <radialGradient id="icon-glow-a" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(132 118) rotate(45) scale(260)">
-      <stop stop-color="#1EA1FF" stop-opacity="0.42"/>
+    <filter id="icon-glow-amber" x="-34%" y="-34%" width="168%" height="178%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="13" flood-color="#FFB23A" flood-opacity="0.4"/>
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#261001" flood-opacity="0.16"/>
+    </filter>
+    <filter id="icon-glow-green" x="-28%" y="-45%" width="156%" height="190%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#2FEA7A" flood-opacity="0.38"/>
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#03150D" flood-opacity="0.16"/>
+    </filter>
+    <filter id="icon-dot-glow" x="-80%" y="-80%" width="260%" height="260%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="#55E9FF" flood-opacity="0.5"/>
+    </filter>
+    <radialGradient id="icon-glow-a" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(118 120) rotate(45) scale(310)">
+      <stop stop-color="#1EA1FF" stop-opacity="0.36"/>
       <stop offset="1" stop-color="#1EA1FF" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="icon-glow-b" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(382 386) rotate(45) scale(260)">
-      <stop stop-color="#38CE62" stop-opacity="0.34"/>
-      <stop offset="1" stop-color="#38CE62" stop-opacity="0"/>
+    <radialGradient id="icon-glow-b" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(388 386) rotate(45) scale(300)">
+      <stop stop-color="#2FEA7A" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#2FEA7A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="icon-glow-c" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(260 196) rotate(45) scale(240)">
+      <stop stop-color="#FFB23A" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#FFB23A" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <rect width="512" height="512" rx="112" fill="#040C18"/>
   <rect width="512" height="512" rx="112" fill="url(#icon-glow-a)"/>
   <rect width="512" height="512" rx="112" fill="url(#icon-glow-b)"/>
-  <g transform="translate(91 178.2) scale(0.66)">
+  <rect width="512" height="512" rx="112" fill="url(#icon-glow-c)"/>
+  <g transform="translate(32.80000000000001 171) scale(0.62)">
 
-    <g filter="url(#icon-shadow)">
-      <path d="M44 76C78 136 91 232 149 232C191 232 202 164 225 111C239 80 263 80 277 111C300 164 311 232 353 232C411 232 424 136 458 76" fill="none" stroke="url(#icon-route)" stroke-width="31" stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M145 238L360 150L575 238" stroke="#55E9FF" stroke-width="2" opacity="0.22"/>
+      <path d="M126 92L360 150L594 92" stroke="#2FEA7A" stroke-width="2" opacity="0.18"/>
+      <path d="M360 150V264" stroke="#FFB23A" stroke-width="2" opacity="0.22"/>
+      <path d="M104 76C43 119 32 225 91 258C154 293 235 252 279 190C311 145 338 124 369 146" stroke="url(#icon-left)" stroke-width="48" filter="url(#icon-glow-blue)"/>
+      <path d="M104 76C43 119 32 225 91 258C154 293 235 252 279 190C311 145 338 124 369 146" stroke="#55E9FF" stroke-width="11" opacity="0.52"/>
+      <path d="M351 146C382 124 409 145 441 190C485 252 566 293 629 258C688 225 677 119 616 76" stroke="url(#icon-right)" stroke-width="48" filter="url(#icon-glow-green)"/>
+      <path d="M351 146C382 124 409 145 441 190C485 252 566 293 629 258C688 225 677 119 616 76" stroke="#7AF5B2" stroke-width="11" opacity="0.5"/>
+      <path d="M370 70C311 76 276 117 281 166C287 225 350 247 395 219C434 195 433 141 392 132C358 124 334 147 336 177C339 213 382 231 421 207C466 180 473 108 430 78C396 54 338 60 308 96" stroke="url(#icon-center)" stroke-width="50" filter="url(#icon-glow-amber)"/>
+      <path d="M421 207C427 249 398 276 342 282" stroke="url(#icon-center)" stroke-width="50" filter="url(#icon-glow-amber)"/>
+      <path d="M370 70C311 76 276 117 281 166C287 225 350 247 395 219C434 195 433 141 392 132C358 124 334 147 336 177C339 213 382 231 421 207C466 180 473 108 430 78C396 54 338 60 308 96" stroke="#FFD775" stroke-width="12" opacity="0.55"/>
+      <path d="M421 207C427 249 398 276 342 282" stroke="#FFD775" stroke-width="12" opacity="0.52"/>
+    </g>
+
+    <g filter="url(#icon-dot-glow)">
+      <circle cx="104" cy="76" r="17" fill="#55E9FF" opacity="0.24"/>
+      <circle cx="104" cy="76" r="10" fill="#55E9FF"/>
+      <circle cx="101" cy="73" r="4" fill="#FFFFFF" opacity="0.74"/>
+    </g>
+
+    <g filter="url(#icon-dot-glow)">
+      <circle cx="145" cy="238" r="17" fill="#55E9FF" opacity="0.24"/>
+      <circle cx="145" cy="238" r="10" fill="#55E9FF"/>
+      <circle cx="142" cy="235" r="4" fill="#FFFFFF" opacity="0.74"/>
+    </g>
+
+    <g filter="url(#icon-dot-glow)">
+      <circle cx="342" cy="282" r="17" fill="#FFB23A" opacity="0.24"/>
+      <circle cx="342" cy="282" r="10" fill="#FFB23A"/>
+      <circle cx="339" cy="279" r="4" fill="#FFFFFF" opacity="0.74"/>
+    </g>
+
+    <g filter="url(#icon-dot-glow)">
+      <circle cx="360" cy="150" r="17" fill="url(#icon-hub)" opacity="0.24"/>
+      <circle cx="360" cy="150" r="10" fill="url(#icon-hub)"/>
+      <circle cx="357" cy="147" r="4" fill="#FFFFFF" opacity="0.74"/>
+    </g>
+
+    <g filter="url(#icon-dot-glow)">
+      <circle cx="575" cy="238" r="17" fill="#7AF5B2" opacity="0.24"/>
+      <circle cx="575" cy="238" r="10" fill="#7AF5B2"/>
+      <circle cx="572" cy="235" r="4" fill="#FFFFFF" opacity="0.74"/>
+    </g>
+
+    <g filter="url(#icon-dot-glow)">
+      <circle cx="616" cy="76" r="17" fill="#7AF5B2" opacity="0.24"/>
+      <circle cx="616" cy="76" r="10" fill="#7AF5B2"/>
+      <circle cx="613" cy="73" r="4" fill="#FFFFFF" opacity="0.74"/>
     </g>
   </g>
 </svg>
