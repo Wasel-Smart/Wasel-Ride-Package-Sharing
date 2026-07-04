@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { AlertTriangle, Brain, Network, ShieldCheck, Truck } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { AlertTriangle, Brain, Network, ShieldCheck, Truck, Wifi, WifiOff } from 'lucide-react';
 import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -12,6 +12,8 @@ import { buildDriverRoutePlan, getMarketplaceNodes } from '../../config/wasel-mo
 export default function DriverPage() {
   const { user } = useLocalAuth();
   const navigate = useIframeSafeNavigate();
+
+  const [offlineMode, setOfflineMode] = useState(false);
 
   const membership = useMemo(() => getMovementMembershipSnapshot(), []);
   const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(1, 4), []);
@@ -254,23 +256,49 @@ export default function DriverPage() {
                   : 'All checks are complete. You can go live now.'}
               </div>
             </div>
-            <div
-              style={{
-                height: 10,
-                background: C.elevated,
-                borderRadius: R.full,
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  width: `${readinessPercent}%`,
-                  height: '100%',
-                  background: `linear-gradient(90deg, ${DS.green}, ${DS.cyan})`,
-                }}
-              />
-            </div>
-            <div style={{ display: 'grid', gap: 10 }}>
+<div
+               style={{
+                 height: 10,
+                 background: C.elevated,
+                 borderRadius: R.full,
+                 overflow: 'hidden',
+               }}
+             >
+               <div
+                 style={{
+                   width: `${readinessPercent}%`,
+                   height: '100%',
+                   background: `linear-gradient(90deg, ${DS.green}, ${DS.cyan})`,
+                 }}
+               />
+             </div>
+
+             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16 }}>
+               <button
+                 onClick={() => setOfflineMode(!offlineMode)}
+                 style={{
+                   display: 'flex',
+                   alignItems: 'center',
+                   gap: 8,
+                   padding: '8px 14px',
+                   borderRadius: 8,
+                   border: `1px solid ${DS.border}`,
+                   background: offlineMode ? `${DS.gold}16` : C.elevated,
+                   color: offlineMode ? DS.gold : C.text,
+                   fontSize: '0.78rem',
+                   fontWeight: 700,
+                   cursor: 'pointer',
+                 }}
+               >
+                 {offlineMode ? <WifiOff size={14} /> : <Wifi size={14} />}
+                 {offlineMode ? 'Offline Mode' : 'Online Mode'}
+               </button>
+               <span style={{ color: DS.muted, fontSize: '0.72rem' }}>
+                 {offlineMode ? 'Local sync only' : 'Live updates active'}
+               </span>
+             </div>
+
+             <div style={{ display: 'grid', gap: 10 }}>
               {(pendingSteps.length > 0 ? pendingSteps : readiness.steps.slice(0, 3)).map(step => (
                 <div
                   key={step.id}

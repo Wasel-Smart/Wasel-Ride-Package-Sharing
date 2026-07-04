@@ -643,6 +643,60 @@ export default function SettingsPage() {
     ? 'One active session on this device - Supabase'
     : 'Sign in to view active sessions';
 
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [savedSettings, setSavedSettings] = useState<string | null>(null);
+
+  const resetToDefaults = () => {
+    if (
+      !confirm(
+        'Reset all settings to their defaults? This will restore the original configuration for notifications, privacy, and display.',
+      )
+    )
+      return;
+
+    setPrivacy(defaultAccountSettings.privacy);
+    setDisplay({
+      ...defaultAccountSettings.display,
+      language,
+      direction: ar ? 'rtl' : 'ltr',
+    });
+    setNotifs({
+      inApp: true,
+      push: true,
+      email: true,
+      sms: true,
+      whatsapp: false,
+      tripUpdates: true,
+      bookingRequests: true,
+      messages: true,
+      promotions: false,
+      prayerReminders: true,
+      criticalAlerts: true,
+      preferredLanguage: language === 'ar' ? 'ar' : 'en',
+    });
+
+    void updateAccountSettings(user?.id ?? null, {
+      privacy: defaultAccountSettings.privacy,
+      display: {
+        ...defaultAccountSettings.display,
+        language,
+        direction: ar ? 'rtl' : 'ltr',
+      },
+    });
+
+    setSavedSettings('All settings reset to defaults');
+    setShowSaveConfirm(true);
+    setTimeout(() => setShowSaveConfirm(false), 2000);
+  };
+
+  useEffect(() => {
+    if (settingsHydratedRef.current) {
+      setSavedSettings('Settings saved automatically');
+      setShowSaveConfirm(true);
+      setTimeout(() => setShowSaveConfirm(false), 1500);
+    }
+  }, [privacy, display, notifs]);
+
   return (
     <PageShell maxWidth={760} dir={ar ? 'rtl' : 'ltr'}>
       <div style={{ paddingInline: SPACE[4] }}>
@@ -844,6 +898,35 @@ export default function SettingsPage() {
             value={privacy.dataAnalytics}
             onChange={value => setPrivacy(previous => ({ ...previous, dataAnalytics: value }))}
           />
+          <div style={{ padding: '14px 18px' }}>
+            <button
+              onClick={resetToDefaults}
+              style={{
+                padding: '8px 14px',
+                borderRadius: 8,
+                border: `1px solid ${C.error}33`,
+                background: 'transparent',
+                color: C.error,
+                fontSize: TYPE.size.sm,
+                fontFamily: F,
+                cursor: 'pointer',
+              }}
+            >
+              Reset to Defaults
+            </button>
+            {showSaveConfirm && savedSettings && (
+              <span
+                style={{
+                  marginLeft: 12,
+                  color: C.success,
+                  fontSize: TYPE.size.sm,
+                  fontFamily: F,
+                }}
+              >
+                ✓ {savedSettings}
+              </span>
+            )}
+          </div>
         </Section>
 
         <div ref={securityRef}>

@@ -29,15 +29,42 @@ import {
 } from './HomePageSections';
 
 export function HomePage() {
-  const { language, dir } = useLanguage();
+  const { language, dir, setLanguage } = useLanguage();
   const { user } = useAuth();
   const navigate = useIframeSafeNavigate();
   const { stats: liveStats, loading } = useLiveUserStats();
   const [tripMode, setTripMode] = useState<TripMode>('one-way');
+  const [cookieConsented, setCookieConsented] = useState(false);
 
   const ar = language === 'ar';
   const svc = CurrencyService.getInstance();
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
+
+  useEffect(() => {
+    const savedCookieConsent = localStorage.getItem('wasel-cookie-consent');
+    if (savedCookieConsent) {
+      setCookieConsented(true);
+    }
+
+    const detectedLang = detectBrowserLanguage();
+    if (!savedCookieConsent && detectedLang && detectedLang !== language) {
+      setLanguage(detectedLang);
+    }
+  }, [language, setLanguage]);
+
+  const detectBrowserLanguage = (): string | null => {
+    if (typeof navigator === 'undefined') return null;
+    const browserLang = navigator.language.split('-')[0];
+    if (browserLang === 'ar' || browserLang === 'en') {
+      return browserLang;
+    }
+    return null;
+  };
+
+  const acceptCookies = () => {
+    localStorage.setItem('wasel-cookie-consent', 'accepted');
+    setCookieConsented(true);
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'performance' in window) {
@@ -203,6 +230,47 @@ return (
     <WaselErrorBoundary>
       <div className="wasel-home-shell" dir={dir} style={{ color: C.text, fontFamily: F }}>
         <HomePageStyles />
+
+        {!cookieConsented && (
+          <div
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: 'rgba(0, 0, 0, 0.9)',
+              color: '#fff',
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              zIndex: 100,
+              flexWrap: 'wrap',
+            }}
+          >
+            <span style={{ fontSize: '0.82rem', fontFamily: F }}>
+              {ar
+                ? 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك. بقبولك، أنت توافق على شروط الخصوصية.'
+                : 'We use cookies to improve your experience. By accepting, you agree to our privacy policy.'}
+            </span>
+            <button
+              onClick={acceptCookies}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 8,
+                background: C.cyan,
+                color: '#000',
+                border: 'none',
+                fontWeight: 700,
+                fontFamily: F,
+                cursor: 'pointer',
+              }}
+            >
+              {ar ? 'قبول' : 'Accept'}
+            </button>
+          </div>
+        )}
 
         <div className="wasel-home-container relative z-10">
           <HomeHeroSection
