@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { loadConfig } from '@wasel/backend-shared/config';
-import { authenticate } from './middleware/auth.ts';
 import { errorHandler } from './middleware/errors.ts';
 import tripRoutes from './routes/v1/trips.ts';
 import packageRoutes from './routes/v1/packages.ts';
@@ -42,8 +41,6 @@ function createApp(): express.Application {
   app.get('/ready', (_req: express.Request, res: express.Response) => {
     res.json({ status: 'ready', timestamp: new Date().toISOString() });
   });
-
-  app.use('/v1', authenticate);
 
   app.use('/v1/trips', tripRoutes);
   app.use('/v1/packages', packageRoutes);

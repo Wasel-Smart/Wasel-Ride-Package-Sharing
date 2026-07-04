@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { authenticate, requireRole } from '../../middleware/auth.ts';
+import { getDb } from '@wasel/backend-shared/db';
 import { tripRepository } from '../../repositories/tripRepository.ts';
 import { packageRepository } from '../../repositories/packageRepository.ts';
 import { ratingRepository } from '../../repositories/ratingRepository.ts';
@@ -9,6 +10,7 @@ import { notificationGateway } from '../../services/notificationGateway.ts';
 import { z } from 'zod';
 
 const router = Router();
+const db = getDb();
 
 const AdminQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
@@ -39,7 +41,6 @@ router.get('/users', authenticate, requireRole(['admin']), async (req: Request, 
   try {
     const { page = 1, limit = 20 } = req.query as { page?: number; limit?: number };
     const offset = (page - 1) * limit;
-    const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
 
     const countResult = await db.unsafe('SELECT COUNT(*) as total FROM users');
     const total = Number(countResult[0]?.total || 0);
@@ -58,7 +59,6 @@ router.get('/users', authenticate, requireRole(['admin']), async (req: Request, 
 router.patch('/users/:id/status', authenticate, requireRole(['admin']), async (req: Request, res: Response) => {
   try {
     const { status } = req.body;
-    const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
     const result = await db.unsafe(
       'UPDATE users SET is_active = $1, updated_at = NOW() WHERE id = $2 RETURNING id, email, full_name, role, is_active',
       [status === 'active', req.params.id]
@@ -74,7 +74,6 @@ router.patch('/users/:id/status', authenticate, requireRole(['admin']), async (r
 
 router.get('/payments/reconciliation', authenticate, requireRole(['admin', 'operator']), async (req: Request, res: Response) => {
   try {
-    const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
     const { page = 1, limit = 20 } = req.query as { page?: number; limit?: number };
     const offset = (page - 1) * limit;
 
@@ -100,7 +99,6 @@ router.get('/payments/reconciliation', authenticate, requireRole(['admin', 'oper
 
 router.get('/disputes', authenticate, requireRole(['admin', 'operator']), async (req: Request, res: Response) => {
   try {
-    const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
     const { page = 1, limit = 20 } = req.query as { page?: number; limit?: number };
     const offset = (page - 1) * limit;
 
@@ -126,7 +124,6 @@ router.get('/disputes', authenticate, requireRole(['admin', 'operator']), async 
 
 router.patch('/disputes/:id/resolve', authenticate, requireRole(['admin', 'operator']), async (req: Request, res: Response) => {
   try {
-    const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
     const { resolution, action } = req.body;
     const userId = (req as unknown as { user: { id: string } }).user.id;
 
@@ -162,8 +159,6 @@ router.patch('/rides/:id/dispatch', authenticate, requireRole(['admin', 'operato
 
 router.get('/dashboard/metrics', authenticate, requireRole(['admin', 'operator']), async (req: Request, res: Response) => {
   try {
-    const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
-
     const [
       activeTrips,
       totalPackages,

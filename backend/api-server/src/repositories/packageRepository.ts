@@ -111,6 +111,14 @@ export class PackageRepository {
     return result as unknown as PackageRow[];
   }
 
+  async findPackagesByCarrier(carrierId: string): Promise<PackageRow[]> {
+    const result = await this.db.unsafe(
+      `SELECT * FROM packages WHERE carrier_id = $1 AND status IN ('matched', 'picked_up', 'in_transit') ORDER BY created_at DESC`,
+      [carrierId]
+    );
+    return result as unknown as PackageRow[];
+  }
+
   async findPackagesByStatus(status: string): Promise<PackageRow[]> {
     const result = await this.db.unsafe(
       'SELECT * FROM packages WHERE status = $1 ORDER BY created_at DESC',

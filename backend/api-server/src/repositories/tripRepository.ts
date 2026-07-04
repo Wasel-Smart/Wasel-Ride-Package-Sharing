@@ -95,6 +95,39 @@ export interface CreateBookingInput {
 export class TripRepository {
   private db = getDb();
 
+  async findTripsByDriver(
+    driverId: string,
+    filters: { status?: string; page: number; limit: number }
+  ): Promise<{ data: TripRow[]; meta: { total: number; page: number; limit: number } }> {
+    const { status, page, limit } = filters;
+    const offset = (page - 1) * limit;
+    const params: unknown[] = [driverId];
+    let where = 'WHERE t.driver_id = $1';
+    if (status) {
+      params.push(status);
+      where += ` AND t.status = $${params.length}`;
+    }
+    const countResult = await this.db.unsafe(
+      `SELECT COUNT(*) as total FROM trips t ${where}`,
+      params as any[]
+    );
+    const total = Number(countResult[0]?.total || 0);
+    params.push(limit, offset);
+    const data = await this.db.unsafe(
+      `SELECT t.*, u.full_name as driver_name, u.avatar_url as driver_avatar
+       FROM trips t
+       LEFT JOIN users u ON t.driver_id = u.id
+       ${where}
+       ORDER BY t.departure_time DESC
+       LIMIT $${params.length - 1} OFFSET $${params.length}`,
+      params as any[]
+    );
+    return {
+      data: data as unknown as TripRow[],
+      meta: { total, page, limit },
+    };
+  }
+
   async findAvailableTrips(filters: {
     originCity?: string;
     destinationCity?: string;

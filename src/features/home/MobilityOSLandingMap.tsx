@@ -34,6 +34,8 @@ interface MobilityOSLandingMapProps {
 const FLOW = C.cyan;
 const GHOST = C.cyanDark;
 const PULSE = C.blueLight;
+const BUS_GREEN = C.green;          // #47D69E — bus movement colour
+const BUS_GREEN_DIM = C.greenDim;   // rgba(71,214,158,0.12)
 
 const BASE_ROUTES: readonly Corridor[] = [
   { id: 'amman-aqaba', from: 0, to: 1, distanceKm: 335 },
@@ -554,11 +556,15 @@ export function MobilityOSLandingMap({
         for (let i = 0; i < riderCount; i += 1) {
           const t = (time * 0.000055 * (1 + i * 0.08) + i / riderCount + index * 0.06) % 1;
           const point = pointOnCurve(from, control, to, t);
+          // Every 3rd particle is a bus — drawn in green, slightly larger
+          const isBus = i % 3 === 0;
           ctx.beginPath();
-          ctx.arc(point.x, point.y, isFocused ? 2.9 : 2.4, 0, Math.PI * 2);
-          ctx.fillStyle = isFocused ? MAP_LAYER.routeNameActive : MAP_LAYER.routeName;
-          ctx.shadowBlur = isFocused ? 18 : 14;
-          ctx.shadowColor = withAlpha(isFocused ? focusStroke : FLOW, isFocused ? 0.8 : 0.66);
+          ctx.arc(point.x, point.y, isBus ? (isFocused ? 4.2 : 3.6) : (isFocused ? 2.9 : 2.4), 0, Math.PI * 2);
+          ctx.fillStyle = isBus ? BUS_GREEN : (isFocused ? MAP_LAYER.routeNameActive : MAP_LAYER.routeName);
+          ctx.shadowBlur = isBus ? (isFocused ? 22 : 16) : (isFocused ? 18 : 14);
+          ctx.shadowColor = isBus
+            ? withAlpha(BUS_GREEN, isFocused ? 0.9 : 0.72)
+            : withAlpha(isFocused ? focusStroke : FLOW, isFocused ? 0.8 : 0.66);
           ctx.fill();
           ctx.shadowBlur = 0;
         }

@@ -49,15 +49,7 @@ router.post('/', authenticate, validate(CreateRatingSchema), async (req: Request
 
 router.get('/trip/:tripId', authenticate, async (req: Request, res: Response) => {
   try {
-    const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
-    const ratings = await db.unsafe(
-      `SELECT r.*, u.full_name as rater_name
-       FROM reviews r
-       JOIN users u ON r.reviewer_id = u.id
-       WHERE r.trip_id = $1
-       ORDER BY r.created_at DESC`,
-      [req.params.tripId]
-    );
+    const ratings = await ratingRepository.findRatingsByTrip(req.params.tripId);
     res.json({ success: true, data: ratings });
   } catch (error) {
     res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch ratings' } });

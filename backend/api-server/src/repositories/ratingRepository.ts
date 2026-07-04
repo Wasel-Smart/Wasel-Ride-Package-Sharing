@@ -49,7 +49,7 @@ export class RatingRepository {
         `INSERT INTO reviews (reviewer_id, reviewee_id, trip_id, rating, review, driver_rating)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id, reviewer_id as rater_id, reviewee_id as target_id,
-                   'driver' as target_type, trip_id, rating as score,
+                   $7::text as target_type, trip_id, rating as score,
                    ARRAY[]::text[] as tags, review as comment,
                    'published' as status, created_at`,
         [
@@ -59,6 +59,7 @@ export class RatingRepository {
           input.score,
           input.comment || null,
           input.score,
+          input.targetType,
         ]
       );
       return result[0] as unknown as RatingRow;
@@ -66,6 +67,21 @@ export class RatingRepository {
       logger.error({ error, input }, 'Failed to create rating');
       throw new InternalError('Failed to create rating', error as Error);
     }
+  }
+
+  async findRatingsByTrip(tripId: string): Promise<(RatingRow & { rater_name: string })[]> {
+    const data = await this.db.unsafe(
+      `SELECT r.id, r.reviewer_id as rater_id, r.reviewee_id as target_id,
+              'driver' as target_type, r.trip_id, r.rating as score,
+              ARRAY[]::text[] as tags, r.review as comment,
+              'published' as status, r.created_at, u.full_name as rater_name
+       FROM reviews r
+       JOIN users u ON r.reviewer_id = u.id
+       WHERE r.trip_id = $1
+       ORDER BY r.created_at DESC`,
+      [tripId]
+    );
+    return data as unknown as (RatingRow & { rater_name: string })[];
   }
 
   async findRatingsForUser(userId: string, page: number, limit: number): Promise<{ data: RatingRow[]; meta: { total: number; page: number; limit: number } }> {
