@@ -90,9 +90,19 @@ function createApp(): express.Application {
     }),
   );
 
-  app.get('/health', async () => ({ status: 'ok' }));
+  app.get('/health', async (_req, res) => {
+    const redisHealthy = await redis.ping().then(() => true).catch(() => false);
+    const dbHealthy = await PostgresPool.connection`SELECT 1`.then(() => true).catch(() => false);
+    res.json({ status: dbHealthy ? 'ok' : 'unhealthy', timestamp: new Date().toISOString(), checks: { redis: redisHealthy, database: dbHealthy } });
+  });
 
-  app.get('/ready', async () => ({ status: 'ready' }));
+  app.get('/ready', async (_req, res) => {
+    const ready = await Promise.all([
+      redis.ping().then(() => true).catch(() => false),
+      PostgresPool.connection`SELECT 1`.then(() => true).catch(() => false),
+    ]).then(results => results.every(Boolean));
+    res.json({ status: ready ? 'ready' : 'not_ready' });
+  });
 
   app.get('/metrics', async () => ({
     uptime: process.uptime(),
