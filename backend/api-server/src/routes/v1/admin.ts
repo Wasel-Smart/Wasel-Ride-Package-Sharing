@@ -150,7 +150,10 @@ router.patch('/disputes/:id/resolve', authenticate, requireRole(['admin', 'opera
 router.patch('/rides/:id/dispatch', authenticate, requireRole(['admin', 'operator']), async (req: Request, res: Response) => {
   try {
     const { driverId } = req.body;
-    const trip = await tripRepository.updateTripStatus(req.params.id, driverId, 'in_progress');
+    if (typeof driverId !== 'string' || driverId.length === 0) {
+      return res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'driverId is required' } });
+    }
+    const trip = await tripRepository.updateTripStatus(req.params.id, 'in_progress', driverId);
     res.json({ success: true, data: trip });
   } catch (error) {
     res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: (error as Error).message } });

@@ -71,7 +71,7 @@ export class TripService {
     return trip;
   }
 
-  async bookTrip(tripId: string, passengerId: string, seatsBooked: number, pricePaid: number) {
+  async bookTrip(tripId: string, passengerId: string, seatsBooked: number, expectedPricePaid?: number) {
     if (seatsBooked < 1) {
       throw new ValidationError('At least one seat must be booked');
     }
@@ -80,7 +80,7 @@ export class TripService {
       tripId,
       passengerId,
       seatsBooked,
-      pricePaid,
+      expectedPricePaid,
     });
 
     return booking;

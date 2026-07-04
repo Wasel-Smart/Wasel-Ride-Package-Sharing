@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { ratingRepository } from '../repositories/ratingRepository.ts';
 import { ValidationError } from '@wasel/backend-shared/errors/app-errors';
 export class RatingService {
@@ -23,3 +24,6 @@ export class RatingService {
     }
 }
 export const ratingService = new RatingService();
+=======
+export * from './ratingService.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

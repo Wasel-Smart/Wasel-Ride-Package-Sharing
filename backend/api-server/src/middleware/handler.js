@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 export function notFoundHandler(_req, res) {
     res.status(404).json({
         success: false,
@@ -16,3 +17,6 @@ export function errorHandler(err, req, res, _next) {
         metadata: { requestId, timestamp: new Date().toISOString(), version: 'v1', traceId: req.headers['x-trace-id'] ?? undefined },
     });
 }
+=======
+export * from './handler.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

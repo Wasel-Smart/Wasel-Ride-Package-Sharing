@@ -93,6 +93,7 @@ export class DatabaseError extends AppError {
         });
     }
 }
+<<<<<<< HEAD
 export class InternalError extends AppError {
     constructor(message = 'Internal server error', cause) {
         super({
@@ -104,3 +105,5 @@ export class InternalError extends AppError {
         });
     }
 }
+=======
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

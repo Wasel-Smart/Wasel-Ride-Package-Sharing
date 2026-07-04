@@ -12,8 +12,17 @@ const PRECACHE_URLS = [
   '/apple-touch-icon.png',
   '/icon-192.png',
   '/icon-512.png',
-  '/brand/Wasel June.jpeg',
-  '/brand/wasel-w-mark.jpeg',
+  '/brand/wasel-logo.svg',
+  '/brand/wasel-logo-light.svg',
+  '/brand/wasel-mark.svg',
+  '/brand/wasel-w-mark.png',
+  '/brand/wasellogo-64.png',
+  '/brand/wasellogo-96.png',
+  '/brand/wasellogo-160.png',
+  '/brand/wasellogo-280.png',
+  '/brand/wasellogo-512.png',
+  '/brand/wasel-logo-transparent.png',
+  '/brand/wasel-logo-dark.png',
 ];
 
 self.addEventListener('install', (event) => {

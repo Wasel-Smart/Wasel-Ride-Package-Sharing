@@ -48,6 +48,7 @@ export function PackageReturnsPanel({
           </div>
         ))}
       </div>
+
       {createError && (
         <div
           style={{
@@ -69,6 +70,7 @@ export function PackageReturnsPanel({
           <span>{createError}</span>
         </div>
       )}
+
       <button
         disabled={busyState === 'creating'}
         onClick={onCreateReturn}

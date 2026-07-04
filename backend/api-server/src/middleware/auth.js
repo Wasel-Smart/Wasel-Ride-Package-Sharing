@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { UnauthorizedError, ForbiddenError } from '@wasel/backend-shared/errors/app-errors';
 import jwt from 'jsonwebtoken';
 import { loadConfig } from '@wasel/backend-shared/config';
@@ -41,3 +42,6 @@ export function requireRole(allowedRoles) {
         next();
     };
 }
+=======
+export * from './auth.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

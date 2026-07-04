@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { getRedis } from '@wasel/backend-shared/redis';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { loadConfig } from '@wasel/backend-shared/config';
@@ -93,3 +94,6 @@ export class NotificationGateway {
     }
 }
 export const notificationGateway = new NotificationGateway();
+=======
+export * from './notificationGateway.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

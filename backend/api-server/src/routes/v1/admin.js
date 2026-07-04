@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Router } from 'express';
 import { authenticate, requireRole } from '../../middleware/auth.ts';
 import { tripRepository } from '../../repositories/tripRepository.ts';
@@ -149,3 +150,6 @@ router.get('/dashboard/metrics', authenticate, requireRole(['admin', 'operator']
     }
 });
 export default router;
+=======
+export * from './admin.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

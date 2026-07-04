@@ -85,7 +85,7 @@ export interface CreateBookingInput {
   tripId: string;
   passengerId: string;
   seatsBooked: number;
-  pricePaid: number;
+  expectedPricePaid?: number;
   pickupCity?: string;
   pickupCoords?: { lat: number; lng: number };
   dropoffCity?: string;
@@ -223,23 +223,6 @@ export class TripRepository {
 
   async createBooking(input: CreateBookingInput): Promise<TripBookingRow> {
     try {
-      const tripResult = await this.db.unsafe(
-        'SELECT available_seats, status FROM trips WHERE id = $1 FOR UPDATE',
-        [input.tripId]
-      );
-
-      if (!tripResult[0]) {
-        throw new NotFoundError('Trip');
-      }
-
-      const trip = tripResult[0] as unknown as { available_seats: number; status: string };
-      if (trip.status !== 'posted' && trip.status !== 'open') {
-        throw new ValidationError('Trip is not available for booking');
-      }
-      if (trip.available_seats < input.seatsBooked) {
-        throw new ValidationError('Not enough seats available');
-      }
-
       const pkLocation = input.pickupCoords
         ? `SRID=4326;POINT(${input.pickupCoords.lng} ${input.pickupCoords.lat})`
         : null;
@@ -247,32 +230,70 @@ export class TripRepository {
         ? `SRID=4326;POINT(${input.dropoffCoords.lng} ${input.dropoffCoords.lat})`
         : null;
 
-      const bookingResult = await this.db.unsafe(
-        `INSERT INTO trip_bookings (
-          trip_id, passenger_id, seats_booked, price_paid, status,
-          pickup_location, pickup_name, dropoff_location, dropoff_name
-        ) VALUES ($1, $2, $3, $4, 'booked', $5, $6, $7, $8)
-        RETURNING *`,
-        [
-          input.tripId,
-          input.passengerId,
-          input.seatsBooked,
-          input.pricePaid,
-          pkLocation,
-          input.pickupCity || null,
-          doLocation,
-          input.dropoffCity || null,
-        ]
-      );
+      return await this.db.begin(async (tx) => {
+        const tripResult = await tx.unsafe(
+          'SELECT available_seats, status, price_per_seat, total_price FROM trips WHERE id = $1 FOR UPDATE',
+          [input.tripId],
+        );
 
-      await this.db.unsafe(
-        'UPDATE trips SET available_seats = available_seats - $1 WHERE id = $2',
-        [input.seatsBooked, input.tripId]
-      );
+        if (!tripResult[0]) {
+          throw new NotFoundError('Trip');
+        }
 
-      return bookingResult[0] as unknown as TripBookingRow;
+        const trip = tripResult[0] as unknown as {
+          available_seats: number;
+          status: string;
+          price_per_seat: number | string | null;
+          total_price: number | string | null;
+        };
+        if (trip.status !== 'posted' && trip.status !== 'open') {
+          throw new ValidationError('Trip is not available for booking');
+        }
+        if (trip.available_seats < input.seatsBooked) {
+          throw new ValidationError('Not enough seats available');
+        }
+
+        const unitPrice = Number(trip.price_per_seat ?? 0);
+        const totalPrice = Number(trip.total_price ?? 0);
+        const computedPrice = unitPrice > 0 ? unitPrice * input.seatsBooked : totalPrice;
+        if (!Number.isFinite(computedPrice) || computedPrice <= 0) {
+          throw new ValidationError('Trip price is not configured');
+        }
+
+        if (
+          input.expectedPricePaid !== undefined &&
+          Math.abs(input.expectedPricePaid - computedPrice) > 0.01
+        ) {
+          throw new ConflictError('Booking price changed. Refresh the trip and try again.');
+        }
+
+        const bookingResult = await tx.unsafe(
+          `INSERT INTO trip_bookings (
+            trip_id, passenger_id, seats_booked, price_paid, status,
+            pickup_location, pickup_name, dropoff_location, dropoff_name
+          ) VALUES ($1, $2, $3, $4, 'booked', $5, $6, $7, $8)
+          RETURNING *`,
+          [
+            input.tripId,
+            input.passengerId,
+            input.seatsBooked,
+            computedPrice,
+            pkLocation,
+            input.pickupCity || null,
+            doLocation,
+            input.dropoffCity || null,
+          ],
+        );
+
+        await tx.unsafe(
+          'UPDATE trips SET available_seats = available_seats - $1, updated_at = NOW() WHERE id = $2',
+          [input.seatsBooked, input.tripId],
+        );
+
+        return bookingResult[0] as unknown as TripBookingRow;
+      });
     } catch (error) {
-      if (error instanceof NotFoundError || error instanceof ValidationError) throw error;
+      if (error instanceof NotFoundError || error instanceof ValidationError || error instanceof ConflictError) throw error;
       logger.error({ error, input }, 'Failed to create booking');
       throw new InternalError('Failed to create booking', error as Error);
     }

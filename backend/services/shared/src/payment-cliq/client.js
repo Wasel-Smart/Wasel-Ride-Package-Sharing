@@ -100,7 +100,17 @@ export class CliQClient {
     }
     async generateSignature(payload, timestamp) {
         const encoder = new TextEncoder();
+<<<<<<< HEAD
         const key = await crypto.subtle.importKey('raw', encoder.encode(this.config.webhookSecret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+=======
+        const key = await crypto.subtle.importKey(
+            'raw',
+            encoder.encode(this.config.webhookSecret),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['sign'],
+        );
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf
         const signedPayload = timestamp ? `${timestamp}.${payload}` : payload;
         const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(signedPayload));
         return Array.from(new Uint8Array(signature))

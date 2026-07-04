@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { packageRepository } from '../repositories/packageRepository.ts';
 import { notificationRepository } from '../repositories/notificationRepository.ts';
 import { NotFoundError, ValidationError } from '@wasel/backend-shared/errors/app-errors';
@@ -59,3 +60,6 @@ export class PackageService {
     }
 }
 export const packageService = new PackageService();
+=======
+export * from './packageService.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

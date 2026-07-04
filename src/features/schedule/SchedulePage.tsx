@@ -317,7 +317,7 @@ export function SchedulePage() {
         <div style={{ height: 4 }} />
       </SectionCard>
 
-      {error && (
+      {error && !showForm && (
         <div
           style={{
             padding: '12px 16px',
@@ -327,6 +327,7 @@ export function SchedulePage() {
             color: C.error,
             fontSize: TYPE.size.sm,
             fontFamily: F,
+            marginBottom: 20,
           }}
         >
           {error}
@@ -624,6 +625,23 @@ export function SchedulePage() {
                 }}
               />
             </div>
+
+            {error && (
+              <div
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: R.md,
+                  background: `${C.error}14`,
+                  border: `1px solid ${C.error}30`,
+                  color: C.error,
+                  fontSize: TYPE.size.sm,
+                  fontFamily: F,
+                  marginBottom: 16,
+                }}
+              >
+                {error}
+              </div>
+            )}
 
             <button
               onClick={handleCreate}

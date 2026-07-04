@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.ts';
 import { validate } from '../../middleware/validate.ts';
@@ -56,3 +57,6 @@ router.get('/trip/:tripId', authenticate, async (req, res) => {
     }
 });
 export default router;
+=======
+export * from './ratings.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

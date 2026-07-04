@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Router } from 'express';
 import { tripService } from '../../services/tripService.ts';
 import { authenticate, requireRole } from '../../middleware/auth.ts';
@@ -88,3 +89,6 @@ router.patch('/:id/status', authenticate, async (req, res) => {
     }
 });
 export default router;
+=======
+export * from './trips.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

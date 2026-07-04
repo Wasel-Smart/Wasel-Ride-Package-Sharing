@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import jwt from 'jsonwebtoken';
 export function createJWTAuthMiddleware(secret) {
     return function authenticate(req, res, next) {
@@ -27,3 +28,6 @@ export function generateTokens(userId, role, secret, accessExpiry, refreshExpiry
     const refreshToken = jwt.sign({ sub: userId, role }, secret, { expiresIn: `${refreshExpiry}s` });
     return { accessToken, refreshToken };
 }
+=======
+export * from './jwt.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

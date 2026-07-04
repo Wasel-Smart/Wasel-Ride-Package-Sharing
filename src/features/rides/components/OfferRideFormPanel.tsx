@@ -54,6 +54,26 @@ export function OfferRideFormPanel({
   onStepChange,
   onSubmit,
 }: OfferRideFormPanelProps) {
+  const errorDisplay = formError ? (
+    <div
+      style={{
+        marginBottom: 16,
+        display: 'flex',
+        gap: 10,
+        alignItems: 'center',
+        background: `${DS.gold}12`,
+        border: `1px solid ${DS.gold}30`,
+        borderRadius: r(14),
+        padding: '12px 14px',
+        color: C.text,
+        fontSize: '0.84rem',
+      }}
+    >
+      <Shield size={16} color={DS.gold} />
+      <span>{formError}</span>
+    </div>
+  ) : null;
+
   return (
     <div
       style={{
@@ -187,26 +207,6 @@ export function OfferRideFormPanel({
         ))}
       </div>
 
-      {formError && (
-        <div
-          style={{
-            marginBottom: 18,
-            display: 'flex',
-            gap: 10,
-            alignItems: 'center',
-            background: `${DS.gold}12`,
-            border: `1px solid ${DS.gold}30`,
-            borderRadius: r(14),
-            padding: '12px 14px',
-            color: C.text,
-            fontSize: '0.84rem',
-          }}
-        >
-          <Shield size={16} color={DS.gold} />
-          <span>{formError}</span>
-        </div>
-      )}
-
       {step === 1 && (
         <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr' }}>
           <h3 style={{ color: C.text, fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>
@@ -320,6 +320,7 @@ export function OfferRideFormPanel({
               }}
             />
           </div>
+          <div style={{ gridColumn: '1/-1' }}>{errorDisplay}</div>
           <button
             data-testid="offer-ride-step-1"
             onClick={() => onStepChange(2)}
@@ -554,6 +555,7 @@ export function OfferRideFormPanel({
               </select>
             </div>
           )}
+          {errorDisplay}
           <div style={{ display: 'flex', gap: 10 }}>
             <button
               onClick={() => onStepChange(1)}
@@ -749,11 +751,12 @@ export function OfferRideFormPanel({
                     'the top corridor node'}
                   {liveSignal
                     ? `, with ${liveSignal.activeDemandAlerts} active alerts and ${liveSignal.nextWaveWindow} as the next dense departure window`
-                    : ''}
+                  : ''}
                 </>
               )}
             </div>
           </div>
+          {errorDisplay}
           <div style={{ display: 'flex', gap: 10 }}>
             <button
               onClick={() => onStepChange(2)}

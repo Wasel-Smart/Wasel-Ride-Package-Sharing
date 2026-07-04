@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Router } from 'express';
 import { authenticate, requireRole } from '../../middleware/auth.ts';
 import { validate } from '../../middleware/validate.ts';
@@ -100,3 +101,6 @@ router.get('/organizations/:id/invoices', authenticate, requireRole(['admin', 'b
     }
 });
 export default router;
+=======
+export * from './corporate.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

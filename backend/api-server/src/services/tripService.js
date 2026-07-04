@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { tripRepository } from '../repositories/tripRepository.ts';
 import { NotFoundError, ValidationError, } from '@wasel/backend-shared/errors/app-errors';
 export class TripService {
@@ -83,3 +84,6 @@ export class TripService {
     }
 }
 export const tripService = new TripService();
+=======
+export * from './tripService.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

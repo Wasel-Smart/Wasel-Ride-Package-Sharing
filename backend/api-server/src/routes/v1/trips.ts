@@ -31,7 +31,7 @@ const SearchTripsSchema = z.object({
 
 const BookTripSchema = z.object({
   seats: z.number().int().min(1),
-  pricePaid: z.number().positive(),
+  pricePaid: z.number().positive().optional(),
 });
 
 router.get('/search', validateQuery(SearchTripsSchema), async (req: Request, res: Response) => {

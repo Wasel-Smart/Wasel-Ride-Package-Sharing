@@ -63,6 +63,12 @@ export function loadConfig(): AppConfig {
   const healthCheckRedis = process.env.HEALTH_CHECK_REDIS !== 'false';
   const healthCheckExternal = process.env.HEALTH_CHECK_EXTERNAL === 'true';
 
+  const jwtSecret = process.env.JWT_SECRET;
+  const isProduction = nodeEnv === 'production';
+  if (isProduction && (!jwtSecret || jwtSecret.length < 32 || jwtSecret === 'default-secret')) {
+    throw new Error('JWT_SECRET must be set to a strong value in production');
+  }
+
   return {
     nodeEnv,
     port: parseInt(process.env.PORT ?? '8080', 10),
@@ -81,7 +87,7 @@ export function loadConfig(): AppConfig {
       retryDelayMs: parseInt(process.env.REDIS_RETRY_DELAY_MS ?? '1000', 10),
     },
     jwt: {
-      secret: process.env.JWT_SECRET ?? 'default-secret',
+      secret: jwtSecret ?? 'development-only-secret-change-before-production',
     },
     stripe: {
       secretKey: process.env.STRIPE_SECRET_KEY ?? '',

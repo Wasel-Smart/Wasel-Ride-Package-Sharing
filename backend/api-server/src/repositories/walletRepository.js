@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { getDb } from '@wasel/backend-shared/db';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { ValidationError, InternalError } from '@wasel/backend-shared/errors/app-errors';
@@ -74,3 +75,6 @@ export class WalletRepository {
     }
 }
 export const walletRepository = new WalletRepository();
+=======
+export * from './walletRepository.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

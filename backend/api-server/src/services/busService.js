@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { busRepository } from '../repositories/busRepository.ts';
 import { NotFoundError, ValidationError } from '@wasel/backend-shared/errors/app-errors';
 export class BusService {
@@ -30,3 +31,6 @@ export class BusService {
     }
 }
 export const busService = new BusService();
+=======
+export * from './busService.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

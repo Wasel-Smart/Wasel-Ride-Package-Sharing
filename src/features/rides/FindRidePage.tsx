@@ -572,6 +572,26 @@ export function FindRidePage() {
                 </div>
               </div>
 
+              {searchError && (
+                <div
+                  style={{
+                    marginBottom: 14,
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'center',
+                    background: `${DS.gold}12`,
+                    border: `1px solid ${DS.gold}30`,
+                    borderRadius: r(14),
+                    padding: '12px 14px',
+                    color: C.text,
+                    fontSize: '0.84rem',
+                  }}
+                >
+                  <Shield size={16} color={DS.gold} />
+                  <span>{searchError}</span>
+                </div>
+              )}
+
               <WaselButton
                 onClick={handleSearch}
                 data-testid="find-ride-search"
@@ -652,25 +672,6 @@ export function FindRidePage() {
                 />
               </div>
 
-              {searchError && (
-                <div
-                  style={{
-                    marginTop: 14,
-                    display: 'flex',
-                    gap: 10,
-                    alignItems: 'center',
-                    background: `${DS.gold}12`,
-                    border: `1px solid ${DS.gold}30`,
-                    borderRadius: r(14),
-                    padding: '12px 14px',
-                    color: C.text,
-                    fontSize: '0.84rem',
-                  }}
-                >
-                  <Shield size={16} color={DS.gold} />
-                  <span>{searchError}</span>
-                </div>
-              )}
               {bookingMessage && (
                 <div
                   style={{

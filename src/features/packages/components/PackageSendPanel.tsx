@@ -48,6 +48,27 @@ export function PackageSendPanel({
   onOpenTracking,
   onOpenRecent,
 }: PackageSendPanelProps) {
+  const errorDisplay = createError ? (
+    <div
+      style={{
+        gridColumn: '1/-1',
+        display: 'flex',
+        gap: 10,
+        alignItems: 'center',
+        background: `${DS.gold}12`,
+        border: `1px solid ${DS.gold}30`,
+        borderRadius: r(14),
+        padding: '12px 14px',
+        color: C.text,
+        fontSize: '0.84rem',
+        marginBottom: 16,
+      }}
+    >
+      <Shield size={16} color={DS.gold} />
+      <span>{createError}</span>
+    </div>
+  ) : null;
+
   if (pkg.sent) {
     return (
       <div style={{ textAlign: 'center', padding: '40px 0' }}>
@@ -384,25 +405,7 @@ export function PackageSendPanel({
             </div>
           ))}
         </div>
-        {createError && (
-          <div
-            style={{
-              gridColumn: '1/-1',
-              display: 'flex',
-              gap: 10,
-              alignItems: 'center',
-              background: `${DS.gold}12`,
-              border: `1px solid ${DS.gold}30`,
-              borderRadius: r(14),
-              padding: '12px 14px',
-              color: C.text,
-              fontSize: '0.84rem',
-            }}
-          >
-            <Shield size={16} color={DS.gold} />
-            <span>{createError}</span>
-          </div>
-        )}
+        {errorDisplay}
         <button
           data-testid="package-create-request"
           disabled={busyState === 'creating'}

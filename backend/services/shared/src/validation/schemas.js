@@ -37,9 +37,15 @@ export const RideCompletionSchema = z.object({
     rideId: z.string().uuid(),
     driverId: z.string().uuid(),
     riderId: z.string().uuid(),
+<<<<<<< HEAD
     fare: z.number().nonnegative(),
     distance: z.number().nonnegative(),
     duration: z.number().nonnegative(),
+=======
+    fare: z.number().nonNegative(),
+    distance: z.number().nonNegative(),
+    duration: z.number().nonNegative(),
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf
     origin: CoordinateSchema,
     destination: CoordinateSchema,
     completedAt: z.string().datetime(),
@@ -48,7 +54,11 @@ export const PaymentCaptureSchema = z.object({
     paymentId: z.string().uuid(),
     rideId: z.string().uuid().optional(),
     packageId: z.string().uuid().optional(),
+<<<<<<< HEAD
     capturedAmount: z.number().int().nonnegative(),
+=======
+    capturedAmount: z.number().int().nonNegative(),
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf
     providerTransactionId: z.string(),
     capturedAt: z.string().datetime(),
 });

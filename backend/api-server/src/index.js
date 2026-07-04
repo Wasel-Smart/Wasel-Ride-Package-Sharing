@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -61,3 +62,6 @@ app.listen(port, () => {
     logger.info({ port, nodeEnv: config.nodeEnv }, 'API gateway started');
 });
 export default app;
+=======
+export * from './index.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

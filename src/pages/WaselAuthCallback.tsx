@@ -201,33 +201,35 @@ export default function WaselAuthCallback() {
             placeholder="Re-enter your new password"
           />
 
-          {formError && (
-            <div
-              style={{
-                borderRadius: R.md,
-                border: `1px solid ${C.errorDim}`,
-                background: C.errorDim,
-                color: C.error,
-                padding: '12px 14px',
-                fontSize: '0.85rem',
-                lineHeight: 1.5,
-              }}
-            >
-              {formError}
-            </div>
-          )}
+          <div style={{ display: 'grid', gap: '16px' }}>
+            {formError && (
+              <div
+                style={{
+                  borderRadius: R.md,
+                  border: `1px solid ${C.errorDim}`,
+                  background: C.errorDim,
+                  color: C.error,
+                  padding: '12px 14px',
+                  fontSize: '0.85rem',
+                  lineHeight: 1.5,
+                }}
+              >
+                {formError}
+              </div>
+            )}
 
-          <WaselButton
-            type="button"
-            onClick={() => {
-              void handlePasswordUpdate();
-            }}
-            disabled={savingPassword}
-            fullWidth
-            style={{ background: GRAD, color: C.bgDeep }}
-          >
-            {savingPassword ? 'Updating password...' : 'Save new password'}
-          </WaselButton>
+            <WaselButton
+              type="button"
+              onClick={() => {
+                void handlePasswordUpdate();
+              }}
+              disabled={savingPassword}
+              fullWidth
+              style={{ background: GRAD, color: C.bgDeep }}
+            >
+              {savingPassword ? 'Updating password...' : 'Save new password'}
+            </WaselButton>
+          </div>
 
           <WaselButton
             type="button"

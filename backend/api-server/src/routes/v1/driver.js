@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.ts';
 import { tripRepository } from '../../repositories/tripRepository.ts';
@@ -76,3 +77,6 @@ router.get('/ratings', authenticate, async (req, res) => {
     }
 });
 export default router;
+=======
+export * from './driver.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

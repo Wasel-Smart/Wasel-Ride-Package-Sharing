@@ -1,6 +1,10 @@
 {
   "projects": {
+<<<<<<< HEAD
     "default": "coffee-spark-ai-barista-5d7f0"
+=======
+    "default": "laith-nassar"
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf
   },
   "targets": {},
   "etags": {}

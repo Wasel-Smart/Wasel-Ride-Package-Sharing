@@ -137,28 +137,30 @@ export function RateDriverModal({
           <p className="text-xs text-gray-500 mt-1">{review.length}/500</p>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            {error}
-          </div>
-        )}
+        <div className="flex flex-col gap-4 mb-4">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
 
-        <div className="flex gap-3">
-          <Button
-            onClick={onClose}
-            variant="outline"
-            className="flex-1"
-            disabled={loading}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            className="flex-1"
-            disabled={loading || rating === 0}
-          >
-            {loading ? 'Submitting...' : 'Submit Rating'}
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              onClick={onClose}
+              variant="outline"
+              className="flex-1"
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              className="flex-1"
+              disabled={loading || rating === 0}
+            >
+              {loading ? 'Submitting...' : 'Submit Rating'}
+            </Button>
+          </div>
         </div>
       </Card>
     </div>

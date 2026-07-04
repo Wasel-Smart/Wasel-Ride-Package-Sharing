@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Router } from 'express';
 import { busService } from '../../services/busService.ts';
 import { authenticate } from '../../middleware/auth.ts';
@@ -59,3 +60,6 @@ router.patch('/bookings/:id/cancel', authenticate, async (req, res) => {
     }
 });
 export default router;
+=======
+export * from './bus.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

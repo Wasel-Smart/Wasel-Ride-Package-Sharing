@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Router } from 'express';
 import { packageService } from '../../services/packageService.ts';
 import { authenticate } from '../../middleware/auth.ts';
@@ -80,3 +81,6 @@ router.post('/:id/status', authenticate, validate(UpdateStatusSchema), async (re
     }
 });
 export default router;
+=======
+export * from './packages.ts';
+>>>>>>> 3f91593102061af94f82b9db9416273735742bdf

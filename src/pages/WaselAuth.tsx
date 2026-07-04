@@ -773,29 +773,6 @@ export default function WaselAuth() {
           </AnimatePresence>
 
           <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                style={{ overflow: 'hidden', marginBottom: SPACE[5] }}
-              >
-                <WaselCard
-                  variant="solid"
-                  padding={`${SPACE[3]} ${SPACE[4]}`}
-                  radius={R.lg}
-                  style={{ background: C.errorDim, border: `1px solid ${C.error}40` }}
-                >
-                  <span style={{ fontSize: TYPE.size.sm, color: C.error, fontFamily: F }}>
-                    {error}
-                  </span>
-                </WaselCard>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Success banner */}
-          <AnimatePresence>
             {success && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.96 }}
@@ -906,6 +883,28 @@ export default function WaselAuth() {
                     </button>
                   </div>
                 )}
+
+                <AnimatePresence>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      style={{ overflow: 'hidden', marginBottom: SPACE[4] }}
+                    >
+                      <WaselCard
+                        variant="solid"
+                        padding={`${SPACE[3]} ${SPACE[4]}`}
+                        radius={R.lg}
+                        style={{ background: C.errorDim, border: `1px solid ${C.error}40` }}
+                      >
+                        <span style={{ fontSize: TYPE.size.sm, color: C.error, fontFamily: F }}>
+                          {error}
+                        </span>
+                      </WaselCard>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <WaselButton
                   variant="primary"
