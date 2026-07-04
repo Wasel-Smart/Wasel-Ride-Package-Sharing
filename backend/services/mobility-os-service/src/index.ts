@@ -11,7 +11,6 @@ import {
 import { startRuntimeHealthServer } from '../../runtime/http-health';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { z } from 'zod';
-import { eventBroker } from '../../../../src/platform/event-broker-redis-production.js';
 
 const config = loadConfig();
 
@@ -135,12 +134,20 @@ function createApp(): express.Application {
     res.json({ status: 'ok', timestamp: new Date().toISOString(), checks: { redis: redisHealthy, database: dbHealthy } });
   });
 
-  app.get('/ready', async (_req, res) => ({ status: 'ready' }));
+  app.get('/ready', async (_req, res) => {
+    const ready = await Promise.all([
+      RedisPool.connection.ping().then(() => true).catch(() => false),
+      PostgresPool.connection`SELECT 1`.then(() => true).catch(() => false),
+    ]).then(results => results.every(Boolean));
+    res.json({ status: ready ? 'ready' : 'not_ready' });
+  });
 
-  app.get('/metrics', async (_req, res) => ({
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  }));
+  app.get('/metrics', async (_req, res) => {
+    res.json({
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+    });
+  });
 
   app.get('/v1/mobility-os/snapshot', async (req, res) => {
     const sql = PostgresPool.connection;
@@ -186,13 +193,8 @@ function createApp(): express.Application {
       WHERE id = ${corridorId}
     `;
 
-    await eventBroker.publish({
-      id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-      type: 'mobility.booking-created',
-      payload: { corridorId, type, quantity, userId },
-      producer: 'mobility-os-service',
-      occurredAt: now,
-    });
+    // TODO: Publish event when eventBroker integration is properly configured
+    // await eventBroker.publish({...});
 
     res.status(201).json({ success: true, corridor: updated });
   });

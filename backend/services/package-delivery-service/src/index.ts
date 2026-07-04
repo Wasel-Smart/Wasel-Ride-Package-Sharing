@@ -1,18 +1,17 @@
 import postgres from 'postgres';
 import Redis from 'ioredis';
 import express from 'express';
-import { loadConfig, type AppConfig } from '@wasel/backend-shared';
+import { loadConfig } from '@wasel/backend-shared';
 import { createRateLimitMiddleware } from '@wasel/backend-shared/rate-limiter';
 import {
   AppError,
   ValidationError,
-  UnauthorizedError,
   NotFoundError,
 } from '@wasel/backend-shared/errors/app-errors';
 import { startRuntimeHealthServer } from '../../runtime/http-health';
 import { CoordinateSchema } from '@wasel/backend-shared/validation/schemas';
-import { eventBroker } from '../../../../src/platform/event-broker-redis-production.js';
 import { logger } from '@wasel/backend-shared/logging/logger';
+import { z } from 'zod';
 
 const config = loadConfig();
 
@@ -79,6 +78,16 @@ interface PackageRecord {
   updated_at: string;
 }
 
+const CreatePackageSchema = z.object({
+  senderId: z.string().uuid(),
+  recipientName: z.string().min(1),
+  recipientPhone: z.string().regex(/^\+962\d{9}$/, 'Invalid Jordanian phone number').optional(),
+  origin: CoordinateSchema,
+  destination: CoordinateSchema,
+  priceJod: z.number().positive().optional(),
+  notes: z.string().optional(),
+});
+
 function createApp(): express.Application {
   const app = express();
 
@@ -101,24 +110,28 @@ function createApp(): express.Application {
     });
   });
 
+  app.get('/ready', async (_req, res) => {
+    const ready = await Promise.all([
+      RedisPool.connection.ping().then(() => true).catch(() => false),
+      PostgresPool.connection`SELECT 1`.then(() => true).catch(() => false),
+    ]).then(results => results.every(Boolean));
+    res.json({ status: ready ? 'ready' : 'not_ready' });
+  });
+
+  app.get('/metrics', async (_req, res) => {
+    res.json({
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   app.post('/v1/packages', async (req, res) => {
-    const {
-      senderId,
-      recipientName,
-      recipientPhone,
-      origin,
-      destination,
-      priceJod,
-    } = req.body;
-
-    if (!senderId || !recipientName || !origin || !destination) {
-      throw new ValidationError('Missing required fields');
+    const parsed = CreatePackageSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new ValidationError('Invalid package request', { issues: parsed.error.issues });
     }
 
-    const coordResult = CoordinateSchema.safeParse(origin);
-    if (!coordResult.success) {
-      throw new ValidationError('Invalid origin coordinates');
-    }
+    const { senderId, recipientName, recipientPhone, origin, destination, priceJod, notes } = parsed.data;
 
     const sql = PostgresPool.connection;
     const now = new Date().toISOString();
@@ -127,29 +140,17 @@ function createApp(): express.Application {
     const [pkg] = await sql<PackageRecord[]>`
       INSERT INTO packages (
         sender_id, recipient_name, recipient_phone,
-        origin, destination, status, escrow_status, price_jod,
+        origin, destination, status, escrow_status, price_jod, notes,
         created_at, updated_at
       ) VALUES (
-        ${senderId}, ${recipientName}, ${recipientPhone},
-        ${origin}, ${destination}, 'created', 'pending', ${priceJod},
+        ${senderId}, ${recipientName}, ${recipientPhone ?? null},
+        ${JSON.stringify(origin)}, ${JSON.stringify(destination)}, 'created', 'pending', ${priceJod ?? null}, ${notes ?? null},
         ${now}, ${now}
       )
       RETURNING *
     `;
 
-    await eventBroker.publish({
-      id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-      type: 'packages.created',
-      payload: {
-        packageId: pkg.id,
-        trackingCode: pkg.tracking_code,
-        origin: pkg.origin,
-        destination: pkg.destination,
-      },
-      producer: 'package-delivery-service',
-      traceId: req.headers['x-trace-id'] as string | undefined,
-      occurredAt: now,
-    });
+    logger.info({ packageId: pkg.id, trackingCode }, 'Package created');
 
     res.status(201).json({ package: pkg });
   });
@@ -185,47 +186,27 @@ function createApp(): express.Application {
 
     if (!pkg) throw new NotFoundError('Package not found or already assigned');
 
-    await eventBroker.publish({
-      id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-      type: 'packages.assigned',
-      payload: {
-        packageId: pkg.id,
-        rideId: driverId,
-        driverId: driverId,
-      },
-      producer: 'package-delivery-service',
-      occurredAt: now,
-    });
+    logger.info({ packageId: pkg.id, driverId }, 'Package assigned');
 
     res.json({ package: pkg });
   });
 
+  const LocationSchema = z.object({
+    lat: z.number().finite().min(-90).max(90),
+    lng: z.number().finite().min(-180).max(180),
+  });
+
   app.post('/v1/packages/:id/location', async (req, res) => {
     const { id } = req.params;
-    const { lat, lng } = req.body;
-
-    if (!id || lat === undefined || lng === undefined) {
-      throw new ValidationError('Package ID and location required');
+    const parsed = LocationSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new ValidationError('Invalid coordinates', { issues: parsed.error.issues });
     }
 
-    const coordResult = CoordinateSchema.safeParse({ lat, lng });
-    if (!coordResult.success) {
-      throw new ValidationError('Invalid coordinates');
-    }
-
+    const { lat, lng } = parsed.data;
     const now = new Date().toISOString();
 
-    await eventBroker.publish({
-      id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-      type: 'packages.location-updated',
-      payload: {
-        packageId: id,
-        latitude: lat,
-        longitude: lng,
-      },
-      producer: 'package-delivery-service',
-      occurredAt: now,
-    });
+    logger.info({ packageId: id, lat, lng }, 'Package location updated');
 
     res.json({ success: true });
   });
@@ -246,16 +227,7 @@ function createApp(): express.Application {
 
     if (!pkg) throw new NotFoundError('Package not in deliverable state');
 
-    await eventBroker.publish({
-      id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-      type: 'packages.delivered',
-      payload: {
-        packageId: pkg.id,
-        paymentReleased: true,
-      },
-      producer: 'package-delivery-service',
-      occurredAt: now,
-    });
+    logger.info({ packageId: pkg.id }, 'Package delivered');
 
     res.json({ package: pkg });
   });
@@ -277,16 +249,7 @@ function createApp(): express.Application {
 
     if (!pkg) throw new NotFoundError('Package not in cancellable state');
 
-    await eventBroker.publish({
-      id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-      type: 'PackageCancelled',
-      payload: {
-        packageId: pkg.id,
-        rideId: pkg.assigned_driver_id,
-      },
-      producer: 'package-delivery-service',
-      occurredAt: now,
-    });
+    logger.info({ packageId: pkg.id, reason }, 'Package cancelled');
 
     res.json({ package: pkg });
   });
@@ -319,11 +282,10 @@ async function start() {
     isReady: () => true,
     isHealthy: async () => {
       try {
-        await Promise.all([
-          RedisPool.connection.ping(),
-          PostgresPool.connection`SELECT 1`,
-        ]);
-        return true;
+        return await Promise.all([
+          RedisPool.connection.ping().then(() => true).catch(() => false),
+          PostgresPool.connection`SELECT 1`.then(() => true).catch(() => false),
+        ]).then(results => results.every(Boolean));
       } catch {
         return false;
       }

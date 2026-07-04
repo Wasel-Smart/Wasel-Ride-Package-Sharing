@@ -58,6 +58,20 @@ class RedisPool {
   }
 }
 
+function verifyStripeSignature(payload: string, signature: string, secret: string): boolean {
+  const expectedSignature = createHmac('sha256', secret)
+    .update(payload, 'utf8')
+    .digest('hex');
+
+  if (expectedSignature.length !== signature.length) return false;
+
+  let mismatch = 0;
+  for (let i = 0; i < expectedSignature.length; i++) {
+    mismatch |= expectedSignature.charCodeAt(i) ^ signature.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
 function moderateText(text: string): { cleaned: string; flags: string[] } {
   const flags: string[] = [];
   let cleaned = text;
@@ -91,29 +105,31 @@ function createApp(): express.Application {
   );
 
   app.get('/health', async (_req, res) => {
-    const redisHealthy = await redis.ping().then(() => true).catch(() => false);
+    const redisHealthy = await RedisPool.connection.ping().then(() => true).catch(() => false);
     const dbHealthy = await PostgresPool.connection`SELECT 1`.then(() => true).catch(() => false);
     res.json({ status: dbHealthy ? 'ok' : 'unhealthy', timestamp: new Date().toISOString(), checks: { redis: redisHealthy, database: dbHealthy } });
   });
 
   app.get('/ready', async (_req, res) => {
     const ready = await Promise.all([
-      redis.ping().then(() => true).catch(() => false),
+      RedisPool.connection.ping().then(() => true).catch(() => false),
       PostgresPool.connection`SELECT 1`.then(() => true).catch(() => false),
     ]).then(results => results.every(Boolean));
     res.json({ status: ready ? 'ready' : 'not_ready' });
   });
 
-  app.get('/metrics', async () => ({
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  }));
+  app.get('/metrics', async (_req, res) => {
+    res.json({
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+    });
+  });
 
   app.get('/v1/trust/status/:userId', async (req, res) => {
     const { userId } = req.params;
     const sql = PostgresPool.connection;
 
-    const [{ data: user }, { data: wallet }, { data: verifications }] = await Promise.all([
+    const [user, wallet, verifications] = await Promise.all([
       sql`SELECT id, email, phone_number, phone_verified_at, verification_level, sanad_verified_status FROM users WHERE id = ${userId}`,
       sql`SELECT wallet_id, wallet_status FROM wallets WHERE user_id = ${userId}`,
       sql`SELECT id, verification_level, document_status, sanad_status, created_at FROM verification_records WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 5`,
@@ -124,19 +140,19 @@ function createApp(): express.Application {
         id: 'identity',
         state: verifications?.[0]?.document_status === 'pending' ? 'in_progress' :
           (verifications?.[0]?.document_status === 'verified' ? 'completed' :
-            user?.sanad_verified_status === 'verified' ? 'completed' : 'not_started'),
+            user?.[0]?.sanad_verified_status === 'verified' ? 'completed' : 'not_started'),
         detail: verifications?.[0]?.document_status === 'verified' ? 'Identity verified' :
-          user?.sanad_verified_status ? `Sanad status: ${user.sanad_verified_status}` : 'Submit ID verification',
+          user?.[0]?.sanad_verified_status ? `Sanad status: ${user[0].sanad_verified_status}` : 'Submit ID verification',
       },
       email: {
         id: 'email',
-        state: user?.email ? 'completed' : 'not_started',
-        detail: user?.email ? 'Email verified' : 'Add email',
+        state: user?.[0]?.email ? 'completed' : 'not_started',
+        detail: user?.[0]?.email ? 'Email verified' : 'Add email',
       },
       phone: {
         id: 'phone',
-        state: user?.phone_verified_at ? 'completed' : 'not_started',
-        detail: user?.phone_verified_at ? `Phone verified: ${user.phone_number}` : 'Add and verify phone',
+        state: user?.[0]?.phone_verified_at ? 'completed' : 'not_started',
+        detail: user?.[0]?.phone_verified_at ? `Phone verified: ${user[0].phone_number}` : 'Add and verify phone',
       },
       driverDocuments: {
         id: 'driver_documents',
@@ -145,8 +161,8 @@ function createApp(): express.Application {
       },
       walletStanding: {
         id: 'wallet_standing',
-        state: wallet?.wallet_status === 'active' ? 'completed' : 'failed',
-        detail: wallet?.wallet_status ? `Wallet status: ${wallet.wallet_status}` : 'No wallet',
+        state: wallet?.[0]?.wallet_status === 'active' ? 'completed' : 'failed',
+        detail: wallet?.[0]?.wallet_status ? `Wallet status: ${wallet[0].wallet_status}` : 'No wallet',
       },
     };
 
@@ -342,7 +358,7 @@ function createApp(): express.Application {
     const payload = req.body;
     const signature = req.headers['x-sanad-signature'] as string;
 
-    logger.info({ payload, hasSignature: !!signature }, 'Sanad webhook received');
+    logger.info({ hasSignature: !!signature }, 'Sanad webhook received');
 
     const status = payload?.status ?? payload?.verification_status ?? 'unknown';
     const userId = payload?.user_id ?? payload?.userId;
@@ -363,10 +379,29 @@ function createApp(): express.Application {
   });
 
   app.post('/v1/payments/webhooks/stripe', async (req, res) => {
+    const signature = req.headers['stripe-signature'] as string | undefined;
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      logger.warn('STRIPE_WEBHOOK_SECRET not configured');
+      return res.status(500).json({ error: 'Webhook secret not configured' });
+    }
+
+    if (!signature) {
+      return res.status(401).json({ error: 'Missing signature' });
+    }
+
+    const rawBody = JSON.stringify(req.body);
+
+    if (!verifyStripeSignature(rawBody, signature, webhookSecret)) {
+      logger.warn({ signature }, 'Stripe webhook signature verification failed');
+      return res.status(401).json({ error: 'Invalid signature' });
+    }
+
     const payload = req.body;
     const event = payload?.type ?? 'unknown';
 
-    logger.info({ event, payload }, 'Stripe webhook received');
+    logger.info({ event }, 'Stripe webhook received');
 
     if (event === 'checkout.session.completed') {
       const session = payload?.data?.object;
