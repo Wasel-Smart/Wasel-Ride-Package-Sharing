@@ -243,13 +243,8 @@ export function FindRidePage() {
 
   useEffect(() => {
     setSavedReminders(getRouteReminders());
-  }, [routeIntelligence.updatedAt]);
-
-  useEffect(() => {
     void syncRouteReminders(user ?? undefined).then(delivered => {
-      if (delivered.length > 0) {
-        setSavedReminders(getRouteReminders());
-      }
+      if (delivered.length > 0) setSavedReminders(getRouteReminders());
     });
   }, [routeIntelligence.updatedAt, user?.email, user?.phone]);
 
@@ -476,12 +471,6 @@ export function FindRidePage() {
           titleAr="احجز مشوار"
           sub="Compare verified routes, live demand, and route-level price clarity."
           action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
-        />
-
-        <CoreExperienceBanner
-          title="Route intelligence is part of the booking surface."
-          detail="Search once and compare confirmed drivers, grouped departures, and the strongest route options for this corridor."
-          tone={DS.cyan}
         />
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>

@@ -9,10 +9,14 @@ import {
   CheckCircle,
   Clock,
   CreditCard,
+  FileText,
+  Key,
   LogOut,
+  Monitor,
   Settings,
   Shield,
   Star,
+  TrendingUp,
 } from 'lucide-react';
 import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import { PageHero, PageShell, StatusBadge } from '../../components/wasel-ui/WaselPagePrimitives';
@@ -561,20 +565,20 @@ function ProfilePageContent({
           <SharedSection title={ar ? 'وضع السائق' : 'Driver Mode'}>
             <SharedRow
               label={ar ? 'سيارتي' : 'My Vehicle'}
-              value={ar ? 'تويوتا كورولا 2021' : 'Toyota Corolla 2021'}
+              value={user.vehicle ?? (ar ? 'لم تُضف بعد' : 'Not added yet')}
               icon={<Car size={15} />}
               onClick={() => nav('/app/settings?section=account')}
             />
             <SharedRow
               label={ar ? 'المستندات' : 'Documents'}
               value={ar ? 'رخصة + تأمين + ترخيص' : 'License · Insurance · Registration'}
-              icon={<span>DOC</span>}
+              icon={<FileText size={15} />}
               badge={<CheckCircle size={14} color={C.green} />}
               onClick={() => nav('/app/trust')}
             />
             <SharedRow
               label={ar ? 'الأرباح' : 'Earnings'}
-              icon={<span>JOD</span>}
+              icon={<TrendingUp size={15} />}
               onClick={() => nav('/app/wallet')}
             />
           </SharedSection>
@@ -584,13 +588,13 @@ function ProfilePageContent({
           <SharedRow
             label={ar ? 'تفضيل الجنس' : 'Gender Preference'}
             value={ar ? 'مختلط (افتراضي)' : 'Mixed (default)'}
-            icon={<span>UX</span>}
+            icon={<Settings size={15} />}
             onClick={() => nav('/app/settings?section=account')}
           />
           <SharedRow
             label={ar ? 'العملة' : 'Currency'}
             value="JOD"
-            icon={<span>JOD</span>}
+            icon={<CreditCard size={15} />}
             onClick={() => nav('/app/settings?section=account')}
           />
           <SharedRow
@@ -603,7 +607,7 @@ function ProfilePageContent({
         <SharedSection title={ar ? 'الأمان' : 'Security'}>
           <SharedRow
             label={ar ? 'تغيير كلمة المرور' : 'Change Password'}
-            icon={<span>KEY</span>}
+            icon={<Key size={15} />}
             onClick={() => nav('/app/settings?section=security')}
           />
           <SharedRow
@@ -623,12 +627,12 @@ function ProfilePageContent({
                 {user.twoFactorEnabled ? (ar ? 'مفعل' : 'On') : ar ? 'غير مفعل' : 'Off'}
               </span>
             }
-            icon={<span>2FA</span>}
+            icon={<Shield size={15} />}
             onClick={() => nav('/app/settings?section=security')}
           />
           <SharedRow
             label={ar ? 'الأجهزة المسجلة' : 'Active Sessions'}
-            icon={<span>WEB</span>}
+            icon={<Monitor size={15} />}
             onClick={() => nav('/app/settings?section=security')}
           />
         </SharedSection>
@@ -646,12 +650,12 @@ function ProfilePageContent({
         <SharedSection title={ar ? 'القانوني' : 'Legal'}>
           <SharedRow
             label={ar ? 'سياسة الخصوصية' : 'Privacy Policy'}
-            icon={<span>PRIV</span>}
+            icon={<FileText size={15} />}
             onClick={() => nav('/app/privacy')}
           />
           <SharedRow
             label={ar ? 'شروط الخدمة' : 'Terms of Service'}
-            icon={<span>TERMS</span>}
+            icon={<FileText size={15} />}
             onClick={() => nav('/app/terms')}
           />
         </SharedSection>
@@ -659,13 +663,13 @@ function ProfilePageContent({
         <SharedSection title={ar ? 'منطقة الخطر' : 'Danger Zone'}>
           <SharedRow
             label={ar ? 'تصدير بياناتي' : 'Export My Data'}
-            icon={<span>DATA</span>}
+            icon={<FileText size={15} />}
             onClick={handleExportData}
           />
           <SharedRow
             label={ar ? 'طلب حذف الحساب' : 'Request Account Deletion'}
             danger
-            icon={<span>DEL</span>}
+            icon={<LogOut size={15} />}
             onClick={() => setShowDeleteConfirm(true)}
           />
           <SharedRow

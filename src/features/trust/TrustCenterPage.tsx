@@ -11,7 +11,7 @@ import {
   Shield,
   Wallet,
 } from 'lucide-react';
-import { Button } from '../../components/ui/button';
+import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import {
   MetricCard,
@@ -158,6 +158,7 @@ function StepCard({
   subtitle,
   state,
   icon,
+  ar,
   children,
   footer,
 }: {
@@ -165,10 +166,12 @@ function StepCard({
   subtitle: string;
   state: TrustStepState;
   icon: ReactNode;
+  ar: boolean;
   children?: ReactNode;
   footer?: ReactNode;
 }) {
   const accent = getPanelAccent(state);
+  const badge = getStepBadge(state, ar);
 
   return (
     <div
@@ -210,10 +213,7 @@ function StepCard({
             {subtitle}
           </div>
         </div>
-        <StatusBadge
-          label={getStepBadge(state, false).label}
-          accent={getStepBadge(state, false).accent}
-        />
+        <StatusBadge label={badge.label} accent={badge.accent} />
       </div>
       {children}
       {footer}
@@ -423,8 +423,8 @@ export default function TrustCenterPage() {
   };
 
   const handleSubmitIdentity = async () => {
-    if (identityReference.trim().length < 4) {
-      toast.error('Enter the Sanad reference before submitting.');
+    if (identityReference.trim().length < 6) {
+      toast.error('Enter a valid Sanad reference (minimum 6 characters).');
       return;
     }
 
@@ -449,8 +449,8 @@ export default function TrustCenterPage() {
   };
 
   const handleSubmitDriverDocuments = async () => {
-    if (licenseNumber.trim().length < 4) {
-      toast.error('Enter the driver license number before submitting.');
+    if (licenseNumber.trim().length < 6) {
+      toast.error('Enter a valid driver license number (minimum 6 characters).');
       return;
     }
 
@@ -491,36 +491,18 @@ export default function TrustCenterPage() {
           accent={heroAccent}
           actions={
             <>
-              <Button
-                onClick={handleNextAction}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
+              <WaselButton onClick={handleNextAction} variant="primary">
                 {effectiveStatus?.nextStepId
-                  ? ar
-                    ? 'افتح الخطوة التالية'
-                    : 'Open next step'
-                  : ar
-                    ? 'راجع الخطوات'
-                    : 'Review checks'}
-              </Button>
-              <Button
+                  ? ar ? 'افتح الخطوة التالية' : 'Open next step'
+                  : ar ? 'راجع الخطوات' : 'Review checks'}
+              </WaselButton>
+              <WaselButton
                 variant="outline"
-                onClick={() => {
-                  void reloadTrustStatus();
-                }}
-                className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+                loading={statusLoading}
+                onClick={() => { void reloadTrustStatus(); }}
               >
-                {statusLoading ? (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                    <LoaderCircle size={14} className="animate-spin" />
-                    {ar ? 'يتم التحديث' : 'Refreshing'}
-                  </span>
-                ) : ar ? (
-                  'تحديث الحالة'
-                ) : (
-                  'Refresh status'
-                )}
-              </Button>
+                {ar ? 'تحديث الحالة' : 'Refresh status'}
+              </WaselButton>
             </>
           }
           aside={
@@ -557,6 +539,30 @@ export default function TrustCenterPage() {
             </div>
           }
         />
+
+        {/* ── 5-segment progress bar ── */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: SPACE[5] }}>
+          {(
+            [
+              effectiveStatus?.steps.identity.state ?? 'not_started',
+              effectiveStatus?.steps.email.state ?? 'not_started',
+              effectiveStatus?.steps.phone.state ?? 'not_started',
+              effectiveStatus?.steps.driverDocuments.state ?? 'not_started',
+              effectiveStatus?.steps.walletStanding.state ?? 'not_started',
+            ] as TrustStepState[]
+          ).map((state, i) => (
+            <div
+              key={i}
+              title={['Identity', 'Email', 'Phone', 'Driver docs', 'Wallet'][i]}
+              style={{
+                flex: 1, height: 6, borderRadius: 999,
+                background: getPanelAccent(state),
+                opacity: state === 'not_started' ? 0.22 : 1,
+                transition: 'background 300ms, opacity 300ms',
+              }}
+            />
+          ))}
+        </div>
 
         <div
           style={{
@@ -764,50 +770,25 @@ export default function TrustCenterPage() {
               <div ref={identityRef}>
                 <StepCard
                   title={ar ? 'الهوية / سند' : 'Identity / Sanad'}
-                  subtitle={
-                    effectiveStatus?.steps.identity.detail ??
-                    'Submit Sanad verification to continue.'
-                  }
+                  subtitle={effectiveStatus?.steps.identity.detail ?? 'Submit Sanad verification to continue.'}
                   state={effectiveStatus?.steps.identity.state ?? 'not_started'}
-                  icon={
-                    <Shield
-                      size={16}
-                      color={getPanelAccent(effectiveStatus?.steps.identity.state ?? 'not_started')}
-                    />
-                  }
+                  ar={ar}
+                  icon={<Shield size={16} color={getPanelAccent(effectiveStatus?.steps.identity.state ?? 'not_started')} />}
                   footer={
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                      <Button
-                        onClick={() => {
-                          void handleSubmitIdentity();
-                        }}
-                        disabled={
-                          actionKey === 'identity' ||
-                          effectiveStatus?.steps.identity.state === 'in_progress'
-                        }
-                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                      <WaselButton
+                        onClick={() => { void handleSubmitIdentity(); }}
+                        loading={actionKey === 'identity'}
+                        disabled={actionKey === 'identity' || effectiveStatus?.steps.identity.state === 'in_progress'}
+                        variant="primary"
                       >
-                        {actionKey === 'identity'
-                          ? ar
-                            ? 'جارٍ الإرسال'
-                            : 'Submitting'
-                          : effectiveStatus?.steps.identity.state === 'failed'
-                            ? ar
-                              ? 'إعادة الإرسال'
-                              : 'Resubmit'
-                            : ar
-                              ? 'إرسال للمراجعة'
-                              : 'Submit for review'}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          void reloadTrustStatus();
-                        }}
-                        className="border-white/15 bg-white/5 text-white hover:bg-white/10"
-                      >
+                        {effectiveStatus?.steps.identity.state === 'failed'
+                          ? ar ? 'إعادة الإرسال' : 'Resubmit'
+                          : ar ? 'إرسال للمراجعة' : 'Submit for review'}
+                      </WaselButton>
+                      <WaselButton variant="outline" onClick={() => { void reloadTrustStatus(); }}>
                         {ar ? 'تحديث' : 'Refresh'}
-                      </Button>
+                      </WaselButton>
                     </div>
                   }
                 >
@@ -851,11 +832,8 @@ export default function TrustCenterPage() {
               <div ref={contactRef}>
                 <StepCard
                   title={ar ? 'البريد والهاتف' : 'Email and phone'}
-                  subtitle={
-                    ar
-                      ? 'تأكيد البريد والهاتف يجب أن يغيّر الحالة مباشرة.'
-                      : 'Email and phone verification should move state immediately.'
-                  }
+                  subtitle={ar ? 'تأكيد البريد والهاتف يجب أن يغيّر الحالة مباشرة.' : 'Email and phone verification should move state immediately.'}
+                  ar={ar}
                   state={
                     effectiveStatus?.steps.phone.state === 'failed' ||
                     effectiveStatus?.steps.email.state === 'failed'
@@ -923,28 +901,16 @@ export default function TrustCenterPage() {
                         {user.email || effectiveStatus?.steps.email.meta.email || 'No email'}
                       </div>
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <Button
-                          onClick={() => {
-                            void handleResendEmail();
-                          }}
-                          disabled={
-                            actionKey === 'email' ||
-                            effectiveStatus?.steps.email.state === 'completed'
-                          }
-                          className="bg-primary text-primary-foreground hover:bg-primary/90"
+                        <WaselButton
+                          onClick={() => { void handleResendEmail(); }}
+                          loading={actionKey === 'email'}
+                          disabled={actionKey === 'email' || effectiveStatus?.steps.email.state === 'completed'}
+                          variant="primary"
                         >
-                          {actionKey === 'email'
-                            ? ar
-                              ? 'يتم الإرسال'
-                              : 'Sending'
-                            : effectiveStatus?.steps.email.state === 'completed'
-                              ? ar
-                                ? 'تم التأكيد'
-                                : 'Confirmed'
-                              : ar
-                                ? 'إرسال رابط التأكيد'
-                                : 'Send confirmation'}
-                        </Button>
+                          {effectiveStatus?.steps.email.state === 'completed'
+                            ? ar ? 'تم التأكيد' : 'Confirmed'
+                            : ar ? 'إرسال رابط التأكيد' : 'Send confirmation'}
+                        </WaselButton>
                       </div>
                     </div>
 
@@ -1013,25 +979,16 @@ export default function TrustCenterPage() {
                         type="tel"
                       />
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <Button
-                          onClick={() => {
-                            void handleStartPhone();
-                          }}
+                        <WaselButton
+                          onClick={() => { void handleStartPhone(); }}
+                          loading={actionKey === 'phone-start'}
                           disabled={actionKey === 'phone-start'}
-                          className="bg-primary text-primary-foreground hover:bg-primary/90"
+                          variant="primary"
                         >
-                          {actionKey === 'phone-start'
-                            ? ar
-                              ? 'يتم الإرسال'
-                              : 'Sending'
-                            : effectiveStatus?.steps.phone.state === 'in_progress'
-                              ? ar
-                                ? 'إعادة إرسال الكود'
-                                : 'Resend code'
-                              : ar
-                                ? 'إرسال الكود'
-                                : 'Send code'}
-                        </Button>
+                          {effectiveStatus?.steps.phone.state === 'in_progress'
+                            ? ar ? 'إعادة إرسال الكود' : 'Resend code'
+                            : ar ? 'إرسال الكود' : 'Send code'}
+                        </WaselButton>
                       </div>
                       {(effectiveStatus?.steps.phone.state === 'in_progress' ||
                         effectiveStatus?.steps.phone.state === 'failed') && (
@@ -1041,21 +998,14 @@ export default function TrustCenterPage() {
                             onChange={setPhoneCode}
                             placeholder={ar ? 'أدخل كود التحقق' : 'Enter verification code'}
                           />
-                          <Button
-                            onClick={() => {
-                              void handleConfirmPhone();
-                            }}
+                          <WaselButton
+                            onClick={() => { void handleConfirmPhone(); }}
+                            loading={actionKey === 'phone-confirm'}
                             disabled={actionKey === 'phone-confirm'}
-                            className="bg-white text-slate-900 hover:bg-white/90"
+                            variant="primary"
                           >
-                            {actionKey === 'phone-confirm'
-                              ? ar
-                                ? 'جارٍ التأكيد'
-                                : 'Confirming'
-                              : ar
-                                ? 'تأكيد الهاتف'
-                                : 'Confirm phone'}
-                          </Button>
+                            {ar ? 'تأكيد الهاتف' : 'Confirm phone'}
+                          </WaselButton>
                           {formatTimestamp(effectiveStatus?.steps.phone.meta.expiresAt) ? (
                             <div
                               style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}
@@ -1074,19 +1024,10 @@ export default function TrustCenterPage() {
               <div ref={documentsRef}>
                 <StepCard
                   title={ar ? 'وثائق السائق' : 'Driver documents'}
-                  subtitle={
-                    effectiveStatus?.steps.driverDocuments.detail ??
-                    'Submit driver license and compliance documents.'
-                  }
+                  subtitle={effectiveStatus?.steps.driverDocuments.detail ?? 'Submit driver license and compliance documents.'}
                   state={effectiveStatus?.steps.driverDocuments.state ?? 'not_started'}
-                  icon={
-                    <FileCheck
-                      size={16}
-                      color={getPanelAccent(
-                        effectiveStatus?.steps.driverDocuments.state ?? 'not_started',
-                      )}
-                    />
-                  }
+                  ar={ar}
+                  icon={<FileCheck size={16} color={getPanelAccent(effectiveStatus?.steps.driverDocuments.state ?? 'not_started')} />}
                 >
                   <div style={{ display: 'grid', gap: 10 }}>
                     {effectiveStatus?.steps.driverDocuments.failureReason ? (
@@ -1107,21 +1048,14 @@ export default function TrustCenterPage() {
                     ) : null}
                     {effectiveStatus?.steps.driverDocuments.meta.role === 'rider' ? (
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <Button
-                          onClick={() => {
-                            void handleEnableDriverMode();
-                          }}
+                        <WaselButton
+                          onClick={() => { void handleEnableDriverMode(); }}
+                          loading={actionKey === 'driver-mode'}
                           disabled={actionKey === 'driver-mode'}
-                          className="bg-primary text-primary-foreground hover:bg-primary/90"
+                          variant="primary"
                         >
-                          {actionKey === 'driver-mode'
-                            ? ar
-                              ? 'يتم التفعيل'
-                              : 'Enabling'
-                            : ar
-                              ? 'تفعيل وضع السائق'
-                              : 'Enable Driver mode'}
-                        </Button>
+                          {ar ? 'تفعيل وضع السائق' : 'Enable Driver mode'}
+                        </WaselButton>
                       </div>
                     ) : (
                       <>
@@ -1138,28 +1072,16 @@ export default function TrustCenterPage() {
                           }
                         />
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                          <Button
-                            onClick={() => {
-                              void handleSubmitDriverDocuments();
-                            }}
-                            disabled={
-                              actionKey === 'driver-documents' ||
-                              effectiveStatus?.steps.driverDocuments.state === 'in_progress'
-                            }
-                            className="bg-primary text-primary-foreground hover:bg-primary/90"
+                          <WaselButton
+                            onClick={() => { void handleSubmitDriverDocuments(); }}
+                            loading={actionKey === 'driver-documents'}
+                            disabled={actionKey === 'driver-documents' || effectiveStatus?.steps.driverDocuments.state === 'in_progress'}
+                            variant="primary"
                           >
-                            {actionKey === 'driver-documents'
-                              ? ar
-                                ? 'جارٍ الإرسال'
-                                : 'Submitting'
-                              : effectiveStatus?.steps.driverDocuments.state === 'failed'
-                                ? ar
-                                  ? 'إعادة الإرسال'
-                                  : 'Resubmit'
-                                : ar
-                                  ? 'إرسال الوثائق'
-                                  : 'Submit documents'}
-                          </Button>
+                            {effectiveStatus?.steps.driverDocuments.state === 'failed'
+                              ? ar ? 'إعادة الإرسال' : 'Resubmit'
+                              : ar ? 'إرسال الوثائق' : 'Submit documents'}
+                          </WaselButton>
                         </div>
                       </>
                     )}
@@ -1176,33 +1098,18 @@ export default function TrustCenterPage() {
               <div ref={walletRef}>
                 <StepCard
                   title={ar ? 'سلامة المحفظة' : 'Wallet standing'}
-                  subtitle={
-                    effectiveStatus?.steps.walletStanding.detail ?? 'Wallet status unavailable.'
-                  }
+                  subtitle={effectiveStatus?.steps.walletStanding.detail ?? 'Wallet status unavailable.'}
                   state={effectiveStatus?.steps.walletStanding.state ?? 'failed'}
-                  icon={
-                    <Wallet
-                      size={16}
-                      color={getPanelAccent(
-                        effectiveStatus?.steps.walletStanding.state ?? 'failed',
-                      )}
-                    />
-                  }
+                  ar={ar}
+                  icon={<Wallet size={16} color={getPanelAccent(effectiveStatus?.steps.walletStanding.state ?? 'failed')} />}
                   footer={
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                      <Button
-                        onClick={() => nav('/app/wallet')}
-                        className="bg-primary text-primary-foreground hover:bg-primary/90"
-                      >
+                      <WaselButton onClick={() => nav('/app/wallet')} variant="primary">
                         {ar ? 'افتح المحفظة' : 'Open wallet'}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => nav('/app/settings?section=account')}
-                        className="border-white/15 bg-white/5 text-white hover:bg-white/10"
-                      >
+                      </WaselButton>
+                      <WaselButton variant="outline" onClick={() => nav('/app/settings?section=account')}>
                         {ar ? 'إعدادات الحساب' : 'Account settings'}
-                      </Button>
+                      </WaselButton>
                     </div>
                   }
                 >
