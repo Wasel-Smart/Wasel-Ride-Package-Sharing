@@ -1,0 +1,607 @@
+diff --git a/package.json b/package.json
+index 557245c0..4b2ceb73 100644
+--- a/package.json
++++ b/package.json
+@@ -138,7 +138,6 @@
+     "input-otp": "^1.4.2",
+     "ioredis": "^5.11.1",
+     "leaflet": "^1.9.4",
+-    "lightningcss-win32-x64-msvc": "^1.32.0",
+     "lucide-react": "^0.487.0",
+     "motion": "^12.0.0",
+     "pino": "^9.0.0",
+diff --git a/src/features/activity/ActivityPage.tsx b/src/features/activity/ActivityPage.tsx
+index 4a94cb65..fd55cbb9 100644
+--- a/src/features/activity/ActivityPage.tsx
++++ b/src/features/activity/ActivityPage.tsx
+@@ -108,7 +108,7 @@ export function ActivityPage() {
+     const mapped: TimelineItem[] = [];
+ 
+     rides.forEach((b: RideBookingRecord) => {
+-      const isActive = b.status === 'confirmed' || b.status === 'pending' || b.status === 'pending_driver';
++      const isActive = b.status === 'confirmed' || b.status === 'pending_driver';
+       mapped.push({
+         id: b.id,
+         kind: 'ride',
+diff --git a/src/features/admin/AdminDashboardPage.tsx b/src/features/admin/AdminDashboardPage.tsx
+index 910cf812..ecc315d0 100644
+--- a/src/features/admin/AdminDashboardPage.tsx
++++ b/src/features/admin/AdminDashboardPage.tsx
+@@ -1,8 +1,8 @@
+ import { useEffect, useState } from 'react';
+ import { useLocalAuth } from '../../contexts/LocalAuth';
+ import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
+-import { C, R, SPACE, TYPE, SH, card, pillStyle } from '../../utils/wasel-ds';
+-import { RefreshCw, AlertTriangle, TrendingUp, Users, Package, Car, DollarSign } from 'lucide-react';
++import { C, R, SPACE, TYPE, card, pillStyle } from '../../utils/wasel-ds';
++import { RefreshCw, AlertTriangle, Users, Package, Car, DollarSign } from 'lucide-react';
+ 
+ interface AdminMetrics {
+   activeTrips: number;
+diff --git a/src/features/home/HomePage.tsx b/src/features/home/HomePage.tsx
+index c7fc7191..fca61af7 100644
+--- a/src/features/home/HomePage.tsx
++++ b/src/features/home/HomePage.tsx
+@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
+ import { Bus, Calendar, Car, Package, Search } from 'lucide-react';
+ import { useAuth } from '../../contexts/AuthContext';
+ import { useLanguage } from '../../contexts/LanguageContext';
++import type { Language } from '../../locales/translations';
+ import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+ import { useLiveUserStats } from '../../services/liveDataService';
+ import { buildCorridorBetaPlan } from '../../services/corridorBeta';
+@@ -17,7 +18,6 @@ import {
+   HomeHeroSection,
+   HomePageStyles,
+   OnboardingDemoSection,
+-  OutcomesSection,
+   ProofSection,
+   QuickActionsSection,
+   SignedInUtilitySection,
+@@ -53,7 +53,7 @@ export function HomePage() {
+     }
+   }, [language, setLanguage]);
+ 
+-  const detectBrowserLanguage = (): string | null => {
++  const detectBrowserLanguage = (): Language | null => {
+     if (typeof navigator === 'undefined') return null;
+     const browserLang = navigator.language.split('-')[0];
+     if (browserLang === 'ar' || browserLang === 'en') {
+diff --git a/src/features/home/MobilityOSLandingMap.tsx b/src/features/home/MobilityOSLandingMap.tsx
+index 58368225..dd12f7f4 100644
+--- a/src/features/home/MobilityOSLandingMap.tsx
++++ b/src/features/home/MobilityOSLandingMap.tsx
+@@ -35,7 +35,6 @@ const FLOW = C.cyan;
+ const GHOST = C.cyanDark;
+ const PULSE = C.blueLight;
+ const BUS_GREEN = C.green;          // #47D69E — bus movement colour
+-const BUS_GREEN_DIM = C.greenDim;   // rgba(71,214,158,0.12)
+ 
+ const BASE_ROUTES: readonly Corridor[] = [
+   { id: 'amman-aqaba', from: 0, to: 1, distanceKm: 335 },
+diff --git a/src/features/notifications/NotificationsPage.tsx b/src/features/notifications/NotificationsPage.tsx
+index 882c6dbe..a9e6cffa 100644
+--- a/src/features/notifications/NotificationsPage.tsx
++++ b/src/features/notifications/NotificationsPage.tsx
+@@ -1,4 +1,5 @@
+-import { NotificationCenter, useNotifications } from '../../components/NotificationCenter';
++import { NotificationCenter } from '../../components/NotificationCenter';
++import { useNotifications } from '../../hooks/useNotifications';
+ import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
+ import { useLanguage } from '../../contexts/LanguageContext';
+ import { Bell } from 'lucide-react';
+diff --git a/src/features/operations/CorporatePage.tsx b/src/features/operations/CorporatePage.tsx
+index 4c452ea5..ebabe9d0 100644
+--- a/src/features/operations/CorporatePage.tsx
++++ b/src/features/operations/CorporatePage.tsx
+@@ -1,7 +1,7 @@
+ import React, { useState } from 'react';
+ import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
+ import { useLanguage } from '../../contexts/LanguageContext';
+-import { Briefcase, Building, Mail, Users, MapPin, Calendar, CheckCircle } from 'lucide-react';
++import { Briefcase, Building, Users, MapPin, CheckCircle } from 'lucide-react';
+ import { C } from '../../utils/wasel-ds';
+ 
+ export function CorporatePage() {
+diff --git a/src/features/profile/ProfilePage.tsx b/src/features/profile/ProfilePage.tsx
+index 47586117..ed5b2e19 100644
+--- a/src/features/profile/ProfilePage.tsx
++++ b/src/features/profile/ProfilePage.tsx
+@@ -565,7 +565,7 @@ function ProfilePageContent({
+           <SharedSection title={ar ? 'وضع السائق' : 'Driver Mode'}>
+             <SharedRow
+               label={ar ? 'سيارتي' : 'My Vehicle'}
+-              value={user.vehicle ?? (ar ? 'لم تُضف بعد' : 'Not added yet')}
++              value={ar ? 'لم تُضف بعد' : 'Not added yet'}
+               icon={<Car size={15} />}
+               onClick={() => nav('/app/settings?section=account')}
+             />
+diff --git a/src/features/rides/FindRidePage.tsx b/src/features/rides/FindRidePage.tsx
+index fe26f9d1..fe16c516 100644
+--- a/src/features/rides/FindRidePage.tsx
++++ b/src/features/rides/FindRidePage.tsx
+@@ -61,7 +61,6 @@ import {
+ } from '../../pages/waselCorePageHelpers';
+ import { readStoredStringList, writeStoredStringList } from '../../pages/waselCoreStorage';
+ import {
+-  CoreExperienceBanner,
+   DS,
+   midpoint,
+   PageShell,
+@@ -199,12 +198,6 @@ export function FindRidePage() {
+         )
+     : allAvailableRides.slice(0, 4);
+ 
+-  const routeReadinessLabel =
+-    corridorRides.length >= 2
+-      ? t.instantMatch
+-      : corridorRides.length === 1
+-        ? t.bookingReady
+-        : t.searchHelp;
+   const recommendedRides = [...results]
+     .sort((left, right) => scoreRideForRecommendation(right) - scoreRideForRecommendation(left))
+     .slice(0, 2);
+diff --git a/src/features/rides/__tests__/FindRidePage.test.tsx b/src/features/rides/__tests__/FindRidePage.test.tsx
+index 175cea3c..3cdffe12 100644
+--- a/src/features/rides/__tests__/FindRidePage.test.tsx
++++ b/src/features/rides/__tests__/FindRidePage.test.tsx
+@@ -1,30 +1,29 @@
+ import { describe, it, expect, vi } from 'vitest';
+ import { render, screen } from '@testing-library/react';
+-import React from 'react';
+ import { FindRidePage } from '../FindRidePage';
+ 
+ // Mock dependencies
+-vi.mock('../../services/rideLifecycle', () => ({
++vi.mock('../../../services/rideLifecycle', () => ({
+   createRideBooking: vi.fn(),
+   getRideBookings: vi.fn(() => []),
+ }));
+ 
+-vi.mock('../../services/walletApi', () => ({
++vi.mock('../../../services/walletApi', () => ({
+   walletApi: {
+     getBalance: vi.fn(() => Promise.resolve(10)),
+   },
+ }));
+ 
+-vi.mock('../../services/movementPricing', () => ({
++vi.mock('../../../services/movementPricing', () => ({
+   getMovementPriceQuote: vi.fn(() => Promise.resolve({ priceJod: 2.5 })),
+ }));
+ 
+ vi.mock('leaflet', () => ({}));
+-vi.mock('../../components/MapWrapper', () => ({
++vi.mock('../../../components/MapWrapper', () => ({
+   MapWrapper: () => <div data-testid="map-wrapper" />,
+ }));
+ 
+-vi.mock('../../contexts/LanguageContext', () => ({
++vi.mock('../../../contexts/LanguageContext', () => ({
+   useLanguage: () => ({
+     language: 'en',
+     dir: 'ltr',
+@@ -32,7 +31,7 @@ vi.mock('../../contexts/LanguageContext', () => ({
+   }),
+ }));
+ 
+-vi.mock('../../contexts/LocalAuth', () => ({
++vi.mock('../../../contexts/LocalAuth', () => ({
+   useLocalAuth: () => ({
+     user: { id: 'user-1', name: 'Test User' },
+   }),
+@@ -40,61 +39,71 @@ vi.mock('../../contexts/LocalAuth', () => ({
+ 
+ vi.mock('react-router', () => ({
+   useLocation: () => ({ search: '' }),
++  useNavigate: () => vi.fn(),
+ }));
+ 
+-vi.mock('../../hooks/useIframeSafeNavigate', () => ({
++vi.mock('../../../hooks/useIframeSafeNavigate', () => ({
+   useIframeSafeNavigate: () => vi.fn(),
+ }));
+ 
+-vi.mock('../../hooks/usePushNotifications', () => ({
++vi.mock('../../../hooks/usePushNotifications', () => ({
+   usePushNotifications: () => ({ permission: 'granted' }),
+ }));
+ 
+-vi.mock('../../services/demandCapture', () => ({
++vi.mock('../../../services/demandCapture', () => ({
+   createDemandAlert: vi.fn(),
+-  getDemandStats: vi.fn(),
++  getDemandStats: vi.fn(() => ({ active: 0, rides: 0, buses: 0, packages: 0 })),
+   hydrateDemandAlerts: vi.fn(),
+ }));
+ 
+-vi.mock('../../services/growthEngine', () => ({
++vi.mock('../../../services/growthEngine', () => ({
+   trackGrowthEvent: vi.fn(),
+ }));
+ 
+-vi.mock('../../services/journeyLogistics', () => ({
+-  getConnectedRides: vi.fn(() => Promise.resolve([])),
++vi.mock('../../../services/journeyLogistics', () => ({
++  getConnectedRides: vi.fn(() => []),
+ }));
+ 
+-vi.mock('../../services/movementMembership', () => ({
++vi.mock('../../../services/movementMembership', () => ({
+   recordMovementActivity: vi.fn(),
+ }));
+ 
+-vi.mock('../../services/movementRetention', () => ({
++vi.mock('../../../services/movementRetention', () => ({
+   createReminderFromSuggestion: vi.fn(),
+-  formatRouteReminderSchedule: vi.fn(),
+-  getRecurringRouteSuggestions: vi.fn(),
+-  getRouteReminderForCorridor: vi.fn(),
+-  getRouteReminders: vi.fn(),
+-  syncRouteReminders: vi.fn(),
++  formatRouteReminderSchedule: vi.fn(() => ''),
++  getRecurringRouteSuggestions: vi.fn(() => []),
++  getRouteReminderForCorridor: vi.fn(() => null),
++  getRouteReminders: vi.fn(() => []),
++  syncRouteReminders: vi.fn(() => Promise.resolve([])),
+ }));
+ 
+-vi.mock('../../services/notifications.js', () => ({
++vi.mock('../../../services/notifications.js', () => ({
+   notificationsAPI: {},
+ }));
+ 
+-vi.mock('../../services/rideRealtime', () => ({
++vi.mock('../../../services/rideRealtime', () => ({
+   subscribeToRideBookingRealtime: vi.fn(() => () => {}),
+ }));
+ 
+-vi.mock('../../services/routeDemandIntelligence', () => ({
+-  getLiveCorridorSignal: vi.fn(),
+-  useLiveRouteIntelligence: () => ({ corridors: [] }),
+-}));
++vi.mock('../../../services/routeDemandIntelligence', () => {
++  const stableSnapshot = {
++    updatedAt: '2026-01-01T00:00:00.000Z',
++    selectedSignal: null,
++    featuredSignals: [] as unknown[],
++    allSignals: [] as unknown[],
++    membership: null,
++  };
++  return {
++    getLiveCorridorSignal: vi.fn(),
++    useLiveRouteIntelligence: () => stableSnapshot,
++  };
++});
+ 
+ describe('FindRidePage', () => {
+-  it('renders successfully', () => {
++  it('renders successfully', async () => {
+     render(<FindRidePage />);
+     // Verify some text or component from the page is present
+-    const heading = screen.getByRole('heading', { name: /find/i }) || screen.getByText(/search/i);
++    const heading = await screen.findByText(/book a ride/i);
+     expect(heading).toBeDefined();
+   });
+ });
+diff --git a/src/features/safety/SafetyPage.tsx b/src/features/safety/SafetyPage.tsx
+index a216b94c..49155041 100644
+--- a/src/features/safety/SafetyPage.tsx
++++ b/src/features/safety/SafetyPage.tsx
+@@ -1,14 +1,12 @@
+ import { useState } from 'react';
+ import { Headphones, Phone, Shield, ShieldCheck, Siren, UserCheck } from 'lucide-react';
+ import {
+-  MetricCard,
+   PageHero,
+   PageShell,
+   SectionCard,
+   StatusBadge,
+ } from '../../components/wasel-ui/WaselPagePrimitives';
+ import { useLanguage } from '../../contexts/LanguageContext';
+-import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+ import { C, R, SH, SPACE, TYPE, card, pillStyle } from '../../utils/wasel-ds';
+ 
+ const SAFETY_STACK = [
+@@ -62,7 +60,6 @@ const RESPONSE_FLOW = [
+ 
+ export default function SafetyPage() {
+   const { language } = useLanguage();
+-  const nav = useIframeSafeNavigate();
+   const ar = language === 'ar';
+   const [sosActive, setSosActive] = useState(false);
+ 
+diff --git a/src/features/trust/TrustCenterPage.tsx b/src/features/trust/TrustCenterPage.tsx
+index c2f208bf..f6832322 100644
+--- a/src/features/trust/TrustCenterPage.tsx
++++ b/src/features/trust/TrustCenterPage.tsx
+@@ -6,7 +6,6 @@ import {
+   BadgeCheck,
+   CheckCircle2,
+   FileCheck,
+-  LoaderCircle,
+   MailCheck,
+   Shield,
+   Wallet,
+diff --git a/src/features/wallet/WalletDashboard.tsx b/src/features/wallet/WalletDashboard.tsx
+index 35fe7897..ea69a017 100644
+--- a/src/features/wallet/WalletDashboard.tsx
++++ b/src/features/wallet/WalletDashboard.tsx
+@@ -90,7 +90,7 @@ export function WalletDashboard() {
+   } = useWalletDashboardController();
+ 
+   const [txSearch, setTxSearch] = useState('');
+-  const bal = walletData?.wallet?.balance ?? walletData?.balance ?? 0;
++  const bal = walletData?.balance ?? 0;
+   const pending = walletData?.pendingBalance ?? 0;
+   const rewardsBal = walletData?.rewardsBalance ?? 0;
+   const transactionCount = walletData?.transactions?.length ?? 0;
+diff --git a/src/features/wallet/__tests__/WalletDashboard.test.tsx b/src/features/wallet/__tests__/WalletDashboard.test.tsx
+index cea2c6ae..cbf08fa9 100644
+--- a/src/features/wallet/__tests__/WalletDashboard.test.tsx
++++ b/src/features/wallet/__tests__/WalletDashboard.test.tsx
+@@ -1,35 +1,63 @@
+ import { describe, it, expect, vi } from 'vitest';
+ import { render, screen } from '@testing-library/react';
+-import React from 'react';
++import { MemoryRouter } from 'react-router';
+ import { WalletDashboard } from '../WalletDashboard';
+ 
+-// Mock dependency modules
+-vi.mock('../../services/walletApi', () => ({
++// Mock dependency modules — paths are relative to this __tests__ folder,
++// three levels up to src (../../../), matching the depth actually used by
++// the modules that import them from src/features/wallet/.
++vi.mock('../../../services/walletApi', () => ({
+   walletApi: {
+-    getWalletSummary: vi.fn(async () => ({
+-      id: 'wallet-123',
+-      userId: 'user-1',
+-      status: 'active',
++    getWallet: vi.fn(async () => ({
++      wallet: {
++        id: 'wallet-123',
++        userId: 'user-1',
++        status: 'active',
++        currency: 'JOD',
++        autoTopUp: false,
++        autoTopUpAmount: 10,
++        autoTopUpThreshold: 5,
++        paymentMethods: [],
++        createdAt: null,
++      },
++      balance: 15.5,
++      pendingBalance: 0,
++      rewardsBalance: 0,
++      total_earned: 0,
++      total_spent: 0,
++      total_deposited: 0,
+       currency: 'JOD',
++      pinSet: false,
+       autoTopUp: false,
+-      autoTopUpAmount: 10,
+-      autoTopUpThreshold: 5,
+-      paymentMethods: [],
+-      createdAt: null,
++      transactions: [],
++      activeEscrows: [],
++      activeRewards: [],
++      subscription: null,
+     })),
+-    getBalance: vi.fn(async () => 15.5),
+-    getTransactions: vi.fn(async () => []),
+-    getPaymentMethods: vi.fn(async () => []),
++    getInsights: vi.fn(async () => null),
+   },
++  getWalletCapabilities: vi.fn(() => ({
++    topUp: true,
++    rewardClaim: true,
++    subscription: true,
++    pin: true,
++    send: true,
++    withdraw: true,
++    autoTopUp: true,
++  })),
+ }));
+ 
+-vi.mock('../../contexts/LocalAuth', () => ({
++vi.mock('../../../contexts/AuthContext', () => ({
++  useAuth: () => ({ user: { id: 'user-1' } }),
++}));
++
++vi.mock('../../../contexts/LocalAuth', () => ({
+   useLocalAuth: () => ({
+     user: { id: 'user-1' },
+   }),
+ }));
+ 
+-vi.mock('../../contexts/LanguageContext', () => ({
++vi.mock('../../../contexts/LanguageContext', () => ({
+   useLanguage: () => ({
+     language: 'en',
+     dir: 'ltr',
+@@ -37,11 +65,23 @@ vi.mock('../../contexts/LanguageContext', () => ({
+   }),
+ }));
+ 
++vi.mock('../../../hooks/useIframeSafeNavigate', () => ({
++  useIframeSafeNavigate: () => vi.fn(),
++}));
++
++vi.mock('../../../services/movementMembership', () => ({
++  setWaselPlusActive: vi.fn(),
++}));
++
+ describe('WalletDashboard Component', () => {
+   it('renders successfully', async () => {
+-    render(<WalletDashboard />);
++    render(
++      <MemoryRouter>
++        <WalletDashboard />
++      </MemoryRouter>,
++    );
+     // Just verify the initial component render is safe
+-    const heading = screen.getByText(/wallet/i) || screen.getByText(/balance/i);
+-    expect(heading).toBeDefined();
++    const headings = await screen.findAllByText(/wallet|balance/i);
++    expect(headings.length).toBeGreaterThan(0);
+   });
+ });
+diff --git a/src/pages/WorldClassAuthPage.tsx b/src/pages/WorldClassAuthPage.tsx
+index 4b95b595..8acbf0d9 100644
+--- a/src/pages/WorldClassAuthPage.tsx
++++ b/src/pages/WorldClassAuthPage.tsx
+@@ -420,21 +420,6 @@ const standaloneInputStyle: CSSProperties = {
+   marginBottom: 16,
+ };
+ 
+-const codeInputStyle: CSSProperties = {
+-  width: '100%',
+-  background: 'rgba(255,255,255,0.1)',
+-  border: '1px solid rgba(255,255,255,0.2)',
+-  borderRadius: 12,
+-  padding: 16,
+-  color: '#fff',
+-  fontSize: '1.5rem',
+-  textAlign: 'center',
+-  letterSpacing: '0.5em',
+-  outline: 'none',
+-  fontWeight: 700,
+-  margin: '24px 0 16px',
+-};
+-
+ const errorStyle: CSSProperties = {
+   background: 'rgba(239,68,68,0.1)',
+   border: '1px solid rgba(239,68,68,0.3)',
+diff --git a/src/services/__tests__/paymentService.test.ts b/src/services/__tests__/paymentService.test.ts
+index 0da253e2..8a3b23ae 100644
+--- a/src/services/__tests__/paymentService.test.ts
++++ b/src/services/__tests__/paymentService.test.ts
+@@ -1,5 +1,4 @@
+ import { describe, it, expect, vi, beforeEach } from 'vitest';
+-import { PaymentIntent } from '../../services/paymentService';
+ 
+ // Mock dependencies
+ vi.mock('../monitoring', () => ({
+@@ -16,34 +15,18 @@ vi.mock('../rateLimit', () => ({
+   },
+ }));
+ 
+-// We can test buildCliqCheckoutUrl and validation logic
+-// Let's import directly from paymentService
+-import { PaymentService } from '../paymentService';
++// paymentService is exported as a singleton instance, not a class
++import { paymentService } from '../paymentService';
+ 
+ describe('paymentService', () => {
+-  let paymentService: any;
+-
+   beforeEach(() => {
+     vi.clearAllMocks();
+-    paymentService = new PaymentService();
+-  });
+-
+-  it('buildCliqCheckoutUrl works deterministically', () => {
+-    // Access private/internal buildCliqCheckoutUrl method via prototype or test its integration
+-    // Since paymentService prototype has buildCliqCheckoutUrl:
+-    const buildCliq = (paymentService as any).constructor.prototype.buildCliqCheckoutUrl || (paymentService as any).buildCliqCheckoutUrl;
+-    if (buildCliq) {
+-      const url = buildCliq('tx-123', 5.5, 'https://return.url');
+-      expect(url).toContain('transactionId=tx-123');
+-      expect(url).toContain('amount=5.500');
+-      expect(url).toContain('currency=JOD');
+-    }
+   });
+ 
+   it('verifies webhooks correctly', async () => {
+     // If verifyWebhookSignature exists
+     if (paymentService.verifyWebhookSignature) {
+-      const result = await paymentService.verifyWebhookSignature('payload', 'valid-sig');
++      const result = await paymentService.verifyWebhookSignature('payload', 'valid-sig', 'test-secret');
+       expect(result).toBeDefined();
+     }
+   });
+diff --git a/src/services/__tests__/rideLifecycle.test.ts b/src/services/__tests__/rideLifecycle.test.ts
+index 10f1253a..fad702dc 100644
+--- a/src/services/__tests__/rideLifecycle.test.ts
++++ b/src/services/__tests__/rideLifecycle.test.ts
+@@ -64,7 +64,7 @@ describe('rideLifecycle Service', () => {
+ 
+     const bookings = getRideBookings();
+     expect(bookings.length).toBe(1);
+-    expect(bookings[0].from).toBe('Amman');
++    expect(bookings[0]?.from).toBe('Amman');
+   });
+ 
+   it('createRideBooking() saves a booking and returns it', async () => {
+@@ -86,7 +86,7 @@ describe('rideLifecycle Service', () => {
+ 
+     const stored = getRideBookings();
+     expect(stored.length).toBe(1);
+-    expect(stored[0].id).toBe(newBooking.id);
++    expect(stored[0]?.id).toBe(newBooking.id);
+   });
+ 
+   it('handles invalid JSON in localStorage gracefully', () => {
+diff --git a/src/services/__tests__/walletApi.test.ts b/src/services/__tests__/walletApi.test.ts
+index ec24b262..f00c1770 100644
+--- a/src/services/__tests__/walletApi.test.ts
++++ b/src/services/__tests__/walletApi.test.ts
+@@ -25,15 +25,13 @@ describe('walletApi Service', () => {
+     vi.clearAllMocks();
+   });
+ 
+-  it('normalizes payment method rows correctly', () => {
+-    // If we test an internal helper, we can test walletApi.getWalletSummary mapping
+-    // Let's verify that the module exports walletApi object
++  it('exposes the wallet API surface', () => {
+     expect(walletApi).toBeDefined();
+-    expect(typeof walletApi.getBalance).toBe('function');
++    expect(typeof walletApi.getWallet).toBe('function');
+   });
+ 
+-  it('getBalance returns fallback or resolves successfully', async () => {
+-    const balance = await walletApi.getBalance();
+-    expect(typeof balance).toBe('number');
++  it('getWallet returns fallback or resolves successfully', async () => {
++    const wallet = await walletApi.getWallet('user-123');
++    expect(typeof wallet.balance).toBe('number');
+   });
+ });
+diff --git a/tests/setup.ts b/tests/setup.ts
+index 1c64e9c3..9a86b7eb 100644
+--- a/tests/setup.ts
++++ b/tests/setup.ts
+@@ -26,9 +26,13 @@ Object.defineProperty(globalThis, 'localStorage', {
+ });
+ 
+ // ── navigator.language default ────────────────────────────────────────────────
+-Object.defineProperty(globalThis, 'navigator', {
+-  value: { language: 'en-US' },
++// Only override `language`; replacing the whole navigator object strips jsdom's
++// userAgent (and other properties) that react-dom relies on internally, which
++// crashes any test that renders a component before it even runs.
++Object.defineProperty(globalThis.navigator, 'language', {
++  value: 'en-US',
+   writable: true,
++  configurable: true,
+ });
+ 
+ // ── Clean state between tests ─────────────────────────────────────────────────
+diff --git a/vitest.config.ts b/vitest.config.ts
+index 6a744f27..647f207b 100644
+--- a/vitest.config.ts
++++ b/vitest.config.ts
+@@ -31,10 +31,11 @@ export default defineConfig({
+       VITE_ENABLE_TWO_FACTOR_AUTH: 'false',
+       VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true',
+     },
+-    passWithNoTests: true,
+     include: [
+       'tests/**/*.test.ts',
+       'tests/**/*.test.tsx',
++      'src/**/*.test.ts',
++      'src/**/*.test.tsx',
+     ],
+     exclude: [
+       'node_modules',

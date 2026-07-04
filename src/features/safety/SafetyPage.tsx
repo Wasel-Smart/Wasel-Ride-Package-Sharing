@@ -15,29 +15,41 @@ const SAFETY_STACK = [
   {
     icon: UserCheck,
     title: 'Verified identity',
+    titleAr: 'هوية موثقة',
     detail: 'Sensitive actions stay behind identity checks and trusted-account rules.',
+    detailAr: 'الإجراءات الحساسة تبقى خلف تحقق الهوية وقواعد الحساب الموثوق.',
     stat: '2-step',
+    statAr: 'خطوتان',
     accent: C.green,
   },
   {
     icon: Siren,
     title: 'Emergency help',
+    titleAr: 'مساعدة طارئة',
     detail: 'SOS and fast support stay one tap away during movement.',
+    detailAr: 'طلب النجدة والدعم السريع يبعدان نقرة واحدة أثناء التنقل.',
     stat: '<60s',
+    statAr: '<60 ث',
     accent: C.error,
   },
   {
     icon: Shield,
     title: 'Trip evidence',
+    titleAr: 'إثبات الرحلة',
     detail: 'Routes, tickets, and support events stay visible for issue resolution.',
+    detailAr: 'المسارات والتذاكر وأحداث الدعم تبقى ظاهرة لحل أي مشكلة.',
     stat: '100%',
+    statAr: '100%',
     accent: C.gold,
   },
   {
     icon: Headphones,
     title: 'Comfort controls',
+    titleAr: 'ضوابط الراحة',
     detail: 'Preferences and safety expectations appear before the trip begins.',
+    detailAr: 'التفضيلات وتوقعات السلامة تظهر قبل بدء الرحلة.',
     stat: '4 rails',
+    statAr: '4 مسارات',
     accent: C.cyan,
   },
 ];
@@ -45,17 +57,23 @@ const SAFETY_STACK = [
 const RESPONSE_FLOW = [
   {
     label: 'Before booking',
+    labelAr: 'قبل الحجز',
     detail: 'Identity status, trust, and comfort settings appear first.',
+    detailAr: 'حالة الهوية والثقة وإعدادات الراحة تظهر أولاً.',
     accent: C.green,
   },
   {
     label: 'During trip',
+    labelAr: 'أثناء الرحلة',
     detail: 'SOS, route visibility, and handoff details stay active.',
+    detailAr: 'طلب النجدة وظهور المسار وتفاصيل التسليم تبقى نشطة.',
     accent: C.cyan,
   },
   {
     label: 'After trip',
+    labelAr: 'بعد الرحلة',
     detail: 'Support, proof, and follow-up actions stay attached to the journey.',
+    detailAr: 'الدعم والإثبات وإجراءات المتابعة تبقى مرتبطة بالرحلة.',
     accent: C.gold,
   },
 ];
@@ -126,24 +144,28 @@ export default function SafetyPage() {
         </div>
 
         <PageHero
-          eyebrow="Safety Center"
+          eyebrow={ar ? 'مركز السلامة' : 'Safety Center'}
           icon={<ShieldCheck size={18} />}
-          title="Clear safety, visible trust, faster decisions."
-          description="Safety works best when people understand it immediately. Protection is visible before booking, during movement, and after support is needed."
+          title={ar ? 'سلامة واضحة، وثقة ظاهرة، وقرارات أسرع.' : 'Clear safety, visible trust, faster decisions.'}
+          description={
+            ar
+              ? 'تعمل السلامة بأفضل شكل عندما يفهمها الناس فوراً. الحماية ظاهرة قبل الحجز، وأثناء التنقل، وبعد الحاجة إلى الدعم.'
+              : 'Safety works best when people understand it immediately. Protection is visible before booking, during movement, and after support is needed.'
+          }
           accent={C.green}
           aside={
             <div style={{ display: 'grid', gap: SPACE[3] }}>
-              <StatusBadge label="Always visible" accent={C.green} />
+              <StatusBadge label={ar ? 'ظاهرة دائماً' : 'Always visible'} accent={C.green} />
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
                 gap: SPACE[3],
               }}>
                 {[
-                  { label: 'Trust gates',    value: '4',       accent: C.green },
-                  { label: 'Response path',  value: '1 tap',   accent: C.cyan },
-                  { label: 'Trip proof',     value: 'Live',    accent: C.gold },
-                  { label: 'Support state',  value: 'Tracked', accent: C.error },
+                  { label: ar ? 'بوابات الثقة' : 'Trust gates',    value: '4',       accent: C.green },
+                  { label: ar ? 'مسار الاستجابة' : 'Response path',  value: ar ? 'نقرة واحدة' : '1 tap',   accent: C.cyan },
+                  { label: ar ? 'إثبات الرحلة' : 'Trip proof',     value: ar ? 'مباشر' : 'Live',    accent: C.gold },
+                  { label: ar ? 'حالة الدعم' : 'Support state',  value: ar ? 'متتبعة' : 'Tracked', accent: C.error },
                 ].map(item => (
                   <div
                     key={item.label}
@@ -179,8 +201,8 @@ export default function SafetyPage() {
 
         {/* ── Protection Stack ── */}
         <SectionCard
-          title="Protection Stack"
-          subtitle="The four rails that keep every trip safe."
+          title={ar ? 'منظومة الحماية' : 'Protection Stack'}
+          subtitle={ar ? 'المسارات الأربعة التي تحافظ على سلامة كل رحلة.' : 'The four rails that keep every trip safe.'}
           icon={<ShieldCheck size={18} color={C.green} />}
         >
           <div style={{
@@ -215,14 +237,14 @@ export default function SafetyPage() {
                       <Icon size={18} />
                     </span>
                     <span style={{ color: item.accent, fontSize: TYPE.size.sm, fontWeight: TYPE.weight.black }}>
-                      {item.stat}
+                      {ar ? item.statAr : item.stat}
                     </span>
                   </div>
                   <div style={{ color: C.text, fontSize: TYPE.size.lg, fontWeight: TYPE.weight.black }}>
-                    {item.title}
+                    {ar ? item.titleAr : item.title}
                   </div>
                   <div style={{ marginTop: SPACE[2], color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: TYPE.lineHeight.relaxed }}>
-                    {item.detail}
+                    {ar ? item.detailAr : item.detail}
                   </div>
                 </div>
               );
@@ -232,8 +254,8 @@ export default function SafetyPage() {
 
         {/* ── Emergency Flow — 3-step stepper ── */}
         <SectionCard
-          title="Emergency Flow"
-          subtitle="One page, one pattern, one predictable response model."
+          title={ar ? 'تدفق الطوارئ' : 'Emergency Flow'}
+          subtitle={ar ? 'صفحة واحدة، ونمط واحد، ونموذج استجابة يمكن توقعه.' : 'One page, one pattern, one predictable response model.'}
           icon={<Siren size={18} color={C.error} />}
         >
           <div style={{
@@ -259,13 +281,13 @@ export default function SafetyPage() {
                   textTransform: 'uppercase',
                   marginBottom: SPACE[3],
                 }}>
-                  Step {index + 1}
+                  {ar ? `الخطوة ${index + 1}` : `Step ${index + 1}`}
                 </div>
                 <div style={{ color: C.text, fontSize: TYPE.size.base, fontWeight: TYPE.weight.black }}>
-                  {step.label}
+                  {ar ? step.labelAr : step.label}
                 </div>
                 <div style={{ marginTop: SPACE[2], color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: TYPE.lineHeight.relaxed }}>
-                  {step.detail}
+                  {ar ? step.detailAr : step.detail}
                 </div>
               </div>
             ))}

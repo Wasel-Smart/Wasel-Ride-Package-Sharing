@@ -645,15 +645,14 @@ export default function SettingsPage() {
 
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [savedSettings, setSavedSettings] = useState<string | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  const requestResetToDefaults = () => {
+    setShowResetConfirm(true);
+  };
 
   const resetToDefaults = () => {
-    if (
-      !confirm(
-        'Reset all settings to their defaults? This will restore the original configuration for notifications, privacy, and display.',
-      )
-    )
-      return;
-
+    setShowResetConfirm(false);
     setPrivacy(defaultAccountSettings.privacy);
     setDisplay({
       ...defaultAccountSettings.display,
@@ -900,7 +899,7 @@ export default function SettingsPage() {
           />
           <div style={{ padding: '14px 18px' }}>
             <button
-              onClick={resetToDefaults}
+              onClick={requestResetToDefaults}
               style={{
                 padding: '8px 14px',
                 borderRadius: 8,
@@ -1238,6 +1237,92 @@ export default function SettingsPage() {
           Wasel v1.0.0 - wasel14.online
         </p>
       </div>
+
+      {showResetConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 2000,
+            background: C.overlay,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 24,
+          }}
+          onClick={() => setShowResetConfirm(false)}
+        >
+          <div
+            style={{
+              background: C.cardSolid,
+              border: `1px solid ${C.errorDim}`,
+              borderRadius: 16,
+              padding: 28,
+              maxWidth: 380,
+              width: '100%',
+            }}
+            onClick={event => event.stopPropagation()}
+          >
+            <h3
+              style={{
+                color: C.error,
+                fontFamily: F,
+                fontWeight: 800,
+                fontSize: '1.1rem',
+                marginBottom: 10,
+              }}
+            >
+              {ar ? 'إعادة ضبط الإعدادات؟' : 'Reset all settings?'}
+            </h3>
+            <p
+              style={{
+                color: C.textMuted,
+                fontFamily: F,
+                fontSize: '0.85rem',
+                marginBottom: 20,
+                lineHeight: 1.6,
+              }}
+            >
+              {ar
+                ? 'سيؤدي هذا إلى استعادة الإعدادات الافتراضية للتنبيهات والخصوصية والعرض.'
+                : 'This will restore the original configuration for notifications, privacy, and display.'}
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                style={{
+                  flex: 1,
+                  height: 40,
+                  borderRadius: 10,
+                  background: 'transparent',
+                  border: `1px solid ${C.border}`,
+                  color: C.textMuted,
+                  fontFamily: F,
+                  cursor: 'pointer',
+                }}
+              >
+                {ar ? 'إلغاء' : 'Cancel'}
+              </button>
+              <button
+                onClick={resetToDefaults}
+                style={{
+                  flex: 1,
+                  height: 40,
+                  borderRadius: 10,
+                  background: C.errorDim,
+                  border: `1px solid ${C.errorDim}`,
+                  color: C.error,
+                  fontFamily: F,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {ar ? 'إعادة الضبط' : 'Reset'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageShell>
   );
 }
