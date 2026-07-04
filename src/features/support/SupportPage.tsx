@@ -105,8 +105,52 @@ function SupportChannel({
   );
 }
 
-// Extracted to fix hooks-in-map violation
-function FaqItem({ q, a }: { q: string; a: string }) {
+const FAQS = [
+  {
+    q: 'How do I cancel a ride booking?',
+    a: 'Open My Trips, find the ride, expand it, and tap "Open journey". From there you can request cancellation. Cancellation policy depends on how close to departure you are.',
+  },
+  {
+    q: 'My package is not moving — what do I do?',
+    a: 'Go to Packages → Track Package and enter your tracking ID. If the status has not changed in 24 hours, tap "Open support" to escalate directly from the tracking screen.',
+  },
+  {
+    q: 'Why is my wallet balance pending?',
+    a: 'Pending balance means a payment is awaiting settlement or a payout is being processed. It typically clears within 1–3 business days. Check the Wallet → Transactions tab for details.',
+  },
+  {
+    q: 'How do I verify my account to offer rides?',
+    a: 'Go to Trust Center from your profile. Complete email verification, phone confirmation, and upload your driver documents. Once all checks pass, the Offer Ride flow unlocks.',
+  },
+  {
+    q: 'Can I change my pickup location after booking?',
+    a: 'Contact the driver directly through the trip chat, or open a support ticket from My Trips. Changes are subject to driver approval.',
+  },
+];
+
+const TOPIC_CHANNEL: Record<string, { hint: string; href: () => string }> = {
+  'Ride issue': { hint: '→ Fastest via WhatsApp or call', href: getWhatsAppSupportUrl },
+  'Package issue': { hint: '→ Use email for tracking details', href: getSupportEmailUrl.bind(null, 'Package issue') },
+  'Wallet question': { hint: '→ Email works best for payment records', href: getSupportEmailUrl.bind(null, 'Wallet question') },
+  'Account access': { hint: '→ Call support for fastest recovery', href: getSupportPhoneUrl },
+  'Driver verification': { hint: '→ Email with document attachments', href: getSupportEmailUrl.bind(null, 'Driver verification') },
+};
+
+function FAQSection({ ar: _ar }: { ar: boolean }) {
+  return (
+    <SectionCard
+      title="Frequently Asked Questions"
+      subtitle="Quick answers to the most common issues."
+      icon={<HelpCircle size={18} color={C.cyan} />}
+    >
+      <div style={{ display: 'grid', gap: 8 }}>
+        {FAQS.map(item => (
+          <FaqItem key={item.q} q={item.q} a={item.a} />
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
   const [open, setOpen] = useState(false);
   return (
     <div style={{

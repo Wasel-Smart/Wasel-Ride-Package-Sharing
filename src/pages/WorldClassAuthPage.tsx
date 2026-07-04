@@ -1,11 +1,12 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { WaselLogo } from '../components/wasel-ds/WaselLogo';
-import { ArrowRight, Check, Lock, Mail, Phone } from 'lucide-react';
+import { ArrowRight, Check, Lock, Mail, Phone, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { useLanguage } from '../contexts/LanguageContext';
 
 type AuthStep = 'phone' | 'verify' | 'complete';
+type AuthMode = 'signin' | 'signup';
 
 export function WorldClassAuthPage() {
   const { language } = useLanguage();
@@ -14,6 +15,7 @@ export function WorldClassAuthPage() {
 
   const ar = language === 'ar';
   const [step, setStep] = useState<AuthStep>('phone');
+  const [mode, setMode] = useState<AuthMode>('signin');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -22,6 +24,7 @@ export function WorldClassAuthPage() {
   const [useEmail, setUseEmail] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const formatPhone = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
@@ -40,6 +43,13 @@ export function WorldClassAuthPage() {
     window.setTimeout(() => {
       setLoading(false);
       setStep('verify');
+      setResendCooldown(30);
+      const interval = window.setInterval(() => {
+        setResendCooldown(prev => {
+          if (prev <= 1) { window.clearInterval(interval); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
     }, 500);
   };
 
@@ -110,6 +120,25 @@ export function WorldClassAuthPage() {
           <p style={mutedStyle}>{ar ? 'سجل دخولك للمتابعة' : 'Sign in to continue'}</p>
         </header>
 
+        {/* Mode toggle */}
+        <div style={{ display: 'flex', gap: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 14, padding: 4, marginBottom: 24 }}>
+          {(['signin', 'signup'] as AuthMode[]).map(m => (
+            <button
+              key={m}
+              onClick={() => { setMode(m); setStep('phone'); setError(''); }}
+              style={{
+                flex: 1, height: 40, borderRadius: 10, border: 'none', cursor: 'pointer',
+                background: mode === m ? 'rgba(0,200,232,0.18)' : 'transparent',
+                color: mode === m ? '#55E9FF' : '#94A3B8',
+                fontWeight: 700, fontSize: '0.88rem',
+                transition: 'all 0.18s',
+              }}
+            >
+              {m === 'signin' ? (ar ? 'تسجيل الدخول' : 'Sign in') : (ar ? 'إنشاء حساب' : 'Sign up')}
+            </button>
+          ))}
+        </div>
+
         <main style={cardStyle}>
           {step === 'phone' && !useEmail && (
             <>
@@ -146,22 +175,62 @@ export function WorldClassAuthPage() {
               </div>
               <h2 style={subheadingStyle}>{ar ? 'أدخل رمز التحقق' : 'Enter verification code'}</h2>
               <p style={mutedStyle}>{ar ? `أرسلنا رمزا إلى +${phone}` : `We sent a code to +${phone}`}</p>
-              <input
-                type="text"
-                value={code}
-                maxLength={6}
-                onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                style={codeInputStyle}
-              />
+              {/* 6-box OTP input */}
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center', margin: '24px 0 16px' }}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <input
+                    key={i}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={code[i] ?? ''}
+                    onChange={ev => {
+                      const val = ev.target.value.replace(/\D/g, '');
+                      const next = code.split('');
+                      next[i] = val;
+                      const joined = next.join('').slice(0, 6);
+                      setCode(joined);
+                      if (val && i < 5) {
+                        const sibling = ev.target.parentElement?.children[i + 1] as HTMLInputElement | undefined;
+                        sibling?.focus();
+                      }
+                    }}
+                    onKeyDown={ev => {
+                      if (ev.key === 'Backspace' && !code[i] && i > 0) {
+                        const sibling = ev.currentTarget.parentElement?.children[i - 1] as HTMLInputElement | undefined;
+                        sibling?.focus();
+                      }
+                    }}
+                    style={{
+                      width: 44, height: 52, borderRadius: 12, textAlign: 'center',
+                      background: 'rgba(255,255,255,0.1)', border: `1.5px solid ${code[i] ? '#00C8E8' : 'rgba(255,255,255,0.2)'}`,
+                      color: '#fff', fontSize: '1.4rem', fontWeight: 700, outline: 'none',
+                    }}
+                  />
+                ))}
+              </div>
               <ErrorMessage message={error} />
               <PrimaryButton disabled={loading || code.length !== 6} onClick={handleVerifyCode}>
                 {loading ? (ar ? 'جار التحقق...' : 'Verifying...') : ar ? 'تحقق' : 'Verify'}
                 {!loading && <Check size={18} />}
               </PrimaryButton>
-              <SecondaryButton onClick={() => setStep('phone')}>
-                {ar ? 'تغيير رقم الهاتف' : 'Change phone number'}
-              </SecondaryButton>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, flexWrap: 'wrap', gap: 8 }}>
+                <SecondaryButton onClick={() => setStep('phone')}>
+                  {ar ? 'تغيير رقم الهاتف' : 'Change number'}
+                </SecondaryButton>
+                <button
+                  onClick={resendCooldown === 0 ? handlePhoneSubmit : undefined}
+                  disabled={resendCooldown > 0}
+                  style={{
+                    background: 'none', border: 'none', cursor: resendCooldown > 0 ? 'not-allowed' : 'pointer',
+                    color: resendCooldown > 0 ? '#64748B' : '#00C8E8',
+                    fontSize: '0.88rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6,
+                  }}
+                >
+                  <RefreshCw size={14} />
+                  {resendCooldown > 0 ? `${ar ? 'إعادة الإرسال' : 'Resend'} (${resendCooldown}s)` : (ar ? 'إعادة إرسال الرمز' : 'Resend code')}
+                </button>
+              </div>
             </>
           )}
 

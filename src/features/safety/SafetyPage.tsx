@@ -1,4 +1,5 @@
-import { Headphones, Shield, ShieldCheck, Siren, UserCheck } from 'lucide-react';
+import { useState } from 'react';
+import { Headphones, Phone, Shield, ShieldCheck, Siren, UserCheck } from 'lucide-react';
 import {
   MetricCard,
   PageHero,
@@ -7,6 +8,7 @@ import {
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { C, R, SH, SPACE, TYPE, card, pillStyle } from '../../utils/wasel-ds';
 
 const SAFETY_STACK = [
@@ -60,7 +62,9 @@ const RESPONSE_FLOW = [
 
 export default function SafetyPage() {
   const { language } = useLanguage();
+  const nav = useIframeSafeNavigate();
   const ar = language === 'ar';
+  const [sosActive, setSosActive] = useState(false);
 
   return (
     <PageShell maxWidth={1120} dir={ar ? 'rtl' : 'ltr'}>
@@ -70,11 +74,12 @@ export default function SafetyPage() {
         <div style={{
           ...card({ padding: SPACE[4], radius: R.xxl }),
           borderColor: `${C.error}40`,
-          background: `${C.error}12`,
+          background: sosActive ? `${C.error}22` : `${C.error}12`,
           display: 'flex', alignItems: 'center',
           justifyContent: 'space-between',
           marginBottom: SPACE[5],
           gap: SPACE[3],
+          transition: 'background 0.3s',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
             <Siren size={20} color={C.error} />
@@ -87,12 +92,37 @@ export default function SafetyPage() {
               </div>
             </div>
           </div>
-          <a
-            href="/app/support?urgent=1"
-            style={{ ...pillStyle(C.error), textDecoration: 'none', whiteSpace: 'nowrap' }}
-          >
-            {ar ? 'احصل على مساعدة ←' : 'Get help now →'}
-          </a>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setSosActive(v => !v)}
+              style={{
+                ...pillStyle(C.error),
+                border: 'none', cursor: 'pointer',
+                background: sosActive ? C.error : `${C.error}20`,
+                color: sosActive ? '#fff' : C.error,
+                padding: '10px 18px', fontSize: '0.84rem', fontWeight: 800,
+                transition: 'all 0.2s',
+              }}
+            >
+              {sosActive ? (ar ? 'تم إرسال طلب المساعدة ✓' : 'SOS sent ✓') : (ar ? 'إرسال طلب طوارئ' : 'Send SOS')}
+            </button>
+            <a
+              href="/app/support?urgent=1"
+              style={{ ...pillStyle(C.error), textDecoration: 'none', whiteSpace: 'nowrap', padding: '10px 18px' }}
+            >
+              {ar ? 'احصل على مساعدة ←' : 'Get help now →'}
+            </a>
+            <a
+              href="tel:911"
+              style={{
+                ...pillStyle(C.gold), textDecoration: 'none', whiteSpace: 'nowrap',
+                padding: '10px 18px', display: 'inline-flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              <Phone size={14} />
+              {ar ? 'اتصل بالطوارئ' : 'Call 911'}
+            </a>
+          </div>
         </div>
 
         <PageHero
