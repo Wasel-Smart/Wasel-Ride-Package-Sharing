@@ -3,18 +3,33 @@
  * Shows all user notifications with real-time updates and preferences.
  */
 
-import { useState } from 'react';
-import { NotificationCenter } from '../../components/NotificationCenter';
+import { useEffect, useState } from 'react';
+import { NotificationCenter, useNotifications } from '../../components/NotificationCenter';
 import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Bell, CheckSquare, Settings } from 'lucide-react';
+import { Bell, CheckSquare, Settings, Filter, Archive } from 'lucide-react';
 import { C } from '../../utils/wasel-ds';
 
 export function NotificationsPage() {
   const { language, dir } = useLanguage();
   const ar = language === 'ar';
-  
+  const { notifications, markAllAsRead } = useNotifications();
+
   const [activeTab, setActiveTab] = useState<'all' | 'rides' | 'system'>('all');
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      // Real-time refresh every 30 seconds
+    }, 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  const handleMarkAllRead = () => {
+    void markAllAsRead();
+  };
 
   return (
     <PageShell maxWidth={1120} dir={dir}>
@@ -67,11 +82,68 @@ export function NotificationsPage() {
           <TabButton active={activeTab === 'all'} onClick={() => setActiveTab('all')} label={ar ? 'الكل' : 'All Notifications'} />
           <TabButton active={activeTab === 'rides'} onClick={() => setActiveTab('rides')} label={ar ? 'الرحلات' : 'Ride Alerts'} />
           <TabButton active={activeTab === 'system'} onClick={() => setActiveTab('system')} label={ar ? 'النظام' : 'System Messages'} />
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+            <button
+              onClick={() => setShowUnreadOnly(!showUnreadOnly)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 13,
+                backgroundColor: showUnreadOnly ? '#06b6d4' : '#1f2937',
+                color: showUnreadOnly ? '#000' : '#d1d5db',
+                border: 'none',
+                borderRadius: 6,
+                padding: '6px 12px',
+                cursor: 'pointer',
+              }}
+            >
+              <Filter size={14} />
+              {ar ? 'غير المقروءة فقط' : 'Unread only'} ({unreadCount})
+            </button>
+          </div>
         </div>
 
         {/* Notification Main Panel */}
         <div style={{ backgroundColor: '#11141c', border: '1px solid #1f2937', borderRadius: 12, padding: 16 }}>
-          <NotificationCenter />
+          <div style={{ marginBottom: 12, display: 'flex', gap: 8 }}>
+            <button
+              onClick={handleMarkAllRead}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 13,
+                backgroundColor: '#1f2937',
+                color: '#d1d5db',
+                border: 'none',
+                borderRadius: 6,
+                padding: '6px 12px',
+                cursor: 'pointer',
+              }}
+            >
+              <CheckSquare size={14} />
+              {ar ? 'تحديد الكل كمقروء' : 'Mark all read'}
+            </button>
+            <button
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 13,
+                backgroundColor: '#1f2937',
+                color: '#d1d5db',
+                border: 'none',
+                borderRadius: 6,
+                padding: '6px 12px',
+                cursor: 'pointer',
+              }}
+            >
+              <Archive size={14} />
+              {ar ? 'أرشفة المقروءة' : 'Archive read'}
+            </button>
+          </div>
+          <NotificationCenter filter={activeTab} showUnreadOnly={showUnreadOnly} />
         </div>
 
       </div>

@@ -1,5 +1,18 @@
 import type { ReactNode } from 'react';
-import { AlertCircle, HelpCircle, Mail, MessageCircle, PackageCheck, Phone, Route, Wallet } from 'lucide-react';
+import { useState } from 'react';
+import {
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
+  Mail,
+  MessageCircle,
+  PackageCheck,
+  Phone,
+  Route,
+  Send,
+  Wallet,
+} from 'lucide-react';
 import {
   MetricCard,
   PageHero,
@@ -51,6 +64,14 @@ const responsePath = [
   'Wasel keeps the issue attached to the relevant movement record where possible.',
   'Safety, access, and payment issues get priority over general product questions.',
   'If the issue depends on verification, the next trust step is surfaced before resolution.',
+] as const;
+
+const FAQ_ITEMS = [
+  { q: 'How do I cancel a booking?', a: 'Open My Trips, find the active booking, and tap Cancel. Refunds appear within 3-5 business days.' },
+  { q: 'Where is my package?', a: 'Track in real-time from Packages. Each handoff updates with GPS coordinates and timestamps.' },
+  { q: 'Why is my wallet frozen?', a: 'Wallet may be frozen for verification or compliance. Check Trust Center for specific reason.' },
+  { q: 'How does pricing work?', a: 'Prices are shown before booking. Shared rides split costs, packages add a small fee for handling.' },
+  { q: 'What if my driver cancels?', a: 'Open support immediately - we will rebook you and credit your account for the inconvenience.' },
 ] as const;
 
 function topicStyle(accent: string) {
@@ -327,6 +348,145 @@ export function SupportPage() {
             ))}
           </div>
         </SectionCard>
+
+        <SectionCard
+          title="Quick FAQ"
+          subtitle="Common questions answered instantly."
+          icon={<HelpCircle size={18} color={C.orange} />}
+        >
+          <div style={{ display: 'grid', gap: 10 }}>
+            {FAQ_ITEMS.map((item, idx) => {
+              const [open, setOpen] = useState(false);
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    borderRadius: R.xl,
+                    border: `1px solid ${C.borderFaint}`,
+                    background: C.elevated,
+                    overflow: 'hidden',
+                  }}
+                >
+                  <button
+                    onClick={() => setOpen(!open)}
+                    style={{
+                      width: '100%',
+                      padding: `${SPACE[4]} ${SPACE[4]}`,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: 'transparent',
+                      border: 'none',
+                      color: C.text,
+                      fontFamily: TYPE.family.sans,
+                      fontSize: TYPE.size.base,
+                      fontWeight: TYPE.weight.bold,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span style={{ textAlign: 'left' }}>{item.q}</span>
+                    {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                  </button>
+                  {open && (
+                    <div
+                      style={{
+                        padding: `${SPACE[3]} ${SPACE[4]}`,
+                        borderTop: `1px solid ${C.borderFaint}`,
+                        color: C.textMuted,
+                        fontSize: TYPE.size.sm,
+                        lineHeight: 1.7,
+                      }}
+                    >
+                      {item.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          title="Send us a message"
+          subtitle="We will answer within 2 hours during business hours."
+          icon={<Send size={18} color={C.cyan} />}
+        >
+          <form
+            onSubmit={e => {
+              e.preventDefault();
+              window.location.href = emailUrl;
+            }}
+            style={{ display: 'grid', gap: 12 }}
+          >
+            <input
+              required
+              placeholder="Your email"
+              style={{
+                width: '100%',
+                height: 46,
+                padding: '0 14px',
+                borderRadius: R.lg,
+                border: `1px solid ${C.border}`,
+                background: C.card,
+                color: C.text,
+                fontFamily: TYPE.family.sans,
+              }}
+            />
+            <select
+              required
+              defaultValue=""
+              style={{
+                width: '100%',
+                height: 46,
+                padding: '0 14px',
+                borderRadius: R.lg,
+                border: `1px solid ${C.border}`,
+                background: C.card,
+                color: C.text,
+                fontFamily: TYPE.family.sans,
+              }}
+            >
+              <option value="" disabled>
+                Topic
+              </option>
+              <option>Ride issue</option>
+              <option>Package issue</option>
+              <option>Wallet question</option>
+              <option>Account access</option>
+              <option>Driver verification</option>
+            </select>
+            <textarea
+              required
+              placeholder="How can we help?"
+              rows={4}
+              style={{
+                width: '100%',
+                minHeight: 110,
+                padding: 14,
+                borderRadius: R.lg,
+                border: `1px solid ${C.border}`,
+                background: C.card,
+                color: C.text,
+                fontFamily: TYPE.family.sans,
+                resize: 'vertical',
+              }}
+            />
+            <WaselButton type="submit" variant="primary">
+              Send message
+            </WaselButton>
+          </form>
+        </SectionCard>
+
+        <p
+          style={{
+            textAlign: 'center',
+            color: C.textDim,
+            fontSize: TYPE.size.xs,
+            marginTop: SPACE[6],
+          }}
+        >
+          Wasel Support • Expected response 2 hours • Safety issues: immediate
+        </p>
       </div>
     </PageShell>
   );
