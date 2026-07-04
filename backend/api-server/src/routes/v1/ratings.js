@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Router } from 'express';
 import { authenticate } from '../../middleware/auth.ts';
 import { validate } from '../../middleware/validate.ts';
@@ -44,12 +43,7 @@ router.post('/', authenticate, validate(CreateRatingSchema), async (req, res) =>
 });
 router.get('/trip/:tripId', authenticate, async (req, res) => {
     try {
-        const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
-        const ratings = await db.unsafe(`SELECT r.*, u.full_name as rater_name
-       FROM reviews r
-       JOIN users u ON r.reviewer_id = u.id
-       WHERE r.trip_id = $1
-       ORDER BY r.created_at DESC`, [req.params.tripId]);
+        const ratings = await ratingRepository.findRatingsByTrip(req.params.tripId);
         res.json({ success: true, data: ratings });
     }
     catch (error) {
@@ -57,6 +51,3 @@ router.get('/trip/:tripId', authenticate, async (req, res) => {
     }
 });
 export default router;
-=======
-export * from './ratings.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { notificationRepository } from '../repositories/notificationRepository.ts';
 import { getRedis } from '@wasel/backend-shared/redis';
 import { logger } from '@wasel/backend-shared/logging/logger';
@@ -34,6 +33,3 @@ export class NotificationService {
     }
 }
 export const notificationService = new NotificationService();
-=======
-export * from './notificationService.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

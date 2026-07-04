@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { ValidationError } from '@wasel/backend-shared/errors/app-errors';
 export function validate(schema) {
     return (req, res, next) => {
@@ -24,6 +23,3 @@ export function validateQuery(schema) {
         }
     };
 }
-=======
-export * from './validate.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

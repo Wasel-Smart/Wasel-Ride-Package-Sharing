@@ -47,12 +47,8 @@ export class CliQGateway {
                 mismatch |= expectedSignature.charCodeAt(i) ^ signature.charCodeAt(i);
             }
             signatureValid = mismatch === 0;
-<<<<<<< HEAD
         }
         else {
-=======
-        } else {
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf
             signatureValid = false;
         }
         return { valid: signatureValid, status: signatureValid ? 'verified' : 'invalid_signature' };
@@ -67,8 +63,4 @@ export function getPaymentGateway() {
         return new CliQGateway();
     }
     return new StripeGateway();
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

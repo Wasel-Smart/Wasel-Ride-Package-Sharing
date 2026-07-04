@@ -1,9 +1,17 @@
-<<<<<<< HEAD
 import { UnauthorizedError, ForbiddenError } from '@wasel/backend-shared/errors/app-errors';
 import jwt from 'jsonwebtoken';
 import { loadConfig } from '@wasel/backend-shared/config';
+import { getDb } from '@wasel/backend-shared/db';
 const config = loadConfig();
-export function authenticate(req, res, next) {
+const allowedRoles = new Set(['passenger', 'driver', 'operator', 'admin']);
+function extractAppRole(payload) {
+    // Prefer app_metadata.role (set server-side), fall back to user_metadata.role,
+    // then fall back to the top-level role claim for non-Supabase tokens.
+    return (payload.app_metadata?.role ??
+        payload.user_metadata?.role ??
+        (payload.role !== 'authenticated' ? payload.role : ''));
+}
+export async function authenticate(req, _res, next) {
     try {
         const header = req.headers.authorization;
         if (!header?.startsWith('Bearer ')) {
@@ -13,16 +21,43 @@ export function authenticate(req, res, next) {
         if (!token) {
             return next(new UnauthorizedError('Empty token'));
         }
-        let payload;
-        try {
-            payload = jwt.verify(token, config.jwt.secret);
+        // Try JWT_SECRET first (own tokens), then SUPABASE_JWT_SECRET (Supabase-issued tokens).
+        // Set SUPABASE_JWT_SECRET to the value from Supabase Dashboard → Settings → API → JWT Secret.
+        const secrets = [
+            config.jwt.secret,
+            ...(process.env.SUPABASE_JWT_SECRET ? [process.env.SUPABASE_JWT_SECRET] : []),
+        ];
+        let payload = null;
+        for (const secret of secrets) {
+            try {
+                payload = jwt.verify(token, secret);
+                break;
+            }
+            catch {
+                // Try next secret.
+            }
         }
-        catch {
+        if (!payload) {
             return next(new UnauthorizedError('Invalid or expired token'));
         }
+        if (!payload.sub) {
+            return next(new UnauthorizedError('Invalid token claims'));
+        }
+        const db = getDb();
+        const users = await db.unsafe('SELECT id, role, is_active FROM users WHERE id = $1 LIMIT 1', [payload.sub]);
+        const user = users[0];
+        if (!user || user.is_active === false) {
+            return next(new UnauthorizedError('User is not active'));
+        }
+        // For Supabase tokens the app role lives in metadata, not the top-level claim.
+        // Only enforce role freshness when the token explicitly carries an app role.
+        const tokenRole = extractAppRole(payload);
+        if (tokenRole && allowedRoles.has(tokenRole) && user.role !== tokenRole) {
+            return next(new UnauthorizedError('Token role is stale'));
+        }
         req.user = {
-            id: payload.sub,
-            role: payload.role,
+            id: user.id,
+            role: user.role,
         };
         next();
     }
@@ -30,18 +65,15 @@ export function authenticate(req, res, next) {
         next(error);
     }
 }
-export function requireRole(allowedRoles) {
+export function requireRole(roles) {
     return (req, _res, next) => {
         const user = req.user;
         if (!user) {
             return next(new UnauthorizedError('No user context'));
         }
-        if (!allowedRoles.includes(user.role)) {
+        if (!roles.includes(user.role)) {
             return next(new ForbiddenError(`Role '${user.role}' is not authorized`));
         }
         next();
     };
 }
-=======
-export * from './auth.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

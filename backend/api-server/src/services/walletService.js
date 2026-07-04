@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { walletRepository } from '../repositories/walletRepository.ts';
 import { ValidationError } from '@wasel/backend-shared/errors/app-errors';
 export class WalletService {
@@ -28,6 +27,3 @@ export class WalletService {
     }
 }
 export const walletService = new WalletService();
-=======
-export * from './walletService.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

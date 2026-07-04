@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { getDb } from '@wasel/backend-shared/db';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { InternalError } from '@wasel/backend-shared/errors/app-errors';
@@ -44,6 +43,3 @@ export class NotificationRepository {
     }
 }
 export const notificationRepository = new NotificationRepository();
-=======
-export * from './notificationRepository.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

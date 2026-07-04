@@ -3,11 +3,30 @@
  * Event consumption, structured logging, env-driven config, input validation
  */
 import postgres from 'postgres';
-import type { RideCompletionInput, PaymentCaptureInput, CoordinateInput } from './shared/src/validation/schemas.js';
-import { logger } from './shared/src/logging/logger.js';
-import { ValidationError, DatabaseError } from './shared/src/errors/app-errors.js';
-import { eventBroker } from './shared/platform/event-broker-redis-production.js';
+import { logger } from '@wasel/backend-shared';
+import { ValidationError, DatabaseError } from '@wasel/backend-shared/errors/app-errors';
+import { eventBroker } from './platform/event-broker-redis-production.js';
 import { startRuntimeHealthServer } from './runtime/http-health.js';
+
+interface CoordinateInput { lat: number; lng: number; }
+interface RideCompletionInput {
+  rideId: string;
+  driverId: string;
+  riderId: string;
+  completedAt: string;
+  origin: CoordinateInput;
+  destination: CoordinateInput;
+  fare: number;
+  distance: number;
+  duration: number;
+}
+interface PaymentCaptureInput {
+  paymentId: string;
+  rideId?: string;
+  packageId?: string;
+  capturedAmount: number;
+  capturedAt: string;
+}
 
 const config = (() => {
   const dbUrl = process.env.DATABASE_URL;
@@ -55,7 +74,7 @@ class AnalyticsEngine {
       const sql = PostgresPool.connection;
       await sql`
         INSERT INTO operational_metrics (metric_type, entity_id, value, metadata, recorded_at)
-        VALUES ('ride_completion', ${ride.rideId}, ${ride.fare}, ${sql.json({
+        VALUES ('ride_completion', ${ride.rideId}, ${ride.fare}, ${JSON.stringify({
           driver_id: ride.driverId, rider_id: ride.riderId, distance: ride.distance,
           duration: ride.duration, origin: ride.origin, destination: ride.destination,
         })}, ${ride.completedAt})
@@ -108,17 +127,19 @@ class AnalyticsEngine {
     try {
       const [startDate, endDate] = this.parsePeriod(period);
       const sql = PostgresPool.connection;
-      const result = await sql<{ total_rides: string; total_earnings: string; platform_fee: string; net_payout: string }>`
-        SELECT COUNT(*) as total_rides, SUM(r.fare) as total_earnings, SUM(r.fare * 0.20) as platform_fee, SUM(r.fare * 0.80) as net_payout
-        FROM rides r WHERE r.driver_id = ${driverId} AND r.completed_at >= ${startDate} AND r.completed_at < ${endDate} AND r.status = 'completed'
+      const results = await sql`
+        SELECT COUNT(*) as total_rides, SUM(fare) as total_earnings, 
+               SUM(fare * 0.20) as platform_fee, SUM(fare * 0.80) as net_payout
+        FROM rides WHERE driver_id = ${driverId} AND completed_at >= ${startDate} AND completed_at < ${endDate} AND status = 'completed'
       `;
-      if (result.length === 0 || Number(result[0].total_rides) === 0) {
+      const result = results[0] as { total_rides: string; total_earnings: string; platform_fee: string; net_payout: string } | undefined;
+      if (!result || Number(result.total_rides ?? 0) === 0) {
         return { driverId, period, totalRides: 0, totalEarnings: 0, platformFee: 0, netPayout: 0, status: 'pending' };
       }
       return {
         driverId, period,
-        totalRides: Number(result[0].total_rides), totalEarnings: Number(result[0].total_earnings),
-        platformFee: Number(result[0].platform_fee), netPayout: Number(result[0].net_payout),
+        totalRides: Number(result.total_rides ?? 0), totalEarnings: Number(result.total_earnings ?? 0),
+        platformFee: Number(result.platform_fee ?? 0), netPayout: Number(result.net_payout ?? 0),
         status: 'pending',
       };
     } catch (err) {
@@ -207,7 +228,9 @@ export class OpsAnalyticsWorker {
     try {
       const sql = PostgresPool.connection;
       const drivers = await sql`SELECT DISTINCT driver_id FROM driver_availability WHERE status != 'inactive'`;
-      const payouts = await Promise.all(drivers.map(d => this.engine.generateDriverPayout(d.driver_id, period)));
+      const payouts = await Promise.all(
+        (drivers as unknown as Array<{ driver_id: string }>).map(d => this.engine.generateDriverPayout(d.driver_id, period))
+      );
       return payouts.filter(p => typeof p === 'object' && p !== null && p.totalRides > 0);
     } catch (err) {
       logger.error({ err, period }, 'Settlement report error');
@@ -217,7 +240,7 @@ export class OpsAnalyticsWorker {
 
   async healthCheck() {
     try {
-      await PostgresPool.connection.sql`SELECT 1`;
+      await PostgresPool.connection`SELECT 1`;
       return true;
     } catch {
       return false;

@@ -136,21 +136,7 @@ const TOPIC_CHANNEL: Record<string, { hint: string; href: () => string }> = {
   'Driver verification': { hint: '→ Email with document attachments', href: getSupportEmailUrl.bind(null, 'Driver verification') },
 };
 
-function FAQSection({ ar: _ar }: { ar: boolean }) {
-  return (
-    <SectionCard
-      title="Frequently Asked Questions"
-      subtitle="Quick answers to the most common issues."
-      icon={<HelpCircle size={18} color={C.cyan} />}
-    >
-      <div style={{ display: 'grid', gap: 8 }}>
-        {FAQS.map(item => (
-          <FaqItem key={item.q} q={item.q} a={item.a} />
-        ))}
-      </div>
-    </SectionCard>
-  );
-}
+function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{
@@ -184,6 +170,22 @@ function FAQSection({ ar: _ar }: { ar: boolean }) {
   );
 }
 
+function FAQSection({ ar: _ar }: { ar: boolean }) {
+  return (
+    <SectionCard
+      title="Frequently Asked Questions"
+      subtitle="Quick answers to the most common issues."
+      icon={<HelpCircle size={18} color={C.cyan} />}
+    >
+      <div style={{ display: 'grid', gap: 8 }}>
+        {FAQS.map(item => (
+          <FaqItem key={item.q} q={item.q} a={item.a} />
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
+
 export function SupportPage() {
   const { dir } = useLanguage();
   const { user } = useLocalAuth();
@@ -204,7 +206,6 @@ export function SupportPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formEmail || !formTopic || !formMessage) return;
-    // In production: POST to /v1/support/messages
     setSubmitted(true);
   };
 
@@ -243,7 +244,6 @@ export function SupportPage() {
           }
         />
 
-        {/* ── Contact Channels — primary action, first section ── */}
         <SectionCard
           title="Contact Channels"
           subtitle="Use the channel that matches the urgency and the device you are on."
@@ -254,14 +254,13 @@ export function SupportPage() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
             gap: 12,
           }}>
-            <SupportChannel icon={<Mail size={18} />}          label="Email support"    detail="Best for non-urgent issues with detail."              href={emailUrl}    accent={C.cyan} />
-            <SupportChannel icon={<MessageCircle size={18} />} label="WhatsApp support" detail="Best for quick route or handoff updates."             href={whatsappUrl} accent={C.green} />
-            <SupportChannel icon={<Phone size={18} />}         label="Call support"     detail="Best for urgent account or movement escalation."      href={phoneUrl}    accent={C.gold} />
-            <SupportChannel icon={<MessageCircle size={18} />} label="SMS support"      detail="Best when mobile data is limited."                    href={smsUrl}      accent={C.blueLight} />
+            <SupportChannel icon={<Mail size={18} />} label="Email support" detail="Best for non-urgent issues with detail." href={emailUrl} accent={C.cyan} />
+            <SupportChannel icon={<MessageCircle size={18} />} label="WhatsApp support" detail="Best for quick route or handoff updates." href={whatsappUrl} accent={C.green} />
+            <SupportChannel icon={<Phone size={18} />} label="Call support" detail="Best for urgent account or movement escalation." href={phoneUrl} accent={C.gold} />
+            <SupportChannel icon={<MessageCircle size={18} />} label="SMS support" detail="Best when mobile data is limited." href={smsUrl} accent={C.blueLight} />
           </div>
         </SectionCard>
 
-        {/* ── What we can help with ── */}
         <SectionCard
           title="What We Can Help With"
           subtitle="Support topics grouped by product outcome."
@@ -359,7 +358,6 @@ export function SupportPage() {
                   <option>Account access</option>
                   <option>Driver verification</option>
                 </select>
-                {/* Topic-aware channel recommendation */}
                 {recommendedChannel && (
                   <a
                     href={recommendedChannel.href()}

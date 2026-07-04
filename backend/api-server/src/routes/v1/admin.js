@@ -1,10 +1,11 @@
-<<<<<<< HEAD
 import { Router } from 'express';
 import { authenticate, requireRole } from '../../middleware/auth.ts';
+import { getDb } from '@wasel/backend-shared/db';
 import { tripRepository } from '../../repositories/tripRepository.ts';
 import { packageRepository } from '../../repositories/packageRepository.ts';
 import { z } from 'zod';
 const router = Router();
+const db = getDb();
 const AdminQuerySchema = z.object({
     page: z.coerce.number().int().positive().default(1),
     limit: z.coerce.number().int().positive().max(100).default(20),
@@ -33,7 +34,6 @@ router.get('/users', authenticate, requireRole(['admin']), async (req, res) => {
     try {
         const { page = 1, limit = 20 } = req.query;
         const offset = (page - 1) * limit;
-        const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
         const countResult = await db.unsafe('SELECT COUNT(*) as total FROM users');
         const total = Number(countResult[0]?.total || 0);
         const users = await db.unsafe('SELECT id, email, phone, full_name, role, is_active, created_at FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2', [limit, offset]);
@@ -46,7 +46,6 @@ router.get('/users', authenticate, requireRole(['admin']), async (req, res) => {
 router.patch('/users/:id/status', authenticate, requireRole(['admin']), async (req, res) => {
     try {
         const { status } = req.body;
-        const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
         const result = await db.unsafe('UPDATE users SET is_active = $1, updated_at = NOW() WHERE id = $2 RETURNING id, email, full_name, role, is_active', [status === 'active', req.params.id]);
         if (!result[0]) {
             return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'User not found' } });
@@ -59,7 +58,6 @@ router.patch('/users/:id/status', authenticate, requireRole(['admin']), async (r
 });
 router.get('/payments/reconciliation', authenticate, requireRole(['admin', 'operator']), async (req, res) => {
     try {
-        const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
         const { page = 1, limit = 20 } = req.query;
         const offset = (page - 1) * limit;
         const countResult = await db.unsafe("SELECT COUNT(*) as total FROM payments WHERE status = 'pending'");
@@ -79,7 +77,6 @@ router.get('/payments/reconciliation', authenticate, requireRole(['admin', 'oper
 });
 router.get('/disputes', authenticate, requireRole(['admin', 'operator']), async (req, res) => {
     try {
-        const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
         const { page = 1, limit = 20 } = req.query;
         const offset = (page - 1) * limit;
         const countResult = await db.unsafe("SELECT COUNT(*) as total FROM safety_incidents WHERE status = 'pending'");
@@ -99,7 +96,6 @@ router.get('/disputes', authenticate, requireRole(['admin', 'operator']), async 
 });
 router.patch('/disputes/:id/resolve', authenticate, requireRole(['admin', 'operator']), async (req, res) => {
     try {
-        const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
         const { resolution, action } = req.body;
         const userId = req.user.id;
         const result = await db.unsafe(`UPDATE safety_incidents
@@ -117,7 +113,10 @@ router.patch('/disputes/:id/resolve', authenticate, requireRole(['admin', 'opera
 router.patch('/rides/:id/dispatch', authenticate, requireRole(['admin', 'operator']), async (req, res) => {
     try {
         const { driverId } = req.body;
-        const trip = await tripRepository.updateTripStatus(req.params.id, driverId, 'in_progress');
+        if (typeof driverId !== 'string' || driverId.length === 0) {
+            return res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: 'driverId is required' } });
+        }
+        const trip = await tripRepository.updateTripStatus(req.params.id, 'in_progress', driverId);
         res.json({ success: true, data: trip });
     }
     catch (error) {
@@ -126,7 +125,6 @@ router.patch('/rides/:id/dispatch', authenticate, requireRole(['admin', 'operato
 });
 router.get('/dashboard/metrics', authenticate, requireRole(['admin', 'operator']), async (req, res) => {
     try {
-        const db = await import('@wasel/backend-shared/db').then(m => m.getDb());
         const [activeTrips, totalPackages, pendingDisputes, totalRevenue, activeUsers,] = await Promise.all([
             db.unsafe("SELECT COUNT(*) as count FROM trips WHERE status = 'in_progress'"),
             db.unsafe("SELECT COUNT(*) as count FROM packages WHERE status IN ('created', 'matched', 'in_transit')"),
@@ -150,6 +148,3 @@ router.get('/dashboard/metrics', authenticate, requireRole(['admin', 'operator']
     }
 });
 export default router;
-=======
-export * from './admin.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

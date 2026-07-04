@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { tripRepository } from '../repositories/tripRepository.ts';
 import { NotFoundError, ValidationError, } from '@wasel/backend-shared/errors/app-errors';
 export class TripService {
@@ -37,7 +36,7 @@ export class TripService {
         });
         return trip;
     }
-    async bookTrip(tripId, passengerId, seatsBooked, pricePaid) {
+    async bookTrip(tripId, passengerId, seatsBooked, expectedPricePaid) {
         if (seatsBooked < 1) {
             throw new ValidationError('At least one seat must be booked');
         }
@@ -45,7 +44,7 @@ export class TripService {
             tripId,
             passengerId,
             seatsBooked,
-            pricePaid,
+            expectedPricePaid,
         });
         return booking;
     }
@@ -84,6 +83,3 @@ export class TripService {
     }
 }
 export const tripService = new TripService();
-=======
-export * from './tripService.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

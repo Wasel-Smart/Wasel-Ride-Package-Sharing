@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Router } from 'express';
 import { walletService } from '../../services/walletService.ts';
 import { authenticate } from '../../middleware/auth.ts';
@@ -57,6 +56,3 @@ router.get('/:userId/transactions', authenticate, async (req, res) => {
     }
 });
 export default router;
-=======
-export * from './wallet.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

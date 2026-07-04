@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { getDb } from '@wasel/backend-shared/db';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { ValidationError, InternalError } from '@wasel/backend-shared/errors/app-errors';
@@ -19,7 +18,7 @@ export class RatingRepository {
             const result = await this.db.unsafe(`INSERT INTO reviews (reviewer_id, reviewee_id, trip_id, rating, review, driver_rating)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id, reviewer_id as rater_id, reviewee_id as target_id,
-                   'driver' as target_type, trip_id, rating as score,
+                   $7::text as target_type, trip_id, rating as score,
                    ARRAY[]::text[] as tags, review as comment,
                    'published' as status, created_at`, [
                 input.raterId,
@@ -28,6 +27,7 @@ export class RatingRepository {
                 input.score,
                 input.comment || null,
                 input.score,
+                input.targetType,
             ]);
             return result[0];
         }
@@ -35,6 +35,17 @@ export class RatingRepository {
             logger.error({ error, input }, 'Failed to create rating');
             throw new InternalError('Failed to create rating', error);
         }
+    }
+    async findRatingsByTrip(tripId) {
+        const data = await this.db.unsafe(`SELECT r.id, r.reviewer_id as rater_id, r.reviewee_id as target_id,
+              'driver' as target_type, r.trip_id, r.rating as score,
+              ARRAY[]::text[] as tags, r.review as comment,
+              'published' as status, r.created_at, u.full_name as rater_name
+       FROM reviews r
+       JOIN users u ON r.reviewer_id = u.id
+       WHERE r.trip_id = $1
+       ORDER BY r.created_at DESC`, [tripId]);
+        return data;
     }
     async findRatingsForUser(userId, page, limit) {
         const offset = (page - 1) * limit;
@@ -63,6 +74,3 @@ export class RatingRepository {
     }
 }
 export const ratingRepository = new RatingRepository();
-=======
-export * from './ratingRepository.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

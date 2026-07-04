@@ -1,11 +1,9 @@
-<<<<<<< HEAD
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { loadConfig } from '@wasel/backend-shared/config';
-import { authenticate } from './middleware/auth.ts';
 import { errorHandler } from './middleware/errors.ts';
 import tripRoutes from './routes/v1/trips.ts';
 import packageRoutes from './routes/v1/packages.ts';
@@ -36,7 +34,6 @@ function createApp() {
     app.get('/ready', (_req, res) => {
         res.json({ status: 'ready', timestamp: new Date().toISOString() });
     });
-    app.use('/v1', authenticate);
     app.use('/v1/trips', tripRoutes);
     app.use('/v1/packages', packageRoutes);
     app.use('/v1/bus', busRoutes);
@@ -62,6 +59,3 @@ app.listen(port, () => {
     logger.info({ port, nodeEnv: config.nodeEnv }, 'API gateway started');
 });
 export default app;
-=======
-export * from './index.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

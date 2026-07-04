@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Router } from 'express';
 import { tripService } from '../../services/tripService.ts';
 import { authenticate, requireRole } from '../../middleware/auth.ts';
@@ -28,7 +27,7 @@ const SearchTripsSchema = z.object({
 });
 const BookTripSchema = z.object({
     seats: z.number().int().min(1),
-    pricePaid: z.number().positive(),
+    pricePaid: z.number().positive().optional(),
 });
 router.get('/search', validateQuery(SearchTripsSchema), async (req, res) => {
     try {
@@ -88,7 +87,17 @@ router.patch('/:id/status', authenticate, async (req, res) => {
         res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: error.message } });
     }
 });
+router.patch('/bookings/:id/cancel', authenticate, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const booking = await tripService.cancelBooking(req.params.id, userId);
+        res.json({ success: true, data: booking });
+    }
+    catch (error) {
+        if (error.message.includes('not found')) {
+            return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: error.message } });
+        }
+        res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: error.message } });
+    }
+});
 export default router;
-=======
-export * from './trips.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

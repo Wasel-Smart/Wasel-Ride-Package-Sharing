@@ -4,11 +4,12 @@
  */
 import postgres from 'postgres';
 import Redis from 'ioredis';
-import type { CoordinateInput } from './shared/src/validation/schemas.js';
-import { logger } from './shared/src/logging/logger.js';
-import { ValidationError, DatabaseError } from './shared/src/errors/app-errors.js';
-import { eventBroker } from './shared/platform/event-broker-redis-production.js';
-import { startRuntimeHealthServer } from './runtime/http-health.js';
+import { logger } from '@wasel/backend-shared';
+import { ValidationError, DatabaseError } from '@wasel/backend-shared/errors/app-errors';
+import { eventBroker } from '../../platform/event-broker-redis-production.js';
+import { startRuntimeHealthServer } from '../../runtime/http-health.js';
+
+interface CoordinateInput { lat: number; lng: number; }
 
 const config = (() => {
   const dbUrl = process.env.DATABASE_URL;
@@ -93,32 +94,30 @@ class MatchingEngine {
 
     try {
       const sql = PostgresPool.connection;
-      const drivers = await sql<{
-        driverId: string; vehicleId: string; lng: string; lat: string;
-        availableSeats: string; rating: string; status: string;
-      }>`
+      const drivers = await sql`
         SELECT
-          d.driver_id as "driverId", d.vehicle_id as "vehicleId",
-          ST_X(d.location::geometry) as lng, ST_Y(d.location::geometry) as lat,
-          d.available_seats as "availableSeats",
-          COALESCE(p.rating, 4.5) as rating, d.status
-        FROM driver_availability d
-        LEFT JOIN profiles p ON d.driver_id = p.id
-        WHERE d.status = 'available'
-          AND d.available_seats >= ${seats}
+          driver_id, vehicle_id,
+          ST_X(location::geometry) as lng, ST_Y(location::geometry) as lat,
+          available_seats, rating, status
+        FROM driver_availability
+        WHERE status = 'available'
+          AND available_seats >= ${seats}
           AND ST_DWithin(
-            d.location::geography,
+            location::geography,
             ST_MakePoint(${origin.lng}, ${origin.lat})::geography,
             ${radiusKm * 1000}
           )
-        ORDER BY ST_Distance(d.location::geography, ST_MakePoint(${origin.lng}, ${origin.lat})::geography)
+        ORDER BY ST_Distance(location::geography, ST_MakePoint(${origin.lng}, ${origin.lat})::geography)
         LIMIT 20
       `;
       logger.info({ count: drivers.length, origin: { lat: origin.lat, lng: origin.lng }, seats }, 'Nearby drivers found');
-      return drivers.map(d => ({
-        driverId: d.driverId, vehicleId: d.vehicleId,
+      return (drivers as unknown as Array<{
+        driver_id: string; vehicle_id: string; lng: string; lat: string;
+        available_seats: string; rating: string; status: string;
+      }>).map(d => ({
+        driverId: d.driver_id, vehicleId: d.vehicle_id,
         location: { lat: Number(d.lat), lng: Number(d.lng) },
-        availableSeats: Number(d.availableSeats), rating: Number(d.rating), status: d.status,
+        availableSeats: Number(d.available_seats), rating: Number(d.rating), status: d.status,
       }));
     } catch (error) {
       logger.error({ err: error, origin, seats }, 'PostGIS driver search failed');
@@ -157,7 +156,7 @@ class MatchingEngine {
         WHERE driver_id = ${driverId} AND status = 'available'
         RETURNING driver_id
       `;
-      return result.length > 0;
+      return (result as unknown as Array<{ driver_id: string }>).length > 0;
     } catch (error) {
       logger.error({ err: error, driverId, rideId }, 'Reservation failed');
       return false;
@@ -240,7 +239,7 @@ export class RideMatchingService {
 
   async healthCheck() {
     try {
-      await PostgresPool.connection.sql`SELECT 1`;
+      await PostgresPool.connection`SELECT 1`;
       return true;
     } catch {
       return false;

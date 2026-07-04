@@ -5,11 +5,20 @@
 import postgres from 'postgres';
 import Stripe from 'stripe';
 import Redis from 'ioredis';
-import type { PaymentAuthorizationInput, PaymentRefundInput } from './shared/src/validation/schemas.js';
-import { logger } from './shared/src/logging/logger.js';
-import { ValidationError, DatabaseError } from './shared/src/errors/app-errors.js';
-import { eventBroker } from './shared/platform/event-broker-redis-production.js';
-import { startRuntimeHealthServer } from './runtime/http-health.js';
+import { logger } from '@wasel/backend-shared';
+import { ValidationError, DatabaseError } from '@wasel/backend-shared/errors/app-errors';
+import { eventBroker } from '../../platform/event-broker-redis-production.js';
+import { startRuntimeHealthServer } from '../../runtime/http-health.js';
+
+interface PaymentAuthorizationInput {
+  paymentId: string;
+  providerId: string;
+  amount: number;
+  currency: string;
+  rideId?: string;
+  packageId?: string;
+  escrowStatus?: string;
+}
 
 const config = (() => {
   const dbUrl = process.env.DATABASE_URL;
@@ -42,7 +51,7 @@ const config = (() => {
 const stripe = new Stripe(config.stripe.secretKey, {
   maxNetworkRetries: 3,
   timeout: 30000,
-  apiVersion: config.stripe.apiVersion,
+  apiVersion: config.stripe.apiVersion as Stripe.LatestStripeErrorType,
 });
 
 class PostgresPool {
@@ -98,7 +107,7 @@ class PaymentProviderAdapter {
     try {
       const pi = await stripe.paymentIntents.capture(providerId, { amount_to_capture: amount }, { idempotencyKey });
       return {
-        paymentId: pi.metadata.paymentId ?? '',
+        paymentId: pi.metadata?.paymentId ?? '',
         capturedAmount: pi.amount_received,
         providerTransactionId: pi.id,
         capturedAt: new Date(pi.created * 1000).toISOString(),
@@ -138,7 +147,7 @@ class PaymentProviderAdapter {
 }
 
 export class PaymentReconciliationService {
-  private readonly provider: PaymentProviderAdapter;
+  private readonly provider = new PaymentProviderAdapter();
   private readonly processing = new Set<string>();
   private unsubscribe: (() => Promise<void>) | null = null;
   private healthServer: { close(): Promise<void> } | null = null;
@@ -283,7 +292,7 @@ export class PaymentReconciliationService {
 
   async healthCheck() {
     try {
-      await PostgresPool.connection.sql`SELECT 1`;
+      await PostgresPool.connection`SELECT 1`;
       await stripe.balance.retrieve();
       return true;
     } catch {

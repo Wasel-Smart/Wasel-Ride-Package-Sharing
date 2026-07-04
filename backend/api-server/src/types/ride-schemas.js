@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { z } from 'zod';
 export const CreateRideSchema = z.object({
     riderId: z.string().uuid().optional(),
@@ -72,6 +71,3 @@ export const ActivityQuerySchema = z.object({
     fromDate: z.string().datetime().optional(),
     toDate: z.string().datetime().optional(),
 });
-=======
-export * from './ride-schemas.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

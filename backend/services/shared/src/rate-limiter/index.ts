@@ -1,4 +1,4 @@
-import { createRateLimiterService, type RateLimitConfig, type RateLimitResult } from './service';
+import { createRateLimiterService, type RateLimitConfig, type RateLimitResult } from './service.js';
 
 export { createRateLimiterService, type RateLimitConfig, type RateLimitResult };
 

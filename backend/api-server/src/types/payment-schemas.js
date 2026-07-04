@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { z } from 'zod';
 export const PaymentChargeSchema = z.object({
     amount: z.number().int().positive(),
@@ -17,6 +16,3 @@ export const PaymentVerifySchema = z.object({
     providerTransactionId: z.string().min(1),
     methodId: z.string().uuid().optional(),
 });
-=======
-export * from './payment-schemas.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

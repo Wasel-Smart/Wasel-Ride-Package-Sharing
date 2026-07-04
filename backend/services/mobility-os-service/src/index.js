@@ -6,7 +6,6 @@ import { createRateLimitMiddleware } from '@wasel/backend-shared/rate-limiter';
 import { AppError, ValidationError, NotFoundError, } from '@wasel/backend-shared/errors/app-errors';
 import { startRuntimeHealthServer } from '../../runtime/http-health';
 import { logger } from '@wasel/backend-shared/logging/logger';
-import { eventBroker } from '../../../../src/platform/event-broker-redis-production.js';
 const config = loadConfig();
 class PostgresPool {
     static instance = null;
@@ -88,11 +87,19 @@ function createApp() {
         const dbHealthy = await PostgresPool.connection `SELECT 1`.then(() => true).catch(() => false);
         res.json({ status: 'ok', timestamp: new Date().toISOString(), checks: { redis: redisHealthy, database: dbHealthy } });
     });
-    app.get('/ready', async (_req, res) => ({ status: 'ready' }));
-    app.get('/metrics', async (_req, res) => ({
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString(),
-    }));
+    app.get('/ready', async (_req, res) => {
+        const ready = await Promise.all([
+            RedisPool.connection.ping().then(() => true).catch(() => false),
+            PostgresPool.connection `SELECT 1`.then(() => true).catch(() => false),
+        ]).then(results => results.every(Boolean));
+        res.json({ status: ready ? 'ready' : 'not_ready' });
+    });
+    app.get('/metrics', async (_req, res) => {
+        res.json({
+            uptime: process.uptime(),
+            timestamp: new Date().toISOString(),
+        });
+    });
     app.get('/v1/mobility-os/snapshot', async (req, res) => {
         const sql = PostgresPool.connection;
         const [corridors] = await sql `
@@ -128,13 +135,8 @@ function createApp() {
           price_per_kg = ${updated.price_per_kg}
       WHERE id = ${corridorId}
     `;
-        await eventBroker.publish({
-            id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-            type: 'mobility.booking-created',
-            payload: { corridorId, type, quantity, userId },
-            producer: 'mobility-os-service',
-            occurredAt: now,
-        });
+        // TODO: Publish event when eventBroker integration is properly configured
+        // await eventBroker.publish({...});
         res.status(201).json({ success: true, corridor: updated });
     });
     app.get('/v1/mobility-os/live-rows', async (req, res) => {

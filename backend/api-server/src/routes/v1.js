@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Router } from 'express';
 import tripRoutes from './v1/trips.ts';
 import packageRoutes from './v1/packages.ts';
@@ -20,6 +19,3 @@ router.use('/driver', driverRoutes);
 router.use('/admin', adminRoutes);
 router.use('/corporate', corporateRoutes);
 export default router;
-=======
-export * from './v1.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

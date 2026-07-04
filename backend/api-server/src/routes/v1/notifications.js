@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Router } from 'express';
 import { notificationService } from '../../services/notificationService.ts';
 import { authenticate } from '../../middleware/auth.ts';
@@ -25,6 +24,3 @@ router.patch('/:id/read', authenticate, async (req, res) => {
     }
 });
 export default router;
-=======
-export * from './notifications.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

@@ -1,6 +1,5 @@
-<<<<<<< HEAD
 import { Router } from 'express';
-import { authenticate } from '../../middleware/auth.ts';
+import { authenticate, requireRole } from '../../middleware/auth.ts';
 import { tripRepository } from '../../repositories/tripRepository.ts';
 import { packageRepository } from '../../repositories/packageRepository.ts';
 import { ratingRepository } from '../../repositories/ratingRepository.ts';
@@ -12,19 +11,18 @@ const DriverQuerySchema = z.object({
     page: z.coerce.number().int().positive().default(1),
     limit: z.coerce.number().int().positive().max(50).default(20),
 });
-router.get('/trips', authenticate, async (req, res) => {
+router.get('/trips', authenticate, requireRole(['driver', 'admin']), async (req, res) => {
     try {
         const driverId = req.user.id;
         const filters = DriverQuerySchema.parse(req.query);
-        const result = await tripRepository.findAvailableTrips({ ...filters, seats: 1 });
-        const myTrips = result.data.filter(t => t.driver_id === driverId);
-        res.json({ success: true, data: myTrips, meta: { total: myTrips.length, page: 1, limit: 50 } });
+        const result = await tripRepository.findTripsByDriver(driverId, filters);
+        res.json({ success: true, data: result.data, meta: result.meta });
     }
     catch (error) {
         res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: error.message } });
     }
 });
-router.get('/earnings', authenticate, async (req, res) => {
+router.get('/earnings', authenticate, requireRole(['driver']), async (req, res) => {
     try {
         const driverId = req.user.id;
         const transactions = await walletRepository.getTransactions(driverId, 1, 50);
@@ -36,18 +34,17 @@ router.get('/earnings', authenticate, async (req, res) => {
         res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch earnings' } });
     }
 });
-router.get('/packages/assignments', authenticate, async (req, res) => {
+router.get('/packages/assignments', authenticate, requireRole(['driver', 'admin']), async (req, res) => {
     try {
         const driverId = req.user.id;
-        const packages = await packageRepository.findPackagesByStatus('matched');
-        const myPackages = packages.filter(p => p.carrier_id === driverId);
-        res.json({ success: true, data: myPackages });
+        const packages = await packageRepository.findPackagesByCarrier(driverId);
+        res.json({ success: true, data: packages });
     }
     catch (error) {
         res.status(500).json({ success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to fetch assignments' } });
     }
 });
-router.post('/packages/:id/confirm-pickup', authenticate, async (req, res) => {
+router.post('/packages/:id/confirm-pickup', authenticate, requireRole(['driver']), async (req, res) => {
     try {
         const pkg = await packageRepository.updatePackageStatus(req.params.id, 'picked_up');
         res.json({ success: true, data: pkg });
@@ -56,7 +53,7 @@ router.post('/packages/:id/confirm-pickup', authenticate, async (req, res) => {
         res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: error.message } });
     }
 });
-router.post('/packages/:id/confirm-delivery', authenticate, async (req, res) => {
+router.post('/packages/:id/confirm-delivery', authenticate, requireRole(['driver']), async (req, res) => {
     try {
         const pkg = await packageRepository.updatePackageStatus(req.params.id, 'delivered');
         res.json({ success: true, data: pkg });
@@ -65,7 +62,7 @@ router.post('/packages/:id/confirm-delivery', authenticate, async (req, res) => 
         res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: error.message } });
     }
 });
-router.get('/ratings', authenticate, async (req, res) => {
+router.get('/ratings', authenticate, requireRole(['driver']), async (req, res) => {
     try {
         const driverId = req.user.id;
         const { page = 1, limit = 10 } = req.query;
@@ -77,6 +74,3 @@ router.get('/ratings', authenticate, async (req, res) => {
     }
 });
 export default router;
-=======
-export * from './driver.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

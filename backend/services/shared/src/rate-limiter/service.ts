@@ -1,5 +1,4 @@
 import Redis from 'ioredis';
-import type { RateLimitConfig, RateLimitResult } from './types';
 
 export interface RateLimitConfig {
   windowMs: number;
@@ -34,24 +33,25 @@ export class RateLimiterService {
     const now = Date.now();
     const windowStart = now - this.windowMs;
 
-    const result = await this.redis.multi()
-      .zremrangebyscore(redisKey, '-inf', String(windowStart))
-      .zcard(redisKey)
-      .zadd(redisKey, now, `${now}-${Math.random().toString(36).slice(2)}`)
-      .expire(redisKey, Math.ceil(this.windowMs / 1000))
-      .exec();
+    try {
+      const count = await this.redis.zcount(redisKey, windowStart, now);
+      const allowed = count <= this.maxRequests;
+      const remaining = Math.max(0, this.maxRequests - count);
+      const resetAt = new Date(now + this.windowMs);
 
-    const count = result[1][1] as number;
-    const allowed = count <= this.maxRequests;
-    const remaining = Math.max(0, this.maxRequests - count);
-    const resetAt = new Date(now + this.windowMs);
-
-    return {
-      allowed,
-      remaining,
-      resetAt,
-      retryAfterMs: allowed ? undefined : this.windowMs,
-    };
+      return {
+        allowed,
+        remaining,
+        resetAt,
+        retryAfterMs: allowed ? undefined : this.windowMs,
+      };
+    } catch {
+      return {
+        allowed: true,
+        remaining: this.maxRequests - 1,
+        resetAt: new Date(Date.now() + this.windowMs),
+      };
+    }
   }
 
   async consume(key: string): Promise<RateLimitResult> {
@@ -59,24 +59,33 @@ export class RateLimiterService {
     const now = Date.now();
     const windowStart = now - this.windowMs;
 
-    const result = await this.redis.multi()
-      .zremrangebyscore(redisKey, '-inf', String(windowStart))
-      .zcard(redisKey)
-      .zadd(redisKey, now, `${now}-${Math.random().toString(36).slice(2)}`)
-      .expire(redisKey, Math.ceil(this.windowMs / 1000))
-      .exec();
+    try {
+      const result = await this.redis.multi()
+        .zremrangebyscore(redisKey, '-inf', String(windowStart))
+        .zcard(redisKey)
+        .zadd(redisKey, now, `${now}-${Math.random().toString(36).slice(2)}`)
+        .expire(redisKey, Math.ceil(this.windowMs / 1000))
+        .exec();
 
-    const count = (result[1][1] as number) + 1;
-    const allowed = count <= this.maxRequests;
-    const remaining = Math.max(0, this.maxRequests - count);
-    const resetAt = new Date(now + this.windowMs);
+      const count = (result?.[1]?.[1] as number | undefined) ?? 0;
+      const newCount = count + 1;
+      const allowed = newCount <= this.maxRequests;
+      const remaining = Math.max(0, this.maxRequests - newCount);
+      const resetAt = new Date(now + this.windowMs);
 
-    return {
-      allowed,
-      remaining,
-      resetAt,
-      retryAfterMs: allowed ? undefined : this.windowMs,
-    };
+      return {
+        allowed,
+        remaining,
+        resetAt,
+        retryAfterMs: allowed ? undefined : this.windowMs,
+      };
+    } catch {
+      return {
+        allowed: true,
+        remaining: this.maxRequests - 1,
+        resetAt: new Date(Date.now() + this.windowMs),
+      };
+    }
   }
 
   async reset(key: string): Promise<void> {

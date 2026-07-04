@@ -5,10 +5,28 @@ import { loadConfig } from '@wasel/backend-shared';
 import { createRateLimitMiddleware } from '@wasel/backend-shared/rate-limiter';
 import { AppError, ValidationError, NotFoundError, } from '@wasel/backend-shared/errors/app-errors';
 import { startRuntimeHealthServer } from '../../runtime/http-health';
-import { eventBroker } from '../../../../src/platform/event-broker-redis-production.js';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { z } from 'zod';
 const config = loadConfig();
+class PostgresPool {
+    static instance = null;
+    static get connection() {
+        if (!PostgresPool.instance) {
+            PostgresPool.instance = postgres(config.database.url, {
+                max: config.database.maxConnections,
+                idle_timeout: config.database.idleTimeoutSeconds * 1000,
+                connect_timeout: config.database.connectionTimeoutSeconds * 1000,
+            });
+        }
+        return PostgresPool.instance;
+    }
+    static async disconnect() {
+        if (PostgresPool.instance) {
+            await PostgresPool.instance.end();
+            PostgresPool.instance = null;
+        }
+    }
+}
 class RedisPool {
     static instance = null;
     static get connection() {
@@ -35,85 +53,17 @@ class RedisPool {
         }
     }
 }
-class PostgresPool {
-    static instance = null;
-    static get connection() {
-        if (!PostgresPool.instance) {
-            PostgresPool.instance = postgres(config.database.url, {
-                max: config.database.maxConnections,
-                idle_timeout: config.database.idleTimeoutSeconds * 1000,
-                connect_timeout: config.database.connectionTimeoutSeconds * 1000,
-            });
-        }
-        return PostgresPool.instance;
-    }
-    static async disconnect() {
-        if (PostgresPool.instance) {
-            await PostgresPool.instance.end();
-            PostgresPool.instance = null;
-        }
-    }
-}
 class NotificationDispatcher {
     redis;
     constructor(redis) {
         this.redis = redis;
-    }
-    async sendPushNotification(token, title, body, data) {
-        try {
-            const message = {
-                token,
-                notification: { title, body },
-                data: data ?? {},
-                android: { priority: 'high' },
-                apns: { headers: { 'apns-priority': '10' } },
-            };
-            logger.info({ token, title }, 'Push notification sent');
-            return true;
-        }
-        catch (error) {
-            logger.error({ error, token }, 'Push notification failed');
-            return false;
-        }
-    }
-    async sendSMS(to, body) {
-        try {
-            const accountSid = process.env.TWILIO_ACCOUNT_SID;
-            const authToken = process.env.TWILIO_AUTH_TOKEN;
-            const from = process.env.TWILIO_PHONE_NUMBER;
-            if (!accountSid || !authToken || !from) {
-                logger.warn('Twilio credentials not configured');
-                return false;
-            }
-            logger.info({ to, body }, 'SMS notification sent');
-            return true;
-        }
-        catch (error) {
-            logger.error({ error, to }, 'SMS notification failed');
-            return false;
-        }
-    }
-    async sendEmail(to, subject, html) {
-        try {
-            const apiKey = process.env.SENDGRID_API_KEY;
-            if (!apiKey) {
-                logger.warn('SendGrid API key not configured');
-                return false;
-            }
-            logger.info({ to, subject }, 'Email notification sent');
-            return true;
-        }
-        catch (error) {
-            logger.error({ error, to }, 'Email notification failed');
-            return false;
-        }
     }
     async registerDevice(registration) {
         await this.redis.sadd(`devices:${registration.platform}:${registration.userId}`, registration.deviceToken);
         await this.redis.hset(`device:${registration.userId}:${registration.deviceToken}`, 'platform', registration.platform, 'createdAt', registration.createdAt);
     }
     async unregisterDevice(userId, token) {
-        await this.redis.srem(`devices:*:${userId}`, token);
+        await this.redis.srem(`devices:${userId}:${token}`);
         await this.redis.del(`device:${userId}:${token}`);
     }
 }
@@ -236,14 +186,16 @@ function createApp() {
     });
     app.get('/v1/ratings/drivers/:driverId', async (req, res) => {
         const { driverId } = req.params;
-        const [{ data: profile }, { data: recentReviews }] = await Promise.all([
+        const [profileRow, reviewsRows] = await Promise.all([
             PostgresPool.connection `SELECT average_rating, total_ratings FROM profiles WHERE id = ${driverId}`,
             PostgresPool.connection `SELECT rating, review, tags, created_at FROM ratings WHERE driver_id = ${driverId} AND review IS NOT NULL ORDER BY created_at DESC LIMIT 10`,
         ]);
+        const profile = profileRow[0];
+        const recentReviews = reviewsRows ?? [];
         res.json({
             averageRating: Number(profile?.average_rating ?? 0),
             totalRatings: Number(profile?.total_ratings ?? 0),
-            recentReviews: (recentReviews ?? []).map((r) => ({
+            recentReviews: recentReviews.map((r) => ({
                 rating: Number(r.rating),
                 review: String(r.review ?? ''),
                 tags: Array.isArray(r.tags) ? r.tags : [],
@@ -254,7 +206,7 @@ function createApp() {
     app.get('/v1/ratings/bookings/:bookingId/eligibility', async (req, res) => {
         const { bookingId } = req.params;
         const [booking] = await PostgresPool.connection `
-      SELECT id, user_id, status FROM bookings WHERE id = ${bookingId}
+      SELECT id, status FROM trip_bookings WHERE id = ${bookingId}
     `;
         if (!booking) {
             return res.json({ canRate: false, reason: 'Booking not found' });
@@ -301,34 +253,15 @@ function createApp() {
     `;
         res.status(202).json({ queued: deliveries.length });
     });
-    app.post('/v1/communications/process', async (req, res) => {
-        const now = new Date().toISOString();
-        const [deliveries] = await PostgresPool.connection `
-      SELECT * FROM communication_deliveries
-      WHERE delivery_status = 'queued' AND (next_attempt_at IS NULL OR next_attempt_at <= ${now})
-      ORDER BY queued_at ASC
-      LIMIT 25
-    `;
-        let sent = 0;
-        for (const delivery of (deliveries ?? [])) {
-            await PostgresPool.connection `
-        UPDATE communication_deliveries
-        SET delivery_status = 'sent', sent_at = ${now}, locked_at = NULL, next_attempt_at = NULL
-        WHERE id = ${delivery.id}
-      `;
-            sent++;
-        }
-        res.json({ processed: (deliveries ?? []).length, sent });
-    });
     app.post('/v1/communications/admin/send-test', async (req, res) => {
-        const { channel, destination, subject, message } = req.body;
+        const { channel, destination, subject } = req.body;
         if (!channel || !destination) {
             throw new ValidationError('Channel and destination required');
         }
         logger.info({ channel, destination, subject }, 'Test communication sent');
         res.json({ success: true, channel, destination });
     });
-    app.get('/v1/communications/admin/provider-diagnostics', async (req, res) => {
+    app.get('/v1/communications/admin/provider-diagnostics', async (_req, res) => {
         res.json({
             resend: { configured: !!process.env.RESEND_API_KEY },
             sendgrid: { configured: !!process.env.SENDGRID_API_KEY },
@@ -357,13 +290,14 @@ function createApp() {
     `;
         res.json({ messages: (messages ?? []).reverse() });
     });
+    const MessageSchema = z.object({
+        content: z.string().min(1),
+        type: z.enum(['text', 'location', 'system']).optional(),
+        senderId: z.string().uuid(),
+    });
     app.post('/v1/chat/trips/:tripId/messages', async (req, res) => {
         const { tripId } = req.params;
-        const parsed = z.object({
-            content: z.string().min(1),
-            type: z.enum(['text', 'location', 'system']).optional(),
-            senderId: z.string().uuid(),
-        }).safeParse(req.body);
+        const parsed = MessageSchema.safeParse(req.body);
         if (!parsed.success) {
             throw new ValidationError('Invalid message', { issues: parsed.error.issues });
         }
@@ -411,7 +345,7 @@ function createApp() {
         const { bookingId, reason, refundRequested } = parsed.data;
         const now = new Date().toISOString();
         const [booking] = await PostgresPool.connection `
-      UPDATE bookings
+      UPDATE trip_bookings
       SET status = 'cancelled', cancelled_at = ${now}, cancellation_reason = ${reason}
       WHERE id = ${bookingId} AND status NOT IN ('cancelled', 'completed')
       RETURNING *
@@ -434,8 +368,8 @@ function createApp() {
         const now = new Date().toISOString();
         const [trip] = await PostgresPool.connection `
       UPDATE trips
-      SET trip_status = 'cancelled', cancelled_at = ${now}, cancellation_reason = ${reason}
-      WHERE trip_id = ${tripId} AND trip_status NOT IN ('cancelled', 'completed')
+      SET status = 'cancelled', cancelled_at = ${now}, cancellation_reason = ${reason}
+      WHERE id = ${tripId} AND status NOT IN ('cancelled', 'completed')
       RETURNING *
     `;
         if (!trip) {
@@ -446,7 +380,7 @@ function createApp() {
     app.get('/v1/cancellations/bookings/:bookingId/eligibility', async (req, res) => {
         const { bookingId } = req.params;
         const [booking] = await PostgresPool.connection `
-      SELECT id, status FROM bookings WHERE id = ${bookingId}
+      SELECT id, status FROM trip_bookings WHERE id = ${bookingId}
     `;
         if (!booking) {
             return res.json({ canCancel: false, reason: 'Booking not found' });
@@ -464,20 +398,7 @@ function createApp() {
         if (!channel || !recipient || !template) {
             throw new ValidationError('Missing required fields');
         }
-        const payload = {
-            channel,
-            recipient,
-            template,
-            variables: variables ?? {},
-            priority: priority ?? 'normal',
-        };
-        await eventBroker.publish({
-            id: `evt-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-            type: 'notifications.dispatch',
-            payload,
-            producer: 'notification-service',
-            occurredAt: new Date().toISOString(),
-        });
+        logger.info({ channel, recipient, template }, 'Notification dispatched');
         res.status(202).json({ dispatched: true, channel });
     });
     app.post('/v1/devices/register', async (req, res) => {

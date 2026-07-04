@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { getDb } from '@wasel/backend-shared/db';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { NotFoundError, ValidationError, InternalError } from '@wasel/backend-shared/errors/app-errors';
@@ -49,6 +48,10 @@ export class PackageRepository {
     }
     async findPackagesBySender(senderId) {
         const result = await this.db.unsafe('SELECT * FROM packages WHERE sender_id = $1 ORDER BY created_at DESC', [senderId]);
+        return result;
+    }
+    async findPackagesByCarrier(carrierId) {
+        const result = await this.db.unsafe(`SELECT * FROM packages WHERE carrier_id = $1 AND status IN ('matched', 'picked_up', 'in_transit') ORDER BY created_at DESC`, [carrierId]);
         return result;
     }
     async findPackagesByStatus(status) {
@@ -140,6 +143,3 @@ export class PackageRepository {
     }
 }
 export const packageRepository = new PackageRepository();
-=======
-export * from './packageRepository.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

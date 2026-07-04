@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { getDb } from '@wasel/backend-shared/db';
 import { logger } from '@wasel/backend-shared/logging/logger';
 import { ValidationError, InternalError } from '@wasel/backend-shared/errors/app-errors';
@@ -28,11 +27,13 @@ export class WalletRepository {
         }
         const wallet = await this.getOrCreateWallet(userId);
         try {
-            const txResult = await this.db.unsafe(`INSERT INTO transactions (wallet_id, user_id, type, amount, currency, status, reference_type, reference_id, description)
-         VALUES ($1, $2, $3, $4, $5, 'completed', $6, $7, $8)
-         RETURNING *`, [wallet.wallet_id, userId, type, amount, wallet.currency_code, refType || null, refId || null, description]);
-            await this.db.unsafe('UPDATE wallets SET balance_jod = balance_jod + $1, updated_at = NOW() WHERE wallet_id = $2', [amount, wallet.wallet_id]);
-            return txResult[0];
+            return await this.db.begin(async (tx) => {
+                const txResult = await tx.unsafe(`INSERT INTO transactions (wallet_id, user_id, type, amount, currency, status, reference_type, reference_id, description)
+           VALUES ($1, $2, $3, $4, $5, 'completed', $6, $7, $8)
+           RETURNING *`, [wallet.wallet_id, userId, type, amount, wallet.currency_code, refType || null, refId || null, description]);
+                await tx.unsafe('UPDATE wallets SET balance_jod = balance_jod + $1, updated_at = NOW() WHERE wallet_id = $2', [amount, wallet.wallet_id]);
+                return txResult[0];
+            });
         }
         catch (error) {
             logger.error({ error, userId, amount, type }, 'Failed to credit wallet');
@@ -48,11 +49,18 @@ export class WalletRepository {
             throw new ValidationError('Insufficient wallet balance');
         }
         try {
-            const txResult = await this.db.unsafe(`INSERT INTO transactions (wallet_id, user_id, type, amount, currency, status, reference_type, reference_id, description)
-         VALUES ($1, $2, $3, $4, $5, 'completed', $6, $7, $8)
-         RETURNING *`, [wallet.wallet_id, userId, type, -amount, wallet.currency_code, refType || null, refId || null, description]);
-            await this.db.unsafe('UPDATE wallets SET balance_jod = balance_jod - $1, updated_at = NOW() WHERE wallet_id = $2', [amount, wallet.wallet_id]);
-            return txResult[0];
+            return await this.db.begin(async (tx) => {
+                // Re-check balance inside the transaction with a lock to prevent race conditions.
+                const locked = await tx.unsafe('SELECT balance_jod FROM wallets WHERE wallet_id = $1 FOR UPDATE', [wallet.wallet_id]);
+                if (Number(locked[0].balance_jod) < amount) {
+                    throw new ValidationError('Insufficient wallet balance');
+                }
+                const txResult = await tx.unsafe(`INSERT INTO transactions (wallet_id, user_id, type, amount, currency, status, reference_type, reference_id, description)
+           VALUES ($1, $2, $3, $4, $5, 'completed', $6, $7, $8)
+           RETURNING *`, [wallet.wallet_id, userId, type, -amount, wallet.currency_code, refType || null, refId || null, description]);
+                await tx.unsafe('UPDATE wallets SET balance_jod = balance_jod - $1, updated_at = NOW() WHERE wallet_id = $2', [amount, wallet.wallet_id]);
+                return txResult[0];
+            });
         }
         catch (error) {
             if (error instanceof ValidationError)
@@ -75,6 +83,3 @@ export class WalletRepository {
     }
 }
 export const walletRepository = new WalletRepository();
-=======
-export * from './walletRepository.ts';
->>>>>>> 3f91593102061af94f82b9db9416273735742bdf

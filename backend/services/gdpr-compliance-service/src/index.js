@@ -22,7 +22,7 @@ class PostgresPool {
     static async disconnect() {
         if (PostgresPool.instance) {
             await PostgresPool.instance.end();
-            PostgresPool.instance = null;
+            PostgresPool.connection = null;
         }
     }
 }
@@ -64,11 +64,19 @@ function createApp() {
             checks: { redis: redisHealthy, database: dbHealthy },
         });
     });
-    app.get('/ready', async (_req, res) => ({ status: 'ready' }));
-    app.get('/metrics', async (_req, res) => ({
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString(),
-    }));
+    app.get('/ready', async (_req, res) => {
+        const ready = await Promise.all([
+            RedisPool.connection.ping().then(() => true).catch(() => false),
+            PostgresPool.connection `SELECT 1`.then(() => true).catch(() => false),
+        ]).then(results => results.every(Boolean));
+        res.json({ status: ready ? 'ready' : 'not_ready' });
+    });
+    app.get('/metrics', async (_req, res) => {
+        res.json({
+            uptime: process.uptime(),
+            timestamp: new Date().toISOString(),
+        });
+    });
     app.post('/v1/gdpr/consents', async (req, res) => {
         const { userId, consentType, granted } = req.body;
         if (!userId || !consentType) {
@@ -129,9 +137,9 @@ function createApp() {
         }
         const userId = request.user_id;
         await sql.begin(async (trx) => {
-            await trx `DELETE FROM bookings WHERE passenger_id = ${userId}`;
+            await trx `DELETE FROM trip_bookings WHERE passenger_id = ${userId}`;
             await trx `DELETE FROM trips WHERE driver_id = ${userId}`;
-            await trx `DELETE FROM payments WHERE user_id = ${userId}`;
+            await trx `DELETE FROM transactions WHERE wallet_id IN (SELECT wallet_id FROM wallets WHERE user_id = ${userId})`;
             await trx `DELETE FROM wallets WHERE user_id = ${userId}`;
             await trx `DELETE FROM verification_records WHERE user_id = ${userId}`;
             await trx `UPDATE data_deletion_requests SET status = 'completed', completed_at = NOW() WHERE id = ${requestId}`;
@@ -145,8 +153,8 @@ function createApp() {
         const [user, trips, bookings, payments] = await Promise.all([
             sql `SELECT id, email, full_name, created_at FROM users WHERE id = ${userId}`,
             sql `SELECT * FROM trips WHERE driver_id = ${userId}`,
-            sql `SELECT * FROM bookings WHERE passenger_id = ${userId}`,
-            sql `SELECT * FROM payments WHERE user_id = ${userId}`,
+            sql `SELECT * FROM trip_bookings WHERE passenger_id = ${userId}`,
+            sql `SELECT * FROM transactions WHERE wallet_id IN (SELECT wallet_id FROM wallets WHERE user_id = ${userId})`,
         ]);
         const exportData = {
             user: user[0],
