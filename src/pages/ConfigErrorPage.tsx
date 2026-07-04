@@ -1,3 +1,4 @@
+
 import { WaselLogo } from '../components/wasel-ds/WaselLogo';
 import type { RuntimeConfigIssue } from '../utils/env';
 
@@ -44,7 +45,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
           <WaselLogo size={64} theme="light" variant="compact" />
         </div>
-        
+
         <div
           style={{
             fontSize: '0.74rem',
@@ -57,7 +58,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
         >
           Configuration Error
         </div>
-        
+
         <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#EFF6FF', margin: '0 0 16px' }}>
           Environment configuration errors
         </h2>
