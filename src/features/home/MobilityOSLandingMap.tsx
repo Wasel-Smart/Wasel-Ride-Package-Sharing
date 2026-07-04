@@ -35,7 +35,6 @@ const FLOW = C.cyan;
 const GHOST = C.cyanDark;
 const PULSE = C.blueLight;
 const BUS_GREEN = C.green;          // #47D69E — bus movement colour
-const BUS_GREEN_DIM = C.greenDim;   // rgba(71,214,158,0.12)
 
 const BASE_ROUTES: readonly Corridor[] = [
   { id: 'amman-aqaba', from: 0, to: 1, distanceKm: 335 },

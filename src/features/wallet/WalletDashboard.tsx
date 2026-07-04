@@ -90,7 +90,7 @@ export function WalletDashboard() {
   } = useWalletDashboardController();
 
   const [txSearch, setTxSearch] = useState('');
-  const bal = walletData?.wallet?.balance ?? walletData?.balance ?? 0;
+  const bal = walletData?.balance ?? 0;
   const pending = walletData?.pendingBalance ?? 0;
   const rewardsBal = walletData?.rewardsBalance ?? 0;
   const transactionCount = walletData?.transactions?.length ?? 0;

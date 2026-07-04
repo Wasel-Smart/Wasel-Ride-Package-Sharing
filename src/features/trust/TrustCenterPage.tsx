@@ -6,7 +6,6 @@ import {
   BadgeCheck,
   CheckCircle2,
   FileCheck,
-  LoaderCircle,
   MailCheck,
   Shield,
   Wallet,

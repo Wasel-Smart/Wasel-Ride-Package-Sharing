@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Bus, Calendar, Car, Package, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
+import type { Language } from '../../locales/translations';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { useLiveUserStats } from '../../services/liveDataService';
 import { buildCorridorBetaPlan } from '../../services/corridorBeta';
@@ -17,7 +18,6 @@ import {
   HomeHeroSection,
   HomePageStyles,
   OnboardingDemoSection,
-  OutcomesSection,
   ProofSection,
   QuickActionsSection,
   SignedInUtilitySection,
@@ -53,7 +53,7 @@ export function HomePage() {
     }
   }, [language, setLanguage]);
 
-  const detectBrowserLanguage = (): string | null => {
+  const detectBrowserLanguage = (): Language | null => {
     if (typeof navigator === 'undefined') return null;
     const browserLang = navigator.language.split('-')[0];
     if (browserLang === 'ar' || browserLang === 'en') {

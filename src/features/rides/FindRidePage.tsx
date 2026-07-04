@@ -61,7 +61,6 @@ import {
 } from '../../pages/waselCorePageHelpers';
 import { readStoredStringList, writeStoredStringList } from '../../pages/waselCoreStorage';
 import {
-  CoreExperienceBanner,
   DS,
   midpoint,
   PageShell,
@@ -199,12 +198,6 @@ export function FindRidePage() {
         )
     : allAvailableRides.slice(0, 4);
 
-  const routeReadinessLabel =
-    corridorRides.length >= 2
-      ? t.instantMatch
-      : corridorRides.length === 1
-        ? t.bookingReady
-        : t.searchHelp;
   const recommendedRides = [...results]
     .sort((left, right) => scoreRideForRecommendation(right) - scoreRideForRecommendation(left))
     .slice(0, 2);

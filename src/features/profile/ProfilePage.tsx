@@ -565,7 +565,7 @@ function ProfilePageContent({
           <SharedSection title={ar ? 'وضع السائق' : 'Driver Mode'}>
             <SharedRow
               label={ar ? 'سيارتي' : 'My Vehicle'}
-              value={user.vehicle ?? (ar ? 'لم تُضف بعد' : 'Not added yet')}
+              value={ar ? 'لم تُضف بعد' : 'Not added yet'}
               icon={<Car size={15} />}
               onClick={() => nav('/app/settings?section=account')}
             />

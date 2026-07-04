@@ -420,21 +420,6 @@ const standaloneInputStyle: CSSProperties = {
   marginBottom: 16,
 };
 
-const codeInputStyle: CSSProperties = {
-  width: '100%',
-  background: 'rgba(255,255,255,0.1)',
-  border: '1px solid rgba(255,255,255,0.2)',
-  borderRadius: 12,
-  padding: 16,
-  color: '#fff',
-  fontSize: '1.5rem',
-  textAlign: 'center',
-  letterSpacing: '0.5em',
-  outline: 'none',
-  fontWeight: 700,
-  margin: '24px 0 16px',
-};
-
 const errorStyle: CSSProperties = {
   background: 'rgba(239,68,68,0.1)',
   border: '1px solid rgba(239,68,68,0.3)',

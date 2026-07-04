@@ -1,4 +1,5 @@
-import { NotificationCenter, useNotifications } from '../../components/NotificationCenter';
+import { NotificationCenter } from '../../components/NotificationCenter';
+import { useNotifications } from '../../hooks/useNotifications';
 import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Bell } from 'lucide-react';

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
-import { C, R, SPACE, TYPE, SH, card, pillStyle } from '../../utils/wasel-ds';
-import { RefreshCw, AlertTriangle, TrendingUp, Users, Package, Car, DollarSign } from 'lucide-react';
+import { C, R, SPACE, TYPE, card, pillStyle } from '../../utils/wasel-ds';
+import { RefreshCw, AlertTriangle, Users, Package, Car, DollarSign } from 'lucide-react';
 
 interface AdminMetrics {
   activeTrips: number;

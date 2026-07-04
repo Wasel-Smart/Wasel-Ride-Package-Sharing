@@ -25,15 +25,13 @@ describe('walletApi Service', () => {
     vi.clearAllMocks();
   });
 
-  it('normalizes payment method rows correctly', () => {
-    // If we test an internal helper, we can test walletApi.getWalletSummary mapping
-    // Let's verify that the module exports walletApi object
+  it('exposes the wallet API surface', () => {
     expect(walletApi).toBeDefined();
-    expect(typeof walletApi.getBalance).toBe('function');
+    expect(typeof walletApi.getWallet).toBe('function');
   });
 
-  it('getBalance returns fallback or resolves successfully', async () => {
-    const balance = await walletApi.getBalance();
-    expect(typeof balance).toBe('number');
+  it('getWallet returns fallback or resolves successfully', async () => {
+    const wallet = await walletApi.getWallet('user-123');
+    expect(typeof wallet.balance).toBe('number');
   });
 });

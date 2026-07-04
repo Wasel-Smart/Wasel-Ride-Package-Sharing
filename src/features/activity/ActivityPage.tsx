@@ -108,7 +108,7 @@ export function ActivityPage() {
     const mapped: TimelineItem[] = [];
 
     rides.forEach((b: RideBookingRecord) => {
-      const isActive = b.status === 'confirmed' || b.status === 'pending' || b.status === 'pending_driver';
+      const isActive = b.status === 'confirmed' || b.status === 'pending_driver';
       mapped.push({
         id: b.id,
         kind: 'ride',

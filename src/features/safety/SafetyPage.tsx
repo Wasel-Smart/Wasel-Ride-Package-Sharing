@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { Headphones, Phone, Shield, ShieldCheck, Siren, UserCheck } from 'lucide-react';
 import {
-  MetricCard,
   PageHero,
   PageShell,
   SectionCard,
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { C, R, SH, SPACE, TYPE, card, pillStyle } from '../../utils/wasel-ds';
 
 const SAFETY_STACK = [
@@ -80,7 +78,6 @@ const RESPONSE_FLOW = [
 
 export default function SafetyPage() {
   const { language } = useLanguage();
-  const nav = useIframeSafeNavigate();
   const ar = language === 'ar';
   const [sosActive, setSosActive] = useState(false);
 

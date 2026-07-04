@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Briefcase, Building, Mail, Users, MapPin, Calendar, CheckCircle } from 'lucide-react';
+import { Briefcase, Building, Users, MapPin, CheckCircle } from 'lucide-react';
 import { C } from '../../utils/wasel-ds';
 
 export function CorporatePage() {

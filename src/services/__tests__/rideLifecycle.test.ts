@@ -64,7 +64,7 @@ describe('rideLifecycle Service', () => {
 
     const bookings = getRideBookings();
     expect(bookings.length).toBe(1);
-    expect(bookings[0].from).toBe('Amman');
+    expect(bookings[0]?.from).toBe('Amman');
   });
 
   it('createRideBooking() saves a booking and returns it', async () => {
@@ -86,7 +86,7 @@ describe('rideLifecycle Service', () => {
 
     const stored = getRideBookings();
     expect(stored.length).toBe(1);
-    expect(stored[0].id).toBe(newBooking.id);
+    expect(stored[0]?.id).toBe(newBooking.id);
   });
 
   it('handles invalid JSON in localStorage gracefully', () => {

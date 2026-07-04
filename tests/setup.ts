@@ -26,9 +26,13 @@ Object.defineProperty(globalThis, 'localStorage', {
 });
 
 // ── navigator.language default ────────────────────────────────────────────────
-Object.defineProperty(globalThis, 'navigator', {
-  value: { language: 'en-US' },
+// Only override `language`; replacing the whole navigator object strips jsdom's
+// userAgent (and other properties) that react-dom relies on internally, which
+// crashes any test that renders a component before it even runs.
+Object.defineProperty(globalThis.navigator, 'language', {
+  value: 'en-US',
   writable: true,
+  configurable: true,
 });
 
 // ── Clean state between tests ─────────────────────────────────────────────────

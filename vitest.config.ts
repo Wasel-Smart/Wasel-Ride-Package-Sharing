@@ -31,10 +31,11 @@ export default defineConfig({
       VITE_ENABLE_TWO_FACTOR_AUTH: 'false',
       VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true',
     },
-    passWithNoTests: true,
     include: [
       'tests/**/*.test.ts',
       'tests/**/*.test.tsx',
+      'src/**/*.test.ts',
+      'src/**/*.test.tsx',
     ],
     exclude: [
       'node_modules',
