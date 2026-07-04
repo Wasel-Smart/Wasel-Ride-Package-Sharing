@@ -473,6 +473,33 @@ export function FindRidePage() {
           action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
         />
 
+        {/* Persistent booking indicator */}
+        {bookedRideIds.size > 0 && (
+          <div
+            style={{
+              marginBottom: 16,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              background: `${DS.green}12`,
+              border: `1px solid ${DS.green}30`,
+              borderRadius: r(14),
+              padding: '12px 16px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <CheckCircle2 size={16} color={DS.green} />
+              <span style={{ color: C.text, fontSize: '0.84rem', fontWeight: 700 }}>
+                {bookedRideIds.size} active booking{bookedRideIds.size > 1 ? 's' : ''} in progress
+              </span>
+            </div>
+            <WaselButton onClick={openMyTrips} variant="outline" size="sm">
+              View in My Trips
+            </WaselButton>
+          </div>
+        )}
+
         <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
           {(
             [
@@ -636,19 +663,19 @@ export function FindRidePage() {
                         margin: '0 0 4px',
                       }}
                     >
-                      Route
+                      Route preview
                     </p>
                     <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>
                       {selectedSignal
-                        ? `${selectedSignal.liveSearches} searches, ${selectedSignal.liveBookings} bookings, ${selectedSignal.activeDemandAlerts} alerts.`
-                        : 'Check the route before booking.'}
+                        ? `${selectedSignal.liveSearches} people searching · ${selectedSignal.liveBookings} booked · ${selectedSignal.activeDemandAlerts} watching`
+                        : 'Select a route above to see live demand.'}
                     </p>
                   </div>
-                  <span style={{ ...pill(DS.green), fontSize: '0.72rem' }}>
-                    {selectedSignal
-                      ? `${selectedSignal.forecastDemandScore}/100 forecast`
-                      : (corridorPlan?.density ?? 'steady density')}
-                  </span>
+                  {selectedSignal && (
+                    <span style={{ ...pill(DS.green), fontSize: '0.72rem' }}>
+                      {selectedSignal.forecastDemandScore}/100 demand score
+                    </span>
+                  )}
                 </div>
                 <MapWrapper
                   mode="static"
@@ -769,36 +796,36 @@ export function FindRidePage() {
                 className="sp-4col"
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
                   gap: 12,
                   marginTop: 14,
                 }}
               >
                 {[
                   {
-                    label: 'Route readiness',
+                    label: 'Available departures',
                     value: selectedSignal
-                      ? `${selectedSignal.activeSupply} live departures`
-                      : routeReadinessLabel,
+                      ? `${selectedSignal.activeSupply} departures`
+                      : `${corridorRides.length} departures`,
                     sub: selectedSignal
-                      ? `${selectedSignal.liveBookings} bookings | ${selectedSignal.activeDemandAlerts} alerts`
-                      : `${corridorRides.length} live departures`,
+                      ? `${selectedSignal.liveBookings} booked · ${selectedSignal.activeDemandAlerts} watching`
+                      : 'Live supply on this route',
                     tone: DS.cyan,
                   },
                   {
-                    label: 'Shared price now',
+                    label: 'Shared seat price',
                     value: selectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : '--',
                     sub: selectedPriceQuote
-                      ? `${selectedPriceQuote.discountJod} JOD saved`
-                      : 'Best shared fare',
+                      ? `You save ${selectedPriceQuote.discountJod} JOD vs solo`
+                      : 'Price shown after search',
                     tone: DS.green,
                   },
                   {
-                    label: 'Next wave',
+                    label: 'Next departure window',
                     value:
                       selectedSignal?.nextWaveWindow ??
                       corridorPlan?.autoGroupWindow ??
-                      'Next shared wave',
+                      'Check after search',
                     sub:
                       selectedSignal?.recommendedPickupPoint ??
                       corridorPlan?.pickupPoints[0] ??
@@ -806,12 +833,12 @@ export function FindRidePage() {
                     tone: DS.gold,
                   },
                   {
-                    label: 'Route ownership',
+                    label: 'Route reliability',
                     value: selectedSignal
                       ? `${selectedSignal.routeOwnershipScore}/100`
-                      : (corridorPlan?.routeMoat ?? 'Growing route data'),
+                      : (corridorPlan?.routeMoat ?? 'Growing'),
                     sub: selectedSignal
-                      ? selectedSignal.productionSources.slice(0, 2).join(' | ')
+                      ? selectedSignal.productionSources.slice(0, 2).join(' · ')
                       : `${demandStats.active} saved alerts`,
                     tone: DS.cyan,
                   },
@@ -870,13 +897,12 @@ export function FindRidePage() {
             >
               <h2 style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
                 {searched
-                  ? `${from} to ${to} | ${results.length} route match${results.length !== 1 ? 'es' : ''}`
-                  : `Popular routes | showing ${results.length} departures`}
+                  ? `${from} → ${to} · ${results.length} ride${results.length !== 1 ? 's' : ''} found`
+                  : `Popular routes · ${results.length} departures`}
               </h2>
               {selectedSignal ? (
                 <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
-                  Live lane price {selectedSignal.priceQuote.finalPriceJod} JOD | Next wave{' '}
-                  {selectedSignal.nextWaveWindow}
+                  Best price {selectedSignal.priceQuote.finalPriceJod} JOD · Next departure {selectedSignal.nextWaveWindow}
                 </div>
               ) : null}
               <div className="sp-sort-bar" style={{ display: 'flex', gap: 6 }}>
@@ -1075,9 +1101,9 @@ export function FindRidePage() {
                     <Brain size={18} color={DS.cyan} />
                   </div>
                   <div>
-                    <div style={{ color: C.text, fontWeight: 800 }}>Why it fits</div>
+                    <div style={{ color: C.text, fontWeight: 800 }}>Why this route fits</div>
                     <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                      Quick route signals.
+                      Demand signals for {from} → {to}.
                     </div>
                   </div>
                 </div>
@@ -1143,7 +1169,7 @@ export function FindRidePage() {
                       <TrendingUp size={18} color={DS.gold} />
                     </div>
                     <div>
-                      <div style={{ color: C.text, fontWeight: 800 }}>Popular now</div>
+                      <div style={{ color: C.text, fontWeight: 800 }}>Popular routes right now</div>
                       <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
                         Routes with strong live activity.
                       </div>
@@ -1215,9 +1241,9 @@ export function FindRidePage() {
                       <Network size={18} color={DS.green} />
                     </div>
                     <div>
-                      <div style={{ color: C.text, fontWeight: 800 }}>Package-ready rides</div>
+                      <div style={{ color: C.text, fontWeight: 800 }}>Rides that also carry packages</div>
                       <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                        Some rides also carry packages.
+                        Some rides accept parcels on the same route.
                       </div>
                     </div>
                   </div>
@@ -1489,27 +1515,41 @@ export function FindRidePage() {
                     <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>
                       {card.title}
                     </div>
-                    {card.items.length > 0 ? (
-                      <div style={{ display: 'grid', gap: 10 }}>
-                        {card.items.map(item => (
-                          <div
-                            key={item}
-                            style={{
-                              borderRadius: r(12),
-                              border: `1px solid ${DS.border}`,
-                              background: DS.card2,
-                              padding: '11px 12px',
-                              color: C.text,
-                              fontSize: '0.78rem',
-                            }}
-                          >
-                            {item}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{card.empty}</div>
-                    )}
+                    {recentSearches.length > 0 ? (
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {recentSearches.map(item => (
+                      <button
+                        key={item}
+                        onClick={() => {
+                          const parts = item.split(' to ');
+                          if (parts[0]) setFrom(parts[0]);
+                          const toPart = parts[1]?.split(' on ')[0];
+                          if (toPart) setTo(toPart);
+                          setSearched(true);
+                        }}
+                        style={{
+                          borderRadius: r(12),
+                          border: `1px solid ${DS.border}`,
+                          background: DS.card2,
+                          padding: '11px 12px',
+                          color: C.text,
+                          fontSize: '0.78rem',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 8,
+                        }}
+                      >
+                        <span>{item}</span>
+                        <Search size={12} color={DS.muted} />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{t.searchHelp}</div>
+                )}
                   </div>
                 ))}
               </div>

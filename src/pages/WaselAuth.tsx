@@ -962,6 +962,15 @@ export default function WaselAuth() {
                   ))}
                 </div>
 
+                {/* Phone OTP section with clear visual separator */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+                  <div style={{ flex: 1, height: 1, background: C.border }} />
+                  <span style={{ fontSize: TYPE.size.xs, color: C.textMuted, whiteSpace: 'nowrap' }}>
+                    or sign in with phone
+                  </span>
+                  <div style={{ flex: 1, height: 1, background: C.border }} />
+                </div>
+
                 <div
                   style={{
                     display: 'grid',
@@ -974,8 +983,8 @@ export default function WaselAuth() {
                 >
                   <WaselInput
                     id="phone-otp"
-                    label="Phone sign in"
-                    description="SMS or WhatsApp one-time code"
+                    label="Phone number"
+                    description="Receive a one-time code via SMS or WhatsApp"
                     type="tel"
                     value={phone}
                     onChange={value => {

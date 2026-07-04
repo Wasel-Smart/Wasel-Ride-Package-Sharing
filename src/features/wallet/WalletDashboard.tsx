@@ -5,7 +5,7 @@
  * handling, and wallet mutations now live in `useWalletDashboardController`.
  */
 
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { Activity, Gift, Lock, RefreshCw, Wallet } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -89,7 +89,8 @@ export function WalletDashboard() {
     withdrawMethod,
   } = useWalletDashboardController();
 
-  const bal = walletData?.balance ?? 0;
+  const [txSearch, setTxSearch] = useState('');
+  const bal = walletData?.wallet?.balance ?? walletData?.balance ?? 0;
   const pending = walletData?.pendingBalance ?? 0;
   const rewardsBal = walletData?.rewardsBalance ?? 0;
   const transactionCount = walletData?.transactions?.length ?? 0;
@@ -201,13 +202,10 @@ export function WalletDashboard() {
                   accent={autoTopUpEnabled ? C.green : C.gold}
                 />
               </div>
-              <div style={{ color: C.text, fontSize: '1.8rem', fontWeight: 900 }}>
-                JOD {bal.toFixed(2)}
-              </div>
               <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7 }}>
                 {isRTL
-                  ? 'الأرقام الأساسية تظهر أولاً: الرصيد المتاح والمعلق والمكافآت بدون شرح زائد.'
-                  : 'The key numbers stay above the fold: available, pending, and rewards.'}
+                  ? 'الرصيد والتحويلات والمكافآت في سطح واحد واضح.'
+                  : 'Balance, transfers, and rewards in one clear surface.'}
               </div>
             </div>
           }
@@ -274,20 +272,20 @@ export function WalletDashboard() {
           />
 
           <Tabs value={tab} onValueChange={setTab} className="w-full">
-            <TabsList className="w-full grid grid-cols-5 h-11 rounded-xl bg-card">
-              <TabsTrigger value="overview" className="text-xs rounded-lg">
+            <TabsList className="w-full grid grid-cols-5 h-11 rounded-xl bg-card overflow-x-auto" style={{ overflowX: 'auto', display: 'flex' }}>
+              <TabsTrigger value="overview" className="text-xs rounded-lg whitespace-nowrap">
                 {t.overview}
               </TabsTrigger>
-              <TabsTrigger value="transactions" className="text-xs rounded-lg">
+              <TabsTrigger value="transactions" className="text-xs rounded-lg whitespace-nowrap">
                 {t.transactions}
               </TabsTrigger>
-              <TabsTrigger value="rewards" className="text-xs rounded-lg">
+              <TabsTrigger value="rewards" className="text-xs rounded-lg whitespace-nowrap">
                 {t.rewardsTab}
               </TabsTrigger>
-              <TabsTrigger value="insights" className="text-xs rounded-lg">
+              <TabsTrigger value="insights" className="text-xs rounded-lg whitespace-nowrap">
                 {t.insights}
               </TabsTrigger>
-              <TabsTrigger value="settings" className="text-xs rounded-lg">
+              <TabsTrigger value="settings" className="text-xs rounded-lg whitespace-nowrap">
                 {t.settings}
               </TabsTrigger>
             </TabsList>
@@ -307,14 +305,38 @@ export function WalletDashboard() {
             <TabsContent value="transactions" className="mt-4">
               <Card className="rounded-xl">
                 <CardContent className="pt-4">
+                  {/* Transaction search */}
+                  <div style={{ marginBottom: 12 }}>
+                    <input
+                      type="search"
+                      value={txSearch}
+                      onChange={e => setTxSearch(e.target.value)}
+                      placeholder={isRTL ? 'ابحث في الحركات...' : 'Search transactions...'}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        borderRadius: 10,
+                        border: `1px solid ${C.border}`,
+                        background: C.elevated,
+                        color: C.text,
+                        fontSize: '0.84rem',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
                   {!walletData?.transactions || walletData.transactions.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground text-sm">
                       {t.noTransactions}
                     </div>
                   ) : (
-                    walletData.transactions.map((tx: any) => (
-                      <SharedTransactionRow key={tx.id} tx={tx} isRTL={isRTL} jodLabel={jodLabel} />
-                    ))
+                    walletData.transactions
+                      .filter((tx: any) =>
+                        !txSearch ||
+                        JSON.stringify(tx).toLowerCase().includes(txSearch.toLowerCase())
+                      )
+                      .map((tx: any) => (
+                        <SharedTransactionRow key={tx.id} tx={tx} isRTL={isRTL} jodLabel={jodLabel} />
+                      ))
                   )}
                 </CardContent>
               </Card>
@@ -334,6 +356,22 @@ export function WalletDashboard() {
                       <Gift className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30" />
                       <p className="text-muted-foreground text-sm">{t.noRewards}</p>
                       <p className="text-xs text-muted-foreground mt-1">{t.rewardsEmptyHint}</p>
+                      <button
+                        onClick={() => setTab('overview')}
+                        style={{
+                          marginTop: 12,
+                          padding: '8px 18px',
+                          borderRadius: 999,
+                          background: C.cyan,
+                          border: 'none',
+                          color: C.bg,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          fontSize: '0.82rem',
+                        }}
+                      >
+                        {isRTL ? 'ابدأ رحلة لكسب مكافآت' : 'Book a ride to earn rewards'}
+                      </button>
                     </div>
                   ) : (
                     <>

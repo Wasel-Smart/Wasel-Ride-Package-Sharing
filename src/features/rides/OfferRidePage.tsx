@@ -42,7 +42,7 @@ export function OfferRidePage() {
   const [networkStats, setNetworkStats] = useState(() => getConnectedStats());
   const [busyState, setBusyState] = useState<'idle' | 'posting'>('idle');
   const [formError, setFormError] = useState<string | null>(null);
-  const [draftMessage, setDraftMessage] = useState<string | null>('Draft saved on this device.');
+  const [draftMessage, setDraftMessage] = useState<string | null>(null);
 
   const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(2, 5), []);
   const offerGate = evaluateTrustCapability(user, 'offer_ride');
@@ -84,6 +84,8 @@ export function OfferRidePage() {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const saved = window.localStorage.getItem(OFFER_RIDE_DRAFT_KEY);
+    if (saved) setDraftMessage('Draft restored from your last session.');
     window.localStorage.setItem(OFFER_RIDE_DRAFT_KEY, JSON.stringify(form));
   }, [form]);
 
@@ -263,6 +265,34 @@ export function OfferRidePage() {
               </button>
             </div>
           </div>
+        )}
+
+        {/* Step progress indicator */}
+        {!submitted && (
+          <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
+            {[1, 2, 3].map(s => (
+              <div
+                key={s}
+                style={{
+                  flex: 1,
+                  height: 5,
+                  borderRadius: 999,
+                  background: s <= step ? DS.cyan : C.elevated,
+                  border: `1px solid ${s <= step ? DS.cyan : DS.border}`,
+                  transition: 'background 0.25s',
+                }}
+                title={`Step ${s} of 3`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Incoming requests shown BEFORE the form so drivers see them first */}
+        {incomingRequests.length > 0 && (
+          <OfferRideIncomingRequests
+            incomingRequests={incomingRequests}
+            onStatusMessage={setDraftMessage}
+          />
         )}
 
         <div
@@ -636,10 +666,13 @@ export function OfferRidePage() {
           </div>
         </div>
 
-        <OfferRideIncomingRequests
-          incomingRequests={incomingRequests}
-          onStatusMessage={setDraftMessage}
-        />
+        {/* Only show bottom incoming requests section if none shown above */}
+        {incomingRequests.length === 0 && (
+          <OfferRideIncomingRequests
+            incomingRequests={incomingRequests}
+            onStatusMessage={setDraftMessage}
+          />
+        )}
       </PageShell>
     </Protected>
   );

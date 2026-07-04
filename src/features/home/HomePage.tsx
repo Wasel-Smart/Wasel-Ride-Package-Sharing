@@ -35,6 +35,7 @@ export function HomePage() {
   const { stats: liveStats, loading } = useLiveUserStats();
   const [tripMode, setTripMode] = useState<TripMode>('one-way');
   const [cookieConsented, setCookieConsented] = useState(false);
+  const [cookieDeclined, setCookieDeclined] = useState(false);
 
   const ar = language === 'ar';
   const svc = CurrencyService.getInstance();
@@ -64,6 +65,12 @@ export function HomePage() {
   const acceptCookies = () => {
     localStorage.setItem('wasel-cookie-consent', 'accepted');
     setCookieConsented(true);
+  };
+
+  const declineCookies = () => {
+    localStorage.setItem('wasel-cookie-consent', 'declined');
+    setCookieDeclined(true);
+    setCookieConsented(true); // hide banner
   };
 
   useEffect(() => {
@@ -231,46 +238,109 @@ return (
       <div className="wasel-home-shell" dir={dir} style={{ color: C.text, fontFamily: F }}>
         <HomePageStyles />
 
-        {!cookieConsented && (
+        {/* Cookie banner — bottom position, non-blocking */}
+        {!cookieConsented && !cookieDeclined && (
           <div
             style={{
               position: 'fixed',
               bottom: 0,
               left: 0,
               right: 0,
-              background: 'rgba(0, 0, 0, 0.9)',
+              background: 'rgba(6,17,27,0.97)',
               color: '#fff',
-              padding: '16px 20px',
+              padding: '14px 20px calc(14px + env(safe-area-inset-bottom))',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: 12,
-              zIndex: 100,
+              zIndex: 200,
               flexWrap: 'wrap',
+              borderTop: `1px solid rgba(88,221,255,0.14)`,
+              backdropFilter: 'blur(16px)',
             }}
+            role="dialog"
+            aria-label={ar ? 'إشعار ملفات تعريف الارتباط' : 'Cookie consent'}
           >
-            <span style={{ fontSize: '0.82rem', fontFamily: F }}>
+            <span style={{ fontSize: '0.84rem', fontFamily: F, flex: 1, minWidth: 200, lineHeight: 1.5 }}>
               {ar
-                ? 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك. بقبولك، أنت توافق على شروط الخصوصية.'
-                : 'We use cookies to improve your experience. By accepting, you agree to our privacy policy.'}
+                ? 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك.'
+                : 'We use cookies to improve your experience.'}{' '}
+              <a href="/app/privacy" style={{ color: C.cyan, textDecoration: 'underline', fontSize: '0.8rem' }}>
+                {ar ? 'سياسة الخصوصية' : 'Privacy policy'}
+              </a>
             </span>
-            <button
-              onClick={acceptCookies}
-              style={{
-                padding: '8px 16px',
-                borderRadius: 8,
-                background: C.cyan,
-                color: '#000',
-                border: 'none',
-                fontWeight: 700,
-                fontFamily: F,
-                cursor: 'pointer',
-              }}
-            >
-              {ar ? 'قبول' : 'Accept'}
-            </button>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <button
+                onClick={declineCookies}
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: 10,
+                  background: 'transparent',
+                  color: '#aaa',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  fontWeight: 600,
+                  fontFamily: F,
+                  cursor: 'pointer',
+                  fontSize: '0.82rem',
+                }}
+              >
+                {ar ? 'رفض' : 'Decline'}
+              </button>
+              <button
+                onClick={acceptCookies}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: 10,
+                  background: C.cyan,
+                  color: '#000',
+                  border: 'none',
+                  fontWeight: 800,
+                  fontFamily: F,
+                  cursor: 'pointer',
+                  fontSize: '0.82rem',
+                }}
+              >
+                {ar ? 'قبول' : 'Accept'}
+              </button>
+            </div>
           </div>
         )}
+
+        {/* Sticky mobile CTA */}
+        <div className="wasel-home-sticky-cta">
+          <button
+            onClick={() => handleNavigate(primaryTripPath, 'sticky_find')}
+            style={{
+              height: 48,
+              borderRadius: 12,
+              border: 'none',
+              background: C.cyan,
+              color: '#000',
+              fontWeight: 800,
+              fontFamily: F,
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+            }}
+          >
+            {ar ? 'ابحث عن رحلة' : 'Find a ride'}
+          </button>
+          <button
+            onClick={() => handleNavigate('/offer-ride', 'sticky_offer')}
+            style={{
+              height: 48,
+              borderRadius: 12,
+              border: `1px solid rgba(255,255,255,0.15)`,
+              background: 'rgba(255,255,255,0.06)',
+              color: '#fff',
+              fontWeight: 700,
+              fontFamily: F,
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+            }}
+          >
+            {ar ? 'اعرض مقاعد' : 'Offer seats'}
+          </button>
+        </div>
 
         <div className="wasel-home-container relative z-10">
           <HomeHeroSection
@@ -283,15 +353,15 @@ return (
             primaryTripPath={primaryTripPath}
           />
 
-          <ProofSection ar={ar} onNavigate={handleNavigate} />
+          {/* Proof section only for signed-out users; signed-in users see active trips instead */}
+          {!user && <ProofSection ar={ar} onNavigate={handleNavigate} />}
 
-          <OnboardingDemoSection ar={ar} onNavigate={handleNavigate} />
+          {user && <ActiveTripsBanner onNavigate={handleNavigate} />}
 
           <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={handleNavigate} />
 
-          {user && (
-            <ActiveTripsBanner onNavigate={handleNavigate} />
-          )}
+          {/* Show onboarding demo only for new/signed-out users */}
+          {!user && <OnboardingDemoSection ar={ar} onNavigate={handleNavigate} />}
 
           <CorridorBetaFocusSection
             ar={ar}
@@ -299,8 +369,7 @@ return (
             onNavigate={handleNavigate}
           />
 
-          <OutcomesSection ar={ar} corridorCards={corridorCards} onNavigate={handleNavigate} />
-
+          {/* Single corridor section — OutcomesSection removed to eliminate redundancy */}
           <CorridorsSection ar={ar} corridorCards={corridorCards} onNavigate={handleNavigate} />
 
           <TrustPagesSection ar={ar} onNavigate={handleNavigate} />

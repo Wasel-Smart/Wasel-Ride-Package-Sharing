@@ -1,4 +1,5 @@
 import { useState, type CSSProperties, type ReactNode } from 'react';
+import { WaselLogo } from '../components/wasel-ds/WaselLogo';
 import { ArrowRight, Check, Lock, Mail, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
@@ -102,7 +103,9 @@ export function WorldClassAuthPage() {
     <div style={pageStyle}>
       <div style={{ width: '100%', maxWidth: 440 }}>
         <header style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ fontSize: '3rem', marginBottom: 16 }}>W</div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+            <WaselLogo size={44} theme="light" />
+          </div>
           <h1 style={headingStyle}>{ar ? 'مرحبا بك في واصل' : 'Welcome to Wasel'}</h1>
           <p style={mutedStyle}>{ar ? 'سجل دخولك للمتابعة' : 'Sign in to continue'}</p>
         </header>

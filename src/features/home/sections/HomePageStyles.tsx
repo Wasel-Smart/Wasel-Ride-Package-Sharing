@@ -58,6 +58,33 @@ export function HomePageStyles() {
         padding: 28px 28px 64px;
       }
 
+      /* Sticky bottom CTA for mobile */
+      .wasel-home-sticky-cta {
+        display: none;
+      }
+
+      @media (max-width: 760px) {
+        .wasel-home-sticky-cta {
+          display: flex;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 90;
+          padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+          background: rgba(3, 8, 15, 0.96);
+          border-top: 1px solid rgba(156, 202, 230, 0.12);
+          backdrop-filter: blur(12px);
+          gap: 10px;
+        }
+        .wasel-home-sticky-cta > button {
+          flex: 1;
+        }
+        .wasel-home-container {
+          padding-bottom: 100px;
+        }
+      }
+
       .wasel-home-hero {
         display: grid;
         grid-template-columns: minmax(0, 0.82fr) minmax(520px, 1.18fr);

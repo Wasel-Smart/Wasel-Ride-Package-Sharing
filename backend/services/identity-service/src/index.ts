@@ -50,7 +50,10 @@ function createApp(): express.Application {
     });
   });
 
-  app.get('/ready', async (_req, res) => ({ status: 'ready' }));
+  app.get('/ready', async (_req, res) => {
+    const redisHealthy = await redis.ping().then(() => true).catch(() => false);
+    res.json({ status: redisHealthy ? 'ready' : 'not_ready' });
+  });
 
   app.get('/metrics', async (_req, res) => ({
     uptime: process.uptime(),
