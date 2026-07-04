@@ -152,7 +152,7 @@ function BrandPanel() {
 
       <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 380 }}>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <WaselLogo size={44} theme="light" variant="full" />
+          <WaselLogo size={64} theme="light" variant="full" />
         </div>
         <h2
           style={{

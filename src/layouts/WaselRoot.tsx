@@ -143,7 +143,7 @@ export default function WaselRoot() {
                 transition: 'opacity 0.15s',
               }}
             >
-              <WaselLogo size={34} theme="light" variant="full" />
+              <WaselLogo size={48} theme="light" variant="full" />
             </button>
 
             <nav

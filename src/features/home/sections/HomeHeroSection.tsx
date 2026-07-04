@@ -249,7 +249,7 @@ export function HomeHeroSection({
               <Shield size={13} color={C.cyan} />
               {ar ? 'شبكة مسارات الأردن' : 'Jordan route network'}
             </div>
-            <WaselLogo size={36} theme="light" variant="full" />
+            <WaselLogo size={48} theme="light" variant="full" />
           </div>
           {user ? <InlineCurrencySwitcher ar={ar} /> : null}
         </div>

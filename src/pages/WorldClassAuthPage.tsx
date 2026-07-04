@@ -114,7 +114,7 @@ export function WorldClassAuthPage() {
       <div style={{ width: '100%', maxWidth: 440 }}>
         <header style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-            <WaselLogo size={44} theme="light" />
+            <WaselLogo size={60} theme="light" />
           </div>
           <h1 style={headingStyle}>{ar ? 'مرحبا بك في واصل' : 'Welcome to Wasel'}</h1>
           <p style={mutedStyle}>{ar ? 'سجل دخولك للمتابعة' : 'Sign in to continue'}</p>
