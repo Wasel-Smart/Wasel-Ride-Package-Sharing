@@ -6,14 +6,28 @@ import { getDb } from '@wasel/backend-shared/db';
 
 const config = loadConfig();
 
+// Supabase JWTs carry the app role in app_metadata.role (or user_metadata.role).
+// The top-level `role` claim is always "authenticated" for logged-in users.
 interface JWTPayload {
   sub: string;
   role: string;
+  app_metadata?: { role?: string };
+  user_metadata?: { role?: string };
   iat: number;
   exp: number;
 }
 
 const allowedRoles = new Set(['passenger', 'driver', 'operator', 'admin']);
+
+function extractAppRole(payload: JWTPayload): string {
+  // Prefer app_metadata.role (set server-side), fall back to user_metadata.role,
+  // then fall back to the top-level role claim for non-Supabase tokens.
+  return (
+    payload.app_metadata?.role ??
+    payload.user_metadata?.role ??
+    (payload.role !== 'authenticated' ? payload.role : '')
+  );
+}
 
 export async function authenticate(req: Request, _res: Response, next: NextFunction) {
   try {
@@ -27,14 +41,28 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
       return next(new UnauthorizedError('Empty token'));
     }
 
-    let payload: JWTPayload;
-    try {
-      payload = jwt.verify(token, config.jwt.secret) as JWTPayload;
-    } catch {
+    // Try JWT_SECRET first (own tokens), then SUPABASE_JWT_SECRET (Supabase-issued tokens).
+    // Set SUPABASE_JWT_SECRET to the value from Supabase Dashboard → Settings → API → JWT Secret.
+    const secrets = [
+      config.jwt.secret,
+      ...(process.env.SUPABASE_JWT_SECRET ? [process.env.SUPABASE_JWT_SECRET] : []),
+    ];
+
+    let payload: JWTPayload | null = null;
+    for (const secret of secrets) {
+      try {
+        payload = jwt.verify(token, secret) as JWTPayload;
+        break;
+      } catch {
+        // Try next secret.
+      }
+    }
+
+    if (!payload) {
       return next(new UnauthorizedError('Invalid or expired token'));
     }
 
-    if (!payload.sub || !allowedRoles.has(payload.role)) {
+    if (!payload.sub) {
       return next(new UnauthorizedError('Invalid token claims'));
     }
 
@@ -48,7 +76,10 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
       return next(new UnauthorizedError('User is not active'));
     }
 
-    if (user.role !== payload.role) {
+    // For Supabase tokens the app role lives in metadata, not the top-level claim.
+    // Only enforce role freshness when the token explicitly carries an app role.
+    const tokenRole = extractAppRole(payload);
+    if (tokenRole && allowedRoles.has(tokenRole) && user.role !== tokenRole) {
       return next(new UnauthorizedError('Token role is stale'));
     }
 
@@ -63,13 +94,13 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
   }
 }
 
-export function requireRole(allowedRoles: string[]) {
+export function requireRole(roles: string[]) {
   return (req: Request, _res: Response, next: NextFunction) => {
     const user = (req as unknown as { user?: { id: string; role: string } }).user;
     if (!user) {
       return next(new UnauthorizedError('No user context'));
     }
-    if (!allowedRoles.includes(user.role)) {
+    if (!roles.includes(user.role)) {
       return next(new ForbiddenError(`Role '${user.role}' is not authorized`));
     }
     next();

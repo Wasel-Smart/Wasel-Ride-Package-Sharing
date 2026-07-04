@@ -68,3 +68,8 @@ export async function updateTripStatus(tripId: string, status: string) {
   const response = await api.patch(`/trips/${tripId}/status`, { status });
   return response as { data: Trip };
 }
+
+export async function cancelBooking(bookingId: string) {
+  const response = await api.patch(`/trips/bookings/${bookingId}/cancel`, {});
+  return response as { data: unknown };
+}

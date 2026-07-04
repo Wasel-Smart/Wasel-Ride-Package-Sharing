@@ -1,4 +1,4 @@
-import api from '../utils/api';
+import api, { getSessionUserId } from '../utils/api';
 
 export interface Package {
   id: string;
@@ -35,7 +35,9 @@ export async function getPackage(id: string) {
 }
 
 export async function getMyPackages() {
-  const response = await api.get('/packages/sender/me');
+  const userId = await getSessionUserId();
+  if (!userId) throw new Error('Not authenticated');
+  const response = await api.get(`/packages/sender/${userId}`);
   return response as { data: Package[] };
 }
 

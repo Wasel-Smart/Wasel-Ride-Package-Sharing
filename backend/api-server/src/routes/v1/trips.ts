@@ -92,6 +92,19 @@ router.patch('/:id/status', authenticate, async (req: Request, res: Response) =>
   }
 });
 
+router.patch('/bookings/:id/cancel', authenticate, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as unknown as { user: { id: string } }).user.id;
+    const booking = await tripService.cancelBooking(req.params.id, userId);
+    res.json({ success: true, data: booking });
+  } catch (error) {
+    if ((error as Error).message.includes('not found')) {
+      return res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: (error as Error).message } });
+    }
+    res.status(400).json({ success: false, error: { code: 'BAD_REQUEST', message: (error as Error).message } });
+  }
+});
+
 export default router;
 
 

@@ -1,17 +1,31 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/v1';
+import { supabase } from './supabase/client';
+
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '') || '/v1';
 
 export function generateId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 11)}`;
 }
 
+async function getSessionToken(): Promise<string | null> {
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
+export async function getSessionUserId(): Promise<string | null> {
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user?.id ?? null;
+}
+
 async function request(path: string, options: RequestInit = {}) {
-  const token = localStorage.getItem('wasel_access_token');
-  
+  const token = await getSessionToken();
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...((options.headers as Record<string, string>) || {}),
   };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -22,11 +36,11 @@ async function request(path: string, options: RequestInit = {}) {
   });
 
   const data = await response.json();
-  
+
   if (!response.ok || !data.success) {
     throw new Error(data.error?.message || 'Request failed');
   }
-  
+
   return data;
 }
 
