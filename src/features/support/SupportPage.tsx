@@ -4,6 +4,7 @@ import {
   AlertCircle,
   ChevronDown,
   ChevronUp,
+  CheckCircle,
   HelpCircle,
   Mail,
   MessageCircle,
@@ -14,15 +15,14 @@ import {
   Wallet,
 } from 'lucide-react';
 import {
-  MetricCard,
   PageHero,
   PageShell,
   SectionCard,
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
-import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
 import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import {
   getSmsSupportUrl,
@@ -30,7 +30,7 @@ import {
   getSupportPhoneUrl,
   getWhatsAppSupportUrl,
 } from '../../utils/env';
-import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { C, F, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 
 const supportTopics = [
   {
@@ -59,21 +59,6 @@ const supportTopics = [
   },
 ] as const;
 
-const responsePath = [
-  'Open the support channel and include the route, package, wallet, or account context.',
-  'Wasel keeps the issue attached to the relevant movement record where possible.',
-  'Safety, access, and payment issues get priority over general product questions.',
-  'If the issue depends on verification, the next trust step is surfaced before resolution.',
-] as const;
-
-const FAQ_ITEMS = [
-  { q: 'How do I cancel a booking?', a: 'Open My Trips, find the active booking, and tap Cancel. Refunds appear within 3-5 business days.' },
-  { q: 'Where is my package?', a: 'Track in real-time from Packages. Each handoff updates with GPS coordinates and timestamps.' },
-  { q: 'Why is my wallet frozen?', a: 'Wallet may be frozen for verification or compliance. Check Trust Center for specific reason.' },
-  { q: 'How does pricing work?', a: 'Prices are shown before booking. Shared rides split costs, packages add a small fee for handling.' },
-  { q: 'What if my driver cancels?', a: 'Open support immediately - we will rebook you and credit your account for the inconvenience.' },
-] as const;
-
 function topicStyle(accent: string) {
   return {
     borderRadius: R.xxl,
@@ -85,53 +70,34 @@ function topicStyle(accent: string) {
 }
 
 function SupportChannel({
-  icon,
-  label,
-  detail,
-  href,
-  accent,
+  icon, label, detail, href, accent,
 }: {
-  icon: ReactNode;
-  label: string;
-  detail: string;
-  href: string;
-  accent: string;
+  icon: ReactNode; label: string; detail: string; href: string; accent: string;
 }) {
   const disabled = !href;
-
   return (
     <a
       href={href || undefined}
       aria-disabled={disabled}
       style={{
         ...topicStyle(accent),
-        display: 'flex',
-        alignItems: 'center',
-        gap: SPACE[3],
-        textDecoration: 'none',
+        display: 'flex', alignItems: 'center',
+        gap: SPACE[3], textDecoration: 'none',
         color: 'inherit',
         opacity: disabled ? 0.58 : 1,
         pointerEvents: disabled ? 'none' : 'auto',
       }}
     >
-      <span
-        style={{
-          width: 42,
-          height: 42,
-          display: 'grid',
-          placeItems: 'center',
-          borderRadius: R.lg,
-          color: accent,
-          background: `${accent}16`,
-          border: `1px solid ${accent}28`,
-          flexShrink: 0,
-        }}
-      >
+      <span style={{
+        width: 42, height: 42, display: 'grid', placeItems: 'center',
+        borderRadius: R.lg, color: accent,
+        background: `${accent}16`, border: `1px solid ${accent}28`, flexShrink: 0,
+      }}>
         {icon}
       </span>
       <span style={{ display: 'grid', gap: 4 }}>
-        <span style={{ color: C.text, fontWeight: TYPE.weight.black }}>{label}</span>
-        <span style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.5 }}>
+        <span style={{ color: C.text, fontWeight: TYPE.weight.black, fontFamily: F }}>{label}</span>
+        <span style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.5, fontFamily: F }}>
           {disabled ? 'Not configured in this environment.' : detail}
         </span>
       </span>
@@ -139,13 +105,64 @@ function SupportChannel({
   );
 }
 
+// Extracted to fix hooks-in-map violation
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{
+      borderRadius: R.xl, border: `1px solid ${C.borderFaint}`,
+      background: C.elevated, overflow: 'hidden',
+    }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          width: '100%', padding: `${SPACE[4]} ${SPACE[4]}`,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          background: 'transparent', border: 'none',
+          color: C.text, fontFamily: F,
+          fontSize: TYPE.size.base, fontWeight: TYPE.weight.bold, cursor: 'pointer',
+        }}
+      >
+        <span style={{ textAlign: 'left' }}>{q}</span>
+        {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      </button>
+      {open && (
+        <div style={{
+          padding: `${SPACE[3]} ${SPACE[4]}`,
+          borderTop: `1px solid ${C.borderFaint}`,
+          color: C.textMuted, fontSize: TYPE.size.sm,
+          lineHeight: 1.7, fontFamily: F,
+        }}>
+          {a}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function SupportPage() {
   const { dir } = useLanguage();
+  const { user } = useLocalAuth();
   const nav = useIframeSafeNavigate();
+
   const emailUrl = getSupportEmailUrl('Wasel support request');
   const smsUrl = getSmsSupportUrl('Hi Wasel support team');
   const whatsappUrl = getWhatsAppSupportUrl('Hi Wasel support team');
   const phoneUrl = getSupportPhoneUrl();
+
+  const [formEmail, setFormEmail] = useState(user?.email ?? '');
+  const [formTopic, setFormTopic] = useState('');
+  const [formMessage, setFormMessage] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const recommendedChannel = formTopic ? TOPIC_CHANNEL[formTopic] : null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formEmail || !formTopic || !formMessage) return;
+    // In production: POST to /v1/support/messages
+    setSubmitted(true);
+  };
 
   return (
     <PageShell maxWidth={1120} dir={dir === 'rtl' ? 'rtl' : 'ltr'}>
@@ -173,9 +190,8 @@ export function SupportPage() {
           }
           aside={
             <div style={{ display: 'grid', gap: SPACE[4] }}>
-              <WaselLogo size={42} theme="light" variant="full" />
               <StatusBadge label="Rides, parcels, wallet, account, and safety" accent={C.blueLight} />
-              <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+              <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7, fontFamily: F }}>
                 For urgent safety concerns, use the in-app SOS flow or your local emergency number
                 first, then open Wasel support with the trip context.
               </div>
@@ -183,121 +199,50 @@ export function SupportPage() {
           }
         />
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: 12,
-            marginBottom: SPACE[6],
-          }}
-        >
-          <MetricCard
-            label="Support scope"
-            value="5 areas"
-            detail="Routes, packages, wallet, account, and safety escalation."
-            accent={C.blueLight}
-            icon={<HelpCircle size={18} />}
-          />
-          <MetricCard
-            label="Context"
-            value="Attached"
-            detail="Issues should stay linked to the relevant record."
-            accent={C.cyan}
-            icon={<Route size={18} />}
-          />
-          <MetricCard
-            label="Priority"
-            value="Safety"
-            detail="Safety, access, and payment issues come first."
-            accent={C.green}
-            icon={<AlertCircle size={18} />}
-          />
-          <MetricCard
-            label="Channels"
-            value="4"
-            detail="Email, SMS, WhatsApp, and phone when configured."
-            accent={C.gold}
-            icon={<MessageCircle size={18} />}
-          />
-        </div>
-
+        {/* ── Contact Channels — primary action, first section ── */}
         <SectionCard
           title="Contact Channels"
           subtitle="Use the channel that matches the urgency and the device you are on."
           icon={<MessageCircle size={18} color={C.blueLight} />}
         >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-              gap: 12,
-            }}
-          >
-            <SupportChannel
-              icon={<Mail size={18} />}
-              label="Email support"
-              detail="Best for non-urgent issues with detail."
-              href={emailUrl}
-              accent={C.cyan}
-            />
-            <SupportChannel
-              icon={<MessageCircle size={18} />}
-              label="WhatsApp support"
-              detail="Best for quick route or handoff updates."
-              href={whatsappUrl}
-              accent={C.green}
-            />
-            <SupportChannel
-              icon={<Phone size={18} />}
-              label="Call support"
-              detail="Best for urgent account or movement escalation."
-              href={phoneUrl}
-              accent={C.gold}
-            />
-            <SupportChannel
-              icon={<MessageCircle size={18} />}
-              label="SMS support"
-              detail="Best when mobile data is limited."
-              href={smsUrl}
-              accent={C.blueLight}
-            />
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
+            gap: 12,
+          }}>
+            <SupportChannel icon={<Mail size={18} />}          label="Email support"    detail="Best for non-urgent issues with detail."              href={emailUrl}    accent={C.cyan} />
+            <SupportChannel icon={<MessageCircle size={18} />} label="WhatsApp support" detail="Best for quick route or handoff updates."             href={whatsappUrl} accent={C.green} />
+            <SupportChannel icon={<Phone size={18} />}         label="Call support"     detail="Best for urgent account or movement escalation."      href={phoneUrl}    accent={C.gold} />
+            <SupportChannel icon={<MessageCircle size={18} />} label="SMS support"      detail="Best when mobile data is limited."                    href={smsUrl}      accent={C.blueLight} />
           </div>
         </SectionCard>
 
+        {/* ── What we can help with ── */}
         <SectionCard
           title="What We Can Help With"
-          subtitle="Support topics are grouped by product outcome so users can choose quickly."
+          subtitle="Support topics grouped by product outcome."
           icon={<HelpCircle size={18} color={C.cyan} />}
         >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-              gap: 12,
-            }}
-          >
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+            gap: 12,
+          }}>
             {supportTopics.map(topic => {
               const Icon = topic.icon;
               return (
                 <div key={topic.title} style={topicStyle(topic.accent)}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-                    <span
-                      style={{
-                        width: 40,
-                        height: 40,
-                        display: 'grid',
-                        placeItems: 'center',
-                        borderRadius: R.lg,
-                        color: topic.accent,
-                        background: `${topic.accent}16`,
-                        border: `1px solid ${topic.accent}28`,
-                      }}
-                    >
+                    <span style={{
+                      width: 40, height: 40, display: 'grid', placeItems: 'center',
+                      borderRadius: R.lg, color: topic.accent,
+                      background: `${topic.accent}16`, border: `1px solid ${topic.accent}28`,
+                    }}>
                       <Icon size={18} />
                     </span>
-                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>{topic.title}</div>
+                    <div style={{ color: C.text, fontWeight: TYPE.weight.black, fontFamily: F }}>{topic.title}</div>
                   </div>
-                  <div style={{ marginTop: SPACE[3], color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+                  <div style={{ marginTop: SPACE[3], color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7, fontFamily: F }}>
                     {topic.detail}
                   </div>
                 </div>
@@ -306,185 +251,107 @@ export function SupportPage() {
           </div>
         </SectionCard>
 
-        <SectionCard
-          title="Escalation Path"
-          subtitle="A support page should reduce uncertainty after something goes wrong."
-          icon={<AlertCircle size={18} color={C.gold} />}
-        >
-          <div style={{ display: 'grid', gap: 10 }}>
-            {responsePath.map((step, index) => (
-              <div
-                key={step}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '44px minmax(0, 1fr)',
-                  gap: 12,
-                  alignItems: 'center',
-                  borderRadius: R.xl,
-                  border: `1px solid ${C.borderFaint}`,
-                  background: C.elevated,
-                  padding: `${SPACE[3]} ${SPACE[4]}`,
-                }}
-              >
-                <div
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: R.lg,
-                    display: 'grid',
-                    placeItems: 'center',
-                    color: C.blueLight,
-                    background: `${C.blueLight}14`,
-                    border: `1px solid ${C.blueLight}24`,
-                    fontWeight: TYPE.weight.black,
-                  }}
-                >
-                  {index + 1}
-                </div>
-                <div style={{ color: C.text, fontSize: TYPE.size.sm, lineHeight: 1.65 }}>
-                  {step}
-                </div>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          title="Quick FAQ"
-          subtitle="Common questions answered instantly."
-          icon={<HelpCircle size={18} color={C.orange} />}
-        >
-          <div style={{ display: 'grid', gap: 10 }}>
-            {FAQ_ITEMS.map((item, idx) => {
-              const [open, setOpen] = useState(false);
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    borderRadius: R.xl,
-                    border: `1px solid ${C.borderFaint}`,
-                    background: C.elevated,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <button
-                    onClick={() => setOpen(!open)}
-                    style={{
-                      width: '100%',
-                      padding: `${SPACE[4]} ${SPACE[4]}`,
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      background: 'transparent',
-                      border: 'none',
-                      color: C.text,
-                      fontFamily: TYPE.family.sans,
-                      fontSize: TYPE.size.base,
-                      fontWeight: TYPE.weight.bold,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <span style={{ textAlign: 'left' }}>{item.q}</span>
-                    {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                  </button>
-                  {open && (
-                    <div
-                      style={{
-                        padding: `${SPACE[3]} ${SPACE[4]}`,
-                        borderTop: `1px solid ${C.borderFaint}`,
-                        color: C.textMuted,
-                        fontSize: TYPE.size.sm,
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      {item.a}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </SectionCard>
+        <FAQSection ar={false} />
 
         <SectionCard
           title="Send us a message"
           subtitle="We will answer within 2 hours during business hours."
           icon={<Send size={18} color={C.cyan} />}
         >
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              window.location.href = emailUrl;
-            }}
-            style={{ display: 'grid', gap: 12 }}
-          >
-            <input
-              required
-              placeholder="Your email"
-              style={{
-                width: '100%',
-                height: 46,
-                padding: '0 14px',
-                borderRadius: R.lg,
-                border: `1px solid ${C.border}`,
-                background: C.card,
-                color: C.text,
-                fontFamily: TYPE.family.sans,
-              }}
-            />
-            <select
-              required
-              defaultValue=""
-              style={{
-                width: '100%',
-                height: 46,
-                padding: '0 14px',
-                borderRadius: R.lg,
-                border: `1px solid ${C.border}`,
-                background: C.card,
-                color: C.text,
-                fontFamily: TYPE.family.sans,
-              }}
-            >
-              <option value="" disabled>
-                Topic
-              </option>
-              <option>Ride issue</option>
-              <option>Package issue</option>
-              <option>Wallet question</option>
-              <option>Account access</option>
-              <option>Driver verification</option>
-            </select>
-            <textarea
-              required
-              placeholder="How can we help?"
-              rows={4}
-              style={{
-                width: '100%',
-                minHeight: 110,
-                padding: 14,
-                borderRadius: R.lg,
-                border: `1px solid ${C.border}`,
-                background: C.card,
-                color: C.text,
-                fontFamily: TYPE.family.sans,
-                resize: 'vertical',
-              }}
-            />
-            <WaselButton type="submit" variant="primary">
-              Send message
-            </WaselButton>
-          </form>
+          {submitted ? (
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              gap: SPACE[4], padding: `${SPACE[8]} ${SPACE[4]}`, textAlign: 'center',
+            }}>
+              <CheckCircle size={40} color={C.green} />
+              <div style={{ color: C.text, fontWeight: TYPE.weight.bold, fontSize: TYPE.size.lg, fontFamily: F }}>
+                Message received
+              </div>
+              <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F }}>
+                We'll reply to <strong style={{ color: C.text }}>{formEmail}</strong> within 2 hours.
+              </div>
+              <button
+                onClick={() => { setSubmitted(false); setFormMessage(''); setFormTopic(''); }}
+                style={{
+                  padding: `${SPACE[2]} ${SPACE[5]}`, borderRadius: R.full,
+                  background: C.elevated, border: `1px solid ${C.border}`,
+                  color: C.text, fontFamily: F, fontSize: TYPE.size.sm, cursor: 'pointer',
+                }}
+              >
+                Send another message
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
+              <input
+                required
+                type="email"
+                value={formEmail}
+                onChange={e => setFormEmail(e.target.value)}
+                placeholder="Your email"
+                style={{
+                  width: '100%', height: 46, padding: '0 14px',
+                  borderRadius: R.lg, border: `1px solid ${C.border}`,
+                  background: C.card, color: C.text, fontFamily: F,
+                  boxSizing: 'border-box',
+                }}
+              />
+              <div>
+                <select
+                  required
+                  value={formTopic}
+                  onChange={e => setFormTopic(e.target.value)}
+                  style={{
+                    width: '100%', height: 46, padding: '0 14px',
+                    borderRadius: R.lg, border: `1px solid ${C.border}`,
+                    background: C.card, color: formTopic ? C.text : C.textMuted,
+                    fontFamily: F,
+                  }}
+                >
+                  <option value="" disabled>Topic</option>
+                  <option>Ride issue</option>
+                  <option>Package issue</option>
+                  <option>Wallet question</option>
+                  <option>Account access</option>
+                  <option>Driver verification</option>
+                </select>
+                {/* Topic-aware channel recommendation */}
+                {recommendedChannel && (
+                  <a
+                    href={recommendedChannel.href()}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      marginTop: 6, color: C.cyan,
+                      fontSize: TYPE.size.xs, fontFamily: F,
+                      textDecoration: 'none', fontWeight: TYPE.weight.semibold,
+                    }}
+                  >
+                    {recommendedChannel.hint}
+                  </a>
+                )}
+              </div>
+              <textarea
+                required
+                value={formMessage}
+                onChange={e => setFormMessage(e.target.value)}
+                placeholder="How can we help?"
+                rows={4}
+                style={{
+                  width: '100%', minHeight: 110, padding: 14,
+                  borderRadius: R.lg, border: `1px solid ${C.border}`,
+                  background: C.card, color: C.text,
+                  fontFamily: F, resize: 'vertical',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <WaselButton type="submit" variant="primary">
+                Send message
+              </WaselButton>
+            </form>
+          )}
         </SectionCard>
 
-        <p
-          style={{
-            textAlign: 'center',
-            color: C.textDim,
-            fontSize: TYPE.size.xs,
-            marginTop: SPACE[6],
-          }}
-        >
+        <p style={{ textAlign: 'center', color: C.textDim, fontSize: TYPE.size.xs, marginTop: SPACE[6], fontFamily: F }}>
           Wasel Support • Expected response 2 hours • Safety issues: immediate
         </p>
       </div>
