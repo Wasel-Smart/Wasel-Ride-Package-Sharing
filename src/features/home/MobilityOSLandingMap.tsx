@@ -649,8 +649,7 @@ export function MobilityOSLandingMap({
           city.name === 'Karak' ||
           city.name === 'Aqaba'
         ) {
-          ctx.fillStyle =
-            city.name === 'Amman' ? MAP_LAYER.footerPrimary : MAP_LAYER.footerSecondary;
+          ctx.fillStyle = MAP_LAYER.footerPrimary;
           ctx.textAlign = city.labelAlign ?? 'center';
           ctx.font =
             city.name === 'Amman'

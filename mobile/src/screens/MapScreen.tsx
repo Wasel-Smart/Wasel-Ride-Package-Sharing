@@ -253,7 +253,7 @@ function MapScreen() {
                       <Text
                         style={[
                           styles.cityShortName,
-                          { color: isSelected ? colors.cyan : colors.ink },
+                           { color: colors.surface },
                           isSelected && { fontWeight: '900' },
                         ]}
                       >
@@ -262,7 +262,7 @@ function MapScreen() {
                       <Text
                         style={[
                           styles.cityFullName,
-                          { color: colors.muted },
+                           { color: colors.surface },
                         ]}
                       >
                         {city.name}
