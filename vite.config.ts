@@ -73,6 +73,13 @@ export default defineConfig({
     sourcemap: false,
     chunkSizeWarningLimit: 900,
     rollupOptions: {
+      external: (id) => {
+        // Keep backend-only packages out of client bundle
+        if (id.includes('ioredis') || id.includes('pg') || id.includes('postgres')) {
+          return !id.includes('supabase'); // Allow if it's through supabase
+        }
+        return false;
+      },
       output: {
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined;
