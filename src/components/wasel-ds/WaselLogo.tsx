@@ -11,7 +11,8 @@ interface WaselLogoProps {
   subtitle?: string;
 }
 
-const CLEAN_MARK_SRC = '/brand/wasel-mark-clean.svg';
+export const WASEL_BRAND_MARK_SRC = '/brand/wasel-mark-clean.svg';
+export const WASEL_BRAND_ALT = 'Wasel ride and package sharing logo';
 
 function LogoImage({
   size,
@@ -50,7 +51,7 @@ export function WaselLogo({
   theme = 'light',
   style,
   variant = 'full',
-  subtitle = 'Mobility OS',
+  subtitle = 'Ride • Package Sharing',
 }: WaselLogoProps) {
   const onDarkSurface = theme === 'light';
   const titleColor = onDarkSurface ? '#F7FCFF' : '#0A1D2D';
@@ -72,11 +73,11 @@ export function WaselLogo({
     >
       <LogoImage
         size={size}
-        src={CLEAN_MARK_SRC}
-        alt="Wasel mobility application logo"
+        src={WASEL_BRAND_MARK_SRC}
+        alt={WASEL_BRAND_ALT}
         style={{
           filter: onDarkSurface
-            ? 'drop-shadow(0 6px 16px rgba(18, 214, 255, 0.14))'
+            ? 'drop-shadow(0 6px 16px rgba(8, 125, 255, 0.18))'
             : 'drop-shadow(0 3px 10px rgba(10, 29, 45, 0.10))',
         }}
       />
@@ -123,7 +124,7 @@ export function WaselLogo({
 export function WaselMark({ size = 38, style }: { size?: number; style?: CSSProperties }) {
   return (
     <div style={{ display: 'inline-flex', ...style }}>
-      <LogoImage size={size} src={CLEAN_MARK_SRC} alt="Wasel logo mark" />
+      <LogoImage size={size} src={WASEL_BRAND_MARK_SRC} alt={WASEL_BRAND_ALT} />
     </div>
   );
 }
@@ -153,17 +154,17 @@ export function WaselHeroMark({ size = 120 }: { size?: number }) {
           inset: -24,
           borderRadius: '36%',
           background:
-            'radial-gradient(circle, rgba(18,219,255,0.28) 0%, rgba(106,255,69,0.14) 44%, rgba(4,18,30,0) 78%)',
+            'radial-gradient(circle, rgba(8,125,255,0.3) 0%, rgba(57,199,44,0.16) 42%, rgba(255,138,0,0.12) 58%, rgba(4,18,30,0) 78%)',
           filter: 'blur(22px)',
         }}
       />
       <LogoImage
         size={Math.round(size * 0.74)}
-        src={CLEAN_MARK_SRC}
-        alt="Wasel hero logo"
+        src={WASEL_BRAND_MARK_SRC}
+        alt={WASEL_BRAND_ALT}
         style={{
           position: 'relative',
-          filter: 'drop-shadow(0 10px 26px rgba(18, 214, 255, 0.2))',
+          filter: 'drop-shadow(0 10px 26px rgba(8, 125, 255, 0.24))',
         }}
       />
     </div>
@@ -171,5 +172,5 @@ export function WaselHeroMark({ size = 120 }: { size?: number }) {
 }
 
 export function WaselIcon({ size = 20 }: { size?: number }) {
-  return <LogoImage size={size} src={CLEAN_MARK_SRC} alt="Wasel icon" />;
+  return <LogoImage size={size} src={WASEL_BRAND_MARK_SRC} alt={WASEL_BRAND_ALT} />;
 }

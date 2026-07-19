@@ -66,7 +66,7 @@ const MAJOR_ROUTES = [
 **Implementation:**
 - **STRICT SEPARATION** enforced at data structure level
 - Different colors for visual coding:
-  - **Passengers:** Blue (#00C8E8)
+  - **Passengers:** Blue (#087DFF)
   - **Packages:** Gold (#F0A830)
 - Separate flow metrics tracked independently
 - No overlap or ambiguity
@@ -79,7 +79,7 @@ interface RouteEdge {
   packageFlow: number;       // packages/hour
   
   // Visualization (CONSISTENT)
-  passengerColor: string;    // Blue (#00C8E8)
+  passengerColor: string;    // Blue (#087DFF)
   packageColor: string;      // Gold (#F0A830)
 }
 
@@ -94,7 +94,7 @@ interface Vehicle {
 ```typescript
 // Passenger flow overlay (BLUE)
 if (route.passengerFlow > 0) {
-  ctx.strokeStyle = `rgba(0, 200, 232, ${alpha})`;
+  ctx.strokeStyle = `rgba(8, 125, 255, ${alpha})`;
   // Draw blue line
 }
 

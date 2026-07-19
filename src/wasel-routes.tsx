@@ -38,8 +38,8 @@ function PageLoader() {
           width: 36,
           height: 36,
           borderRadius: '50%',
-          border: '3px solid rgba(22,199,242,0.15)',
-          borderTop: '3px solid #16C7F2',
+          border: '3px solid rgba(8,125,255,0.15)',
+          borderTop: '3px solid #087DFF',
           animation: 'spin 0.8s linear infinite',
         }}
       />
@@ -144,7 +144,7 @@ function NotFound() {
           marginBottom: 16,
           letterSpacing: '0.18em',
           textTransform: 'uppercase',
-          color: '#16C7F2',
+          color: '#087DFF',
           fontWeight: 800,
         }}
       >
@@ -167,7 +167,7 @@ function NotFound() {
           style={{
             padding: '10px 24px',
             borderRadius: 12,
-            background: 'linear-gradient(135deg,#16C7F2,#0F78BF)',
+            background: 'linear-gradient(135deg,#087DFF,#0057F0)',
             color: '#040C18',
             fontWeight: 700,
             textDecoration: 'none',
@@ -180,7 +180,7 @@ function NotFound() {
           style={{
             padding: '10px 24px',
             borderRadius: 12,
-            border: '1px solid rgba(22,199,242,0.22)',
+            border: '1px solid rgba(8,125,255,0.22)',
             color: '#EFF6FF',
             fontWeight: 700,
             textDecoration: 'none',
@@ -222,13 +222,13 @@ function RouteErrorFallback() {
           borderRadius: 20,
           padding: 28,
           background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(22,199,242,0.14)',
+          border: '1px solid rgba(8,125,255,0.14)',
         }}
       >
         <div
           style={{
             fontSize: '0.7rem',
-            color: '#16C7F2',
+            color: '#087DFF',
             fontWeight: 800,
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
@@ -247,7 +247,7 @@ function RouteErrorFallback() {
             style={{
               padding: '10px 18px',
               borderRadius: 12,
-              background: 'linear-gradient(135deg,#16C7F2,#0F78BF)',
+              background: 'linear-gradient(135deg,#087DFF,#0057F0)',
               color: '#041018',
               textDecoration: 'none',
               fontWeight: 800,
@@ -273,7 +273,7 @@ function RouteErrorFallback() {
             style={{
               padding: '10px 18px',
               borderRadius: 12,
-              border: '1px solid rgba(22,199,242,0.22)',
+              border: '1px solid rgba(8,125,255,0.22)',
               color: '#EFF6FF',
               textDecoration: 'none',
               fontWeight: 700,

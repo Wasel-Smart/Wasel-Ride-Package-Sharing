@@ -23,9 +23,9 @@ import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence
 const BG = '#061726';
 const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
 const BORD = 'rgba(73,190,242,0.14)';
-const CYAN = '#16C7F2';
-const GOLD = '#C7FF1A';
-const GREEN = '#60C536';
+const CYAN = '#087DFF';
+const GOLD = '#FF8A00';
+const GREEN = '#39C72C';
 const BLUE = '#3B82F6';
 const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 

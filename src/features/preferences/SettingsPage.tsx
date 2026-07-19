@@ -39,7 +39,7 @@ import {
 const BG = '#061726';
 const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
 const BORD = 'rgba(73,190,242,0.14)';
-const CYAN = '#16C7F2';
+const CYAN = '#087DFF';
 const FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 const STORAGE_KEYS = {

@@ -50,7 +50,7 @@ function showToast(message: string) {
     left: '50%',
     transform: 'translateX(-50%)',
     background: '#0A1628',
-    border: '1px solid rgba(22,199,242,0.3)',
+    border: '1px solid rgba(8,125,255,0.3)',
     color: '#EFF6FF',
     padding: '10px 20px',
     borderRadius: '10px',

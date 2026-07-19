@@ -9,12 +9,12 @@ export const C = {
   card: '#0B2135',
   card2: '#102B44',
   s3: '#14334F',
-  cyan: '#16C7F2',
-  cyanDim: 'rgba(22,199,242,0.12)',
-  gold: '#C7FF1A',
-  goldDim: 'rgba(199,255,26,0.12)',
-  green: '#60C536',
-  greenDim: 'rgba(96,197,54,0.12)',
+  cyan: '#087DFF',
+  cyanDim: 'rgba(8,125,255,0.12)',
+  gold: '#FF8A00',
+  goldDim: 'rgba(255,138,0,0.12)',
+  green: '#39C72C',
+  greenDim: 'rgba(57,199,44,0.12)',
   purple: '#8B5CF6',
   purpleDim: 'rgba(139,92,246,0.12)',
   red: '#FF4455',
@@ -99,14 +99,14 @@ export function InlineCurrencySwitcher() {
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <button onClick={() => setOpen((o) => !o)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 9999, background: 'rgba(22,199,242,0.12)', border: '1px solid rgba(73,190,242,0.26)', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700, color: C.cyan, fontFamily: F }}>
+      <button onClick={() => setOpen((o) => !o)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 9999, background: 'rgba(8,125,255,0.12)', border: '1px solid rgba(73,190,242,0.26)', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700, color: C.cyan, fontFamily: F }}>
         FX {current}
         <ChevronDown size={10} />
       </button>
       {open && (
         <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, minWidth: 120, background: 'rgba(7,23,38,0.98)', border: '1px solid rgba(73,190,242,0.18)', borderRadius: 10, boxShadow: '0 12px 32px rgba(0,0,0,0.6)', zIndex: 100, overflow: 'hidden' }}>
           {popular.map((code) => (
-            <button key={code} onClick={() => select(code)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '7px 12px', border: 'none', background: current === code ? 'rgba(22,199,242,0.14)' : 'transparent', cursor: 'pointer', fontSize: '0.78rem', fontWeight: current === code ? 700 : 500, color: current === code ? C.cyan : C.text, fontFamily: F }}>
+            <button key={code} onClick={() => select(code)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '7px 12px', border: 'none', background: current === code ? 'rgba(8,125,255,0.14)' : 'transparent', cursor: 'pointer', fontSize: '0.78rem', fontWeight: current === code ? 700 : 500, color: current === code ? C.cyan : C.text, fontFamily: F }}>
               <span>{code}</span>
               <span style={{ color: C.textDim, fontSize: '0.65rem' }}>{getSymbol(code)}</span>
             </button>
@@ -175,7 +175,7 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
             </div>
           </div>
         </div>
-        <button onClick={() => setExpanded((e) => !e)} style={{ background: 'rgba(22,199,242,0.1)', border: '1px solid rgba(73,190,242,0.2)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.72rem', color: C.cyan, fontFamily: F, fontWeight: 600 }}>
+        <button onClick={() => setExpanded((e) => !e)} style={{ background: 'rgba(8,125,255,0.1)', border: '1px solid rgba(73,190,242,0.2)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.72rem', color: C.cyan, fontFamily: F, fontWeight: 600 }}>
           <Info size={12} />
           {ar ? 'لماذا؟' : 'Why?'}
           {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}

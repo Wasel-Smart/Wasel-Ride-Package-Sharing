@@ -172,7 +172,7 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
 export function VerificationBadge({
   level,
   ar = false,
-  accent = '#16C7F2',
+  accent = '#087DFF',
 }: {
   level: string;
   ar?: boolean;
@@ -181,8 +181,8 @@ export function VerificationBadge({
   const map: Record<string, { label: string; color: string; bg: string }> = {
     level_0: { label: ar ? 'غير موثق' : 'Unverified', color: '#94A3B8', bg: 'rgba(148,163,184,0.12)' },
     level_1: { label: ar ? 'موثق الهاتف' : 'Phone Verified', color: '#F59E0B', bg: 'rgba(245,158,11,0.12)' },
-    level_2: { label: ar ? 'موثق الهوية' : 'ID Verified', color: accent, bg: 'rgba(22,199,242,0.12)' },
-    level_3: { label: ar ? 'موثوق' : 'Trusted', color: '#60C536', bg: 'rgba(96,197,54,0.12)' },
+    level_2: { label: ar ? 'موثق الهوية' : 'ID Verified', color: accent, bg: 'rgba(8,125,255,0.12)' },
+    level_3: { label: ar ? 'موثوق' : 'Trusted', color: '#39C72C', bg: 'rgba(57,199,44,0.12)' },
   };
   const v = map[level] ?? map.level_0;
 

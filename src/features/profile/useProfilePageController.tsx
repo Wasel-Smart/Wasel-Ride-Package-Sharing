@@ -9,7 +9,7 @@ import {
 
 export const PROFILE_BG = '#061726';
 export const PROFILE_BORDER = 'rgba(73,190,242,0.14)';
-export const PROFILE_CYAN = '#16C7F2';
+export const PROFILE_CYAN = '#087DFF';
 export const PROFILE_FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
 
 export type SavingField = 'name' | 'phone' | 'photo' | null;

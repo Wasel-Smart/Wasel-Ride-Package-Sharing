@@ -28,7 +28,7 @@ export const TX_ICONS: Record<string, any> = {
   cashback: { icon: Zap, color: '#A855F7', bg: 'bg-purple-500/10' },
 };
 
-export const PIE_COLORS = ['#16C7F2', '#C7FF1A', '#22C55E', '#A855F7', '#3B82F6', '#F59E0B', '#EF4444'];
+export const PIE_COLORS = ['#087DFF', '#FF8A00', '#22C55E', '#A855F7', '#3B82F6', '#F59E0B', '#EF4444'];
 
 const TX_STATUS_META: Record<string, { label: string; className: string }> = {
   pending: { label: 'Pending', className: 'text-amber-300 border-amber-400/30 bg-amber-500/10' },

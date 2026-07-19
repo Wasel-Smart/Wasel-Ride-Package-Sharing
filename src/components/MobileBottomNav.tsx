@@ -11,8 +11,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
 
 const BG = 'rgba(8,27,43,0.96)';
-const CYAN = '#16C7F2';
-const GOLD = '#C7FF1A';
+const CYAN = '#087DFF';
+const GOLD = '#FF8A00';
 const INACTIVE = 'rgba(153,184,210,0.56)';
 const BORDER = 'rgba(73,190,242,0.16)';
 const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
@@ -132,8 +132,8 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
                         borderRadius: 999,
                         background:
                           item.accent === 'gold'
-                            ? 'radial-gradient(circle, rgba(199,255,26,0.22), rgba(199,255,26,0))'
-                            : 'radial-gradient(circle, rgba(22,199,242,0.24), rgba(22,199,242,0))',
+                            ? 'radial-gradient(circle, rgba(255,138,0,0.22), rgba(255,138,0,0))'
+                            : 'radial-gradient(circle, rgba(8,125,255,0.24), rgba(8,125,255,0))',
                         pointerEvents: 'none',
                       }}
                     />

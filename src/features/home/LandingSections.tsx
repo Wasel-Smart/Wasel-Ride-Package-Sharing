@@ -35,7 +35,7 @@ export const LANDING_RESPONSIVE_STYLES = `
   .landing-shell, .landing-shell * { box-sizing: border-box; }
   .landing-shell > * { min-width: 0; }
   .landing-shell button:focus-visible {
-    outline: 2px solid rgba(22,199,242,0.92);
+    outline: 2px solid rgba(8,125,255,0.92);
     outline-offset: 3px;
   }
   .wasel-lift-card { transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
@@ -45,7 +45,7 @@ export const LANDING_RESPONSIVE_STYLES = `
     content: '';
     position: absolute;
     inset: -1px;
-    background: linear-gradient(135deg, rgba(22,199,242,0.18), rgba(22,199,242,0) 36%, rgba(199,255,26,0.16) 100%);
+    background: linear-gradient(135deg, rgba(8,125,255,0.18), rgba(8,125,255,0) 36%, rgba(255,138,0,0.16) 100%);
     opacity: 0.9;
     pointer-events: none;
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -170,7 +170,7 @@ export function LandingPageFrame({ children }: LandingPageFrameProps) {
         style={{
           position: 'absolute',
           inset: 0,
-          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, rgba(22,199,242,0.18), rgba(4,18,30,0) 26%), radial-gradient(circle at 72% 68%, rgba(199,255,26,0.14), rgba(4,18,30,0) 18%)`,
+          background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, rgba(8,125,255,0.18), rgba(4,18,30,0) 26%), radial-gradient(circle at 72% 68%, rgba(255,138,0,0.14), rgba(4,18,30,0) 18%)`,
           pointerEvents: 'none',
           opacity: 0.96,
         }}
@@ -389,7 +389,7 @@ export function LandingHeroSection({
             position: 'absolute',
             inset: 0,
             background:
-              'radial-gradient(circle at 18% 18%, rgba(22,199,242,0.18), rgba(4,18,30,0) 32%), radial-gradient(circle at 82% 26%, rgba(199,255,26,0.12), rgba(4,18,30,0) 24%), linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
+              'radial-gradient(circle at 18% 18%, rgba(8,125,255,0.18), rgba(4,18,30,0) 32%), radial-gradient(circle at 82% 26%, rgba(255,138,0,0.12), rgba(4,18,30,0) 24%), linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0))',
             pointerEvents: 'none',
           }}
         />
@@ -411,7 +411,7 @@ export function LandingHeroSection({
                 width: 'fit-content',
                 padding: '8px 12px',
                 borderRadius: 999,
-                background: 'rgba(22,199,242,0.1)',
+                background: 'rgba(8,125,255,0.1)',
                 border: `1px solid ${LANDING_COLORS.borderStrong}`,
                 color: LANDING_COLORS.cyan,
                 fontSize: '0.75rem',
@@ -1082,7 +1082,7 @@ export function LandingMapSection({
           height: '100%',
           borderRadius: 32,
           background:
-            'radial-gradient(circle at 14% 10%, rgba(22,199,242,0.18), rgba(4,18,30,0) 24%), radial-gradient(circle at 88% 14%, rgba(199,255,26,0.12), rgba(4,18,30,0) 18%), linear-gradient(165deg, rgba(7,24,39,0.96) 0%, rgba(7,27,43,0.9) 42%, rgba(4,19,31,0.96) 100%)',
+            'radial-gradient(circle at 14% 10%, rgba(8,125,255,0.18), rgba(4,18,30,0) 24%), radial-gradient(circle at 88% 14%, rgba(255,138,0,0.12), rgba(4,18,30,0) 18%), linear-gradient(165deg, rgba(7,24,39,0.96) 0%, rgba(7,27,43,0.9) 42%, rgba(4,19,31,0.96) 100%)',
           boxShadow: SH.navy,
           overflow: 'hidden',
         }}
@@ -1480,7 +1480,7 @@ export function LandingTrustSection({ ar }: LandingTrustSectionProps) {
             position: 'absolute',
             inset: 0,
             background:
-              'radial-gradient(circle at top right, rgba(96,197,54,0.18), rgba(4,18,30,0) 30%)',
+              'radial-gradient(circle at top right, rgba(57,199,44,0.18), rgba(4,18,30,0) 30%)',
             pointerEvents: 'none',
           }}
         />

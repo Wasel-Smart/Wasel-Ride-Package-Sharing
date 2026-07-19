@@ -1,34 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" fill="none" role="img" aria-labelledby="title desc" shape-rendering="geometricPrecision">
-  <title id="title">Wasel clean mark on light mood</title>
-  <desc id="desc">A clean interlocking rounded-rectangle mark presented on a soft light background for bright surfaces.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-labelledby="title desc" shape-rendering="geometricPrecision">
+  <title id="title">Wasel connected mobility mark</title>
+  <desc id="desc">A blue location pin surrounded by green and orange connection arcs, matching the Wasel ride and package sharing brand.</desc>
   <defs>
-    <linearGradient id="bg" x1="20" y1="22" x2="296" y2="300" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFFFFF" />
-      <stop offset="1" stop-color="#EFF6F2" />
+    <linearGradient id="waselBlue" x1="382" y1="228" x2="626" y2="759" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#18B8FF"/>
+      <stop offset="0.45" stop-color="#087DFF"/>
+      <stop offset="1" stop-color="#0048E8"/>
     </linearGradient>
-    <linearGradient id="topStroke" x1="54" y1="108" x2="182" y2="108" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#00C9F5" />
-      <stop offset="1" stop-color="#00AEE4" />
+    <linearGradient id="waselBlueShade" x1="478" y1="498" x2="618" y2="684" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0067F7" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0036B9" stop-opacity="0.52"/>
     </linearGradient>
-    <linearGradient id="rightStroke" x1="180" y1="176" x2="284" y2="176" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#0BCFAE" />
-      <stop offset="1" stop-color="#8FDD00" />
+    <linearGradient id="waselGreen" x1="206" y1="230" x2="425" y2="728" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7BEE20"/>
+      <stop offset="0.5" stop-color="#39C72C"/>
+      <stop offset="1" stop-color="#008D38"/>
     </linearGradient>
-    <linearGradient id="bottomStroke" x1="54" y1="242" x2="182" y2="242" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#10D0B1" />
-      <stop offset="0.55" stop-color="#42D86A" />
-      <stop offset="1" stop-color="#98E100" />
+    <linearGradient id="waselOrange" x1="666" y1="230" x2="842" y2="734" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFB223"/>
+      <stop offset="0.48" stop-color="#FF8A00"/>
+      <stop offset="1" stop-color="#FF6900"/>
     </linearGradient>
-    <linearGradient id="linkStroke" x1="186" y1="116" x2="186" y2="248" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#00C4F3" />
-      <stop offset="0.45" stop-color="#12D6BB" />
-      <stop offset="1" stop-color="#99E100" />
-    </linearGradient>
+    <filter id="softShadow" x="130" y="168" width="764" height="682" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#001B40" flood-opacity="0.24"/>
+    </filter>
+    <filter id="pinShadow" x="326" y="214" width="360" height="570" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="14" flood-color="#002B98" flood-opacity="0.32"/>
+    </filter>
   </defs>
 
-  <rect x="12" y="12" width="296" height="296" rx="44" fill="url(#bg)" />
-  <rect x="54" y="66" width="128" height="84" rx="20" stroke="url(#topStroke)" stroke-width="14" />
-  <rect x="180" y="134" width="104" height="56" rx="16" stroke="url(#rightStroke)" stroke-width="14" />
-  <rect x="54" y="200" width="128" height="84" rx="20" stroke="url(#bottomStroke)" stroke-width="14" />
-  <path d="M186 108V242" stroke="url(#linkStroke)" stroke-width="14" stroke-linecap="round" />
+  <g filter="url(#softShadow)" stroke-linecap="round">
+    <path d="M363 214C255 249 180 348 180 464c0 140 108 255 245 267" stroke="url(#waselGreen)" stroke-width="64"/>
+    <path d="M668 214c108 35 183 134 183 250 0 140-108 255-245 267" stroke="url(#waselOrange)" stroke-width="64"/>
+  </g>
+
+  <g filter="url(#pinShadow)">
+    <path d="M512 232c-100 0-181 81-181 181 0 45 16 86 44 118l99 135c18 25 55 25 74 0l99-135c28-32 44-73 44-118 0-100-80-181-179-181Zm0 253a72 72 0 1 1 0-144 72 72 0 0 1 0 144Z" fill="url(#waselBlue)"/>
+    <path d="M466 653c21 14 56 18 82 13l-74 101c-15 21-48 10-48-16 0-8 2-15 7-21l33-77Z" fill="#0057F0"/>
+    <path d="M376 532c39 51 92 75 158 73 48-2 92-20 129-54l-115 157c-19 25-56 25-74 0L376 532Z" fill="url(#waselBlueShade)"/>
+  </g>
 </svg>

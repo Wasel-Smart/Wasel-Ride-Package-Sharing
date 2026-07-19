@@ -207,7 +207,7 @@ export function OfferRidePage() {
         </div>}
 
         {(!offerGate.allowed || (form.acceptsPackages && !packageGate.allowed)) && (
-          <div style={{ marginBottom: 18, background: 'rgba(199,255,26,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: '#fff' }}>
+          <div style={{ marginBottom: 18, background: 'rgba(255,138,0,0.10)', border: `1px solid ${DS.gold}35`, borderRadius: r(16), padding: '14px 16px', color: '#fff' }}>
             <div style={{ fontWeight: 800, marginBottom: 6 }}>Trust readiness required</div>
             <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>{(!offerGate.allowed ? offerGate.reason : packageGate.reason) ?? 'Complete account checks before opening supply.'}</div>
             <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>

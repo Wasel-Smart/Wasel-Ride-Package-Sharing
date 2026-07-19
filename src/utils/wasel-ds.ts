@@ -1,10 +1,10 @@
 /**
- * Wasel brand tokens aligned to the neon linked mobility mark.
+ * Wasel brand tokens aligned to the connected location mobility mark.
  *
  * The identity is built around:
- * - luminous cyan for movement, system focus, and live state
- * - electric lime for shared capacity, routing gain, and positive momentum
- * - midnight navy support surfaces that let the mark glow without noise
+ * - electric blue for location, trust, and live movement
+ * - connected green for shared capacity and routing gain
+ * - warm orange for package handoffs, corridor energy, and calls to action
  */
 
 export const C = {
@@ -21,21 +21,21 @@ export const C = {
   navyMid: '#10365A',
   navyLight: '#1B5D8F',
 
-  cyan: '#12DBFF',
-  cyanDark: '#0E86D2',
-  cyanDim: 'rgba(18,219,255,0.16)',
-  cyanGlow: 'rgba(18,219,255,0.32)',
-  blue: '#0F7BC3',
-  blueLight: '#5DCCFF',
+  cyan: '#18B8FF',
+  cyanDark: '#087DFF',
+  cyanDim: 'rgba(8,125,255,0.16)',
+  cyanGlow: 'rgba(8,125,255,0.32)',
+  blue: '#0057F0',
+  blueLight: '#18B8FF',
   blueDim: 'rgba(15,123,195,0.18)',
-  gold: '#BFFF18',
+  gold: '#FF8A00',
   goldDim: 'rgba(191,255,24,0.16)',
-  green: '#69FF45',
+  green: '#39C72C',
   greenDim: 'rgba(105,255,69,0.16)',
   purple: '#39D8F1',
   purpleDim: 'rgba(57,216,241,0.14)',
-  orange: '#D8FF67',
-  orangeDim: 'rgba(216,255,103,0.16)',
+  orange: '#FF8A00',
+  orangeDim: 'rgba(255,138,0,0.16)',
 
   text: '#EAF7FF',
   textSub: 'rgba(234,247,255,0.84)',
@@ -49,8 +49,8 @@ export const C = {
   error: '#FF646A',
   errorDim: 'rgba(255,100,106,0.12)',
   warning: '#FFD84A',
-  success: '#69FF45',
-  info: '#12DBFF',
+  success: '#39C72C',
+  info: '#087DFF',
 
   overlay: 'rgba(3,12,20,0.84)',
   glass: 'rgba(8,23,39,0.9)',
@@ -277,8 +277,8 @@ export const GLOBAL_STYLES = `
   50% { opacity: 0.6; transform: scale(0.92); }
 }
 @keyframes pulse-glow {
-  0%,100% { box-shadow: 0 0 18px rgba(22,199,242,0.2); }
-  50% { box-shadow: 0 0 28px rgba(22,199,242,0.34), 0 0 36px rgba(199,255,26,0.18); }
+  0%,100% { box-shadow: 0 0 18px rgba(8,125,255,0.2); }
+  50% { box-shadow: 0 0 28px rgba(8,125,255,0.34), 0 0 36px rgba(255,138,0,0.18); }
 }
 @keyframes shimmer {
   0% { background-position: -1000px 0; }
