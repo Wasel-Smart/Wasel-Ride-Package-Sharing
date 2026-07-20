@@ -6,9 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import {
   InfoCard,
-  MetricTile,
   PremiumPanel,
-  RoutePreview,
   ScreenShell,
   SectionHeader,
   StateNotice,
@@ -17,7 +15,6 @@ import {
 } from '../components/MobilePrimitives';
 import { useOffline } from '../hooks/useOffline';
 import { useAuth } from '../providers/AuthProvider';
-import { waselMobileConfig } from '../lib/config';
 import { colors, spacing } from '../theme';
 
 type RootStackParamList = {
@@ -33,160 +30,148 @@ type RootStackParamList = {
   AdvancedSearch: undefined;
   SignIn: undefined;
   Map: undefined;
+  Networks: undefined;
   Wallet: undefined;
-  Operations: undefined;
+  ScheduledRide: undefined;
 };
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
-const readiness = [
-  { label: 'الخادم', value: waselMobileConfig.hasSupabase ? 'مباشر' : 'البيئة', ready: waselMobileConfig.hasSupabase },
-  { label: 'الدفع', value: waselMobileConfig.hasStripe ? 'جاهز' : 'المفتاح', ready: waselMobileConfig.hasStripe },
-  { label: 'الخرائط', value: waselMobileConfig.hasMaps ? 'جاهزة' : 'المفتاح', ready: waselMobileConfig.hasMaps },
-  { label: 'الدوال', value: waselMobileConfig.hasFunctions ? 'جاهزة' : 'الرابط', ready: waselMobileConfig.hasFunctions },
-] as const;
-
-const readinessRows = [readiness.slice(0, 2), readiness.slice(2, 4)];
+const quickActions: Array<{
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  screen: keyof RootStackParamList;
+  tone: string;
+}> = [
+  { label: 'ابحث عن مشوار', icon: 'search', screen: 'AdvancedSearch', tone: colors.teal },
+  { label: 'جدول مشوار', icon: 'calendar', screen: 'ScheduledRide', tone: colors.blue },
+  { label: 'افتح الخريطة', icon: 'map', screen: 'Map', tone: colors.green },
+  { label: 'مشاويري السابقة', icon: 'time', screen: 'Trips', tone: colors.lilac },
+];
 
 const HomeScreen = React.memo(function HomeScreen() {
-  const { user, loading } = useAuth();
-  const { isOnline, queueSize, cacheSize } = useOffline();
+  const { user } = useAuth();
+  const { isOnline, queueSize } = useOffline();
   const navigation = useNavigation<NavProp>();
 
   const displayName = useMemo(
-    () =>
-      user?.user_metadata?.name ||
-      user?.email?.split('@')[0] ||
-      (loading ? 'جاري التحميل' : 'زائر'),
-    [loading, user?.email, user?.user_metadata?.name],
+    () => user?.user_metadata?.name || user?.email?.split('@')[0] || 'صديقنا',
+    [user?.email, user?.user_metadata?.name],
   );
-
-  const operationalScore = useMemo(() => {
-    const readyCount = readiness.filter(item => item.ready).length;
-    return `${Math.round((readyCount / readiness.length) * 100)}%`;
-  }, []);
-
-  const QUICK_LINKS: Array<{
-    label: string;
-    icon: keyof typeof Ionicons.glyphMap;
-    screen: keyof RootStackParamList;
-    tone: string;
-  }> = [
-    { label: 'مشاويري', icon: 'time', screen: 'Trips', tone: colors.teal },
-    { label: 'خطوط الباصات', icon: 'bus', screen: 'Bus', tone: colors.blue },
-    { label: 'تجهيز السائق', icon: 'car', screen: 'Driver', tone: colors.green },
-    { label: 'مركز الأمان', icon: 'shield-checkmark', screen: 'Safety', tone: colors.amber },
-    { label: 'الإشعارات', icon: 'notifications', screen: 'Notifications', tone: colors.lilac },
-    { label: 'بحث ذكي عن مشوار', icon: 'search', screen: 'AdvancedSearch', tone: colors.cyan },
-  ];
 
   return (
     <ScreenShell testID="home-screen">
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        accessibilityLabel="الصفحة الرئيسية"
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.topRow}>
           <StatusPill
-            label={isOnline ? 'الشبكة مباشرة' : 'وضع آمن بدون إنترنت'}
+            label={isOnline ? 'متصل' : 'بدون إنترنت'}
             tone={isOnline ? colors.green : colors.amber}
             icon={isOnline ? 'cloud-done' : 'cloud-offline'}
           />
           <StatusPill
-            label={queueSize ? `${queueSize} بالانتظار` : 'ما في انتظار'}
+            label={queueSize ? `${queueSize} عملية بانتظار المزامنة` : 'كل شيء متزامن'}
             tone={queueSize ? colors.amber : colors.teal}
             icon={queueSize ? 'time' : 'checkmark-circle'}
           />
         </View>
 
-        <PremiumPanel tone="dark" testID="mobile-command-center">
+        <PremiumPanel tone="dark" testID="customer-home-hero">
           <SectionHeader
-            eyebrow="مركز قيادة واصل"
+            eyebrow="واصل معك بكل طريق"
             title={`أهلاً، ${displayName}`}
-            body="المشاوير والطرود والشبكات والمحفظة والأمان وتجهيز السائق كلها من هون."
+            body="احجز مشوارك، أرسل طردك، وتابع كل خطوة من مكان واحد."
             tone="dark"
           />
-          <View style={styles.heroStats}>
-            <View style={styles.heroStatItem}>
-              <StatusPill label={operationalScore} tone={colors.cyan} icon="flash" />
-            </View>
-            <View style={styles.heroStatItem}>
-              <StatusPill label={`${cacheSize} محفوظ محلياً`} tone={colors.gold} icon="archive" />
-            </View>
+          <View style={styles.heroActions}>
+            <PrimaryButton
+              label="ابدأ مشواراً"
+              icon="car"
+              tone={colors.teal}
+              onPress={() => navigation.navigate('AdvancedSearch')}
+              testID="home-start-ride"
+            />
+            <PrimaryButton
+              label="استعرض الخريطة"
+              icon="map"
+              tone={colors.blue}
+              onPress={() => navigation.navigate('Map')}
+              testID="home-open-map"
+            />
           </View>
         </PremiumPanel>
 
-        <RoutePreview from="عمّان" to="العقبة" eta="٣س ٤٢د" distance="٣٣١ كم" />
-
-        {loading ? (
+        {!isOnline ? (
           <StateNotice
-            icon="person-circle"
-            title="جاري تحميل الحساب"
-            body="بنرجّع حالة الجلسة من تخزين التطبيق الآمن."
-            loading
-            tone={colors.blue}
-            testID="home-loading-state"
-          />
-        ) : !user ? (
-          <StateNotice
-            icon="shield-checkmark"
-            title="مركز تحكم الزائر"
-            body="التحقق والتقييمات والدفع الآمن بظهروا بعد تسجيل الدخول."
+            icon="cloud-offline"
+            title="أنت الآن في الوضع غير المتصل"
+            body="يمكنك متابعة البيانات المحفوظة، وسنزامن عملياتك تلقائياً عند عودة الشبكة."
             tone={colors.amber}
-            testID="home-empty-state"
+            testID="home-offline-state"
           />
         ) : null}
 
-        {readinessRows.map((row, index) => (
-          <View key={index} style={styles.metrics}>
-            {row.map(item => (
-              <MetricTile
-                key={item.label}
-                label={item.label}
-                value={item.value}
-                tone={item.ready ? colors.teal : colors.amber}
-              />
-            ))}
-          </View>
-        ))}
-
         <SectionHeader
           eyebrow="وصول سريع"
-          title="كل الميزات"
-          body="افتح أي قسم من التطبيق مباشرة."
+          title="ماذا تريد أن تفعل؟"
+          body="اختر الإجراء المناسب وسنأخذك مباشرة إلى الخطوة التالية."
         />
 
-        {QUICK_LINKS.map(link => (
-          <PrimaryButton
-            key={link.screen}
-            label={link.label}
-            icon={link.icon}
-            tone={link.tone}
-            onPress={() => navigation.navigate(link.screen)}
-            testID={`quick-link-${link.screen.toLowerCase()}`}
-          />
-        ))}
+        <View style={styles.actionsGrid}>
+          {quickActions.map(action => (
+            <View key={action.screen} style={styles.actionItem}>
+              <PrimaryButton
+                label={action.label}
+                icon={action.icon}
+                tone={action.tone}
+                onPress={() => navigation.navigate(action.screen)}
+                testID={`quick-action-${action.screen.toLowerCase()}`}
+              />
+            </View>
+          ))}
+        </View>
+
+        <SectionHeader
+          eyebrow="خدمات واصل"
+          title="كل احتياجات التنقل والتوصيل"
+          body="خدمات واضحة وآمنة ومصممة للاستخدام اليومي."
+        />
 
         <InfoCard
           icon="car-sport"
-          title="سعة مشاركة موثقة"
-          body="طلبات الخط بتضل واضحة وموثقة ومتابعة من المطابقة للاستلام والوصول."
+          title="مشاوير موثوقة"
+          body="اعثر على مشوار مناسب، راجع تفاصيل السائق، وتابع الرحلة حتى الوصول."
           tone={colors.teal}
         />
         <InfoCard
           icon="cube"
-          title="طرود بتتبع العهدة"
-          body="تسليمات الطرود بتحافظ على الخط والوزن والملاحظات وحالة المزامنة حتى مع ضعف الشبكة."
+          title="توصيل طرود مع تتبع"
+          body="أنشئ طلب توصيل واحتفظ بحالة الطرد وملاحظاته وسجل الاستلام والتسليم."
           tone={colors.blue}
         />
         <InfoCard
           icon="git-network"
-          title="الشبكات والخطوط"
-          body="استعرض شبكات المشاوير الموثقة وخطوط الشركاء ومجموعات المشغلين على كل الخطوط النشطة."
+          title="شبكات وخطوط مشتركة"
+          body="استعرض الخطوط والمجموعات النشطة للوصول إلى خيارات تنقل أكثر."
           tone={colors.green}
         />
         <InfoCard
           icon="shield-checkmark"
-          title="طبقة ثقة متقدمة"
-          body="حالة الهوية والجلسات الآمنة وجاهزية الدفع واضحة قبل تأكيد أي إجراء."
+          title="الأمان أولاً"
+          body="الوصول السريع لمركز الأمان، مشاركة الرحلة، ومعلومات الحساب الموثقة."
           tone={colors.lilac}
+          style={styles.lastCard}
+        />
+
+        <PrimaryButton
+          label="افتح مركز الأمان"
+          icon="shield-checkmark"
+          tone={colors.navy}
+          onPress={() => navigation.navigate('Safety')}
+          testID="home-safety-center"
         />
       </ScrollView>
     </ScreenShell>
@@ -195,10 +180,16 @@ const HomeScreen = React.memo(function HomeScreen() {
 
 const styles = StyleSheet.create({
   scroll: { gap: spacing.lg, paddingBottom: spacing.xxl },
-  topRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'space-between' },
-  heroStats: { flexDirection: 'row', gap: spacing.lg, marginTop: spacing.md, flexWrap: 'wrap' },
-  heroStatItem: { gap: 3 },
-  metrics: { flexDirection: 'row', gap: spacing.sm },
+  topRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'space-between',
+  },
+  heroActions: { gap: spacing.sm, marginTop: spacing.lg },
+  actionsGrid: { gap: spacing.sm },
+  actionItem: { width: '100%' },
+  lastCard: { marginBottom: spacing.xs },
 });
 
 export default HomeScreen;
