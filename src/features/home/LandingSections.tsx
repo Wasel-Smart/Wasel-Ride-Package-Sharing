@@ -272,7 +272,7 @@ export function LandingHeader({
               boxShadow: `0 0 14px ${LANDING_COLORS.green}`,
             }}
           />
-          {copy(ar ? 'Ø´Ø¨ÙƒØ© Ø§Ù„Ø£Ø±Ø¯Ù† Ø§Ù„Ø­ÙŠØ©' : 'Jordan mobility network')}
+          {copy(ar ? 'شبكة الأردن الحية' : 'Jordan mobility network')}
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
@@ -280,7 +280,7 @@ export function LandingHeader({
           <>
             <button
               aria-label={copy(
-                ar ? 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù…Ù† Ø´Ø±ÙŠØ· Ø§Ù„Ø±Ø£Ø³' : 'Sign in from header',
+                ar ? 'تسجيل الدخول من شريط الرأس' : 'Sign in from header',
               )}
               type="button"
               onClick={() => onNavigate?.(signinPath!)}
@@ -292,11 +292,11 @@ export function LandingHeader({
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 14px 30px rgba(1,10,18,0.18)',
               }}
             >
-              {copy(ar ? 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„' : 'Sign in')}
+              {copy(ar ? 'تسجيل الدخول' : 'Sign in')}
             </button>
             <button
               aria-label={copy(
-                ar ? 'Ø¥Ù†Ø´Ø§Ø¡ Ø­Ø³Ø§Ø¨ Ù…Ù† Ø´Ø±ÙŠØ· Ø§Ù„Ø±Ø£Ø³' : 'Sign up from header',
+                ar ? 'إنشاء حساب من شريط الرأس' : 'Sign up from header',
               )}
               type="button"
               onClick={() => onNavigate?.(signupPath!)}
@@ -308,7 +308,7 @@ export function LandingHeader({
                 boxShadow: '0 18px 40px rgba(30,124,255,0.28)',
               }}
             >
-              {copy(ar ? 'Ø¥Ù†Ø´Ø§Ø¡ Ø­Ø³Ø§Ø¨' : 'Sign up')}
+              {copy(ar ? 'إنشاء حساب' : 'Sign up')}
             </button>
           </>
         ) : null}
@@ -1029,7 +1029,7 @@ export function LandingHeroSection({
             fontWeight: 700,
           }}
         >
-          {copy(ar ? 'ØªØ§Ø¨Ø¹ Ø±Ø­Ù„Ø§ØªÙŠ' : 'Track my trips')}
+          {copy(ar ? 'تابع رحلاتي' : 'Track my trips')}
         </button>
       </div>
     </motion.section>
@@ -1171,7 +1171,7 @@ export function LandingMapSection({
                 boxShadow: `0 0 10px ${LANDING_COLORS.green}`,
               }}
             />
-            {copy(ar ? 'Optimized for mobile and desktop' : 'Optimized for mobile and desktop')}
+            {copy(ar ? 'محسّن للهاتف والويب' : 'Optimized for mobile and desktop')}
           </div>
         </div>
         <div style={{ position: 'relative', borderRadius: 28, overflow: 'hidden' }}>

@@ -99,6 +99,7 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
-    "verify": "npm run type-check && npm run lint && npm run test && npm run build && npm run test:e2e"
+    "verify": "npm run type-check && npm run lint && npm run test && npm run build && npm run verify:mobile-readiness && npm run test:e2e",
+    "verify:mobile-readiness": "node scripts/verify-mobile-readiness.mjs"
   }
 }

@@ -307,20 +307,20 @@ export default function MobilityOSCore() {
     selectedNode: ar ? 'مرجع المدينة المحددة' : 'Selected city reference',
   };
   const liveTag = liveSnapshot ? (ar ? 'مباشر' : 'Live') : copy.modeledTag;
-  const liveOpsTag = ar ? 'ØªØ´ØºÙŠÙ„ Ø­ÙŠ' : 'Live ops';
-  const hybridTag = ar ? 'Ù‡Ø¬ÙŠÙ†' : 'Hybrid';
-  const telemetryFreshLabel = ar ? 'ØªÙ„Ù…ØªØ±ÙŠØ§ Ø­Ø¯ÙŠØ«Ø©' : 'Fresh telemetry';
-  const telemetryStaleLabel = ar ? 'ØªÙ„Ù…ØªØ±ÙŠØ§ Ù…ØªØ£Ø®Ø±Ø©' : 'Stale telemetry';
-  const telemetryNoneLabel = ar ? 'Ø¨Ù„Ø§ ØªÙ„Ù…ØªØ±ÙŠØ§' : 'No telemetry';
-  const telemetryLabel = ar ? 'Ø­Ø§Ù„Ø© Ø§Ù„ØªÙ„Ù…ØªØ±ÙŠØ§' : 'Telemetry status';
-  const sourceMatrixLabel = ar ? 'Ù…ØµÙÙˆÙØ© Ø§Ù„Ù…ØµØ§Ø¯Ø±' : 'Source matrix';
+  const liveOpsTag = ar ? 'تشغيل حي' : 'Live ops';
+  const hybridTag = ar ? 'هجين' : 'Hybrid';
+  const telemetryFreshLabel = ar ? 'تلمتريا حديثة' : 'Fresh telemetry';
+  const telemetryStaleLabel = ar ? 'تلمتريا متأخرة' : 'Stale telemetry';
+  const telemetryNoneLabel = ar ? 'بلا تلمتريا' : 'No telemetry';
+  const telemetryLabel = ar ? 'حالة التلمتريا' : 'Telemetry status';
+  const sourceMatrixLabel = ar ? 'مصفوفة المصادر' : 'Source matrix';
   const sourceMatrixBody = ar
-    ? 'Ø§Ù„Ø±ÙƒØ§Ø¨ ÙˆØ§Ù„Ø·Ø±ÙˆØ¯ Ù…Ù† Ø³Ø¬Ù„Ø§Øª Ø§Ù„Ø±Ø­Ù„Ø§Øª Ø§Ù„Ø­ÙŠØ©ØŒ Ø§Ù„Ø³Ø±Ø¹Ø© ÙˆØ§Ù„Ø¶ØºØ· ØªÙ‚Ø¯ÙŠØ±ÙŠØ§Ù† Ø­ØªÙ‰ Ø±Ø¨Ø· Ù…ØµØ¯Ø± Ù…Ø±ÙˆØ± Ø­Ù‚ÙŠÙ‚ÙŠØŒ Ø£Ù…Ø§ ØªÙˆØµÙŠØ© Ø§Ù„Ù…Ø³Ø§Ø± ÙÙ†Ø§ØªØ¬Ø© Ø¹Ù† Ù†Ù…ÙˆØ°Ø¬ Ø§Ù„ØªØ­Ø³ÙŠÙ†.'
+    ? 'الركاب والطرود تأتي من سجلات الرحلات الحية. السرعة والضغط تقديريان حتى ربط مصدر مرور حقيقي، أما توصية المسار فهي ناتجة عن نموذج التحسين.'
     : 'Passengers and packages come from live trip records. Speed and pressure remain estimated until a true traffic source is connected. Route guidance is produced by the optimization model.';
-  const telemetryHeartbeatLabel = ar ? 'Ø¢Ø®Ø± Ù†Ø¨Ø¶Ø©' : 'Latest heartbeat';
-  const telemetryCoverageLabel = ar ? 'ØªØºØ·ÙŠØ© Ø§Ù„ØªÙ„Ù…ØªØ±ÙŠØ§' : 'Telemetry coverage';
-  const realtimeVerifiedLabel = ar ? 'Ù…ØªØ­Ù‚Ù‚ Ù…Ø¨Ø§Ø´Ø±Ø§Ù‹' : 'Verified live';
-  const estimatedFromLoadLabel = ar ? 'Ù…Ù‚Ø¯Ù‘Ø± Ù…Ù† Ø§Ù„Ø­Ù…ÙˆÙ„Ø©' : 'Estimated from load';
+  const telemetryHeartbeatLabel = ar ? 'آخر نبضة' : 'Latest heartbeat';
+  const telemetryCoverageLabel = ar ? 'تغطية التلمتريا' : 'Telemetry coverage';
+  const realtimeVerifiedLabel = ar ? 'متحقق مباشرة' : 'Verified live';
+  const estimatedFromLoadLabel = ar ? 'مقدر من الحمولة' : 'Estimated from load';
   void hybridTag;
   void realtimeVerifiedLabel;
   const numberFormatter = useMemo(() => new Intl.NumberFormat(ar ? 'ar-JO' : 'en-US'), [ar]);
@@ -364,7 +364,7 @@ export default function MobilityOSCore() {
       : C.textMuted;
   const latestHeartbeatValue = liveSnapshot?.telemetry.latestHeartbeatAt
     ? dateTimeFormatter.format(new Date(liveSnapshot.telemetry.latestHeartbeatAt))
-    : (ar ? 'Ù„Ø§ ÙŠÙˆØ¬Ø¯' : 'Unavailable');
+    : (ar ? 'غير متاح' : 'Unavailable');
 
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
