@@ -8,6 +8,13 @@
     "scheme": "wasel",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
@@ -17,8 +24,11 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.wasel.app",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Wasel uses your location to find nearby rides and show your position on the map.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Wasel uses your location to update your position as a driver during an active trip."
+        "NSLocationWhenInUseUsageDescription": "يستخدم واصل موقعك للعثور على المشاوير القريبة وإظهار موقعك على الخريطة. Wasel uses your location to find nearby rides and show your position on the map.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "يستخدم واصل موقعك أثناء الرحلة النشطة لتحديث موقع السائق بأمان. Wasel uses your location during an active trip to update the driver's position safely."
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": []
       }
     },
     "android": {
@@ -27,6 +37,7 @@
         "backgroundColor": "#06111b"
       },
       "package": "com.wasel.app",
+      "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -49,7 +60,8 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Wasel needs location access to match you with drivers and track your trip."
+          "locationWhenInUsePermission": "يحتاج واصل إلى موقعك للعثور على المشاوير القريبة وعرض موقعك على الخريطة.",
+          "locationAlwaysAndWhenInUsePermission": "يحتاج واصل إلى الموقع أثناء الرحلة النشطة للمطابقة والتتبع الآمن."
         }
       ],
       "expo-secure-store",
