@@ -11,9 +11,9 @@ export const TRUST_THEME = {
   bg: '#061726',
   card: 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
   border: 'rgba(73,190,242,0.14)',
-  cyan: '#16C7F2',
-  green: '#60C536',
-  gold: '#C7FF1A',
+  cyan: '#087DFF',
+  green: '#39C72C',
+  gold: '#FF8A00',
   red: '#EF4444',
   font: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
   display: "var(--wasel-font-display, 'Space Grotesk', 'Plus Jakarta Sans', 'Cairo', sans-serif)",
@@ -254,8 +254,8 @@ export function TrustHeroCard({
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, rgba(22,199,242,0.16), rgba(255,255,255,0.03))',
-        border: '1px solid rgba(22,199,242,0.22)',
+        background: 'linear-gradient(135deg, rgba(8,125,255,0.16), rgba(255,255,255,0.03))',
+        border: '1px solid rgba(8,125,255,0.22)',
         borderRadius: 24,
         padding: '24px 22px',
         marginBottom: 20,
@@ -277,8 +277,8 @@ export function TrustHeroCard({
             width: 52,
             height: 52,
             borderRadius: 16,
-            background: 'rgba(22,199,242,0.15)',
-            border: '1px solid rgba(22,199,242,0.25)',
+            background: 'rgba(8,125,255,0.15)',
+            border: '1px solid rgba(8,125,255,0.25)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -522,7 +522,7 @@ export function TrustDriverReadinessCard({
           style={{
             border: 'none',
             borderRadius: 12,
-            background: `linear-gradient(135deg, ${TRUST_THEME.cyan}, #0F78BF)`,
+            background: `linear-gradient(135deg, ${TRUST_THEME.cyan}, #0057F0)`,
             color: '#041018',
             fontWeight: 800,
             padding: '11px 16px',

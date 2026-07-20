@@ -30,7 +30,7 @@ interface WaselButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, { background: string; color: string; border: string; boxShadow: string; hoverShadow: string }> = {
   primary: {
-    background:  'linear-gradient(135deg, #16C7F2 0%, #0F78BF 100%)',
+    background:  'linear-gradient(135deg, #087DFF 0%, #0057F0 100%)',
     color:       '#040C18',
     border:      'none',
     boxShadow:   SH.cyan,
@@ -51,11 +51,11 @@ const variantStyles: Record<ButtonVariant, { background: string; color: string; 
     hoverShadow: 'none',
   },
   gold: {
-    background:  'linear-gradient(135deg, #C7FF1A 0%, #60C536 100%)',
+    background:  'linear-gradient(135deg, #FF8A00 0%, #39C72C 100%)',
     color:       '#040C18',
     border:      'none',
     boxShadow:   SH.gold,
-    hoverShadow: '0 10px 36px rgba(199,255,26,0.45)',
+    hoverShadow: '0 10px 36px rgba(255,138,0,0.45)',
   },
   danger: {
     background:  C.errorDim,

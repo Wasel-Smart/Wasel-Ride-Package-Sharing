@@ -132,8 +132,8 @@ export function PageShell({ children }: { children: ReactNode }) {
     <div style={{ minHeight: '100vh', background: DS.bg, fontFamily: DS.F, direction: ar ? 'rtl' : 'ltr' }}>
       <style>{`
         :root { color-scheme: dark; }
-        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(22,199,242,0.28); }
-        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(199,255,26,0.24); }
+        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(8,125,255,0.28); }
+        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(255,138,0,0.24); }
         @media(max-width:899px){
           .sp-inner{ padding:16px !important; }
           .sp-2col { grid-template-columns:1fr !important; }
@@ -172,7 +172,7 @@ export function PageShell({ children }: { children: ReactNode }) {
           inset: 0,
           pointerEvents: 'none',
           background:
-            'radial-gradient(circle at 14% 10%, rgba(22,199,242,0.16), transparent 24%), radial-gradient(circle at 85% 12%, rgba(199,255,26,0.08), transparent 20%), radial-gradient(circle at 78% 84%, rgba(96,197,54,0.08), transparent 24%)',
+            'radial-gradient(circle at 14% 10%, rgba(8,125,255,0.16), transparent 24%), radial-gradient(circle at 85% 12%, rgba(255,138,0,0.08), transparent 20%), radial-gradient(circle at 78% 84%, rgba(57,199,44,0.08), transparent 24%)',
         }}
       />
       <div className="sp-inner" style={{ position: 'relative', maxWidth: 1120, margin: '0 auto', padding: '24px 16px' }}>

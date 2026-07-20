@@ -243,7 +243,7 @@ export default function App() {
                 toastOptions={{
                   style: {
                     background: '#0A1628',
-                    border: '1px solid rgba(22,199,242,0.25)',
+                    border: '1px solid rgba(8,125,255,0.25)',
                     color: '#EFF6FF',
           fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
                   },

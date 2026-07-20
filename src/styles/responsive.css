@@ -308,7 +308,7 @@ small, .caption {
 
 /* Focus visible (keyboard navigation) */
 :focus-visible {
-  outline: 2px solid #00C8E8;
+  outline: 2px solid #087DFF;
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -395,7 +395,7 @@ img {
 /* Android tap highlight color */
 @supports (-webkit-appearance: none) {
   * {
-    -webkit-tap-highlight-color: rgba(0, 200, 232, 0.1);
+    -webkit-tap-highlight-color: rgba(8, 125, 255, 0.1);
   }
 }
 

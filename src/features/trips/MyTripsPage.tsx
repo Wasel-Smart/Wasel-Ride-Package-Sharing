@@ -39,9 +39,9 @@ const BG = '#061726';
 const CARD = 'linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))';
 const CARD_ALT = 'rgba(255,255,255,0.03)';
 const BORDER = 'rgba(73,190,242,0.14)';
-const CYAN = '#16C7F2';
-const GOLD = '#C7FF1A';
-const GREEN = '#60C536';
+const CYAN = '#087DFF';
+const GOLD = '#FF8A00';
+const GREEN = '#39C72C';
 const RED = '#EF4444';
 const AMBER = '#F59E0B';
 const TEXT = '#EAF7FF';
@@ -72,26 +72,26 @@ interface TripItem {
 }
 
 const lifecycleConfig: Record<TripLifecycle, { label: string; color: string; bg: string; icon: ReactNode }> = {
-  active: { label: 'Active', color: CYAN, bg: 'rgba(22,199,242,0.12)', icon: <Clock size={12} /> },
+  active: { label: 'Active', color: CYAN, bg: 'rgba(8,125,255,0.12)', icon: <Clock size={12} /> },
   attention: { label: 'Needs attention', color: AMBER, bg: 'rgba(245,158,11,0.12)', icon: <ShieldAlert size={12} /> },
-  completed: { label: 'Completed', color: GREEN, bg: 'rgba(96,197,54,0.12)', icon: <CheckCircle size={12} /> },
+  completed: { label: 'Completed', color: GREEN, bg: 'rgba(57,199,44,0.12)', icon: <CheckCircle size={12} /> },
   cancelled: { label: 'Cancelled', color: RED, bg: 'rgba(239,68,68,0.12)', icon: <XCircle size={12} /> },
 };
 
 const paymentConfig: Record<RidePaymentStatus | 'n/a', { label: string; color: string; bg: string }> = {
   pending: { label: 'Payment pending', color: AMBER, bg: 'rgba(245,158,11,0.12)' },
-  authorized: { label: 'Payment authorized', color: CYAN, bg: 'rgba(22,199,242,0.12)' },
-  captured: { label: 'Settlement captured', color: GREEN, bg: 'rgba(96,197,54,0.12)' },
+  authorized: { label: 'Payment authorized', color: CYAN, bg: 'rgba(8,125,255,0.12)' },
+  captured: { label: 'Settlement captured', color: GREEN, bg: 'rgba(57,199,44,0.12)' },
   refunded: { label: 'Refund completed', color: CYAN, bg: 'rgba(59,130,246,0.12)' },
   failed: { label: 'Payment issue', color: RED, bg: 'rgba(239,68,68,0.12)' },
   'n/a': { label: 'No payment state', color: MUTED, bg: 'rgba(148,163,184,0.12)' },
 };
 
 const supportStatusConfig: Record<SupportStatus, { label: string; color: string; bg: string }> = {
-  open: { label: 'Open', color: CYAN, bg: 'rgba(22,199,242,0.12)' },
+  open: { label: 'Open', color: CYAN, bg: 'rgba(8,125,255,0.12)' },
   investigating: { label: 'Investigating', color: AMBER, bg: 'rgba(245,158,11,0.12)' },
-  waiting_on_user: { label: 'Waiting on you', color: GOLD, bg: 'rgba(199,255,26,0.12)' },
-  resolved: { label: 'Resolved', color: GREEN, bg: 'rgba(96,197,54,0.12)' },
+  waiting_on_user: { label: 'Waiting on you', color: GOLD, bg: 'rgba(255,138,0,0.12)' },
+  resolved: { label: 'Resolved', color: GREEN, bg: 'rgba(57,199,44,0.12)' },
   closed: { label: 'Closed', color: MUTED, bg: 'rgba(148,163,184,0.12)' },
 };
 
@@ -440,7 +440,7 @@ export default function MyTripsPage() {
           </div>
           <button
             onClick={() => nav(createPath)}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, background: `linear-gradient(135deg,${CYAN},#0F78BF)`, border: 'none', color: '#041018', fontWeight: 800, fontFamily: FONT, fontSize: '0.82rem', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, background: `linear-gradient(135deg,${CYAN},#0057F0)`, border: 'none', color: '#041018', fontWeight: 800, fontFamily: FONT, fontSize: '0.82rem', cursor: 'pointer' }}
           >
             <Plus size={14} />
             {tab === 'rides' ? 'New ride' : tab === 'packages' ? 'New package' : 'Book bus'}
@@ -494,8 +494,8 @@ export default function MyTripsPage() {
                 flex: 1,
                 padding: '9px 0',
                 borderRadius: 10,
-                background: tab === key ? 'rgba(22,199,242,0.12)' : 'transparent',
-                border: tab === key ? '1px solid rgba(22,199,242,0.25)' : '1px solid transparent',
+                background: tab === key ? 'rgba(8,125,255,0.12)' : 'transparent',
+                border: tab === key ? '1px solid rgba(8,125,255,0.25)' : '1px solid transparent',
                 color: tab === key ? CYAN : MUTED,
                 fontWeight: tab === key ? 800 : 600,
                 fontFamily: FONT,
@@ -527,7 +527,7 @@ export default function MyTripsPage() {
                 fontFamily: FONT,
                 cursor: 'pointer',
                 border: `1px solid ${filter === filterOption.key ? CYAN : BORDER}`,
-                background: filter === filterOption.key ? 'rgba(22,199,242,0.12)' : 'transparent',
+                background: filter === filterOption.key ? 'rgba(8,125,255,0.12)' : 'transparent',
                 color: filter === filterOption.key ? CYAN : MUTED,
               }}
             >
@@ -544,7 +544,7 @@ export default function MyTripsPage() {
             </p>
             <button
               onClick={() => nav(createPath)}
-              style={{ marginTop: 16, padding: '10px 18px', borderRadius: 10, background: 'rgba(22,199,242,0.12)', border: '1px solid rgba(22,199,242,0.25)', color: CYAN, fontWeight: 800, fontFamily: FONT, fontSize: '0.82rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+              style={{ marginTop: 16, padding: '10px 18px', borderRadius: 10, background: 'rgba(8,125,255,0.12)', border: '1px solid rgba(8,125,255,0.25)', color: CYAN, fontWeight: 800, fontFamily: FONT, fontSize: '0.82rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}
             >
               {tab === 'rides' ? 'Create ride' : tab === 'packages' ? 'Create package request' : 'Find a bus'}
               <ArrowRight size={14} />

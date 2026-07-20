@@ -93,7 +93,7 @@ export function HomePage() {
       desc: ar ? 'شارك المقاعد وخفف تكلفة الرحلة' : 'Share seats and lower your trip cost',
       color: C.gold,
       dim: C.goldDim,
-      border: 'rgba(199,255,26,0.28)',
+      border: 'rgba(255,138,0,0.28)',
       path: '/offer-ride',
     },
     {
@@ -103,7 +103,7 @@ export function HomePage() {
       desc: ar ? 'حرّك الطرود مع راكب موثوق على نفس المسار' : 'Move parcels with a trusted rider on the same route',
       color: C.gold,
       dim: C.goldDim,
-      border: 'rgba(199,255,26,0.28)',
+      border: 'rgba(255,138,0,0.28)',
       path: '/packages',
     },
     {
@@ -113,7 +113,7 @@ export function HomePage() {
       desc: ar ? 'مغادرات بين المدن بجداول واضحة' : 'Fixed intercity departures with clear schedules',
       color: C.green,
       dim: C.greenDim,
-      border: 'rgba(96,197,54,0.24)',
+      border: 'rgba(57,199,44,0.24)',
       path: '/bus',
     },
   ];
@@ -160,8 +160,8 @@ export function HomePage() {
         {starsRef.current.map((s, i) => (
           <div key={i} className="absolute rounded-full bg-white" style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.size, height: s.size, opacity: s.opacity }} />
         ))}
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(22,199,242,0.08) 0%, transparent 70%)', filter: 'blur(80px)' }} />
-        <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(199,255,26,0.06) 0%, transparent 70%)', filter: 'blur(80px)' }} />
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(8,125,255,0.08) 0%, transparent 70%)', filter: 'blur(80px)' }} />
+        <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,138,0,0.06) 0%, transparent 70%)', filter: 'blur(80px)' }} />
       </div>
 
       <div className="relative z-10 mx-auto px-4 py-8" style={{ maxWidth: 1120 }}>
@@ -195,7 +195,7 @@ export function HomePage() {
             </div>
           </div>
 
-          <div style={{ borderRadius: 22, padding: '16px 18px', background: `linear-gradient(135deg, rgba(22,199,242,0.08), rgba(199,255,26,0.05))`, border: '1px solid rgba(73,190,242,0.18)', boxShadow: '0 12px 30px rgba(0,0,0,0.16)' }}>
+          <div style={{ borderRadius: 22, padding: '16px 18px', background: `linear-gradient(135deg, rgba(8,125,255,0.08), rgba(255,138,0,0.05))`, border: '1px solid rgba(73,190,242,0.18)', boxShadow: '0 12px 30px rgba(0,0,0,0.16)' }}>
             <p style={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: C.textDim, fontFamily: F, marginBottom: 10 }}>
               {ar ? 'نوع الرحلة' : 'TRIP TYPE'}
             </p>
@@ -203,7 +203,7 @@ export function HomePage() {
               {ar ? 'اختر النمط وسنفتح لك المطابقات المناسبة مباشرة.' : 'Pick a mode and jump straight into the best matching flow.'}
             </p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button onClick={() => { setTripMode('one-way'); navigate('/find-ride'); }} style={{ flex: 1, minWidth: 140, padding: '12px 16px', borderRadius: 16, background: tripMode === 'one-way' ? 'rgba(22,199,242,0.16)' : 'rgba(255,255,255,0.04)', border: `1.5px solid ${tripMode === 'one-way' ? C.cyan : 'rgba(255,255,255,0.10)'}`, cursor: 'pointer', transition: 'all 0.18s', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button onClick={() => { setTripMode('one-way'); navigate('/find-ride'); }} style={{ flex: 1, minWidth: 140, padding: '12px 16px', borderRadius: 16, background: tripMode === 'one-way' ? 'rgba(8,125,255,0.16)' : 'rgba(255,255,255,0.04)', border: `1.5px solid ${tripMode === 'one-way' ? C.cyan : 'rgba(255,255,255,0.10)'}`, cursor: 'pointer', transition: 'all 0.18s', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <ArrowRight size={18} color={tripMode === 'one-way' ? C.cyan : C.textDim} />
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: 800, color: tripMode === 'one-way' ? C.cyan : C.text, fontFamily: F }}>{ar ? 'ذهاب فقط' : 'One Way'}</div>
@@ -212,7 +212,7 @@ export function HomePage() {
                 {tripMode === 'one-way' && <CheckCircle size={14} color={C.cyan} style={{ marginLeft: 'auto' }} />}
               </button>
 
-              <button onClick={() => { setTripMode('round'); navigate('/find-ride?mode=round'); }} style={{ flex: 1, minWidth: 140, padding: '12px 16px', borderRadius: 16, background: tripMode === 'round' ? 'rgba(96,197,54,0.16)' : 'rgba(255,255,255,0.04)', border: `1.5px solid ${tripMode === 'round' ? C.green : 'rgba(255,255,255,0.10)'}`, cursor: 'pointer', transition: 'all 0.18s', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button onClick={() => { setTripMode('round'); navigate('/find-ride?mode=round'); }} style={{ flex: 1, minWidth: 140, padding: '12px 16px', borderRadius: 16, background: tripMode === 'round' ? 'rgba(57,199,44,0.16)' : 'rgba(255,255,255,0.04)', border: `1.5px solid ${tripMode === 'round' ? C.green : 'rgba(255,255,255,0.10)'}`, cursor: 'pointer', transition: 'all 0.18s', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Repeat size={18} color={tripMode === 'round' ? C.green : C.textDim} />
                 <div style={{ textAlign: 'left' }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: 800, color: tripMode === 'round' ? C.green : C.text, fontFamily: F }}>{ar ? 'ذهاب وعودة' : 'Round Trip'}</div>
@@ -329,7 +329,7 @@ export function HomePage() {
                     if (!referral?.shareUrl) return;
                     await navigator.clipboard?.writeText(referral.shareUrl).catch(() => {});
                   }}
-                  style={{ padding: '10px 16px', borderRadius: 12, background: 'rgba(22,199,242,0.14)', border: '1px solid rgba(73,190,242,0.28)', color: C.text, fontWeight: 800, fontFamily: F, cursor: 'pointer' }}
+                  style={{ padding: '10px 16px', borderRadius: 12, background: 'rgba(8,125,255,0.14)', border: '1px solid rgba(73,190,242,0.28)', color: C.text, fontWeight: 800, fontFamily: F, cursor: 'pointer' }}
                 >
                   {ar ? 'انسخ رابط الدعوة' : 'Copy invite link'}
                 </button>
@@ -379,7 +379,7 @@ export function HomePage() {
                         setReferralMessage(error instanceof Error ? error.message : 'Referral could not be redeemed.');
                       }
                     }}
-                    style={{ padding: '11px 16px', borderRadius: 12, background: 'rgba(22,199,242,0.14)', border: '1px solid rgba(73,190,242,0.28)', color: C.text, fontWeight: 800, fontFamily: F, cursor: 'pointer' }}
+                    style={{ padding: '11px 16px', borderRadius: 12, background: 'rgba(8,125,255,0.14)', border: '1px solid rgba(73,190,242,0.28)', color: C.text, fontWeight: 800, fontFamily: F, cursor: 'pointer' }}
                   >
                     {ar ? 'تفعيل الرمز' : 'Redeem code'}
                   </button>
@@ -422,14 +422,14 @@ export function HomePage() {
 
         {user && (
           <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.24 }} style={{ marginTop: 24, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 200px', borderRadius: 18, padding: '16px 20px', background: `linear-gradient(135deg, rgba(22,199,242,0.14), rgba(199,255,26,0.07))`, border: '1px solid rgba(73,190,242,0.22)' }}>
+            <div style={{ flex: '1 1 200px', borderRadius: 18, padding: '16px 20px', background: `linear-gradient(135deg, rgba(8,125,255,0.14), rgba(255,138,0,0.07))`, border: '1px solid rgba(73,190,242,0.22)' }}>
               <div style={{ fontSize: '0.68rem', fontWeight: 700, color: C.textDim, textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: F }}>{ar ? 'رصيد المحفظة' : 'Wallet Balance'}</div>
               <div style={{ marginTop: 6, fontSize: '1.5rem', fontWeight: 900, color: C.cyan, fontFamily: F }}>{loading ? <Skeleton w={100} h={28} radius={6} /> : formatFromJOD(liveStats?.walletBalance ?? 47.5)}</div>
               <div style={{ fontSize: '0.65rem', color: C.textDim, fontFamily: F, marginTop: 2 }}>{liveStats ? `JOD ${liveStats.walletBalance.toFixed(3)} base` : ''}</div>
             </div>
 
             {platformStats && (
-              <div style={{ flex: '1 1 200px', borderRadius: 16, padding: '16px 20px', background: 'rgba(22,199,242,0.06)', border: '1px solid rgba(73,190,242,0.16)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ flex: '1 1 200px', borderRadius: 16, padding: '16px 20px', background: 'rgba(8,125,255,0.06)', border: '1px solid rgba(73,190,242,0.16)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ fontSize: '0.68rem', fontWeight: 700, color: C.textDim, textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: F }}>{ar ? 'نبض المنصة المباشر' : 'Live Platform'}</div>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   {[
@@ -462,14 +462,14 @@ export function HomePage() {
         )}
 
         <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} style={{ marginTop: 36 }}>
-          <motion.button onClick={() => navigate('/mobility-os')} whileHover={{ scale: 1.01, y: -2 }} whileTap={{ scale: 0.99 }} style={{ width: '100%', borderRadius: 24, padding: '24px 28px', textAlign: ar ? 'right' : 'left', background: `linear-gradient(135deg, ${glass(0.6)} 0%, ${glass(0.8)} 100%)`, border: '1px solid rgba(73,190,242,0.24)', backdropFilter: 'blur(24px)', boxShadow: '0 8px 32px rgba(22,199,242,0.14)', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
+          <motion.button onClick={() => navigate('/mobility-os')} whileHover={{ scale: 1.01, y: -2 }} whileTap={{ scale: 0.99 }} style={{ width: '100%', borderRadius: 24, padding: '24px 28px', textAlign: ar ? 'right' : 'left', background: `linear-gradient(135deg, ${glass(0.6)} 0%, ${glass(0.8)} 100%)`, border: '1px solid rgba(73,190,242,0.24)', backdropFilter: 'blur(24px)', boxShadow: '0 8px 32px rgba(8,125,255,0.14)', cursor: 'pointer', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', inset: 0, opacity: 0.07, pointerEvents: 'none', backgroundImage: `linear-gradient(${C.cyan} 1px, transparent 1px), linear-gradient(90deg, ${C.cyan} 1px, transparent 1px)`, backgroundSize: '40px 40px' }} />
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                   <span style={{ fontSize: '1.2rem' }}>OS</span>
                   <span style={{ fontSize: '0.65rem', fontWeight: 800, letterSpacing: '0.12em', color: C.cyan, textTransform: 'uppercase', fontFamily: F }}>{ar ? 'واصل لحركة ذكية' : 'MOBILITY OS | LAYER 8'}</span>
-                  <span style={{ padding: '2px 8px', borderRadius: 9999, background: 'rgba(22,199,242,0.16)', color: C.cyan, fontSize: '0.6rem', fontWeight: 800, border: '1px solid rgba(73,190,242,0.32)', fontFamily: F }}>LIVE</span>
+                  <span style={{ padding: '2px 8px', borderRadius: 9999, background: 'rgba(8,125,255,0.16)', color: C.cyan, fontSize: '0.6rem', fontWeight: 800, border: '1px solid rgba(73,190,242,0.32)', fontFamily: F }}>LIVE</span>
                 </div>
                 <div style={{ fontSize: 'clamp(1rem, 2.5vw, 1.4rem)', fontWeight: 900, color: C.text, fontFamily: F }}>{ar ? 'شبكة تنقل الأردن المباشرة' : 'Jordan mobility network | live'}</div>
                 <div style={{ marginTop: 4, fontSize: '0.78rem', color: C.textMuted, fontFamily: F }}>{ar ? 'الطلب المباشر | السائقون | المسارات | التسعير الديناميكي' : 'Live demand | drivers | routes | pricing'}</div>
@@ -529,14 +529,14 @@ export function HomePage() {
 
         {!user && (
           <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }} style={{ marginTop: 40, marginBottom: 40 }}>
-            <div style={{ borderRadius: 24, padding: '32px 28px', textAlign: 'center', background: 'linear-gradient(135deg, rgba(22,199,242,0.1), rgba(199,255,26,0.06))', border: '1px solid rgba(73,190,242,0.22)' }}>
+            <div style={{ borderRadius: 24, padding: '32px 28px', textAlign: 'center', background: 'linear-gradient(135deg, rgba(8,125,255,0.1), rgba(255,138,0,0.06))', border: '1px solid rgba(73,190,242,0.22)' }}>
               <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>W</div>
               <h2 style={{ fontWeight: 900, color: C.text, fontSize: '1.3rem', marginBottom: 8, fontFamily: F }}>{ar ? 'انضم إلى واصل' : 'Join Wasel'}</h2>
               <p style={{ color: C.textMuted, fontSize: '0.875rem', marginBottom: 24, maxWidth: 400, margin: '0 auto 24px', fontFamily: F }}>
                 {ar ? 'ابدأ مع الرحلات والباصات والطرود المحمولة مع المسافر. وفر حتى 70% مقارنة بخيارات التنقل الفردية.' : 'Start with rides, buses, and rider-delivered packages. Save up to 70% versus taxis.'}
               </p>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <motion.button onClick={() => navigate('/auth?tab=register')} whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} style={{ padding: '12px 28px', borderRadius: 12, background: 'linear-gradient(135deg,#16C7F2,#0F78BF)', border: 'none', color: '#03131F', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', fontFamily: F, boxShadow: '0 4px 20px rgba(22,199,242,0.28)' }}>
+                <motion.button onClick={() => navigate('/auth?tab=register')} whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} style={{ padding: '12px 28px', borderRadius: 12, background: 'linear-gradient(135deg,#087DFF,#0057F0)', border: 'none', color: '#03131F', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', fontFamily: F, boxShadow: '0 4px 20px rgba(8,125,255,0.28)' }}>
                   {ar ? 'ابدأ مجاناً' : 'Get started free'}
                 </motion.button>
                 <motion.button onClick={() => navigate('/find-ride')} whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }} style={{ padding: '12px 28px', borderRadius: 12, background: 'transparent', border: '1.5px solid rgba(255,255,255,0.2)', color: C.text, fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', fontFamily: F }}>

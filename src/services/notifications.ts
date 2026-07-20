@@ -74,10 +74,17 @@ function writeLocalNotifications(items: StoredNotification[]): void {
 function normalizeNotification(item: StoredNotification): StoredNotification {
   return {
     ...item,
+    created_at: item.created_at ?? new Date(0).toISOString(),
+    type: item.type ?? 'general',
+    user_id: item.user_id ?? 'local',
     read: typeof item.read === 'boolean' ? item.read : Boolean(item.is_read),
     is_read: typeof item.is_read === 'boolean' ? item.is_read : Boolean(item.read),
     priority: item.priority ?? 'medium',
   };
+}
+
+function buildLocalNotificationResult(localNotifications: StoredNotification[]) {
+  return { notifications: sortNotifications(localNotifications.map(normalizeNotification)) };
 }
 
 function sortNotifications(items: StoredNotification[]): StoredNotification[] {
@@ -206,11 +213,11 @@ export const notificationsAPI = {
       token = auth.token;
       userId = auth.userId;
     } catch {
-      return { notifications: sortNotifications(localNotifications.map(normalizeNotification)) };
+      return buildLocalNotificationResult(localNotifications);
     }
 
     if (!token || !userId) {
-      return { notifications: sortNotifications(localNotifications.map(normalizeNotification)) };
+      return buildLocalNotificationResult(localNotifications);
     }
 
     if (!canUseEdgeApi()) {
@@ -220,7 +227,7 @@ export const notificationsAPI = {
           notifications: mergeNotifications(localNotifications, serverNotifications as StoredNotification[]),
         };
       } catch {
-        return { notifications: sortNotifications(localNotifications.map(normalizeNotification)) };
+        return buildLocalNotificationResult(localNotifications);
       }
     }
 
@@ -240,13 +247,17 @@ export const notificationsAPI = {
         notifications: mergeNotifications(localNotifications, serverNotifications),
       };
     } catch {
+      if (localNotifications.length > 0) {
+        return buildLocalNotificationResult(localNotifications);
+      }
+
       try {
         const serverNotifications = await getDirectNotifications(userId);
         return {
           notifications: mergeNotifications(localNotifications, serverNotifications as StoredNotification[]),
         };
       } catch {
-        return { notifications: sortNotifications(localNotifications.map(normalizeNotification)) };
+        return buildLocalNotificationResult(localNotifications);
       }
     }
   },

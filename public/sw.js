@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'wasel-v2';
+const CACHE_VERSION = 'wasel-v3-brand-refresh';
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
 
@@ -13,10 +13,10 @@ const PRECACHE_URLS = [
   '/apple-touch-icon.png',
   '/icon-192.png',
   '/icon-512.png',
-  '/brand/wasellogo-64.png',
-  '/brand/wasellogo-96.png',
-  '/brand/wasellogo-160.png',
-  '/brand/wasellogo-280.png',
+  '/brand/wasel-mark-clean.svg',
+  '/brand/wasel-mark-clean-light.svg',
+  '/brand/wasel-mark-clean-dark.svg',
+  '/brand/wasel-mark.svg',
 ];
 
 self.addEventListener('install', (event) => {

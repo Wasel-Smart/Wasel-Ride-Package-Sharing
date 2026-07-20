@@ -517,8 +517,8 @@ function RideSearchPanel({
         <AlertBanner
           icon={CheckCircle2}
           tone={DS.green}
-          background="rgba(96,197,54,0.10)"
-          border="1px solid rgba(96,197,54,0.28)"
+          background="rgba(57,199,44,0.10)"
+          border="1px solid rgba(57,199,44,0.28)"
           message={bookingMessage}
         />
       ) : null}

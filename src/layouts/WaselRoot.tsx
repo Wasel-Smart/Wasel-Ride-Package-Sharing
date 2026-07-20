@@ -96,7 +96,7 @@ export default function WaselRoot() {
       style={{
         minHeight: '100vh',
         background:
-          'radial-gradient(circle at 14% 14%, rgba(22,199,242,0.16), transparent 24%), radial-gradient(circle at 82% 16%, rgba(199,255,26,0.12), transparent 18%), linear-gradient(180deg, #071b2b 0%, #05121d 100%)',
+          'radial-gradient(circle at 14% 14%, rgba(8,125,255,0.16), transparent 24%), radial-gradient(circle at 82% 16%, rgba(255,138,0,0.12), transparent 18%), linear-gradient(180deg, #071b2b 0%, #05121d 100%)',
         fontFamily: F,
         direction: ar ? 'rtl' : 'ltr',
       }}
@@ -107,7 +107,7 @@ export default function WaselRoot() {
         @keyframes spin { to { transform: rotate(360deg); } }
         * { box-sizing: border-box; }
         input, select, button, textarea { font-family: inherit; }
-        :focus-visible { outline: 2px solid #16C7F2; outline-offset: 2px; }
+        :focus-visible { outline: 2px solid #087DFF; outline-offset: 2px; }
       `}</style>
 
       <header ref={navRef} style={{ position: 'sticky', top: 0, zIndex: 500, background: scrolled ? 'rgba(6,23,38,0.95)' : 'rgba(7,24,39,0.84)', backdropFilter: 'blur(24px)', borderBottom: `1px solid rgba(73,190,242,${scrolled ? '0.20' : '0.12'})`, boxShadow: scrolled ? '0 18px 44px rgba(1,10,18,0.28)' : '0 8px 24px rgba(1,10,18,0.18)', transition: 'all 0.25s ease' }}>
@@ -144,7 +144,7 @@ export default function WaselRoot() {
                       aria-current={isCurrent ? 'page' : undefined}
                       aria-haspopup={!isDirect ? 'true' : undefined}
                       aria-expanded={!isDirect ? isOpen : undefined}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 42, padding: '0 14px', borderRadius: R.full, background: isEmphasized ? 'linear-gradient(135deg, rgba(22,199,242,0.18), rgba(12,110,168,0.16) 58%, rgba(199,255,26,0.14))' : 'transparent', border: `1px solid ${isEmphasized ? 'rgba(73,190,242,0.24)' : 'transparent'}`, boxShadow: isEmphasized ? '0 12px 28px rgba(22,199,242,0.14)' : 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: isEmphasized ? 700 : 600, color: isEmphasized ? C.text : 'rgba(234,247,255,0.72)', fontFamily: F, letterSpacing: '-0.01em', transition: 'all 0.16s ease', whiteSpace: 'nowrap' }}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 7, height: 42, padding: '0 14px', borderRadius: R.full, background: isEmphasized ? 'linear-gradient(135deg, rgba(8,125,255,0.18), rgba(12,110,168,0.16) 58%, rgba(255,138,0,0.14))' : 'transparent', border: `1px solid ${isEmphasized ? 'rgba(73,190,242,0.24)' : 'transparent'}`, boxShadow: isEmphasized ? '0 12px 28px rgba(8,125,255,0.14)' : 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: isEmphasized ? 700 : 600, color: isEmphasized ? C.text : 'rgba(234,247,255,0.72)', fontFamily: F, letterSpacing: '-0.01em', transition: 'all 0.16s ease', whiteSpace: 'nowrap' }}
                     >
                       <span>{ar ? group.labelAr : group.label}</span>
                       {isDirect && (group as any).badge && <Badge label={(group as any).badge} color={(group as any).color} />}
@@ -169,7 +169,7 @@ export default function WaselRoot() {
 
             {user ? (
               <>
-                <button type="button" onClick={() => navigate('/notifications')} title={notificationsLabel} aria-label={unreadNotificationsLabel} style={{ position: 'relative', width: 38, height: 38, borderRadius: R.md, background: unreadCount > 0 ? 'rgba(22,199,242,0.12)' : 'rgba(255,255,255,0.05)', border: `1px solid ${unreadCount > 0 ? 'rgba(73,190,242,0.28)' : 'rgba(73,190,242,0.16)'}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.14s' }}>
+                <button type="button" onClick={() => navigate('/notifications')} title={notificationsLabel} aria-label={unreadNotificationsLabel} style={{ position: 'relative', width: 38, height: 38, borderRadius: R.md, background: unreadCount > 0 ? 'rgba(8,125,255,0.12)' : 'rgba(255,255,255,0.05)', border: `1px solid ${unreadCount > 0 ? 'rgba(73,190,242,0.28)' : 'rgba(73,190,242,0.16)'}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.14s' }}>
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(234,247,255,0.75)" strokeWidth="2" strokeLinecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" /></svg>
                   {unreadCount > 0 && (
                     <div style={{ position: 'absolute', top: 4, right: 4, minWidth: unreadCount > 9 ? 16 : 12, height: unreadCount > 9 ? 16 : 12, padding: unreadCount > 9 ? '0 4px' : 0, borderRadius: R.full, background: unreadCount > 9 ? 'linear-gradient(135deg, #FF7A84, #FF646A)' : '#FF646A', border: '1.5px solid rgba(6,23,38,0.95)', color: '#fff', fontSize: unreadCount > 9 ? '0.56rem' : 0, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
@@ -245,7 +245,7 @@ export default function WaselRoot() {
       <MobileDrawer open={mobileOpen} onClose={() => setMobileOpen(false)} onNavigate={navigate} user={user} onSignOut={handleSignOut} ar={ar} />
 
       <main id="main-content" role="main" aria-label={ar ? 'المحتوى الرئيسي' : 'Main content'} tabIndex={-1} style={{ position: 'relative', isolation: 'isolate' }}>
-        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at top center, rgba(22,199,242,0.08), transparent 30%), radial-gradient(circle at 80% 20%, rgba(199,255,26,0.06), transparent 24%)', zIndex: -1 }} />
+        <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at top center, rgba(8,125,255,0.08), transparent 30%), radial-gradient(circle at 80% 20%, rgba(255,138,0,0.06), transparent 24%)', zIndex: -1 }} />
         <Outlet />
       </main>
 
