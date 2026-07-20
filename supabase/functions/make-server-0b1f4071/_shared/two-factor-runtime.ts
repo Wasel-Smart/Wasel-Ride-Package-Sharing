@@ -91,12 +91,12 @@ async function generateTOTPCode(secretKey: Uint8Array, counter: number): Promise
   );
 
   const signature = new Uint8Array(await crypto.subtle.sign('HMAC', cryptoKey, buffer));
-  const offset = signature[signature.length - 1] & 0x0f;
+  const offset = (signature[signature.length - 1] ?? 0) & 0x0f;
   const binary =
-    ((signature[offset] & 0x7f) << 24) |
-    ((signature[offset + 1] & 0xff) << 16) |
-    ((signature[offset + 2] & 0xff) << 8) |
-    (signature[offset + 3] & 0xff);
+    (((signature[offset] ?? 0) & 0x7f) << 24) |
+    (((signature[offset + 1] ?? 0) & 0xff) << 16) |
+    (((signature[offset + 2] ?? 0) & 0xff) << 8) |
+    ((signature[offset + 3] ?? 0) & 0xff);
 
   return String(binary % 1_000_000).padStart(6, '0');
 }

@@ -96,7 +96,11 @@ const DEFAULT_BUSINESS_ROUTE_ID = 'JO_AMM_IRB';
 const DEFAULT_SCHOOL_ROUTE_ID = 'JO_AMM_ZRQ';
 
 function getJordanRoute(routeId: string, fallbackId: string): CityRoute {
-  return findRoute(routeId) ?? findRoute(fallbackId) ?? getTier1Routes('JO')[0];
+  const resolved = findRoute(routeId) ?? findRoute(fallbackId) ?? getTier1Routes('JO')[0];
+  if (!resolved) {
+    throw new Error(`No CityRoute found for ${routeId} or fallback ${fallbackId}`);
+  }
+  return resolved;
 }
 
 function buildTripCandidates(route: CityRoute, seatsPerTrip: number): TripSummary[] {
@@ -124,7 +128,8 @@ function buildTripCandidates(route: CityRoute, seatsPerTrip: number): TripSummar
   }));
 }
 
-function buildDefaultBusinessEmployees(_route: CityRoute, seatPrice: number): BusinessEmployee[] {
+function buildDefaultBusinessEmployees(route: CityRoute, seatPrice: number): BusinessEmployee[] {
+  void route;
   return [
     {
       id: generateId('emp'),
@@ -211,16 +216,22 @@ function buildDefaultSchoolStudents(): SchoolStudentDraft[] {
 }
 
 function computeBusinessInvoice(employees: BusinessEmployee[]): number {
-  return Number(employees.reduce((total, employee) => total + employee.monthlySpendJOD, 0).toFixed(2));
+  return Number(
+    employees.reduce((total, employee) => total + employee.monthlySpendJOD, 0).toFixed(2),
+  );
 }
 
 export async function buildBusinessAccountSnapshot(
   routeId: string = DEFAULT_BUSINESS_ROUTE_ID,
 ): Promise<BusinessAccountSnapshot> {
   const corridor = getJordanRoute(routeId, DEFAULT_BUSINESS_ROUTE_ID);
-  const totalTripCost = calculateFare(corridor.distanceKm, 1, 'on-demand') + corridor.tollCostLocal + 6;
+  const totalTripCost =
+    calculateFare(corridor.distanceKm, 1, 'on-demand') + corridor.tollCostLocal + 6;
   const seatYield = SmartPricingEngine.calculateSharedRidePricing(totalTripCost, 4);
-  const employees = buildDefaultBusinessEmployees(corridor, seatYield[1]?.price ?? seatYield[0]?.price ?? 0);
+  const employees = buildDefaultBusinessEmployees(
+    corridor,
+    seatYield[1]?.price ?? seatYield[0]?.price ?? 0,
+  );
   const fleetDrivers = buildDefaultFleetDrivers(corridor);
   const passengerTrips = buildTripCandidates(corridor, 4);
 
@@ -249,7 +260,13 @@ export async function buildBusinessAccountSnapshot(
   };
 
   const packageTrips = buildTripCandidates(
-    { ...corridor, from: corridor.to, to: corridor.from, fromAr: corridor.toAr, toAr: corridor.fromAr },
+    {
+      ...corridor,
+      from: corridor.to,
+      to: corridor.from,
+      fromAr: corridor.toAr,
+      toAr: corridor.fromAr,
+    },
     4,
   );
 

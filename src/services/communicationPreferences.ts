@@ -1,4 +1,4 @@
-import { API_URL, fetchWithRetry, getAuthDetails } from './core';
+import { requestEdgeJson, runBackendWorkflow } from './backendWorkflow';
 import {
   getDirectCommunicationPreferences,
   getDirectCommunicationDeliveries,
@@ -6,11 +6,6 @@ import {
   upsertDirectCommunicationPreferences,
 } from './directSupabase';
 import { getConfig } from '../utils/env';
-import {
-  buildTraceHeaders,
-  communicationPreferenceUpdateSchema,
-  withDataIntegrity,
-} from './dataIntegrity';
 
 export type CommunicationChannel = 'in_app' | 'push' | 'email' | 'sms' | 'whatsapp';
 export type NotificationTopic =
@@ -71,11 +66,9 @@ export const defaultCommunicationPreferences: CommunicationPreferences = {
   preferredLanguage: 'en',
 };
 
-function canUseEdgeApi(): boolean {
-  return Boolean(API_URL);
-}
-
-function normalizePreferences(value: Partial<CommunicationPreferences> | null | undefined): CommunicationPreferences {
+function normalizePreferences(
+  value: Partial<CommunicationPreferences> | null | undefined,
+): CommunicationPreferences {
   return {
     ...defaultCommunicationPreferences,
     ...value,
@@ -92,13 +85,18 @@ function readStoredPreferences(userId?: string | null): CommunicationPreferences
 
   try {
     const raw = window.localStorage.getItem(storageKeyFor(userId));
-    return raw ? normalizePreferences(JSON.parse(raw) as Partial<CommunicationPreferences>) : defaultCommunicationPreferences;
+    return raw
+      ? normalizePreferences(JSON.parse(raw) as Partial<CommunicationPreferences>)
+      : defaultCommunicationPreferences;
   } catch {
     return defaultCommunicationPreferences;
   }
 }
 
-function writeStoredPreferences(userId: string | null | undefined, prefs: CommunicationPreferences): void {
+function writeStoredPreferences(
+  userId: string | null | undefined,
+  prefs: CommunicationPreferences,
+): void {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(storageKeyFor(userId), JSON.stringify(prefs));
 }
@@ -114,7 +112,7 @@ function readOutbox(): QueuedDeliveryRecord[] {
   try {
     const raw = window.localStorage.getItem(OUTBOX_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed as QueuedDeliveryRecord[] : [];
+    return Array.isArray(parsed) ? (parsed as QueuedDeliveryRecord[]) : [];
   } catch {
     return [];
   }
@@ -125,7 +123,9 @@ function writeOutbox(records: QueuedDeliveryRecord[]): void {
   window.localStorage.setItem(OUTBOX_KEY, JSON.stringify(records.slice(0, 200)));
 }
 
-function normalizeDirectPreferences(row: Record<string, unknown> | null | undefined): CommunicationPreferences {
+function normalizeDirectPreferences(
+  row: Record<string, unknown> | null | undefined,
+): CommunicationPreferences {
   return normalizePreferences({
     inApp: row?.in_app_enabled !== false,
     push: row?.push_enabled !== false,
@@ -165,24 +165,34 @@ export function resolveNotificationTopic(type: string): NotificationTopic {
   if (normalized.includes('message') || normalized.includes('chat')) return 'messages';
   if (normalized.includes('booking') || normalized.includes('request')) return 'booking_requests';
   if (normalized.includes('prayer')) return 'prayer_reminders';
-  if (normalized.includes('support') || normalized.includes('security') || normalized.includes('wallet')) return 'critical_alerts';
+  if (
+    normalized.includes('support') ||
+    normalized.includes('security') ||
+    normalized.includes('wallet')
+  )
+    return 'critical_alerts';
   return 'trip_updates';
 }
 
-export function getCommunicationCapabilities(contact?: { email?: string | null; phone?: string | null }): CommunicationCapabilitySnapshot {
+export function getCommunicationCapabilities(contact?: {
+  email?: string | null;
+  phone?: string | null;
+}): CommunicationCapabilitySnapshot {
   const config = getConfig();
   const NotificationApi =
     (typeof window !== 'undefined'
-      ? ((window as unknown) as { Notification?: typeof Notification }).Notification
-      : undefined)
-    ?? ((globalThis as unknown) as { Notification?: typeof Notification }).Notification;
+      ? (window as unknown as { Notification?: typeof Notification }).Notification
+      : undefined) ??
+    (globalThis as unknown as { Notification?: typeof Notification }).Notification;
 
   return {
     inApp: true,
     push: typeof NotificationApi !== 'undefined',
     email: Boolean(config.enableEmailNotifications && contact?.email),
     sms: Boolean(config.enableSmsNotifications && contact?.phone),
-    whatsapp: Boolean(config.enableWhatsAppNotifications && contact?.phone),
+    whatsapp: Boolean(
+      config.enableWhatsAppNotifications && contact?.phone && config.supportWhatsAppNumber,
+    ),
   };
 }
 
@@ -194,66 +204,64 @@ export function buildDeliveryPlan(args: {
 }): CommunicationChannel[] {
   const topic = resolveNotificationTopic(args.type);
   const topicEnabled =
-    topic === 'trip_updates' ? args.preferences.tripUpdates
-      : topic === 'booking_requests' ? args.preferences.bookingRequests
-      : topic === 'messages' ? args.preferences.messages
-      : topic === 'promotions' ? args.preferences.promotions
-      : topic === 'prayer_reminders' ? args.preferences.prayerReminders
-      : args.preferences.criticalAlerts;
+    topic === 'trip_updates'
+      ? args.preferences.tripUpdates
+      : topic === 'booking_requests'
+        ? args.preferences.bookingRequests
+        : topic === 'messages'
+          ? args.preferences.messages
+          : topic === 'promotions'
+            ? args.preferences.promotions
+            : topic === 'prayer_reminders'
+              ? args.preferences.prayerReminders
+              : args.preferences.criticalAlerts;
 
   if (!topicEnabled) return [];
 
-  const requestedChannels = args.explicitChannels && args.explicitChannels.length > 0
-    ? args.explicitChannels
-    : (['in_app', 'push', 'email', 'sms'] as CommunicationChannel[]);
+  const requestedChannels =
+    args.explicitChannels && args.explicitChannels.length > 0
+      ? args.explicitChannels
+      : (['in_app', 'push', 'email', 'sms'] as CommunicationChannel[]);
 
-  return requestedChannels.filter((channel) => {
-    const forceChannel = Boolean(args.explicitChannels?.includes(channel));
-    if (channel === 'in_app') return args.capabilities.inApp && (forceChannel || args.preferences.inApp);
-    if (channel === 'push') return args.capabilities.push && (forceChannel || args.preferences.push);
-    if (channel === 'email') return args.capabilities.email && (forceChannel || args.preferences.email);
-    if (channel === 'sms') return args.capabilities.sms && (forceChannel || args.preferences.sms);
-    if (channel === 'whatsapp') return args.capabilities.whatsapp && (forceChannel || args.preferences.whatsapp);
+  return requestedChannels.filter(channel => {
+    if (channel === 'in_app') return args.preferences.inApp && args.capabilities.inApp;
+    if (channel === 'push') return args.preferences.push && args.capabilities.push;
+    if (channel === 'email') return args.preferences.email && args.capabilities.email;
+    if (channel === 'sms') return args.preferences.sms && args.capabilities.sms;
+    if (channel === 'whatsapp') return args.preferences.whatsapp && args.capabilities.whatsapp;
     return false;
   });
 }
 
-export async function getCommunicationPreferences(userId?: string | null): Promise<CommunicationPreferences> {
+export async function getCommunicationPreferences(
+  userId?: string | null,
+): Promise<CommunicationPreferences> {
   const localPrefs = readStoredPreferences(userId);
   if (!userId) return localPrefs;
 
-  if (!canUseEdgeApi()) {
-    try {
-      const direct = await getDirectCommunicationPreferences(userId);
-      if (!direct) return localPrefs;
-      const normalized = normalizeDirectPreferences(direct as Record<string, unknown> | null);
-      writeStoredPreferences(userId, normalized);
-      return normalized;
-    } catch {
-      return localPrefs;
-    }
-  }
-
   try {
-    const { token } = await getAuthDetails();
-    const response = await fetchWithRetry(`${API_URL}/communications/preferences`, {
-      headers: { Authorization: `Bearer ${token}` },
+    const normalized = await runBackendWorkflow({
+      operation: 'Communication preferences loading',
+      authMode: 'required',
+      fallback: async () => {
+        const direct = await getDirectCommunicationPreferences(userId);
+        if (!direct) return localPrefs;
+        return normalizeDirectPreferences(direct as Record<string, unknown> | null);
+      },
+      edge: context =>
+        requestEdgeJson<{
+          preferences?: Partial<CommunicationPreferences>;
+        }>({
+          path: '/communications/preferences',
+          authMode: 'required',
+          context,
+          operation: 'Failed to load communication preferences',
+        }).then(data => normalizePreferences(data?.preferences)),
     });
-    if (!response.ok) throw new Error('Failed to load communication preferences');
-    const data = await response.json();
-    const normalized = normalizePreferences(data?.preferences as Partial<CommunicationPreferences>);
     writeStoredPreferences(userId, normalized);
     return normalized;
   } catch {
-    try {
-      const direct = await getDirectCommunicationPreferences(userId);
-      if (!direct) return localPrefs;
-      const normalized = normalizeDirectPreferences(direct as Record<string, unknown> | null);
-      writeStoredPreferences(userId, normalized);
-      return normalized;
-    } catch {
-      return localPrefs;
-    }
+    return localPrefs;
   }
 }
 
@@ -261,46 +269,32 @@ export async function updateCommunicationPreferences(
   userId: string | null | undefined,
   updates: Partial<CommunicationPreferences>,
 ): Promise<CommunicationPreferences> {
-  const validatedUpdates = communicationPreferenceUpdateSchema.parse(updates);
-  const merged = normalizePreferences({ ...readStoredPreferences(userId), ...validatedUpdates });
+  const merged = normalizePreferences({ ...readStoredPreferences(userId), ...updates });
   writeStoredPreferences(userId, merged);
 
   if (!userId) return merged;
 
-  if (!canUseEdgeApi()) {
-    try {
-      await upsertDirectCommunicationPreferences(userId, toDirectPreferenceUpdate(updates));
-    } catch {
-      // local-first fallback
-    }
-    return merged;
-  }
-
   try {
-    await withDataIntegrity({
-      operation: 'communication.preferences.update',
-      schema: communicationPreferenceUpdateSchema,
-      payload: validatedUpdates,
-      execute: async ({ requestId }) => {
-        const { token } = await getAuthDetails();
-        const response = await fetchWithRetry(`${API_URL}/communications/preferences`, {
+    await runBackendWorkflow({
+      operation: 'Communication preferences update',
+      authMode: 'required',
+      fallbackPolicy: 'writes-if-enabled',
+      fallback: () =>
+        upsertDirectCommunicationPreferences(userId, toDirectPreferenceUpdate(updates)).then(
+          () => merged,
+        ),
+      edge: context =>
+        requestEdgeJson<CommunicationPreferences>({
+          path: '/communications/preferences',
           method: 'PATCH',
-          headers: buildTraceHeaders(requestId, {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          }),
-          body: JSON.stringify(merged),
-        });
-        if (!response.ok) throw new Error('Failed to update communication preferences');
-        return merged;
-      },
+          authMode: 'required',
+          context,
+          body: merged,
+          operation: 'Failed to update communication preferences',
+        }),
     });
   } catch {
-    try {
-      await upsertDirectCommunicationPreferences(userId, toDirectPreferenceUpdate(validatedUpdates));
-    } catch {
-      // keep local copy
-    }
+    // keep local copy even if backend sync is unavailable
   }
 
   return merged;
@@ -329,43 +323,35 @@ export async function queueCommunicationDeliveries(args: {
     return { queued: localRecords.length, source: 'local' as const };
   }
 
-  if (!canUseEdgeApi()) {
-    try {
-      await queueDirectCommunicationDeliveries(args.userId, args.requests.map((request) => ({
-        ...request,
-        notification_id: args.notificationId ?? null,
-      })));
-      return { queued: localRecords.length, source: 'server' as const };
-    } catch {
-      return { queued: localRecords.length, source: 'local' as const };
-    }
-  }
-
   try {
-    const { token } = await getAuthDetails();
-    const response = await fetchWithRetry(`${API_URL}/communications/deliver`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        notificationId: args.notificationId ?? null,
-        deliveries: args.requests,
-      }),
+    await runBackendWorkflow({
+      operation: 'Communication delivery queueing',
+      authMode: 'required',
+      fallbackPolicy: 'writes-if-enabled',
+      fallback: () =>
+        queueDirectCommunicationDeliveries(
+          args.userId ?? '',
+          args.requests.map(request => ({
+            ...request,
+            notification_id: args.notificationId ?? null,
+          })),
+        ).then(() => undefined),
+      edge: context =>
+        requestEdgeJson<void>({
+          path: '/communications/deliver',
+          method: 'POST',
+          authMode: 'required',
+          context,
+          body: {
+            notificationId: args.notificationId ?? null,
+            deliveries: args.requests,
+          },
+          operation: 'Failed to queue communication deliveries',
+        }),
     });
-    if (!response.ok) throw new Error('Failed to queue communication deliveries');
     return { queued: localRecords.length, source: 'server' as const };
   } catch {
-    try {
-      await queueDirectCommunicationDeliveries(args.userId, args.requests.map((request) => ({
-        ...request,
-        notification_id: args.notificationId ?? null,
-      })));
-      return { queued: localRecords.length, source: 'server' as const };
-    } catch {
-      return { queued: localRecords.length, source: 'local' as const };
-    }
+    return { queued: localRecords.length, source: 'local' as const };
   }
 }
 
@@ -377,6 +363,6 @@ export async function getCommunicationDeliveryHistory(userId?: string | null) {
   try {
     return await getDirectCommunicationDeliveries(userId);
   } catch {
-    return readOutbox().filter((record) => record.userId === userId);
+    return readOutbox().filter(record => record.userId === userId);
   }
 }

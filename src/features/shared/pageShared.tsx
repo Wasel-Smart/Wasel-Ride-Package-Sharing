@@ -6,22 +6,14 @@
  * live in their own file without duplicating DS bindings, city
  * data, storage helpers, or the Protected / PageShell wrappers.
  */
-import { useEffect, useRef, type ReactNode } from 'react';
-import { useLocation } from 'react-router';
+import type { ReactNode } from 'react';
+import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import {
-  WaselBusinessFooter,
-} from '../../components/system/WaselPresence';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
-import {
-  JORDAN_LOCATION_OPTIONS,
-  resolveJordanLocationCoord,
-} from '../../utils/jordanLocations';
-import { buildAuthPagePath, buildAuthReturnTo } from '../../utils/authFlow';
+import { C, GRAD, GRAD_HERO, R, SH } from '../../utils/wasel-ds';
 
-// ── Design-system shorthand ───────────────────────────────────────────────────
+// Design-system shorthand
 export const DS = PAGE_DS;
 
 export const r = (px = 12) => `${px}px`;
@@ -39,21 +31,53 @@ export const pill = (color: string) => ({
   color,
 });
 
-// ── Jordan city coordinates ───────────────────────────────────────────────────
-export const CITIES = JORDAN_LOCATION_OPTIONS;
+// Jordan city coordinates
+export const CITY_COORDS: Record<string, { lat: number; lng: number }> = {
+  Amman: { lat: 31.9539, lng: 35.9106 },
+  Aqaba: { lat: 29.5321, lng: 35.006 },
+  Irbid: { lat: 32.5568, lng: 35.8479 },
+  Zarqa: { lat: 32.0728, lng: 36.088 },
+  'Dead Sea': { lat: 31.559, lng: 35.4732 },
+  Karak: { lat: 31.1854, lng: 35.7048 },
+  Madaba: { lat: 31.7196, lng: 35.7939 },
+  Petra: { lat: 30.3285, lng: 35.4444 },
+  Jerash: { lat: 32.2744, lng: 35.8961 },
+  Mafraq: { lat: 32.3429, lng: 36.208 },
+  Salt: { lat: 32.0392, lng: 35.7272 },
+  'Wadi Rum': { lat: 29.5734, lng: 35.4196 },
+  Ajloun: { lat: 32.3333, lng: 35.7528 },
+  "Ma'in": { lat: 31.6796, lng: 35.6217 },
+};
 
-export function resolveCityCoord(city: string) {
-  return resolveJordanLocationCoord(city);
+export const CITIES = [
+  'Amman',
+  'Aqaba',
+  'Irbid',
+  'Zarqa',
+  'Dead Sea',
+  'Karak',
+  'Madaba',
+  'Petra',
+  'Jerash',
+  'Mafraq',
+  'Salt',
+  'Wadi Rum',
+  'Ajloun',
+  "Ma'in",
+];
+
+export function resolveCityCoord(city: string): { lat: number; lng: number } {
+  return CITY_COORDS[city] ?? CITY_COORDS.Amman ?? { lat: 31.9539, lng: 35.9106 };
 }
 
 export function midpoint(
   a: { lat: number; lng: number },
   b: { lat: number; lng: number },
-) {
+): { lat: number; lng: number } {
   return { lat: (a.lat + b.lat) / 2, lng: (a.lng + b.lng) / 2 };
 }
 
-// ── localStorage helpers ──────────────────────────────────────────────────────
+// localStorage helpers
 export function readStoredStringList(key: string): string[] {
   if (typeof window === 'undefined') return [];
   try {
@@ -82,71 +106,36 @@ export function readStoredObject<T>(key: string, fallback: T): T {
   }
 }
 
-// ── Auth guard ────────────────────────────────────────────────────────────────
+// Auth guard
 export function Protected({ children }: { children: ReactNode }) {
-  const { user, loading } = useLocalAuth();
-  const nav = useIframeSafeNavigate();
-  const location = useLocation();
-  const mountedRef = useRef(true);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
-  }, []);
-
-  useEffect(() => {
-    if (!loading && !user && mountedRef.current) {
-      nav(
-        buildAuthPagePath(
-          'signin',
-          buildAuthReturnTo(location.pathname, location.search, location.hash),
-        ),
-      );
-    }
-  }, [loading, location.hash, location.pathname, location.search, nav, user]);
-
-  if (loading) {
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '60vh', gap: 16, background: DS.bg,
-      }}>
-        <div style={{ color: '#fff', fontWeight: 800, fontFamily: DS.F }}>Checking your Wasel session...</div>
-        <div style={{ color: DS.sub, fontFamily: DS.F }}>We are confirming account access before opening this protected flow.</div>
-      </div>
-    );
-  }
+  const { user } = useLocalAuth();
 
   if (!user) {
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '60vh', gap: 16, background: DS.bg,
-      }}>
-        <div style={{ fontSize: '3rem' }}>🔒</div>
-        <div style={{ color: DS.sub, fontFamily: DS.F }}>Redirecting to sign in…</div>
-      </div>
-    );
+    return <ProtectedPagePreview />;
   }
   return <>{children}</>;
 }
 
-// ── Page shell (responsive layout wrapper) ────────────────────────────────────
+// Page shell (responsive layout wrapper)
 export function PageShell({ children }: { children: ReactNode }) {
   const { language } = useLanguage();
   const ar = language === 'ar';
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: `radial-gradient(circle at 12% 10%, rgba(22,199,242,0.16), transparent 24%), radial-gradient(circle at 88% 6%, rgba(199,255,26,0.1), transparent 22%), radial-gradient(circle at 80% 86%, rgba(96,197,54,0.1), transparent 24%), ${DS.bg}`,
-      fontFamily: DS.F, direction: ar ? 'rtl' : 'ltr',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
+    <div
+      style={{
+        minHeight: 'var(--app-min-height)',
+        background: `linear-gradient(180deg, ${C.bgDeep} 0%, ${DS.bg} 42%, ${C.bgAlt} 100%)`,
+        fontFamily: DS.F,
+        direction: ar ? 'rtl' : 'ltr',
+        color: C.text,
+        position: 'relative',
+        overflow: 'hidden',
+      }}
+    >
       <style>{`
         :root { color-scheme: dark; scroll-behavior: smooth; }
-        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(22,199,242,0.28); }
-        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(199,255,26,0.24); }
+        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px ${C.cyanGlow}; }
+        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px ${C.goldDim}; }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
             animation-duration: 0.01ms !important;
@@ -172,8 +161,6 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-bus-card-grid { grid-template-columns:1fr !important; }
           .sp-empty-actions { grid-template-columns:1fr !important; }
           .sp-side-column { position:static !important; }
-          .pkg-send-form-grid { grid-template-columns:1fr !important; }
-          .pkg-send-steps-grid { grid-template-columns:1fr !important; }
           .sp-shell-grid { opacity: 0.12 !important; }
         }
         @media(max-width:480px){
@@ -190,93 +177,140 @@ export function PageShell({ children }: { children: ReactNode }) {
         style={{
           position: 'fixed',
           inset: 0,
-          backgroundImage: 'linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.032) 1px, transparent 1px)',
-          backgroundSize: '54px 54px',
-          maskImage: 'radial-gradient(circle at center, black 0%, black 44%, transparent 82%)',
+          backgroundImage: `linear-gradient(${C.borderFaint} 1px, transparent 1px), linear-gradient(90deg, ${C.borderFaint} 1px, transparent 1px)`,
+          backgroundSize: '72px 72px',
+          maskImage:
+            'linear-gradient(180deg, transparent 0%, black 12%, black 78%, transparent 100%)',
           pointerEvents: 'none',
-          opacity: 0.22,
+          opacity: 0.08,
         }}
       />
       <div
-        aria-hidden="true"
+        className="sp-inner"
         style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'radial-gradient(circle at 50% 0%, rgba(22,199,242,0.08), transparent 38%), radial-gradient(circle at 82% 76%, rgba(199,255,26,0.05), transparent 24%)',
-          pointerEvents: 'none',
+          position: 'relative',
+          maxWidth: 1120,
+          margin: '0 auto',
+          padding: '24px 16px 36px',
         }}
-      />
-      <div className="sp-inner" style={{ position:'relative', maxWidth: 1180, margin: '0 auto', padding: '24px 16px 40px' }}>
+      >
         {children}
-        <div style={{ marginTop: 18 }}>
-          <WaselBusinessFooter ar={ar} />
-        </div>
       </div>
     </div>
   );
 }
 
-// ── Section header ────────────────────────────────────────────────────────────
+// Section header
 export function SectionHead({
-  emoji, title, titleAr, sub, color = DS.cyan, action,
+  emoji,
+  title,
+  titleAr,
+  sub,
+  subAr,
+  color = DS.cyan,
+  action,
 }: {
-  emoji: string; title: string; titleAr?: string; sub?: string; color?: string;
-  action?: { label: string; onClick: () => void };
+  emoji: ReactNode;
+  title: string;
+  titleAr?: string;
+  sub?: string;
+  subAr?: string;
+  color?: string;
+  action?: { label: string; labelAr?: string; onClick: () => void };
 }) {
   const { language } = useLanguage();
   const ar = language === 'ar';
+  const displayTitle = ar && titleAr ? titleAr : title;
+  const displaySub = ar && subAr ? subAr : sub;
 
   return (
-    <div className="sp-head" style={{
-      background: 'linear-gradient(180deg, rgba(8,23,40,0.96), rgba(8,23,40,0.92))',
-      borderRadius: r(22), padding: '22px 24px',
-      marginBottom: 20, position: 'relative', overflow: 'hidden',
-      border: `1px solid ${color}1f`, boxShadow: '0 18px 44px rgba(0,0,0,0.34)',
-    }}>
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}10,transparent 64%)`,
-        pointerEvents: 'none',
-      }} />
-      <div className="sp-head-inner" style={{
-        display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', position: 'relative',
-      }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{
-            width: 58, height: 58, borderRadius: r(18),
-            background: `${color}18`, border: `1.5px solid ${color}34`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '1.85rem', flexShrink: 0,
-          }}>
+    <div
+      className="sp-head"
+      style={{
+        background: GRAD_HERO,
+        borderRadius: R.xxl,
+        padding: '26px 24px',
+        marginBottom: 20,
+        position: 'relative',
+        overflow: 'hidden',
+        border: `1px solid ${color}20`,
+        boxShadow: SH.lg,
+      }}
+    >
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: `linear-gradient(120deg, ${color}12, transparent 36%, ${C.elevated})`,
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        className="sp-head-inner"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'relative',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: R.xl,
+              background: `${color}18`,
+              border: `1.5px solid ${color}34`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color,
+              flexShrink: 0,
+            }}
+          >
             {emoji}
           </div>
           <div>
-            <div style={{ color, fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
-              {ar ? 'المهمة الأساسية' : 'Primary task'}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <h1 style={{ fontSize: '1.62rem', fontWeight: 950, color: '#fff', margin: 0, letterSpacing: '-0.03em' }}>{title}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <h1
+                style={{
+                  fontSize: '1.62rem',
+                  fontWeight: 950,
+                  color: C.text,
+                  margin: 0,
+                  letterSpacing: 0,
+                }}
+              >
+                {displayTitle}
+              </h1>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-              {titleAr && (
-                <p dir="rtl" style={{
-                  fontSize: '0.86rem', fontWeight: 800, color, margin: 0,
-                  fontFamily: "'Cairo',sans-serif",
-                }}>{titleAr}</p>
+              {displaySub && (
+                <span style={{ color: C.textMuted, fontSize: '0.78rem' }}>{displaySub}</span>
               )}
-              {sub && <span style={{ color: 'rgba(239,246,255,0.72)', fontSize: '0.88rem', lineHeight: 1.6, maxWidth: 620 }}>{sub}</span>}
             </div>
           </div>
         </div>
         {action && (
-          <button onClick={action.onClick} className="sp-head-btn" style={{
-            height: 44, padding: '0 22px', borderRadius: '99px', border: 'none',
-            background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 52%, #18D7C8 100%)',
-            color: '#041018', fontWeight: 900, fontSize: '0.875rem',
-            boxShadow: `0 10px 24px ${DS.cyan}26`, cursor: 'pointer', flexShrink: 0,
-          }}>
-            {action.label}
+          <button
+            onClick={action.onClick}
+            className="sp-head-btn"
+            style={{
+              height: 44,
+              padding: '0 22px',
+              borderRadius: R.full,
+              border: 'none',
+              background: GRAD,
+              color: C.bgDeep,
+              fontWeight: 900,
+              fontSize: '0.875rem',
+              boxShadow: SH.cyanL,
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            {ar && action.labelAr ? action.labelAr : action.label}
           </button>
         )}
       </div>
@@ -284,26 +318,39 @@ export function SectionHead({
   );
 }
 
-// ── Core experience banner ────────────────────────────────────────────────────
+// Core experience banner
 export function CoreExperienceBanner({
-  title, detail, tone = DS.cyan,
+  title,
+  detail,
+  tone = DS.cyan,
 }: {
-  title: string; detail: string; tone?: string;
+  title: string;
+  detail: string;
+  tone?: string;
 }) {
+  const { t } = useLanguage();
   return (
-    <div style={{
-      display: 'grid', gap: 10,
-      background: `linear-gradient(135deg, ${tone}12, rgba(255,255,255,0.02))`,
-      border: `1px solid ${tone}30`, borderRadius: r(20),
-      padding: '16px 18px', marginBottom: 18,
-      boxShadow: '0 14px 34px rgba(0,0,0,0.22)',
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        gap: 10,
+        alignItems: 'flex-start',
+        background: `linear-gradient(135deg, ${tone}0f, ${C.elevated})`,
+        border: `1px solid ${tone}24`,
+        borderRadius: R.xl,
+        padding: '13px 14px',
+        marginBottom: 18,
+        boxShadow: '0 14px 34px rgba(0,0,0,0.22)',
+      }}
+    >
+      <span style={{ ...pill(tone), flexShrink: 0 }}>{t('pageShared.live')}</span>
       <div>
-        <div style={{ color: tone, fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>
-          Quick brief
+        <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.9rem', letterSpacing: 0 }}>
+          {title}
         </div>
-        <div style={{ color: '#fff', fontWeight: 900, fontSize: '1rem', marginBottom: 4, letterSpacing: '-0.02em' }}>{title}</div>
-        <div style={{ color: DS.sub, fontSize: '0.86rem', lineHeight: 1.65, maxWidth: 760 }}>{detail}</div>
+        <div style={{ color: DS.muted, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 3 }}>
+          {detail}
+        </div>
       </div>
     </div>
   );

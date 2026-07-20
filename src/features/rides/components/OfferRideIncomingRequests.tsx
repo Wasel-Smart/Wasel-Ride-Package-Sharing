@@ -1,13 +1,9 @@
 import { notificationsAPI } from '../../../services/notifications.js';
-import {
-  getConnectedRides,
-  updateConnectedRide,
-} from '../../../services/journeyLogistics';
-import {
-  updateRideBooking,
-  type RideBookingRecord,
-} from '../../../services/rideLifecycle';
+import { getConnectedRides, updateConnectedRide } from '../../../services/journeyLogistics';
+import { updateRideBooking, type RideBookingRecord } from '../../../services/rideLifecycle';
 import { DS, r } from '../../../pages/waselServiceShared';
+import { C } from '../../../utils/wasel-ds';
+import { tx } from '../../../locales/tx';
 
 type OfferRideIncomingRequestsProps = {
   incomingRequests: RideBookingRecord[];
@@ -30,9 +26,11 @@ export function OfferRideIncomingRequests({
         marginBottom: 18,
       }}
     >
-      <div style={{ color: '#fff', fontWeight: 800, marginBottom: 12 }}>Incoming booking requests</div>
+      <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>
+        {tx('offerRideIncomingRequests.incoming_booking_requests')}
+      </div>
       <div style={{ display: 'grid', gap: 10 }}>
-        {incomingRequests.map((request) => (
+        {incomingRequests.map(request => (
           <div
             key={request.id}
             style={{
@@ -52,22 +50,25 @@ export function OfferRideIncomingRequests({
               }}
             >
               <div>
-                <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.84rem' }}>
-                  {request.from} to {request.to}
+                <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>
+                  {request.from} {tx('offerRideIncomingRequests.to')}
+                  {request.to}
                 </div>
                 <div style={{ color: DS.sub, fontSize: '0.74rem', marginTop: 4 }}>
-                  {request.passengerName} requested {request.seatsRequested} seat on {request.date} at{' '}
+                  {request.passengerName} {tx('offerRideIncomingRequests.requested')}
+                  {request.seatsRequested} {tx('offerRideIncomingRequests.seat_on')}
+                  {request.date} {tx('offerRideIncomingRequests.at')}
                   {request.time}.
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <button
-                  onClick={() => {
-                    const updated = updateRideBooking(request.id, {
+                  onClick={async () => {
+                    const updated = await updateRideBooking(request.id, {
                       status: 'confirmed',
                       paymentStatus: 'authorized',
                     });
-                    const ride = getConnectedRides().find((item) => item.id === request.rideId);
+                    const ride = getConnectedRides().find(item => item.id === request.rideId);
                     if (ride) {
                       updateConnectedRide(ride.id, {
                         seats: Math.max(0, ride.seats - request.seatsRequested),
@@ -81,11 +82,6 @@ export function OfferRideIncomingRequests({
                           type: 'booking',
                           priority: 'high',
                           action_url: '/app/my-trips?tab=rides',
-                          channels: ['whatsapp', 'sms', 'email'],
-                          contact: {
-                            phone: updated.passengerPhone ?? null,
-                            email: updated.passengerEmail ?? null,
-                          },
                         })
                         .catch(() => {});
                     }
@@ -97,16 +93,16 @@ export function OfferRideIncomingRequests({
                     borderRadius: '99px',
                     border: 'none',
                     background: DS.gradG,
-                    color: '#fff',
+                    color: C.text,
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}
                 >
-                  Accept
+                  {tx('offerRideIncomingRequests.accept')}
                 </button>
                 <button
-                  onClick={() => {
-                    const updated = updateRideBooking(request.id, {
+                  onClick={async () => {
+                    const updated = await updateRideBooking(request.id, {
                       status: 'rejected',
                       paymentStatus: 'failed',
                     });
@@ -118,11 +114,6 @@ export function OfferRideIncomingRequests({
                           type: 'booking',
                           priority: 'medium',
                           action_url: '/app/find-ride',
-                          channels: ['whatsapp', 'sms', 'email'],
-                          contact: {
-                            phone: updated.passengerPhone ?? null,
-                            email: updated.passengerEmail ?? null,
-                          },
                         })
                         .catch(() => {});
                     }
@@ -134,12 +125,12 @@ export function OfferRideIncomingRequests({
                     borderRadius: '99px',
                     border: `1px solid ${DS.border}`,
                     background: DS.card2,
-                    color: '#fff',
+                    color: C.text,
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}
                 >
-                  Decline
+                  {tx('offerRideIncomingRequests.decline')}
                 </button>
               </div>
             </div>

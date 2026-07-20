@@ -1,24 +1,32 @@
-﻿/**
+/**
  * ProfilePage - /app/profile
  */
-import { type MutableRefObject, type ReactNode, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   Bell,
+  Camera,
   Car,
   CheckCircle,
+  Clock,
   CreditCard,
+  FileText,
+  Key,
   LogOut,
+  Monitor,
   Settings,
   Shield,
   Star,
+  TrendingUp,
 } from 'lucide-react';
+import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
+import { PageHero, PageShell, StatusBadge } from '../../components/wasel-ui/WaselPagePrimitives';
+import { WaselButton } from '../../design-system';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { buildAuthPagePath } from '../../utils/authFlow';
+import { C, GRAD, R, SH, SPACE } from '../../utils/wasel-ds';
 import { getProfileInitials } from './profileUtils';
 import {
   InsightCard as SharedInsightCard,
@@ -30,16 +38,11 @@ import {
 } from './components/ProfilePageParts';
 import {
   PROFILE_BG as BG,
+  PROFILE_BORDER as BORD,
   PROFILE_CYAN as CYAN,
   PROFILE_FONT as FONT,
   useProfilePageController,
 } from './useProfilePageController';
-import {
-  ProfileDeleteConfirmDialog,
-  ProfileHeroSection,
-  ProfileQuickPhoneEditor,
-  ProfileSignedOutState,
-} from './components/ProfilePageSections';
 
 function showToast(message: string) {
   const element = document.createElement('div');
@@ -49,14 +52,14 @@ function showToast(message: string) {
     bottom: '24px',
     left: '50%',
     transform: 'translateX(-50%)',
-    background: '#0A1628',
-    border: '1px solid rgba(22,199,242,0.3)',
-    color: '#EFF6FF',
+    background: C.cardSolid,
+    border: `1px solid ${C.borderHov}`,
+    color: C.text,
     padding: '10px 20px',
     borderRadius: '10px',
     fontSize: '0.85rem',
     zIndex: '9999',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+    boxShadow: SH.md,
   });
   document.body.appendChild(element);
   setTimeout(() => element.remove(), 2800);
@@ -65,14 +68,14 @@ function showToast(message: string) {
 export default function ProfilePage() {
   const { user, signOut } = useLocalAuth();
   const { updateProfile } = useAuth();
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const nav = useIframeSafeNavigate();
   const { isSupported, permission, requestPermission } = usePushNotifications();
   const ar = language === 'ar';
-  const photoInputRef = useRef<HTMLInputElement | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   if (!user) {
-    return <ProfileSignedOutState ar={ar} onSignIn={() => nav(buildAuthPagePath('signin'))} />;
+    return <ProtectedPagePreview pathname="/app/profile" />;
   }
 
   return (
@@ -81,6 +84,7 @@ export default function ProfilePage() {
       signOut={signOut}
       updateProfile={updateProfile}
       ar={ar}
+      t={t}
       nav={nav}
       isSupported={isSupported}
       permission={permission}
@@ -95,35 +99,12 @@ interface ProfilePageContentProps {
   signOut: ReturnType<typeof useLocalAuth>['signOut'];
   updateProfile: ReturnType<typeof useAuth>['updateProfile'];
   ar: boolean;
+  t: (key: string) => string;
   nav: ReturnType<typeof useIframeSafeNavigate>;
   isSupported: boolean;
   permission: NotificationPermission;
   requestPermission: () => Promise<NotificationPermission>;
-  photoInputRef: MutableRefObject<HTMLInputElement | null>;
-}
-
-type ProfileRowConfig = {
-  key: string;
-  label: string;
-  value?: string;
-  icon?: ReactNode;
-  badge?: ReactNode;
-  danger?: boolean;
-  onClick?: () => void;
-};
-
-function renderRows(rows: ProfileRowConfig[]) {
-  return rows.map((row) => (
-    <SharedRow
-      key={row.key}
-      label={row.label}
-      value={row.value}
-      icon={row.icon}
-      badge={row.badge}
-      danger={row.danger}
-      onClick={row.onClick}
-    />
-  ));
+  photoInputRef: React.MutableRefObject<HTMLInputElement | null>;
 }
 
 function ProfilePageContent({
@@ -131,6 +112,7 @@ function ProfilePageContent({
   signOut,
   updateProfile,
   ar,
+  t,
   nav,
   isSupported,
   permission,
@@ -174,303 +156,245 @@ function ProfilePageContent({
     },
     showToast,
     signOut,
+    photoInputRef,
   });
 
   const initials = getProfileInitials(user.name);
+  const memberLabel = user.joinedAt
+    ? `${t('profileExpanded.memberSince')} ${joinedText}`
+    : t('profileExpanded.waselMember');
 
   useEffect(() => {
     if (editingField !== 'name') setNameInput(user.name ?? '');
     if (editingField !== 'phone') setPhoneInput(user.phone ?? '');
   }, [editingField, setNameInput, setPhoneInput, user.name, user.phone]);
 
-  const trustVerificationRows: ProfileRowConfig[] = [
-    ...verificationItems.map((item) => ({
-      key: item.label,
-      label: item.label,
-      icon: <Shield size={15} />,
-      badge: (
-        <span
-          style={{
-            fontSize: '0.65rem',
-            color: item.color,
-            background: `${item.color}1A`,
-            padding: '3px 8px',
-            borderRadius: 999,
-            fontFamily: FONT,
-            fontWeight: 700,
-          }}
-        >
-          {item.status}
-        </span>
-      ),
-      onClick: () => nav('/app/settings?section=account'),
-    })),
-    {
-      key: 'operational-standing',
-      label: ar ? 'الوضع التشغيلي' : 'Operational standing',
-      value: ar ? `${trustTier} - عضو منذ ${joinedText}` : `${trustTier} - Member since ${joinedText}`,
-      icon: <CheckCircle size={15} />,
-      onClick: () => nav('/app/my-trips'),
-    },
-  ];
-
-  const accountRows: ProfileRowConfig[] = [
-    {
-      key: 'phone',
-      label: ar ? 'الهاتف' : 'Phone number',
-      value: user.phone ?? (ar ? 'لم يُضف بعد' : 'Not added'),
-      icon: <span>📱</span>,
-      onClick: () => nav('/app/settings?section=phone'),
-    },
-    {
-      key: 'id-verification',
-      label: ar ? 'التحقق من الهوية' : 'ID Verification',
-      value: ar ? 'سند eKYC' : 'Sanad eKYC',
-      icon: <Shield size={15} />,
-      badge: <SharedVerificationBadge level={user.verificationLevel ?? 'level_0'} ar={ar} accent={CYAN} />,
-      onClick: () => nav('/app/trust'),
-    },
-    {
-      key: 'language',
-      label: ar ? 'اللغة' : 'Language',
-      value: ar ? 'العربية' : 'English',
-      icon: <span>🌐</span>,
-      onClick: () => nav('/app/settings?section=account'),
-    },
-    {
-      key: 'notifications',
-      label: ar ? 'الإشعارات' : 'Notifications',
-      value: permissionStatus.label,
-      icon: <Bell size={15} />,
-      badge: (
-        <span
-          style={{
-            fontSize: '0.65rem',
-            color: permissionStatus.color,
-            background: `${permissionStatus.color}1A`,
-            padding: '3px 8px',
-            borderRadius: 999,
-            fontFamily: FONT,
-            fontWeight: 700,
-          }}
-        >
-          {permissionStatus.label}
-        </span>
-      ),
-      onClick: () => {
-        void handleNotificationSetup();
-      },
-    },
-  ];
-
-  const driverRows: ProfileRowConfig[] = [
-    {
-      key: 'vehicle',
-      label: ar ? 'سيارتي' : 'My Vehicle',
-      value: ar ? 'تويوتا كورولا 2021' : 'Toyota Corolla 2021',
-      icon: <Car size={15} />,
-      onClick: () => nav('/app/settings?section=account'),
-    },
-    {
-      key: 'documents',
-      label: ar ? 'المستندات' : 'Documents',
-      value: ar ? 'رخصة + تأمين + ترخيص' : 'License · Insurance · Registration',
-      icon: <span>📄</span>,
-      badge: <CheckCircle size={14} color="#22C55E" />,
-      onClick: () => nav('/app/trust'),
-    },
-    {
-      key: 'earnings',
-      label: ar ? 'الأرباح' : 'Earnings',
-      icon: <span>💰</span>,
-      onClick: () => nav('/app/wallet'),
-    },
-  ];
-
-  const preferenceRows: ProfileRowConfig[] = [
-    {
-      key: 'gender-preference',
-      label: ar ? 'تفضيل الجنس' : 'Gender Preference',
-      value: ar ? 'مختلط (افتراضي)' : 'Mixed (default)',
-      icon: <span>👥</span>,
-      onClick: () => nav('/app/settings?section=account'),
-    },
-    {
-      key: 'currency',
-      label: ar ? 'العملة' : 'Currency',
-      value: 'JOD',
-      icon: <span>💱</span>,
-      onClick: () => nav('/app/settings?section=account'),
-    },
-    {
-      key: 'advanced-settings',
-      label: ar ? 'الإعدادات المتقدمة' : 'Advanced Settings',
-      icon: <Settings size={15} />,
-      onClick: () => nav('/app/settings?section=account'),
-    },
-  ];
-
-  const securityRows: ProfileRowConfig[] = [
-    {
-      key: 'password',
-      label: ar ? 'تغيير كلمة المرور' : 'Change Password',
-      icon: <span>🔑</span>,
-      onClick: () => nav('/app/settings?section=security'),
-    },
-    {
-      key: 'two-factor',
-      label: ar ? 'التحقق الثنائي (2FA)' : 'Two-Factor Auth (2FA)',
-      icon: <span>🛡️</span>,
-      badge: (
-        <span
-          style={{
-            fontSize: '0.65rem',
-            color: '#F59E0B',
-            background: 'rgba(245,158,11,0.12)',
-            padding: '2px 7px',
-            borderRadius: 999,
-            fontFamily: FONT,
-            fontWeight: 700,
-          }}
-        >
-          {user.twoFactorEnabled ? (ar ? 'مفعل' : 'On') : (ar ? 'غير مفعل' : 'Off')}
-        </span>
-      ),
-      onClick: () => nav('/app/settings?section=security'),
-    },
-    {
-      key: 'sessions',
-      label: ar ? 'الأجهزة المسجلة' : 'Active Sessions',
-      icon: <span>💻</span>,
-      onClick: () => nav('/app/settings?section=security'),
-    },
-  ];
-
-  const legalRows: ProfileRowConfig[] = [
-    {
-      key: 'privacy',
-      label: ar ? 'سياسة الخصوصية' : 'Privacy Policy',
-      icon: <span>📋</span>,
-      onClick: () => nav('/app/privacy'),
-    },
-    {
-      key: 'terms',
-      label: ar ? 'شروط الخدمة' : 'Terms of Service',
-      icon: <span>📜</span>,
-      onClick: () => nav('/app/terms'),
-    },
-  ];
-
-  const dangerRows: ProfileRowConfig[] = [
-    {
-      key: 'export-data',
-      label: ar ? 'تصدير بياناتي' : 'Export My Data',
-      icon: <span>📦</span>,
-      onClick: handleExportData,
-    },
-    {
-      key: 'delete-account',
-      label: ar ? 'طلب حذف الحساب' : 'Request Account Deletion',
-      icon: <span>🗑️</span>,
-      danger: true,
-      onClick: () => setShowDeleteConfirm(true),
-    },
-    {
-      key: 'sign-out',
-      label: ar ? 'تسجيل الخروج' : 'Sign Out',
-      icon: <LogOut size={15} />,
-      danger: true,
-      onClick: () => {
-        void handleSignOut();
-      },
-    },
-  ];
-
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: FONT, direction: ar ? 'rtl' : 'ltr', paddingBottom: 80 }}>
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '0 16px' }}>
-        <ProfileHeroSection
-          user={user}
-          ar={ar}
-          initials={initials}
-          roleLabel={roleLabel}
-          walletStatus={walletStatus}
-          trustTier={trustTier}
-          joinedText={joinedText}
-          profileCompleteness={profileCompleteness}
-          permissionStatus={permissionStatus}
-          editingField={editingField}
-          nameInput={nameInput}
-          savingField={savingField}
-          photoInputRef={photoInputRef}
-          onNameInputChange={setNameInput}
-          onNameEditStart={() => {
-            setNameInput(user.name);
-            setEditingField('name');
-          }}
-          onNameEditCancel={() => setEditingField(null)}
-          onNameSave={handleSaveName}
-          onPhotoSelection={handlePhotoSelection}
+    <PageShell maxWidth={820} dir={ar ? 'rtl' : 'ltr'}>
+      <div style={{ paddingInline: SPACE[4] }}>
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handlePhotoSelection}
+          style={{ display: 'none' }}
         />
 
-        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 24 }}>
-          <StakeholderSignalBanner
-            dir={ar ? 'rtl' : 'ltr'}
-            eyebrow={ar ? 'واصل · تواصل الهوية' : 'Wasel · identity comms'}
-            title={
-              ar
-                ? 'الملف الشخصي أصبح نقطة تنسيق بين الهوية والثقة والتشغيل'
-                : 'Profile now acts as the shared handoff point between identity, trust, and operations'
-            }
-            detail={
-              ar
-                ? 'هذه الصفحة لم تعد مجرد معلومات شخصية. هي الآن ملخص واضح لما يراه المستخدم والدعم والثقة والتشغيل عن جاهزية الحساب.'
-                : 'This page is no longer just personal info. It now summarizes what the user, support, trust, and operations all need to see about account readiness.'
-            }
-            stakeholders={[
-              { label: ar ? 'الثقة' : 'Trust', value: `${user.trustScore}/100`, tone: 'green' },
-              { label: ar ? 'الرحلات' : 'Trips', value: String(user.trips ?? 0), tone: 'teal' },
-              { label: ar ? 'الإشعارات' : 'Alerts', value: permissionStatus.label, tone: 'blue' },
-              { label: ar ? 'المحفظة' : 'Wallet', value: walletStatus.label, tone: 'amber' },
-            ]}
-            statuses={[
-              { label: ar ? 'اكتمال الملف' : 'Profile completeness', value: `${profileCompleteness}%`, tone: profileCompleteness >= 80 ? 'green' : 'amber' },
-              { label: ar ? 'التحقق' : 'Verification', value: trustTier, tone: user.verified || user.sanadVerified ? 'green' : 'amber' },
-              { label: ar ? 'الحماية الثنائية' : '2FA', value: user.twoFactorEnabled ? (ar ? 'مفعلة' : 'Enabled') : (ar ? 'غير مفعلة' : 'Disabled'), tone: user.twoFactorEnabled ? 'green' : 'rose' },
-            ]}
-            lanes={[
-              {
-                label: ar ? 'مسار الهوية' : 'Identity lane',
-                detail: ar
-                  ? 'الاسم والهاتف والتحقق وصورة الملف كلها تصنع الانطباع الأول للحساب.'
-                  : 'Name, phone, verification, and profile media define the account’s first layer of trust.',
-              },
-              {
-                label: ar ? 'مسار التشغيل' : 'Operations lane',
-                detail: ar
-                  ? 'الرحلات والتقييم والمحفظة تظهر هنا حتى تبقى الجاهزية مرئية قبل أي نشاط جديد.'
-                  : 'Trips, rating, and wallet health stay visible here so readiness is clear before the next action.',
-              },
-              {
-                label: ar ? 'مسار الدعم' : 'Support lane',
-                detail: ar
-                  ? 'الإشعارات والإعدادات السريعة تقلل الوقت اللازم لحل مشاكل الحساب.'
-                  : 'Alerts and quick settings reduce the time it takes to resolve account issues.',
-              },
-            ]}
-          />
-        </div>}
+        <PageHero
+          eyebrow={t('profileExpanded.accountIdentity')}
+          icon={<StatusBadge label={roleLabel} accent={CYAN} />}
+          title={user.name}
+          description={`${user.email} · ${t('profileExpanded.trustScore')} ${user.trustScore}/100 · ${memberLabel}`}
+          accent={CYAN}
+          actions={
+            <>
+              <WaselButton
+                onClick={() => {
+                  setNameInput(user.name);
+                  setEditingField('name');
+                }}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {t('profileExpanded.editName')}
+              </WaselButton>
+              <WaselButton
+                variant="outline"
+                onClick={() => nav('/app/trust')}
+                className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+              >
+                {t('profileExpanded.trustCenter')}
+              </WaselButton>
+              <WaselButton
+                variant="outline"
+                onClick={() => nav('/app/settings?section=account')}
+                className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+              >
+                {t('profileExpanded.settings')}
+              </WaselButton>
+            </>
+          }
+          aside={
+            <div style={{ display: 'grid', justifyItems: 'center', gap: 12 }}>
+              <div style={{ position: 'relative' }}>
+                <div
+                  style={{
+                    width: 92,
+                    height: 92,
+                    borderRadius: R.full,
+                    background: GRAD,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.9rem',
+                    fontWeight: 900,
+                    color: C.bgDeep,
+                    boxShadow: SH.cyanL,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {user.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    initials
+                  )}
+                </div>
+                <button
+                  title={t('profileExpanded.changePhoto')}
+                  onClick={() => photoInputRef.current?.click()}
+                  disabled={savingField === 'photo'}
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    width: 30,
+                    height: 30,
+                    borderRadius: R.full,
+                    background: C.cardSolid,
+                    border: `2px solid ${BG}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: savingField === 'photo' ? 'not-allowed' : 'pointer',
+                    opacity: savingField === 'photo' ? 0.65 : 1,
+                  }}
+                >
+                  {savingField === 'photo' ? (
+                    <Clock size={12} color={CYAN} />
+                  ) : (
+                    <Camera size={12} color={CYAN} />
+                  )}
+                </button>
+              </div>
+              <SharedVerificationBadge
+                level={user.verificationLevel ?? 'level_0'}
+                ar={ar}
+                accent={CYAN}
+              />
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <StatusBadge label={`${walletStatus.label}`} accent={walletStatus.color} />
+                <StatusBadge label={permissionStatus.label} accent={permissionStatus.color} />
+              </div>
+            </div>
+          }
+        />
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 28 }}>
-          <SharedStatCard label={ar ? 'رحلات' : 'Trips'} value={user.trips ?? 0} icon={<Car size={16} />} color={CYAN} />
-          <SharedStatCard label={ar ? 'تقييم' : 'Rating'} value={(user.rating ?? 5).toFixed(1)} icon={<Star size={16} />} color="#F59E0B" />
-          <SharedStatCard label={ar ? 'الثقة' : 'Trust'} value={`${user.trustScore}/100`} icon={<Shield size={16} />} color="#22C55E" />
-          <SharedStatCard label={ar ? 'الرصيد' : 'Balance'} value={`JOD ${(user.balance ?? 0).toFixed(1)}`} icon={<CreditCard size={16} />} color="#A78BFA" />
+        {editingField === 'name' ? (
+          <SharedSection title={t('profileExpanded.quickEdit')}>
+            <div
+              style={{
+                padding: 18,
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                flexWrap: 'wrap',
+              }}
+            >
+              <input
+                value={nameInput}
+                onChange={event => setNameInput(event.target.value)}
+                autoFocus
+                style={{
+                  flex: '1 1 240px',
+                  minWidth: 0,
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  border: `1.5px solid ${CYAN}`,
+                  background: C.cyanDim,
+                  color: C.text,
+                  fontSize: '0.9rem',
+                  fontFamily: FONT,
+                  outline: 'none',
+                }}
+                onKeyDown={event => {
+                  if (event.key === 'Enter') void handleSaveName();
+                  if (event.key === 'Escape') setEditingField(null);
+                }}
+                maxLength={60}
+              />
+              <button
+                onClick={() => void handleSaveName()}
+                disabled={savingField !== null}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: 10,
+                  background: CYAN,
+                  border: 'none',
+                  color: C.bgDeep,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontFamily: FONT,
+                }}
+              >
+                {savingField === 'name' ? '...' : t('profileExpanded.save')}
+              </button>
+              <button
+                onClick={() => setEditingField(null)}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  background: C.elevated,
+                  border: `1px solid ${BORD}`,
+                  color: C.textMuted,
+                  cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  fontFamily: FONT,
+                }}
+              >
+                {t('profileExpanded.cancel')}
+              </button>
+            </div>
+          </SharedSection>
+        ) : null}
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            gap: 12,
+            marginBottom: 28,
+          }}
+        >
+          <SharedStatCard
+            label={t('profileExpanded.trips')}
+            value={user.trips ?? 0}
+            icon={<Car size={16} />}
+            color={CYAN}
+          />
+          <SharedStatCard
+            label={t('profileExpanded.rating')}
+            value={(user.rating ?? 5).toFixed(1)}
+            icon={<Star size={16} />}
+            color={C.gold}
+          />
+          <SharedStatCard
+            label={t('profileExpanded.trust')}
+            value={`${user.trustScore}/100`}
+            icon={<Shield size={16} />}
+            color={C.green}
+          />
+          <SharedStatCard
+            label={t('profileExpanded.balance')}
+            value={`JOD ${(user.balance ?? 0).toFixed(1)}`}
+            icon={<CreditCard size={16} />}
+            color={C.purple}
+          />
         </div>
 
-        <SharedSection title={ar ? 'مركز الحساب' : 'Quick actions'}>
-          <div style={{ padding: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-            {quickActions.map((action) => (
+        <SharedSection title={t('profileExpanded.account')}>
+          <div
+            style={{
+              padding: 18,
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {quickActions.map(action => (
               <SharedQuickActionCard
                 key={action.label}
                 label={action.label}
@@ -483,93 +407,349 @@ function ProfilePageContent({
           </div>
         </SharedSection>
 
-        <SharedSection title={ar ? 'صحة الحساب' : 'Account overview'}>
-          <div style={{ padding: 18, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+        <SharedSection title={t('profileExpanded.accountHealth')}>
+          <div
+            style={{
+              padding: 18,
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 12,
+            }}
+          >
             <SharedInsightCard
-              label={ar ? 'اكتمال الملف' : 'Profile completeness'}
+              label={t('profileExpanded.profileCompleteness')}
               value={`${profileCompleteness}%`}
-              detail={ar ? 'كلما اكتمل الملف تحسنت الثقة وسهُل الحجز.' : 'A more complete account improves trust and booking confidence.'}
-              color={profileCompleteness >= 80 ? '#22C55E' : CYAN}
+              detail={t('profileExpanded.profileCompletenessDetail')}
+              color={profileCompleteness >= 80 ? C.green : CYAN}
             />
             <SharedInsightCard
-              label={ar ? 'مستوى التحقق' : 'Verification level'}
+              label={t('profileExpanded.verificationLevel')}
               value={(user.verificationLevel ?? 'level_0').replace('level_', 'L')}
-              detail={ar ? 'مرتبط بالبريد والهاتف والهوية أو سند.' : 'Driven by email, phone, and identity completion.'}
-              color={user.verified || user.sanadVerified ? CYAN : '#F59E0B'}
+              detail={t('profileExpanded.verificationLevelDetail')}
+              color={user.verified || user.sanadVerified ? CYAN : C.gold}
             />
             <SharedInsightCard
-              label={ar ? 'حالة المحفظة' : 'Wallet status'}
+              label={t('profileExpanded.walletStatus')}
               value={walletStatus.label}
-              detail={ar ? 'يعكس جاهزية الدفع والتحصيل داخل واصل.' : 'Shows whether payments and payouts are ready to flow.'}
+              detail={t('profileExpanded.walletStatusDetail')}
               color={walletStatus.color}
             />
             <SharedInsightCard
-              label={ar ? 'التنبيهات' : 'Alerts'}
+              label={t('profileExpanded.alerts')}
               value={permissionStatus.label}
-              detail={ar ? 'إشعارات الرحلات والطرود والتحديثات الحرجة.' : 'Critical ride, package, and account alerts for this device.'}
+              detail={t('profileExpanded.alertsDetail')}
               color={permissionStatus.color}
             />
           </div>
         </SharedSection>
 
-        <SharedSection title={ar ? 'الثقة والتحقق' : 'Trust & Verification'}>
-          {renderRows(trustVerificationRows)}
-        </SharedSection>
-
-        <SharedSection title={ar ? 'تعديلات سريعة' : 'Quick Edits'}>
-          <ProfileQuickPhoneEditor
-            ar={ar}
-            phoneInput={phoneInput}
-            editingField={editingField}
-            savingField={savingField}
-            onPhoneInputChange={setPhoneInput}
-            onPhoneFocus={() => setEditingField('phone')}
-            onPhoneSave={handleSavePhone}
-            onPhoneCancel={() => setEditingField(null)}
+        <SharedSection title={t('profileExpanded.trustAndVerification')}>
+          {verificationItems.map(item => (
+            <SharedRow
+              key={item.label}
+              label={item.label}
+              value={item.status}
+              icon={<Shield size={15} />}
+              badge={
+                <span
+                  style={{
+                    fontSize: '0.65rem',
+                    color: item.color,
+                    background: `${item.color}1A`,
+                    padding: '3px 8px',
+                    borderRadius: 999,
+                    fontFamily: FONT,
+                    fontWeight: 700,
+                  }}
+                >
+                  {item.status}
+                </span>
+              }
+              onClick={() => nav('/app/settings?section=account')}
+            />
+          ))}
+          <SharedRow
+            label={t('profileExpanded.operationalStanding')}
+            value={`${trustTier} - ${memberLabel}`}
+            icon={<CheckCircle size={15} />}
+            onClick={() => nav('/app/my-trips')}
           />
         </SharedSection>
 
-        <SharedSection title={ar ? 'الحساب' : 'Account'}>
-          {renderRows(accountRows)}
+        <SharedSection title={t('profileExpanded.quickEdits')}>
+          <div style={{ padding: 18, display: 'grid', gap: 14 }}>
+            <div style={{ display: 'grid', gap: 8 }}>
+              <div
+                style={{
+                  fontSize: '0.72rem',
+                  color: C.textMuted,
+                  fontFamily: FONT,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                }}
+              >
+                {t('profileExpanded.phoneNumber')}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <input
+                  value={phoneInput}
+                  onChange={event => setPhoneInput(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter') void handleSavePhone();
+                    if (event.key === 'Escape') setEditingField(null);
+                  }}
+                  onFocus={() => setEditingField('phone')}
+                  placeholder="+962791234567"
+                  style={{
+                    flex: '1 1 220px',
+                    minWidth: 0,
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: `1px solid ${editingField === 'phone' ? CYAN : BORD}`,
+                    background: C.cyanDim,
+                    color: C.text,
+                    fontSize: '0.88rem',
+                    fontFamily: FONT,
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  onClick={() => void handleSavePhone()}
+                  disabled={savingField !== null}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: 10,
+                    background: CYAN,
+                    border: 'none',
+                    color: C.bgDeep,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    fontSize: '0.8rem',
+                    fontFamily: FONT,
+                  }}
+                >
+                  {savingField === 'phone' ? '...' : t('profileExpanded.savePhone')}
+                </button>
+              </div>
+              <div style={{ fontSize: '0.74rem', color: C.textMuted, fontFamily: FONT }}>
+                {t('profileExpanded.usedForAlertsVerificationAndCoordination')}
+              </div>
+            </div>
+          </div>
         </SharedSection>
 
         {(user.role === 'driver' || user.role === 'both') && (
-          <SharedSection title={ar ? 'وضع السائق' : 'Driver Mode'}>
-            {renderRows(driverRows)}
+          <SharedSection title={t('profileExpanded.driverMode')}>
+            <SharedRow
+              label={t('profileExpanded.myVehicle')}
+              value={t('profileExpanded.notAddedYet')}
+              icon={<Car size={15} />}
+              onClick={() => nav('/app/settings?section=account')}
+            />
+            <SharedRow
+              label={t('profileExpanded.documents')}
+              value={t('profileExpanded.licenseInsuranceRegistration')}
+              icon={<FileText size={15} />}
+              badge={<CheckCircle size={14} color={C.green} />}
+              onClick={() => nav('/app/trust')}
+            />
+            <SharedRow
+              label={t('profileExpanded.earnings')}
+              icon={<TrendingUp size={15} />}
+              onClick={() => nav('/app/wallet')}
+            />
           </SharedSection>
         )}
 
-        <SharedSection title={ar ? 'التفضيلات' : 'Preferences'}>
-          {renderRows(preferenceRows)}
+        <SharedSection title={t('profileExpanded.preferences')}>
+          <SharedRow
+            label={t('profileExpanded.genderPreference')}
+            value={t('profileExpanded.mixedDefault')}
+            icon={<Settings size={15} />}
+            onClick={() => nav('/app/settings?section=account')}
+          />
+          <SharedRow
+            label={t('profileExpanded.currency')}
+            value="JOD"
+            icon={<CreditCard size={15} />}
+            onClick={() => nav('/app/settings?section=account')}
+          />
+          <SharedRow
+            label={t('profileExpanded.advancedSettings')}
+            icon={<Settings size={15} />}
+            onClick={() => nav('/app/settings?section=account')}
+          />
         </SharedSection>
 
-        <SharedSection title={ar ? 'الأمان' : 'Security'}>
-          {renderRows(securityRows)}
+        <SharedSection title={t('profileExpanded.security')}>
+          <SharedRow
+            label={t('profileExpanded.changePassword')}
+            icon={<Key size={15} />}
+            onClick={() => nav('/app/settings?section=security')}
+          />
+          <SharedRow
+            label={t('profileExpanded.twoFactorAuth2FA')}
+            badge={
+              <span
+                style={{
+                  fontSize: '0.65rem',
+                  color: C.gold,
+                  background: C.goldDim,
+                  padding: '2px 7px',
+                  borderRadius: 999,
+                  fontFamily: FONT,
+                  fontWeight: 700,
+                }}
+              >
+                {user.twoFactorEnabled ? t('profileExpanded.on') : t('profileExpanded.off')}
+              </span>
+            }
+            icon={<Shield size={15} />}
+            onClick={() => nav('/app/settings?section=security')}
+          />
+          <SharedRow
+            label={t('profileExpanded.activeSessions')}
+            icon={<Monitor size={15} />}
+            onClick={() => nav('/app/settings?section=security')}
+          />
         </SharedSection>
 
-        <SharedSection title={ar ? 'القانوني' : 'Legal'}>
-          {renderRows(legalRows)}
+        <SharedSection title={t('profileExpanded.alerts')}>
+          <SharedRow
+            label={t('profileExpanded.notificationCenter')}
+            value={permissionStatus.label}
+            icon={<Bell size={15} />}
+            badge={<StatusBadge label={permissionStatus.label} accent={permissionStatus.color} />}
+            onClick={() => void handleNotificationSetup()}
+          />
         </SharedSection>
 
-        <SharedSection title={ar ? 'منطقة الخطر' : 'Danger Zone'}>
-          {renderRows(dangerRows)}
+        <SharedSection title={t('profileExpanded.legal')}>
+          <SharedRow
+            label={t('profileExpanded.privacyPolicy')}
+            icon={<FileText size={15} />}
+            onClick={() => nav('/app/privacy')}
+          />
+          <SharedRow
+            label={t('profileExpanded.termsOfService')}
+            icon={<FileText size={15} />}
+            onClick={() => nav('/app/terms')}
+          />
         </SharedSection>
 
-        <p style={{ textAlign: 'center', fontSize: '0.72rem', color: 'rgba(148,163,184,0.35)', fontFamily: FONT }}>
-          {user.joinedAt
-            ? (ar ? `عضو منذ ${joinedText}` : `Member since ${joinedText}`)
-            : (ar ? 'عضو في واصل' : 'Wasel member')}
+        <SharedSection title={t('profileExpanded.dangerZone')}>
+          <SharedRow
+            label={t('profileExpanded.exportMyData')}
+            icon={<FileText size={15} />}
+            onClick={handleExportData}
+          />
+          <SharedRow
+            label={t('profileExpanded.requestAccountDeletion')}
+            danger
+            icon={<LogOut size={15} />}
+            onClick={() => setShowDeleteConfirm(true)}
+          />
+          <SharedRow
+            label={t('profileExpanded.signOut')}
+            danger
+            icon={<LogOut size={15} />}
+            onClick={() => void handleSignOut()}
+          />
+        </SharedSection>
+
+        <p
+          style={{
+            textAlign: 'center',
+            fontSize: '0.72rem',
+            color: C.textDim,
+            fontFamily: FONT,
+          }}
+        >
+          <Clock size={11} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+          {memberLabel}
         </p>
       </div>
 
-      {showDeleteConfirm ? (
-        <ProfileDeleteConfirmDialog
-          ar={ar}
-          onCancel={() => setShowDeleteConfirm(false)}
-          onContinue={handleDeletionContinue}
-        />
-      ) : null}
-    </div>
+      {showDeleteConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 2000,
+            background: C.overlay,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 24,
+          }}
+        >
+          <div
+            style={{
+              background: C.cardSolid,
+              border: `1px solid ${C.errorDim}`,
+              borderRadius: 16,
+              padding: 28,
+              maxWidth: 360,
+              width: '100%',
+            }}
+          >
+            <h3
+              style={{
+                color: C.error,
+                fontFamily: FONT,
+                fontWeight: 800,
+                fontSize: '1.1rem',
+                marginBottom: 10,
+              }}
+            >
+              {t('profileExpanded.requestAccountDeletion')}
+            </h3>
+            <p
+              style={{
+                color: C.textMuted,
+                fontFamily: FONT,
+                fontSize: '0.85rem',
+                marginBottom: 20,
+              }}
+            >
+              {t('profileExpanded.fullAccountDeletionBody')}
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{
+                  flex: 1,
+                  height: 40,
+                  borderRadius: 10,
+                  background: 'transparent',
+                  border: `1px solid ${C.border}`,
+                  color: C.textMuted,
+                  fontFamily: FONT,
+                  cursor: 'pointer',
+                }}
+              >
+                {t('profileExpanded.cancel')}
+              </button>
+              <button
+                onClick={() => void handleDeletionContinue()}
+                style={{
+                  flex: 1,
+                  height: 40,
+                  borderRadius: 10,
+                  background: C.errorDim,
+                  border: `1px solid ${C.errorDim}`,
+                  color: C.error,
+                  fontFamily: FONT,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {t('profileExpanded.continue')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </PageShell>
   );
 }
-

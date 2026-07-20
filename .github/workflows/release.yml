@@ -1,0 +1,87 @@
+# .github/workflows/release.yml
+
+name: 1. Create Release PR
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version bump type'
+        required: false
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    name: Prepare Release PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Determine version bump
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ github.event.inputs.version }}" != "" ]]; then
+            echo "bump=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            COMMIT_MSG="${{ github.event.head_commit.message }}"
+            if [[ "$COMMIT_MSG" == *"[major]"* || "$COMMIT_MSG" == "feat!"* ]]; then
+              echo "bump=major" >> $GITHUB_OUTPUT
+            elif [[ "$COMMIT_MSG" == "feat"* ]]; then
+              echo "bump=minor" >> $GITHUB_OUTPUT
+            else
+              echo "bump=patch" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Bump version
+        id: bump
+        run: |
+          npm version ${{ steps.version.outputs.bump }} --no-git-tag-version
+          echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+        with:
+          configuration: ".github/changelog-config.json"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(release): prepare for ${{ steps.bump.outputs.version }}"
+          title: "🚀 Release ${{ steps.bump.outputs.version }}"
+          body: |
+            This PR was automatically generated to release version ${{ steps.bump.outputs.version }}.
+            
+            ${{ steps.changelog.outputs.changelog }}
+            
+            Please review the changes and merge to trigger the release.
+          branch: "release/${{ steps.bump.outputs.version }}"
+          base: "master"
+          labels: "release"
+          add-paths: |
+            package.json
+            package-lock.json

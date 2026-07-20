@@ -1,78 +1,39 @@
 # Mock Engine Launch Pack
 
-This pack gives the application engine a realistic canonical Supabase dataset
-for mock launch, QA rehearsals, demos, and pre-production smoke runs.
+This pack validates the production data contract before real traffic is enabled. It uses controlled seed data only and must not be run against a live production database after launch.
 
-Files:
+## Scope
 
-- `src/supabase/seeds/mock_engine_launch_pack.sql`
-- `src/supabase/seeds/mock_engine_smoke_checks.sql`
-- `src/supabase/migrations/20260401133000_align_canonical_rls_policies.sql`
+- Seed representative riders, drivers, vehicles, trips, bookings, packages, payments, and notifications.
+- Verify the Supabase runtime contract, RLS coverage, RPC grants, and worker queue assumptions.
+- Exercise web, mobile, and worker flows without external customer impact.
 
-## What It Seeds
+## Preconditions
 
-The launch pack creates a stable mock environment around the canonical schema:
+- `SUPABASE_DB_URL` points to the intended rehearsal database.
+- `VITE_SUPABASE_URL` and a current public key are configured.
+- Stripe, messaging, and notification providers are in test or sandbox mode.
+- The target database has a verified backup or disposable rehearsal data.
 
-- 5 users
-- 2 approved drivers
-- 2 active vehicles
-- 3 trips across real Jordan corridors
-- 2 confirmed bookings
-- 3 packages across assigned, in-transit, and delivered states
-- wallet balances plus transaction history
-- payment methods
-- verification records
-- notifications
-- trip presence rows for live engine surfaces
+## Apply Pack
 
-## Recommended Order
+```bash
+psql "$SUPABASE_DB_URL" -f supabase/seeds/mock_engine_launch_pack.sql
+psql "$SUPABASE_DB_URL" -f supabase/seeds/mock_engine_smoke_checks.sql
+npm run verify:supabase-rollout
+```
 
-1. Apply the canonical migrations.
-2. Apply `20260401133000_align_canonical_rls_policies.sql`.
-3. Run `mock_engine_launch_pack.sql`.
-4. Run `mock_engine_smoke_checks.sql`.
-5. Start the app and exercise the main engine flows.
+## Validation
 
-## Suggested Smoke Flows
+- Sign in as a seeded rider and driver.
+- Create a ride booking and confirm the booking status changes.
+- Create a package handoff and confirm package events are recorded.
+- Confirm wallet/payment rows are created only through approved RPC paths.
+- Confirm notifications are queued and delivery attempts are idempotent.
 
-Run these flows after seeding:
+## Exit Criteria
 
-- Search trips from `Amman` to `Irbid`
-- Open driver trips for Omar and Sara
-- Load wallet and wallet insights for Lina and Omar
-- Track package codes:
-  - `PKG-AMM-001`
-  - `PKG-AQB-002`
-  - `PKG-ZRQ-003`
-- Load notifications for seeded users
-- Open booking lists for the seeded trips
-
-## Mock Personas
-
-- `Lina Haddad`: verified passenger with active wallet and package activity
-- `Omar Nasser`: active driver with open and booked trips
-- `Sara Khoury`: active driver with long-haul route and package flow
-- `Kareem Saleh`: partially verified passenger for restricted-path testing
-- `Noor Hamdan`: admin reference persona
-
-## Important Notes
-
-- The seed pack uses fixed UUIDs on purpose so downstream demos and smoke checks
-  stay reproducible.
-- `auth_user_id` is left `NULL` for seeded mock identities. This is intentional:
-  the pack is for engine-state launch, not for real authentication sign-in.
-- If you want these personas to be sign-in capable, create real Supabase Auth
-  users first, then update `public.users.auth_user_id` to bind them.
-- Wallet balances are seeded to be operationally useful for demos; they are not
-  meant to represent audited accounting history.
-
-## Engine Readiness Criteria
-
-You can consider the mock engine ready when:
-
-- trip search returns seeded corridors
-- wallet reads return balances and transaction history
-- package tracking returns assigned, in-transit, and delivered examples
-- notifications render for at least one passenger and one driver
-- booking views load for both passenger-side and driver-side flows
-- no RLS errors appear on canonical insert/update operations used by the app
+- No seed SQL errors.
+- No RLS permission failures in expected user flows.
+- No direct frontend table access regressions.
+- Smoke checks pass and generated test rows are documented for cleanup.

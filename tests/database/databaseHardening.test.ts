@@ -1,10 +1,11 @@
+/** @vitest-environment node */
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const migrationPath = path.resolve(
   __dirname,
-  '../../src/supabase/migrations/20260401093000_database_hardening.sql',
+  '../../supabase/migrations/20260401093000_database_hardening.sql',
 );
 
 const scorecardPath = path.resolve(

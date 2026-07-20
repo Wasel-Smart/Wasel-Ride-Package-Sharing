@@ -1,10 +1,7 @@
 import type { WaselUser } from '../contexts/LocalAuth';
 
 export type TrustCapability =
-  | 'offer_ride'
-  | 'carry_packages'
-  | 'receive_payouts'
-  | 'priority_support';
+  'offer_ride' | 'carry_packages' | 'receive_payouts' | 'priority_support';
 
 export interface TrustGateResult {
   allowed: boolean;
@@ -26,25 +23,36 @@ function verificationRank(level?: string): number {
 }
 
 export function evaluateTrustCapability(
-  user: Pick<WaselUser, 'role' | 'verificationLevel' | 'walletStatus' | 'trustScore' | 'phoneVerified' | 'emailVerified'> | null | undefined,
+  user:
+    | Pick<
+        WaselUser,
+        | 'role'
+        | 'verificationLevel'
+        | 'walletStatus'
+        | 'trustScore'
+        | 'phoneVerified'
+        | 'emailVerified'
+      >
+    | null
+    | undefined,
   capability: TrustCapability,
 ): TrustGateResult {
   if (!user) {
     return {
       allowed: false,
       reason: 'Sign in to continue.',
-      recommendation: 'Open your account and complete verification first.',
+      recommendation: 'Open your account first.',
     };
   }
 
   const level = verificationRank(user.verificationLevel);
-  const walletBlocked = user.walletStatus === 'frozen';
+  const walletBlocked = user.walletStatus === 'frozen' || user.walletStatus === 'closed';
 
   if (walletBlocked && capability !== 'priority_support') {
     return {
       allowed: false,
-      reason: 'Wallet standing needs review before this action can continue.',
-      recommendation: 'Resolve wallet restrictions from Settings or Wallet.',
+      reason: 'Wallet needs review.',
+      recommendation: 'Fix wallet status in Wallet or Settings.',
     };
   }
 
@@ -52,15 +60,15 @@ export function evaluateTrustCapability(
     if (user.role !== 'driver' && user.role !== 'both') {
       return {
         allowed: false,
-        reason: 'Ride posting is limited to approved driver accounts.',
-        recommendation: 'Open Driver or Trust Center to start driver onboarding.',
+        reason: 'Turn on Driver mode first.',
+        recommendation: 'Open Driver to start.',
       };
     }
     if (level < 2 || !user.phoneVerified || !user.emailVerified) {
       return {
         allowed: false,
-        reason: 'Ride posting needs confirmed phone, email, and identity checks.',
-        recommendation: 'Complete account confirmation and driver verification before posting a ride.',
+        reason: 'Verify phone, email, and ID.',
+        recommendation: 'Finish checks in Trust Center.',
       };
     }
     return { allowed: true, reason: null, recommendation: null };
@@ -70,15 +78,15 @@ export function evaluateTrustCapability(
     if (user.role !== 'driver' && user.role !== 'both') {
       return {
         allowed: false,
-        reason: 'Package carrying is limited to approved driver accounts.',
-        recommendation: 'Complete driver onboarding before enabling parcel capacity.',
+        reason: 'Turn on Driver mode first.',
+        recommendation: 'Complete driver setup.',
       };
     }
     if (level < 3 || user.trustScore < 70) {
       return {
         allowed: false,
-        reason: 'Package carrying is limited to trusted riders.',
-        recommendation: 'Reach full driver verification and maintain strong trust standing first.',
+        reason: 'Packages need full trust approval.',
+        recommendation: 'Reach full driver verification first.',
       };
     }
     return { allowed: true, reason: null, recommendation: null };
@@ -88,8 +96,8 @@ export function evaluateTrustCapability(
     if (level < 2 || !user.emailVerified) {
       return {
         allowed: false,
-        reason: 'Payouts need an identity-verified account and confirmed email.',
-        recommendation: 'Confirm email and complete identity verification first.',
+        reason: 'Payouts need verified ID and email.',
+        recommendation: 'Finish account verification.',
       };
     }
     return { allowed: true, reason: null, recommendation: null };
@@ -98,8 +106,8 @@ export function evaluateTrustCapability(
   if (user.trustScore < 70) {
     return {
       allowed: false,
-      reason: 'Priority support is reserved for stronger trust standing.',
-      recommendation: 'Complete verification and maintain good trip completion.',
+      reason: 'Priority support needs stronger trust.',
+      recommendation: 'Complete checks and keep a good trip record.',
     };
   }
 
@@ -107,7 +115,18 @@ export function evaluateTrustCapability(
 }
 
 export function getTrustReadinessSummary(
-  user: Pick<WaselUser, 'role' | 'verificationLevel' | 'walletStatus' | 'trustScore' | 'phoneVerified' | 'emailVerified'> | null | undefined,
+  user:
+    | Pick<
+        WaselUser,
+        | 'role'
+        | 'verificationLevel'
+        | 'walletStatus'
+        | 'trustScore'
+        | 'phoneVerified'
+        | 'emailVerified'
+      >
+    | null
+    | undefined,
 ) {
   return {
     canOfferRide: evaluateTrustCapability(user, 'offer_ride').allowed,

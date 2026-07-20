@@ -1,18 +1,10 @@
 import type { WaselUser } from '../contexts/LocalAuth';
-import {
-  enqueueDirectAutomationJob,
-  getDirectRouteReminders,
-  markDirectRouteReminderDelivered,
-  upsertDirectRouteReminder,
-} from './directSupabase';
-import { isEdgeFunctionAvailable } from './core';
 import { notificationsAPI } from './notifications.js';
 import { getDemandAlerts } from './demandCapture';
 import { getGrowthEventFeed } from './growthEngine';
 import type { MovementPriceQuote } from './movementPricing';
 import { buildRouteIntelligenceSnapshot, type LiveCorridorSignal } from './routeDemandIntelligence';
 import { getRideBookings } from './rideLifecycle';
-import { routeMatchesLocationPair } from '../utils/jordanLocations';
 
 const REMINDER_KEY = 'wasel-route-reminders';
 
@@ -20,7 +12,6 @@ export type ReminderFrequency = 'weekdays' | 'daily' | 'weekly';
 
 export interface RouteReminder {
   id: string;
-  backendId?: string;
   corridorId: string;
   label: string;
   from: string;
@@ -31,7 +22,6 @@ export interface RouteReminder {
   enabled: boolean;
   createdAt: string;
   lastSentAt?: string;
-  syncedAt?: string;
 }
 
 export interface RecurringRouteSuggestion {
@@ -53,7 +43,7 @@ function readReminders(): RouteReminder[] {
   try {
     const raw = window.localStorage.getItem(REMINDER_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed as RouteReminder[] : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
@@ -62,28 +52,6 @@ function readReminders(): RouteReminder[] {
 function writeReminders(reminders: RouteReminder[]) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(REMINDER_KEY, JSON.stringify(reminders.slice(0, 30)));
-}
-
-function sortReminders(reminders: RouteReminder[]) {
-  return [...reminders].sort((left, right) => new Date(left.nextReminderAt).getTime() - new Date(right.nextReminderAt).getTime());
-}
-
-function upsertReminders(reminders: RouteReminder[]) {
-  const merged = [...readReminders()];
-  for (const reminder of reminders) {
-    const index = merged.findIndex((item) =>
-      item.id === reminder.id ||
-      (item.backendId && reminder.backendId && item.backendId === reminder.backendId) ||
-      item.corridorId === reminder.corridorId,
-    );
-    if (index >= 0) {
-      merged[index] = { ...merged[index], ...reminder };
-    } else {
-      merged.unshift(reminder);
-    }
-  }
-  writeReminders(sortReminders(merged));
-  return getRouteReminders();
 }
 
 function makeReminderId(corridorId: string) {
@@ -97,14 +65,18 @@ function toLocalDate(date = new Date()) {
 }
 
 function parseTimeParts(time: string) {
-  const [hours, minutes] = time.split(':').map((value) => Number(value));
+  const [hours = 7, minutes = 30] = time.split(':').map(value => Number(value));
   return {
     hours: Number.isFinite(hours) ? hours : 7,
     minutes: Number.isFinite(minutes) ? minutes : 30,
   };
 }
 
-function nextReminderDate(frequency: ReminderFrequency, preferredTime: string, fromDate = new Date()) {
+function nextReminderDate(
+  frequency: ReminderFrequency,
+  preferredTime: string,
+  fromDate = new Date(),
+) {
   const next = toLocalDate(fromDate);
   const { hours, minutes } = parseTimeParts(preferredTime);
   next.setHours(hours, minutes, 0, 0);
@@ -144,46 +116,17 @@ function buildReason(signal: LiveCorridorSignal, weeklyFrequency: number) {
   return `${signal.label} keeps showing strong live demand and credit-adjusted pricing, so it is ready for a recurring nudge.`;
 }
 
-function findSignal(from: string, to: string) {
-  const snapshot = buildRouteIntelligenceSnapshot();
-  return snapshot.allSignals.find((item) => routeMatchesLocationPair(item.from, item.to, from, to)) ?? null;
-}
-
-function mapRemoteReminder(row: Record<string, unknown>): RouteReminder {
-  return {
-    id: String(row.reminder_id ?? row.id ?? ''),
-    backendId: String(row.reminder_id ?? row.id ?? ''),
-    corridorId: String(row.corridor_id ?? ''),
-    label: String(row.label ?? ''),
-    from: String(row.origin_location ?? ''),
-    to: String(row.destination_location ?? ''),
-    frequency: row.frequency === 'weekdays' || row.frequency === 'weekly' ? row.frequency : 'daily',
-    preferredTime: String(row.preferred_time ?? '07:30'),
-    nextReminderAt: String(row.next_reminder_at ?? new Date().toISOString()),
-    enabled: row.enabled !== false,
-    createdAt: String(row.created_at ?? new Date().toISOString()),
-    lastSentAt: String(row.last_sent_at ?? '').trim() || undefined,
-    syncedAt: new Date().toISOString(),
-  };
-}
-
 export function getRouteReminders() {
-  return sortReminders(readReminders());
-}
-
-export async function hydrateRouteReminders(userId?: string) {
-  if (!userId) return getRouteReminders();
-  try {
-    const remote = await getDirectRouteReminders(userId);
-    const mapped = remote.map((row) => mapRemoteReminder(row as unknown as Record<string, unknown>));
-    return upsertReminders(mapped);
-  } catch {
-    return getRouteReminders();
-  }
+  return readReminders()
+    .slice()
+    .sort(
+      (left, right) =>
+        new Date(left.nextReminderAt).getTime() - new Date(right.nextReminderAt).getTime(),
+    );
 }
 
 export function getRouteReminderForCorridor(corridorId: string) {
-  return readReminders().find((reminder) => reminder.corridorId === corridorId) ?? null;
+  return readReminders().find(reminder => reminder.corridorId === corridorId) ?? null;
 }
 
 export function getRecurringRouteSuggestions(limit = 4) {
@@ -193,7 +136,7 @@ export function getRecurringRouteSuggestions(limit = 4) {
   const alerts = getDemandAlerts();
   const usageMap = new Map<string, { count: number; hours: number[] }>();
 
-  const addUsage = (signal: LiveCorridorSignal | undefined | null, timestamp?: string) => {
+  const addUsage = (signal: LiveCorridorSignal | undefined, timestamp?: string) => {
     if (!signal) return;
     const current = usageMap.get(signal.id) ?? { count: 0, hours: [] };
     current.count += 1;
@@ -207,33 +150,37 @@ export function getRecurringRouteSuggestions(limit = 4) {
   };
 
   for (const event of events) {
-    addUsage(
-      snapshot.allSignals.find((item) => routeMatchesLocationPair(item.from, item.to, event.from, event.to)),
-      event.createdAt,
-    );
+    const signal =
+      snapshot.allSignals.find(item => item.from === event.from && item.to === event.to) ??
+      snapshot.allSignals.find(item => item.from === event.to && item.to === event.from);
+    addUsage(signal, event.createdAt);
   }
 
   for (const booking of bookings) {
-    addUsage(
-      snapshot.allSignals.find((item) => routeMatchesLocationPair(item.from, item.to, booking.from, booking.to)),
-      booking.createdAt,
-    );
+    const signal =
+      snapshot.allSignals.find(item => item.from === booking.from && item.to === booking.to) ??
+      snapshot.allSignals.find(item => item.from === booking.to && item.to === booking.from);
+    addUsage(signal, booking.createdAt);
   }
 
   for (const alert of alerts) {
-    addUsage(
-      snapshot.allSignals.find((item) => routeMatchesLocationPair(item.from, item.to, alert.from, alert.to)),
-      alert.createdAt,
-    );
+    const signal =
+      snapshot.allSignals.find(item => item.from === alert.from && item.to === alert.to) ??
+      snapshot.allSignals.find(item => item.from === alert.to && item.to === alert.from);
+    addUsage(signal, alert.createdAt);
   }
 
   const suggestions = snapshot.allSignals
-    .map((signal) => {
+    .map(signal => {
       const usage = usageMap.get(signal.id);
       const weeklyFrequency = usage?.count ?? 0;
       const confidenceScore = Math.min(
         98,
-        Math.round((signal.forecastDemandScore * 0.58) + (signal.routeOwnershipScore * 0.18) + (weeklyFrequency * 5.4)),
+        Math.round(
+          signal.forecastDemandScore * 0.58 +
+            signal.routeOwnershipScore * 0.18 +
+            weeklyFrequency * 5.4,
+        ),
       );
       return {
         corridorId: signal.id,
@@ -244,19 +191,19 @@ export function getRecurringRouteSuggestions(limit = 4) {
         weeklyFrequency,
         reason: buildReason(signal, weeklyFrequency),
         recommendedTime: inferReminderTime(usage?.hours ?? []),
-        recommendedFrequency: weeklyFrequency >= 3 ? 'weekdays' : weeklyFrequency >= 1 ? 'weekly' : 'daily',
+        recommendedFrequency:
+          weeklyFrequency >= 3 ? 'weekdays' : weeklyFrequency >= 1 ? 'weekly' : 'daily',
         liveSignal: signal,
         priceQuote: signal.priceQuote,
       } satisfies RecurringRouteSuggestion;
     })
-    .filter((suggestion) => suggestion.confidenceScore >= 58)
+    .filter(suggestion => suggestion.confidenceScore >= 58)
     .sort((left, right) => right.confidenceScore - left.confidenceScore);
 
   return suggestions.slice(0, limit);
 }
 
 export function upsertRouteReminder(args: {
-  userId?: string;
   corridorId: string;
   label: string;
   from: string;
@@ -264,6 +211,7 @@ export function upsertRouteReminder(args: {
   preferredTime: string;
   frequency: ReminderFrequency;
 }) {
+  const reminders = readReminders();
   const nextReminderAt = nextReminderDate(args.frequency, args.preferredTime).toISOString();
   const nextReminder: RouteReminder = {
     id: makeReminderId(args.corridorId),
@@ -278,45 +226,25 @@ export function upsertRouteReminder(args: {
     createdAt: new Date().toISOString(),
   };
 
-  upsertReminders([nextReminder]);
-
-  if (args.userId) {
-    void upsertDirectRouteReminder(args.userId, {
-      corridorId: args.corridorId,
-      label: args.label,
-      from: args.from,
-      to: args.to,
-      preferredTime: args.preferredTime,
-      frequency: args.frequency,
-      nextReminderAt,
-      enabled: true,
-    })
-      .then((remote) => {
-        upsertReminders([mapRemoteReminder(remote as unknown as Record<string, unknown>)]);
-        const reminderId = String(remote.reminder_id ?? '');
-        return enqueueDirectAutomationJob({
-          userId: args.userId,
-          jobType: 'retention_nudge',
-          corridorId: args.corridorId,
-          from: args.from,
-          to: args.to,
-          payload: {
-            reminderId,
-            label: args.label,
-            frequency: args.frequency,
-            preferredTime: args.preferredTime,
-          },
-        }).catch(() => {});
-      })
-      .catch(() => {});
+  const index = reminders.findIndex(reminder => reminder.corridorId === args.corridorId);
+  if (index >= 0) {
+    const currentReminder = reminders[index];
+    if (!currentReminder) return nextReminder;
+    reminders[index] = {
+      ...currentReminder,
+      ...nextReminder,
+      createdAt: currentReminder.createdAt,
+    };
+  } else {
+    reminders.unshift(nextReminder);
   }
 
+  writeReminders(reminders);
   return nextReminder;
 }
 
-export function createReminderFromSuggestion(suggestion: RecurringRouteSuggestion, userId?: string) {
+export function createReminderFromSuggestion(suggestion: RecurringRouteSuggestion) {
   return upsertRouteReminder({
-    userId,
     corridorId: suggestion.corridorId,
     label: suggestion.label,
     from: suggestion.from,
@@ -327,23 +255,20 @@ export function createReminderFromSuggestion(suggestion: RecurringRouteSuggestio
 }
 
 export function formatRouteReminderSchedule(reminder: RouteReminder) {
-  const label = reminder.frequency === 'weekdays'
-    ? 'Weekdays'
-    : reminder.frequency === 'weekly'
-      ? 'Weekly'
-      : 'Daily';
+  const label =
+    reminder.frequency === 'weekdays'
+      ? 'Weekdays'
+      : reminder.frequency === 'weekly'
+        ? 'Weekly'
+        : 'Daily';
   return `${label} at ${reminder.preferredTime}`;
 }
 
-export async function syncRouteReminders(user?: Pick<WaselUser, 'id' | 'email' | 'phone'> | null) {
-  if (user?.id && isEdgeFunctionAvailable()) {
-    return [];
-  }
-
+export async function syncRouteReminders(user?: Pick<WaselUser, 'email' | 'phone'> | null) {
   let reminders = readReminders();
   const now = new Date();
   const dueReminders = reminders.filter(
-    (reminder) => reminder.enabled && new Date(reminder.nextReminderAt).getTime() <= now.getTime(),
+    reminder => reminder.enabled && new Date(reminder.nextReminderAt).getTime() <= now.getTime(),
   );
   if (dueReminders.length === 0) {
     return [];
@@ -352,36 +277,36 @@ export async function syncRouteReminders(user?: Pick<WaselUser, 'id' | 'email' |
   const delivered: string[] = [];
 
   for (const reminder of dueReminders) {
-    const signal = findSignal(reminder.from, reminder.to);
-    const nextReminderAt = nextReminderDate(reminder.frequency, reminder.preferredTime, now).toISOString();
-    reminders = reminders.map((item) => (
-      item.id === reminder.id
-        ? { ...item, lastSentAt: now.toISOString(), nextReminderAt }
-        : item
-    ));
+    const signal = buildRouteIntelligenceSnapshot({
+      from: reminder.from,
+      to: reminder.to,
+    }).selectedSignal;
+    const nextReminderAt = nextReminderDate(
+      reminder.frequency,
+      reminder.preferredTime,
+      now,
+    ).toISOString();
+    reminders = reminders.map(item =>
+      item.id === reminder.id ? { ...item, lastSentAt: now.toISOString(), nextReminderAt } : item,
+    );
     writeReminders(reminders);
 
-    await notificationsAPI.createNotification({
-      title: `Route reminder: ${reminder.label}`,
-      message: signal
-        ? `${signal.nextWaveWindow}. Live demand ${signal.forecastDemandScore}/100 and your current price is ${signal.priceQuote.finalPriceJod} JOD.`
-        : 'Your recurring route is ready to check again.',
-      type: 'trip_updates',
-      priority: 'medium',
-      action_url: `/app/find-ride?from=${encodeURIComponent(reminder.from)}&to=${encodeURIComponent(reminder.to)}&search=1`,
-      channels: ['in_app', 'push', 'email', 'sms'],
-      contact: {
-        email: user?.email,
-        phone: user?.phone,
-      },
-    }).catch(() => {});
-
-    if (reminder.backendId) {
-      void markDirectRouteReminderDelivered(reminder.backendId, {
-        nextReminderAt,
-        lastSentAt: now.toISOString(),
-      }).catch(() => {});
-    }
+    await notificationsAPI
+      .createNotification({
+        title: `Route reminder: ${reminder.label}`,
+        message: signal
+          ? `${signal.nextWaveWindow}. Live demand ${signal.forecastDemandScore}/100 and your current price is ${signal.priceQuote.finalPriceJod} JOD.`
+          : `Your recurring route is ready to check again.`,
+        type: 'trip_updates',
+        priority: 'medium',
+        action_url: `/app/find-ride?from=${encodeURIComponent(reminder.from)}&to=${encodeURIComponent(reminder.to)}&search=1`,
+        channels: ['in_app', 'push', 'email', 'sms'],
+        contact: {
+          email: user?.email,
+          phone: user?.phone,
+        },
+      })
+      .catch(() => {});
 
     delivered.push(reminder.id);
   }

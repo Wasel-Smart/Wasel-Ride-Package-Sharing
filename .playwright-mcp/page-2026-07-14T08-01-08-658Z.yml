@@ -1,0 +1,10 @@
+- generic [ref=e2]:
+  - region "Notifications alt+T" [ref=e3]
+  - generic [ref=e5]:
+    - generic [ref=e10]:
+      - generic [ref=e11]: Install Wasel
+      - generic [ref=e12]: Add to home screen for faster access and offline use.
+    - generic [ref=e13]:
+      - button "Dismiss install prompt" [ref=e14] [cursor=pointer]
+      - button "Install Wasel app" [ref=e19] [cursor=pointer]:
+        - generic [ref=e20]: Install

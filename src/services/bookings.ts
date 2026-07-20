@@ -1,18 +1,49 @@
-import { API_URL, fetchWithRetry, getAuthDetails } from './core';
+import { requestEdgeJson, runBackendWorkflow } from './backendWorkflow';
 import {
   createDirectBooking,
   getDirectTripBookings,
   getDirectUserBookings,
   updateDirectBookingStatus,
 } from './directSupabase';
-import {
-  bookingCreatePayloadSchema,
-  buildTraceHeaders,
-  withDataIntegrity,
-} from './dataIntegrity';
 
-function canUseEdgeApi(): boolean {
-  return Boolean(API_URL);
+export interface BookingRecord {
+  booking_id: string;
+  trip_id: string;
+  status: string;
+  seats_requested?: number;
+  pickup?: string;
+  dropoff?: string;
+  [key: string]: unknown;
+}
+
+export interface BookingListResponse {
+  bookings?: BookingRecord[];
+  data?: BookingRecord[];
+  [key: string]: unknown;
+}
+
+function normalizeBookingRecord(value: unknown): BookingRecord {
+  const record =
+    value && typeof value === 'object' && 'booking' in value
+      ? (value as { booking?: unknown }).booking
+      : value;
+  const raw = (record && typeof record === 'object' ? record : {}) as Record<string, unknown>;
+  const bookingId = String(raw.booking_id ?? raw.id ?? '');
+  const tripId = String(raw.trip_id ?? '');
+
+  return {
+    ...raw,
+    booking_id: bookingId,
+    trip_id: tripId,
+    status: String(raw.status ?? raw.booking_status ?? 'pending'),
+  };
+}
+
+function normalizeBookingList(bookings: unknown): BookingListResponse {
+  const list = Array.isArray(bookings) ? bookings : [];
+  return {
+    bookings: list.map(normalizeBookingRecord),
+  };
 }
 
 export const bookingsAPI = {
@@ -22,109 +53,90 @@ export const bookingsAPI = {
     pickup?: string,
     dropoff?: string,
     metadata?: Record<string, unknown>,
-  ) {
-    const { token, userId } = await getAuthDetails();
-
-    return withDataIntegrity({
-      operation: 'booking.create.api',
-      schema: bookingCreatePayloadSchema,
-      payload: { tripId, userId, seatsRequested, pickup, dropoff, metadata },
-      execute: async ({ requestId, payload }) => {
-        if (!canUseEdgeApi()) {
-          return createDirectBooking(payload);
-        }
-
-        let response: Response;
-        try {
-          response = await fetchWithRetry(`${API_URL}/bookings`, {
-            method: 'POST',
-            headers: buildTraceHeaders(requestId, {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            }),
-            body: JSON.stringify({
-              trip_id: payload.tripId,
-              seats_requested: payload.seatsRequested,
-              pickup_stop: payload.pickup,
-              dropoff_stop: payload.dropoff,
-              ...payload.metadata,
-            }),
-          });
-        } catch {
-          return createDirectBooking(payload);
-        }
-
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({ error: 'Failed to create booking' }));
-          throw new Error(error.error || 'Failed to create booking');
-        }
-
-        return await response.json();
-      },
+  ): Promise<BookingRecord> {
+    return runBackendWorkflow({
+      operation: 'Booking creation',
+      authMode: 'required',
+      fallbackPolicy: 'writes-if-enabled',
+      fallback: async ({ userId }) =>
+        normalizeBookingRecord(
+          await createDirectBooking({
+            tripId,
+            userId: userId ?? '',
+            seatsRequested,
+            pickup,
+            dropoff,
+            metadata,
+          }),
+        ),
+      edge: context =>
+        requestEdgeJson<BookingRecord>({
+          path: '/bookings',
+          method: 'POST',
+          authMode: 'required',
+          context,
+          body: {
+            trip_id: tripId,
+            seats_requested: seatsRequested,
+            pickup_stop: pickup,
+            dropoff_stop: dropoff,
+            ...metadata,
+          },
+          operation: 'Failed to create booking',
+        }),
     });
   },
 
-  async getUserBookings() {
-    const { token, userId } = await getAuthDetails();
-
-    if (!canUseEdgeApi()) {
-      return getDirectUserBookings(userId);
-    }
-
-    const response = await fetchWithRetry(`${API_URL}/bookings/user/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  async getUserBookings(): Promise<BookingListResponse> {
+    return runBackendWorkflow({
+      operation: 'User booking loading',
+      authMode: 'required',
+      fallback: async ({ userId }) =>
+        normalizeBookingList(await getDirectUserBookings(userId ?? '')),
+      edge: context =>
+        requestEdgeJson<BookingListResponse>({
+          path: `/bookings/user/${context.userId}`,
+          authMode: 'required',
+          context,
+          operation: 'Failed to fetch bookings',
+        }),
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch bookings');
-    }
-
-    return await response.json();
   },
 
-  async getTripBookings(tripId: string) {
-    const { token } = await getAuthDetails();
-
-    if (!canUseEdgeApi()) {
-      return getDirectTripBookings(tripId);
-    }
-
-    const response = await fetchWithRetry(`${API_URL}/trips/${tripId}/bookings`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  async getTripBookings(tripId: string): Promise<BookingListResponse> {
+    return runBackendWorkflow({
+      operation: 'Trip booking loading',
+      authMode: 'required',
+      fallback: async () => normalizeBookingList(await getDirectTripBookings(tripId)),
+      edge: context =>
+        requestEdgeJson<BookingListResponse>({
+          path: `/trips/${tripId}/bookings`,
+          authMode: 'required',
+          context,
+          operation: 'Failed to fetch trip bookings',
+        }),
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch trip bookings');
-    }
-
-    return await response.json();
   },
 
-  async updateBookingStatus(bookingId: string, status: 'accepted' | 'rejected' | 'cancelled') {
-    const { token } = await getAuthDetails();
-
-    if (!canUseEdgeApi()) {
-      return updateDirectBookingStatus(bookingId, status);
-    }
-
-    const response = await fetchWithRetry(`${API_URL}/bookings/${bookingId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ status }),
+  async updateBookingStatus(
+    bookingId: string,
+    status: 'accepted' | 'rejected' | 'cancelled',
+  ): Promise<BookingRecord> {
+    return runBackendWorkflow({
+      operation: 'Booking update',
+      authMode: 'required',
+      fallbackPolicy: 'writes-if-enabled',
+      fallback: async () =>
+        normalizeBookingRecord(await updateDirectBookingStatus(bookingId, status)),
+      edge: context =>
+        requestEdgeJson<BookingRecord>({
+          path: `/bookings/${bookingId}`,
+          method: 'PUT',
+          authMode: 'required',
+          context,
+          body: { status },
+          operation: 'Failed to update booking',
+        }),
     });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Failed to update booking' }));
-      throw new Error(error.error || 'Failed to update booking');
-    }
-
-    return await response.json();
   },
 };

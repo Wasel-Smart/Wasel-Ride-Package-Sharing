@@ -1,15 +1,16 @@
-import type { WaselUser } from '../../contexts/LocalAuth';
-
 export type WalletRuntimeMode = 'redirect' | 'live' | 'unavailable';
 
 export function resolveWalletRuntimeMode({
-  localUser,
+  hasUser,
   backendReady,
+  localFallbackReady = false,
 }: {
-  localUser: WaselUser | null;
+  hasUser: boolean;
   backendReady: boolean;
+  localFallbackReady?: boolean;
 }): WalletRuntimeMode {
-  if (!localUser) return 'redirect';
+  if (!hasUser) return 'redirect';
+  if (localFallbackReady) return 'live';
   if (!backendReady) return 'unavailable';
   return 'live';
 }

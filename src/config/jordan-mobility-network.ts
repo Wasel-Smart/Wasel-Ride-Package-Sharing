@@ -1,8 +1,3 @@
-import {
-  locationsOverlap,
-  resolveRepresentativeCity,
-} from '../utils/jordanLocations';
-
 /**
  * Jordan Mobility Network - 12 Core Routes
  * Pre-configured routes with coordinates, distances, and pricing.
@@ -221,27 +216,25 @@ export const JORDAN_MOBILITY_NETWORK: JordanRoute[] = [
 ];
 
 export function getRoute(routeId: string): JordanRoute | undefined {
-  return JORDAN_MOBILITY_NETWORK.find((route) => route.id === routeId);
+  return JORDAN_MOBILITY_NETWORK.find(route => route.id === routeId);
 }
 
 export function getRoutesFrom(city: string): JordanRoute[] {
-  return JORDAN_MOBILITY_NETWORK.filter(
-    (route) => locationsOverlap(route.origin, city),
-  );
+  return JORDAN_MOBILITY_NETWORK.filter(route => route.origin.toLowerCase() === city.toLowerCase());
 }
 
 export function getRoutesTo(city: string): JordanRoute[] {
   return JORDAN_MOBILITY_NETWORK.filter(
-    (route) => locationsOverlap(route.destination, city),
+    route => route.destination.toLowerCase() === city.toLowerCase(),
   );
 }
 
 export function getRouteBetween(city1: string, city2: string): JordanRoute | undefined {
-  const c1 = resolveRepresentativeCity(city1).toLowerCase();
-  const c2 = resolveRepresentativeCity(city2).toLowerCase();
+  const c1 = city1.toLowerCase();
+  const c2 = city2.toLowerCase();
 
   return JORDAN_MOBILITY_NETWORK.find(
-    (route) =>
+    route =>
       (route.origin.toLowerCase() === c1 && route.destination.toLowerCase() === c2) ||
       (route.origin.toLowerCase() === c2 && route.destination.toLowerCase() === c1),
   );
@@ -249,7 +242,7 @@ export function getRouteBetween(city1: string, city2: string): JordanRoute | und
 
 export function getAllCities(): string[] {
   const cities = new Set<string>();
-  JORDAN_MOBILITY_NETWORK.forEach((route) => {
+  JORDAN_MOBILITY_NETWORK.forEach(route => {
     cities.add(route.origin);
     cities.add(route.destination);
   });
@@ -257,7 +250,7 @@ export function getAllCities(): string[] {
 }
 
 export function getPopularRoutes(): JordanRoute[] {
-  return JORDAN_MOBILITY_NETWORK.filter((route) => route.popularity === 'high');
+  return JORDAN_MOBILITY_NETWORK.filter(route => route.popularity === 'high');
 }
 
 export function calculateFare(

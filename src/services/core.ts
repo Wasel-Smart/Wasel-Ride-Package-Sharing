@@ -4,12 +4,19 @@ import {
   supabase as supabaseClient,
   supabaseUrl,
 } from '../utils/supabase/client';
+import { validateApiUrl } from '../utils/sanitization';
+import { addCSRFHeader } from '../utils/csrf';
+import { circuitBreakers, CircuitState } from '../utils/circuitBreaker';
 
 export { projectId, publicAnonKey };
 
 const configuredApiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
-const configuredFunctionsBaseUrl = (import.meta.env.VITE_EDGE_FUNCTIONS_BASE_URL as string | undefined)?.trim();
-const configuredFunctionName = (import.meta.env.VITE_EDGE_FUNCTION_NAME as string | undefined)?.trim();
+const configuredFunctionsBaseUrl = (
+  import.meta.env.VITE_EDGE_FUNCTIONS_BASE_URL as string | undefined
+)?.trim();
+const configuredFunctionName = (
+  import.meta.env.VITE_EDGE_FUNCTION_NAME as string | undefined
+)?.trim();
 const defaultFunctionsBaseUrl = supabaseUrl ? `${supabaseUrl}/functions/v1` : '';
 const resolvedFunctionsBaseUrl = configuredFunctionsBaseUrl || defaultFunctionsBaseUrl;
 const resolvedFunctionName = configuredFunctionName || 'make-server-0b1f4071';
@@ -30,12 +37,61 @@ export interface AvailabilitySnapshot {
   lastCheckedAt: number | null;
 }
 
+export function createEdgeHeaders(
+  headers?: HeadersInit,
+  userToken?: string,
+  includeCSRF = true,
+): Headers {
+  let headersInit = headers ?? {};
+
+  // Add CSRF token for state-changing operations
+  if (includeCSRF) {
+    headersInit = addCSRFHeader(headersInit);
+  }
+
+  const finalHeaders = new Headers(headersInit);
+
+  if (publicAnonKey && !finalHeaders.has('apikey')) {
+    finalHeaders.set('apikey', publicAnonKey);
+  }
+
+  if (userToken) {
+    finalHeaders.set('Authorization', `Bearer ${userToken}`);
+  }
+
+  return finalHeaders;
+}
+
 type AvailabilityListener = (snapshot: AvailabilitySnapshot) => void;
 
 let edgeFunctionAvailable = Boolean(supabaseClient || API_URL);
 let backendStatus: BackendStatus = supabaseClient ? 'unknown' : 'degraded';
 let lastCheckedAt: number | null = null;
+let loggedLocalHealthBypass = false;
 const availabilityListeners = new Set<AvailabilityListener>();
+
+function shouldPreferDirectSupabaseHealth(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  try {
+    const { hostname, protocol } = new URL(window.location.origin);
+    const isLocalOrigin =
+      protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1');
+
+    if (isLocalOrigin && import.meta.env.DEV && !loggedLocalHealthBypass) {
+      loggedLocalHealthBypass = true;
+      if (import.meta.env.DEV) {
+        console.info('[Wasel] Local dev origin detected, bypassing remote edge health probe.');
+      }
+    }
+
+    return isLocalOrigin;
+  } catch {
+    return false;
+  }
+}
 
 async function markSupabaseHealth(): Promise<boolean> {
   if (!supabaseClient) {
@@ -81,7 +137,7 @@ function buildAvailabilitySnapshot(): AvailabilitySnapshot {
 
 function notifyAvailabilityListeners(): void {
   const snapshot = buildAvailabilitySnapshot();
-  availabilityListeners.forEach((listener) => listener(snapshot));
+  availabilityListeners.forEach(listener => listener(snapshot));
 }
 
 function setEdgeFunctionAvailability(nextValue: boolean): void {
@@ -115,6 +171,14 @@ export function subscribeAvailability(listener: AvailabilityListener): () => voi
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
     notifyAvailabilityListeners();
+    // Reset circuit breaker when network comes back online
+    const breaker = circuitBreakers.get('api-calls');
+    if (breaker.getState() === CircuitState.OPEN) {
+      breaker.reset();
+      if (import.meta.env.DEV) {
+        console.info('[Wasel] API circuit breaker reset due to network recovery');
+      }
+    }
   });
 
   window.addEventListener('offline', () => {
@@ -144,7 +208,7 @@ export async function probeBackendHealth(timeout = 8_000): Promise<AvailabilityS
     return buildAvailabilitySnapshot();
   }
 
-  if (!API_URL || !publicAnonKey) {
+  if (!API_URL || !publicAnonKey || shouldPreferDirectSupabaseHealth()) {
     await markSupabaseHealth();
     return buildAvailabilitySnapshot();
   }
@@ -152,7 +216,7 @@ export async function probeBackendHealth(timeout = 8_000): Promise<AvailabilityS
   try {
     const response = await fetch(`${API_URL}/health`, {
       signal: AbortSignal.timeout(timeout),
-      headers: { Authorization: `Bearer ${publicAnonKey}` },
+      headers: createEdgeHeaders(),
     });
 
     if (response.ok) {
@@ -178,7 +242,7 @@ export async function warmUpServer(): Promise<void> {
     return;
   }
 
-  if (!API_URL || !publicAnonKey) {
+  if (!API_URL || !publicAnonKey || shouldPreferDirectSupabaseHealth()) {
     serverWarm = await markSupabaseHealth();
     return;
   }
@@ -188,7 +252,7 @@ export async function warmUpServer(): Promise<void> {
   try {
     const response = await fetch(`${API_URL}/health`, {
       signal: AbortSignal.timeout(12_000),
-      headers: { Authorization: `Bearer ${publicAnonKey}` },
+      headers: createEdgeHeaders(),
     });
 
     if (response.ok) {
@@ -245,8 +309,6 @@ warmUpServer().catch(() => {
 
 interface FetchWithRetryOptions extends RequestInit {
   timeout?: number;
-  queuePriority?: 'critical' | 'high' | 'normal' | 'low';
-  deduplicationKey?: string;
 }
 
 export async function fetchWithRetry(
@@ -256,127 +318,118 @@ export async function fetchWithRetry(
   backoff = 500,
 ): Promise<Response> {
   if (!url) {
-    throw new Error('Backend API is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+    throw new Error(
+      'Backend API is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.',
+    );
   }
 
-  const {
-    timeout = 5_000,
-    signal: callerSignal,
-    queuePriority = 'normal',
-    deduplicationKey,
-    ...fetchOptions
-  } = options;
+  // Validate URL to prevent SSRF attacks
+  const allowedDomains = ['supabase.co', 'supabase.net', 'wasel14.online', 'localhost'];
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
-
-  if (callerSignal?.aborted) {
-    clearTimeout(timer);
-    throw new DOMException('Request aborted', 'AbortError');
+  if (!validateApiUrl(url, allowedDomains)) {
+    throw new Error('Invalid or unauthorized URL');
   }
 
-  const onCallerAbort = () => controller.abort();
-  callerSignal?.addEventListener('abort', onCallerAbort, { once: true });
+  // Use circuit breaker for API calls
+  const breaker = circuitBreakers.get('api-calls', {
+    failureThreshold: 5,
+    timeout: 10000,
+  });
 
-  try {
-    const response = await fetch(url, {
-      ...fetchOptions,
-      signal: controller.signal,
-    });
+  return breaker.execute(async () => {
+    const { timeout = 5_000, signal: callerSignal, ...fetchOptions } = options;
 
-    if (response.ok) {
-      setBackendStatus('healthy');
-      if (edgeFunctionAvailable || url.includes('/health')) {
-        setEdgeFunctionAvailability(true);
-      }
+    // Add CSRF token for state-changing operations
+    if (fetchOptions.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(fetchOptions.method)) {
+      fetchOptions.headers = addCSRFHeader(fetchOptions.headers);
     }
 
-    if (retries > 0 && [502, 503, 504].includes(response.status)) {
-      await delay(backoff);
-      return fetchWithRetry(url, options, retries - 1, backoff * 2);
-    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
 
-    if (!response.ok && response.status >= 500) {
-      setBackendStatus(getNetworkOnline() ? 'degraded' : 'offline');
-      // Queue for retry on 5xx errors
-      try {
-        const { getOfflineQueueManager } = await import('./offlineQueue');
-        const queue = getOfflineQueueManager();
-        queue.addRequest(
-          (options.method?.toUpperCase() || 'GET') as any,
-          url,
-          {
-            body: options.body,
-            headers: options.headers as Record<string, string>,
-            priority: queuePriority,
-            deduplicationKey,
-            maxRetries: retries + 3,
-          }
-        );
-      } catch (e) {
-        // Offline queue not available
-      }
-    }
-
-    return response;
-  } catch (error: unknown) {
     if (callerSignal?.aborted) {
-      throw error;
+      clearTimeout(timer);
+      throw new DOMException('Request aborted', 'AbortError');
     }
 
-    const isRetryable =
-      error instanceof TypeError ||
-      (error instanceof DOMException && error.name === 'AbortError');
+    const onCallerAbort = () => controller.abort();
+    callerSignal?.addEventListener('abort', onCallerAbort, { once: true });
 
-    if (retries > 0 && isRetryable) {
-      await delay(backoff);
-      return fetchWithRetry(url, options, retries - 1, backoff * 2);
-    }
+    try {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        signal: controller.signal,
+      });
 
-    setBackendStatus(getNetworkOnline() ? 'degraded' : 'offline');
-
-    if (url.startsWith(API_URL)) {
-      setEdgeFunctionAvailability(false);
-    }
-
-    // Network error - queue for later
-    if (!getNetworkOnline()) {
-      try {
-        const { getOfflineQueueManager } = await import('./offlineQueue');
-        const queue = getOfflineQueueManager();
-        queue.addRequest(
-          (options.method?.toUpperCase() || 'GET') as any,
-          url,
-          {
-            body: options.body,
-            headers: options.headers as Record<string, string>,
-            priority:
-              queuePriority === 'critical'
-                ? 'critical'
-                : queuePriority === 'high'
-                  ? 'high'
-                  : 'normal',
-            deduplicationKey,
-            maxRetries: 5,
-          }
-        );
-      } catch (e) {
-        // Offline queue not available
+      if (response.ok) {
+        setBackendStatus('healthy');
+        if (!edgeFunctionAvailable && url.includes('/health')) {
+          setEdgeFunctionAvailability(true);
+        }
       }
-    }
 
-    throw error;
-  } finally {
-    clearTimeout(timer);
-    callerSignal?.removeEventListener('abort', onCallerAbort);
-  }
+      if (retries > 0 && [502, 503, 504].includes(response.status)) {
+        await delay(backoff);
+        return fetchWithRetry(url, options, retries - 1, backoff * 2);
+      }
+
+      if (!response.ok && response.status >= 500) {
+        setBackendStatus(getNetworkOnline() ? 'degraded' : 'offline');
+      }
+
+      return response;
+    } catch (error: unknown) {
+      if (callerSignal?.aborted) {
+        throw error;
+      }
+
+      const isRetryable =
+        error instanceof TypeError ||
+        (error instanceof DOMException && error.name === 'AbortError');
+
+      if (retries > 0 && isRetryable) {
+        await delay(backoff);
+        return fetchWithRetry(url, options, retries - 1, backoff * 2);
+      }
+
+      setBackendStatus(getNetworkOnline() ? 'degraded' : 'offline');
+
+      if (url.startsWith(API_URL)) {
+        setEdgeFunctionAvailability(false);
+      }
+
+      throw error;
+    } finally {
+      clearTimeout(timer);
+      callerSignal?.removeEventListener('abort', onCallerAbort);
+    }
+  });
 }
 
 function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export const supabase = supabaseClient;
+
+/**
+ * Reset the API circuit breaker to recover from OPEN state
+ */
+export function resetApiCircuitBreaker(): void {
+  const breaker = circuitBreakers.get('api-calls');
+  breaker.reset();
+  if (import.meta.env.DEV) {
+    console.info('[Wasel] API circuit breaker manually reset');
+  }
+}
+
+/**
+ * Get the current state of the API circuit breaker
+ */
+export function getApiCircuitBreakerState() {
+  const breaker = circuitBreakers.get('api-calls');
+  return breaker.getStats();
+}
 
 export interface AuthDetails {
   token: string;
@@ -388,12 +441,26 @@ export async function getAuthDetails(): Promise<AuthDetails> {
     throw new Error('Supabase client is not initialised');
   }
 
-  const { data: { session }, error } = await supabase.auth.getSession();
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
   if (error) {
     throw error;
   }
-  if (!session) {
-    throw new Error('Not authenticated');
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const needsRefresh = !session || (session.expires_at ?? 0) - nowSeconds < 60;
+
+  if (needsRefresh) {
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError || !refreshed.session) {
+      throw new Error('Session expired. Please sign in again.');
+    }
+    return {
+      token: refreshed.session.access_token,
+      userId: refreshed.session.user.id,
+    };
   }
 
   return {

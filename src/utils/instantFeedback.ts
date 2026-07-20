@@ -22,9 +22,12 @@ class InstantFeedbackEngine {
     // DEFER INITIALIZATION to avoid blocking FID
     if (typeof window !== 'undefined') {
       // Use requestIdleCallback to initialize non-critical features
-      requestIdleCallback(() => {
-        this.lazyInit();
-      }, { timeout: 2000 });
+      requestIdleCallback(
+        () => {
+          this.lazyInit();
+        },
+        { timeout: 2000 },
+      );
     }
   }
 
@@ -33,19 +36,22 @@ class InstantFeedbackEngine {
    */
   private lazyInit(): void {
     if (this.initialized) return;
-    
+
     // Check for haptic feedback support
     this.supportsHaptics = 'vibrate' in navigator;
-    
+
     // Initialize audio context for audio feedback (deferred)
     if ('AudioContext' in window || 'webkitAudioContext' in window) {
       try {
-        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      } catch (e) {
+        const AudioCtor =
+          window.AudioContext ||
+          (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (AudioCtor) this.audioContext = new AudioCtor();
+      } catch {
         // Ignore - audio not critical
       }
     }
-    
+
     this.initialized = true;
   }
 
@@ -63,11 +69,11 @@ class InstantFeedbackEngine {
       heavy: 30,
       success: [10, 50, 10],
       warning: [20, 100, 20],
-      error: [30, 100, 30, 100, 30]
+      error: [30, 100, 30, 100, 30],
     };
 
     const pattern = patterns[type];
-    
+
     // Use try-catch to prevent any blocking
     try {
       if (Array.isArray(pattern)) {
@@ -75,7 +81,7 @@ class InstantFeedbackEngine {
       } else {
         navigator.vibrate(pattern);
       }
-    } catch (e) {
+    } catch {
       // Ignore vibration errors silently
     }
   }
@@ -85,20 +91,23 @@ class InstantFeedbackEngine {
    * Target: <16ms (1 frame at 60fps)
    * OPTIMIZED: Uses transform and will-change for GPU acceleration
    */
-  ripple(element: HTMLElement, options: { x: number; y: number; color?: string } = { x: 0, y: 0 }): void {
+  ripple(
+    element: HTMLElement,
+    options: { x: number; y: number; color?: string } = { x: 0, y: 0 },
+  ): void {
     // Skip if element doesn't exist
     if (!element) return;
-    
+
     // Use requestAnimationFrame to avoid blocking
     requestAnimationFrame(() => {
       // Use CSS animations for performance
       const ripple = document.createElement('span');
       const rect = element.getBoundingClientRect();
-      
+
       const size = Math.max(rect.width, rect.height);
       const x = options.x - rect.left - size / 2;
       const y = options.y - rect.top - size / 2;
-      
+
       ripple.style.cssText = `
         position: absolute;
         border-radius: 50%;
@@ -112,9 +121,9 @@ class InstantFeedbackEngine {
         will-change: transform, opacity;
         animation: ripple-animation 0.6s cubic-bezier(0.4, 0, 0.2, 1);
       `;
-      
+
       element.appendChild(ripple);
-      
+
       // Remove ripple after animation (using setTimeout to avoid blocking)
       setTimeout(() => {
         if (ripple.parentNode) {
@@ -133,7 +142,7 @@ class InstantFeedbackEngine {
     element.style.transition = 'transform 0.1s cubic-bezier(0.4, 0, 0.2, 1)';
     element.style.transform = `scale(${scale})`;
     element.style.willChange = 'transform';
-    
+
     // Reset after brief moment
     setTimeout(() => {
       element.style.transform = 'scale(1)';
@@ -154,19 +163,22 @@ class InstantFeedbackEngine {
     try {
       const oscillator = this.audioContext.createOscillator();
       const gainNode = this.audioContext.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(this.audioContext.destination);
-      
+
       oscillator.frequency.value = frequency;
       oscillator.type = type;
-      
+
       gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
-      
+      gainNode.gain.exponentialRampToValueAtTime(
+        0.01,
+        this.audioContext.currentTime + duration / 1000,
+      );
+
       oscillator.start(this.audioContext.currentTime);
       oscillator.stop(this.audioContext.currentTime + duration / 1000);
-    } catch (e) {
+    } catch {
       // Ignore audio errors silently
     }
   }
@@ -177,14 +189,10 @@ class InstantFeedbackEngine {
    * OPTIMIZED: Non-blocking
    */
   instant(element: HTMLElement, type: FeedbackType = 'light', options: FeedbackOptions = {}): void {
-    const {
-      haptic = true,
-      visual = true,
-      audio = false,
-    } = options;
+    const { haptic = true, visual = true, audio = false } = options;
 
     // All feedback runs in parallel for <50ms total time
-    
+
     // Haptic (<10ms)
     if (haptic) {
       this.haptic(type);
@@ -203,7 +211,7 @@ class InstantFeedbackEngine {
         heavy: 659,
         success: 523,
         warning: 440,
-        error: 330
+        error: 330,
       };
       this.playTone(frequencies[type], 30);
     }
@@ -213,16 +221,12 @@ class InstantFeedbackEngine {
    * Touch-optimized event handler
    * Provides instant feedback on touch
    */
-  attachTouchFeedback(element: HTMLElement, type: FeedbackType = 'light', options: FeedbackOptions = {}): () => void {
+  attachTouchFeedback(element: HTMLElement, type: FeedbackType = 'light'): () => void {
     const handleTouchStart = (e: TouchEvent) => {
       // Provide immediate feedback
       const touch = e.touches[0];
-      if (options.haptic !== false) {
-        this.haptic(type);
-      }
-      if (options.audio) {
-        this.playTone(440, 30);
-      }
+      if (!touch) return;
+      this.haptic(type);
       this.ripple(element, { x: touch.clientX, y: touch.clientY });
     };
 
@@ -248,14 +252,9 @@ class InstantFeedbackEngine {
    * Mouse-optimized event handler
    * Provides instant feedback on click
    */
-  attachClickFeedback(element: HTMLElement, type: FeedbackType = 'light', options: FeedbackOptions = {}): () => void {
+  attachClickFeedback(element: HTMLElement, type: FeedbackType = 'light'): () => void {
     const handleMouseDown = (e: MouseEvent) => {
-      if (options.haptic !== false) {
-        this.haptic(type);
-      }
-      if (options.audio) {
-        this.playTone(440, 30);
-      }
+      this.haptic(type);
       this.ripple(element, { x: e.clientX, y: e.clientY });
       this.scalePress(element);
     };
@@ -285,6 +284,7 @@ export const instantFeedback = new InstantFeedbackEngine();
 import { useEffect, useRef } from 'react';
 
 export function useInstantFeedback(type: FeedbackType = 'light', options: FeedbackOptions = {}) {
+  void options;
   const elementRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -292,8 +292,8 @@ export function useInstantFeedback(type: FeedbackType = 'light', options: Feedba
     if (!element) return;
 
     // Attach both touch and click feedback
-    const cleanupTouch = instantFeedback.attachTouchFeedback(element, type, options);
-    const cleanupClick = instantFeedback.attachClickFeedback(element, type, options);
+    const cleanupTouch = instantFeedback.attachTouchFeedback(element, type);
+    const cleanupClick = instantFeedback.attachClickFeedback(element, type);
 
     return () => {
       cleanupTouch();

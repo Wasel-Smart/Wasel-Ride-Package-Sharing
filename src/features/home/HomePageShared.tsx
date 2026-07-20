@@ -1,55 +1,144 @@
-/* eslint-disable react-refresh/only-export-components */
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ChevronRight, ChevronUp, Info, Phone } from 'lucide-react';
-import { type SupportedCurrency, useCurrency } from '../../utils/currency';
+import { CurrencyService, type SupportedCurrency } from '../../utils/currency';
+import { C as TOKENS, F as FONT_SANS, R, SH, TYPE } from '../../utils/wasel-ds';
 
 export const C = {
-  bg: '#061726',
-  card: '#0B2135',
-  card2: '#102B44',
-  s3: '#14334F',
-  cyan: '#16C7F2',
-  cyanDim: 'rgba(22,199,242,0.12)',
-  gold: '#C7FF1A',
-  goldDim: 'rgba(199,255,26,0.12)',
-  green: '#60C536',
-  greenDim: 'rgba(96,197,54,0.12)',
-  purple: '#8B5CF6',
-  purpleDim: 'rgba(139,92,246,0.12)',
-  red: '#FF4455',
-  redDim: 'rgba(255,68,85,0.12)',
-  border: 'rgba(73,190,242,0.14)',
-  text: '#EAF7FF',
-  textMuted: 'rgba(153,184,210,0.75)',
-  textDim: 'rgba(153,184,210,0.55)',
+  ...TOKENS,
+  s3: TOKENS.card2,
+  red: TOKENS.error,
+  redDim: TOKENS.errorDim,
 } as const;
 
-export const F = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
-export const glass = (op = 0.68) => `rgba(11,33,53,${op})`;
+export const F = FONT_SANS;
+export const glass = (_op = 0.84) => C.glass;
 
 export const POPULAR_ROUTES = [
-  { from: 'Amman', fromAr: 'عمان', to: 'Aqaba', toAr: 'العقبة', dist: 330, priceJod: 8, icon: 'A', color: C.cyan },
-  { from: 'Amman', fromAr: 'عمان', to: 'Irbid', toAr: 'إربد', dist: 85, priceJod: 3, icon: 'I', color: C.green },
-  { from: 'Amman', fromAr: 'عمان', to: 'Dead Sea', toAr: 'البحر الميت', dist: 60, priceJod: 5, icon: 'D', color: C.cyan },
-  { from: 'Amman', fromAr: 'عمان', to: 'Petra', toAr: 'البترا', dist: 250, priceJod: 12, icon: 'P', color: C.gold },
-  { from: 'Amman', fromAr: 'عمان', to: 'Wadi Rum', toAr: 'وادي رم', dist: 320, priceJod: 15, icon: 'W', color: C.gold },
-  { from: 'Amman', fromAr: 'عمان', to: 'Zarqa', toAr: 'الزرقاء', dist: 30, priceJod: 2, icon: 'Z', color: C.purple },
+  {
+    from: 'Amman',
+    fromAr: 'عمان',
+    to: 'Aqaba',
+    toAr: 'العقبة',
+    dist: 330,
+    priceJod: 8,
+    icon: 'A',
+    color: C.cyan,
+  },
+  {
+    from: 'Amman',
+    fromAr: 'عمان',
+    to: 'Irbid',
+    toAr: 'إربد',
+    dist: 85,
+    priceJod: 3,
+    icon: 'I',
+    color: C.green,
+  },
+  {
+    from: 'Amman',
+    fromAr: 'عمان',
+    to: 'Dead Sea',
+    toAr: 'البحر الميت',
+    dist: 60,
+    priceJod: 5,
+    icon: 'D',
+    color: C.cyan,
+  },
+  {
+    from: 'Amman',
+    fromAr: 'عمان',
+    to: 'Petra',
+    toAr: 'البتراء',
+    dist: 250,
+    priceJod: 12,
+    icon: 'P',
+    color: C.gold,
+  },
+  {
+    from: 'Amman',
+    fromAr: 'عمان',
+    to: 'Wadi Rum',
+    toAr: 'وادي رم',
+    dist: 320,
+    priceJod: 15,
+    icon: 'W',
+    color: C.gold,
+  },
+  {
+    from: 'Amman',
+    fromAr: 'عمان',
+    to: 'Zarqa',
+    toAr: 'الزرقاء',
+    dist: 30,
+    priceJod: 2,
+    icon: 'Z',
+    color: C.purple,
+  },
 ] as const;
 
-export function Skeleton({ w = '100%', h = 20, radius = 8 }: { w?: string | number; h?: number; radius?: number }) {
+export function Skeleton({
+  w = '100%',
+  h = 20,
+  radius = 8,
+}: {
+  w?: string | number;
+  h?: number;
+  radius?: number;
+}) {
   return (
     <div
       style={{
         width: w,
         height: h,
         borderRadius: radius,
-        background: 'linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 100%)',
+        background: `linear-gradient(90deg, ${C.elevated} 0%, ${C.panel} 50%, ${C.elevated} 100%)`,
         backgroundSize: '200% 100%',
         animation: 'shimmer 1.6s infinite linear',
       }}
     />
   );
+}
+
+export function CardSkeleton({ lines = 3 }: { lines?: number }) {
+  return (
+    <div
+      style={{
+        background: C.card,
+        border: `1px solid ${C.border}`,
+        borderRadius: R.lg,
+        padding: 18,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+      }}
+    >
+      <Skeleton w="40%" h={14} radius={6} />
+      {Array.from({ length: lines }).map((_, i) => (
+        <Skeleton key={i} w={i === lines - 1 ? '60%' : '100%'} h={12} radius={6} />
+      ))}
+    </div>
+  );
+}
+
+export function ListSkeleton({ count = 3 }: { count?: number }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <CardSkeleton key={i} lines={3} />
+      ))}
+    </div>
+  );
+}
+
+export function cardContainer(overrides: React.CSSProperties = {}): React.CSSProperties {
+  return {
+    background: C.card,
+    border: `1px solid ${C.border}`,
+    borderRadius: R.lg,
+    padding: '18px 18px 16px',
+    ...overrides,
+  };
 }
 
 export function SectionHeader({
@@ -64,55 +153,162 @@ export function SectionHeader({
   onAction?: () => void;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: '1.1rem' }}>{icon}</span>
-        <h2 style={{ fontWeight: 800, color: C.text, fontSize: '1rem', margin: 0 }}>{title}</h2>
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        gap: 16,
+        marginBottom: 18,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <span
+          aria-hidden="true"
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 10,
+            display: 'grid',
+            placeItems: 'center',
+            background: C.cyanDim,
+            border: `1px solid ${C.borderFaint}`,
+            color: C.cyan,
+            fontSize: '0.72rem',
+            fontWeight: TYPE.weight.black,
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </span>
+        <h2
+          style={{
+            fontWeight: TYPE.weight.black,
+            color: C.text,
+            fontSize: '1.12rem',
+            letterSpacing: 0,
+            margin: 0,
+          }}
+        >
+          {title}
+        </h2>
       </div>
-      {action && onAction && (
-        <button onClick={onAction} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.cyan, fontSize: '0.78rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, fontFamily: F }}>
-          {action} <ChevronRight size={12} />
+      {action && onAction ? (
+        <button
+          onClick={onAction}
+          style={{
+            height: 36,
+            padding: '0 14px',
+            borderRadius: R.full,
+            background: C.elevated,
+            border: `1px solid ${C.border}`,
+            cursor: 'pointer',
+            color: C.textSub,
+            fontSize: TYPE.size.sm,
+            fontWeight: TYPE.weight.semibold,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            fontFamily: F,
+          }}
+        >
+          {action}
+          <ChevronRight size={12} color={C.cyan} />
         </button>
-      )}
+      ) : null}
     </div>
   );
 }
 
-export function InlineCurrencySwitcher() {
-  const { current, setCurrency, getSymbol } = useCurrency();
+export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
+  const svc = CurrencyService.getInstance();
+  const [cur, setCur] = useState<SupportedCurrency>(svc.current);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const popular: SupportedCurrency[] = ['JOD', 'USD', 'EUR', 'SAR', 'EGP', 'GBP'];
 
   useEffect(() => {
-    const handleMouseDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    const handleMouseDown = (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
     };
     document.addEventListener('mousedown', handleMouseDown);
     return () => document.removeEventListener('mousedown', handleMouseDown);
   }, []);
 
   const select = (code: SupportedCurrency) => {
-    setCurrency(code);
+    svc.setCurrency(code);
+    setCur(code);
     setOpen(false);
   };
 
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <button onClick={() => setOpen((o) => !o)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 9999, background: 'rgba(22,199,242,0.12)', border: '1px solid rgba(73,190,242,0.26)', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700, color: C.cyan, fontFamily: F }}>
-        FX {current}
-        <ChevronDown size={10} />
+      <button
+        onClick={() => setOpen(value => !value)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          height: 36,
+          padding: '0 12px',
+          borderRadius: R.full,
+          background: open ? C.cyanDim : C.elevated,
+          border: `1px solid ${open ? C.borderHov : C.border}`,
+          cursor: 'pointer',
+          fontSize: TYPE.size.sm,
+          fontWeight: TYPE.weight.bold,
+          color: open ? C.text : C.textSub,
+          fontFamily: F,
+        }}
+      >
+        <span style={{ fontSize: TYPE.size.xs, color: C.textMuted }}>
+          {ar ? 'العملة' : 'Currency'}
+        </span>
+        <span>{cur}</span>
+        <ChevronDown size={12} color={C.cyan} />
       </button>
-      {open && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, minWidth: 120, background: 'rgba(7,23,38,0.98)', border: '1px solid rgba(73,190,242,0.18)', borderRadius: 10, boxShadow: '0 12px 32px rgba(0,0,0,0.6)', zIndex: 100, overflow: 'hidden' }}>
-          {popular.map((code) => (
-            <button key={code} onClick={() => select(code)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '7px 12px', border: 'none', background: current === code ? 'rgba(22,199,242,0.14)' : 'transparent', cursor: 'pointer', fontSize: '0.78rem', fontWeight: current === code ? 700 : 500, color: current === code ? C.cyan : C.text, fontFamily: F }}>
+      {open ? (
+        <div
+          style={{
+            position: 'absolute',
+            top: 'calc(100% + 8px)',
+            insetInlineStart: 0,
+            minWidth: 156,
+            background: glass(0.96),
+            border: `1px solid ${C.border}`,
+            borderRadius: 14,
+            boxShadow: SH.lg,
+            zIndex: 100,
+            overflow: 'hidden',
+          }}
+        >
+          {popular.map(code => (
+            <button
+              key={code}
+              onClick={() => select(code)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                width: '100%',
+                padding: '9px 12px',
+                border: 'none',
+                background: cur === code ? C.elevated : 'transparent',
+                cursor: 'pointer',
+                fontSize: TYPE.size.sm,
+                fontWeight: cur === code ? TYPE.weight.bold : TYPE.weight.medium,
+                color: cur === code ? C.text : C.textSub,
+                fontFamily: F,
+              }}
+            >
               <span>{code}</span>
-              <span style={{ color: C.textDim, fontSize: '0.65rem' }}>{getSymbol(code)}</span>
+              <span style={{ color: C.textDim, fontSize: TYPE.size.xs }}>
+                {svc.getSymbol(code)}
+              </span>
             </button>
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -136,15 +332,52 @@ export function SOSButton({ ar }: { ar: boolean }) {
 
   return (
     <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-      <motion.button onClick={handleSOS} whileTap={{ scale: 0.92 }} style={{ height: 42, padding: '0 18px', borderRadius: 9999, background: confirm ? '#FF2233' : 'rgba(255,68,85,0.15)', border: `2px solid ${confirm ? '#FF2233' : 'rgba(255,68,85,0.45)'}`, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem', fontWeight: 800, color: confirm ? '#fff' : C.red, fontFamily: F, transition: 'all 0.2s', boxShadow: confirm ? '0 0 24px rgba(255,34,51,0.5)' : 'none' }}>
+      <motion.button
+        onClick={handleSOS}
+        whileTap={{ scale: 0.97 }}
+        style={{
+          height: 42,
+          padding: '0 16px',
+          borderRadius: R.full,
+          background: confirm ? C.error : C.elevated,
+          border: `1px solid ${confirm ? `${C.error}AA` : `${C.error}40`}`,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          fontSize: TYPE.size.sm,
+          fontWeight: TYPE.weight.bold,
+          color: confirm ? C.text : C.error,
+          fontFamily: F,
+          boxShadow: confirm ? `0 0 0 4px ${C.errorDim}` : 'none',
+        }}
+      >
         <Phone size={14} />
-        {pressed ? (ar ? 'جار الاتصال...' : 'Calling...') : confirm ? (ar ? 'اضغط مرة أخرى للتأكيد' : 'Tap again to confirm') : 'SOS'}
+        {pressed
+          ? ar
+            ? 'جار الاتصال...'
+            : 'Calling...'
+          : confirm
+            ? ar
+              ? 'اضغط مرة أخرى للتأكيد'
+              : 'Tap again to confirm'
+            : 'SOS'}
       </motion.button>
-      {confirm && !pressed && (
-        <button onClick={() => setConfirm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.textDim, fontSize: '0.72rem', fontFamily: F }}>
+      {confirm && !pressed ? (
+        <button
+          onClick={() => setConfirm(false)}
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: C.textDim,
+            fontSize: TYPE.size.xs,
+            fontFamily: F,
+          }}
+        >
           {ar ? 'إلغاء' : 'Cancel'}
         </button>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -153,61 +386,198 @@ export function TrustScoreCard({ score, ar }: { score: number; ar: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const pct = score;
   const factors = [
-    { label: ar ? 'توثيق الهوية عبر سند' : 'ID Verification (Sanad)', weight: 35, yours: 35, color: C.cyan },
-    { label: ar ? 'تقييمات المستخدمين' : 'User Ratings', weight: 25, yours: 22, color: C.green },
-    { label: ar ? 'الرحلات المكتملة' : 'Completed Trips', weight: 20, yours: 14, color: C.gold },
-    { label: ar ? 'النشاط الحديث' : 'Recent Activity', weight: 10, yours: 8, color: C.purple },
-    { label: ar ? 'الإعدادات الثقافية' : 'Cultural Preferences Set', weight: 10, yours: 8, color: C.cyan },
+    {
+      label: ar ? 'توثيق الهوية عبر سند' : 'ID verification',
+      weight: 35,
+      yours: 35,
+      color: C.cyan,
+    },
+    { label: ar ? 'تقييمات المستخدمين' : 'User ratings', weight: 25, yours: 22, color: C.green },
+    { label: ar ? 'الرحلات المكتملة' : 'Completed trips', weight: 20, yours: 14, color: C.gold },
+    { label: ar ? 'النشاط الحديث' : 'Recent activity', weight: 10, yours: 8, color: C.purple },
+    { label: ar ? 'اكتمال الملف' : 'Profile completion', weight: 10, yours: 8, color: C.cyan },
   ];
-  const color = pct >= 80 ? C.green : pct >= 60 ? C.gold : C.red;
+  const color = pct >= 80 ? C.green : pct >= 60 ? C.gold : C.error;
 
   return (
-    <div style={{ borderRadius: 16, padding: '16px 20px', background: glass(0.5), border: '1px solid rgba(73,190,242,0.12)', backdropFilter: 'blur(20px)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 48, height: 48, borderRadius: '50%', background: `${color}18`, border: `2px solid ${color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: '1.2rem', fontWeight: 900, color, fontFamily: F }}>{score}</span>
+    <div
+      style={{
+        borderRadius: 16,
+        padding: '20px 22px',
+        background: glass(0.88),
+        border: `1px solid ${C.border}`,
+        boxShadow: SH.sm,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 14,
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              background: `${color}18`,
+              border: `1px solid ${color}38`,
+              display: 'grid',
+              placeItems: 'center',
+              boxShadow: `0 0 0 6px ${color}10`,
+            }}
+          >
+            <span
+              style={{ fontSize: '1.25rem', fontWeight: TYPE.weight.ultra, color, fontFamily: F }}
+            >
+              {score}
+            </span>
           </div>
-          <div>
-            <div style={{ fontWeight: 700, color: C.text, fontSize: '0.9rem', fontFamily: F }}>{ar ? 'مؤشر الثقة' : 'Trust Score'}</div>
-            <div style={{ fontSize: '0.72rem', color, fontFamily: F }}>
-              {pct >= 80 ? (ar ? 'ممتاز' : 'Excellent') : pct >= 60 ? (ar ? 'جيد' : 'Good') : (ar ? 'بحاجة لتحسين' : 'Needs Improvement')}
+          <div style={{ display: 'grid', gap: 4 }}>
+            <div
+              style={{
+                fontWeight: TYPE.weight.black,
+                color: C.text,
+                fontSize: TYPE.size.lg,
+                fontFamily: F,
+              }}
+            >
+              {ar ? 'مؤشر الثقة' : 'Trust score'}
+            </div>
+            <div style={{ fontSize: TYPE.size.sm, color: C.textMuted, fontFamily: F }}>
+              {pct >= 80
+                ? ar
+                  ? 'مؤشر قوي قبل الحجز أو العرض'
+                  : 'Strong standing before booking or offering'
+                : pct >= 60
+                  ? ar
+                    ? 'مؤشر جيد ويستفيد من مزيد من النشاط'
+                    : 'Healthy standing with room to improve'
+                  : ar
+                    ? 'يحتاج إلى تقوية قبل الاعتماد الكامل'
+                    : 'Needs stronger standing before full trust'}
             </div>
           </div>
         </div>
-        <button onClick={() => setExpanded((e) => !e)} style={{ background: 'rgba(22,199,242,0.1)', border: '1px solid rgba(73,190,242,0.2)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.72rem', color: C.cyan, fontFamily: F, fontWeight: 600 }}>
-          <Info size={12} />
-          {ar ? 'لماذا؟' : 'Why?'}
-          {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+        <button
+          onClick={() => setExpanded(value => !value)}
+          style={{
+            height: 34,
+            padding: '0 12px',
+            borderRadius: R.full,
+            background: C.elevated,
+            border: `1px solid ${C.borderFaint}`,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: TYPE.size.xs,
+            color: C.textSub,
+            fontWeight: TYPE.weight.semibold,
+            fontFamily: F,
+          }}
+        >
+          <Info size={12} color={C.cyan} />
+          {ar ? 'طريقة الحساب' : 'How it works'}
+          {expanded ? (
+            <ChevronUp size={12} color={C.textMuted} />
+          ) : (
+            <ChevronDown size={12} color={C.textMuted} />
+          )}
         </button>
       </div>
-      <div style={{ marginTop: 12, height: 6, borderRadius: 9999, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, borderRadius: 9999, background: `linear-gradient(90deg, ${color}, ${color}99)`, transition: 'width 0.8s ease' }} />
+      <div
+        style={{
+          marginTop: 16,
+          height: 7,
+          borderRadius: 9999,
+          background: C.elevated,
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            width: `${pct}%`,
+            borderRadius: 9999,
+            background: `linear-gradient(90deg, ${color}, ${C.cyan})`,
+            transition: 'width 0.8s ease',
+          }}
+        />
       </div>
       <AnimatePresence>
-        {expanded && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }} style={{ overflow: 'hidden' }}>
-            <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(73,190,242,0.12)' }}>
-              <p style={{ fontSize: '0.75rem', color: C.textMuted, fontFamily: F, marginBottom: 12 }}>
-                {ar ? 'يُحسب هذا المؤشر من خمسة عوامل واضحة. لكل عامل وزن محدد من أصل 100 نقطة.' : 'Your score is calculated from 5 factors. Each has a weight out of 100 points:'}
+        {expanded ? (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.borderFaint}` }}>
+              <p
+                style={{
+                  fontSize: TYPE.size.sm,
+                  color: C.textMuted,
+                  fontFamily: F,
+                  margin: '0 0 14px',
+                }}
+              >
+                {ar
+                  ? 'يتكوّن المؤشر من عوامل واضحة تؤثر مباشرة على الثقة في الحجز والحركة.'
+                  : 'The score is built from clear factors that directly affect booking confidence.'}
               </p>
-              {factors.map((f) => (
-                <div key={f.label} style={{ marginBottom: 10 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <span style={{ fontSize: '0.72rem', color: C.textMuted, fontFamily: F }}>{f.label}</span>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: f.color, fontFamily: F }}>{f.yours}/{f.weight}</span>
+              {factors.map(factor => (
+                <div key={factor.label} style={{ marginBottom: 12 }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: 5,
+                      gap: 12,
+                    }}
+                  >
+                    <span style={{ fontSize: TYPE.size.sm, color: C.textSub, fontFamily: F }}>
+                      {factor.label}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: TYPE.size.xs,
+                        fontWeight: TYPE.weight.bold,
+                        color: factor.color,
+                        fontFamily: F,
+                      }}
+                    >
+                      {factor.yours}/{factor.weight}
+                    </span>
                   </div>
-                  <div style={{ height: 4, borderRadius: 9999, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${(f.yours / f.weight) * 100}%`, borderRadius: 9999, background: f.color, transition: 'width 0.6s ease' }} />
+                  <div
+                    style={{
+                      height: 5,
+                      borderRadius: 9999,
+                      background: C.elevated,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${(factor.yours / factor.weight) * 100}%`,
+                        borderRadius: 9999,
+                        background: factor.color,
+                      }}
+                    />
                   </div>
                 </div>
               ))}
-              <p style={{ marginTop: 10, fontSize: '0.7rem', color: C.textDim, fontFamily: F }}>
-                {ar ? 'للتحسين: أكمل توثيق الهوية، أضف صورة شخصية، وأنهِ مزيداً من الرحلات.' : 'To improve: complete ID verification, add a profile photo, and complete more trips.'}
-              </p>
             </div>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   );

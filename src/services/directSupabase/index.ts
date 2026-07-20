@@ -1,7 +1,3 @@
-// ─── directSupabase/index.ts ──────────────────────────────────────────────────
-// Barrel re-export — all existing imports of `./directSupabase` continue to
-// resolve here without any changes to call sites.
-
 export type {
   DbClient,
   DriverRow,
@@ -11,14 +7,9 @@ export type {
   RawDemandAlert,
   RawGrowthEvent,
   RawNotification,
-  RawAutomationJob,
   RawPackage,
-  RawPricingSnapshot,
   RawProfile,
   RawReferral,
-  RawRouteReminder,
-  RawSupportTicket,
-  RawSupportTicketEvent,
   RawVerificationRecord,
   TripRow,
   UserContext,
@@ -26,9 +17,9 @@ export type {
   WalletRow,
 } from './types';
 
-export { getDb, toNumber, mapProfileFromContext, buildTrustLikeUser } from './helpers';
+export { getDb, toNumber, mapProfileFromContext, buildTrustLikeUser } from './helpers.js';
 
-export { buildUserContext, ensureCanonicalUser, ensureDriverForUser } from './userContext.ts';
+export { buildUserContext, ensureCanonicalUser, ensureDriverForUser } from './userContext.js';
 
 export {
   getDirectProfile,
@@ -45,31 +36,20 @@ export {
   getDirectTripBookings,
   updateDirectBookingStatus,
   getDirectDriverBookings,
-} from './trips';
+} from './trips.js';
 
 export {
   recordDirectGrowthEvent,
   createDirectDemandAlert,
   getDirectDemandAlerts,
   getDirectGrowthAnalytics,
-} from './growth';
-
-export {
-  createDirectPricingSnapshot,
-  createDirectSupportTicket,
-  enqueueDirectAutomationJob,
-  getDirectRouteReminders,
-  getDirectSupportTickets,
-  markDirectRouteReminderDelivered,
-  updateDirectSupportTicketStatus,
-  upsertDirectRouteReminder,
-} from './automation';
+} from './growth.js';
 
 export {
   processReferralConversionForPassenger,
   getDirectReferralSnapshot,
   redeemDirectReferralCode,
-} from './referrals';
+} from './referrals.js';
 
 export {
   createDirectPackage,
@@ -82,11 +62,21 @@ export {
   createDirectNotification,
   queueDirectCommunicationDeliveries,
   upsertDirectCommunicationPreferences,
-} from './packagesAndNotifications';
+} from './packagesAndNotifications.js';
+
+export {
+  createDirectSupportTicket,
+  getDirectSupportTickets,
+  getDirectUserSettings,
+  updateDirectSupportTicketStatus,
+  upsertDirectUserSettings,
+} from './accountAndSupport.js';
+
+export { enableDirectTrustDriverMode, submitDirectTrustDriverDocuments } from './trust.js';
 
 // Price calculator (pure, no Supabase dependency)
 import type { PriceCalculationResult } from '../trips';
-import { toNumber } from './helpers';
+import { toNumber } from './helpers.js';
 
 export function calculateDirectPrice(
   type: 'passenger' | 'package',

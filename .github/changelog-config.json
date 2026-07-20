@@ -1,0 +1,29 @@
+{
+    "categories": [
+        {
+            "title": "🚀 Features",
+            "labels": [
+                "feature",
+                "feat"
+            ]
+        },
+        {
+            "title": "🐛 Bug Fixes",
+            "labels": [
+                "fix",
+                "bug"
+            ]
+        },
+        {
+            "title": "🧰 Maintenance",
+            "labels": [
+                "chore",
+                "docs",
+                "refactor",
+                "style",
+                "test"
+            ]
+        }
+    ],
+    "template": "${{CHANGELOG}}\n\n**Full Changelog**: https://github.com/${{OWNER}}/${{REPOSITORY}}/compare/${{FROM_TAG}}...${{TO_TAG}}"
+}

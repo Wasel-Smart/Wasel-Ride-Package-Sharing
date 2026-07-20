@@ -9,18 +9,19 @@
  * production schema direction and the tables the app currently queries.
  */
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
-type RowSet<Row, Insert = Partial<Row>, Update = Partial<Insert>> = {
+type RowSet<Row, Insert = Record<string, unknown>, Update = Record<string, unknown>> = {
   Row: Row;
   Insert: Insert;
   Update: Update;
+  Relationships: Array<{
+    foreignKeyName: string;
+    columns: string[];
+    isOneToOne?: boolean;
+    referencedRelation: string;
+    referencedColumns: string[];
+  }>;
 };
 
 export interface Database {
@@ -28,6 +29,7 @@ export interface Database {
     Tables: {
       bookings: RowSet<{
         id: string;
+        booking_id: string;
         trip_id: string;
         passenger_id: string;
         seats_requested: number | null;
@@ -41,6 +43,8 @@ export interface Database {
         total_price: number | null;
         amount: number | null;
         payment_transaction_id: string | null;
+        payment_intent_id: string | null;
+        payment_status: string | null;
         status: string | null;
         booking_status: string | null;
         confirmed_by_driver: boolean | null;
@@ -57,7 +61,8 @@ export interface Database {
         user_id: string;
         notification_id: string | null;
         channel: 'email' | 'sms' | 'whatsapp' | 'push' | 'in_app' | string;
-        delivery_status: 'queued' | 'processing' | 'sent' | 'delivered' | 'failed' | 'cancelled' | string;
+        delivery_status:
+          'queued' | 'processing' | 'sent' | 'delivered' | 'failed' | 'cancelled' | string;
         destination: string | null;
         subject: string | null;
         payload: Json | null;
@@ -102,7 +107,15 @@ export interface Database {
         user_id: string;
         license_number: string;
         vehicle_id: string | null;
-        driver_status: 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'suspended' | 'offline' | 'online' | 'busy';
+        driver_status:
+          | 'draft'
+          | 'pending_approval'
+          | 'approved'
+          | 'rejected'
+          | 'suspended'
+          | 'offline'
+          | 'online'
+          | 'busy';
         verification_level: 'level_0' | 'level_1' | 'level_2' | 'level_3';
         sanad_identity_linked: boolean;
         background_check_status: 'unverified' | 'pending' | 'verified' | 'rejected' | 'expired';
@@ -159,7 +172,8 @@ export interface Database {
         trip_id: string | null;
         carrier_id: string | null;
         payment_transaction_id: string | null;
-        package_status: 'created' | 'assigned' | 'in_transit' | 'delivered' | 'cancelled' | 'disputed' | null;
+        package_status:
+          'created' | 'assigned' | 'in_transit' | 'delivered' | 'cancelled' | 'disputed' | null;
         status: string | null;
         delivered_at: string | null;
         picked_up_at: string | null;
@@ -178,7 +192,8 @@ export interface Database {
         payment_method_id: string;
         user_id: string;
         provider: string;
-        method_type: 'wallet_balance' | 'card_payment' | 'local_gateway' | 'government_api' | string;
+        method_type:
+          'wallet_balance' | 'card_payment' | 'local_gateway' | 'government_api' | string;
         token_reference: string;
         is_default: boolean;
         status: string;
@@ -215,9 +230,22 @@ export interface Database {
         transaction_id: string;
         wallet_id: string;
         amount: number;
-        transaction_type: 'add_funds' | 'withdraw_funds' | 'transfer_funds' | 'ride_payment' | 'package_payment' | 'driver_earning' | 'refund' | 'adjustment' | 'hold' | 'release' | string;
-        payment_method: 'wallet_balance' | 'card_payment' | 'local_gateway' | 'government_api' | string;
-        transaction_status: 'pending' | 'authorized' | 'posted' | 'failed' | 'reversed' | 'refunded' | string;
+        transaction_type:
+          | 'add_funds'
+          | 'withdraw_funds'
+          | 'transfer_funds'
+          | 'ride_payment'
+          | 'package_payment'
+          | 'driver_earning'
+          | 'refund'
+          | 'adjustment'
+          | 'hold'
+          | 'release'
+          | string;
+        payment_method:
+          'wallet_balance' | 'card_payment' | 'local_gateway' | 'government_api' | string;
+        transaction_status:
+          'pending' | 'authorized' | 'posted' | 'failed' | 'reversed' | 'refunded' | string;
         direction: 'debit' | 'credit';
         reference_type: string | null;
         reference_id: string | null;
@@ -297,6 +325,9 @@ export interface Database {
         two_factor_enabled: boolean | null;
         two_factor_secret: string | null;
         two_factor_backup_codes: string[] | null;
+        referral_code: string | null;
+        average_rating: number | null;
+        total_ratings: number | null;
         created_at: string;
         updated_at: string;
       }>;
@@ -341,6 +372,236 @@ export interface Database {
         created_at: string;
         updated_at: string;
       }>;
+
+      referrals: RowSet<{
+        id?: string;
+        referrer_id?: string | null;
+        referee_id?: string | null;
+        referral_code?: string | null;
+        referrer_reward_jod?: number | string | null;
+        referee_reward_jod?: number | string | null;
+        referee_completed_first_trip?: boolean | null;
+        referrer_rewarded?: boolean | null;
+        redeemed_at?: string | null;
+        completed_at?: string | null;
+        rewarded_at?: string | null;
+        created_at?: string | null;
+      }>;
+
+      growth_events: RowSet<{
+        id?: string;
+        user_id?: string | null;
+        event_name?: string | null;
+        funnel_stage?: string | null;
+        service_type?: string | null;
+        route_from?: string | null;
+        route_to?: string | null;
+        monetary_value_jod?: number | string | null;
+        metadata?: Json | null;
+        created_at?: string | null;
+      }>;
+
+      demand_alerts: RowSet<{
+        id?: string;
+        user_id?: string | null;
+        origin_city?: string | null;
+        destination_city?: string | null;
+        service_type?: string | null;
+        requested_date?: string | null;
+        seats_or_slots?: number | string | null;
+        status?: string | null;
+        created_at?: string | null;
+      }>;
+
+      support_tickets: RowSet<{
+        id?: string;
+        user_id?: string;
+        topic?: string | null;
+        subject?: string | null;
+        detail?: string | null;
+        related_id?: string | null;
+        route_label?: string | null;
+        status?: string | null;
+        priority?: string | null;
+        channel?: string | null;
+        resolution_summary?: string | null;
+        created_at?: string | null;
+        updated_at?: string | null;
+      }>;
+
+      support_ticket_events: RowSet<{
+        id?: string;
+        ticket_id?: string;
+        status?: string | null;
+        note?: string | null;
+        created_at?: string | null;
+      }>;
+
+      user_settings: RowSet<{
+        user_id?: string;
+        locale?: string | null;
+        currency?: string | null;
+        theme?: string | null;
+        profile_visible?: boolean | null;
+        photo_hidden?: boolean | null;
+        location_sharing_enabled?: boolean | null;
+        analytics_enabled?: boolean | null;
+        created_at?: string | null;
+        updated_at?: string | null;
+      }>;
+
+      profile_change_history: RowSet<{
+        id?: string;
+        user_id?: string;
+        field_name?: string | null;
+        old_value?: string | null;
+        new_value?: string | null;
+        changed_at?: string | null;
+        changed_by?: string | null;
+        ip_address?: string | null;
+        user_agent?: string | null;
+      }>;
+
+      wallet_transactions: RowSet<{
+        id: string;
+        user_id: string;
+        amount: number;
+        transaction_type: string | null;
+        status: string | null;
+        reference_id: string | null;
+        deleted_at: string | null;
+        created_at: string;
+        updated_at: string | null;
+      }>;
+
+      ride_bookings: RowSet<{
+        id: string;
+        passenger_id: string;
+        trip_id: string | null;
+        status: string | null;
+        deleted_at: string | null;
+        created_at: string;
+        updated_at: string | null;
+      }>;
+
+      user_consents: RowSet<{
+        id: string;
+        user_id: string;
+        consent_type: string;
+        granted: boolean;
+        ip_address: string | null;
+        user_agent: string | null;
+        created_at: string;
+      }>;
+
+      data_export_requests: RowSet<{
+        id: string;
+        user_id: string;
+        status: string;
+        download_url: string | null;
+        requested_at: string;
+        completed_at: string | null;
+        expires_at: string | null;
+      }>;
+
+      data_deletion_requests: RowSet<{
+        id: string;
+        user_id: string;
+        status: string;
+        reason: string | null;
+        requested_at: string;
+        scheduled_for: string;
+        completed_at: string | null;
+      }>;
+
+      scheduled_pickups: RowSet<{
+        id: string;
+        user_id: string;
+        item_type: 'ride' | 'package_delivery' | 'package_return';
+        status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'missed';
+        pickup_location: string;
+        pickup_lat: number;
+        pickup_lng: number;
+        dropoff_location?: string | null;
+        dropoff_lat?: number | null;
+        dropoff_lng?: number | null;
+        pickup_location_geom?: unknown | null;
+        dropoff_location_geom?: unknown | null;
+        scheduled_at: string;
+        recurring_pattern?: string | null;
+        recurring_until?: string | null;
+        trip_id?: string | null;
+        booking_id?: string | null;
+        package_id?: string | null;
+        notes?: string | null;
+        contact_name?: string | null;
+        contact_phone?: string | null;
+        estimated_price?: number | null;
+        reminder_24h_sent?: boolean;
+        reminder_1h_sent?: boolean;
+        created_at: string;
+        updated_at?: string | null;
+        cancelled_at?: string | null;
+        cancellation_reason?: string | null;
+      }>;
+
+      messages: RowSet<{
+        id: string;
+        trip_id: string;
+        sender_id: string;
+        content: string;
+        type: 'text' | 'location' | 'system';
+        metadata: Json | null;
+        read_by: string[] | null;
+        created_at: string;
+      }>;
+
+      ratings: RowSet<{
+        id: string;
+        booking_id: string;
+        trip_id: string;
+        rider_id: string;
+        driver_id: string;
+        rating: number;
+        review: string | null;
+        tags: string[] | null;
+        created_at: string;
+      }>;
+
+      event_outbox: RowSet<{
+        id: string;
+        topic: string;
+        payload: Json | null;
+        producer: string | null;
+        trace_id: string | null;
+        status: string | null;
+        error: string | null;
+        processed_at: string | null;
+        created_at: string;
+      }>;
+
+      dead_letter_messages: RowSet<{
+        id: string;
+        original_topic: string | null;
+        original_id: string | null;
+        payload: Json | null;
+        error: string | null;
+        error_stack: string | null;
+        retry_count: number | null;
+        trace_id: string | null;
+        worker: string | null;
+        created_at: string;
+      }>;
+
+      ops_aggregates: RowSet<{
+        id: string;
+        metric_date: string | null;
+        metric_name: string | null;
+        dimension: string | null;
+        value: number | null;
+        sample_count: number | null;
+        updated_at: string | null;
+      }>;
     };
 
     Views: {
@@ -348,6 +609,16 @@ export interface Database {
     };
 
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_user_id: string;
+          p_operation: string;
+          p_max_attempts: number;
+          p_window_minutes: number;
+        };
+        Returns: boolean;
+      };
+
       app_add_wallet_funds: {
         Args: {
           p_user_id: string;
@@ -370,17 +641,53 @@ export interface Database {
           credit_transaction_id: string;
         }[];
       };
+
+      request_data_export: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: void;
+      };
+
+      request_account_deletion: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: void;
+      };
     };
 
     Enums: {
-      booking_status_v2: 'pending_payment' | 'confirmed' | 'checked_in' | 'completed' | 'cancelled' | 'refunded';
-      driver_status_v2: 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'suspended' | 'offline' | 'online' | 'busy';
-      otp_purpose_v2: 'login' | 'wallet_transfer' | 'wallet_withdrawal' | 'driver_action' | 'admin_action';
-      package_status_v2: 'created' | 'assigned' | 'in_transit' | 'delivered' | 'cancelled' | 'disputed';
+      booking_status_v2:
+        'pending_payment' | 'confirmed' | 'checked_in' | 'completed' | 'cancelled' | 'refunded';
+      driver_status_v2:
+        | 'draft'
+        | 'pending_approval'
+        | 'approved'
+        | 'rejected'
+        | 'suspended'
+        | 'offline'
+        | 'online'
+        | 'busy';
+      otp_purpose_v2:
+        'login' | 'wallet_transfer' | 'wallet_withdrawal' | 'driver_action' | 'admin_action';
+      package_status_v2:
+        'created' | 'assigned' | 'in_transit' | 'delivered' | 'cancelled' | 'disputed';
       payment_method_v2: 'wallet_balance' | 'card_payment' | 'local_gateway' | 'government_api';
       profile_status_v2: 'pending' | 'active' | 'suspended' | 'blocked';
-      transaction_status_v2: 'pending' | 'authorized' | 'posted' | 'failed' | 'reversed' | 'refunded';
-      transaction_type_v2: 'add_funds' | 'withdraw_funds' | 'transfer_funds' | 'ride_payment' | 'package_payment' | 'driver_earning' | 'refund' | 'adjustment' | 'hold' | 'release';
+      transaction_status_v2:
+        'pending' | 'authorized' | 'posted' | 'failed' | 'reversed' | 'refunded';
+      transaction_type_v2:
+        | 'add_funds'
+        | 'withdraw_funds'
+        | 'transfer_funds'
+        | 'ride_payment'
+        | 'package_payment'
+        | 'driver_earning'
+        | 'refund'
+        | 'adjustment'
+        | 'hold'
+        | 'release';
       trip_status_v2: 'draft' | 'open' | 'booked' | 'in_progress' | 'completed' | 'cancelled';
       user_role_v2: 'passenger' | 'driver' | 'admin';
       verification_level_v2: 'level_0' | 'level_1' | 'level_2' | 'level_3';

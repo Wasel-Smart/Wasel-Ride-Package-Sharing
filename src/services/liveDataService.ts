@@ -19,7 +19,7 @@ import { getConnectedStats } from './journeyLogistics';
 
 export interface LiveUserStats {
   totalTrips: number;
-  totalSaved: number;    // in JOD
+  totalSaved: number; // in JOD
   rating: number;
   pkgsDelivered: number;
   walletBalance: number; // in JOD
@@ -59,11 +59,11 @@ export function useLiveUserStats(): { stats: LiveUserStats | null; loading: bool
     // Build a baseline from LocalAuth (always available)
     const connectedStats = getConnectedStats();
     const baseStats: LiveUserStats = {
-      totalTrips:     localUser?.trips      ?? connectedStats.ridesPosted,
-      totalSaved:     (localUser?.trips ?? 0) * 2.8, // avg JOD 2.8 saved per trip
-      rating:         localUser?.rating     ?? 5.0,
-      pkgsDelivered:  connectedStats.packagesCreated,
-      walletBalance:  localUser?.balance    ?? 0,
+      totalTrips: localUser?.trips ?? connectedStats.ridesPosted,
+      totalSaved: (localUser?.trips ?? 0) * 2.8, // avg JOD 2.8 saved per trip
+      rating: localUser?.rating ?? 5.0,
+      pkgsDelivered: connectedStats.packagesCreated,
+      walletBalance: localUser?.balance ?? 0,
     };
 
     // If there is a live Supabase session, try to enrich from wallet API
@@ -71,11 +71,11 @@ export function useLiveUserStats(): { stats: LiveUserStats | null; loading: bool
       try {
         const wallet = await walletApi.getWallet(authUser.id);
         setStats({
-          totalTrips:    localUser?.trips      ?? connectedStats.ridesPosted,
-          totalSaved:    wallet.total_earned   ?? baseStats.totalSaved,
-          rating:        localUser?.rating     ?? 5.0,
+          totalTrips: localUser?.trips ?? connectedStats.ridesPosted,
+          totalSaved: wallet.total_earned ?? baseStats.totalSaved,
+          rating: localUser?.rating ?? 5.0,
           pkgsDelivered: connectedStats.packagesCreated,
-          walletBalance: wallet.balance        ?? baseStats.walletBalance,
+          walletBalance: wallet.balance ?? baseStats.walletBalance,
         });
         setLoading(false);
         return;
@@ -111,8 +111,8 @@ export function useLivePlatformStats(): LivePlatformStats | null {
     const isPeak = (hour >= 7 && hour <= 9) || (hour >= 16 && hour <= 19);
 
     setStats({
-      activeDrivers:          clamp(randomDelta(isPeak ? 380 : 210, 0.08), 80, 600),
-      avgWaitMinutes:         clamp(randomDelta(isPeak ? 8  : 4,   0.15), 2, 25),
+      activeDrivers: clamp(randomDelta(isPeak ? 380 : 210, 0.08), 80, 600),
+      avgWaitMinutes: clamp(randomDelta(isPeak ? 8 : 4, 0.15), 2, 25),
       passengersMatchedToday: clamp(randomDelta(isPeak ? 1420 : 780, 0.06), 100, 5000),
     });
   }, []);

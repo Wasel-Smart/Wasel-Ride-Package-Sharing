@@ -1,11 +1,27 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useRideFilters } from './hooks/useRideFilters';
+import {
+  Brain,
+  Calendar,
+  CheckCircle2,
+  Network,
+  Search,
+  Shield,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react';
+import { MapWrapper } from '../../components/MapWrapper';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { createDemandAlert, getDemandStats, hydrateDemandAlerts } from '../../services/demandCapture';
+import {
+  createDemandAlert,
+  getDemandStats,
+  hydrateDemandAlerts,
+} from '../../services/demandCapture';
 import { trackGrowthEvent } from '../../services/growthEngine';
 import { getConnectedRides } from '../../services/journeyLogistics';
 import { getMovementPriceQuote } from '../../services/movementPricing';
@@ -14,20 +30,25 @@ import {
   createReminderFromSuggestion,
   formatRouteReminderSchedule,
   getRecurringRouteSuggestions,
+  getRouteReminderForCorridor,
   getRouteReminders,
-  hydrateRouteReminders,
   syncRouteReminders,
 } from '../../services/movementRetention';
 import { notificationsAPI } from '../../services/notifications.js';
-import { getLiveCorridorSignal, useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
-import { createRideBooking, hydrateRideBookings } from '../../services/rideLifecycle';
+import { subscribeToRideBookingRealtime } from '../../services/rideRealtime';
 import {
-  getCorridorOpportunity,
-  getWaselCategoryPosition,
-} from '../../config/wasel-movement-network';
+  getLiveCorridorSignal,
+  useLiveRouteIntelligence,
+} from '../../services/routeDemandIntelligence';
 import {
-  ALL_RIDES,
-  buildRideFromPostedRide,
+  createRideBooking,
+  getRideBookings,
+  updateRideBooking,
+  type RideBookingRecord,
+} from '../../services/rideLifecycle';
+import { walletApi } from '../../services/walletApi';
+import { getCorridorOpportunity, getMarketplaceNodes } from '../../config/wasel-movement-network';
+import {
   CITIES,
   RIDE_BOOKINGS_KEY,
   RIDE_SEARCHES_KEY,
@@ -36,38 +57,110 @@ import {
 import {
   createFindRideCopy,
   parseFindRideParams,
+  scoreRideForRecommendation,
 } from '../../pages/waselCorePageHelpers';
 import { readStoredStringList, writeStoredStringList } from '../../pages/waselCoreStorage';
 import {
-  CoreExperienceBanner,
   DS,
+  midpoint,
   PageShell,
+  pill,
   Protected,
   r,
   resolveCityCoord,
   SectionHead,
 } from '../../pages/waselServiceShared';
+import { WaselButton, WaselInput, WaselSelect } from '../../design-system';
+import { C } from '../../utils/wasel-ds';
+import { useLocale } from '../../hooks/useLocale';
+import { ListSkeleton } from '../home/HomePageShared';
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
+import { FindRideCard } from './components/FindRideCard';
 import { FindRidePackagePanel } from './components/FindRidePackagePanel';
-import { FindRideRideTab } from './components/FindRideRideTab';
 import { FindRideTripDetailModal } from './components/FindRideTripDetailModal';
 import { getFindRideStaticCopy } from './findRideContent';
-import {
-  routeEndpointsAreDistinct,
-  routeMatchesLocationPair,
-  routeTouchesLocation,
-} from '../../utils/jordanLocations';
+import { useRideInventory } from './useRideInventory';
+
+type BookingSuccessState = {
+  status: 'pending_driver' | 'confirmed';
+  routeLabel: string;
+  driverName: string;
+  priceJod: number;
+  ticketCode?: string;
+};
+
+const CITY_LABELS_AR: Record<string, string> = {
+  Amman: 'عمّان',
+  Aqaba: 'العقبة',
+  Irbid: 'إربد',
+  Zarqa: 'الزرقاء',
+  Salt: 'السلط',
+  Madaba: 'مادبا',
+  Jerash: 'جرش',
+  Karak: 'الكرك',
+  Mafraq: 'المفرق',
+  Tafilah: 'الطفيلة',
+  "Ma'an": 'معان',
+  Ajloun: 'عجلون',
+  'Dead Sea': 'البحر الميت',
+  Petra: 'البتراء',
+  'Wadi Rum': 'وادي رم',
+};
+
+const PICKUP_LABELS_AR: Record<string, string> = {
+  '7th Circle launch point': 'نقطة الانطلاق عند الدوار السابع',
+  'Abdali transfer gate': 'بوابة تبديل العبدلي',
+  'Airport road merge': 'مدخل طريق المطار',
+  'Aqaba logistics zone': 'منطقة العقبة اللوجستية',
+  'North Amman ring': 'حلقة شمال عمّان',
+  'Jerash gate': 'بوابة جرش',
+  'festival shuttle node': 'نقطة نقل المهرجان',
+  'South Amman edge': 'طرف جنوب عمّان',
+  'Mujib connector': 'وصلة الموجب',
+  'Karak city gate': 'بوابة مدينة الكرك',
+};
 
 export function FindRidePage() {
   const nav = useIframeSafeNavigate();
   const location = useLocation();
   const { user } = useLocalAuth();
-  const { language } = useLanguage();
+  const { language, t: i18nT } = useLanguage();
   const ar = language === 'ar';
+  const locale = useLocale();
   const { notifyTripConfirmed, requestPermission, permission } = usePushNotifications();
-  const { initialFrom, initialTo, initialDate, initialSearched } = parseFindRideParams(location.search);
+  const { initialFrom, initialTo, initialDate, initialSearched } = parseFindRideParams(
+    location.search,
+  );
   const t = createFindRideCopy(ar);
   const copy = getFindRideStaticCopy(ar);
+  const cityLabel = (city: string) => (ar ? CITY_LABELS_AR[city] ?? city : city);
+  const routeLabel = (routeFrom: string, routeTo: string) =>
+    ar ? `${cityLabel(routeFrom)} إلى ${cityLabel(routeTo)}` : `${routeFrom} to ${routeTo}`;
+  const routeArrowLabel = (routeFrom: string, routeTo: string) =>
+    ar ? `${cityLabel(routeFrom)} ← ${cityLabel(routeTo)}` : `${routeFrom} → ${routeTo}`;
+  const localizeSignalText = (value: string) => {
+    if (!ar) return value;
+    return CITIES.reduce(
+      (next, city) => next.split(city).join(cityLabel(city)),
+      value
+        .replace(/\band\b/g, 'و')
+        .replace(/live searches/g, 'عمليات بحث مباشرة')
+        .replace(/live bookings/g, 'حجوزات مباشرة')
+        .replace(/package moves/g, 'حركة طرود')
+        .replace(/ownership/g, 'ملكية المسار')
+        .replace(/Best pickup/g, 'أفضل نقطة انطلاق')
+        .replace(/pickup/g, 'نقطة الانطلاق'),
+    );
+  };
+  const pickupLabel = (value: string) => (ar ? PICKUP_LABELS_AR[value] ?? localizeSignalText(value) : value);
+  const windowLabel = (value: string) => localizeSignalText(value);
+  const displayStoredRouteItem = (item: string) => {
+    if (!ar) return item;
+    return CITIES.reduce(
+      (next, city) => next.split(city).join(cityLabel(city)),
+      item.replace(' to ', ' إلى ').replace(' on ', ' بتاريخ '),
+    );
+  };
 
   const [tab, setTab] = useState<'ride' | 'package'>('ride');
   const [from, setFrom] = useState(initialFrom);
@@ -75,27 +168,62 @@ export function FindRidePage() {
   const [date, setDate] = useState(initialDate);
   const [searched, setSearched] = useState(initialSearched);
   const [loading, setLoading] = useState(false);
-  const [sort, setSort] = useState<'price' | 'time' | 'rating'>('rating');
   const [selected, setSelected] = useState<Ride | null>(null);
-  const [booked, setBooked] = useState<Set<string>>(() => new Set(readStoredStringList(RIDE_BOOKINGS_KEY)));
-  const [recentSearches, setRecentSearches] = useState<string[]>(() => readStoredStringList(RIDE_SEARCHES_KEY));
+  const [bookingInFlightId, setBookingInFlightId] = useState<string | null>(null);
+  const [rideBookings, setRideBookings] = useState<RideBookingRecord[]>(() => getRideBookings());
+  const [recentSearches, setRecentSearches] = useState<string[]>(() =>
+    readStoredStringList(RIDE_SEARCHES_KEY),
+  );
   const [searchError, setSearchError] = useState<string | null>(null);
   const [bookingMessage, setBookingMessage] = useState<string | null>(null);
+  const [bookingSuccess, setBookingSuccess] = useState<BookingSuccessState | null>(null);
   const [waitlistMessage, setWaitlistMessage] = useState<string | null>(null);
   const [retentionMessage, setRetentionMessage] = useState<string | null>(null);
   const [savedReminders, setSavedReminders] = useState(() => getRouteReminders());
-  const [pkg, setPkg] = useState({ from: 'Amman', to: 'Aqaba', weight: '<1 kg', note: '', sent: false });
-  const searchTimerRef = useRef<number | null>(null);
+  const [pkg, setPkg] = useState({
+    from: 'Amman',
+    to: 'Aqaba',
+    weight: '<1 kg',
+    note: '',
+    sent: false,
+  });
 
-  const category = useMemo(() => getWaselCategoryPosition(), []);
+  const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(0, 3), []);
   const corridorPlan = useMemo(() => getCorridorOpportunity(from, to), [from, to]);
   const routeIntelligence = useLiveRouteIntelligence({ from, to });
   const selectedSignal = routeIntelligence.selectedSignal;
+  const liveDemandLabel = selectedSignal
+    ? ar
+                        ? `${selectedSignal.liveSearches} يبحثون · ${selectedSignal.liveBookings} محجوز · ${selectedSignal.activeDemandAlerts} يتابعون`
+      : `${selectedSignal.liveSearches} people searching · ${selectedSignal.liveBookings} booked · ${selectedSignal.activeDemandAlerts} watching`
+    : ar
+      ? 'اختار المسار فوق عشان تشوف الطلب المباشر.'
+      : 'Select a route above to see live demand.';
   const featuredSignals = routeIntelligence.featuredSignals.slice(0, 4);
   const recurringSuggestions = useMemo(
     () => getRecurringRouteSuggestions(3),
     [routeIntelligence.updatedAt],
   );
+  const bookingByRideId = useMemo(() => {
+    const next = new Map<string, RideBookingRecord>();
+
+    for (const booking of rideBookings) {
+      if (booking.status !== 'pending_driver' && booking.status !== 'confirmed') {
+        continue;
+      }
+
+      const current = next.get(booking.rideId);
+      if (
+        !current ||
+        new Date(current.updatedAt).getTime() < new Date(booking.updatedAt).getTime()
+      ) {
+        next.set(booking.rideId, booking);
+      }
+    }
+
+    return next;
+  }, [rideBookings]);
+  const bookedRideIds = useMemo(() => new Set(bookingByRideId.keys()), [bookingByRideId]);
   const signalLookup = useMemo(() => {
     const lookup = new Map<string, ReturnType<typeof getLiveCorridorSignal>>();
     for (const signal of routeIntelligence.allSignals) {
@@ -108,122 +236,77 @@ export function FindRidePage() {
 
   const searchFromCoord = resolveCityCoord(from);
   const searchToCoord = resolveCityCoord(to);
-  const connectedRides = useMemo(
-    () => getConnectedRides().map(buildRideFromPostedRide),
-    [location.key, routeIntelligence.updatedAt],
-  );
-  const allAvailableRides = useMemo(
-    () => [...connectedRides, ...ALL_RIDES],
-    [connectedRides],
-  );
-  const corridorRides = useMemo(
-    () => allAvailableRides.filter((ride) => routeMatchesLocationPair(ride.from, ride.to, from, to, { allowReverse: false })),
-    [allAvailableRides, from, to],
-  );
-  const nearbyCorridors = useMemo(
-    () =>
-      allAvailableRides
-        .filter(
-          (ride) =>
-            ride.id &&
-            !routeMatchesLocationPair(ride.from, ride.to, from, to, { allowReverse: false }) &&
-            (routeTouchesLocation(ride.from, ride.to, from) || routeTouchesLocation(ride.from, ride.to, to)),
-        )
-        .slice(0, 3),
-    [allAvailableRides, from, to],
-  );
+  // Live inventory from Supabase, merged with local posts and static seed.
+  const { rides: allAvailableRides, loading: inventoryLoading } = useRideInventory({ from, to, date, searched });
+  const corridorRides = allAvailableRides.filter(ride => ride.from === from && ride.to === to);
+  const nearbyCorridors = allAvailableRides
+    .filter(
+      ride =>
+        ride.id &&
+        !(ride.from === from && ride.to === to) &&
+        (ride.from === from || ride.to === to || ride.to === from || ride.from === to),
+    )
+    .slice(0, 3);
 
-  const results: Ride[] = useMemo(
-    () =>
-      searched
-        ? allAvailableRides
-            .filter(
-              (ride) =>
-                (!from || routeMatchesLocationPair(ride.from, ride.to, from, ride.to, { allowReverse: false })) &&
-                (!to || routeMatchesLocationPair(ride.from, ride.to, ride.from, to, { allowReverse: false })) &&
-                (!date || ride.date === date),
-            )
-            .sort((left, right) =>
-              sort === 'price'
-                ? left.pricePerSeat - right.pricePerSeat
-                : sort === 'time'
-                  ? left.time.localeCompare(right.time)
-                  : right.driver.rating - left.driver.rating,
-            )
-        : allAvailableRides.slice(0, 4),
-    [allAvailableRides, date, from, searched, sort, to],
-  );
+  const filteredResults: Ride[] = searched
+    ? allAvailableRides.filter(
+      ride =>
+        (!from ||
+          ride.from.toLowerCase().includes(from.toLowerCase()) ||
+          ride.fromAr === from) &&
+        (!to || ride.to.toLowerCase().includes(to.toLowerCase()) || ride.toAr === to) &&
+        (!date || ride.date === date),
+    )
+    : allAvailableRides.slice(0, 4);
 
-  const routeReadinessLabel = corridorRides.length >= 2 ? t.instantMatch : corridorRides.length === 1 ? t.bookingReady : t.searchHelp;
-  const bookedRides = useMemo(
-    () => allAvailableRides.filter((ride) => booked.has(ride.id)).slice(0, 3),
-    [allAvailableRides, booked],
-  );
-  const selectedPriceQuote = selectedSignal?.priceQuote
-    ?? (corridorPlan
+  const { sort, setSort, sortedRides: results } = useRideFilters(filteredResults);
+
+  const recommendedRides = [...results]
+    .sort((left, right) => scoreRideForRecommendation(right) - scoreRideForRecommendation(left))
+    .slice(0, 2);
+  const bookedRides = allAvailableRides.filter(ride => bookedRideIds.has(ride.id)).slice(0, 3);
+  const selectedPriceQuote =
+    selectedSignal?.priceQuote ??
+    (corridorPlan
       ? getMovementPriceQuote({
-          basePriceJod: corridorPlan.sharedPriceJod,
-          corridorId: corridorPlan.id,
-          forecastDemandScore: corridorPlan.predictedDemandScore,
-          membership: routeIntelligence.membership,
-        })
+        basePriceJod: corridorPlan.sharedPriceJod,
+        corridorId: corridorPlan.id,
+        forecastDemandScore: corridorPlan.predictedDemandScore,
+        membership: routeIntelligence.membership,
+      })
       : null);
-  const hasSelectedPriceQuote = typeof selectedPriceQuote?.finalPriceJod === 'number';
-  const savedReminderIds = useMemo(
-    () => new Set(savedReminders.map((reminder) => reminder.corridorId)),
-    [savedReminders],
-  );
-  const bookedRideSummaries = useMemo(
-    () => bookedRides.map((ride) => `${ride.from} to ${ride.to} | ${ride.time} | ${ride.driver.name}`),
-    [bookedRides],
-  );
 
   const resolveSignalForRoute = (routeFrom: string, routeTo: string) =>
-    signalLookup.get(`${routeFrom}::${routeTo}`) ?? getLiveCorridorSignal(routeFrom, routeTo, routeIntelligence.membership);
-  const nearbyCorridorCards = useMemo(
-    () => nearbyCorridors.map((ride) => {
-      const signal = resolveSignalForRoute(ride.from, ride.to);
-      const priceLabel = ride.seatsAvailable > 0
-        ? `${getMovementPriceQuote({
-            basePriceJod: ride.pricePerSeat,
-            corridorId: signal?.id,
-            forecastDemandScore: signal?.forecastDemandScore,
-            membership: routeIntelligence.membership,
-          }).finalPriceJod} JOD`
-        : 'Sold out';
-      return { ride, priceLabel };
-    }),
-    [nearbyCorridors, routeIntelligence.membership, routeIntelligence.updatedAt],
-  );
+    signalLookup.get(`${routeFrom}::${routeTo}`) ??
+    getLiveCorridorSignal(routeFrom, routeTo, routeIntelligence.membership);
+  const openMyTrips = () => nav('/app/my-trips?tab=rides');
+  const selectedBooking = selected ? (bookingByRideId.get(selected.id) ?? null) : null;
+  const getRideBookingStatus = (rideId: string): 'pending_driver' | 'confirmed' | null => {
+    const status = bookingByRideId.get(rideId)?.status;
+    return status === 'pending_driver' || status === 'confirmed' ? status : null;
+  };
 
   useEffect(() => {
     if (!user?.id) return;
-    void hydrateRideBookings(user.id, getConnectedRides());
+    const unsubscribe = subscribeToRideBookingRealtime({
+      userId: user.id,
+      rides: getConnectedRides(),
+      onBookingsChange: setRideBookings,
+    });
     void hydrateDemandAlerts(user.id);
+    return unsubscribe;
   }, [user?.id]);
 
   useEffect(() => {
     setSavedReminders(getRouteReminders());
-  }, [routeIntelligence.updatedAt]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    void hydrateRouteReminders(user.id).then((reminders) => {
-      setSavedReminders(reminders);
-    });
-  }, [user?.id, routeIntelligence.updatedAt]);
-
-  useEffect(() => {
-    void syncRouteReminders(user ?? undefined).then((delivered) => {
-      if (delivered.length > 0) {
-        setSavedReminders(getRouteReminders());
-      }
+    void syncRouteReminders(user ?? undefined).then(delivered => {
+      if (delivered.length > 0) setSavedReminders(getRouteReminders());
     });
   }, [routeIntelligence.updatedAt, user?.email, user?.phone]);
 
   useEffect(() => {
-    writeStoredStringList(RIDE_BOOKINGS_KEY, Array.from(booked));
-  }, [booked]);
+    writeStoredStringList(RIDE_BOOKINGS_KEY, Array.from(bookedRideIds));
+  }, [bookedRideIds]);
 
   useEffect(() => {
     writeStoredStringList(RIDE_SEARCHES_KEY, recentSearches);
@@ -231,8 +314,8 @@ export function FindRidePage() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const nextFrom = CITIES.includes(params.get('from') ?? '') ? params.get('from')! : 'Amman';
-    const nextTo = CITIES.includes(params.get('to') ?? '') ? params.get('to')! : 'Aqaba';
+    const nextFrom = CITIES.includes(params.get('from') ?? '') ? params.get('from') ?? '' : 'Amman';
+    const nextTo = CITIES.includes(params.get('to') ?? '') ? params.get('to') ?? '' : 'Aqaba';
     const nextDate = params.get('date') ?? '';
     const nextSearched = params.get('search') === '1';
     setFrom(nextFrom);
@@ -241,14 +324,8 @@ export function FindRidePage() {
     setSearched(nextSearched);
   }, [location.search]);
 
-  useEffect(() => () => {
-    if (searchTimerRef.current !== null) {
-      window.clearTimeout(searchTimerRef.current);
-    }
-  }, []);
-
   const handleSearch = () => {
-    if (!routeEndpointsAreDistinct(from, to)) {
+    if (from === to) {
       setSearchError(t.chooseDifferentCities);
       setSearched(false);
       return;
@@ -256,36 +333,22 @@ export function FindRidePage() {
 
     setSearchError(null);
     setBookingMessage(null);
-    setLoading(true);
-
-    if (searchTimerRef.current !== null) {
-      window.clearTimeout(searchTimerRef.current);
-    }
-
-    searchTimerRef.current = window.setTimeout(() => {
-      setLoading(false);
-      setSearched(true);
-      setRecentSearches((previous) => {
-        const label = `${from} to ${to}${date ? ` on ${date}` : ''}`;
-        return [label, ...previous.filter((item) => item !== label)].slice(0, 4);
-      });
-      void trackGrowthEvent({
-        userId: user?.id,
-        eventName: 'ride_search_executed',
-        funnelStage: 'searched',
-        serviceType: 'ride',
-        from,
-        to,
-        metadata: {
-          date: date || null,
-          corridorId: corridorPlan?.id ?? null,
-          demandScore: selectedSignal?.forecastDemandScore ?? corridorPlan?.predictedDemandScore ?? null,
-          priceQuote: selectedPriceQuote,
-          pricePressure: selectedSignal?.pricePressure ?? null,
-        },
-      });
-      searchTimerRef.current = null;
-    }, 700);
+    setBookingSuccess(null);
+    setLoading(false);
+    setSearched(true);
+    setRecentSearches(previous => {
+      const label = `${from} to ${to}${date ? ` on ${date}` : ''}`;
+      return [label, ...previous.filter(item => item !== label)].slice(0, 4);
+    });
+    void trackGrowthEvent({
+      userId: user?.id,
+      eventName: 'ride_search_executed',
+      funnelStage: 'searched',
+      serviceType: 'ride',
+      from,
+      to,
+      metadata: { date: date || null },
+    });
   };
 
   const handleOpenRide = (ride: Ride) => {
@@ -308,21 +371,33 @@ export function FindRidePage() {
       metadata: {
         rideId: ride.id,
         driverName: ride.driver.name,
-        corridorId: rideSignal?.id ?? null,
-        demandScore: rideSignal?.forecastDemandScore ?? null,
-        pricePressure: rideSignal?.pricePressure ?? null,
-        priceQuote,
       },
     });
   };
 
-  const handleBook = (ride: Ride) => {
+  const handleBook = async (ride: Ride) => {
+    if (bookingInFlightId) return;
+    const existingBooking = bookingByRideId.get(ride.id);
+    if (existingBooking) {
+      setBookingMessage(
+        existingBooking.status === 'pending_driver'
+          ? ar
+            ? `${routeLabel(ride.from, ride.to)} بانتظار تأكيد السائق في رحلاتي.`
+            : `${ride.from} to ${ride.to} is already waiting for driver confirmation in My Trips.`
+          : ar
+            ? `${routeLabel(ride.from, ride.to)} مؤكد في رحلاتي.`
+            : `${ride.from} to ${ride.to} is already confirmed in My Trips.`,
+      );
+      openMyTrips();
+      return;
+    }
+
     if (!user) {
       nav('/app/auth');
       return;
     }
     if (ride.seatsAvailable <= 0) {
-      setBookingMessage(`That departure is already full. ${t.openBusFallback} and try the next corridor wave.`);
+      setBookingMessage(ar ? `هذا المشوار ممتلئ. ${t.openBusFallback}.` : `That ride is full. ${t.openBusFallback}.`);
       setSelected(null);
       return;
     }
@@ -334,56 +409,109 @@ export function FindRidePage() {
       forecastDemandScore: rideSignal?.forecastDemandScore,
       membership: routeIntelligence.membership,
     });
+    const finalPrice = ridePriceQuote.finalPriceJod;
 
-    const booking = createRideBooking({
-      rideId: ride.id,
-      ownerId: ride.ownerId,
-      driverPhone: ride.driver.phone,
-      driverEmail: ride.driver.email,
-      passengerId: user.id,
-      from: ride.from,
-      to: ride.to,
-      date: ride.date,
-      time: ride.time,
-      driverName: ride.driver.name,
-      passengerName: user.name,
-      passengerPhone: user.phone,
-      passengerEmail: user.email,
-      seatsRequested: 1,
-      pricePerSeatJod: ridePriceQuote.finalPriceJod,
-      routeMode: ride.routeMode === 'live_post' ? 'live_post' : 'network_inventory',
-    });
+    setBookingInFlightId(ride.id);
 
-    setBooked((previous) => new Set(previous).add(ride.id));
-    setBookingMessage(
-      booking.status === 'pending_driver'
-        ? `${ride.from} to ${ride.to} was sent to ${ride.driver.name} for approval at ${ridePriceQuote.finalPriceJod} JOD. We will update you as soon as the captain responds.`
-        : `${ride.from} to ${ride.to} with ${ride.driver.name} is reserved at ${ridePriceQuote.finalPriceJod} JOD. Ticket ${booking.ticketCode} is now saved in your trips.`,
-    );
+    try {
+      const booking = await createRideBooking({
+        rideId: ride.id,
+        ownerId: ride.ownerId,
+        passengerId: user.id,
+        from: ride.from,
+        to: ride.to,
+        date: ride.date,
+        time: ride.time,
+        driverName: ride.driver.name,
+        passengerName: user.name,
+        seatsRequested: 1,
+        pricePerSeatJod: finalPrice,
+        routeMode: ride.routeMode === 'live_post' ? 'live_post' : 'network_inventory',
+      });
 
-    notificationsAPI.createNotification({
-      title: booking.status === 'pending_driver' ? 'Route request sent' : t.bookingStarted,
-      message:
+      setRideBookings(getRideBookings());
+      setBookingSuccess({
+        status: booking.status === 'pending_driver' ? 'pending_driver' : 'confirmed',
+        routeLabel: routeLabel(ride.from, ride.to),
+        driverName: ride.driver.name,
+        priceJod: finalPrice,
+        ticketCode: booking.ticketCode,
+      });
+      setBookingMessage(
         booking.status === 'pending_driver'
-          ? `${ride.from} to ${ride.to} is waiting for driver approval at ${ridePriceQuote.finalPriceJod} JOD.`
-          : `${ride.from} to ${ride.to} at ${ride.time} is now in your trips at ${ridePriceQuote.finalPriceJod} JOD with boarding reminders.`,
-      type: 'booking',
-      priority: 'high',
-      action_url: '/app/my-trips?tab=rides',
-      channels: ['whatsapp', 'sms', 'email'],
-      contact: {
-        phone: ride.driver.phone || null,
-        email: ride.driver.email ?? null,
-      },
-    }).catch(() => {});
+          ? ar
+            ? `تم إرسال الطلب لمسار ${routeLabel(ride.from, ride.to)}.`
+            : `Request sent for ${ride.from} to ${ride.to}.`
+          : ar
+            ? `تم تأكيد المقعد لمسار ${routeLabel(ride.from, ride.to)}.`
+            : `Seat confirmed for ${ride.from} to ${ride.to}.`,
+      );
 
-    if (permission === 'default') {
-      requestPermission().catch(() => {});
+      // Payment must succeed for confirmed bookings. For pending_driver bookings
+      // payment is deferred until the driver accepts — wallet failure is non-fatal.
+      if (booking.status === 'confirmed') {
+        try {
+          await walletApi.pay(user.id, finalPrice, 'ride_booking', booking.id, {
+            rideId: ride.id,
+            from: ride.from,
+            to: ride.to,
+            seats: 1,
+          });
+        } catch (paymentError) {
+          // Payment failed on a confirmed booking — cancel it to keep data consistent.
+          console.error('[Wallet] ride booking payment failed, cancelling booking:', paymentError);
+          await updateRideBooking(booking.id, { status: 'cancelled' }).catch(() => { });
+          setRideBookings(getRideBookings());
+          setBookingSuccess(null);
+          setBookingMessage(
+            ar
+              ? `تم إلغاء حجز ${routeLabel(ride.from, ride.to)} لأن الدفع ما اكتمل. تحقق من رصيد المحفظة وجرب مرة ثانية.`
+              : `Booking for ${ride.from} to ${ride.to} was cancelled because payment could not be processed. Please check your wallet balance and try again.`,
+          );
+          return;
+        }
+      } else {
+        // pending_driver: attempt payment but do not cancel on failure.
+        walletApi
+          .pay(user.id, finalPrice, 'ride_booking', booking.id, {
+            rideId: ride.id,
+            from: ride.from,
+            to: ride.to,
+            seats: 1,
+          })
+          .catch(err => {
+            console.warn('[Wallet] deferred payment queued for driver-confirm flow:', err);
+          });
+      }
+
+      notificationsAPI
+        .createNotification({
+          title: booking.status === 'pending_driver'
+            ? ar ? 'تم إرسال طلب المسار' : 'Route request sent'
+            : t.bookingStarted,
+          message:
+            booking.status === 'pending_driver'
+              ? ar
+                ? `${routeLabel(ride.from, ride.to)} بانتظار موافقة السائق بسعر ${finalPrice} JOD.`
+                : `${ride.from} to ${ride.to} is waiting for driver approval at ${finalPrice} JOD.`
+              : ar
+                ? `${routeLabel(ride.from, ride.to)} الساعة ${ride.time} صار في رحلاتي بسعر ${finalPrice} JOD مع تنبيهات الصعود.`
+                : `${ride.from} to ${ride.to} at ${ride.time} is now in your trips at ${finalPrice} JOD with boarding reminders.`,
+          type: 'booking',
+          priority: 'high',
+          action_url: '/app/my-trips?tab=rides',
+        })
+        .catch(() => { });
+
+      if (permission === 'default') {
+        requestPermission().catch(() => { });
+      }
+
+      notifyTripConfirmed(ride.driver.name, routeLabel(ride.from, ride.to));
+      void recordMovementActivity('ride_booked', corridorPlan?.id ?? null);
+    } finally {
+      setBookingInFlightId(null);
     }
-
-    notifyTripConfirmed(ride.driver.name, `${ride.from} to ${ride.to}`);
-    void recordMovementActivity('ride_booked', corridorPlan?.id ?? null);
-    setSelected(null);
   };
 
   const handleDemandCapture = () => {
@@ -395,7 +523,7 @@ export function FindRidePage() {
       userId: user?.id,
     });
 
-    setWaitlistMessage(`Demand alert saved for ${alert.from} to ${alert.to}. Wasel Brain will wake you around ${selectedSignal?.nextWaveWindow ?? 'the next corridor wave'}.`);
+    setWaitlistMessage(ar ? `تم حفظ التنبيه لمسار ${routeLabel(alert.from, alert.to)}.` : `Alert saved for ${alert.from} to ${alert.to}.`);
     void trackGrowthEvent({
       userId: user?.id,
       eventName: 'route_demand_alert_saved',
@@ -407,12 +535,12 @@ export function FindRidePage() {
   };
 
   const handleSaveReminder = (corridorId: string) => {
-    const suggestion = recurringSuggestions.find((item) => item.corridorId === corridorId);
+    const suggestion = recurringSuggestions.find(item => item.corridorId === corridorId);
     if (!suggestion) return;
 
-    const reminder = createReminderFromSuggestion(suggestion, user?.id);
+    const reminder = createReminderFromSuggestion(suggestion);
     setSavedReminders(getRouteReminders());
-    setRetentionMessage(`Reminder saved for ${reminder.label}. ${formatRouteReminderSchedule(reminder)}.`);
+    setRetentionMessage(ar ? `تم حفظ التذكير. ${formatRouteReminderSchedule(reminder)}.` : `Reminder saved. ${formatRouteReminderSchedule(reminder)}.`);
     void trackGrowthEvent({
       userId: user?.id,
       eventName: 'route_reminder_saved',
@@ -423,159 +551,1101 @@ export function FindRidePage() {
     });
   };
 
-  const handleFocusCorridor = (nextFrom: string, nextTo: string) => {
-    setFrom(nextFrom);
-    setTo(nextTo);
-    setSearched(true);
-  };
-
-  const handleClearDateFilter = () => {
-    setDate('');
-    setSearchError(null);
-    setSearched(true);
-  };
-
-  const handleOpenBusFallback = () => {
-    nav(`/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
-  };
-
   return (
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="🛣️"
-          title="Find a Ride"
-          titleAr={copy.tabRide}
-          sub="Choose your cities, compare live departures, and book the right ride fast."
-          action={{ label: 'Offer route', onClick: () => nav('/app/offer-ride') }}
+          emoji={<Search size={24} />}
+          title={i18nT('findRidePage.book_a_ride')}
+          titleAr="احجز مشوار"
+          sub={ar ? 'قارن المسارات الموثوقة والطلب المباشر ووضوح السعر لكل خط.' : 'Compare verified routes, live demand, and route-level price clarity.'}
+          action={{ label: ar ? 'اعرض مشوار' : 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
         />
 
-        <CoreExperienceBanner
-          title="Search once, compare clearly, and book with confidence."
-          detail={`${category.promise} Shared price, route timing, and the best departure windows stay visible without slowing the booking flow down.`}
-          tone={DS.cyan}
-        />
-
-        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 18 }}>
-          <StakeholderSignalBanner
-            dir={ar ? 'rtl' : 'ltr'}
-            eyebrow={ar ? 'واصل · تواصل الحجز' : 'Wasel · booking comms'}
-            title={
-              ar
-                ? 'اكتشاف الرحلة أصبح لغة مشتركة بين الراكب والطلب الحي والسائق'
-                : 'Ride discovery now reads as a shared language between the rider, live demand, and driver supply'
-            }
-            detail={
-              ar
-                ? 'هذه الصفحة تجمع التسعير والضغط على المسار والتنبيهات والتذكيرات في قرار واحد أوضح للحجز.'
-                : 'This page now pulls pricing, corridor pressure, alerts, and reminders into one clearer booking decision.'
-            }
-            stakeholders={[
-              { label: ar ? 'نتائج' : 'Matches', value: String(results.length), tone: 'teal' },
-              { label: ar ? 'الممرات الحية' : 'Live corridors', value: String(featuredSignals.length), tone: 'blue' },
-              { label: ar ? 'الحجوزات' : 'Booked', value: String(booked.size), tone: 'green' },
-              { label: ar ? 'تنبيهات الطلب' : 'Demand alerts', value: String(demandStats.active), tone: 'amber' },
-            ]}
-            statuses={[
-              { label: ar ? 'جاهزية المسار' : 'Route readiness', value: routeReadinessLabel, tone: corridorRides.length >= 2 ? 'green' : corridorRides.length === 1 ? 'teal' : 'amber' },
-              { label: ar ? 'التسعير' : 'Price signal', value: hasSelectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : 'Pending', tone: hasSelectedPriceQuote ? 'blue' : 'slate' },
-              { label: ar ? 'التذكيرات المحفوظة' : 'Saved reminders', value: String(savedReminders.length), tone: savedReminders.length > 0 ? 'green' : 'slate' },
-            ]}
-            lanes={[
-              { label: ar ? 'مسار الراكب' : 'Rider lane', detail: ar ? 'البحث والنتائج والحجز أصبحت تظهر في سياق واحد.' : 'Search, results, and booking now stay inside one consistent context.' },
-              { label: ar ? 'مسار الطلب' : 'Demand lane', detail: ar ? 'تنبيهات الانتظار والتذكيرات تجعل الممرات الضعيفة قابلة للمتابعة بدل الضياع.' : 'Waitlist alerts and reminders keep weaker corridors trackable instead of invisible.' },
-              { label: ar ? 'مسار السائق' : 'Driver lane', detail: ar ? 'الإشارة الحية والتسعير المشترك يوضحان متى تكون الرحلة جاهزة للحجز.' : 'Live signal strength and shared pricing show when a route is ready to book.' },
-            ]}
-          />
-        </div>}
+        {/* Persistent booking indicator */}
+        {bookedRideIds.size > 0 && (
+          <div
+            style={{
+              marginBottom: 16,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              background: `${DS.green}12`,
+              border: `1px solid ${DS.green}30`,
+              borderRadius: r(14),
+              padding: '12px 16px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <CheckCircle2 size={16} color={DS.green} />
+              <span style={{ color: C.text, fontSize: '0.84rem', fontWeight: 700 }}>
+                {bookedRideIds.size} {i18nT('findRidePage.active_booking')} {i18nT('findRidePage.in_progress')}</span>
+            </div>
+            <WaselButton onClick={openMyTrips} variant="outline" size="sm">
+              {i18nT('findRidePage.view_in_my_trips')}</WaselButton>
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
-          {([
-            ['ride', 'Shared route'],
-            ['package', copy.tabPackage],
-          ] as const).map(([key, label]) => (
-            <button
+          {(
+            [
+              ['ride', ar ? 'مسار مشترك' : 'Shared route'],
+              ['package', copy.tabPackage],
+            ] as const
+          ).map(([key, label]) => (
+            <WaselButton
               key={key}
               onClick={() => setTab(key)}
+              variant={tab === key ? 'primary' : 'outline'}
               style={{
                 flex: 1,
-                height: 44,
-                borderRadius: r(12),
-                border: `1px solid ${tab === key ? DS.cyan : DS.border}`,
-                background: tab === key ? `${DS.cyan}18` : DS.card,
-                color: '#fff',
-                fontWeight: 700,
-                cursor: 'pointer',
               }}
             >
               {label}
-            </button>
+            </WaselButton>
           ))}
         </div>
 
         {tab === 'ride' && (
-          <FindRideRideTab
-            labels={{
-              from: t.from,
-              to: t.to,
-              date: t.date,
-              searching: t.searching,
-              cheapest: t.cheapest,
-              earliest: t.earliest,
-              topRated: t.topRated,
-              noRidesFound: t.noRidesFound,
-              clearDateFilter: t.clearDateFilter,
-              openBusFallback: t.openBusFallback,
-              nearbyCorridors: t.nearbyCorridors,
-              recentSearches: t.recentSearches,
-              bookedTrips: t.bookedTrips,
-              noTripsYet: t.noTripsYet,
-            }}
-            staticCopy={{
-              noResultsIcon: copy.noResultsIcon,
-              notifyMe: copy.notifyMe,
-            }}
-            from={from}
-            to={to}
-            date={date}
-            loading={loading}
-            searched={searched}
-            sort={sort}
-            searchError={searchError}
-            bookingMessage={bookingMessage}
-            retentionMessage={retentionMessage}
-            waitlistMessage={waitlistMessage}
-            routeReadinessLabel={routeReadinessLabel}
-            corridorRidesCount={corridorRides.length}
-            demandStatsActive={demandStats.active}
-            selectedSignal={selectedSignal}
-            selectedPriceQuote={selectedPriceQuote}
-            corridorPlan={corridorPlan}
-            featuredSignals={featuredSignals}
-            results={results}
-            bookedRideIds={booked}
-            nearbyCorridors={nearbyCorridorCards}
-            recurringSuggestions={recurringSuggestions}
-            savedReminders={savedReminders}
-            savedReminderIds={savedReminderIds}
-            recentSearches={recentSearches}
-            bookedRideSummaries={bookedRideSummaries}
-            searchFromCoord={searchFromCoord}
-            searchToCoord={searchToCoord}
-            onSetFrom={setFrom}
-            onSetTo={setTo}
-            onSetDate={setDate}
-            onSearch={handleSearch}
-            onSetSort={setSort}
-            onOpenRide={handleOpenRide}
-            onFocusCorridor={handleFocusCorridor}
-            onSaveReminder={handleSaveReminder}
-            onClearDateFilter={handleClearDateFilter}
-            onOpenBusFallback={handleOpenBusFallback}
-            onDemandCapture={handleDemandCapture}
-            formatRouteReminderSchedule={formatRouteReminderSchedule}
-            resolveSignalForRide={(ride) => resolveSignalForRoute(ride.from, ride.to)}
-          />
+          <>
+            <div
+              style={{
+                background: DS.card,
+                borderRadius: r(16),
+                padding: 20,
+                border: `1px solid ${DS.border}`,
+                marginBottom: 22,
+              }}
+            >
+              <div
+                className="sp-search-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr 180px',
+                  gap: 12,
+                  marginBottom: 14,
+                }}
+              >
+                {[
+                  { label: t.from, value: from, setter: setFrom, icon: DS.green },
+                  { label: t.to, value: to, setter: setTo, icon: DS.cyan },
+                ].map(field => (
+                  <div key={field.label}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.7rem',
+                        color: DS.muted,
+                        fontWeight: 700,
+                        marginBottom: 6,
+                      }}
+                    >
+                      {field.label}
+                    </label>
+                    <WaselSelect
+                      value={field.value}
+                      onChange={field.setter}
+                      options={CITIES.map(city => ({ value: city, label: cityLabel(city) }))}
+                      containerStyle={{ gap: 0 }}
+                      style={{ height: 46, paddingLeft: 42 }}
+                    />
+                  </div>
+                ))}
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '0.7rem',
+                      color: DS.muted,
+                      fontWeight: 700,
+                      marginBottom: 6,
+                    }}
+                  >
+                    {t.date}
+                  </label>
+                  <WaselInput
+                    type={ar ? 'text' : 'date'}
+                    value={date}
+                    onChange={setDate}
+                    min={ar ? undefined : new Date().toISOString().split('T')[0]}
+                    placeholder={ar ? 'السنة-الشهر-اليوم' : undefined}
+                    inputMode={ar ? 'numeric' : undefined}
+                    icon={<Calendar size={15} color={DS.muted} />}
+                    style={{ height: 46, colorScheme: 'dark' }}
+                  />
+                </div>
+              </div>
+
+              {searchError && (
+                <div
+                  style={{
+                    marginBottom: 14,
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'center',
+                    background: `${DS.gold}12`,
+                    border: `1px solid ${DS.gold}30`,
+                    borderRadius: r(14),
+                    padding: '12px 14px',
+                    color: C.text,
+                    fontSize: '0.84rem',
+                  }}
+                >
+                  <Shield size={16} color={DS.gold} />
+                  <span>{searchError}</span>
+                </div>
+              )}
+
+              <WaselButton
+                onClick={handleSearch}
+                data-testid="find-ride-search"
+                fullWidth
+                size="lg"
+                style={{
+                  gap: 10,
+                }}
+              >
+                {loading || inventoryLoading ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                    style={{
+                      width: 20,
+                      height: 20,
+                      border: `2px solid ${C.border}`,
+                      borderTop: `2px solid ${C.text}`,
+                      borderRadius: '50%',
+                    }}
+                  />
+                ) : (
+                  <Search size={18} />
+                )}
+                {loading || inventoryLoading ? t.searching : t.searchRides}
+              </WaselButton>
+
+              <div
+                style={{
+                  marginTop: 14,
+                  background: DS.card2,
+                  borderRadius: r(14),
+                  padding: 12,
+                  border: `1px solid ${DS.border}`,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                    marginBottom: 10,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div>
+                    <p
+                      style={{
+                        color: DS.muted,
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        margin: '0 0 4px',
+                      }}
+                    >
+                      {i18nT('findRidePage.route_preview')}</p>
+                    <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>
+                      {liveDemandLabel}
+                    </p>
+                  </div>
+                  {selectedSignal && (
+                    <span style={{ ...pill(DS.green), fontSize: '0.72rem' }}>
+                      {selectedSignal.forecastDemandScore}{i18nT('findRidePage.100_demand_score')}</span>
+                  )}
+                </div>
+                <MapWrapper
+                  mode="static"
+                  center={midpoint(searchFromCoord, searchToCoord)}
+                  pickupLocation={searchFromCoord}
+                  dropoffLocation={searchToCoord}
+                  height={180}
+                  showMosques={false}
+                  showRadars={false}
+                />
+              </div>
+
+              {bookingMessage && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'center',
+                    background: C.greenDim,
+                    border: `1px solid ${C.greenDim}`,
+                    borderRadius: r(14),
+                    padding: '12px 14px',
+                    color: C.text,
+                    fontSize: '0.84rem',
+                  }}
+                >
+                  <CheckCircle2 size={16} color={DS.green} />
+                  <span>{bookingMessage}</span>
+                </div>
+              )}
+              {bookingSuccess && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    background: `linear-gradient(135deg, ${C.greenDim}, ${C.cyanDim})`,
+                    border: `1px solid ${C.greenDim}`,
+                    borderRadius: r(16),
+                    padding: '16px 18px',
+                    display: 'grid',
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <div>
+                      <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem' }}>
+                        {bookingSuccess.status === 'pending_driver'
+                          ? ar ? 'تم إرسال الطلب' : 'Request sent'
+                          : ar ? 'تم تأكيد المقعد' : 'Seat confirmed'}
+                      </div>
+                      <div
+                        style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.6, marginTop: 6 }}
+                      >
+                        {bookingSuccess.status === 'pending_driver'
+                          ? ar
+                            ? `${bookingSuccess.routeLabel} بانتظار ${bookingSuccess.driverName}. واصل بحدّث رحلاتي أول ما السائق يؤكد.`
+                            : `${bookingSuccess.routeLabel} is now waiting on ${bookingSuccess.driverName}. Wasel will update My Trips as soon as the driver confirms.`
+                          : ar
+                            ? `${bookingSuccess.routeLabel} مؤمّن بسعر ${locale.formatCurrency(bookingSuccess.priceJod, 'JOD')}. تفاصيل الصعود وتتبع التذكرة جاهزة في رحلاتي.`
+                            : `${bookingSuccess.routeLabel} is secured at ${locale.formatCurrency(bookingSuccess.priceJod, 'JOD')}. Boarding details and ticket tracking are now ready in My Trips.`}
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        ...pill(bookingSuccess.status === 'pending_driver' ? DS.gold : DS.green),
+                        fontSize: '0.72rem',
+                      }}
+                    >
+                      {bookingSuccess.status === 'pending_driver'
+                        ? ar ? `${locale.formatCurrency(bookingSuccess.priceJod, 'JOD')} بانتظار التأكيد` : `${locale.formatCurrency(bookingSuccess.priceJod, 'JOD')} pending`
+                        : ar ? `${locale.formatCurrency(bookingSuccess.priceJod, 'JOD')} مؤكد` : `${locale.formatCurrency(bookingSuccess.priceJod, 'JOD')} confirmed`}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <WaselButton onClick={openMyTrips} variant="gold" size="sm">
+                      {i18nT('findRidePage.open_my_trips')}</WaselButton>
+                    <WaselButton
+                      onClick={() => setBookingSuccess(null)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {i18nT('findRidePage.keep_browsing')}</WaselButton>
+                  </div>
+                  {bookingSuccess.ticketCode ? (
+                    <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
+                      {i18nT('findRidePage.ticket')}{bookingSuccess.ticketCode}
+                    </div>
+                  ) : null}
+                </div>
+              )}
+              {retentionMessage && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    display: 'flex',
+                    gap: 10,
+                    alignItems: 'center',
+                    background: `${DS.cyan}12`,
+                    border: `1px solid ${DS.cyan}30`,
+                    borderRadius: r(14),
+                    padding: '12px 14px',
+                    color: C.text,
+                    fontSize: '0.84rem',
+                  }}
+                >
+                  <Sparkles size={16} color={DS.cyan} />
+                  <span>{retentionMessage}</span>
+                </div>
+              )}
+
+              <div
+                className="sp-4col"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: 12,
+                  marginTop: 14,
+                }}
+              >
+                {[
+                  {
+                    label: ar ? 'المغادرات المتاحة' : 'Available departures',
+                    value: selectedSignal
+                      ? ar ? `${selectedSignal.activeSupply} مغادرات` : `${selectedSignal.activeSupply} departures`
+                      : ar ? `${corridorRides.length} مغادرات` : `${corridorRides.length} departures`,
+                    sub: selectedSignal
+                      ? ar ? `${selectedSignal.liveBookings} محجوز · ${selectedSignal.activeDemandAlerts} يتابعون` : `${selectedSignal.liveBookings} booked · ${selectedSignal.activeDemandAlerts} watching`
+                      : ar ? 'العرض المباشر على هذا المسار' : 'Live supply on this route',
+                    tone: DS.cyan,
+                  },
+                  {
+                    label: ar ? 'سعر المقعد المشترك' : 'Shared seat price',
+                    value: selectedPriceQuote ? `${selectedPriceQuote.finalPriceJod} JOD` : '--',
+                    sub: selectedPriceQuote
+                      ? ar ? `بتوفر ${selectedPriceQuote.discountJod} JOD مقارنة بالمشوار الفردي` : `You save ${selectedPriceQuote.discountJod} JOD vs solo`
+                      : ar ? 'السعر يظهر بعد البحث' : 'Price shown after search',
+                    tone: DS.green,
+                  },
+                  {
+                    label: ar ? 'نافذة المغادرة القادمة' : 'Next departure window',
+                    value:
+                      selectedSignal?.nextWaveWindow ? windowLabel(selectedSignal.nextWaveWindow) :
+                      corridorPlan?.autoGroupWindow ? windowLabel(corridorPlan.autoGroupWindow) :
+                      (ar ? 'تحقق بعد البحث' : 'Check after search'),
+                    sub:
+                      selectedSignal?.recommendedPickupPoint ? pickupLabel(selectedSignal.recommendedPickupPoint) :
+                      corridorPlan?.pickupPoints[0] ? pickupLabel(corridorPlan.pickupPoints[0]) :
+                      (ar ? 'نقطة الانطلاق بتظهر هون' : 'Pickup point shown here'),
+                    tone: DS.gold,
+                  },
+                  {
+                    label: ar ? 'موثوقية المسار' : 'Route reliability',
+                    value: selectedSignal
+                      ? `${selectedSignal.routeOwnershipScore}/100`
+                      : (corridorPlan?.routeMoat ?? (ar ? 'ينمو' : 'Growing')),
+                    sub: selectedSignal
+                      ? localizeSignalText(selectedSignal.productionSources.slice(0, 2).join(' · '))
+                      : ar ? `${demandStats.active} تنبيهات محفوظة` : `${demandStats.active} saved alerts`,
+                    tone: DS.cyan,
+                  },
+                ].map(item => (
+                  <div
+                    key={item.label}
+                    style={{
+                      background: DS.card2,
+                      borderRadius: r(14),
+                      padding: '14px 15px',
+                      border: `1px solid ${DS.border}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: DS.muted,
+                        fontSize: '0.68rem',
+                        fontWeight: 800,
+                        marginBottom: 6,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0,
+                      }}
+                    >
+                      {item.label}
+                    </div>
+                    <div
+                      style={{
+                        color: item.tone,
+                        fontWeight: 800,
+                        fontSize: '0.88rem',
+                        lineHeight: 1.55,
+                      }}
+                    >
+                      {item.value}
+                    </div>
+                    <div
+                      style={{ color: DS.sub, fontSize: '0.76rem', marginTop: 6, lineHeight: 1.55 }}
+                    >
+                      {item.sub}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div
+              className="sp-results-header"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 16,
+                flexWrap: 'wrap',
+                gap: 10,
+              }}
+            >
+              <h2 style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
+                {searched
+                  ? ar
+                    ? `${routeArrowLabel(from, to)} · ${results.length} مشاوير موجودة`
+                    : `${from} → ${to} · ${results.length} ride${results.length !== 1 ? 's' : ''} found`
+                  : ar
+                    ? `مسارات شائعة · ${results.length} مغادرات`
+                    : `Popular routes · ${results.length} departures`}
+              </h2>
+              {selectedSignal ? (
+                <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
+                  {i18nT('findRidePage.best_price')}{selectedSignal.priceQuote.finalPriceJod} {i18nT('findRidePage.jod_next_departure')}{windowLabel(selectedSignal.nextWaveWindow)}
+                </div>
+              ) : null}
+              <div className="sp-sort-bar" style={{ display: 'flex', gap: 6 }}>
+                {(
+                  [
+                    ['price', t.cheapest],
+                    ['time', t.earliest],
+                    ['rating', t.topRated],
+                  ] as const
+                ).map(([key, label]) => (
+                  <WaselButton
+                    key={key}
+                    onClick={() => setSort(key)}
+                    variant={sort === key ? 'primary' : 'outline'}
+                    size="sm"
+                  >
+                    {label}
+                  </WaselButton>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
+              <AnimatePresence>
+                {loading || inventoryLoading ? (
+                  <motion.div key="skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <ListSkeleton count={3} />
+                  </motion.div>
+                ) : results.length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    style={{
+                      background: DS.card,
+                      borderRadius: r(20),
+                      padding: '60px 24px',
+                      textAlign: 'center',
+                      border: `1px solid ${DS.border}`,
+                    }}
+                  >
+                    <div style={{ fontSize: '3rem', marginBottom: 16 }}>{copy.noResultsIcon}</div>
+                    <h3 style={{ color: C.text, fontWeight: 800, marginBottom: 8 }}>
+                      {t.noRidesFound}
+                    </h3>
+                    <p style={{ color: DS.sub, fontSize: '0.875rem' }}>
+                      {i18nT('findRidePage.no_ride_found_yet_save_this_route_and_get_alerted_when_one_opens')}{selectedSignal ? (ar ? ` حوالي ${selectedSignal.nextWaveWindow}` : ` around ${selectedSignal.nextWaveWindow}`) : ''}.
+                    </p>
+                    <div
+                      className="sp-empty-actions"
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: 10,
+                        marginTop: 18,
+                      }}
+                    >
+                      <WaselButton
+                        onClick={() => {
+                          setDate('');
+                          setSearchError(null);
+                          setSearched(true);
+                        }}
+                        variant="outline"
+                      >
+                        {t.clearDateFilter}
+                      </WaselButton>
+                      <WaselButton
+                        onClick={() =>
+                          nav(
+                            `/app/bus?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+                          )
+                        }
+                        variant="gold"
+                      >
+                        {t.openBusFallback}
+                      </WaselButton>
+                    </div>
+                    <WaselButton
+                      onClick={handleDemandCapture}
+                      fullWidth
+                      variant="outline"
+                      style={{
+                        marginTop: 10,
+                      }}
+                    >
+                      {copy.notifyMe}
+                    </WaselButton>
+                    {(waitlistMessage || demandStats.active > 0) && (
+                      <div
+                        style={{
+                          marginTop: 12,
+                          color: DS.sub,
+                          fontSize: '0.78rem',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {waitlistMessage ??
+                          (ar ? `${demandStats.active} تنبيهات نشطة.` : `${demandStats.active} active alert${demandStats.active === 1 ? '' : 's'}.`)}
+                      </div>
+                    )}
+                    {nearbyCorridors.length > 0 && (
+                      <div style={{ marginTop: 20, textAlign: 'left' }}>
+                        <div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>
+                          {t.nearbyCorridors}
+                        </div>
+                        <div style={{ display: 'grid', gap: 10 }}>
+                          {nearbyCorridors.map(ride => (
+                            <WaselButton
+                              key={ride.id}
+                              onClick={() => handleOpenRide(ride)}
+                              variant="outline"
+                              style={{
+                                textAlign: 'left',
+                                padding: '12px 14px',
+                                height: 'auto',
+                                justifyContent: 'stretch',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  gap: 12,
+                                  flexWrap: 'wrap',
+                                }}
+                              >
+                                <div>
+                                  <div
+                                    style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}
+                                  >
+                                    {routeLabel(ride.from, ride.to)}
+                                  </div>
+                                  <div
+                                    style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}
+                                  >
+                                    {ride.time} | {ride.driver.name}
+                                  </div>
+                                </div>
+                                <span
+                                  style={{ ...pill(ride.seatsAvailable > 0 ? DS.cyan : DS.gold) }}
+                                >
+                                  {ride.seatsAvailable > 0
+                                    ? `${getMovementPriceQuote({ basePriceJod: ride.pricePerSeat, corridorId: resolveSignalForRoute(ride.from, ride.to)?.id, forecastDemandScore: resolveSignalForRoute(ride.from, ride.to)?.forecastDemandScore, membership: routeIntelligence.membership }).finalPriceJod} JOD`
+                                    : ar ? 'ممتلئ' : 'Sold out'}
+                                </span>
+                              </div>
+                            </WaselButton>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                ) : (
+                  results.map((ride, index) => (
+                    <FindRideCard
+                      key={ride.id}
+                      ride={ride}
+                      idx={index}
+                      bookingStatus={getRideBookingStatus(ride.id)}
+                      signal={resolveSignalForRoute(ride.from, ride.to)}
+                      onOpen={() => handleOpenRide(ride)}
+                      onOpenBooking={openMyTrips}
+                    />
+                  ))
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div
+              className="sp-2col"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.15fr 0.85fr',
+                gap: 14,
+                marginBottom: 18,
+              }}
+            >
+              <div
+                style={{
+                  background: DS.card,
+                  borderRadius: r(18),
+                  padding: '18px 18px 16px',
+                  border: `1px solid ${DS.border}`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <div
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: r(12),
+                      background: `${DS.cyan}12`,
+                      border: `1px solid ${DS.cyan}28`,
+                      display: 'grid',
+                      placeItems: 'center',
+                    }}
+                  >
+                    <Brain size={18} color={DS.cyan} />
+                  </div>
+                  <div>
+                    <div style={{ color: C.text, fontWeight: 800 }}>{i18nT('findRidePage.why_this_route_fits')}</div>
+                    <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
+                      {i18nT('findRidePage.demand_signals_for')}{routeArrowLabel(from, to)}.
+                    </div>
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {(selectedSignal
+                    ? [
+                      selectedSignal.recommendedReason,
+                      ar
+                        ? `الموجة القادمة: ${windowLabel(selectedSignal.nextWaveWindow)} من ${pickupLabel(selectedSignal.recommendedPickupPoint)}.`
+                        : `Next wave: ${selectedSignal.nextWaveWindow} from ${selectedSignal.recommendedPickupPoint}.`,
+                      ar
+                        ? `المصدر المباشر: ${localizeSignalText(selectedSignal.productionSources.slice(0, 3).join(' | '))}.`
+                        : `Live feed: ${selectedSignal.productionSources.slice(0, 3).join(' | ')}.`,
+                    ]
+                    : (corridorPlan?.intelligenceSignals ?? [
+                      ar ? 'الطلب يزيد قبل المغادرة.' : 'Demand builds before departure.',
+                      ar ? 'نقاط الانطلاق بتضل بسيطة.' : 'Pickup points stay simple.',
+                      ar ? 'المشاوير المشتركة بتضل أوفر.' : 'Shared rides stay cheaper.',
+                    ])
+                  ).map(line => (
+                    <div
+                      key={line}
+                      style={{
+                        borderRadius: r(14),
+                        border: `1px solid ${DS.border}`,
+                        background: DS.card2,
+                        padding: '12px 14px',
+                        color: C.text,
+                        fontSize: '0.82rem',
+                        lineHeight: 1.65,
+                      }}
+                    >
+                      {line}
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {(corridorPlan?.movementLayers ?? ['people', 'goods', 'services']).map(layer => (
+                    <span key={layer} style={pill(DS.green)}>
+                      <Sparkles size={10} /> {layer}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gap: 14 }}>
+                <div
+                  style={{
+                    background: DS.card,
+                    borderRadius: r(18),
+                    padding: '18px 18px 16px',
+                    border: `1px solid ${DS.border}`,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                    <div
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: r(12),
+                        background: `${DS.gold}12`,
+                        border: `1px solid ${DS.gold}28`,
+                        display: 'grid',
+                        placeItems: 'center',
+                      }}
+                    >
+                      <TrendingUp size={18} color={DS.gold} />
+                    </div>
+                    <div>
+                      <div style={{ color: C.text, fontWeight: 800 }}>{i18nT('findRidePage.popular_routes_right_now')}</div>
+                      <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
+                        {i18nT('findRidePage.routes_with_strong_live_activity')}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {featuredSignals.map(corridor => (
+                      <WaselButton
+                        key={corridor.id}
+                        onClick={() => {
+                          setFrom(corridor.from);
+                          setTo(corridor.to);
+                          setSearched(true);
+                        }}
+                        variant="outline"
+                        style={{
+                          textAlign: 'left',
+                          padding: '12px 14px',
+                          height: 'auto',
+                          justifyContent: 'stretch',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <div>
+                            <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>
+                              {routeLabel(corridor.from, corridor.to)}
+                            </div>
+                            <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
+                              {i18nT('findRidePage.demand')}{corridor.forecastDemandScore} |{' '}
+                              {corridor.priceQuote.finalPriceJod} {i18nT('findRidePage.jod_owns')}{' '}
+                              {corridor.routeOwnershipScore}
+                            </div>
+                          </div>
+                          <span style={pill(DS.cyan)}>{ar ? 'ضغط السعر' : corridor.pricePressure}</span>
+                        </div>
+                      </WaselButton>
+                    ))}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: DS.card,
+                    borderRadius: r(18),
+                    padding: '18px 18px 16px',
+                    border: `1px solid ${DS.border}`,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                    <div
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: r(12),
+                        background: `${DS.green}12`,
+                        border: `1px solid ${DS.green}28`,
+                        display: 'grid',
+                        placeItems: 'center',
+                      }}
+                    >
+                      <Network size={18} color={DS.green} />
+                    </div>
+                    <div>
+                      <div style={{ color: C.text, fontWeight: 800 }}>{i18nT('findRidePage.rides_that_also_carry_packages')}</div>
+                      <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
+                        {i18nT('findRidePage.some_rides_accept_parcels_on_the_same_route')}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {marketplaceNodes.map(node => (
+                      <div
+                        key={node.id}
+                        style={{
+                          borderRadius: r(14),
+                          border: `1px solid ${DS.border}`,
+                          background: DS.card2,
+                          padding: '12px 14px',
+                        }}
+                      >
+                        <div style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem' }}>
+                          {node.title}
+                        </div>
+                        <div
+                          style={{
+                            color: DS.muted,
+                            fontSize: '0.74rem',
+                            marginTop: 4,
+                            lineHeight: 1.55,
+                          }}
+                        >
+                          {node.summary}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="sp-2col"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.15fr 0.85fr',
+                gap: 14,
+                marginBottom: 18,
+              }}
+            >
+              <div
+                style={{
+                  background: DS.card,
+                  borderRadius: r(18),
+                  padding: '18px 18px 16px',
+                  border: `1px solid ${DS.border}`,
+                }}
+              >
+                <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>
+                  {i18nT('findRidePage.suggested_reminders')}</div>
+                {recurringSuggestions.length > 0 ? (
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {recurringSuggestions.map(suggestion => {
+                      const alreadySaved = Boolean(
+                        getRouteReminderForCorridor(suggestion.corridorId),
+                      );
+                      return (
+                        <div
+                          key={suggestion.corridorId}
+                          style={{
+                            borderRadius: r(14),
+                            border: `1px solid ${DS.border}`,
+                            background: DS.card2,
+                            padding: '12px 14px',
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: 12,
+                              flexWrap: 'wrap',
+                            }}
+                          >
+                            <div>
+                              <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>
+                                {routeLabel(suggestion.from, suggestion.to)}
+                              </div>
+                              <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
+                                {suggestion.confidenceScore}/100 |{' '}
+                                {suggestion.priceQuote.finalPriceJod} JOD |{' '}
+                                {suggestion.weeklyFrequency} {i18nT('findRidePage.signals')}</div>
+                            </div>
+                            <span style={pill(DS.green)}>{ar ? 'تذكير مناسب' : suggestion.recommendedFrequency}</span>
+                          </div>
+                          <div
+                            style={{
+                              color: DS.sub,
+                              fontSize: '0.76rem',
+                              lineHeight: 1.55,
+                              marginTop: 8,
+                            }}
+                          >
+                            {ar ? 'هذا المسار مناسب للتذكير حسب نشاطك وتكرار الطلب.' : suggestion.reason}
+                          </div>
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                            <WaselButton
+                              onClick={() => {
+                                setFrom(suggestion.from);
+                                setTo(suggestion.to);
+                                setSearched(true);
+                              }}
+                              variant="outline"
+                              size="sm"
+                            >
+                              {i18nT('findRidePage.search_route')}</WaselButton>
+                            <WaselButton
+                              onClick={() => handleSaveReminder(suggestion.corridorId)}
+                              variant={alreadySaved ? 'gold' : 'primary'}
+                              size="sm"
+                            >
+                              {alreadySaved
+                                ? ar ? 'التذكير مفعل' : 'Reminder active'
+                                : ar ? 'احفظ التذكير' : 'Save reminder'}
+                            </WaselButton>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ color: DS.muted, fontSize: '0.8rem' }}>
+                    {i18nT('findRidePage.book_more_rides_to_unlock_reminders')}</div>
+                )}
+              </div>
+
+              <div
+                style={{
+                  background: DS.card,
+                  borderRadius: r(18),
+                  padding: '18px 18px 16px',
+                  border: `1px solid ${DS.border}`,
+                }}
+              >
+                <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>
+                  {i18nT('findRidePage.saved_reminders')}</div>
+                {savedReminders.length > 0 ? (
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {savedReminders.slice(0, 4).map(reminder => (
+                      <div
+                        key={reminder.id}
+                        style={{
+                          borderRadius: r(12),
+                          border: `1px solid ${DS.border}`,
+                          background: DS.card2,
+                          padding: '11px 12px',
+                        }}
+                      >
+                        <div style={{ color: C.text, fontWeight: 700, fontSize: '0.8rem' }}>
+                          {routeLabel(reminder.from, reminder.to)}
+                        </div>
+                        <div style={{ color: DS.muted, fontSize: '0.73rem', marginTop: 4 }}>
+                          {formatRouteReminderSchedule(reminder)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ color: DS.muted, fontSize: '0.8rem', lineHeight: 1.55 }}>
+                    {i18nT('findRidePage.save_a_route_to_see_reminders_here')}</div>
+                )}
+              </div>
+            </div>
+
+            <div
+              className="sp-2col"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1.15fr 0.85fr',
+                gap: 14,
+                marginBottom: 18,
+              }}
+            >
+              <div
+                style={{
+                  background: DS.card,
+                  borderRadius: r(18),
+                  padding: '18px 18px 16px',
+                  border: `1px solid ${DS.border}`,
+                }}
+              >
+                <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>
+                  {i18nT('findRidePage.best_ride_matches')}</div>
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {recommendedRides.map(ride => {
+                    const rideSignal = resolveSignalForRoute(ride.from, ride.to);
+                    const ridePriceQuote = getMovementPriceQuote({
+                      basePriceJod: ride.pricePerSeat,
+                      corridorId: rideSignal?.id,
+                      forecastDemandScore: rideSignal?.forecastDemandScore,
+                      membership: routeIntelligence.membership,
+                    });
+
+                    return (
+                      <WaselButton
+                        key={ride.id}
+                        onClick={() => handleOpenRide(ride)}
+                        variant="outline"
+                        style={{
+                          textAlign: 'left',
+                          padding: '12px 14px',
+                          height: 'auto',
+                          justifyContent: 'stretch',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 12,
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <div>
+                            <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>
+                              {routeLabel(ride.from, ride.to)}
+                            </div>
+                            <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
+                              {ride.time} | {ride.driver.name} |{' '}
+                              {rideSignal
+                                ? ar ? `${rideSignal.routeOwnershipScore}/100 ملكية المسار` : `${rideSignal.routeOwnershipScore}/100 ownership`
+                                : ride.car}
+                            </div>
+                          </div>
+                          <span
+                            style={{ ...pill(bookedRideIds.has(ride.id) ? DS.green : DS.cyan) }}
+                          >
+                            {bookedRideIds.has(ride.id)
+                              ? ar ? 'محجوز' : 'Booked'
+                              : `${ridePriceQuote.finalPriceJod} JOD`}
+                          </span>
+                        </div>
+                      </WaselButton>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gap: 14 }}>
+                {[
+                  { title: t.recentSearches, items: recentSearches, empty: t.searchHelp },
+                  {
+                    title: t.bookedTrips,
+                    items: bookedRides.map(
+                      ride => `${routeLabel(ride.from, ride.to)} | ${ride.time} | ${ride.driver.name}`,
+                    ),
+                    empty: t.noTripsYet,
+                  },
+                ].map(card => (
+                  <div
+                    key={card.title}
+                    style={{
+                      background: DS.card,
+                      borderRadius: r(18),
+                      padding: '18px 18px 16px',
+                      border: `1px solid ${DS.border}`,
+                    }}
+                  >
+                    <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>
+                      {card.title}
+                    </div>
+                    {recentSearches.length > 0 ? (
+                      <div style={{ display: 'grid', gap: 10 }}>
+                        {recentSearches.map(item => (
+                          <button
+                            key={item}
+                            onClick={() => {
+                              const parts = item.split(' to ');
+                              if (parts[0]) setFrom(parts[0]);
+                              const toPart = parts[1]?.split(' on ')[0];
+                              if (toPart) setTo(toPart);
+                              setSearched(true);
+                            }}
+                            style={{
+                              borderRadius: r(12),
+                              border: `1px solid ${DS.border}`,
+                              background: DS.card2,
+                              padding: '11px 12px',
+                              color: C.text,
+                              fontSize: '0.78rem',
+                              textAlign: 'left',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: 8,
+                            }}
+                          >
+                            <span>{displayStoredRouteItem(item)}</span>
+                            <Search size={12} color={DS.muted} />
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{t.searchHelp}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
         )}
 
         {tab === 'package' && (
@@ -584,7 +1654,23 @@ export function FindRidePage() {
 
         <ServiceFlowPlaybook focusService={tab === 'ride' ? 'find-ride' : 'send-package'} />
 
-        {selected && <FindRideTripDetailModal ride={selected} booked={booked.has(selected.id)} signal={resolveSignalForRoute(selected.from, selected.to)} onClose={() => setSelected(null)} onBook={() => handleBook(selected)} />}
+        {selected && (
+          <FindRideTripDetailModal
+            ride={selected}
+            bookingStatus={
+              selectedBooking &&
+                (selectedBooking.status === 'pending_driver' ||
+                  selectedBooking.status === 'confirmed')
+                ? selectedBooking.status
+                : null
+            }
+            signal={resolveSignalForRoute(selected.from, selected.to)}
+            isBooking={bookingInFlightId === selected.id}
+            onClose={() => setSelected(null)}
+            onBook={() => handleBook(selected)}
+            onOpenBooking={openMyTrips}
+          />
+        )}
       </PageShell>
     </Protected>
   );

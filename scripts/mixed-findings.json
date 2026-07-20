@@ -1,0 +1,42 @@
+[
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\LiveTripTracking.tsx",
+    "text": "to arrive · للوصول"
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\LiveTripTracking.tsx",
+    "text": "Cancel · إلغاء"
+  },
+  {
+    "kind": "attr:placeholder",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\LiveTripTracking.tsx",
+    "text": "Add a comment (optional) · أضف تعليقاً (اختياري)"
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\LiveTripTracking.tsx",
+    "text": "Skip · تخطى"
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\LiveTripTracking.tsx",
+    "text": "Trip details · تفاصيل الرحلة"
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\LiveTripTracking.tsx",
+    "text": "Share Live Location · شارك موقعك الحي"
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\LiveTripTracking.tsx",
+    "text": "Cancel Ride · إلغاء الرحلة"
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\LiveTripTracking.tsx",
+    "text": "Emergency SOS · طوارئ"
+  }
+]

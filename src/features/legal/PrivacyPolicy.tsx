@@ -1,20 +1,39 @@
-/**
- * Privacy Policy Page - Wasel | واصل
- * GDPR & MENA-compliant privacy policy
- */
-
+import { Eye, FileText, Lock, Mail, Phone, Shield } from 'lucide-react';
+import {
+  MetricCard,
+  PageHero,
+  PageShell,
+  SectionCard,
+  StatusBadge,
+} from '../../components/wasel-ui/WaselPagePrimitives';
+import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Shield, Lock, Eye, FileText, Mail, Phone } from 'lucide-react';
+import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+
+function policyCardStyle(accent: string) {
+  return {
+    borderRadius: R.xxl,
+    border: `1px solid ${accent}24`,
+    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${C.card}`,
+    boxShadow: SH.md,
+    padding: SPACE[5],
+  } as const;
+}
 
 export function PrivacyPolicy() {
-  const { language, dir } = useLanguage();
+  const { language, dir, t } = useLanguage();
+  const nav = useIframeSafeNavigate();
+  const ar = language === 'ar';
 
   const content = {
     ar: {
       title: 'سياسة الخصوصية',
       subtitle: 'آخر تحديث: 16 مارس 2026',
-      intro: 'في واصل، نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية. توضح هذه السياسة كيف نجمع ونستخدم ونحمي معلوماتك.',
-      
+      intro:
+        'في واصل، نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية. توضح هذه السياسة كيف نجمع ونستخدم ونحمي معلوماتك.',
+
       sections: [
         {
           icon: FileText,
@@ -24,8 +43,8 @@ export function PrivacyPolicy() {
             'بيانات التحقق: رقم البطاقة الوطنية (سند) للتحقق الحكومي',
             'بيانات الموقع: لمطابقة الرحلات والتتبع المباشر',
             'معلومات الدفع: تفاصيل الدفع (مشفرة)',
-            'بيانات الاستخدام: سجل الرحلات، التفضيلات، التقييمات'
-          ]
+            'بيانات الاستخدام: سجل الرحلات، التفضيلات، التقييمات',
+          ],
         },
         {
           icon: Lock,
@@ -36,8 +55,8 @@ export function PrivacyPolicy() {
             'معالجة المدفوعات والحجوزات',
             'تحسين الأمان ومنع الاحتيال',
             'إرسال إشعارات الرحلات والتحديثات',
-            'تخصيص تجربتك (أوقات الصلاة، تفضيلات الجنس)'
-          ]
+            'تخصيص تجربتك (أوقات الصلاة، تفضيلات الجنس)',
+          ],
         },
         {
           icon: Shield,
@@ -48,8 +67,8 @@ export function PrivacyPolicy() {
             'مصادقة ثنائية لحسابات السائقين',
             'عمليات تدقيق أمنية منتظمة',
             'الوصول المحدود إلى البيانات الشخصية',
-            'نسخ احتياطي آمن ومشفر'
-          ]
+            'نسخ احتياطي آمن ومشفر',
+          ],
         },
         {
           icon: Eye,
@@ -59,8 +78,8 @@ export function PrivacyPolicy() {
             'مع معالجات الدفع: تفاصيل الدفع المشفرة',
             'مع السلطات: عند الطلب القانوني فقط',
             'لا نبيع بياناتك أبداً لأطراف ثالثة',
-            'لا نشارك البيانات للإعلانات'
-          ]
+            'لا نشارك البيانات للإعلانات',
+          ],
         },
         {
           icon: FileText,
@@ -71,34 +90,35 @@ export function PrivacyPolicy() {
             'الحذف: حذف حسابك وبياناتك',
             'النقل: تصدير بياناتك بصيغة قابلة للقراءة',
             'الاعتراض: رفض معالجة بيانات معينة',
-            'السحب: إلغاء الموافقة في أي وقت'
-          ]
-        }
+            'السحب: إلغاء الموافقة في أي وقت',
+          ],
+        },
       ],
-      
+
       contact: {
         title: 'اتصل بنا',
         subtitle: 'لأسئلة الخصوصية أو طلبات البيانات:',
         email: 'privacy@wasel.jo',
         phone: '+962 79 000 0000',
-        address: 'عمان، الأردن'
+        address: 'عمان، الأردن',
       },
-      
+
       compliance: {
         title: 'الامتثال القانوني',
         items: [
           'متوافق مع اللائحة العامة لحماية البيانات (GDPR)',
           'يتبع قوانين حماية البيانات الأردنية',
           'معتمد من هيئة تنظيم قطاع الاتصالات (TRC)',
-          'تحديثات منتظمة للسياسة'
-        ]
-      }
+          'تحديثات منتظمة للسياسة',
+        ],
+      },
     },
     en: {
       title: 'Privacy Policy',
       subtitle: 'Last Updated: March 16, 2026',
-      intro: 'At Wasel, we respect your privacy and are committed to protecting your personal data. This policy explains how we collect, use, and protect your information.',
-      
+      intro:
+        'At Wasel, privacy is part of movement trust. This policy explains what we collect, why it is needed for rides, parcels, support, and safety, and how users stay in control.',
+
       sections: [
         {
           icon: FileText,
@@ -108,8 +128,8 @@ export function PrivacyPolicy() {
             'Verification Data: National ID (Sanad) for government verification',
             'Location Data: For ride matching and live tracking',
             'Payment Information: Payment details (encrypted)',
-            'Usage Data: Trip history, preferences, ratings'
-          ]
+            'Usage Data: Trip history, preferences, ratings',
+          ],
         },
         {
           icon: Lock,
@@ -120,8 +140,8 @@ export function PrivacyPolicy() {
             'Process payments and bookings',
             'Improve security and prevent fraud',
             'Send trip notifications and updates',
-            'Personalize your experience (prayer times, gender preferences)'
-          ]
+            'Personalize your experience (prayer times, gender preferences)',
+          ],
         },
         {
           icon: Shield,
@@ -132,8 +152,8 @@ export function PrivacyPolicy() {
             'Two-factor authentication for driver accounts',
             'Regular security audits',
             'Limited access to personal data',
-            'Secure encrypted backups'
-          ]
+            'Secure encrypted backups',
+          ],
         },
         {
           icon: Eye,
@@ -143,8 +163,8 @@ export function PrivacyPolicy() {
             'With payment processors: Encrypted payment details',
             'With authorities: Legal requests only',
             'We never sell your data to third parties',
-            'No data sharing for advertising'
-          ]
+            'No data sharing for advertising',
+          ],
         },
         {
           icon: FileText,
@@ -155,113 +175,341 @@ export function PrivacyPolicy() {
             'Erasure: Delete your account and data',
             'Portability: Export your data in readable format',
             'Object: Refuse certain data processing',
-            'Withdraw: Cancel consent at any time'
-          ]
-        }
+            'Withdraw: Cancel consent at any time',
+          ],
+        },
+        {
+          icon: Shield,
+          title: '6. Analytics & Performance',
+          content: [
+            'Web Vitals: Collected to find slow or broken experiences after analytics consent',
+            'Funnel Events: CTA clicks and route starts help improve onboarding and conversion paths',
+            'No Advertising Resale: Analytics are not sold for third-party ad targeting',
+            'Consent Controls: Analytics and improvement settings can be changed from account settings',
+          ],
+        },
       ],
-      
+
       contact: {
         title: 'Contact Us',
         subtitle: 'For privacy questions or data requests:',
         email: 'privacy@wasel.jo',
         phone: '+962 79 000 0000',
-        address: 'Amman, Jordan'
+        address: 'Amman, Jordan',
       },
-      
+
       compliance: {
         title: 'Legal Compliance',
         items: [
           'GDPR Compliant',
           'Follows Jordanian Data Protection Laws',
           'TRC (Telecommunications Regulatory Commission) Certified',
-          'Regular policy updates'
-        ]
-      }
-    }
+          'Regular policy updates',
+        ],
+      },
+    },
   };
 
-  const t = content[language as 'ar' | 'en'];
+  const copy = content[language as 'ar' | 'en'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir={dir}>
-      {/* Header */}
-      <div className="border-b border-white/10 bg-white/5 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-teal-500/20 to-emerald-500/20 border border-teal-500/30">
-              <Shield className="w-6 h-6 text-teal-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">{t.title}</h1>
-              <p className="text-sm text-slate-400 mt-1">{t.subtitle}</p>
-            </div>
-          </div>
-          <p className="text-slate-300 leading-relaxed">{t.intro}</p>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        {/* Sections */}
-        <div className="space-y-8 mb-12">
-          {t.sections.map((section, idx) => (
-            <div
-              key={idx}
-              className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm"
-            >
-              <div className="flex items-start gap-4">
-                <div className="p-2 rounded-lg bg-teal-500/20 border border-teal-500/30 shrink-0">
-                  <section.icon className="w-5 h-5 text-teal-400" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-white mb-4">{section.title}</h2>
-                  <ul className="space-y-2">
-                    {section.content.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2 text-slate-300">
-                        <span className="text-teal-400 mt-1.5">•</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+    <PageShell maxWidth={1120} dir={dir === 'rtl' ? 'rtl' : 'ltr'}>
+      <div style={{ paddingInline: SPACE[4] }}>
+        <PageHero
+          eyebrow={ar ? 'قانوني' : 'Legal'}
+          icon={<Shield size={18} />}
+          title={copy.title}
+          description={copy.intro}
+          accent={C.cyan}
+          actions={
+            <>
+              <WaselButton type="button" variant="primary" onClick={() => nav('/app/security')}>
+                {ar ? 'راجع الأمان' : 'Review security'}
+              </WaselButton>
+              <WaselButton
+                type="button"
+                variant="outline"
+                onClick={() => nav('/app/support')}
+                style={{ background: C.elevated, color: C.text }}
+              >
+                {ar ? 'تواصل مع الدعم' : 'Contact support'}
+              </WaselButton>
+            </>
+          }
+          aside={
+            <div style={{ display: 'grid', gap: SPACE[3] }}>
+              <WaselLogo size={64} theme="light" variant="full" />
+              <StatusBadge label={copy.subtitle} accent={C.cyan} />
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: SPACE[3],
+                }}
+              >
+                {[
+                  {
+                    label: ar ? 'مجموعات البيانات' : 'Data groups',
+                    value: String(copy.sections.length),
+                    accent: C.cyan,
+                  },
+                  { label: ar ? 'حقوق المستخدم' : 'User rights', value: '6', accent: C.green },
+                  { label: ar ? 'بيع للإعلانات' : 'Ad resale', value: '0', accent: C.gold },
+                  {
+                    label: ar ? 'تخزين حساس' : 'Sensitive storage',
+                    value: 'AES-256',
+                    accent: C.blueLight,
+                  },
+                ].map(item => (
+                  <div
+                    key={item.label}
+                    style={{
+                      borderRadius: R.xl,
+                      border: `1px solid ${item.accent}24`,
+                      background: `${item.accent}12`,
+                      padding: `${SPACE[3]} ${SPACE[4]}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: C.text,
+                        fontSize: TYPE.size.lg,
+                        fontWeight: TYPE.weight.ultra,
+                        lineHeight: TYPE.lineHeight.tight,
+                      }}
+                    >
+                      {item.value}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        color: C.textMuted,
+                        fontSize: TYPE.size.xs,
+                        textTransform: 'uppercase',
+                        letterSpacing: TYPE.letterSpacing.wide,
+                      }}
+                    >
+                      {item.label}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          }
+        />
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 12,
+            marginBottom: SPACE[6],
+          }}
+        >
+          <MetricCard
+            label={ar ? 'فئات البيانات' : 'Data categories'}
+            value={copy.sections.length}
+            detail={
+              ar
+                ? 'البيانات المجموعة مرتبة ضمن فئات واضحة.'
+                : 'Collected data is grouped into clear categories.'
+            }
+            accent={C.cyan}
+            icon={<FileText size={18} />}
+          />
+          <MetricCard
+            label={ar ? 'طبقة الأمان' : 'Security layer'}
+            value="TLS + AES"
+            detail={
+              ar
+                ? 'النقل والتخزين الحساس بضلوا مشفّرين.'
+                : 'Transport and sensitive storage stay encrypted.'
+            }
+            accent={C.green}
+            icon={<Lock size={18} />}
+          />
+          <MetricCard
+            label={ar ? 'قاعدة المشاركة' : 'Sharing rule'}
+            value={ar ? 'حسب الحاجة' : 'Need to know'}
+            detail={ar ? 'بنحدد شو بنشارك ومع مين.' : 'We limit what is shared and with whom.'}
+            accent={C.gold}
+            icon={<Eye size={18} />}
+          />
+          <MetricCard
+            label={ar ? 'تحكمك' : 'Your control'}
+            value={ar ? '٦ حقوق' : '6 rights'}
+            detail={
+              ar
+                ? 'وصول، تصحيح، تصدير، حذف، اعتراض، وسحب موافقة.'
+                : 'Access, correction, export, deletion, objection, withdrawal.'
+            }
+            accent={C.blueLight}
+            icon={<Shield size={18} />}
+          />
         </div>
 
-        {/* Contact */}
-        <div className="bg-gradient-to-br from-teal-500/10 to-emerald-500/10 border border-teal-500/30 rounded-2xl p-6 mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <Mail className="w-6 h-6 text-teal-400" />
-            <h2 className="text-xl font-bold text-white">{t.contact.title}</h2>
+        <SectionCard
+          title={t('privacyPolicy.policy_overview')}
+          subtitle={
+            ar
+              ? 'كتل قصيرة وسهلة القراءة بتخلي نموذج الخصوصية أوضح.'
+              : 'Short, scannable blocks make the privacy model easier to understand.'
+          }
+          icon={<Shield size={18} color={C.cyan} />}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {copy.sections.map(section => {
+              const Icon = section.icon;
+              return (
+                <div key={section.title} style={policyCardStyle(C.cyan)}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: SPACE[3],
+                      marginBottom: SPACE[4],
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 40,
+                        height: 40,
+                        borderRadius: R.lg,
+                        background: `${C.cyan}18`,
+                        border: `1px solid ${C.cyan}28`,
+                        color: C.cyan,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Icon size={18} />
+                    </span>
+                    <div
+                      style={{
+                        color: C.text,
+                        fontSize: TYPE.size.base,
+                        fontWeight: TYPE.weight.black,
+                        lineHeight: TYPE.lineHeight.snug,
+                      }}
+                    >
+                      {section.title}
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {section.content.map(item => (
+                      <div
+                        key={item}
+                        style={{
+                          borderRadius: R.xl,
+                          border: `1px solid ${C.borderFaint}`,
+                          background: C.elevated,
+                          padding: `${SPACE[3]} ${SPACE[4]}`,
+                          color: C.text,
+                          fontSize: TYPE.size.sm,
+                          lineHeight: TYPE.lineHeight.relaxed,
+                        }}
+                      >
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <p className="text-slate-300 mb-4">{t.contact.subtitle}</p>
-          <div className="space-y-2">
-            <a href={`mailto:${t.contact.email}`} className="flex items-center gap-2 text-teal-400 hover:text-teal-300">
-              <Mail className="w-4 h-4" />
-              <span>{t.contact.email}</span>
-            </a>
-            <a href={`tel:${t.contact.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 text-teal-400 hover:text-teal-300">
-              <Phone className="w-4 h-4" />
-              <span>{t.contact.phone}</span>
-            </a>
-            <p className="text-slate-400 text-sm">{t.contact.address}</p>
-          </div>
-        </div>
+        </SectionCard>
 
-        {/* Compliance */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-white mb-4">{t.compliance.title}</h2>
-          <ul className="space-y-2">
-            {t.compliance.items.map((item, i) => (
-              <li key={i} className="flex items-center gap-2 text-slate-300">
-                <div className="w-1.5 h-1.5 rounded-full bg-teal-400" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 0.95fr) minmax(0, 1.05fr)',
+            gap: 12,
+          }}
+        >
+          <SectionCard
+            title={copy.contact.title}
+            subtitle={copy.contact.subtitle}
+            icon={<Mail size={18} color={C.cyan} />}
+          >
+            <div style={{ display: 'grid', gap: 12 }}>
+              <a
+                href={`mailto:${copy.contact.email}`}
+                style={{
+                  ...policyCardStyle(C.cyan),
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+                  <Mail size={18} color={C.cyan} />
+                  <div>
+                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                      {copy.contact.email}
+                    </div>
+                    <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>
+                      {t('common.email')}
+                    </div>
+                  </div>
+                </div>
+              </a>
+              <a
+                href={`tel:${copy.contact.phone.replace(/\s/g, '')}`}
+                style={{
+                  ...policyCardStyle(C.green),
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+                  <Phone size={18} color={C.green} />
+                  <div>
+                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                      {copy.contact.phone}
+                    </div>
+                    <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>
+                      {copy.contact.address}
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            title={copy.compliance.title}
+            subtitle={
+              ar
+                ? 'الثقة بتزيد لما تكون المتطلبات القانونية سهلة القراءة.'
+                : 'Trust improves when legal expectations are easy to scan.'
+            }
+            icon={<Shield size={18} color={C.green} />}
+          >
+            <div style={{ display: 'grid', gap: 10 }}>
+              {copy.compliance.items.map(item => (
+                <div key={item} style={policyCardStyle(C.green)}>
+                  <div
+                    style={{
+                      color: C.text,
+                      fontSize: TYPE.size.sm,
+                      lineHeight: TYPE.lineHeight.relaxed,
+                    }}
+                  >
+                    {item}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

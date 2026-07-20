@@ -13,9 +13,7 @@ import { API_URL, fetchWithRetry, getAuthDetails } from '@/services/core';
 import { getConfig } from '@/utils/env';
 import { logger } from '@/utils/monitoring';
 
-const IS_DEV =
-  typeof import.meta !== 'undefined' &&
-  import.meta.env?.MODE === 'development';
+const IS_DEV = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development';
 
 export const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
@@ -25,11 +23,9 @@ export const CSP_DIRECTIVES = {
     'https://js.stripe.com',
     'https://maps.googleapis.com',
   ],
-  'style-src': [
-    "'self'",
-    "'unsafe-inline'",
-    'https://fonts.googleapis.com',
-  ],
+  'style-src': IS_DEV
+    ? ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com']
+    : ["'self'", 'https://fonts.googleapis.com'],
   'img-src': [
     "'self'",
     'data:',
@@ -39,25 +35,18 @@ export const CSP_DIRECTIVES = {
     'https://images.unsplash.com',
     'https://api.qrserver.com',
   ],
-  'font-src': [
-    "'self'",
-    'data:',
-    'https://fonts.gstatic.com',
-  ],
+  'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com'],
   'connect-src': [
     "'self'",
     'https://*.supabase.co',
     'wss://*.supabase.co',
+    'wss://*.sentry.io',
     'https://api.stripe.com',
     'https://maps.googleapis.com',
     'https://*.sentry.io',
     ...(IS_DEV ? ['ws://localhost:*', 'http://localhost:*'] : []),
   ],
-  'frame-src': [
-    "'self'",
-    'https://js.stripe.com',
-    'https://hooks.stripe.com',
-  ],
+  'frame-src': ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
   'object-src': ["'none'"],
   'base-uri': ["'self'"],
   'form-action': ["'self'"],
@@ -104,14 +93,19 @@ export function resetRateLimit(key: string): void {
   rateLimitStore.delete(key);
 }
 
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, record] of rateLimitStore.entries()) {
-    if (now > record.resetAt) {
-      rateLimitStore.delete(key);
-    }
-  }
-}, 5 * 60 * 1000);
+if (typeof setInterval !== 'undefined') {
+  setInterval(
+    () => {
+      const now = Date.now();
+      for (const [key, record] of rateLimitStore.entries()) {
+        if (now > record.resetAt) {
+          rateLimitStore.delete(key);
+        }
+      }
+    },
+    5 * 60 * 1000,
+  );
+}
 
 export interface PasswordStrength {
   score: 0 | 1 | 2 | 3 | 4;
@@ -144,9 +138,9 @@ export function checkPasswordStrength(password: string): PasswordStrength {
   score += Math.min(diversityScore - 1, 2);
 
   const commonPatterns = [/^123456/, /password/i, /qwerty/i, /admin/i, /letmein/i];
-  if (commonPatterns.some((pattern) => pattern.test(password))) {
+  if (commonPatterns.some(pattern => pattern.test(password))) {
     feedback.push('Avoid common patterns');
-    score = Math.max(0, score - 2);
+    score = Math.max(0, score - 1);
   }
   if (/(.)\1{2,}/.test(password)) {
     feedback.push('Avoid repeating characters');
@@ -232,7 +226,9 @@ export async function disable2FA(_userId: string, code: string): Promise<boolean
   }
 
   try {
-    const payload = await callTwoFactorEndpoint<{ disabled: boolean }>('/auth/2fa/disable', { code });
+    const payload = await callTwoFactorEndpoint<{ disabled: boolean }>('/auth/2fa/disable', {
+      code,
+    });
     if (payload.disabled) {
       logger.info('2FA disabled', { important: true });
     }
@@ -249,10 +245,20 @@ export const SECURITY_HEADERS = `
   X-Content-Type-Options: nosniff
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
-  Permissions-Policy: camera=(), microphone=(), geolocation=(self)
-  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=(self)
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
   Content-Security-Policy: ${getCSPHeader()}
 `;
+
+/**
+ * NOTE: SECURITY_HEADERS above is kept for reference and local tooling.
+ * In production, all headers are applied via vercel.json so they are sent
+ * as real HTTP response headers — not meta tags or JS strings.
+ * If you change any policy here, update vercel.json Content-Security-Policy
+ * to match.
+ */
 
 export function sanitizeInput(input: string): string {
   return input
@@ -269,13 +275,25 @@ export function validateEmail(email: string): boolean {
 }
 
 export function validatePhone(phone: string): boolean {
+  // Supports Jordan (+962) and Iraq (+964) in E.164 format
   return /^\+[1-9]\d{1,14}$/.test(phone);
+}
+
+export function validateIraqPhone(phone: string): boolean {
+  // Iraqi mobile: +9647xxxxxxxxx (10 digits after country code)
+  // Iraqi landline: +96401xxxxxxxx or +96402xxxxxxxx etc.
+  return /^\+964[0-9]{9,10}$/.test(phone);
+}
+
+export function validateJordanPhone(phone: string): boolean {
+  // Jordanian mobile: +9627xxxxxxxx (8 digits after country code)
+  return /^\+962[0-9]{8,9}$/.test(phone);
 }
 
 export function validateURL(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
   } catch {
     return false;
   }

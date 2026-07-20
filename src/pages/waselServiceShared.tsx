@@ -1,27 +1,21 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { Shield } from 'lucide-react';
-import { WaselLogo } from '../components/wasel-ds/WaselLogo';
-import {
-  WaselBusinessFooter,
-} from '../components/system/WaselPresence';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
+import { WaselLogo } from '../components/wasel-ds/WaselLogo';
 import {
-  CoreExperienceBanner as SharedCoreExperienceBanner,
-  PageShell as SharedPageShell,
-  Protected as SharedProtected,
-  SectionHead as SharedSectionHead,
+  DS as PAGE_DS,
   midpoint as sharedMidpoint,
   resolveCityCoord as sharedResolveCityCoord,
+  r as sharedR,
 } from '../features/shared/pageShared';
-import { PAGE_DS } from '../styles/wasel-page-theme';
-import { buildAuthPagePath, buildAuthReturnTo } from '../utils/authFlow';
 
 export const DS = PAGE_DS;
-
-export const r = (px = 12) => `${px}px`;
+export const r = sharedR;
+export const resolveCityCoord = sharedResolveCityCoord;
+export const midpoint = sharedMidpoint;
 
 export const pill = (color: string) => ({
   display: 'inline-flex',
@@ -36,16 +30,9 @@ export const pill = (color: string) => ({
   color,
 });
 
-export function resolveCityCoord(city: string) {
-  return sharedResolveCityCoord(city);
-}
-
-export function midpoint(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
-  return sharedMidpoint(a, b);
-}
-
 export function Protected({ children }: { children: ReactNode }) {
-  const { user, loading } = useLocalAuth();
+  const { user } = useLocalAuth();
+  const { t } = useLanguage();
   const nav = useIframeSafeNavigate();
   const location = useLocation();
   const mountedRef = useRef(true);
@@ -58,64 +45,60 @@ export function Protected({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!loading && !user && mountedRef.current) {
-      nav(
-        buildAuthPagePath(
-          'signin',
-          buildAuthReturnTo(location.pathname, location.search, location.hash),
-        ),
-      );
+    if (!user && mountedRef.current) {
+      nav(`/app/auth?returnTo=${encodeURIComponent(location.pathname)}`);
     }
-  }, [loading, location.hash, location.pathname, location.search, nav, user]);
-
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', background: DS.bg, padding: '24px 16px' }}>
-        <div style={{ width: '100%', maxWidth: 480, padding: '28px 24px', borderRadius: r(24), background: `linear-gradient(180deg, ${DS.card} 0%, ${DS.bg} 100%)`, border: `1px solid ${DS.border}`, boxShadow: '0 20px 60px rgba(0,0,0,0.35)', textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-            <WaselLogo size={42} theme="light" variant="full" />
-          </div>
-          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Checking your Wasel access</div>
-          <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7 }}>
-            We are syncing your session so your routes, packages, and history open in the right account.
-          </div>
-        </div>
-      </div>
-    );
-  }
+  }, [location.pathname, nav, user]);
 
   if (!user) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', background: DS.bg, padding: '24px 16px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '60vh',
+          background: DS.bg,
+          padding: '24px 16px',
+        }}
+      >
         <div
-          role="status"
-          aria-live="polite"
-          style={{ width: '100%', maxWidth: 480, padding: '28px 24px', borderRadius: r(24), background: `linear-gradient(180deg, ${DS.card} 0%, ${DS.bg} 100%)`, border: `1px solid ${DS.border}`, boxShadow: '0 20px 60px rgba(0,0,0,0.35)', textAlign: 'center' }}
+          style={{
+            width: '100%',
+            maxWidth: 480,
+            padding: '28px 24px',
+            borderRadius: r(24),
+            background: `linear-gradient(180deg, ${DS.card} 0%, ${DS.bg} 100%)`,
+            border: `1px solid ${DS.border}`,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
+            textAlign: 'center',
+          }}
         >
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
-            <WaselLogo size={42} theme="light" variant="full" />
+            <WaselLogo size={64} theme="light" variant="full" />
           </div>
-          <div style={{ width: 58, height: 58, borderRadius: r(18), margin: '0 auto 14px', background: `${DS.cyan}12`, border: `1px solid ${DS.cyan}24`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: DS.cyan }}>
+          <div
+            style={{
+              width: 58,
+              height: 58,
+              borderRadius: r(18),
+              margin: '0 auto 14px',
+              background: `${DS.cyan}12`,
+              border: `1px solid ${DS.cyan}24`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: DS.cyan,
+            }}
+          >
             <Shield size={24} />
           </div>
-          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>Protected Wasel experience</div>
-          <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7, marginBottom: 16 }}>
-            We are taking you to sign in so your routes, packages, and movement history stay tied to one trusted account.
+          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>
+            {t('waselServiceShared.sign_in_required')}
           </div>
-          <button
-            type="button"
-            onClick={() =>
-              nav(
-                buildAuthPagePath(
-                  'signin',
-                  buildAuthReturnTo(location.pathname, location.search, location.hash),
-                ),
-              )
-            }
-            style={{ minHeight: 44, padding: '0 18px', borderRadius: r(14), border: 'none', background: DS.gradC, color: '#041018', fontWeight: 800, cursor: 'pointer', fontFamily: DS.F }}
-          >
-            Open sign in
-          </button>
+          <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7 }}>
+            {t('waselServiceShared.sign_in_to_continue')}
+          </div>
         </div>
       </div>
     );
@@ -129,16 +112,24 @@ export function PageShell({ children }: { children: ReactNode }) {
   const ar = language === 'ar';
 
   return (
-    <div style={{ minHeight: '100vh', background: DS.bg, fontFamily: DS.F, direction: ar ? 'rtl' : 'ltr' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: DS.bg,
+        fontFamily: DS.F,
+        direction: ar ? 'rtl' : 'ltr',
+      }}
+    >
       <style>{`
         :root { color-scheme: dark; }
-        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(22,199,242,0.28); }
-        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(199,255,26,0.24); }
+        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(0,200,232,0.28); }
+        .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(240,168,48,0.28); }
         @media(max-width:899px){
           .sp-inner{ padding:16px !important; }
           .sp-2col { grid-template-columns:1fr !important; }
           .sp-3col { grid-template-columns:1fr !important; }
           .sp-4col { grid-template-columns:1fr 1fr !important; }
+          .sp-brand-row { flex-direction:column !important; align-items:flex-start !important; gap:10px !important; }
           .sp-head  { padding:20px 16px !important; border-radius:16px !important; }
           .sp-search-grid { grid-template-columns:1fr !important; gap:10px !important; }
           .sp-sort-bar { overflow-x:auto !important; -webkit-overflow-scrolling:touch !important; padding-bottom:6px !important; flex-wrap:nowrap !important; scrollbar-width:none !important; }
@@ -153,8 +144,6 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-modal-price { flex-direction:column !important; align-items:flex-start !important; }
           .sp-empty-actions { grid-template-columns:1fr !important; }
           .sp-side-column { position:static !important; }
-          .pkg-send-form-grid { grid-template-columns:1fr !important; }
-          .pkg-send-steps-grid { grid-template-columns:1fr !important; }
         }
         @media(max-width:480px){
           .sp-4col { grid-template-columns:1fr !important; }
@@ -165,71 +154,155 @@ export function PageShell({ children }: { children: ReactNode }) {
           .sp-modal-route > div { width:100%; text-align:left !important; }
         }
       `}</style>
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'fixed',
-          inset: 0,
-          pointerEvents: 'none',
-          background:
-            'radial-gradient(circle at 14% 10%, rgba(22,199,242,0.16), transparent 24%), radial-gradient(circle at 85% 12%, rgba(199,255,26,0.08), transparent 20%), radial-gradient(circle at 78% 84%, rgba(96,197,54,0.08), transparent 24%)',
-        }}
-      />
-      <div className="sp-inner" style={{ position: 'relative', maxWidth: 1120, margin: '0 auto', padding: '24px 16px' }}>
-        {children}
-        <div style={{ marginTop: 18 }}>
-          <WaselBusinessFooter ar={ar} />
+      <div className="sp-inner" style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px' }}>
+        <div
+          className="sp-brand-row"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 16,
+            marginBottom: 18,
+          }}
+        >
+          <WaselLogo size={56} theme="light" variant="full" />
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 12px',
+              borderRadius: '999px',
+              background: 'rgba(0,200,232,0.08)',
+              border: '1px solid rgba(0,200,232,0.16)',
+              color: 'rgba(239,246,255,0.78)',
+              fontSize: '0.72rem',
+              fontWeight: 700,
+            }}
+          >
+            <span
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: DS.green,
+                boxShadow: `0 0 10px ${DS.green}`,
+              }}
+            />
+            {ar
+              ? 'واصل للحركة اليومية والطرود في الأردن'
+              : 'Wasel for daily movement and parcels across Jordan'}
+          </div>
         </div>
+        {children}
       </div>
     </div>
   );
 }
 
-export function SectionHead({ emoji, title, titleAr, sub, color = DS.cyan, action }: {
-  emoji: string;
+export function SectionHead({
+  emoji,
+  title,
+  titleAr,
+  sub,
+  subAr,
+  color = DS.cyan,
+  action,
+}: {
+  emoji: React.ReactNode;
   title: string;
   titleAr?: string;
   sub?: string;
+  subAr?: string;
   color?: string;
-  action?: { label: string; onClick: () => void };
+  action?: { label: string; labelAr?: string; onClick: () => void };
 }) {
   const { language } = useLanguage();
   const ar = language === 'ar';
+  const displayTitle = ar && titleAr ? titleAr : title;
+  const displaySub = ar && subAr ? subAr : sub;
+  const displayLabel = action && ar && action.labelAr ? action.labelAr : action?.label;
 
   return (
     <div
       className="sp-head"
       style={{
-        background: 'linear-gradient(180deg, rgba(8,23,40,0.96), rgba(8,23,40,0.92))',
-        borderRadius: r(22),
-        padding: '22px 24px',
+        background: DS.gradNav,
+        borderRadius: r(20),
+        padding: '24px 24px',
         marginBottom: 20,
         position: 'relative',
         overflow: 'hidden',
-        border: `1px solid ${color}1f`,
-        boxShadow: '0 18px 44px rgba(0,0,0,0.34)',
+        border: `1px solid ${color}18`,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
       }}
     >
-      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}10,transparent)`, pointerEvents: 'none' }} />
-      <div className="sp-head-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: `radial-gradient(ellipse 55% 80% at 12% 50%,${color}12,transparent)`,
+          pointerEvents: 'none',
+        }}
+      />
+      <div
+        className="sp-head-inner"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          position: 'relative',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 56, height: 56, borderRadius: r(16), background: `${color}18`, border: `1.5px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.9rem', flexShrink: 0 }}>
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: r(16),
+              background: `${color}18`,
+              border: `1.5px solid ${color}30`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.9rem',
+              flexShrink: 0,
+            }}
+          >
             {emoji}
           </div>
           <div>
-            <div style={{ color, fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
-              {ar ? 'المهمة الأساسية' : 'Primary task'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>
+                {displayTitle}
+              </h1>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>{title}</h1>
-            </div>
-            {titleAr && <p dir="rtl" style={{ fontSize: '0.86rem', fontWeight: 700, color, margin: '0 0 4px', fontFamily: "var(--wasel-font-arabic, 'Cairo', 'Tajawal', sans-serif)" }}>{titleAr}</p>}
-            {sub && <p style={{ fontSize: '0.88rem', color: 'rgba(239,246,255,0.72)', margin: 0, lineHeight: 1.6, maxWidth: 620 }}>{sub}</p>}
+            {displaySub && (
+              <p style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.46)', margin: 0 }}>
+                {displaySub}
+              </p>
+            )}
           </div>
         </div>
         {action && (
-          <button onClick={action.onClick} className="sp-head-btn" style={{ height: 44, padding: '0 22px', borderRadius: '99px', border: 'none', background: DS.gradC, color: '#041018', fontWeight: 800, fontSize: '0.875rem', boxShadow: `0 10px 24px ${DS.cyan}26`, cursor: 'pointer', flexShrink: 0 }}>
-            {action.label}
+          <button
+            onClick={action.onClick}
+            className="sp-head-btn"
+            style={{
+              height: 44,
+              padding: '0 22px',
+              borderRadius: '99px',
+              border: 'none',
+              background: DS.gradC,
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              boxShadow: `0 4px 16px ${DS.cyan}30`,
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            {displayLabel}
           </button>
         )}
       </div>
@@ -239,41 +312,28 @@ export function SectionHead({ emoji, title, titleAr, sub, color = DS.cyan, actio
 
 export function CoreExperienceBanner({
   title,
-  detail,
+  detail: _detail,
   tone = DS.cyan,
 }: {
   title: string;
-  detail: string;
+  detail?: string;
   tone?: string;
 }) {
   return (
     <div
       style={{
-        display: 'grid',
+        display: 'flex',
+        alignItems: 'center',
         gap: 10,
         background: `linear-gradient(135deg, ${tone}10, rgba(255,255,255,0.02))`,
         border: `1px solid ${tone}28`,
-        borderRadius: r(18),
-        padding: '16px 18px',
+        borderRadius: r(16),
+        padding: '12px 14px',
         marginBottom: 18,
       }}
     >
-      <div>
-        <div style={{ color: tone, fontSize: '0.72rem', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>
-          Quick brief
-        </div>
-        <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.98rem', marginBottom: 4 }}>{title}</div>
-        <div style={{ color: DS.sub, fontSize: '0.84rem', lineHeight: 1.6, maxWidth: 760 }}>{detail}</div>
-      </div>
+      <Shield size={16} color={tone} style={{ flexShrink: 0 }} />
+      <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>{title}</div>
     </div>
   );
 }
-
-export const SharedPrimitives = {
-  SharedCoreExperienceBanner,
-  SharedPageShell,
-  SharedProtected,
-  SharedSectionHead,
-  sharedMidpoint,
-  sharedResolveCityCoord,
-};

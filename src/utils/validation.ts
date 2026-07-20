@@ -21,11 +21,17 @@ const emailField = z
 const passwordField = z
   .string({ required_error: 'Password is required' })
   .min(8, 'Password must be at least 8 characters')
-  .max(128, 'Password is too long');
+  .max(128, 'Password is too long')
+  .regex(/[A-Z]/, 'Password must include an uppercase letter')
+  .regex(/[^A-Za-z0-9]/, 'Password must include a special character');
 
+// Supports Jordan (+962) and Iraq (+964) international formats
 const phoneField = z
   .string()
-  .regex(/^\+[1-9]\d{1,14}$/, 'Phone must be in international format: +962xxxxxxxxx')
+  .regex(
+    /^\+[1-9]\d{1,14}$/,
+    'Phone must be in international format: +962xxxxxxxxx (Jordan) or +964xxxxxxxxx (Iraq)',
+  )
   .optional()
   .or(z.literal(''));
 
@@ -64,36 +70,78 @@ export type ResetPasswordFields = z.infer<typeof resetPasswordSchema>;
 
 // ── Trip schemas ───────────────────────────────────────────────────────────────
 
+// Jordan cities
 const JORDAN_CITIES = [
-  'Amman', 'Irbid', 'Zarqa', 'Aqaba', 'Madaba', 'Karak',
-  'Jerash', 'Mafraq', 'Dead Sea', 'Petra', 'Ajloun', 'Salt',
+  'Amman',
+  'Irbid',
+  'Zarqa',
+  'Aqaba',
+  'Madaba',
+  'Karak',
+  'Jerash',
+  'Mafraq',
+  'Dead Sea',
+  'Petra',
+  'Ajloun',
+  'Salt',
 ] as const;
 
-export const offerRideSchema = z.object({
-  origin: z.enum(JORDAN_CITIES, { required_error: 'Please select a departure city' }),
-  destination: z.enum(JORDAN_CITIES, { required_error: 'Please select a destination city' }),
-  departureDate: z.string({ required_error: 'Departure date is required' }),
-  departureTime: z.string({ required_error: 'Departure time is required' }),
-  seats: z.number({ required_error: 'Number of seats is required' }).int().min(1).max(7),
-  pricePerSeat: z.number({ required_error: 'Price is required' }).positive('Price must be greater than 0').max(500, 'Price seems too high'),
-  notes: z.string().max(500, 'Notes too long').optional(),
-  allowPackages: z.boolean().default(false),
-  genderPreference: z.enum(['any', 'male', 'female']).default('any'),
-}).refine(data => data.origin !== data.destination, {
-  message: 'Origin and destination must be different cities',
-  path: ['destination'],
-});
+// Iraq cities — Baghdad, Erbil, Basra, Najaf and major governorates
+const IRAQ_CITIES = [
+  'Baghdad',
+  'Erbil',
+  'Basra',
+  'Najaf',
+  'Mosul',
+  'Kirkuk',
+  'Sulaymaniyah',
+  'Karbala',
+  'Nasiriyah',
+  'Amarah',
+  'Diwaniyah',
+  'Hillah',
+  'Ramadi',
+  'Fallujah',
+  'Tikrit',
+  'Samarra',
+  'Duhok',
+] as const;
+
+export const ALL_CITIES = [...JORDAN_CITIES, ...IRAQ_CITIES] as const;
+export type SupportedCity = (typeof ALL_CITIES)[number];
+
+export const offerRideSchema = z
+  .object({
+    origin: z.enum(ALL_CITIES, { required_error: 'Please select a departure city' }),
+    destination: z.enum(ALL_CITIES, { required_error: 'Please select a destination city' }),
+    departureDate: z.string({ required_error: 'Departure date is required' }),
+    departureTime: z.string({ required_error: 'Departure time is required' }),
+    seats: z.number({ required_error: 'Number of seats is required' }).int().min(1).max(7),
+    pricePerSeat: z
+      .number({ required_error: 'Price is required' })
+      .positive('Price must be greater than 0')
+      .max(500, 'Price seems too high'),
+    notes: z.string().max(500, 'Notes too long').optional(),
+    allowPackages: z.boolean().default(false),
+    genderPreference: z.enum(['any', 'male', 'female']).default('any'),
+  })
+  .refine(data => data.origin !== data.destination, {
+    message: 'Origin and destination must be different cities',
+    path: ['destination'],
+  });
 export type OfferRideFields = z.infer<typeof offerRideSchema>;
 
-export const findRideSchema = z.object({
-  origin: z.enum(JORDAN_CITIES, { required_error: 'Please select a departure city' }),
-  destination: z.enum(JORDAN_CITIES, { required_error: 'Please select a destination city' }),
-  date: z.string({ required_error: 'Date is required' }),
-  passengers: z.number().int().min(1).max(7).default(1),
-}).refine(data => data.origin !== data.destination, {
-  message: 'Origin and destination must be different',
-  path: ['destination'],
-});
+export const findRideSchema = z
+  .object({
+    origin: z.enum(ALL_CITIES, { required_error: 'Please select a departure city' }),
+    destination: z.enum(ALL_CITIES, { required_error: 'Please select a destination city' }),
+    date: z.string({ required_error: 'Date is required' }),
+    passengers: z.number().int().min(1).max(7).default(1),
+  })
+  .refine(data => data.origin !== data.destination, {
+    message: 'Origin and destination must be different',
+    path: ['destination'],
+  });
 export type FindRideFields = z.infer<typeof findRideSchema>;
 
 // ── Package schemas ───────────────────────────────────────────────────────────
@@ -103,8 +151,8 @@ export const sendPackageSchema = z.object({
   senderPhone: phoneField.pipe(z.string().min(1, 'Sender phone is required')),
   recipientName: nameField,
   recipientPhone: phoneField.pipe(z.string().min(1, 'Recipient phone is required')),
-  origin: z.enum(JORDAN_CITIES),
-  destination: z.enum(JORDAN_CITIES),
+  origin: z.enum(ALL_CITIES),
+  destination: z.enum(ALL_CITIES),
   description: z.string().min(3, 'Please describe the package').max(200),
   weightKg: z.number().positive().max(50, 'Max package weight is 50 kg'),
   fragile: z.boolean().default(false),
@@ -118,7 +166,12 @@ export const updateProfileSchema = z.object({
   fullName: nameField,
   phone: phoneField,
   bio: z.string().max(250, 'Bio too long').optional(),
-  avatarUrl: z.string().url('Invalid image URL').optional().or(z.literal('')),
+  avatarUrl: z
+    .string()
+    .url('Invalid image URL')
+    .refine(url => url === '' || /^https?:\/\//i.test(url), 'Avatar URL must use http or https')
+    .optional()
+    .or(z.literal('')),
 });
 export type UpdateProfileFields = z.infer<typeof updateProfileSchema>;
 

@@ -1,40 +1,105 @@
-﻿import { motion } from 'motion/react';
-import {
-  Brain,
-  CheckCircle2,
-  Clock,
-  Package,
-  Star,
-  Users,
-} from 'lucide-react';
+import { motion } from 'framer-motion';
+import React from 'react';
+import { Brain, CheckCircle2, Clock, Package, Star, Users } from 'lucide-react';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
+import { C } from '../../../utils/wasel-ds';
 import { getCorridorOpportunity } from '../../../config/wasel-movement-network';
 import { getMovementPriceQuote } from '../../../services/movementPricing';
 import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
-import {
-  createGenderMeta,
-  type Ride,
-} from '../../../pages/waselCoreRideData';
+import { createGenderMeta, type Ride } from '../../../pages/waselCoreRideData';
+import { getCurrentLang, tx } from '../../../locales/tx';
 
 const GENDER_META = createGenderMeta(DS);
+const CITY_LABELS_AR: Record<string, string> = {
+  Amman: 'عمّان',
+  Aqaba: 'العقبة',
+  Irbid: 'إربد',
+  Zarqa: 'الزرقاء',
+  Salt: 'السلط',
+  Madaba: 'مادبا',
+  Jerash: 'جرش',
+  Karak: 'الكرك',
+  Mafraq: 'المفرق',
+  Tafilah: 'الطفيلة',
+  "Ma'an": 'معان',
+  Ajloun: 'عجلون',
+  'Dead Sea': 'البحر الميت',
+  Petra: 'البتراء',
+  'Wadi Rum': 'وادي رم',
+};
+const PICKUP_LABELS_AR: Record<string, string> = {
+  '7th Circle launch point': 'نقطة الانطلاق عند الدوار السابع',
+  'Abdali transfer gate': 'بوابة تبديل العبدلي',
+  'Airport road merge': 'مدخل طريق المطار',
+  'Aqaba logistics zone': 'منطقة العقبة اللوجستية',
+  'North Amman ring': 'حلقة شمال عمّان',
+  'Jerash gate': 'بوابة جرش',
+  'festival shuttle node': 'نقطة نقل المهرجان',
+  'South Amman edge': 'طرف جنوب عمّان',
+  'Mujib connector': 'وصلة الموجب',
+  'Karak city gate': 'بوابة مدينة الكرك',
+};
+
+function cityLabel(city: string) {
+  return getCurrentLang() === 'ar' ? CITY_LABELS_AR[city] ?? city : city;
+}
+
+function packageCapacityLabel(capacity: Ride['pkgCapacity']) {
+  if (getCurrentLang() !== 'ar') return capacity;
+  if (capacity === 'small') return 'طرد صغير';
+  if (capacity === 'medium') return 'طرد متوسط';
+  if (capacity === 'large') return 'طرد كبير';
+  return capacity;
+}
+
+function localizeSignalText(value: string) {
+  if (getCurrentLang() !== 'ar') return value;
+  return value
+    .replace(/\band\b/g, 'و')
+    .replace(/live searches/g, 'عمليات بحث مباشرة')
+    .replace(/live bookings/g, 'حجوزات مباشرة')
+    .replace(/package moves/g, 'حركة طرود')
+    .replace(/ownership/g, 'ملكية المسار')
+    .replace(/pickup/g, 'نقطة الانطلاق');
+}
+
+function pickupLabel(value: string) {
+  return getCurrentLang() === 'ar' ? PICKUP_LABELS_AR[value] ?? localizeSignalText(value) : value;
+}
+
+function durationLabel(value: string) {
+  if (getCurrentLang() !== 'ar') return value;
+  return value.replace(/h\b/g, 'س').replace(/min\b/g, 'د');
+}
+
+function genderLabel(pref: Ride['genderPref'], fallback: string) {
+  if (getCurrentLang() !== 'ar') return fallback;
+  if (pref === 'family_only') return 'للعائلات فقط';
+  if (pref === 'women_only') return 'للنساء فقط';
+  return 'مختلط';
+}
 
 type FindRideCardProps = {
   ride: Ride;
   idx: number;
-  booked?: boolean;
+  bookingStatus?: 'pending_driver' | 'confirmed' | null;
   signal?: LiveCorridorSignal | null;
   onOpen: () => void;
+  onOpenBooking: () => void;
 };
 
-export function FindRideCard({
+export const FindRideCard = React.memo(function FindRideCard({
   ride,
   idx,
-  booked = false,
+  bookingStatus = null,
   signal = null,
   onOpen,
+  onOpenBooking,
 }: FindRideCardProps) {
   const genderMeta = GENDER_META[ride.genderPref];
   const soldOut = ride.seatsAvailable <= 0;
+  const hasBooking = bookingStatus === 'pending_driver' || bookingStatus === 'confirmed';
+  const ar = getCurrentLang() === 'ar';
   const corridorPlan = getCorridorOpportunity(ride.from, ride.to);
   const priceQuote = getMovementPriceQuote({
     basePriceJod: ride.pricePerSeat,
@@ -47,7 +112,7 @@ export function FindRideCard({
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.06, type: 'spring', stiffness: 380, damping: 28 }}
-      whileHover={{ y: -3, boxShadow: '0 12px 40px rgba(22,199,242,0.12)' }}
+      whileHover={{ y: -3, boxShadow: `0 12px 40px ${C.cyanDim}` }}
       onClick={onOpen}
       style={{
         background: DS.card,
@@ -57,10 +122,10 @@ export function FindRideCard({
         overflow: 'hidden',
         transition: 'border-color 0.2s',
       }}
-      onMouseEnter={(event) => {
+      onMouseEnter={(event: React.MouseEvent<HTMLDivElement>) => {
         event.currentTarget.style.borderColor = DS.borderH;
       }}
-      onMouseLeave={(event) => {
+      onMouseLeave={(event: React.MouseEvent<HTMLDivElement>) => {
         event.currentTarget.style.borderColor = DS.border;
       }}
     >
@@ -86,7 +151,7 @@ export function FindRideCard({
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: 900,
-                  color: '#fff',
+                  color: C.text,
                   fontSize: '0.95rem',
                 }}
               >
@@ -108,27 +173,26 @@ export function FindRideCard({
                     justifyContent: 'center',
                   }}
                 >
-                  <CheckCircle2 size={9} color="#fff" />
+                  <CheckCircle2 size={9} color={C.text} />
                 </div>
               )}
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontWeight: 800, color: '#fff', fontSize: '0.92rem' }}>
+                <span style={{ fontWeight: 800, color: C.text, fontSize: '0.92rem' }}>
                   {ride.driver.name}
                 </span>
                 {ride.driver.verified && (
-                  <span style={{ ...pill(DS.green), fontSize: '0.58rem' }}>Verified</span>
+                  <span style={{ ...pill(DS.green), fontSize: '0.58rem' }}>{tx('verification.verified')}</span>
                 )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
-                <Star size={11} fill="#F59E0B" color="#F59E0B" />
-                <span style={{ color: '#F59E0B', fontWeight: 700, fontSize: '0.75rem' }}>
+                <Star size={11} fill={C.gold} color={C.gold} />
+                <span style={{ color: C.gold, fontWeight: 700, fontSize: '0.75rem' }}>
                   {ride.driver.rating}
                 </span>
                 <span style={{ color: DS.muted, fontSize: '0.72rem' }}>
-                  | {ride.driver.trips} trips
-                </span>
+                  | {ride.driver.trips} {tx('findRideCard.trips')}</span>
               </div>
             </div>
           </div>
@@ -137,11 +201,10 @@ export function FindRideCard({
               {priceQuote.finalPriceJod}
             </div>
             <div style={{ color: DS.muted, fontSize: '0.62rem', fontWeight: 600, marginTop: 2 }}>
-              JOD/seat
-            </div>
+              {tx('findRideCard.jod_seat')}</div>
             {priceQuote.discountJod > 0 ? (
               <div style={{ color: DS.green, fontSize: '0.68rem', fontWeight: 700, marginTop: 5 }}>
-                Save {priceQuote.discountJod} JOD from {priceQuote.basePriceJod}
+                {tx('common.save')}{priceQuote.discountJod} {tx('findRideCard.jod_from')}{priceQuote.basePriceJod}
               </div>
             ) : null}
           </div>
@@ -149,7 +212,7 @@ export function FindRideCard({
 
         <div
           style={{
-            background: 'rgba(0,0,0,0.25)',
+            background: C.overlay,
             borderRadius: r(14),
             padding: '14px 18px',
             marginBottom: 14,
@@ -159,7 +222,7 @@ export function FindRideCard({
           }}
         >
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 800, color: '#fff', fontSize: '0.92rem' }}>{ride.from}</div>
+            <div style={{ fontWeight: 800, color: C.text, fontSize: '0.92rem' }}>{cityLabel(ride.from)}</div>
             <div style={{ color: DS.muted, fontSize: '0.7rem', marginTop: 1 }}>
               <Clock size={10} style={{ display: 'inline', marginRight: 3 }} />
               {ride.time}
@@ -183,7 +246,13 @@ export function FindRideCard({
                 boxShadow: `0 0 8px ${DS.green}60`,
               }}
             />
-            <div style={{ width: 1, height: 22, background: `linear-gradient(180deg,${DS.green},${DS.cyan})` }} />
+            <div
+              style={{
+                width: 1,
+                height: 22,
+                background: `linear-gradient(180deg,${DS.green},${DS.cyan})`,
+              }}
+            />
             <div
               style={{
                 width: 7,
@@ -194,12 +263,13 @@ export function FindRideCard({
               }}
             />
             <span style={{ color: DS.muted, fontSize: '0.62rem', fontWeight: 600, marginTop: 2 }}>
-              {ride.duration}
+              {durationLabel(ride.duration)}
             </span>
           </div>
           <div style={{ flex: 1, textAlign: 'right' }}>
-            <div style={{ fontWeight: 800, color: '#fff', fontSize: '0.92rem' }}>{ride.to}</div>
-            <div style={{ color: DS.muted, fontSize: '0.7rem', marginTop: 1 }}>{ride.distance} km</div>
+            <div style={{ fontWeight: 800, color: C.text, fontSize: '0.92rem' }}>{cityLabel(ride.to)}</div>
+            <div style={{ color: DS.muted, fontSize: '0.7rem', marginTop: 1 }}>
+              {ride.distance} {tx('findRideCard.km')}</div>
           </div>
         </div>
 
@@ -209,22 +279,27 @@ export function FindRideCard({
               marginBottom: 14,
               borderRadius: r(14),
               padding: '12px 14px',
-              background: 'linear-gradient(135deg, rgba(22,199,242,0.08), rgba(255,255,255,0.03))',
+              background: `linear-gradient(135deg, ${C.cyanDim}, ${C.elevated})`,
               border: `1px solid ${DS.border}`,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <Brain size={14} color={DS.cyan} />
-              <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.8rem' }}>Wasel Brain</span>
+              <span style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem' }}>
+                {tx('findRideCard.wasel_brain')}</span>
             </div>
             <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.6 }}>
               {signal
-                ? `${signal.recommendedReason} Current route ownership is ${signal.routeOwnershipScore}/100 and pickup is ${signal.recommendedPickupPoint}.`
-                : `${corridorPlan.savingsPercent}% cheaper than solo movement on ${corridorPlan.label}. Best pickup: ${corridorPlan.pickupPoints[0]}.`}
+                  ? ar
+                  ? `ملكية المسار الحالية ${signal.routeOwnershipScore}/100 ونقطة الانطلاق ${pickupLabel(signal.recommendedPickupPoint)}.`
+                  : `${signal.recommendedReason} Current route ownership is ${signal.routeOwnershipScore}/100 and pickup is ${signal.recommendedPickupPoint}.`
+                : ar
+                  ? `أوفر ${corridorPlan.savingsPercent}% من المشوار الفردي على مسار ${cityLabel(ride.from)} إلى ${cityLabel(ride.to)}. أفضل نقطة انطلاق: ${pickupLabel(corridorPlan.pickupPoints[0] ?? '')}.`
+                  : `${corridorPlan.savingsPercent}% cheaper than solo movement on ${corridorPlan.label}. Best pickup: ${corridorPlan.pickupPoints[0]}.`}
             </div>
             {signal ? (
               <div style={{ color: DS.muted, fontSize: '0.7rem', lineHeight: 1.55, marginTop: 8 }}>
-                {signal.productionSources.slice(0, 3).join(' | ')}
+                {localizeSignalText(signal.productionSources.slice(0, 3).join(' | '))}
               </div>
             ) : null}
           </div>
@@ -241,68 +316,100 @@ export function FindRideCard({
         >
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             <span style={pill(soldOut ? DS.gold : DS.cyan)}>
-              <Users size={9} /> {soldOut ? 'Sold out' : `${ride.seatsAvailable} seats`}
+              <Users size={9} /> {soldOut ? (ar ? 'ممتلئ' : 'Sold out') : ar ? `${ride.seatsAvailable} مقاعد` : `${ride.seatsAvailable} seats`}
             </span>
             <span style={pill(genderMeta.color)}>
-              {genderMeta.emoji} {genderMeta.label}
+              {genderMeta.emoji} {genderLabel(ride.genderPref, genderMeta.label)}
             </span>
-            {ride.prayerStops && <span style={pill(DS.gold)}>Prayer</span>}
+            {ride.prayerStops && <span style={pill(DS.gold)}>{tx('findRideCard.prayer')}</span>}
             {ride.pkgCapacity !== 'none' && (
               <span style={pill(DS.gold)}>
-                <Package size={9} /> {ride.pkgCapacity}
+                <Package size={9} /> {packageCapacityLabel(ride.pkgCapacity)}
               </span>
             )}
-            {signal && <span style={pill(DS.green)}>Demand {signal.forecastDemandScore}</span>}
-            {signal && <span style={pill(DS.cyan)}>Owns {signal.routeOwnershipScore}</span>}
-            {!signal && corridorPlan && <span style={pill(DS.green)}>Demand {corridorPlan.predictedDemandScore}</span>}
-            {booked && (
-              <span style={pill(DS.green)}>
-                <CheckCircle2 size={9} /> Booked
-              </span>
+            {signal && <span style={pill(DS.green)}>{tx('findRideCard.demand')}{signal.forecastDemandScore}</span>}
+            {signal && <span style={pill(DS.cyan)}>{tx('findRideCard.owns')}{signal.routeOwnershipScore}</span>}
+            {!signal && corridorPlan && (
+              <span style={pill(DS.green)}>{tx('findRideCard.demand_2')}{corridorPlan.predictedDemandScore}</span>
+            )}
+            {hasBooking && (
+              <span style={pill(bookingStatus === 'pending_driver' ? DS.gold : DS.green)}>
+                <CheckCircle2 size={9} /> {tx('findRideCard.booked')}</span>
             )}
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            <span style={{ color: booked ? DS.green : soldOut ? DS.gold : DS.muted, fontSize: '0.75rem' }}>
-              {booked
-                ? 'Reserved'
+            <span
+              style={{
+                color: hasBooking
+                  ? bookingStatus === 'pending_driver'
+                    ? DS.gold
+                    : DS.green
+                  : soldOut
+                    ? DS.gold
+                    : DS.muted,
+                fontSize: '0.75rem',
+              }}
+            >
+              {hasBooking
+                ? bookingStatus === 'pending_driver'
+                  ? ar ? 'تم إرسال الطلب' : 'Request sent'
+                  : ar ? 'تم تأكيد المقعد' : 'Seat confirmed'
                 : soldOut
-                  ? 'Bus fallback available'
+                  ? ar ? 'بديل الباص متاح' : 'Bus fallback available'
                   : signal
-                    ? `${signal.nextWaveWindow} next`
-                    : 'View details'}
+                    ? ar ? `${localizeSignalText(signal.nextWaveWindow)} التالي` : `${signal.nextWaveWindow} next`
+                    : ar ? 'جاهز للحجز' : 'Ready to reserve'}
             </span>
             <motion.button
               whileTap={{ scale: 0.94 }}
-              onClick={(event) => {
+              onClick={(event: React.MouseEvent) => {
                 event.stopPropagation();
+                if (hasBooking) {
+                  onOpenBooking();
+                  return;
+                }
+
                 onOpen();
               }}
               className="sp-book-btn"
-              disabled={booked || soldOut}
+              disabled={soldOut}
               style={{
                 height: 44,
                 padding: '0 18px',
                 borderRadius: '99px',
                 border: 'none',
-                background: booked
-                  ? DS.gradG
+                background: hasBooking
+                  ? bookingStatus === 'pending_driver'
+                    ? DS.gradGold
+                    : DS.gradG
                   : soldOut
-                    ? 'linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08))'
+                    ? C.elevated
                     : DS.gradC,
-                color: '#fff',
+                color: C.text,
                 fontWeight: 800,
                 fontSize: '0.82rem',
-                boxShadow: `0 4px 16px ${booked ? DS.green : soldOut ? 'rgba(255,255,255,0.14)' : DS.cyan}30`,
-                cursor: booked || soldOut ? 'not-allowed' : 'pointer',
-                opacity: booked || soldOut ? 0.88 : 1,
+                boxShadow: `0 4px 16px ${
+                  hasBooking
+                    ? bookingStatus === 'pending_driver'
+                      ? DS.gold
+                      : DS.green
+                    : soldOut
+                      ? C.elevated
+                      : DS.cyan
+                }30`,
+                cursor: soldOut ? 'not-allowed' : 'pointer',
+                opacity: soldOut ? 0.88 : 1,
               }}
             >
-              {booked ? 'Booked' : soldOut ? 'Sold out' : 'Book seat'}
+               {hasBooking
+                 ? ar ? 'افتح في رحلاتي' : 'Open in My Trips'
+                 : soldOut
+                   ? ar ? 'ممتلئ' : 'Sold out'
+                   : ar ? 'عرض التفاصيل' : 'View details'}
             </motion.button>
           </div>
         </div>
       </div>
     </motion.div>
   );
-}
-
+});

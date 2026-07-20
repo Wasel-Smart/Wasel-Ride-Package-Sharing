@@ -5,6 +5,7 @@ import {
   subscribeAvailability,
   type AvailabilitySnapshot,
 } from '../../services/core';
+import { C, F } from '../../utils/wasel-ds';
 
 interface AvailabilityBannerProps {
   ar?: boolean;
@@ -50,14 +51,14 @@ export function AvailabilityBanner({ ar = false }: AvailabilityBannerProps) {
   const theme =
     bannerState.tone === 'offline'
       ? {
-          border: 'rgba(248,113,113,0.28)',
-          background: 'rgba(127,29,29,0.35)',
-          accent: '#FCA5A5',
+          border: 'rgba(255,124,139,0.28)',
+          background: 'linear-gradient(90deg, rgba(255,124,139,0.14), rgba(6,19,31,0.84))',
+          accent: C.error,
         }
       : {
-          border: 'rgba(250,204,21,0.28)',
-          background: 'rgba(113,63,18,0.30)',
-          accent: '#FCD34D',
+          border: 'rgba(255,190,92,0.28)',
+          background: 'linear-gradient(90deg, rgba(255,190,92,0.12), rgba(6,19,31,0.84))',
+          accent: C.gold,
         };
 
   const handleProbe = async () => {
@@ -97,14 +98,16 @@ export function AvailabilityBanner({ ar = false }: AvailabilityBannerProps) {
               fontSize: '0.8rem',
               fontWeight: 800,
               marginBottom: 2,
+              fontFamily: F,
             }}
           >
             {bannerState.title}
           </div>
           <div
             style={{
-              color: 'rgba(239,246,255,0.76)',
+              color: C.textMuted,
               fontSize: '0.78rem',
+              fontFamily: F,
             }}
           >
             {bannerState.description}
@@ -120,9 +123,10 @@ export function AvailabilityBanner({ ar = false }: AvailabilityBannerProps) {
             padding: '0 14px',
             borderRadius: 999,
             border: `1px solid ${theme.border}`,
-            background: 'rgba(4,12,24,0.55)',
-            color: '#EFF6FF',
+            background: 'rgba(6,19,31,0.72)',
+            color: C.text,
             fontWeight: 700,
+            fontFamily: F,
             cursor: checking ? 'wait' : 'pointer',
             opacity: checking ? 0.75 : 1,
           }}

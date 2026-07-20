@@ -1,57 +1,55 @@
 # Launch Rehearsal Checklist
 
-Use this checklist before moving from mock launch into wider rollout.
+Use this checklist for the final rehearsal before production cutover.
 
-## Supabase Rollout
+## Environment
 
-- Apply [20260401113000_unified_backend_contract.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401113000_unified_backend_contract.sql)
-- Apply [20260401133000_align_canonical_rls_policies.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401133000_align_canonical_rls_policies.sql)
-- Apply [20260401143000_harden_rpc_execute_permissions.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/migrations/20260401143000_harden_rpc_execute_permissions.sql)
-- Run [mock_engine_launch_pack.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/seeds/mock_engine_launch_pack.sql)
-- Run [mock_engine_smoke_checks.sql](/C:/Users/user/OneDrive/Desktop/Wdoubleme/src/supabase/seeds/mock_engine_smoke_checks.sql)
-- Run `node scripts/verify-supabase-rollout.mjs`
+- Production-like Supabase project is linked and reachable.
+- Required provider secrets are configured in Vercel, Kubernetes, and local deploy shell.
+- `kubectl` context points to the intended cluster.
+- Docker registry login is active for `WASEL_REGISTRY`.
+- Monitoring endpoints and alert routing are enabled.
 
-## Application Checks
+## Database
 
-- Confirm sign-in/session restore works
-- Confirm profile fetch returns canonical data
-- Confirm trip search returns seeded mock routes
-- Confirm driver trips load for seeded drivers
-- Confirm booking creation works without RLS failure
-- Confirm package tracking resolves seeded package codes
-- Confirm wallet summary loads
-- Confirm wallet transfer flow works
-- Confirm notifications render
-- Confirm verification state appears correctly in profile/auth flows
+```bash
+npx supabase migration list
+npm run verify:supabase-rollout
+```
 
-## Security Checks
+- Confirm pending migrations are expected.
+- Apply migrations only after backup confirmation.
+- Run `supabase/migrations/verify_database.sql` after migration.
 
-- Confirm internal RPCs are not callable by normal authenticated users
-- Confirm user-facing RPCs still work after execute hardening
-- Confirm no direct canonical write path fails due to missing `WITH CHECK`
-- Confirm no unexpected `anon` access to privileged functions
+## Build Gates
 
-## Go / No-Go
+```bash
+npm run verify:contracts
+npm run type-check
+npm run test:unit
+npm run build
+```
 
-Go when:
+## Services
 
-- migrations apply cleanly
-- seed pack loads cleanly
-- smoke checks return expected rows
-- core user flows work in the app
-- no RLS or RPC permission errors appear in Supabase logs
+```bash
+npm run k8s:deploy
+kubectl rollout status deployment/ride-matching-service -n wasel-production
+kubectl rollout status deployment/payment-reconciliation-service -n wasel-production
+kubectl rollout status deployment/ops-analytics-service -n wasel-production
+```
 
-No-go when:
+## Mobile
 
-- any migration fails
-- canonical insert/update flows fail under RLS
-- wallet or booking flows regress after RPC hardening
-- auth-user to canonical-user mapping fails
+```bash
+npm run mobile:build:android
+npm run mobile:build:ios
+```
 
-## Seeding Readiness
+## Rehearsal Exit
 
-After technical go-live, use the founder seeding pack before broad promotion:
-
-- review [e-SOSTAC Founder Seeding Sprint](/C:/Users/user/OneDrive/Desktop/Wdoubleme/docs/E_SOSTAC_FOUNDER_SEEDING_SPRINT.md)
-- use [Seeding Outreach Copy](/C:/Users/user/OneDrive/Desktop/Wdoubleme/docs/SEEDING_OUTREACH_COPY.md)
-- track daily execution in [Seeding Tracker Template](/C:/Users/user/OneDrive/Desktop/Wdoubleme/docs/SEEDING_TRACKER_TEMPLATE.csv)
+- Web build artifact produced.
+- Backend services roll out cleanly.
+- Android and iOS release artifacts are generated.
+- Smoke and load tests meet SLO thresholds.
+- Rollback owner and communications owner are assigned.

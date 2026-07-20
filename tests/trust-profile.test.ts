@@ -4,7 +4,7 @@ import {
   deriveTrustScore,
   deriveVerificationLevel,
   mapBackendProfile,
-} from '../src/domains/trust/profile';
+} from '../src/domain/trust/profile';
 
 describe('trust profile derivation', () => {
   it('assigns verification levels correctly', () => {

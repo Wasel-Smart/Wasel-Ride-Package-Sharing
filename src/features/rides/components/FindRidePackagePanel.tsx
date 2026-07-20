@@ -1,11 +1,8 @@
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { MapWrapper } from '../../../components/MapWrapper';
 import { CITIES } from '../../../pages/waselCoreRideData';
 import { DS, midpoint, pill, r, resolveCityCoord } from '../../../pages/waselServiceShared';
-import {
-  FIND_RIDE_PACKAGE_WEIGHTS,
-  type FindRideStaticCopy,
-} from '../findRideContent';
+import { FIND_RIDE_PACKAGE_WEIGHTS, type FindRideStaticCopy } from '../findRideContent';
 
 type PackageState = {
   from: string;
@@ -33,13 +30,7 @@ type FindRidePackagePanelProps = {
   setPkg: React.Dispatch<React.SetStateAction<PackageState>>;
 };
 
-export function FindRidePackagePanel({
-  ar,
-  copy,
-  t,
-  pkg,
-  setPkg,
-}: FindRidePackagePanelProps) {
+export function FindRidePackagePanel({ ar, copy, t, pkg, setPkg }: FindRidePackagePanelProps) {
   return (
     <div
       style={{
@@ -52,12 +43,14 @@ export function FindRidePackagePanel({
       {pkg.sent ? (
         <div style={{ textAlign: 'center', padding: '40px 0' }}>
           <div style={{ fontSize: '3rem', marginBottom: 16 }}>{copy.packageIcon}</div>
-          <h3 style={{ color: DS.green, fontWeight: 900, fontSize: '1.3rem' }}>{copy.packageSent}</h3>
+          <h3 style={{ color: DS.green, fontWeight: 900, fontSize: '1.3rem' }}>
+            {copy.packageSent}
+          </h3>
           <p style={{ color: DS.sub, marginTop: 8 }}>
             {copy.packageHint} {pkg.to}.
           </p>
           <button
-            onClick={() => setPkg((previous) => ({ ...previous, sent: false }))}
+            onClick={() => setPkg(previous => ({ ...previous, sent: false }))}
             style={{
               marginTop: 20,
               padding: '10px 24px',
@@ -74,7 +67,7 @@ export function FindRidePackagePanel({
         </div>
       ) : (
         <>
-          <h3 style={{ color: '#fff', fontWeight: 800, marginBottom: 20 }}>{copy.packageTitle}</h3>
+          <h3 style={{ color: DS.text, fontWeight: 800, marginBottom: 20 }}>{copy.packageTitle}</h3>
           <div
             style={{
               display: 'grid',
@@ -83,7 +76,7 @@ export function FindRidePackagePanel({
               marginBottom: 18,
             }}
           >
-            {copy.packageFlow.map((step) => (
+            {copy.packageFlow.map(step => (
               <div
                 key={step.title}
                 style={{
@@ -93,19 +86,23 @@ export function FindRidePackagePanel({
                   background: DS.card2,
                 }}
               >
-                <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem', marginBottom: 4 }}>
+                <div
+                  style={{ color: DS.text, fontWeight: 800, fontSize: '0.84rem', marginBottom: 4 }}
+                >
                   {step.title}
                 </div>
-                <div style={{ color: DS.sub, fontSize: '0.74rem', lineHeight: 1.5 }}>{step.desc}</div>
+                <div style={{ color: DS.sub, fontSize: '0.74rem', lineHeight: 1.5 }}>
+                  {step.desc}
+                </div>
               </div>
             ))}
           </div>
 
           <div style={{ display: 'grid', gap: 14, gridTemplateColumns: '1fr 1fr' }}>
-            {([
+            {[
               { label: t.from, value: pkg.from, key: 'from' as const },
               { label: t.to, value: pkg.to, key: 'to' as const },
-            ]).map((field) => (
+            ].map(field => (
               <div key={field.label}>
                 <label
                   style={{
@@ -113,7 +110,7 @@ export function FindRidePackagePanel({
                     color: DS.muted,
                     fontSize: '0.72rem',
                     fontWeight: 700,
-                    letterSpacing: ar ? undefined : '0.08em',
+                    letterSpacing: 0,
                     textTransform: ar ? undefined : 'uppercase',
                     marginBottom: 6,
                   }}
@@ -122,8 +119,8 @@ export function FindRidePackagePanel({
                 </label>
                 <select
                   value={field.value}
-                  onChange={(event) =>
-                    setPkg((previous) => ({ ...previous, [field.key]: event.target.value }))
+                  onChange={event =>
+                    setPkg(previous => ({ ...previous, [field.key]: event.target.value }))
                   }
                   style={{
                     width: '100%',
@@ -131,13 +128,13 @@ export function FindRidePackagePanel({
                     borderRadius: r(10),
                     border: `1px solid ${DS.border}`,
                     background: DS.card2,
-                    color: '#fff',
+                    color: DS.text,
                     fontFamily: DS.F,
                     fontSize: '0.9rem',
                     outline: 'none',
                   }}
                 >
-                  {CITIES.map((city) => (
+                  {CITIES.map(city => (
                     <option key={city} value={city} style={{ background: DS.card }}>
                       {city}
                     </option>
@@ -152,7 +149,7 @@ export function FindRidePackagePanel({
                   color: DS.muted,
                   fontSize: '0.72rem',
                   fontWeight: 700,
-                  letterSpacing: ar ? undefined : '0.08em',
+                  letterSpacing: 0,
                   textTransform: ar ? undefined : 'uppercase',
                   marginBottom: 6,
                 }}
@@ -161,20 +158,22 @@ export function FindRidePackagePanel({
               </label>
               <select
                 value={pkg.weight}
-                onChange={(event) => setPkg((previous) => ({ ...previous, weight: event.target.value }))}
+                onChange={event =>
+                  setPkg(previous => ({ ...previous, weight: event.target.value }))
+                }
                 style={{
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: r(10),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: '#fff',
+                  color: DS.text,
                   fontFamily: DS.F,
                   fontSize: '0.9rem',
                   outline: 'none',
                 }}
               >
-                {FIND_RIDE_PACKAGE_WEIGHTS.map((weight) => (
+                {FIND_RIDE_PACKAGE_WEIGHTS.map(weight => (
                   <option key={weight} style={{ background: DS.card }}>
                     {weight}
                   </option>
@@ -188,7 +187,7 @@ export function FindRidePackagePanel({
                   color: DS.muted,
                   fontSize: '0.72rem',
                   fontWeight: 700,
-                  letterSpacing: ar ? undefined : '0.08em',
+                  letterSpacing: 0,
                   textTransform: ar ? undefined : 'uppercase',
                   marginBottom: 6,
                 }}
@@ -198,14 +197,14 @@ export function FindRidePackagePanel({
               <input
                 placeholder={t.notePh}
                 value={pkg.note}
-                onChange={(event) => setPkg((previous) => ({ ...previous, note: event.target.value }))}
+                onChange={event => setPkg(previous => ({ ...previous, note: event.target.value }))}
                 style={{
                   width: '100%',
                   padding: '12px 14px',
                   borderRadius: r(10),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: '#fff',
+                  color: DS.text,
                   fontFamily: DS.F,
                   fontSize: '0.9rem',
                   outline: 'none',
@@ -235,7 +234,14 @@ export function FindRidePackagePanel({
               }}
             >
               <div>
-                <p style={{ color: DS.muted, fontSize: '0.7rem', fontWeight: 700, margin: '0 0 4px' }}>
+                <p
+                  style={{
+                    color: DS.muted,
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    margin: '0 0 4px',
+                  }}
+                >
                   {t.deliveryRoute}
                 </p>
                 <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>{t.deliveryHint}</p>
@@ -255,7 +261,7 @@ export function FindRidePackagePanel({
 
           <motion.button
             whileTap={{ scale: 0.97 }}
-            onClick={() => setPkg((previous) => ({ ...previous, sent: true }))}
+            onClick={() => setPkg(previous => ({ ...previous, sent: true }))}
             style={{
               marginTop: 20,
               width: '100%',
@@ -263,7 +269,7 @@ export function FindRidePackagePanel({
               borderRadius: r(14),
               border: 'none',
               background: DS.gradGold,
-              color: '#fff',
+              color: DS.text,
               fontWeight: 800,
               fontSize: '0.95rem',
               cursor: 'pointer',

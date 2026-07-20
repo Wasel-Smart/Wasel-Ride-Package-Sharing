@@ -2,25 +2,125 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
-import { enforceDemoModeSafety, validateEnvironmentConfig } from './utils/environment';
+import { initializeCsrfProtection } from './utils/csrf';
+import { initializeSessionManagement } from './utils/session';
+import { clearMasterKey } from './utils/encryption';
+import {
+  safeStorageGetItem,
+  safeStorageRemoveItem,
+  safeStorageSetItem,
+} from './utils/browserStorage';
+import { verifyBackendConnection, startHealthCheckMonitoring } from './utils/healthCheck';
+import { sanitizeLogMessage } from './utils/sanitization';
+import { circuitBreakers } from './utils/circuitBreaker';
+import { resetApiCircuitBreaker, getApiCircuitBreakerState } from './services/core';
 
-// Validate environment configuration early
-try {
-  validateEnvironmentConfig();
-  enforceDemoModeSafety();
-} catch (error) {
-  console.error('[Wasel] Failed to initialize application due to configuration error:', error);
-  document.body.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui, sans-serif; background: #f5f5f5;">
-      <div style="text-align: center; max-width: 500px; padding: 40px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-        <h1 style="color: #d32f2f; margin: 0 0 16px;">Configuration Error</h1>
-        <p style="color: #666; margin: 16px 0;">${error instanceof Error ? error.message : 'Unknown configuration error'}</p>
-        <p style="color: #999; font-size: 14px;">Please contact support or check your environment variables.</p>
-      </div>
-    </div>
-  `;
-  throw error;
+const LOCAL_DEV_RESET_KEY = 'wasel-local-dev-cache-reset';
+
+function isLocalDevelopmentOrigin(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  try {
+    const { hostname, protocol } = new URL(window.location.origin);
+    return protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1');
+  } catch {
+    return false;
+  }
 }
+
+async function resetLocalDevelopmentArtifacts(): Promise<void> {
+  if (!isLocalDevelopmentOrigin() || !('serviceWorker' in navigator)) {
+    return;
+  }
+
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    if (registrations.length === 0) {
+      safeStorageRemoveItem('sessionStorage', LOCAL_DEV_RESET_KEY);
+      return;
+    }
+
+    await Promise.allSettled(registrations.map(registration => registration.unregister()));
+
+    if ('caches' in window) {
+      const cacheKeys = await caches.keys();
+      await Promise.allSettled(cacheKeys.map(cacheKey => caches.delete(cacheKey)));
+    }
+
+    if (!safeStorageGetItem('sessionStorage', LOCAL_DEV_RESET_KEY)) {
+      safeStorageSetItem('sessionStorage', LOCAL_DEV_RESET_KEY, '1');
+      window.location.reload();
+      return;
+    }
+
+    safeStorageRemoveItem('sessionStorage', LOCAL_DEV_RESET_KEY);
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('[Wasel] Local cache cleanup skipped.', error);
+    }
+  }
+}
+
+// Verify critical environment is configured before the app boots.
+try {
+  if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+    throw new Error(
+      'VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY must be set. ' +
+        'Check .env.local or your deployment environment.',
+    );
+  }
+} catch (envError) {
+  console.error('[Wasel] Environment not configured:', envError);
+  document.body.innerHTML =
+    '<div style="padding:24px;color:#ef4444;font-family:monospace;">' +
+    '<h1>Configuration Error</h1>' +
+    '<p>The application is not configured correctly. Contact support.</p>' +
+    '</div>';
+  throw envError;
+}
+
+// Initialize security features
+try {
+  initializeCsrfProtection();
+} catch (error) {
+  if (import.meta.env.DEV) {
+    console.warn('[Wasel] CSRF startup initialization failed.', error);
+  }
+}
+
+try {
+  initializeSessionManagement();
+} catch (error) {
+  if (import.meta.env.DEV) {
+    console.warn('[Wasel] Session startup initialization failed.', error);
+  }
+}
+
+// Verify backend connectivity on startup (both dev and prod).
+// In production we log warnings without blocking render.
+verifyBackendConnection()
+  .then(result => {
+    if (result.connected) {
+      if (import.meta.env.DEV) {
+        console.log('[Wasel] ✓ Backend connected:', result.message);
+      }
+      startHealthCheckMonitoring(60_000);
+    } else {
+      console.warn('[Wasel] ⚠ Backend connection issue:', sanitizeLogMessage(result.message));
+    }
+  })
+  .catch(error => {
+    console.error('[Wasel] Backend health check failed:', sanitizeLogMessage(String(error)));
+  });
+
+// Clear encryption key on logout
+window.addEventListener('storage', e => {
+  if (e.key === 'wasel-auth-state' && !e.newValue) {
+    clearMasterKey();
+  }
+});
 
 const rootElement = document.getElementById('root');
 
@@ -36,10 +136,63 @@ ReactDOM.createRoot(rootElement).render(
   </React.StrictMode>,
 );
 
+void resetLocalDevelopmentArtifacts();
+
+// Expose circuit breaker utilities globally — DEV builds only.
+// In production this block is dead code and tree-shaken by esbuild.
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  (
+    window as Window & {
+      __waselDebug?: {
+        resetApiCircuitBreaker: typeof resetApiCircuitBreaker;
+        getApiCircuitBreakerState: typeof getApiCircuitBreakerState;
+        getAllCircuitBreakers: () => ReturnType<typeof circuitBreakers.getAllStats>;
+        resetAllCircuitBreakers: () => void;
+      };
+    }
+  ).__waselDebug = {
+    resetApiCircuitBreaker,
+    getApiCircuitBreakerState,
+    getAllCircuitBreakers: () => circuitBreakers.getAllStats(),
+    resetAllCircuitBreakers: () => circuitBreakers.resetAll(),
+  };
+  console.info('[Wasel] Debug utilities available at window.__waselDebug');
+}
+
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((error) => {
-      console.warn('[Wasel] Service Worker registration failed:', error);
-    });
+    navigator.serviceWorker.register('/sw.js').catch(() => undefined);
   });
+}
+
+function isStandalonePWA(): boolean {
+  if (typeof window === 'undefined') return false;
+  const mediaQuery = window.matchMedia('(display-mode: standalone)');
+  if (mediaQuery.matches) return true;
+  if ((navigator as Navigator & { standalone?: boolean }).standalone === true) return true;
+  return false;
+}
+
+if (isStandalonePWA()) {
+  document.documentElement.classList.add('pwa-standalone');
+}
+
+type ServiceWorkerMessage = { type: 'NAVIGATE'; url: string } | { type: 'BACKGROUND_SYNC' };
+
+function handleServiceWorkerMessage(event: MessageEvent<ServiceWorkerMessage>) {
+  const message = event.data;
+
+  if (!message) return;
+
+  if (message.type === 'NAVIGATE') {
+    window.location.href = message.url;
+  }
+
+  if (message.type === 'BACKGROUND_SYNC') {
+    window.dispatchEvent(new Event('online'));
+  }
+}
+
+if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
 }

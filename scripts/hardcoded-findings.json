@@ -1,0 +1,134 @@
+[
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\notifications\\NotificationItem.tsx",
+    "text": "true",
+    "pos": 4634
+  },
+  {
+    "kind": "attr:aria-live",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\system\\AvailabilityBanner.tsx",
+    "text": "polite",
+    "pos": 2143
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\system\\ErrorBoundary.tsx",
+    "text": "true",
+    "pos": 7965
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\system\\ProtectedPagePreview.tsx",
+    "text": "true",
+    "pos": 10508
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\system\\WaselStateCard.tsx",
+    "text": "true",
+    "pos": 1974
+  },
+  {
+    "kind": "attr:alt",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\wasel-ds\\__tests__\\WaselLogo.test.tsx",
+    "text": "Custom Alt",
+    "pos": 776
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\wasel-ui\\WaselBadge.tsx",
+    "text": "true",
+    "pos": 2169
+  },
+  {
+    "kind": "attr:aria-modal",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\wasel-ui\\WaselDialog.tsx",
+    "text": "true",
+    "pos": 1831
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\wasel-ui\\WaselPagePrimitives.tsx",
+    "text": "true",
+    "pos": 1612
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\wasel-ui\\WaselSelect.tsx",
+    "text": "true",
+    "pos": 4348
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\home\\HomePageShared.tsx",
+    "text": "true",
+    "pos": 3458
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\home\\MobilityOSLandingMap.tsx",
+    "text": "true",
+    "pos": 29329
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\home\\sections\\CorridorBetaFocusSection.tsx",
+    "text": "true",
+    "pos": 1733
+  },
+  {
+    "kind": "attr:label",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\preferences\\SettingsPage.tsx",
+    "text": "W",
+    "pos": 18458
+  },
+  {
+    "kind": "attr:aria-live",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\profile\\components\\ValidationFeedback.tsx",
+    "text": "polite",
+    "pos": 964
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\shared\\pageShared.tsx",
+    "text": "true",
+    "pos": 6295
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\wallet\\components\\WalletHeroCard.tsx",
+    "text": "true",
+    "pos": 1209
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\layouts\\root-parts\\controls.tsx",
+    "text": "true",
+    "pos": 7207
+  },
+  {
+    "kind": "attr:aria-haspopup",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\layouts\\root-parts\\menus.tsx",
+    "text": "true",
+    "pos": 5120
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\layouts\\root-parts\\menus.tsx",
+    "text": "true",
+    "pos": 15639
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\layouts\\root-parts\\shared.tsx",
+    "text": "true",
+    "pos": 3548
+  },
+  {
+    "kind": "attr:aria-hidden",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\layouts\\WaselRoot.tsx",
+    "text": "true",
+    "pos": 7609
+  }
+]

@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "Wasel",
+    "slug": "wasel",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "wasel",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#06111b"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.wasel.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Wasel uses your location to find nearby rides and show your position on the map.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Wasel uses your location to update your position as a driver during an active trip."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#06111b"
+      },
+      "package": "com.wasel.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#00C8E8",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Wasel needs location access to match you with drivers and track your trip."
+        }
+      ],
+      "expo-secure-store",
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "wasel-mobile-project"
+      }
+    }
+  }
+}
