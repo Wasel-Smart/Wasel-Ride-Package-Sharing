@@ -23,7 +23,6 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.wasel.app",
-      "usesAppleSignIn": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "يستخدم واصل موقعك للعثور على المشاوير القريبة وإظهار موقعك على الخريطة. Wasel uses your location to find nearby rides and show your position on the map.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "يستخدم واصل موقعك أثناء الرحلة النشطة لتحديث موقع السائق بأمان. Wasel uses your location during an active trip to update the driver's position safely."
