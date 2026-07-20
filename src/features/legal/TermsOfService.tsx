@@ -1,20 +1,39 @@
-/**
- * Terms of Service Page - Wasel | واصل
- * Legal terms and conditions for platform usage
- */
-
+import { AlertCircle, DollarSign, FileText, Scale, ShieldCheck, Users } from 'lucide-react';
+import {
+  MetricCard,
+  PageHero,
+  PageShell,
+  SectionCard,
+  StatusBadge,
+} from '../../components/wasel-ui/WaselPagePrimitives';
+import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { FileText, AlertCircle, ShieldCheck, Users, DollarSign, Scale } from 'lucide-react';
+import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
+import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+
+function termsCardStyle(accent: string) {
+  return {
+    borderRadius: R.xxl,
+    border: `1px solid ${accent}24`,
+    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${C.card}`,
+    boxShadow: SH.md,
+    padding: SPACE[5],
+  } as const;
+}
 
 export function TermsOfService() {
-  const { language, dir } = useLanguage();
+  const { language, dir, t } = useLanguage();
+  const nav = useIframeSafeNavigate();
+  const ar = language === 'ar';
 
   const content = {
     ar: {
       title: 'شروط الخدمة',
       subtitle: 'آخر تحديث: 16 مارس 2026',
-      intro: 'بقبولك لهذه الشروط، تدخل في اتفاقية ملزمة قانوناً مع واصل. يُرجى قراءة هذه الشروط بعناية قبل استخدام خدماتنا.',
-      
+      intro:
+        'بقبولك لهذه الشروط، تدخل في اتفاقية ملزمة قانوناً مع واصل. يُرجى قراءة هذه الشروط بعناية قبل استخدام خدماتنا.',
+
       sections: [
         {
           icon: Users,
@@ -25,8 +44,8 @@ export function TermsOfService() {
             'التحقق الإلزامي عبر سند (رقم البطاقة الوطنية)',
             'حساب واحد لكل مستخدم',
             'معلومات دقيقة وحديثة مطلوبة',
-            'يحق لنا تعليق الحسابات المخالفة'
-          ]
+            'يحق لنا تعليق الحسابات المخالفة',
+          ],
         },
         {
           icon: FileText,
@@ -37,8 +56,8 @@ export function TermsOfService() {
             'إرجاع المنتجات عبر راجع',
             'حاسبة تقاسم التكاليف',
             'ميزات ثقافية (أوقات الصلاة، تفضيلات الجنس، وضع رمضان)',
-            'واصل منصة، وليست شركة نقل مباشرة'
-          ]
+            'واصل منصة، وليست شركة نقل مباشرة',
+          ],
         },
         {
           icon: DollarSign,
@@ -49,8 +68,8 @@ export function TermsOfService() {
             'الدفع: نقداً عند الوصول أو رقمياً',
             'استرداد الأموال: خلال 24 ساعة من الإلغاء',
             'سياسة إلغاء صارمة للحجوزات المتأخرة',
-            'رسوم معالجة 1 JOD للاستردادات'
-          ]
+            'رسوم معالجة 1 JOD للاستردادات',
+          ],
         },
         {
           icon: ShieldCheck,
@@ -61,8 +80,8 @@ export function TermsOfService() {
             'التزم بقوانين المرور',
             'أبلغ عن السلوك المشبوه فوراً',
             'وضع الطوارئ SOS متاح',
-            'نحتفظ بالحق في حظر المستخدمين الخطرين'
-          ]
+            'نحتفظ بالحق في حظر المستخدمين الخطرين',
+          ],
         },
         {
           icon: AlertCircle,
@@ -73,8 +92,8 @@ export function TermsOfService() {
             'التحقق من الطرود مسؤولية المستخدم',
             'نقدم المنصة "كما هي" دون ضمانات',
             'تأمين اختياري متاح للطرود',
-            'استخدمها على مسؤوليتك الخاصة'
-          ]
+            'استخدمها على مسؤوليتك الخاصة',
+          ],
         },
         {
           icon: Scale,
@@ -85,11 +104,11 @@ export function TermsOfService() {
             'يحكم القانون الأردني',
             'الاختصاص القضائي: محاكم عمان، الأردن',
             'لا دعاوى جماعية',
-            'فترة 30 يوماً للمطالبات'
-          ]
-        }
+            'فترة 30 يوماً للمطالبات',
+          ],
+        },
       ],
-      
+
       prohibited: {
         title: 'محظور بشدة',
         items: [
@@ -98,20 +117,22 @@ export function TermsOfService() {
           'استخدام تجاري للحسابات الشخصية',
           'كشط البيانات أو الهندسة العكسية',
           'التلاعب بالتقييمات أو المراجعات',
-          'تجاوز ميزات الأمان'
-        ]
+          'تجاوز ميزات الأمان',
+        ],
       },
-      
+
       termination: {
         title: 'إنهاء الحساب',
-        content: 'يحق لنا تعليق أو إنهاء حسابك في حالة: (1) انتهاك هذه الشروط، (2) نشاط احتيالي، (3) شكاوى متكررة، (4) طلب قانوني. يمكنك حذف حسابك في أي وقت من إعدادات الملف الشخصي.'
-      }
+        content:
+          'يحق لنا تعليق أو إنهاء حسابك في حالة: (1) انتهاك هذه الشروط، (2) نشاط احتيالي، (3) شكاوى متكررة، (4) طلب قانوني. يمكنك حذف حسابك في أي وقت من إعدادات الملف الشخصي.',
+      },
     },
     en: {
       title: 'Terms of Service',
       subtitle: 'Last Updated: March 16, 2026',
-      intro: 'By accepting these terms, you enter into a legally binding agreement with Wasel. Please read these terms carefully before using our services.',
-      
+      intro:
+        'These terms explain how Wasel coordinates routes, packages, payments, trust checks, support, and safety responsibilities across the platform.',
+
       sections: [
         {
           icon: Users,
@@ -122,8 +143,8 @@ export function TermsOfService() {
             'Mandatory verification via Sanad (National ID)',
             'One account per user',
             'Accurate and up-to-date information required',
-            'We reserve the right to suspend violating accounts'
-          ]
+            'We reserve the right to suspend violating accounts',
+          ],
         },
         {
           icon: FileText,
@@ -134,8 +155,8 @@ export function TermsOfService() {
             'E-commerce returns via Raje3',
             'Cost-sharing calculator',
             'Cultural features (prayer times, gender preferences, Ramadan mode)',
-            'Wasel is a platform, not a direct transport company'
-          ]
+            'Wasel is a platform, not a direct transport company',
+          ],
         },
         {
           icon: DollarSign,
@@ -146,8 +167,8 @@ export function TermsOfService() {
             'Payments: Cash on arrival or digital',
             'Refunds: Within 24h of cancellation',
             'Strict cancellation policy for late bookings',
-            'JOD 1 processing fee for refunds'
-          ]
+            'JOD 1 processing fee for refunds',
+          ],
         },
         {
           icon: ShieldCheck,
@@ -158,8 +179,8 @@ export function TermsOfService() {
             'Follow traffic laws',
             'Report suspicious behavior immediately',
             'SOS emergency mode available',
-            'We reserve the right to ban dangerous users'
-          ]
+            'We reserve the right to ban dangerous users',
+          ],
         },
         {
           icon: AlertCircle,
@@ -170,8 +191,8 @@ export function TermsOfService() {
             'Package verification is user responsibility',
             'We provide the platform "as-is" without warranties',
             'Optional insurance available for packages',
-            'Use at your own risk'
-          ]
+            'Use at your own risk',
+          ],
         },
         {
           icon: Scale,
@@ -182,11 +203,11 @@ export function TermsOfService() {
             'Governed by Jordanian law',
             'Jurisdiction: Amman, Jordan courts',
             'No class action lawsuits',
-            '30-day period for claims'
-          ]
-        }
+            '30-day period for claims',
+          ],
+        },
       ],
-      
+
       prohibited: {
         title: 'Strictly Prohibited',
         items: [
@@ -195,88 +216,295 @@ export function TermsOfService() {
           'Commercial use of personal accounts',
           'Data scraping or reverse engineering',
           'Manipulating ratings or reviews',
-          'Bypassing security features'
-        ]
+          'Bypassing security features',
+        ],
       },
-      
+
       termination: {
         title: 'Account Termination',
-        content: 'We reserve the right to suspend or terminate your account for: (1) violating these terms, (2) fraudulent activity, (3) repeated complaints, (4) legal request. You may delete your account anytime from profile settings.'
-      }
-    }
+        content:
+          'We reserve the right to suspend or terminate your account for: (1) violating these terms, (2) fraudulent activity, (3) repeated complaints, (4) legal request. You may delete your account anytime from profile settings.',
+      },
+    },
   };
 
-  const t = content[language as 'ar' | 'en'];
+  const copy = content[language as 'ar' | 'en'];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" dir={dir}>
-      {/* Header */}
-      <div className="border-b border-white/10 bg-white/5 backdrop-blur-xl">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/30">
-              <Scale className="w-6 h-6 text-blue-400" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">{t.title}</h1>
-              <p className="text-sm text-slate-400 mt-1">{t.subtitle}</p>
-            </div>
-          </div>
-          <p className="text-slate-300 leading-relaxed">{t.intro}</p>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-12">
-        {/* Sections */}
-        <div className="space-y-8 mb-12">
-          {t.sections.map((section, idx) => (
-            <div
-              key={idx}
-              className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm"
-            >
-              <div className="flex items-start gap-4">
-                <div className="p-2 rounded-lg bg-blue-500/20 border border-blue-500/30 shrink-0">
-                  <section.icon className="w-5 h-5 text-blue-400" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-white mb-4">{section.title}</h2>
-                  <ul className="space-y-2">
-                    {section.content.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2 text-slate-300">
-                        <span className="text-blue-400 mt-1.5">•</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+    <PageShell maxWidth={1120} dir={dir === 'rtl' ? 'rtl' : 'ltr'}>
+      <div style={{ paddingInline: SPACE[4] }}>
+        <PageHero
+          eyebrow={ar ? 'قانوني' : 'Legal'}
+          icon={<Scale size={18} />}
+          title={copy.title}
+          description={copy.intro}
+          accent={C.blueLight}
+          actions={
+            <>
+              <WaselButton type="button" variant="primary" onClick={() => nav('/app/support')}>
+                {ar ? 'افتح الدعم' : 'Open support'}
+              </WaselButton>
+              <WaselButton
+                type="button"
+                variant="outline"
+                onClick={() => nav('/app/security')}
+                style={{ background: C.elevated, color: C.text }}
+              >
+                {ar ? 'راجع الأمان' : 'Review security'}
+              </WaselButton>
+            </>
+          }
+          aside={
+            <div style={{ display: 'grid', gap: SPACE[3] }}>
+              <WaselLogo size={64} theme="light" variant="full" />
+              <StatusBadge label={copy.subtitle} accent={C.blueLight} />
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: SPACE[3],
+                }}
+              >
+                {[
+                  {
+                    label: ar ? 'الحد الأدنى للعمر' : 'Minimum age',
+                    value: '18+',
+                    accent: C.blueLight,
+                  },
+                  { label: ar ? 'رسوم المقعد' : 'Seat fee', value: '12%', accent: C.green },
+                  { label: ar ? 'رسوم الطرد' : 'Package fee', value: '20%', accent: C.gold },
+                  {
+                    label: ar ? 'مهلة المطالبة' : 'Claims window',
+                    value: ar ? '30 يوم' : '30 days',
+                    accent: C.error,
+                  },
+                ].map(item => (
+                  <div
+                    key={item.label}
+                    style={{
+                      borderRadius: R.xl,
+                      border: `1px solid ${item.accent}24`,
+                      background: `${item.accent}12`,
+                      padding: `${SPACE[3]} ${SPACE[4]}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: C.text,
+                        fontSize: TYPE.size.lg,
+                        fontWeight: TYPE.weight.ultra,
+                        lineHeight: TYPE.lineHeight.tight,
+                      }}
+                    >
+                      {item.value}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        color: C.textMuted,
+                        fontSize: TYPE.size.xs,
+                        textTransform: 'uppercase',
+                        letterSpacing: TYPE.letterSpacing.wide,
+                      }}
+                    >
+                      {item.label}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          }
+        />
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 12,
+            marginBottom: SPACE[6],
+          }}
+        >
+          <MetricCard
+            label={ar ? 'الأهلية' : 'Eligibility'}
+            value="18+"
+            detail={
+              ar
+                ? 'السائقون بحاجة رخصة سارية، تأمين، وتوثيق.'
+                : 'Drivers also need a valid license, insurance, and verification.'
+            }
+            accent={C.blueLight}
+            icon={<Users size={18} />}
+          />
+          <MetricCard
+            label={ar ? 'دور المنصة' : 'Platform role'}
+            value={ar ? 'سوق منظم' : 'Marketplace'}
+            detail={
+              ar
+                ? 'واصل ينسّق الحركة؛ مش مشغّل نقل مباشر.'
+                : 'Wasel coordinates movement; it is not a direct transport operator.'
+            }
+            accent={C.cyan}
+            icon={<FileText size={18} />}
+          />
+          <MetricCard
+            label={ar ? 'منطق الدفع' : 'Payment logic'}
+            value="12% / 20%"
+            detail={
+              ar
+                ? 'العمولة بتختلف حسب المقاعد ومسارات الطرود.'
+                : 'Commission varies by seats and package workflows.'
+            }
+            accent={C.gold}
+            icon={<DollarSign size={18} />}
+          />
+          <MetricCard
+            label={ar ? 'مسار النزاع' : 'Dispute path'}
+            value={ar ? 'الدعم أولاً' : 'Support first'}
+            detail={
+              ar
+                ? 'ابدأ بالدعم، بعدها الوساطة، وبعدها التصعيد القانوني الرسمي.'
+                : 'Start with support, then mediation, then formal legal escalation.'
+            }
+            accent={C.error}
+            icon={<AlertCircle size={18} />}
+          />
         </div>
 
-        {/* Prohibited */}
-        <div className="bg-gradient-to-br from-red-500/10 to-orange-500/10 border border-red-500/30 rounded-2xl p-6 mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <AlertCircle className="w-6 h-6 text-red-400" />
-            <h2 className="text-xl font-bold text-white">{t.prohibited.title}</h2>
+        <SectionCard
+          title={t('termsOfService.terms_overview')}
+          subtitle={
+            ar
+              ? 'البطاقات المرتبة بتخلي الشروط أسهل قراءة وفهم.'
+              : 'Structured cards make the rules easier to scan and understand.'
+          }
+          icon={<Scale size={18} color={C.blueLight} />}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {copy.sections.map(section => {
+              const Icon = section.icon;
+              return (
+                <div key={section.title} style={termsCardStyle(C.blueLight)}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: SPACE[3],
+                      marginBottom: SPACE[4],
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 40,
+                        height: 40,
+                        borderRadius: R.lg,
+                        background: C.blueDim,
+                        border: `1px solid ${C.blueDim}`,
+                        color: C.blueLight,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Icon size={18} />
+                    </span>
+                    <div
+                      style={{
+                        color: C.text,
+                        fontSize: TYPE.size.base,
+                        fontWeight: TYPE.weight.black,
+                        lineHeight: TYPE.lineHeight.snug,
+                      }}
+                    >
+                      {section.title}
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {section.content.map(item => (
+                      <div
+                        key={item}
+                        style={{
+                          borderRadius: R.xl,
+                          border: `1px solid ${C.borderFaint}`,
+                          background: C.elevated,
+                          padding: `${SPACE[3]} ${SPACE[4]}`,
+                          color: C.text,
+                          fontSize: TYPE.size.sm,
+                          lineHeight: TYPE.lineHeight.relaxed,
+                        }}
+                      >
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <ul className="space-y-2">
-            {t.prohibited.items.map((item, i) => (
-              <li key={i} className="flex items-start gap-2 text-red-200">
-                <span className="text-red-400 mt-1.5">✗</span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        </SectionCard>
 
-        {/* Termination */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-white mb-4">{t.termination.title}</h2>
-          <p className="text-slate-300 leading-relaxed">{t.termination.content}</p>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 0.95fr) minmax(0, 1.05fr)',
+            gap: 12,
+          }}
+        >
+          <SectionCard
+            title={copy.prohibited.title}
+            subtitle={
+              ar
+                ? 'هاي القائمة لازم تكون واضحة وما بتنترك بدون انتباه.'
+                : 'This list should be unmissable and easy to understand.'
+            }
+            icon={<AlertCircle size={18} color={C.error} />}
+          >
+            <div style={{ display: 'grid', gap: 10 }}>
+              {copy.prohibited.items.map(item => (
+                <div key={item} style={termsCardStyle(C.error)}>
+                  <div
+                    style={{
+                      color: C.text,
+                      fontSize: TYPE.size.sm,
+                      lineHeight: TYPE.lineHeight.relaxed,
+                    }}
+                  >
+                    {item}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            title={copy.termination.title}
+            subtitle={
+              ar
+                ? 'المستخدم لازم يعرف بالضبط متى ممكن يتوقف أو ينحذف وصول الحساب.'
+                : 'Users should know exactly when account access can be paused or removed.'
+            }
+            icon={<ShieldCheck size={18} color={C.gold} />}
+          >
+            <div style={termsCardStyle(C.gold)}>
+              <div
+                style={{
+                  color: C.text,
+                  fontSize: TYPE.size.base,
+                  lineHeight: TYPE.lineHeight.relaxed,
+                }}
+              >
+                {copy.termination.content}
+              </div>
+            </div>
+          </SectionCard>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

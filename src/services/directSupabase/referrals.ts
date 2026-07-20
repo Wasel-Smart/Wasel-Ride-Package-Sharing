@@ -1,7 +1,7 @@
 // ─── Referral operations ──────────────────────────────────────────────────────
 
-import { getDb, toNumber, creditWalletBalance } from './helpers';
-import { buildUserContext } from './userContext.ts';
+import { getDb, toNumber, creditWalletBalance } from './helpers.js';
+import { buildUserContext } from './userContext';
 import { recordDirectGrowthEvent } from './growth';
 import type { RawReferral, UserRow } from './types';
 
@@ -20,6 +20,7 @@ export async function processReferralConversionForPassenger(passengerCanonicalUs
 
   const row = data as RawReferral;
   const reward = toNumber(row.referrer_reward_jod, 2);
+  if (!row.id) throw new Error('Referral record is missing an id.');
   await db
     .from('referrals')
     .update({
@@ -64,9 +65,13 @@ export async function getDirectReferralSnapshot(userId: string) {
   return {
     code: referralCode,
     invited: rows.length,
-    converted: rows.filter((r) => r.referee_completed_first_trip).length,
-    pendingCredit: rows.filter((r) => !r.referrer_rewarded).reduce((sum, r) => sum + toNumber(r.referrer_reward_jod, 0), 0),
-    earnedCredit: rows.filter((r) => r.referrer_rewarded).reduce((sum, r) => sum + toNumber(r.referrer_reward_jod, 0), 0),
+    converted: rows.filter(r => r.referee_completed_first_trip).length,
+    pendingCredit: rows
+      .filter(r => !r.referrer_rewarded)
+      .reduce((sum, r) => sum + toNumber(r.referrer_reward_jod, 0), 0),
+    earnedCredit: rows
+      .filter(r => r.referrer_rewarded)
+      .reduce((sum, r) => sum + toNumber(r.referrer_reward_jod, 0), 0),
   };
 }
 

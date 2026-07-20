@@ -1,175 +1,338 @@
-/**
- * SafetyPage — /app/safety
- * ID verification · SOS · Insurance · Cultural intelligence
- *
- * Fix: Protected now calls useIframeSafeNavigate so unauthenticated
- * users are actually redirected to /app/auth instead of stuck on
- * the lock screen forever.
- */
-import { useEffect, type ReactNode } from 'react';
-import { StakeholderSignalBanner } from '../../components/system/StakeholderSignalBanner';
-import { useLocalAuth } from '../../contexts/LocalAuth';
-import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { PAGE_DS } from '../../styles/wasel-page-theme';
-import { buildAuthPagePath } from '../../utils/authFlow';
-
-const DS = PAGE_DS;
-const r = (px = 12) => `${px}px`;
-
-function Protected({ children }: { children: ReactNode }) {
-  const { user, loading } = useLocalAuth();
-  const navigate = useIframeSafeNavigate();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate(buildAuthPagePath('signin', '/app/safety'));
-    }
-  }, [loading, user, navigate]);
-
-  if (loading) {
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '60vh', gap: 16, background: DS.bg,
-      }}>
-        <div style={{ color: '#fff', fontWeight: 800, fontFamily: DS.F }}>Checking your Wasel session...</div>
-        <div style={{ color: DS.sub, fontFamily: DS.F }}>Safety tools open once we confirm your trusted account.</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', minHeight: '60vh', gap: 16, background: DS.bg,
-      }}>
-        <div style={{ fontSize: '3rem' }}>🔒</div>
-        <div style={{ color: DS.sub, fontFamily: DS.F }}>Redirecting to sign in…</div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-}
-
-const SAFETY_FEATURES = [
-  {
-    emoji: '🪪',
-    title: 'Gov-ID Verification',
-    desc: 'All drivers verified with Jordan Sanad eKYC system',
-    color: DS.cyan,
-  },
-  {
-    emoji: '🆘',
-    title: 'SOS Emergency',
-    desc: 'One tap to share location with emergency contacts',
-    color: '#EF4444',
-  },
-  {
-    emoji: '📋',
-    title: 'Trip Insurance',
-    desc: 'Up to JOD 1,000 coverage per trip',
-    color: DS.gold,
-  },
-  {
-    emoji: '🕌',
-    title: 'Cultural Intelligence',
-    desc: 'Prayer stops, gender preferences, Ramadan mode',
-    color: DS.blue,
-  },
-];
+import { useState } from 'react';
+import { Headphones, Phone, Shield, ShieldCheck, Siren, UserCheck } from 'lucide-react';
+import {
+  PageHero,
+  PageShell,
+  SectionCard,
+  StatusBadge,
+} from '../../components/wasel-ui/WaselPagePrimitives';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { C, R, SH, SPACE, TYPE, card, pillStyle } from '../../utils/wasel-ds';
 
 export default function SafetyPage() {
+  const { language, t } = useLanguage();
+  const ar = language === 'ar';
+  const [sosActive, setSosActive] = useState(false);
+
+  const SAFETY_STACK = [
+    {
+      icon: UserCheck,
+      title: t('safetyExpanded.verifiedIdentity'),
+      detail: t('safetyExpanded.identityDetail'),
+      stat: t('safetyExpanded.step'),
+      accent: C.green,
+    },
+    {
+      icon: Siren,
+      title: t('safetyExpanded.emergencyHelp'),
+      detail: t('safetyExpanded.emergencyDetail'),
+      stat: t('safetyExpanded.seconds'),
+      accent: C.error,
+    },
+    {
+      icon: Shield,
+      title: t('safetyExpanded.tripEvidence'),
+      detail: t('safetyExpanded.evidenceDetail'),
+      stat: t('safetyExpanded.percentage'),
+      accent: C.gold,
+    },
+    {
+      icon: Headphones,
+      title: t('safetyExpanded.comfortControls'),
+      detail: t('safetyExpanded.comfortDetail'),
+      stat: t('safetyExpanded.rails'),
+      accent: C.cyan,
+    },
+  ];
+
+  const RESPONSE_FLOW = [
+    {
+      label: t('safetyExpanded.beforeBooking'),
+      detail: t('safetyExpanded.beforeBookingDetail'),
+      accent: C.green,
+    },
+    {
+      label: t('safetyExpanded.duringTrip'),
+      detail: t('safetyExpanded.duringTripDetail'),
+      accent: C.cyan,
+    },
+    {
+      label: t('safetyExpanded.afterTrip'),
+      detail: t('safetyExpanded.afterTripDetail'),
+      accent: C.gold,
+    },
+  ];
+
   return (
-    <Protected>
-      <div style={{ minHeight: '100vh', background: DS.bg, fontFamily: DS.F }}>
-        <div style={{ maxWidth: 1040, margin: '0 auto', padding: '24px 16px' }}>
-
-          {/* Header */}
-          <div style={{
-            background: DS.gradNav, borderRadius: r(20), padding: '24px',
-            marginBottom: 20, border: `1px solid ${DS.green}18`,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: r(16),
-                background: `${DS.green}18`, border: `1.5px solid ${DS.green}30`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '1.9rem',
-              }}>
-                🛡️
+    <PageShell maxWidth={1120} dir={ar ? 'rtl' : 'ltr'}>
+      <div style={{ paddingInline: SPACE[4] }}>
+        {/* ── SOS Banner — always visible, no auth required ── */}
+        <div
+          style={{
+            ...card({ padding: SPACE[4], radius: R.xxl }),
+            borderColor: `${C.error}40`,
+            background: sosActive ? `${C.error}22` : `${C.error}12`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: SPACE[5],
+            gap: SPACE[3],
+            transition: 'background 0.3s',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+            <Siren size={20} color={C.error} />
+            <div>
+              <div
+                style={{ color: C.text, fontWeight: TYPE.weight.bold, fontSize: TYPE.size.base }}
+              >
+                {t('safetyExpanded.needHelpNow')}
               </div>
-              <div>
-                <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>
-                  Safety Center
-                </h1>
-                <p style={{ color: DS.sub, margin: '4px 0 0', fontSize: '0.82rem' }}>
-                  ID-verified drivers · SOS · Trip insurance
-                </p>
+              <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, marginTop: 2 }}>
+                {t('safetyExpanded.supportAvailable247')}
               </div>
             </div>
           </div>
-
-          {/* Info banner */}
-          <div style={{
-            background: `${DS.green}08`, border: `1px solid ${DS.green}20`,
-            borderRadius: r(18), padding: '16px 20px', marginBottom: 20,
-          }}>
-            <div style={{ color: DS.green, fontWeight: 700, fontSize: '0.9rem', marginBottom: 4 }}>
-              Trust should feel built in, not added later
-            </div>
-            <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
-              Safety is presented here as a system-wide product layer: verified identity,
-              emergency support, insurance, and cultural comfort cues that support every
-              ride, package, and scheduled trip.
-            </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setSosActive(v => !v)}
+              style={{
+                ...pillStyle(C.error),
+                border: 'none',
+                cursor: 'pointer',
+                background: sosActive ? C.error : `${C.error}20`,
+                color: sosActive ? '#fff' : C.error,
+                padding: '10px 18px',
+                fontSize: '0.84rem',
+                fontWeight: 800,
+                transition: 'all 0.2s',
+              }}
+            >
+              {sosActive ? t('safetyExpanded.sosSent') : t('safetyExpanded.sendSOS')}
+            </button>
+            <a
+              href="/app/support?urgent=1"
+              style={{
+                ...pillStyle(C.error),
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+                padding: '10px 18px',
+              }}
+            >
+              {t('safetyExpanded.getHelpNow')}
+            </a>
+            <a
+              href="tel:911"
+              style={{
+                ...pillStyle(C.gold),
+                textDecoration: 'none',
+                whiteSpace: 'nowrap',
+                padding: '10px 18px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <Phone size={14} />
+              {t('safetyExpanded.callEmergency')}
+            </a>
           </div>
+        </div>
 
-        {Boolean((globalThis as { __showStakeholderBanner?: boolean }).__showStakeholderBanner) && <div style={{ marginBottom: 20 }}>
-            <StakeholderSignalBanner
-              eyebrow="Wasel · safety comms"
-              title="Safety now reads like a shared operating layer across the app"
-              detail="This page makes it clear how trust, emergency response, insurance, and rider comfort work together so users and support teams are reading the same protection story."
-              stakeholders={[
-                { label: 'Trust', value: 'Identity checks', tone: 'green' },
-                { label: 'Support', value: 'SOS handoff', tone: 'rose' },
-                { label: 'Operations', value: 'Trip-wide safety', tone: 'teal' },
-                { label: 'Rider comfort', value: 'Cultural cues', tone: 'blue' },
-              ]}
-              statuses={[
-                { label: 'Emergency lane', value: 'Ready', tone: 'rose' },
-                { label: 'Insurance lane', value: 'Active', tone: 'amber' },
-                { label: 'Verification lane', value: 'Enabled', tone: 'green' },
-              ]}
-              lanes={[
-                { label: 'Emergency communication', detail: 'SOS flows should move quickly from rider context into direct support action.' },
-                { label: 'Verification communication', detail: 'ID checks and trusted-account messaging reduce uncertainty before a trip begins.' },
-                { label: 'Comfort communication', detail: 'Cultural and situational cues help riders feel informed, not surprised.' },
-              ]}
-            />
-          </div>}
+        <PageHero
+          eyebrow={t('safetyExpanded.eyebrow')}
+          icon={<ShieldCheck size={18} />}
+          title={t('safetyExpanded.title')}
+          description={t('safetyExpanded.description')}
+          accent={C.green}
+          aside={
+            <div style={{ display: 'grid', gap: SPACE[3] }}>
+              <StatusBadge label={t('safetyExpanded.alwaysVisible')} accent={C.green} />
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: SPACE[3],
+                }}
+              >
+                {[
+                  { label: t('safetyExpanded.trustGates'), value: '4', accent: C.green },
+                  { label: t('safetyExpanded.responsePath'), value: '1 tap', accent: C.cyan },
+                  { label: t('safetyExpanded.tripProof'), value: 'Live', accent: C.gold },
+                  { label: t('safetyExpanded.supportState'), value: 'Tracked', accent: C.error },
+                ].map(item => (
+                  <div
+                    key={item.label}
+                    style={{
+                      borderRadius: R.xl,
+                      border: `1px solid ${item.accent}24`,
+                      background: `${item.accent}12`,
+                      padding: `${SPACE[3]} ${SPACE[4]}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: C.text,
+                        fontSize: TYPE.size.xl,
+                        fontWeight: TYPE.weight.ultra,
+                        lineHeight: TYPE.lineHeight.tight,
+                      }}
+                    >
+                      {item.value}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 4,
+                        color: C.textMuted,
+                        fontSize: TYPE.size.xs,
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {item.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          }
+        />
 
-          {/* Feature cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            {SAFETY_FEATURES.map(f => (
-              <div key={f.title} style={{
-                background: DS.card, borderRadius: r(20), padding: '24px 22px',
-                border: `1px solid ${DS.border}`,
-              }}>
-                <div style={{ fontSize: '2rem', marginBottom: 12 }}>{f.emoji}</div>
-                <h3 style={{ color: '#fff', fontWeight: 800, margin: '0 0 8px', fontSize: '1rem' }}>
-                  {f.title}
-                </h3>
-                <p style={{ color: DS.sub, fontSize: '0.82rem', margin: 0, lineHeight: 1.6 }}>
-                  {f.desc}
-                </p>
+        {/* ── Protection Stack ── */}
+        <SectionCard
+          title={t('safetyExpanded.protectionStackTitle')}
+          subtitle={t('safetyExpanded.protectionStackSubtitle')}
+          icon={<ShieldCheck size={18} color={C.green} />}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {SAFETY_STACK.map(item => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  style={{
+                    borderRadius: R.xxl,
+                    border: `1px solid ${item.accent}24`,
+                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+                    boxShadow: SH.md,
+                    padding: SPACE[5],
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: SPACE[3],
+                      marginBottom: SPACE[4],
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 42,
+                        height: 42,
+                        borderRadius: R.lg,
+                        background: `${item.accent}18`,
+                        border: `1px solid ${item.accent}28`,
+                        color: item.accent,
+                      }}
+                    >
+                      <Icon size={18} />
+                    </span>
+                    <span
+                      style={{
+                        color: item.accent,
+                        fontSize: TYPE.size.sm,
+                        fontWeight: TYPE.weight.black,
+                      }}
+                    >
+                      {item.stat}
+                    </span>
+                  </div>
+                  <div
+                    style={{ color: C.text, fontSize: TYPE.size.lg, fontWeight: TYPE.weight.black }}
+                  >
+                    {item.title}
+                  </div>
+                  <div
+                    style={{
+                      marginTop: SPACE[2],
+                      color: C.textMuted,
+                      fontSize: TYPE.size.sm,
+                      lineHeight: TYPE.lineHeight.relaxed,
+                    }}
+                  >
+                    {item.detail}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SectionCard>
+
+        {/* ── Emergency Flow — 3-step stepper ── */}
+        <SectionCard
+          title={t('safetyExpanded.emergencyFlowTitle')}
+          subtitle={t('safetyExpanded.emergencyFlowSubtitle')}
+          icon={<Siren size={18} color={C.error} />}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {RESPONSE_FLOW.map((step, index) => (
+              <div
+                key={step.label}
+                style={{
+                  borderRadius: R.xxl,
+                  border: `1px solid ${step.accent}24`,
+                  background: `radial-gradient(circle at top left, ${step.accent}12, transparent 34%), ${C.card}`,
+                  boxShadow: SH.md,
+                  padding: SPACE[5],
+                }}
+              >
+                <div
+                  style={{
+                    color: step.accent,
+                    fontSize: TYPE.size.xs,
+                    fontWeight: TYPE.weight.bold,
+                    textTransform: 'uppercase',
+                    marginBottom: SPACE[3],
+                  }}
+                >
+                  {`${t('safetyExpanded.step')} ${index + 1}`}
+                </div>
+                <div
+                  style={{ color: C.text, fontSize: TYPE.size.base, fontWeight: TYPE.weight.black }}
+                >
+                  {step.label}
+                </div>
+                <div
+                  style={{
+                    marginTop: SPACE[2],
+                    color: C.textMuted,
+                    fontSize: TYPE.size.sm,
+                    lineHeight: TYPE.lineHeight.relaxed,
+                  }}
+                >
+                  {step.detail}
+                </div>
               </div>
             ))}
           </div>
-
-        </div>
+        </SectionCard>
       </div>
-    </Protected>
+    </PageShell>
   );
 }

@@ -18,11 +18,7 @@ export async function resolveCanonicalUser(userKey: string): Promise<UserRow | n
     .maybeSingle();
   if (byAuth) return byAuth as UserRow;
 
-  const { data: byId, error } = await db
-    .from('users')
-    .select('*')
-    .eq('id', userKey)
-    .maybeSingle();
+  const { data: byId, error } = await db.from('users').select('*').eq('id', userKey).maybeSingle();
   if (error) throw error;
   return (byId as UserRow | null) ?? null;
 }
@@ -44,49 +40,33 @@ async function resolveAuthSeed(userKey: string, seed?: UserSeed): Promise<UserSe
       mergedSeed.email = mergedSeed.email || authUser.email || null;
       mergedSeed.full_name =
         mergedSeed.full_name ||
-        String(
-          authUser.user_metadata?.full_name ??
-          authUser.user_metadata?.name ??
-          '',
-        ).trim() ||
+        String(authUser.user_metadata?.full_name ?? authUser.user_metadata?.name ?? '').trim() ||
         null;
       mergedSeed.phone_number =
         mergedSeed.phone_number ||
         String(
           authUser.user_metadata?.phone_number ??
-          authUser.user_metadata?.phone ??
-          authUser.phone ??
-          '',
+            authUser.user_metadata?.phone ??
+            authUser.phone ??
+            '',
         ).trim() ||
         null;
       mergedSeed.role =
-        mergedSeed.role ||
-        String(authUser.user_metadata?.role ?? '').trim() ||
-        null;
+        mergedSeed.role || String(authUser.user_metadata?.role ?? '').trim() || null;
     }
   }
 
   return mergedSeed;
 }
 
-export async function ensureCanonicalUser(
-  userKey: string,
-  seed?: UserSeed,
-): Promise<UserRow> {
+export async function ensureCanonicalUser(userKey: string, seed?: UserSeed): Promise<UserRow> {
   const existing = await resolveCanonicalUser(userKey);
   if (existing) return existing;
 
   const resolvedSeed = await resolveAuthSeed(userKey, seed);
-  const email = resolvedSeed.email?.trim() || null;
-  const fullName =
-    resolvedSeed.full_name?.trim() ||
-    email?.split('@')[0]?.trim() ||
-    'Wasel User';
-  const phoneNumber = resolvedSeed.phone_number?.trim() || null;
-
-  if (!email) {
+  if (!resolvedSeed.email || !resolvedSeed.full_name || !resolvedSeed.phone_number) {
     throw new Error(
-      'User profile is incomplete. Add a valid email address before continuing.',
+      'User profile is incomplete. Complete your account profile in Supabase before continuing.',
     );
   }
 
@@ -95,9 +75,9 @@ export async function ensureCanonicalUser(
     .from('users')
     .insert({
       auth_user_id: userKey,
-      email,
-      full_name: fullName,
-      phone_number: phoneNumber,
+      email: resolvedSeed.email,
+      full_name: resolvedSeed.full_name,
+      phone_number: resolvedSeed.phone_number,
       role: mapCanonicalRole(resolvedSeed.role) || 'passenger',
     })
     .select('*')
@@ -108,11 +88,7 @@ export async function ensureCanonicalUser(
 
 export async function getDriverByCanonicalUserId(userId: string): Promise<DriverRow | null> {
   const db = getDb();
-  const { data, error } = await db
-    .from('drivers')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
+  const { data, error } = await db.from('drivers').select('*').eq('user_id', userId).maybeSingle();
   if (error) throw error;
   return (data as DriverRow | null) ?? null;
 }
@@ -124,7 +100,12 @@ export async function ensureDriverForUser(context: UserContext): Promise<DriverR
     );
   }
 
-  if (context.driver.driver_status !== 'approved' && context.driver.driver_status !== 'online' && context.driver.driver_status !== 'offline' && context.driver.driver_status !== 'busy') {
+  if (
+    context.driver.driver_status !== 'approved' &&
+    context.driver.driver_status !== 'online' &&
+    context.driver.driver_status !== 'offline' &&
+    context.driver.driver_status !== 'busy'
+  ) {
     throw new Error(
       'Driver profile is pending approval. You can offer rides after driver verification is approved.',
     );
@@ -133,11 +114,15 @@ export async function ensureDriverForUser(context: UserContext): Promise<DriverR
   return context.driver;
 }
 
-export async function getLatestVerificationRecord(canonicalUserId: string): Promise<RawVerificationRecord | null> {
+export async function getLatestVerificationRecord(
+  canonicalUserId: string,
+): Promise<RawVerificationRecord | null> {
   const db = getDb();
   const { data, error } = await db
     .from('verification_records')
-    .select('sanad_status, document_status, verification_level, verification_timestamp, failure_reason, updated_at')
+    .select(
+      'sanad_status, document_status, verification_level, verification_timestamp, failure_reason, updated_at',
+    )
     .eq('user_id', canonicalUserId)
     .order('verification_timestamp', { ascending: false })
     .limit(1)

@@ -12,8 +12,17 @@ import {
   getDirectNotifications,
   markDirectNotificationAsRead,
 } from './directSupabase';
+import { dispatchNotification } from '../platform/async-runtime';
 
 const LOCAL_NOTIFICATION_KEY = 'wasel-local-notifications';
+
+// In-memory cache for notifications to reduce database I/O
+type NotificationCacheEntry = {
+  data: StoredNotification[];
+  timestamp: number;
+};
+const notificationCache = new Map<string, NotificationCacheEntry>();
+const NOTIFICATION_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 type StoredNotification = {
   id: string;
@@ -115,11 +124,9 @@ function mergeNotifications(
 function markLocalNotificationAsRead(notificationId: string): void {
   const localNotifications = readLocalNotifications();
   writeLocalNotifications(
-    localNotifications.map((item) => (
-      item.id === notificationId
-        ? { ...item, is_read: true, read: true }
-        : item
-    )),
+    localNotifications.map(item =>
+      item.id === notificationId ? { ...item, is_read: true, read: true } : item,
+    ),
   );
 }
 
@@ -195,6 +202,23 @@ async function queueSecondaryDeliveries(args: {
   };
 }
 
+function dispatchAsyncNotification(data: NotificationCreateInput, userId?: string | null) {
+  const targetUserId = userId ?? data.contact?.email;
+  if (!targetUserId) return;
+  try {
+    dispatchNotification({
+      userId: targetUserId,
+      title: data.title,
+      message: data.message,
+      type: data.type,
+      priority: data.priority,
+      actionUrl: data.action_url,
+    });
+  } catch {
+    // Non-fatal: notification-worker may not be running in this session.
+  }
+}
+
 export const notificationsAPI = {
   async getNotifications() {
     const localNotifications = readLocalNotifications();
@@ -213,11 +237,27 @@ export const notificationsAPI = {
       return { notifications: sortNotifications(localNotifications.map(normalizeNotification)) };
     }
 
+    // Check cache for server notifications
+    const cachedEntry = notificationCache.get(userId);
+    const now = Date.now();
+    if (cachedEntry && now - cachedEntry.timestamp < NOTIFICATION_CACHE_TTL) {
+      return {
+        notifications: mergeNotifications(localNotifications, cachedEntry.data),
+      };
+    }
+
     if (!canUseEdgeApi()) {
       try {
         const serverNotifications = await getDirectNotifications(userId);
+        notificationCache.set(userId, {
+          data: serverNotifications as StoredNotification[],
+          timestamp: Date.now(),
+        });
         return {
-          notifications: mergeNotifications(localNotifications, serverNotifications as StoredNotification[]),
+          notifications: mergeNotifications(
+            localNotifications,
+            serverNotifications as StoredNotification[],
+          ),
         };
       } catch {
         return { notifications: sortNotifications(localNotifications.map(normalizeNotification)) };
@@ -225,10 +265,9 @@ export const notificationsAPI = {
     }
 
     try {
-      const response = await fetchWithRetry(
-        `${API_URL}/notifications`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+      const response = await fetchWithRetry(`${API_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch notifications');
@@ -236,6 +275,7 @@ export const notificationsAPI = {
 
       const data = await response.json();
       const serverNotifications = Array.isArray(data?.notifications) ? data.notifications : [];
+      notificationCache.set(userId, { data: serverNotifications, timestamp: Date.now() });
       return {
         notifications: mergeNotifications(localNotifications, serverNotifications),
       };
@@ -243,7 +283,10 @@ export const notificationsAPI = {
       try {
         const serverNotifications = await getDirectNotifications(userId);
         return {
-          notifications: mergeNotifications(localNotifications, serverNotifications as StoredNotification[]),
+          notifications: mergeNotifications(
+            localNotifications,
+            serverNotifications as StoredNotification[],
+          ),
         };
       } catch {
         return { notifications: sortNotifications(localNotifications.map(normalizeNotification)) };
@@ -276,13 +319,10 @@ export const notificationsAPI = {
     }
 
     try {
-      const response = await fetchWithRetry(
-        `${API_URL}/notifications/${notificationId}/read`,
-        {
-          method: 'PATCH',
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const response = await fetchWithRetry(`${API_URL}/notifications/${notificationId}/read`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!response.ok) return { success: false, source: 'server' };
       return await response.json();
@@ -306,20 +346,32 @@ export const notificationsAPI = {
       token = auth.token;
       userId = auth.userId;
     } catch {
-      writeLocalNotifications(sortNotifications([{
-        id: `local-${Date.now()}`,
-        title: data.title,
-        message: data.message,
-        type: data.type,
-        priority: data.priority ?? 'medium',
-        action_url: data.action_url,
-        user_id: 'local',
-        is_read: false,
-        read: false,
-        created_at: new Date().toISOString(),
+      writeLocalNotifications(
+        sortNotifications([
+          {
+            id: `local-${Date.now()}`,
+            title: data.title,
+            message: data.message,
+            type: data.type,
+            priority: data.priority ?? 'medium',
+            action_url: data.action_url,
+            user_id: 'local',
+            is_read: false,
+            read: false,
+            created_at: new Date().toISOString(),
+            source: 'local',
+          },
+          ...localNotifications,
+        ]),
+      );
+      dispatchAsyncNotification(data, userId);
+      return {
+        success: true,
         source: 'local',
-      }, ...localNotifications]));
-      return { success: true, source: 'local', deliveriesQueued: 0, deliverySource: 'none', channels: ['in_app'] };
+        deliveriesQueued: 0,
+        deliverySource: 'none',
+        channels: ['in_app'],
+      };
     }
 
     const localDraft: StoredNotification = {
@@ -345,6 +397,7 @@ export const notificationsAPI = {
         explicitChannels: data.channels,
         contact: data.contact,
       });
+      dispatchAsyncNotification(data, userId);
       return { success: true, source: 'local', ...deliveryResult };
     }
 
@@ -360,14 +413,16 @@ export const notificationsAPI = {
         });
 
         const notificationId = String(created?.id ?? localDraft.id);
-        writeLocalNotifications(sortNotifications([
-          {
-            ...localDraft,
-            id: notificationId,
-            source: 'server',
-          },
-          ...localNotifications,
-        ]));
+        writeLocalNotifications(
+          sortNotifications([
+            {
+              ...localDraft,
+              id: notificationId,
+              source: 'server',
+            },
+            ...localNotifications,
+          ]),
+        );
 
         const deliveryResult = await queueSecondaryDeliveries({
           userId,
@@ -378,6 +433,7 @@ export const notificationsAPI = {
           explicitChannels: data.channels,
           contact: data.contact,
         });
+        dispatchAsyncNotification(data, userId);
         return { success: true, source: 'server', ...deliveryResult };
       } catch {
         writeLocalNotifications(sortNotifications([localDraft, ...localNotifications]));
@@ -390,22 +446,20 @@ export const notificationsAPI = {
           explicitChannels: data.channels,
           contact: data.contact,
         });
+        dispatchAsyncNotification(data, userId);
         return { success: false, source: 'local', ...deliveryResult };
       }
     }
 
     try {
-      const response = await fetchWithRetry(
-        `${API_URL}/notifications/send-push`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ userId, ...data, body: data.message }),
+      const response = await fetchWithRetry(`${API_URL}/notifications/send-push`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-      );
+        body: JSON.stringify({ userId, ...data, body: data.message }),
+      });
 
       if (!response.ok) {
         writeLocalNotifications(sortNotifications([localDraft, ...localNotifications]));
@@ -418,19 +472,22 @@ export const notificationsAPI = {
           explicitChannels: data.channels,
           contact: data.contact,
         });
+        dispatchAsyncNotification(data, userId);
         return { success: false, source: 'local', ...deliveryResult };
       }
 
       const server = await response.json().catch(() => ({}));
       const notificationId = String(server?.notification?.id ?? localDraft.id);
-      writeLocalNotifications(sortNotifications([
-        {
-          ...localDraft,
-          id: notificationId,
-          source: 'server',
-        },
-        ...localNotifications,
-      ]));
+      writeLocalNotifications(
+        sortNotifications([
+          {
+            ...localDraft,
+            id: notificationId,
+            source: 'server',
+          },
+          ...localNotifications,
+        ]),
+      );
 
       const deliveryResult = await queueSecondaryDeliveries({
         userId,
@@ -441,6 +498,7 @@ export const notificationsAPI = {
         explicitChannels: data.channels,
         contact: data.contact,
       });
+      dispatchAsyncNotification(data, userId);
       return { success: true, source: 'server', ...deliveryResult };
     } catch {
       try {
@@ -454,14 +512,16 @@ export const notificationsAPI = {
         });
 
         const notificationId = String(created?.id ?? localDraft.id);
-        writeLocalNotifications(sortNotifications([
-          {
-            ...localDraft,
-            id: notificationId,
-            source: 'server',
-          },
-          ...localNotifications,
-        ]));
+        writeLocalNotifications(
+          sortNotifications([
+            {
+              ...localDraft,
+              id: notificationId,
+              source: 'server',
+            },
+            ...localNotifications,
+          ]),
+        );
 
         const deliveryResult = await queueSecondaryDeliveries({
           userId,
@@ -472,6 +532,7 @@ export const notificationsAPI = {
           explicitChannels: data.channels,
           contact: data.contact,
         });
+        dispatchAsyncNotification(data, userId);
         return { success: true, source: 'server', ...deliveryResult };
       } catch {
         writeLocalNotifications(sortNotifications([localDraft, ...localNotifications]));
@@ -484,6 +545,7 @@ export const notificationsAPI = {
           explicitChannels: data.channels,
           contact: data.contact,
         });
+        dispatchAsyncNotification(data, userId);
         return { success: false, source: 'local', ...deliveryResult };
       }
     }

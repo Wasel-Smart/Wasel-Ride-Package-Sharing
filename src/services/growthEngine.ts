@@ -1,17 +1,9 @@
 import {
-  createDirectPricingSnapshot,
-  enqueueDirectAutomationJob,
   getDirectGrowthAnalytics,
   getDirectReferralSnapshot,
   recordDirectGrowthEvent,
   redeemDirectReferralCode,
 } from './directSupabase';
-import {
-  buildJordanCorridorKey,
-  getJordanRouteScope,
-  normalizeJordanLocation,
-} from '../utils/jordanLocations';
-import { getAutomationJobRunAfter } from '../utils/automationScheduling';
 
 export interface ReferralSnapshot {
   code: string;
@@ -54,12 +46,33 @@ export interface GrowthEventRecord {
   createdAt: string;
 }
 
+const EMPTY_GROWTH_DASHBOARD: GrowthDashboard = {
+  funnel: {
+    searched: 0,
+    selected: 0,
+    booked: 0,
+    completed: 0,
+  },
+  serviceMix: {
+    rides: 0,
+    buses: 0,
+    packages: 0,
+    referrals: 0,
+  },
+  revenueJod: 0,
+  activeDemand: 0,
+  topCorridors: [],
+};
+
 const LOCAL_REFERRAL_KEY = 'wasel-referral-snapshot';
 const LOCAL_GROWTH_EVENTS_KEY = 'wasel-growth-events';
 const LOCAL_DEMAND_KEY = 'wasel-demand-alerts';
 
 function buildFallbackCode(userId?: string, name?: string) {
-  const seed = (name || userId || 'wasel').replace(/[^a-z0-9]/gi, '').slice(0, 6).toUpperCase();
+  const seed = (name || userId || 'wasel')
+    .replace(/[^a-z0-9]/gi, '')
+    .slice(0, 6)
+    .toUpperCase();
   return `WASEL-${seed || 'MOVE'}`;
 }
 
@@ -98,7 +111,51 @@ function writeLocalGrowthEvents(events: GrowthEventRecord[]) {
 export function getGrowthEventFeed(): GrowthEventRecord[] {
   return readLocalGrowthEvents()
     .slice()
-    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+    .sort(
+      (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    );
+}
+
+function buildGrowthDashboardFromLocal(): GrowthDashboard {
+  const events = readLocalGrowthEvents();
+  const alerts = readLocalDemandAlerts();
+  const corridorMap = new Map<string, { corridor: string; demand: number; conversions: number }>();
+
+  for (const event of events) {
+    const corridor = [event.from, event.to].filter(Boolean).join(' to ');
+    if (!corridor) continue;
+
+    const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
+    current.conversions += event.funnelStage === 'booked' ? 1 : 0;
+    corridorMap.set(corridor, current);
+  }
+
+  for (const alert of alerts) {
+    const corridor = `${alert.from} to ${alert.to}`;
+    const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
+    current.demand += alert.status === 'active' ? 1 : 0;
+    corridorMap.set(corridor, current);
+  }
+
+  return {
+    funnel: {
+      searched: events.filter(event => event.funnelStage === 'searched').length,
+      selected: events.filter(event => event.funnelStage === 'selected').length,
+      booked: events.filter(event => event.funnelStage === 'booked').length,
+      completed: events.filter(event => event.funnelStage === 'completed').length,
+    },
+    serviceMix: {
+      rides: events.filter(event => event.serviceType === 'ride').length,
+      buses: events.filter(event => event.serviceType === 'bus').length,
+      packages: events.filter(event => event.serviceType === 'package').length,
+      referrals: events.filter(event => event.serviceType === 'referral').length,
+    },
+    revenueJod: Number(events.reduce((sum, event) => sum + (event.valueJod ?? 0), 0).toFixed(2)),
+    activeDemand: alerts.filter(alert => alert.status === 'active').length,
+    topCorridors: Array.from(corridorMap.values())
+      .sort((left, right) => right.demand + right.conversions - (left.demand + left.conversions))
+      .slice(0, 6),
+  };
 }
 
 function readLocalDemandAlerts(): Array<{
@@ -117,29 +174,6 @@ function readLocalDemandAlerts(): Array<{
   }
 }
 
-function normalizeRouteInput(from?: string, to?: string) {
-  const normalizedFrom = from ? normalizeJordanLocation(from, from) : undefined;
-  const normalizedTo = to ? normalizeJordanLocation(to, to) : undefined;
-  return {
-    from: normalizedFrom,
-    to: normalizedTo,
-    corridorKey: normalizedFrom && normalizedTo ? buildJordanCorridorKey(normalizedFrom, normalizedTo) : undefined,
-    routeScope: normalizedFrom && normalizedTo ? getJordanRouteScope(normalizedFrom, normalizedTo) : undefined,
-  };
-}
-
-function mapAutomationJobType(input: {
-  eventName: string;
-  funnelStage: string;
-  serviceType: 'ride' | 'bus' | 'package' | 'referral' | 'wallet';
-}) {
-  if (input.eventName.includes('support') || input.funnelStage === 'cancelled') return 'support_follow_up';
-  if (input.funnelStage === 'searched') return 'demand_recovery';
-  if (input.funnelStage === 'selected') return 'corridor_conversion';
-  if (input.funnelStage === 'booked' || input.funnelStage === 'completed') return 'pricing_refresh';
-  return 'revenue_observe';
-}
-
 export async function trackGrowthEvent(input: {
   userId?: string;
   eventName: string;
@@ -150,14 +184,13 @@ export async function trackGrowthEvent(input: {
   valueJod?: number;
   metadata?: Record<string, unknown>;
 }) {
-  const route = normalizeRouteInput(input.from, input.to);
   writeLocalGrowthEvents([
     {
       eventName: input.eventName,
       funnelStage: input.funnelStage,
       serviceType: input.serviceType,
-      from: route.from,
-      to: route.to,
+      from: input.from,
+      to: input.to,
       valueJod: input.valueJod,
       createdAt: new Date().toISOString(),
     },
@@ -165,70 +198,19 @@ export async function trackGrowthEvent(input: {
   ]);
 
   try {
-    await recordDirectGrowthEvent({
-      ...input,
-      from: route.from,
-      to: route.to,
-      metadata: {
-        ...input.metadata,
-        corridorKey: route.corridorKey,
-        routeScope: route.routeScope,
-      },
-    });
-
-    if (input.userId && route.from && route.to) {
-      const jobType = mapAutomationJobType(input);
-      await enqueueDirectAutomationJob({
-        userId: input.userId,
-        jobType,
-        from: route.from,
-        to: route.to,
-        payload: {
-          eventName: input.eventName,
-          funnelStage: input.funnelStage,
-          serviceType: input.serviceType,
-          valueJod: input.valueJod ?? null,
-          corridorKey: route.corridorKey,
-          pricePressure: typeof input.metadata?.pricePressure === 'string' ? input.metadata.pricePressure : null,
-          priceQuote: (input.metadata?.priceQuote as Record<string, unknown> | undefined) ?? null,
-        },
-        runAfter: getAutomationJobRunAfter(jobType),
-      }).catch(() => {});
-    }
-
-    const priceQuote = input.metadata?.priceQuote as Record<string, unknown> | undefined;
-    const basePrice = Number(priceQuote?.basePriceJod ?? input.valueJod ?? 0);
-    const finalPrice = Number(priceQuote?.finalPriceJod ?? input.valueJod ?? 0);
-    if (route.from && route.to && Number.isFinite(basePrice) && Number.isFinite(finalPrice) && finalPrice > 0) {
-      await createDirectPricingSnapshot({
-        userId: input.userId,
-        corridorId: typeof input.metadata?.corridorId === 'string' ? input.metadata.corridorId : null,
-        from: route.from,
-        to: route.to,
-        basePriceJod: basePrice,
-        finalPriceJod: finalPrice,
-        demandScore: Number(priceQuote?.forecastDemandScore ?? input.metadata?.demandScore ?? 0) || undefined,
-        pricePressure: typeof input.metadata?.pricePressure === 'string' ? input.metadata.pricePressure : undefined,
-        sourceContext: input.eventName,
-        metadata: {
-          eventName: input.eventName,
-          funnelStage: input.funnelStage,
-          serviceType: input.serviceType,
-        },
-      }).catch(() => {});
-    }
+    await recordDirectGrowthEvent(input);
   } catch {
     // local fallback is already stored
   }
 }
 
-export async function getReferralSnapshot(user?: { id?: string; name?: string } | null): Promise<ReferralSnapshot | null> {
+export async function getReferralSnapshot(
+  user?: { id?: string; name?: string } | null,
+): Promise<ReferralSnapshot | null> {
   if (!user?.id) return null;
 
   const shareUrlBase =
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : 'https://wasel14.online';
+    typeof window !== 'undefined' ? window.location.origin : 'https://wasel14.online';
 
   try {
     const remote = await getDirectReferralSnapshot(user.id);
@@ -260,7 +242,10 @@ export async function getReferralSnapshot(user?: { id?: string; name?: string } 
   }
 }
 
-export async function applyReferralCode(user: { id?: string; name?: string } | null | undefined, code: string) {
+export async function applyReferralCode(
+  user: { id?: string; name?: string } | null | undefined,
+  code: string,
+) {
   if (!user?.id) {
     throw new Error('Sign in to redeem a referral code.');
   }
@@ -289,43 +274,10 @@ export async function getGrowthDashboard(userId?: string): Promise<GrowthDashboa
   try {
     return await getDirectGrowthAnalytics(userId);
   } catch {
-    const events = readLocalGrowthEvents();
-    const alerts = readLocalDemandAlerts();
-    const corridorMap = new Map<string, { corridor: string; demand: number; conversions: number }>();
-
-    for (const event of events) {
-      const corridor = [event.from, event.to].filter(Boolean).join(' to ');
-      if (corridor) {
-        const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
-        current.conversions += event.funnelStage === 'booked' ? 1 : 0;
-        corridorMap.set(corridor, current);
-      }
-    }
-
-    for (const alert of alerts) {
-      const corridor = `${alert.from} to ${alert.to}`;
-      const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
-      current.demand += 1;
-      corridorMap.set(corridor, current);
-    }
-
-    return {
-      funnel: {
-        searched: events.filter((event) => event.funnelStage === 'searched').length,
-        selected: events.filter((event) => event.funnelStage === 'selected').length,
-        booked: events.filter((event) => event.funnelStage === 'booked').length,
-        completed: events.filter((event) => event.funnelStage === 'completed').length,
-      },
-      serviceMix: {
-        rides: events.filter((event) => event.serviceType === 'ride').length,
-        buses: events.filter((event) => event.serviceType === 'bus').length,
-        packages: events.filter((event) => event.serviceType === 'package').length,
-        referrals: events.filter((event) => event.serviceType === 'referral').length,
-      },
-      revenueJod: events.reduce((sum, event) => sum + Number(event.valueJod ?? 0), 0),
-      activeDemand: alerts.filter((alert) => alert.status === 'active').length,
-      topCorridors: Array.from(corridorMap.values()).sort((a, b) => (b.demand + b.conversions) - (a.demand + a.conversions)).slice(0, 6),
-    };
+    const fallback = buildGrowthDashboardFromLocal();
+    return JSON.stringify(fallback) === JSON.stringify(EMPTY_GROWTH_DASHBOARD)
+      ? EMPTY_GROWTH_DASHBOARD
+      : fallback;
   }
 }
 
@@ -333,7 +285,7 @@ export function getCorridorDemandLeaders(limit = 3) {
   const alerts = readLocalDemandAlerts();
   const corridorMap = new Map<string, { corridor: string; active: number; serviceLabel: string }>();
 
-  for (const alert of alerts.filter((item) => item.status === 'active')) {
+  for (const alert of alerts.filter(item => item.status === 'active')) {
     const key = `${alert.from} to ${alert.to}`;
     const existing = corridorMap.get(key);
     corridorMap.set(key, {

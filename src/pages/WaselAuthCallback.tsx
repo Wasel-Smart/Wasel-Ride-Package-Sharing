@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { AuthChangeEvent } from '@supabase/supabase-js';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { consumePersistedAuthReturnTo } from '../utils/authFlow';
 import { supabase } from '../utils/supabase/client';
+import { normalizeReturnToPath } from '../utils/env';
+import { tx } from '../locales/tx';
 
 type CallbackState = 'loading' | 'closing' | 'redirecting' | 'recovery' | 'error';
 
@@ -23,22 +24,6 @@ function readCallbackParam(key: string): string {
   return new URLSearchParams(hash).get(key) ?? '';
 }
 
-function shouldIgnoreExchangeCodeError(error: unknown): boolean {
-  const message =
-    error instanceof Error
-      ? error.message.toLowerCase()
-      : typeof error === 'string'
-        ? error.toLowerCase()
-        : '';
-
-  return (
-    message.includes('code verifier') ||
-    message.includes('auth code') ||
-    message.includes('already been used') ||
-    message.includes('invalid flow state')
-  );
-}
-
 export default function WaselAuthCallback() {
   const navigate = useIframeSafeNavigate();
   const [state, setState] = useState<CallbackState>('loading');
@@ -48,9 +33,12 @@ export default function WaselAuthCallback() {
   const [formError, setFormError] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
   const callbackType = useMemo(() => readCallbackParam('type'), []);
-  const authCode = useMemo(() => readCallbackParam('code'), []);
+  const returnTo = useMemo(() => normalizeReturnToPath(readCallbackParam('returnTo')), []);
   const callbackError = useMemo(
-    () => decodeURIComponent(readCallbackParam('error_description') || readCallbackParam('error') || ''),
+    () =>
+      decodeURIComponent(
+        readCallbackParam('error_description') || readCallbackParam('error') || '',
+      ),
     [],
   );
 
@@ -73,52 +61,21 @@ export default function WaselAuthCallback() {
         return;
       }
 
-      const authChange =
-        typeof supabase.auth.onAuthStateChange === 'function'
-          ? supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
-              if (!active) return;
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
+        if (!active) return;
 
-              if (event === 'PASSWORD_RECOVERY') {
-                isRecoveryFlow = true;
-                setState('recovery');
-                setMessage('Set a new password to finish recovering your account.');
-                setFormError('');
-              }
-            })
-          : {
-              data: {
-                subscription: {
-                  unsubscribe() {
-                    return undefined;
-                  },
-                },
-              },
-            };
-
-      const { data: { subscription } } = authChange;
+        if (event === 'PASSWORD_RECOVERY') {
+          isRecoveryFlow = true;
+          setState('recovery');
+          setMessage('Set a new password to finish recovering your account.');
+          setFormError('');
+        }
+      });
 
       try {
-        if (typeof supabase.auth.initialize === 'function') {
-          const { error: initializeError } = await supabase.auth.initialize();
-          if (initializeError) {
-            throw initializeError;
-          }
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 50));
-
-        if (authCode && typeof supabase.auth.exchangeCodeForSession === 'function') {
-          const {
-            data: { session: existingSession },
-          } = await supabase.auth.getSession();
-
-          if (!existingSession) {
-            const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(authCode);
-            if (exchangeError && !shouldIgnoreExchangeCodeError(exchangeError)) {
-              throw exchangeError;
-            }
-          }
-        }
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         if (isRecoveryFlow) {
           if (!active) return;
@@ -149,7 +106,7 @@ export default function WaselAuthCallback() {
 
         setState('redirecting');
         setMessage('Sign-in complete. Redirecting...');
-        navigate(consumePersistedAuthReturnTo('/app/find-ride'), { replace: true });
+        navigate(returnTo, { replace: true });
       } catch (error) {
         if (!active) return;
         setState('error');
@@ -164,7 +121,7 @@ export default function WaselAuthCallback() {
     return () => {
       active = false;
     };
-  }, [authCode, callbackError, callbackType, navigate]);
+  }, [callbackError, callbackType, navigate, returnTo]);
 
   const handlePasswordUpdate = async () => {
     if (!supabase) {
@@ -196,7 +153,9 @@ export default function WaselAuthCallback() {
 
     setState('redirecting');
     setMessage('Password updated. Redirecting to sign in...');
-    navigate('/app/auth?tab=signin&reset=success', { replace: true });
+    navigate(`/app/auth?tab=signin&reset=success&returnTo=${encodeURIComponent(returnTo)}`, {
+      replace: true,
+    });
   };
 
   if (state === 'recovery') {
@@ -210,7 +169,7 @@ export default function WaselAuthCallback() {
           background: '#040C18',
           color: '#EFF6FF',
           padding: 24,
-              fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
+          fontFamily: "-apple-system,'Inter',sans-serif",
         }}
       >
         <div
@@ -220,32 +179,32 @@ export default function WaselAuthCallback() {
             borderRadius: 20,
             padding: 28,
             background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(73,190,242,0.16)',
+            border: '1px solid rgba(0,200,232,0.14)',
             display: 'grid',
             gap: 14,
           }}
         >
           <div>
             <h1 style={{ margin: '0 0 8px', fontSize: '1.35rem', lineHeight: 1.2 }}>
-              Reset your password
+              {tx('waselAuthCallback.reset_your_password')}
             </h1>
-            <p style={{ margin: 0, color: 'rgba(239,246,255,0.7)', lineHeight: 1.6 }}>
-              {message}
-            </p>
+            <p style={{ margin: 0, color: 'rgba(239,246,255,0.7)', lineHeight: 1.6 }}>{message}</p>
           </div>
 
           <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: '0.82rem', color: '#CBD5E1' }}>New password</span>
+            <span style={{ fontSize: '0.82rem', color: '#CBD5E1' }}>
+              {tx('settingsExpanded.newPassword')}
+            </span>
             <input
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Enter a new password"
+              onChange={event => setPassword(event.target.value)}
+              placeholder={tx('waselAuthCallback.enter_a_new_password')}
               style={{
                 width: '100%',
                 minHeight: 46,
                 borderRadius: 12,
-                border: '1px solid rgba(73,190,242,0.18)',
+                border: '1px solid rgba(0,200,232,0.18)',
                 background: 'rgba(255,255,255,0.03)',
                 color: '#EFF6FF',
                 padding: '0 14px',
@@ -255,17 +214,19 @@ export default function WaselAuthCallback() {
           </label>
 
           <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: '0.82rem', color: '#CBD5E1' }}>Confirm password</span>
+            <span style={{ fontSize: '0.82rem', color: '#CBD5E1' }}>
+              {tx('waselAuthCallback.confirm_password')}
+            </span>
             <input
               type="password"
               value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              placeholder="Re-enter your new password"
+              onChange={event => setConfirmPassword(event.target.value)}
+              placeholder={tx('waselAuthCallback.re_enter_your_new_password')}
               style={{
                 width: '100%',
                 minHeight: 46,
                 borderRadius: 12,
-                border: '1px solid rgba(73,190,242,0.18)',
+                border: '1px solid rgba(0,200,232,0.18)',
                 background: 'rgba(255,255,255,0.03)',
                 color: '#EFF6FF',
                 padding: '0 14px',
@@ -292,13 +253,15 @@ export default function WaselAuthCallback() {
 
           <button
             type="button"
-            onClick={() => { void handlePasswordUpdate(); }}
+            onClick={() => {
+              void handlePasswordUpdate();
+            }}
             disabled={savingPassword}
             style={{
               minHeight: 46,
               borderRadius: 12,
               border: 'none',
-              background: 'linear-gradient(135deg, #16C7F2, #0F78BF)',
+              background: 'linear-gradient(135deg, #00C8E8, #0095B8)',
               color: '#041018',
               fontSize: '0.95rem',
               fontWeight: 800,
@@ -311,11 +274,15 @@ export default function WaselAuthCallback() {
 
           <button
             type="button"
-            onClick={() => navigate('/app/auth?tab=signin', { replace: true })}
+            onClick={() =>
+              navigate(`/app/auth?tab=signin&returnTo=${encodeURIComponent(returnTo)}`, {
+                replace: true,
+              })
+            }
             style={{
               minHeight: 42,
               borderRadius: 12,
-              border: '1px solid rgba(73,190,242,0.18)',
+              border: '1px solid rgba(0,200,232,0.18)',
               background: 'transparent',
               color: '#EFF6FF',
               fontSize: '0.9rem',
@@ -323,7 +290,7 @@ export default function WaselAuthCallback() {
               cursor: 'pointer',
             }}
           >
-            Back to sign in
+            {tx('waselAuthCallback.back_to_sign_in')}
           </button>
         </div>
       </div>
@@ -340,7 +307,7 @@ export default function WaselAuthCallback() {
         background: '#040C18',
         color: '#EFF6FF',
         padding: 24,
-                  fontFamily: "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)",
+        fontFamily: "-apple-system,'Inter',sans-serif",
       }}
     >
       <div
@@ -350,7 +317,7 @@ export default function WaselAuthCallback() {
           borderRadius: 20,
           padding: 28,
           background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(73,190,242,0.16)',
+          border: '1px solid rgba(0,200,232,0.14)',
           textAlign: 'center',
         }}
       >
@@ -360,9 +327,15 @@ export default function WaselAuthCallback() {
             height: 42,
             margin: '0 auto 16px',
             borderRadius: '50%',
-            border: state === 'error' ? '3px solid rgba(255,68,85,0.3)' : '3px solid rgba(73,190,242,0.18)',
-            borderTop: state === 'error' ? '3px solid #FF4455' : '3px solid #16C7F2',
-            animation: state === 'redirecting' || state === 'loading' || state === 'closing' ? 'spin 0.8s linear infinite' : 'none',
+            border:
+              state === 'error'
+                ? '3px solid rgba(255,68,85,0.3)'
+                : '3px solid rgba(0,200,232,0.15)',
+            borderTop: state === 'error' ? '3px solid #FF4455' : '3px solid #00C8E8',
+            animation:
+              state === 'redirecting' || state === 'loading' || state === 'closing'
+                ? 'spin 0.8s linear infinite'
+                : 'none',
           }}
         />
         <h1 style={{ margin: '0 0 8px', fontSize: '1.35rem', lineHeight: 1.2 }}>

@@ -6,9 +6,15 @@
  * while giving every caller a real, live Google Map.
  */
 
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { MapPin } from 'lucide-react';
-import { WaselMap, type WaselMapRoute } from './WaselMap';
+import type { WaselMapProps, WaselMapRoute } from './WaselMap';
+import { tx } from '../locales/tx';
+
+const WaselMap = lazy(async () => {
+  const mod = await import('./WaselMap');
+  return { default: mod.WaselMap };
+});
 
 export type MapMode = 'google' | 'static' | 'live';
 
@@ -41,10 +47,14 @@ function MapLoader({ height }: { height?: string | number }) {
       className="flex flex-col items-center justify-center bg-[#0c1520] rounded-2xl gap-3 text-[#8590a2]"
       style={{ height: typeof height === 'number' ? `${height}px` : (height ?? '400px') }}
     >
-      <MapPin className="w-8 h-8 animate-pulse text-[#16C7F2]" />
-      <p className="text-sm">Loading map…</p>
+      <MapPin className="w-8 h-8 animate-pulse text-[#04ADBF]" />
+      <p className="text-sm">{tx('mapWrapper.loading_map')}</p>
     </div>
   );
+}
+
+function LazyWaselMap(props: WaselMapProps) {
+  return <WaselMap {...props} />;
 }
 
 export function MapWrapper({
@@ -66,8 +76,8 @@ export function MapWrapper({
 
   // Build route from location props (live mode)
   const route: WaselMapRoute[] = [];
-  if (pickupLocation)  route.push({ ...pickupLocation,  label: 'Pickup' });
-  if (driverLocation)  route.push({ ...driverLocation,  label: 'Driver' });
+  if (pickupLocation) route.push({ ...pickupLocation, label: 'Pickup' });
+  if (driverLocation) route.push({ ...driverLocation, label: 'Driver' });
   if (dropoffLocation) route.push({ ...dropoffLocation, label: 'Dropoff' });
 
   // Convert generic markers to WaselMap markers
@@ -75,7 +85,7 @@ export function MapWrapper({
 
   return (
     <Suspense fallback={<MapLoader height={height} />}>
-      <WaselMap
+      <LazyWaselMap
         center={center}
         zoom={zoom}
         height={height}

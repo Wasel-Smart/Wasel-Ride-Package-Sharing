@@ -1,0 +1,72 @@
+name: Security
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    - cron: '0 5 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan for secrets
+        run: |
+          # Fail if any real-looking secrets are committed
+          node scripts/validate-no-secrets.mjs
+
+  env-exposure-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure server secrets are not in VITE_ prefix
+        run: |
+          # STRIPE_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY, TWILIO_AUTH_TOKEN
+          # must never appear as VITE_ variables (which get bundled into the browser)
+          if grep -rE 'VITE_(STRIPE_SECRET|SERVICE_ROLE|TWILIO_AUTH_TOKEN|CLIQ_API_KEY|CLIQ_MERCHANT)' src/ --include='*.ts' --include='*.tsx'; then
+            echo "ERROR: Server-side secret exposed as VITE_ variable (browser bundle)"
+            exit 1
+          fi
+          echo "OK: No server secrets found in browser bundle"
+
+  math-random-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure Math.random() is not used for IDs or tokens
+        run: |
+          # Allow Math.random() only in test files and animation/UI code
+          # Block it in services/, utils/, platform/, domain/
+          if grep -rn 'Math\.random()' src/services/ src/utils/ src/platform/ src/domain/ 2>/dev/null | grep -v '// allow-math-random'; then
+            echo "ERROR: Math.random() found in security-sensitive path. Use crypto.randomUUID() instead."
+            exit 1
+          fi
+          echo "OK: No Math.random() in sensitive paths"
+
+  codeql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3

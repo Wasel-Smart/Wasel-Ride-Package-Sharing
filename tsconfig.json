@@ -2,7 +2,11 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -10,54 +14,45 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-
-    /* ── Strict mode — production-grade enforcement ───────────────────────── */
+    "jsxImportSource": "react",
+    "allowJs": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
     "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "strictPropertyInitialization": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "noImplicitReturns": true,
-    "noUncheckedIndexedAccess": false,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": false,
-    "forceConsistentCasingInFileNames": true,
-
-    /* ── Interop ──────────────────────────────────────────────────────────── */
+    "alwaysStrict": true,
+    "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-
-    /* ── Path aliases ─────────────────────────────────────────────────────── */
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
-    },
-
-    /* ── Type roots ───────────────────────────────────────────────────────── */
-    "types": ["vite/client", "node"]
+      "@/*": [
+        "./src/*"
+      ]
+    }
   },
   "include": [
-    "src/main.tsx",
-    "src/**/*.ts",
-    "src/**/*.tsx",
+    "src/**/*",
     "src/**/*.d.ts",
     "vite.config.ts",
-    "vitest.config.ts",
     "playwright.config.ts"
   ],
   "exclude": [
     "node_modules",
     "build",
     "dist",
-    "src/features/testing",
-    "src/cypress",
-    "src/supabase/functions",
-    "src/tests",
-    "tests"
+    "with-supabase-app",
+    "playwright-report/",
+    "supabase/functions/",
+    "**/*.test.ts",
+    "**/*.test.tsx"
   ]
 }

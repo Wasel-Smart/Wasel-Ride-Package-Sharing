@@ -1,19 +1,15 @@
 import { API_URL, fetchWithRetry, getAuthDetails } from './core';
-import { createDirectPackage, getDirectPackageByTrackingId, updateDirectPackageStatus } from './directSupabase';
-import { trackGrowthEvent } from './growthEngine';
-import { triggerPackageConfirmationEmail } from './transactionalEmailTriggers';
-import { tripsAPI } from './trips';
 import {
-  normalizeJordanLocation,
-  routeEndpointsAreDistinct,
-  routeMatchesLocationPair,
-} from '../utils/jordanLocations';
+  createDirectPackage,
+  getDirectPackageByTrackingId,
+  updateDirectPackageStatus,
+} from './directSupabase';
+import { trackGrowthEvent } from './growthEngine';
+import { tripsAPI } from './trips';
 
 export interface PostedRide {
   id: string;
   ownerId?: string;
-  ownerPhone?: string;
-  ownerEmail?: string;
   from: string;
   to: string;
   date: string;
@@ -95,7 +91,7 @@ function pickDriverName(carModel: string): string {
 function parseWeight(weight: string): number {
   const matches = weight.match(/\d+(?:\.\d+)?/g);
   if (!matches) return 0.5;
-  const values = matches.map(Number).filter((value) => Number.isFinite(value));
+  const values = matches.map(Number).filter(value => Number.isFinite(value));
   if (!values.length) return 0.5;
   return Math.max(...values);
 }
@@ -106,11 +102,6 @@ function sanitizeWeight(weight: string): string {
 
 function sanitizePhone(phone?: string): string | undefined {
   const sanitized = (phone ?? '').replace(/[^\d+]/g, '').trim();
-  return sanitized || undefined;
-}
-
-function sanitizeEmail(email?: string): string | undefined {
-  const sanitized = String(email ?? '').trim().toLowerCase();
   return sanitized || undefined;
 }
 
@@ -126,7 +117,12 @@ function normalizeStatus(value: unknown, matchedRideId?: string): PackageStatus 
   const status = String(value ?? '').toLowerCase();
   if (status === 'delivered') return 'delivered';
   if (status === 'in_transit' || status === 'picked_up') return 'in_transit';
-  if (status === 'searching' || status === 'pending' || status === 'requested' || status === 'queued') {
+  if (
+    status === 'searching' ||
+    status === 'pending' ||
+    status === 'requested' ||
+    status === 'queued'
+  ) {
     return matchedRideId ? 'matched' : 'searching';
   }
   if (status === 'matched' || status === 'assigned' || status === 'accepted') return 'matched';
@@ -140,12 +136,18 @@ function buildTimeline(
 ): Array<{ label: string; complete: boolean }> {
   const matched = Boolean(matchedRideId) || status !== 'searching';
   const senderShared = Boolean(verification.senderCodeSharedAt);
-  const inTransit = Boolean(verification.riderPickupConfirmedAt) || status === 'in_transit' || status === 'delivered';
+  const inTransit =
+    Boolean(verification.riderPickupConfirmedAt) ||
+    status === 'in_transit' ||
+    status === 'delivered';
   const delivered = Boolean(verification.receiverDeliveryConfirmedAt) || status === 'delivered';
 
   return [
     { label: 'Request received', complete: true },
-    { label: matched ? 'Matched to a rider trip' : 'Searching for a rider trip', complete: matched },
+    {
+      label: matched ? 'Matched to a rider trip' : 'Searching for a rider trip',
+      complete: matched,
+    },
     { label: 'Sender shared OTP handoff code', complete: senderShared },
     { label: 'Rider pickup confirmed', complete: inTransit },
     { label: 'Receiver delivery confirmed', complete: delivered },
@@ -165,14 +167,12 @@ function normalizeServerRide(raw: Record<string, unknown>, fallback: PostedRide)
     carModel: String(raw.vehicle_model ?? raw.carModel ?? fallback.carModel),
     note: String(raw.notes ?? raw.note ?? fallback.note),
     createdAt: String(raw.created_at ?? fallback.createdAt),
-    ownerId: String(raw.owner_id ?? raw.ownerId ?? fallback.ownerId ?? '').trim() || fallback.ownerId,
-    ownerPhone: sanitizePhone(
-      String(raw.owner_phone ?? raw.ownerPhone ?? raw.phone_number ?? raw.driver_phone ?? fallback.ownerPhone ?? ''),
-    ),
-    ownerEmail: sanitizeEmail(
-      String(raw.owner_email ?? raw.ownerEmail ?? raw.email ?? fallback.ownerEmail ?? ''),
-    ),
-    status: raw.status === 'cancelled' || raw.status === 'completed' ? raw.status : (fallback.status ?? 'active'),
+    ownerId:
+      String(raw.owner_id ?? raw.ownerId ?? fallback.ownerId ?? '').trim() || fallback.ownerId,
+    status:
+      raw.status === 'cancelled' || raw.status === 'completed'
+        ? raw.status
+        : (fallback.status ?? 'active'),
   };
 }
 
@@ -195,61 +195,118 @@ function normalizeLocalRide(raw: Partial<PostedRide>): PostedRide | null {
     carModel: String(raw.carModel ?? ''),
     note: String(raw.note ?? ''),
     acceptsPackages: Boolean(raw.acceptsPackages),
-    packageCapacity: (raw.packageCapacity === 'large' || raw.packageCapacity === 'small' ? raw.packageCapacity : 'medium'),
+    packageCapacity:
+      raw.packageCapacity === 'large' || raw.packageCapacity === 'small'
+        ? raw.packageCapacity
+        : 'medium',
     packageNote: String(raw.packageNote ?? ''),
     createdAt: String(raw.createdAt ?? new Date().toISOString()),
     ownerId: String(raw.ownerId ?? '').trim() || undefined,
-    ownerPhone: sanitizePhone(String(raw.ownerPhone ?? '')),
-    ownerEmail: sanitizeEmail(String(raw.ownerEmail ?? '')),
     status: raw.status === 'cancelled' || raw.status === 'completed' ? raw.status : 'active',
   };
 }
 
-function normalizeServerPackage(raw: Record<string, unknown>, fallback: PackageRequest): PackageRequest {
-  const matchedRideId = String(raw.trip_id ?? raw.matchedRideId ?? fallback.matchedRideId ?? '').trim() || undefined;
+function normalizeServerPackage(
+  raw: Record<string, unknown>,
+  fallback: PackageRequest,
+): PackageRequest {
+  const matchedRideId =
+    String(raw.trip_id ?? raw.matchedRideId ?? fallback.matchedRideId ?? '').trim() || undefined;
   const status = normalizeStatus(raw.status, matchedRideId);
-  const handoffCode = String(raw.handoff_code ?? raw.handoffCode ?? fallback.handoffCode ?? '').trim().toUpperCase()
-    || fallback.handoffCode
-    || generateHandoffCode();
+  const handoffCode =
+    String(raw.handoff_code ?? raw.handoffCode ?? fallback.handoffCode ?? '')
+      .trim()
+      .toUpperCase() ||
+    fallback.handoffCode ||
+    generateHandoffCode();
 
   return {
     ...fallback,
     id: String(raw.id ?? fallback.id),
-    trackingId: String(raw.tracking_code ?? raw.trackingId ?? fallback.trackingId).trim().toUpperCase(),
+    trackingId: String(raw.tracking_code ?? raw.trackingId ?? fallback.trackingId)
+      .trim()
+      .toUpperCase(),
     handoffCode,
     from: String(raw.from ?? fallback.from),
     to: String(raw.to ?? fallback.to),
     weight: sanitizeWeight(String(raw.weight ?? fallback.weight)),
     note: String(raw.description ?? raw.note ?? fallback.note),
     packageType: raw.packageType === 'return' ? 'return' : fallback.packageType,
-    recipientName: String(raw.recipient_name ?? raw.recipientName ?? fallback.recipientName ?? '').trim() || undefined,
-    recipientPhone: sanitizePhone(String(raw.recipient_phone ?? raw.recipientPhone ?? fallback.recipientPhone ?? '')),
+    recipientName:
+      String(raw.recipient_name ?? raw.recipientName ?? fallback.recipientName ?? '').trim() ||
+      undefined,
+    recipientPhone: sanitizePhone(
+      String(raw.recipient_phone ?? raw.recipientPhone ?? fallback.recipientPhone ?? ''),
+    ),
     matchedRideId,
-    matchedDriver: String(raw.driver_name ?? raw.matchedDriver ?? fallback.matchedDriver ?? '').trim() || fallback.matchedDriver,
+    matchedDriver:
+      String(raw.driver_name ?? raw.matchedDriver ?? fallback.matchedDriver ?? '').trim() ||
+      fallback.matchedDriver,
     status,
     createdAt: String(raw.created_at ?? fallback.createdAt),
     verification: {
-      senderCodeSharedAt: String(raw.sender_code_shared_at ?? raw.senderCodeSharedAt ?? fallback.verification?.senderCodeSharedAt ?? '').trim() || undefined,
-      riderPickupConfirmedAt: String(raw.rider_pickup_confirmed_at ?? raw.riderPickupConfirmedAt ?? fallback.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
-      receiverDeliveryConfirmedAt: String(raw.receiver_delivery_confirmed_at ?? raw.receiverDeliveryConfirmedAt ?? fallback.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
+      senderCodeSharedAt:
+        String(
+          raw.sender_code_shared_at ??
+            raw.senderCodeSharedAt ??
+            fallback.verification?.senderCodeSharedAt ??
+            '',
+        ).trim() || undefined,
+      riderPickupConfirmedAt:
+        String(
+          raw.rider_pickup_confirmed_at ??
+            raw.riderPickupConfirmedAt ??
+            fallback.verification?.riderPickupConfirmedAt ??
+            '',
+        ).trim() || undefined,
+      receiverDeliveryConfirmedAt:
+        String(
+          raw.receiver_delivery_confirmed_at ??
+            raw.receiverDeliveryConfirmedAt ??
+            fallback.verification?.receiverDeliveryConfirmedAt ??
+            '',
+        ).trim() || undefined,
     },
     timeline: buildTimeline(status, matchedRideId, {
-      senderCodeSharedAt: String(raw.sender_code_shared_at ?? raw.senderCodeSharedAt ?? fallback.verification?.senderCodeSharedAt ?? '').trim() || undefined,
-      riderPickupConfirmedAt: String(raw.rider_pickup_confirmed_at ?? raw.riderPickupConfirmedAt ?? fallback.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
-      receiverDeliveryConfirmedAt: String(raw.receiver_delivery_confirmed_at ?? raw.receiverDeliveryConfirmedAt ?? fallback.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
+      senderCodeSharedAt:
+        String(
+          raw.sender_code_shared_at ??
+            raw.senderCodeSharedAt ??
+            fallback.verification?.senderCodeSharedAt ??
+            '',
+        ).trim() || undefined,
+      riderPickupConfirmedAt:
+        String(
+          raw.rider_pickup_confirmed_at ??
+            raw.riderPickupConfirmedAt ??
+            fallback.verification?.riderPickupConfirmedAt ??
+            '',
+        ).trim() || undefined,
+      receiverDeliveryConfirmedAt:
+        String(
+          raw.receiver_delivery_confirmed_at ??
+            raw.receiverDeliveryConfirmedAt ??
+            fallback.verification?.receiverDeliveryConfirmedAt ??
+            '',
+        ).trim() || undefined,
     }),
   };
 }
 
 function normalizeLocalPackage(raw: Partial<PackageRequest>): PackageRequest | null {
-  const trackingId = String(raw.trackingId ?? '').trim().toUpperCase();
+  const trackingId = String(raw.trackingId ?? '')
+    .trim()
+    .toUpperCase();
   const from = String(raw.from ?? '').trim();
   const to = String(raw.to ?? '').trim();
   if (!trackingId || !from || !to) return null;
 
   const matchedRideId = String(raw.matchedRideId ?? '').trim() || undefined;
   const status = normalizeStatus(raw.status, matchedRideId);
-  const handoffCode = String(raw.handoffCode ?? '').trim().toUpperCase() || generateHandoffCode();
+  const handoffCode =
+    String(raw.handoffCode ?? '')
+      .trim()
+      .toUpperCase() || generateHandoffCode();
 
   return {
     id: String(raw.id ?? makeId('pkg')),
@@ -268,19 +325,25 @@ function normalizeLocalPackage(raw: Partial<PackageRequest>): PackageRequest | n
     createdAt: String(raw.createdAt ?? new Date().toISOString()),
     verification: {
       senderCodeSharedAt: String(raw.verification?.senderCodeSharedAt ?? '').trim() || undefined,
-      riderPickupConfirmedAt: String(raw.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
-      receiverDeliveryConfirmedAt: String(raw.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
+      riderPickupConfirmedAt:
+        String(raw.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
+      receiverDeliveryConfirmedAt:
+        String(raw.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
     },
-    timeline: Array.isArray(raw.timeline) && raw.timeline.length > 0
-      ? raw.timeline.map((step) => ({
-          label: String(step.label ?? ''),
-          complete: Boolean(step.complete),
-        }))
-      : buildTimeline(status, matchedRideId, {
-          senderCodeSharedAt: String(raw.verification?.senderCodeSharedAt ?? '').trim() || undefined,
-          riderPickupConfirmedAt: String(raw.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
-          receiverDeliveryConfirmedAt: String(raw.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
-        }),
+    timeline:
+      Array.isArray(raw.timeline) && raw.timeline.length > 0
+        ? raw.timeline.map(step => ({
+            label: String(step.label ?? ''),
+            complete: Boolean(step.complete),
+          }))
+        : buildTimeline(status, matchedRideId, {
+            senderCodeSharedAt:
+              String(raw.verification?.senderCodeSharedAt ?? '').trim() || undefined,
+            riderPickupConfirmedAt:
+              String(raw.verification?.riderPickupConfirmedAt ?? '').trim() || undefined,
+            receiverDeliveryConfirmedAt:
+              String(raw.verification?.receiverDeliveryConfirmedAt ?? '').trim() || undefined,
+          }),
   };
 }
 
@@ -324,13 +387,16 @@ function saveRides(...lists: PostedRide[][]): PostedRide[] {
   return rides;
 }
 
-function findBestMatchingRide(rides: PostedRide[], input: { from: string; to: string; weight: string }): PostedRide | undefined {
+function findBestMatchingRide(
+  rides: PostedRide[],
+  input: { from: string; to: string; weight: string },
+): PostedRide | undefined {
   const requestedWeight = parseWeight(input.weight);
   const capacityRank = { small: 1, medium: 5, large: 10 };
 
   return sortByCreatedAtDesc(rides)
-    .filter((ride) => ride.acceptsPackages && routeMatchesLocationPair(ride.from, ride.to, input.from, input.to, { allowReverse: false }))
-    .find((ride) => capacityRank[ride.packageCapacity] >= requestedWeight);
+    .filter(ride => ride.acceptsPackages && ride.from === input.from && ride.to === input.to)
+    .find(ride => capacityRank[ride.packageCapacity] >= requestedWeight);
 }
 
 export function getConnectedRides(): PostedRide[] {
@@ -339,11 +405,11 @@ export function getConnectedRides(): PostedRide[] {
   return rides;
 }
 
-export async function createConnectedRide(input: Omit<PostedRide, 'id' | 'createdAt'>): Promise<PostedRide> {
+export async function createConnectedRide(
+  input: Omit<PostedRide, 'id' | 'createdAt'>,
+): Promise<PostedRide> {
   const ride: PostedRide = {
     ...input,
-    from: normalizeJordanLocation(input.from, input.from || 'Amman'),
-    to: normalizeJordanLocation(input.to, input.to || 'Aqaba'),
     id: makeId('ride'),
     createdAt: new Date().toISOString(),
     status: input.status ?? 'active',
@@ -351,8 +417,8 @@ export async function createConnectedRide(input: Omit<PostedRide, 'id' | 'create
 
   try {
     const server = await tripsAPI.createTrip({
-      from: ride.from,
-      to: ride.to,
+      from: input.from,
+      to: input.to,
       date: input.date,
       time: input.time,
       seats: input.seats,
@@ -400,7 +466,7 @@ export function updateConnectedRide(
   updates: Partial<Pick<PostedRide, 'seats' | 'status' | 'note' | 'date' | 'time'>>,
 ): PostedRide | null {
   const rides = getConnectedRides();
-  const target = rides.find((ride) => ride.id === rideId);
+  const target = rides.find(ride => ride.id === rideId);
   if (!target) return null;
 
   const updated: PostedRide = {
@@ -409,7 +475,7 @@ export function updateConnectedRide(
     seats: typeof updates.seats === 'number' ? Math.max(0, updates.seats) : target.seats,
   };
 
-  saveRides(rides.map((ride) => (ride.id === rideId ? updated : ride)));
+  saveRides(rides.map(ride => (ride.id === rideId ? updated : ride)));
   return updated;
 }
 
@@ -441,24 +507,19 @@ export async function createConnectedPackage(input: {
   packageType?: 'delivery' | 'return';
   recipientName?: string;
   recipientPhone?: string;
-  senderName?: string;
-  senderEmail?: string;
 }): Promise<PackageRequest> {
-  const from = normalizeJordanLocation(input.from, input.from.trim() || 'Amman');
-  const to = normalizeJordanLocation(input.to, input.to.trim() || 'Aqaba');
+  const from = input.from.trim();
+  const to = input.to.trim();
 
   if (!from || !to) {
-    throw new Error('Sender and receiver locations are required.');
+    throw new Error('Sender and receiver cities are required.');
   }
 
-  if (!routeEndpointsAreDistinct(from, to)) {
-    throw new Error('Sender and receiver locations must be different.');
+  if (from === to) {
+    throw new Error('Sender and receiver cities must be different.');
   }
 
-  const rides = getConnectedRides();
-  const matchedRide = findBestMatchingRide(rides, { from, to, weight: input.weight });
   const trackingId = `PKG-${Math.floor(10000 + Math.random() * 90000)}`;
-  const status: PackageStatus = matchedRide ? 'matched' : 'searching';
 
   const pkg: PackageRequest = {
     id: makeId('pkg'),
@@ -471,12 +532,12 @@ export async function createConnectedPackage(input: {
     packageType: input.packageType ?? 'delivery',
     recipientName: input.recipientName?.trim() || undefined,
     recipientPhone: sanitizePhone(input.recipientPhone),
-    matchedRideId: matchedRide?.id,
-    matchedDriver: matchedRide ? pickDriverName(matchedRide.carModel) : undefined,
-    status,
+    matchedRideId: undefined,
+    matchedDriver: undefined,
+    status: 'searching',
     createdAt: new Date().toISOString(),
     verification: {},
-    timeline: buildTimeline(status, matchedRide?.id, {}),
+    timeline: buildTimeline('searching', undefined, {}),
   };
 
   try {
@@ -509,20 +570,6 @@ export async function createConnectedPackage(input: {
             packageType: created.packageType,
           },
         });
-        if (input.senderEmail) {
-          triggerPackageConfirmationEmail({
-            senderEmail: input.senderEmail,
-            senderName: input.senderName ?? 'Wasel sender',
-            trackingId: created.trackingId,
-            handoffCode: created.handoffCode,
-            from: created.from,
-            to_city: created.to,
-            weight: created.weight,
-            recipientName: created.recipientName,
-            matchedDriver: created.matchedDriver,
-            status: created.status === 'matched' ? 'matched' : 'searching',
-          });
-        }
         return created;
       }
     } else {
@@ -557,73 +604,60 @@ export async function createConnectedPackage(input: {
           packageType: created.packageType,
         },
       });
-      if (input.senderEmail) {
-        triggerPackageConfirmationEmail({
-          senderEmail: input.senderEmail,
-          senderName: input.senderName ?? 'Wasel sender',
-          trackingId: created.trackingId,
-          handoffCode: created.handoffCode,
-          from: created.from,
-          to_city: created.to,
-          weight: created.weight,
-          recipientName: created.recipientName,
-          matchedDriver: created.matchedDriver,
-          status: created.status === 'matched' ? 'matched' : 'searching',
-        });
-      }
       return created;
     }
   } catch {
     // Fall back to local storage below.
   }
 
-  savePackages([pkg], getConnectedPackages());
+  const rides = getConnectedRides();
+  const matchedRide = findBestMatchingRide(rides, { from, to, weight: input.weight });
+  const fallbackStatus: PackageStatus = matchedRide ? 'matched' : 'searching';
+  const fallbackPackage: PackageRequest = {
+    ...pkg,
+    matchedRideId: matchedRide?.id,
+    matchedDriver: matchedRide ? pickDriverName(matchedRide.carModel) : undefined,
+    status: fallbackStatus,
+    timeline: buildTimeline(fallbackStatus, matchedRide?.id, pkg.verification),
+  };
+
+  savePackages([fallbackPackage], getConnectedPackages());
   void trackGrowthEvent({
     eventName: 'package_request_created',
-    funnelStage: pkg.matchedRideId ? 'selected' : 'searched',
+    funnelStage: fallbackPackage.matchedRideId ? 'selected' : 'searched',
     serviceType: 'package',
-    from: pkg.from,
-    to: pkg.to,
+    from: fallbackPackage.from,
+    to: fallbackPackage.to,
     valueJod: 5,
     metadata: {
-      trackingId: pkg.trackingId,
-      packageType: pkg.packageType,
+      trackingId: fallbackPackage.trackingId,
+      packageType: fallbackPackage.packageType,
       source: 'local',
     },
   });
-  if (input.senderEmail) {
-    triggerPackageConfirmationEmail({
-      senderEmail: input.senderEmail,
-      senderName: input.senderName ?? 'Wasel sender',
-      trackingId: pkg.trackingId,
-      handoffCode: pkg.handoffCode,
-      from: pkg.from,
-      to_city: pkg.to,
-      weight: pkg.weight,
-      recipientName: pkg.recipientName,
-      matchedDriver: pkg.matchedDriver,
-      status: pkg.status === 'matched' ? 'matched' : 'searching',
-    });
-  }
-  return pkg;
+  return fallbackPackage;
 }
 
 export async function getPackageByTrackingId(trackingId: string): Promise<PackageRequest | null> {
   const normalizedTrackingId = trackingId.trim().toUpperCase();
   if (!normalizedTrackingId) return null;
 
-  const local = getConnectedPackages().find((item) => item.trackingId === normalizedTrackingId) ?? null;
+  const local =
+    getConnectedPackages().find(item => item.trackingId === normalizedTrackingId) ?? null;
   if (local) return local;
 
   try {
     let server: Record<string, unknown> | null = null;
 
     if (API_URL) {
-      const response = await fetchWithRetry(`${API_URL}/packages/track/${encodeURIComponent(normalizedTrackingId)}`, {
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetchWithRetry(
+        `${API_URL}/packages/track/${encodeURIComponent(normalizedTrackingId)}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
-      });
+      );
       if (!response.ok) return null;
       server = await response.json();
     } else {
@@ -677,13 +711,13 @@ export async function getPackageByTrackingId(trackingId: string): Promise<Packag
 export function getConnectedStats() {
   const rides = getConnectedRides();
   const packages = getConnectedPackages();
-  const packageEnabledRides = rides.filter((ride) => ride.acceptsPackages).length;
+  const packageEnabledRides = rides.filter(ride => ride.acceptsPackages).length;
 
   return {
     ridesPosted: rides.length,
     packagesCreated: packages.length,
     packageEnabledRides,
-    matchedPackages: packages.filter((pkg) => !!pkg.matchedRideId).length,
+    matchedPackages: packages.filter(pkg => !!pkg.matchedRideId).length,
   };
 }
 
@@ -697,7 +731,7 @@ export function updatePackageVerification(
   if (!normalizedTrackingId) return null;
 
   const packages = getConnectedPackages();
-  const target = packages.find((item) => item.trackingId === normalizedTrackingId);
+  const target = packages.find(item => item.trackingId === normalizedTrackingId);
   if (!target) return null;
 
   const now = new Date().toISOString();
@@ -729,9 +763,7 @@ export function updatePackageVerification(
     timeline: buildTimeline(status, target.matchedRideId, verification),
   };
 
-  savePackages(
-    packages.map((item) => (item.trackingId === normalizedTrackingId ? updated : item)),
-  );
+  savePackages(packages.map(item => (item.trackingId === normalizedTrackingId ? updated : item)));
 
   void updateDirectPackageStatus(
     normalizedTrackingId,
@@ -740,7 +772,8 @@ export function updatePackageVerification(
 
   void trackGrowthEvent({
     eventName: 'package_verification_updated',
-    funnelStage: status === 'delivered' ? 'completed' : status === 'in_transit' ? 'booked' : 'selected',
+    funnelStage:
+      status === 'delivered' ? 'completed' : status === 'in_transit' ? 'booked' : 'selected',
     serviceType: 'package',
     from: updated.from,
     to: updated.to,

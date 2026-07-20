@@ -1,5 +1,5 @@
 import type { PostedRide } from '../services/journeyLogistics';
-import { JORDAN_LOCATION_OPTIONS } from '../utils/jordanLocations';
+import type { TripSearchResult } from '../services/trips';
 
 export interface Ride {
   id: string;
@@ -12,7 +12,6 @@ export interface Ride {
     verified: boolean;
     trips: number;
     phone: string;
-    email?: string;
     avatar: string;
   };
   from: string;
@@ -40,17 +39,52 @@ export interface Ride {
   reviews?: { name: string; rating: number; text: string }[];
 }
 
+function formatDateISO(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function createUpcomingDate(offsetDays: number) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + offsetDays);
+  return formatDateISO(date);
+}
+
+function normalizeRideDate(date?: string, fallbackOffset = 1) {
+  if (!date) {
+    return createUpcomingDate(fallbackOffset);
+  }
+
+  const parsed = new Date(`${date}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (!Number.isFinite(parsed.getTime()) || parsed < today) {
+    return createUpcomingDate(fallbackOffset);
+  }
+
+  return date;
+}
+
 export const ALL_RIDES: Ride[] = [
   {
     id: 'r1',
-    driver: { name: 'Ahmad Hassan', nameAr: 'أحمد حسن', rating: 4.9, verified: true, trips: 1240, phone: '+962790000001', avatar: 'AH' },
+    driver: {
+      name: 'Ahmad Hassan',
+      nameAr: 'أحمد حسن',
+      rating: 4.9,
+      verified: true,
+      trips: 1240,
+      phone: '+962790000001',
+      avatar: 'AH',
+    },
     from: 'Amman',
     fromAr: 'عمّان',
     fromPoint: '8th Circle',
     to: 'Aqaba',
     toAr: 'العقبة',
     toPoint: 'City Center',
-    date: '2026-03-25',
+    date: normalizeRideDate('2026-03-25', 1),
     time: '07:00',
     seatsAvailable: 2,
     totalSeats: 4,
@@ -66,18 +100,28 @@ export const ALL_RIDES: Ride[] = [
     pkgCapacity: 'medium',
     conversationLevel: 'normal',
     intermediateStops: ['Karak (brief stop)'],
-    reviews: [{ name: 'Khalid N.', rating: 5, text: 'Very professional driver, on time and clean car.' }],
+    reviews: [
+      { name: 'Khalid N.', rating: 5, text: 'Very professional driver, on time and clean car.' },
+    ],
   },
   {
     id: 'r2',
-    driver: { name: 'Sara Al-Khalidi', nameAr: 'سارة الخالدي', rating: 4.8, verified: true, trips: 876, phone: '+962790000002', avatar: 'SK' },
+    driver: {
+      name: 'Sara Al-Khalidi',
+      nameAr: 'سارة الخالدي',
+      rating: 4.8,
+      verified: true,
+      trips: 876,
+      phone: '+962790000002',
+      avatar: 'SK',
+    },
     from: 'Amman',
     fromAr: 'عمّان',
     fromPoint: 'Abdali Terminal',
     to: 'Irbid',
     toAr: 'إربد',
     toPoint: 'University District',
-    date: '2026-03-25',
+    date: normalizeRideDate('2026-03-25', 1),
     time: '08:30',
     seatsAvailable: 3,
     totalSeats: 3,
@@ -91,18 +135,28 @@ export const ALL_RIDES: Ride[] = [
     carColor: '#FFFFFF',
     pkgCapacity: 'small',
     conversationLevel: 'quiet',
-    reviews: [{ name: 'Hana M.', rating: 5, text: 'Great driver, felt very safe. Will use again!' }],
+    reviews: [
+      { name: 'Hana M.', rating: 5, text: 'Great driver, felt very safe. Will use again!' },
+    ],
   },
   {
     id: 'r3',
-    driver: { name: 'Khalid Nabulsi', nameAr: 'خالد النابلسي', rating: 4.7, verified: true, trips: 543, phone: '+962790000003', avatar: 'KN' },
+    driver: {
+      name: 'Khalid Nabulsi',
+      nameAr: 'خالد النابلسي',
+      rating: 4.7,
+      verified: true,
+      trips: 543,
+      phone: '+962790000003',
+      avatar: 'KN',
+    },
     from: 'Amman',
     fromAr: 'عمّان',
     fromPoint: 'Sweifieh',
     to: 'Dead Sea',
     toAr: 'البحر الميت',
     toPoint: 'Zara Resort',
-    date: '2026-03-25',
+    date: normalizeRideDate('2026-03-25', 1),
     time: '09:00',
     seatsAvailable: 1,
     totalSeats: 4,
@@ -119,14 +173,22 @@ export const ALL_RIDES: Ride[] = [
   },
   {
     id: 'r4',
-    driver: { name: 'Lina Al-Masri', nameAr: 'لينا المصري', rating: 5.0, verified: true, trips: 320, phone: '+962790000004', avatar: 'LM' },
+    driver: {
+      name: 'Lina Al-Masri',
+      nameAr: 'لينا المصري',
+      rating: 5.0,
+      verified: true,
+      trips: 320,
+      phone: '+962790000004',
+      avatar: 'LM',
+    },
     from: 'Amman',
     fromAr: 'عمّان',
     fromPoint: 'Gardens',
     to: 'Petra',
     toAr: 'البتراء',
     toPoint: 'Visitor Center',
-    date: '2026-03-26',
+    date: normalizeRideDate('2026-03-26', 2),
     time: '06:30',
     seatsAvailable: 2,
     totalSeats: 4,
@@ -143,14 +205,22 @@ export const ALL_RIDES: Ride[] = [
   },
   {
     id: 'r5',
-    driver: { name: 'Omar Zaid', nameAr: 'عمر زيد', rating: 4.6, verified: true, trips: 189, phone: '+962790000005', avatar: 'OZ' },
+    driver: {
+      name: 'Omar Zaid',
+      nameAr: 'عمر زيد',
+      rating: 4.6,
+      verified: true,
+      trips: 189,
+      phone: '+962790000005',
+      avatar: 'OZ',
+    },
     from: 'Irbid',
     fromAr: 'إربد',
     fromPoint: 'University Gate',
     to: 'Amman',
     toAr: 'عمّان',
     toPoint: '7th Circle',
-    date: '2026-03-25',
+    date: normalizeRideDate('2026-03-25', 1),
     time: '14:00',
     seatsAvailable: 3,
     totalSeats: 4,
@@ -167,14 +237,22 @@ export const ALL_RIDES: Ride[] = [
   },
   {
     id: 'r6',
-    driver: { name: 'Nour Awamleh', nameAr: 'نور العواملة', rating: 4.9, verified: true, trips: 710, phone: '+962790000006', avatar: 'NA' },
+    driver: {
+      name: 'Nour Awamleh',
+      nameAr: 'نور العواملة',
+      rating: 4.9,
+      verified: true,
+      trips: 710,
+      phone: '+962790000006',
+      avatar: 'NA',
+    },
     from: 'Amman',
     fromAr: 'عمّان',
     fromPoint: 'Mecca Mall',
     to: 'Aqaba',
     toAr: 'العقبة',
     toPoint: 'South Beach',
-    date: '2026-03-25',
+    date: normalizeRideDate('2026-03-25', 1),
     time: '06:00',
     seatsAvailable: 1,
     totalSeats: 3,
@@ -192,8 +270,19 @@ export const ALL_RIDES: Ride[] = [
   },
 ];
 
-export const LOCATION_OPTIONS = JORDAN_LOCATION_OPTIONS;
-export const CITIES = LOCATION_OPTIONS;
+export const CITIES = [
+  'Amman',
+  'Aqaba',
+  'Irbid',
+  'Zarqa',
+  'Dead Sea',
+  'Karak',
+  'Madaba',
+  'Petra',
+  'Jerash',
+  'Mafraq',
+  'Salt',
+];
 
 export const RIDE_BOOKINGS_KEY = 'wasel-find-ride-bookings';
 export const RIDE_SEARCHES_KEY = 'wasel-find-ride-searches';
@@ -208,11 +297,12 @@ export function createGenderMeta(theme: { cyan: string; gold: string }) {
 }
 
 export function buildRideFromPostedRide(ride: PostedRide): Ride {
-  const capacityLabel = ride.packageCapacity === 'large'
-    ? 'Large trunk'
-    : ride.packageCapacity === 'small'
-      ? 'Compact package lane'
-      : 'Package lane ready';
+  const capacityLabel =
+    ride.packageCapacity === 'large'
+      ? 'Large trunk'
+      : ride.packageCapacity === 'small'
+        ? 'Compact package lane'
+        : 'Package lane ready';
 
   return {
     id: `live-${ride.id}`,
@@ -224,8 +314,7 @@ export function buildRideFromPostedRide(ride: PostedRide): Ride {
       rating: 4.8,
       verified: true,
       trips: 0,
-      phone: ride.ownerPhone ?? '',
-      email: ride.ownerEmail,
+      phone: '+962790000000',
       avatar: (ride.carModel || 'Wasel').slice(0, 2).toUpperCase(),
     },
     from: ride.from,
@@ -234,19 +323,69 @@ export function buildRideFromPostedRide(ride: PostedRide): Ride {
     to: ride.to,
     toAr: ride.to,
     toPoint: 'Shared dropoff point',
-    date: ride.date || new Date().toISOString().slice(0, 10),
+    date: normalizeRideDate(ride.date, 1),
     time: ride.time || 'Flexible',
     seatsAvailable: Math.max(1, ride.seats),
     totalSeats: Math.max(1, ride.seats),
     pricePerSeat: Math.max(0, ride.price),
     distance: 0,
     duration: 'Live route',
-    genderPref: ride.gender === 'women_only' ? 'women_only' : ride.gender === 'family_only' ? 'family_only' : 'mixed',
+    genderPref:
+      ride.gender === 'women_only'
+        ? 'women_only'
+        : ride.gender === 'family_only'
+          ? 'family_only'
+          : 'mixed',
     amenities: ['Live post', ride.carModel || 'Private vehicle', capacityLabel],
     prayerStops: ride.prayer,
     car: ride.carModel || 'Private vehicle',
     pkgCapacity: ride.acceptsPackages ? ride.packageCapacity : 'none',
     conversationLevel: 'normal',
     reviews: ride.note ? [{ name: 'Route note', rating: 5, text: ride.note }] : undefined,
+  };
+}
+
+export function buildRideFromTripSearchResult(ride: TripSearchResult): Ride {
+  const normalizedDate = normalizeRideDate(ride.date, 1);
+  const normalizedSeats = Math.max(0, Number(ride.seats) || 0);
+  const driverInitials =
+    ride.driver.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map(part => part[0]?.toUpperCase() ?? '')
+      .join('') || 'WD';
+
+  return {
+    id: String(ride.id),
+    routeMode: 'network_inventory',
+    driver: {
+      name: ride.driver.name,
+      nameAr: ride.driver.name,
+      rating: ride.driver.rating,
+      verified: ride.driver.verified,
+      trips: 0,
+      phone: '+962790000000',
+      avatar: driverInitials,
+    },
+    from: ride.from,
+    fromAr: ride.from,
+    fromPoint: 'Verified pickup point',
+    to: ride.to,
+    toAr: ride.to,
+    toPoint: 'Verified dropoff point',
+    date: normalizedDate,
+    time: ride.time || 'Flexible',
+    seatsAvailable: normalizedSeats,
+    totalSeats: Math.max(normalizedSeats, 1),
+    pricePerSeat: Math.max(0, Number(ride.price) || 0),
+    distance: 0,
+    duration: 'Scheduled route',
+    genderPref: 'mixed',
+    amenities: ['Verified route', ride.driver.verified ? 'Verified driver' : 'Driver profile'],
+    prayerStops: false,
+    car: 'Wasel vehicle',
+    pkgCapacity: 'none',
+    conversationLevel: 'normal',
   };
 }

@@ -1,15 +1,14 @@
 /**
  * LocalAuth
  *
- * Uses real Supabase auth/session data when configured.
- * Local storage persists authenticated profile state for the active user and
- * supports explicit demo-mode sessions for verification environments.
+ * Thin Wasel-specific adapter on top of the canonical Supabase AuthContext.
+ * It preserves the existing `useLocalAuth()` API that the app uses widely,
+ * but no longer owns a second auth/session subscription.
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
-import { authAPI } from '../services/auth';
-import { initSupabaseListeners, isSupabaseConfigured, supabase } from '../utils/supabase/client';
-import { getConfig } from '../utils/env';
+import type { User } from '@supabase/supabase-js';
+import type { Profile } from './authContextHelpers';
+import { useAuth } from './AuthContext';
 
 export interface WaselUser {
   id: string;
@@ -23,19 +22,22 @@ export interface WaselUser {
   verified: boolean;
   sanadVerified: boolean;
   verificationLevel: string;
-  walletStatus: 'active' | 'limited' | 'frozen';
+  walletStatus: 'active' | 'limited' | 'frozen' | 'closed';
   avatar?: string;
   joinedAt: string;
   emailVerified: boolean;
   phoneVerified: boolean;
   twoFactorEnabled: boolean;
   trustScore: number;
-  backendMode: 'supabase' | 'demo';
+  backendMode: 'supabase';
 }
 
-type SignInResult = Awaited<ReturnType<typeof authAPI.signIn>>;
-
-function computeTrustScore(user: Pick<WaselUser, 'verified' | 'sanadVerified' | 'emailVerified' | 'phoneVerified' | 'trips' | 'rating'>) {
+function computeTrustScore(
+  user: Pick<
+    WaselUser,
+    'verified' | 'sanadVerified' | 'emailVerified' | 'phoneVerified' | 'trips' | 'rating'
+  >,
+) {
   let score = 45;
   if (user.emailVerified) score += 10;
   if (user.phoneVerified) score += 10;
@@ -45,96 +47,21 @@ function computeTrustScore(user: Pick<WaselUser, 'verified' | 'sanadVerified' | 
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
-function normalizeRole(value: unknown): WaselUser['role'] {
-  return value === 'driver' || value === 'both' ? value : 'rider';
-}
-
-function normalizeWalletStatus(value: unknown): WaselUser['walletStatus'] {
-  return value === 'limited' || value === 'frozen' ? value : 'active';
-}
-
-function normalizeVerificationLevel(value: unknown, phoneVerified: boolean, sanadVerified: boolean): string {
-  if (value === 'level_0' || value === 'level_1' || value === 'level_2' || value === 'level_3') {
-    return value;
-  }
-
-  if (sanadVerified) return 'level_3';
-  if (phoneVerified) return 'level_1';
-  return 'level_0';
-}
-
-function normalizeStoredUser(raw: unknown): WaselUser | null {
-  if (!raw || typeof raw !== 'object') {
-    return null;
-  }
-
-  const value = raw as Record<string, unknown>;
-  const id = typeof value.id === 'string' ? value.id.trim() : '';
-  const email = typeof value.email === 'string' ? value.email.trim() : '';
-
-  if (!id || !email) {
-    return null;
-  }
-
-  const name =
-    typeof value.name === 'string' && value.name.trim()
-      ? value.name.trim()
-      : email.split('@')[0] || 'Wasel User';
-  const phone =
-    typeof value.phone === 'string' && value.phone.trim()
-      ? value.phone.trim()
-      : undefined;
-  const rating = Number.isFinite(Number(value.rating))
-    ? Math.max(0, Math.min(Number(value.rating), 5))
-    : 5;
-  const trips = Number.isFinite(Number(value.trips))
-    ? Math.max(0, Math.floor(Number(value.trips)))
-    : 0;
-  const verified = Boolean(value.verified ?? value.sanadVerified);
-  const sanadVerified = Boolean(value.sanadVerified ?? verified);
-  const emailVerified = Boolean(value.emailVerified ?? email);
-  const phoneVerified = Boolean(value.phoneVerified ?? phone);
-
-  const normalized: WaselUser = {
-    id,
-    name,
-    email,
-    phone,
-    role: normalizeRole(value.role),
-    balance: Number.isFinite(Number(value.balance)) ? Number(value.balance) : 0,
-    rating,
-    trips,
-    verified,
-    sanadVerified,
-    verificationLevel: normalizeVerificationLevel(value.verificationLevel, phoneVerified, sanadVerified),
-    walletStatus: normalizeWalletStatus(value.walletStatus),
-    avatar:
-      typeof value.avatar === 'string' && value.avatar.trim()
-        ? value.avatar.trim()
-        : undefined,
-    joinedAt:
-      typeof value.joinedAt === 'string' && value.joinedAt.trim()
-        ? value.joinedAt.slice(0, 10)
-        : new Date().toISOString().slice(0, 10),
-    emailVerified,
-    phoneVerified,
-    twoFactorEnabled: Boolean(value.twoFactorEnabled),
-    trustScore: 0,
-    backendMode: value.backendMode === 'demo' ? 'demo' : 'supabase',
-  };
-
-  return {
-    ...normalized,
-    trustScore: computeTrustScore(normalized),
-  };
-}
-
 function mapBackendProfile({
   authUser,
   profile,
 }: {
-  authUser: any;
-  profile: any;
+  authUser: Pick<
+    User,
+    | 'id'
+    | 'email'
+    | 'phone'
+    | 'created_at'
+    | 'email_confirmed_at'
+    | 'phone_confirmed_at'
+    | 'user_metadata'
+  >;
+  profile: Profile | null;
 }): WaselUser {
   const name =
     profile?.full_name ||
@@ -145,27 +72,40 @@ function mapBackendProfile({
   const phone = profile?.phone_number ?? authUser?.phone ?? undefined;
   const verified = Boolean(profile?.verified ?? profile?.sanad_verified ?? false);
   const sanadVerified = Boolean(profile?.sanad_verified ?? verified);
-  const emailVerified = Boolean(profile?.email_verified ?? authUser?.email_confirmed_at ?? authUser?.confirmed_at ?? false);
+  const emailVerified = Boolean(profile?.email_verified ?? authUser?.email_confirmed_at ?? false);
   const phoneVerified = Boolean(profile?.phone_verified ?? authUser?.phone_confirmed_at ?? false);
-  const verificationLevel = profile?.verification_level || (sanadVerified ? 'level_3' : phoneVerified ? 'level_1' : 'level_0');
-  const walletStatus = profile?.wallet_status || 'active';
-  const role = profile?.role || 'rider';
+  const role = profile?.role === 'driver' || profile?.role === 'both' ? profile.role : 'rider';
+  const verificationLevel =
+    profile?.verification_level ||
+    (sanadVerified
+      ? role === 'driver' || role === 'both'
+        ? 'level_3'
+        : 'level_2'
+      : phoneVerified
+        ? 'level_1'
+        : 'level_0');
+  const walletStatus: WaselUser['walletStatus'] =
+    profile?.wallet_status === 'limited' ||
+    profile?.wallet_status === 'frozen' ||
+    profile?.wallet_status === 'closed'
+      ? profile.wallet_status
+      : 'active';
 
   const baseUser: WaselUser = {
-    id: authUser?.id || profile?.id || `user-${Date.now()}`,
+    id: authUser?.id || `user-${Date.now()}`,
     name,
     email: authUser?.email || profile?.email || '',
     phone,
     role,
-    balance: Number(profile?.wallet_balance ?? profile?.balance ?? 0),
+    balance: Number(profile?.wallet_balance ?? 0),
     rating: Number(profile?.rating ?? 5),
-    trips: Number(profile?.trip_count ?? profile?.trips ?? 0),
+    trips: Number(profile?.trip_count ?? 0),
     verified,
     sanadVerified,
     verificationLevel,
     walletStatus,
     avatar: profile?.avatar_url ?? authUser?.user_metadata?.avatar_url ?? undefined,
-    joinedAt: String(profile?.created_at ?? authUser?.created_at ?? new Date().toISOString()).slice(0, 10),
+    joinedAt: String(authUser?.created_at ?? new Date().toISOString()).slice(0, 10),
     emailVerified,
     phoneVerified,
     twoFactorEnabled: Boolean(profile?.two_factor_enabled),
@@ -179,6 +119,19 @@ function mapBackendProfile({
   };
 }
 
+function applyUserUpdates(user: WaselUser, updates: Partial<WaselUser>): WaselUser {
+  const next = { ...user, ...updates };
+  next.trustScore = computeTrustScore({
+    verified: next.verified,
+    sanadVerified: next.sanadVerified,
+    emailVerified: next.emailVerified,
+    phoneVerified: next.phoneVerified,
+    trips: next.trips,
+    rating: next.rating,
+  });
+  return next;
+}
+
 interface LocalAuthCtx {
   user: WaselUser | null;
   loading: boolean;
@@ -188,6 +141,7 @@ interface LocalAuthCtx {
     email: string,
     password: string,
     phone?: string,
+    returnTo?: string,
   ) => Promise<{
     error: string | null;
     requiresEmailConfirmation?: boolean;
@@ -198,15 +152,58 @@ interface LocalAuthCtx {
 }
 
 const Ctx = createContext<LocalAuthCtx | null>(null);
-const STORAGE_KEY = 'wasel_local_user_v2';
-const AUTH_BOOTSTRAP_GUARD_MS = 2500;
+const STORAGE_KEY = 'wasel_user_session';
+const LOCAL_ACCOUNTS_KEY = 'wasel_accounts';
+
+type LocalStoredAccount = {
+  email: string;
+  password: string;
+  user: WaselUser;
+};
+
+function isLocalE2EAuthEnabled() {
+  return (import.meta.env.VITE_E2E_LOCAL_AUTH as string | undefined) === 'true';
+}
+
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function createLocalUser(name: string, email: string, phone?: string): WaselUser {
+  const now = new Date();
+  const id =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `local-${Date.now()}`;
+
+  return {
+    id,
+    name: name.trim() || email.split('@')[0] || 'Wasel User',
+    email: normalizeEmail(email),
+    phone: phone?.trim() || undefined,
+    role: 'rider',
+    balance: 0,
+    rating: 5,
+    trips: 0,
+    verified: false,
+    sanadVerified: false,
+    verificationLevel: 'level_0',
+    walletStatus: 'active',
+    joinedAt: now.toISOString().slice(0, 10),
+    emailVerified: true,
+    phoneVerified: false,
+    twoFactorEnabled: false,
+    trustScore: 55,
+    backendMode: 'supabase',
+  };
+}
 
 function loadUser(): WaselUser | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const parsed = normalizeStoredUser(JSON.parse(raw));
-    if (!parsed) {
+    const parsed = JSON.parse(raw) as WaselUser;
+    if (parsed.backendMode !== 'supabase') {
       localStorage.removeItem(STORAGE_KEY);
       return null;
     }
@@ -225,12 +222,23 @@ function saveUser(user: WaselUser | null) {
   }
 }
 
-function splitName(fullName: string) {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  return {
-    firstName: parts[0] ?? 'Wasel',
-    lastName: parts.slice(1).join(' ') || 'User',
-  };
+function loadLocalAccounts(): LocalStoredAccount[] {
+  try {
+    const raw = localStorage.getItem(LOCAL_ACCOUNTS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as LocalStoredAccount[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalAccounts(accounts: LocalStoredAccount[]) {
+  try {
+    localStorage.setItem(LOCAL_ACCOUNTS_KEY, JSON.stringify(accounts));
+  } catch {
+    // Ignore storage errors.
+  }
 }
 
 function toMessage(error: unknown): string {
@@ -240,148 +248,62 @@ function toMessage(error: unknown): string {
 
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<WaselUser | null>(loadUser);
-  const [loading, setLoading] = useState(true);
-  const { enableDemoAccount } = getConfig();
+  const [optimisticUpdates, setOptimisticUpdates] = useState<Partial<WaselUser> | null>(null);
+  const [localLoading, setLocalLoading] = useState(false);
+  const auth = useAuth();
 
   useEffect(() => {
-    const cleanup = initSupabaseListeners();
-    return cleanup;
-  }, []);
+    if (auth.loading) {
+      return;
+    }
 
-  useEffect(() => {
-    let mounted = true;
-    let bootstrapTimedOut = false;
-    const bootstrapGuard =
-      typeof window !== 'undefined'
-        ? window.setTimeout(() => {
-            if (!mounted) return;
-            bootstrapTimedOut = true;
-            setLoading(false);
-            if (import.meta.env?.DEV && !import.meta.env?.TEST) {
-              console.warn('[LocalAuth] Auth bootstrap timed out; continuing with cached access state.');
-            }
-          }, AUTH_BOOTSTRAP_GUARD_MS)
-        : null;
-    const getPersistedDemoUser = () => {
-      const storedUser = loadUser();
-      if (!enableDemoAccount || storedUser?.backendMode !== 'demo') {
-        return null;
-      }
-      return storedUser;
-    };
-
-    const setAndPersist = (next: WaselUser | null) => {
-      if (!mounted) return;
-      setUser(next);
-      saveUser(next);
-    };
-
-    const hydrateFromSession = async () => {
-      if (!isSupabaseConfigured || !supabase) {
-        setLoading(false);
+    if (!auth.user) {
+      if (isLocalE2EAuthEnabled() || !auth.isBackendConnected) {
+        const storedUser = loadUser();
+        setUser(storedUser);
         return;
       }
 
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-
-        if (!data.session?.user) {
-          setAndPersist(getPersistedDemoUser());
-          setLoading(false);
-          return;
-        }
-
-        const profileResult = await authAPI.getProfile().catch(() => ({ profile: null }));
-        const mapped = mapBackendProfile({
-          authUser: data.session.user,
-          profile: profileResult?.profile ?? null,
-        });
-        setAndPersist(mapped);
-      } catch {
-        const demoUser = getPersistedDemoUser();
-        if (demoUser) {
-          setAndPersist(demoUser);
-        }
-        // Keep any previously stored user if backend sync fails.
-      } finally {
-        if (bootstrapGuard !== null) {
-          window.clearTimeout(bootstrapGuard);
-        }
-        if (mounted) setLoading(false);
-        if (bootstrapTimedOut && import.meta.env?.DEV && !import.meta.env?.TEST) {
-          console.info('[LocalAuth] Auth bootstrap recovered after the guard released loading.');
-        }
-      }
-    };
-
-    hydrateFromSession();
-
-    if (isSupabaseConfigured && supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event: AuthChangeEvent, session: Session | null) => {
-        if (!mounted) return;
-
-        if (!session?.user) {
-          setAndPersist(getPersistedDemoUser());
-          return;
-        }
-
-        try {
-          const profileResult = await authAPI.getProfile().catch(() => ({ profile: null }));
-          const mapped = mapBackendProfile({
-            authUser: session.user,
-            profile: profileResult?.profile ?? null,
-          });
-          setAndPersist(mapped);
-        } catch {
-          const fallbackUser = mapBackendProfile({ authUser: session.user, profile: null });
-          setAndPersist(fallbackUser);
-        }
-      });
-
-      return () => {
-        mounted = false;
-        if (bootstrapGuard !== null) {
-          window.clearTimeout(bootstrapGuard);
-        }
-        subscription.unsubscribe();
-      };
+      setUser(null);
+      setOptimisticUpdates(null);
+      saveUser(null);
+      return;
     }
 
-    return () => {
-      mounted = false;
-      if (bootstrapGuard !== null) {
-        window.clearTimeout(bootstrapGuard);
-      }
-    };
-  }, [enableDemoAccount]);
+    const mapped = mapBackendProfile({
+      authUser: auth.user,
+      profile: auth.profile,
+    });
+    // Apply any in-flight optimistic updates on top of the fresh backend data,
+    // then clear them so stale patches don’t persist after the profile refreshes.
+    const nextUser = optimisticUpdates ? applyUserUpdates(mapped, optimisticUpdates) : mapped;
+    setOptimisticUpdates(null);
+    setUser(nextUser);
+    saveUser(nextUser);
+  }, [auth.isBackendConnected, auth.loading, auth.profile, auth.user, optimisticUpdates]);
 
   const signIn = async (email: string, password: string): Promise<{ error: string | null }> => {
-    setLoading(true);
+    if (isLocalE2EAuthEnabled()) {
+      setLocalLoading(true);
+      try {
+        const account = loadLocalAccounts().find(
+          entry => normalizeEmail(entry.email) === normalizeEmail(email),
+        );
 
-    try {
-      if (isSupabaseConfigured && supabase) {
-        const data = await authAPI.signIn(email, password);
-        const authUser = (data as SignInResult).user ?? (data as SignInResult).session?.user ?? null;
-
-        if (authUser) {
-          const profileResult = await authAPI.getProfile().catch(() => ({ profile: null }));
-          const mapped = mapBackendProfile({
-            authUser,
-            profile: profileResult?.profile ?? null,
-          });
-          setUser(mapped);
-          saveUser(mapped);
+        if (!account || account.password !== password) {
+          return { error: 'Incorrect email or password.' };
         }
-        return { error: null };
-      }
 
-      return { error: 'Backend auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.' };
-    } catch (error) {
-      return { error: toMessage(error) };
-    } finally {
-      setLoading(false);
+        setUser(account.user);
+        saveUser(account.user);
+        return { error: null };
+      } finally {
+        setLocalLoading(false);
+      }
     }
+
+    const result = await auth.signIn(email, password);
+    return { error: result.error ? toMessage(result.error) : null };
   };
 
   const register = async (
@@ -389,98 +311,94 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     phone?: string,
+    returnTo?: string,
   ): Promise<{
     error: string | null;
     requiresEmailConfirmation?: boolean;
     email?: string;
   }> => {
-    setLoading(true);
+    if (isLocalE2EAuthEnabled()) {
+      setLocalLoading(true);
+      try {
+        const normalizedEmail = normalizeEmail(email);
+        const accounts = loadLocalAccounts();
 
-    try {
-      if (isSupabaseConfigured && supabase) {
-        const { firstName, lastName } = splitName(name);
-        await authAPI.signUp(email, password, firstName, lastName, phone ?? '');
-
-        let authUser: unknown = null;
-        for (let attempt = 0; attempt < 3; attempt += 1) {
-          const { data } = await supabase.auth.getSession();
-          authUser = data.session?.user ?? null;
-          if (authUser) {
-            break;
-          }
-
-          await new Promise((resolve) => setTimeout(resolve, 200));
-        }
-
-        if (!authUser) {
+        if (accounts.some(account => normalizeEmail(account.email) === normalizedEmail)) {
           return {
-            error: null,
-            requiresEmailConfirmation: true,
-            email,
+            error: 'This email is already registered.',
+            requiresEmailConfirmation: false,
+            email: normalizedEmail,
           };
         }
 
-        const profileResult = await authAPI.getProfile().catch(() => ({ profile: null }));
-        const mapped = mapBackendProfile({
-          authUser,
-          profile: profileResult?.profile ?? {
-            full_name: name,
-            phone_number: phone,
-            verification_level: phone ? 'level_1' : 'level_0',
-          },
+        const localUser = createLocalUser(name, normalizedEmail, phone);
+        accounts.push({
+          email: normalizedEmail,
+          password,
+          user: localUser,
         });
-        setUser(mapped);
-        saveUser(mapped);
-        return { error: null, requiresEmailConfirmation: false, email };
-      }
 
-      return {
-        error: 'Backend auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
-      };
-    } catch (error) {
-      return { error: toMessage(error) };
-    } finally {
-      setLoading(false);
+        saveLocalAccounts(accounts);
+        saveUser(localUser);
+        setUser(localUser);
+        setOptimisticUpdates(null);
+
+        return {
+          error: null,
+          requiresEmailConfirmation: false,
+          email: normalizedEmail,
+        };
+      } finally {
+        setLocalLoading(false);
+      }
     }
+
+    const result = await auth.signUp(email, password, name, phone, returnTo);
+    return {
+      error: result.error ? toMessage(result.error) : null,
+      requiresEmailConfirmation: result.requiresEmailConfirmation,
+      email,
+    };
   };
 
   const signOut = async () => {
-    setUser(null);
-    saveUser(null);
-
     try {
-      if (isSupabaseConfigured && supabase) {
-        await Promise.race([
-          authAPI.signOut(),
-          new Promise<void>((resolve) => {
-            window.setTimeout(resolve, 1200);
-          }),
-        ]);
-      }
-    } catch {
-      // Continue local sign-out even if backend sign-out fails.
+      await auth.signOut();
+    } finally {
+      setUser(null);
+      setOptimisticUpdates(null);
+      saveUser(null);
     }
   };
 
   const updateUser = (updates: Partial<WaselUser>) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      const next = { ...prev, ...updates };
-      next.trustScore = computeTrustScore({
-        verified: next.verified,
-        sanadVerified: next.sanadVerified,
-        emailVerified: next.emailVerified,
-        phoneVerified: next.phoneVerified,
-        trips: next.trips,
-        rating: next.rating,
-      });
+    setOptimisticUpdates(previous => ({ ...(previous ?? {}), ...updates }));
+    setUser(previous => {
+      if (!previous) return previous;
+      const next = applyUserUpdates(previous, updates);
+      if (isLocalE2EAuthEnabled()) {
+        const accounts = loadLocalAccounts();
+        const nextAccounts = accounts.map(account =>
+          account.user.id === next.id ? { ...account, user: next } : account,
+        );
+        saveLocalAccounts(nextAccounts);
+      }
       saveUser(next);
       return next;
     });
   };
 
   return (
-    <Ctx.Provider value={{ user, loading, signIn, register, signOut, updateUser }}>
+    <Ctx.Provider
+      value={{
+        user,
+        loading: auth.loading || localLoading,
+        signIn,
+        register,
+        signOut,
+        updateUser,
+      }}
+    >
       {children}
     </Ctx.Provider>
   );

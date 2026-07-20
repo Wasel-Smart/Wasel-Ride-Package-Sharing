@@ -9,11 +9,7 @@ export type DriverReadinessStep = {
 };
 
 export type DriverReadinessStatus =
-  | 'not_started'
-  | 'complete_profile'
-  | 'complete_verification'
-  | 'pending_review'
-  | 'ready';
+  'not_started' | 'complete_profile' | 'complete_verification' | 'pending_review' | 'ready';
 
 export interface DriverReadinessSummary {
   status: DriverReadinessStatus;
@@ -28,36 +24,78 @@ function hasDriverRole(user: WaselUser | null | undefined): boolean {
   return user?.role === 'driver' || user?.role === 'both';
 }
 
-export function getDriverReadinessSummary(user: WaselUser | null | undefined): DriverReadinessSummary {
+export function getDriverReadinessSummary(
+  user: WaselUser | null | undefined,
+): DriverReadinessSummary {
+  if (!user) {
+    // Create steps with all false before returning
+    const initialSteps: DriverReadinessStep[] = [
+      {
+        id: 'account_role',
+        label: 'Driver role enabled',
+        description: 'Turn on Driver mode.',
+        complete: false,
+      },
+      {
+        id: 'phone',
+        label: 'Phone verified',
+        description: 'Confirm your main phone number.',
+        complete: false,
+      },
+      { id: 'email', label: 'Email verified', description: 'Confirm your email.', complete: false },
+      {
+        id: 'identity',
+        label: 'Identity verified',
+        description: 'Reach Level 2 or higher.',
+        complete: false,
+      },
+      {
+        id: 'driver_clearance',
+        label: 'Driver clearance',
+        description: 'Final approval for live rides.',
+        complete: false,
+      },
+    ];
+    return {
+      status: 'not_started',
+      headline: 'Sign in to start',
+      detail: 'Open your Wasel account to begin trust setup.',
+      steps: initialSteps,
+      canOfferRide: false,
+      canCarryPackages: false,
+    };
+  }
   const steps: DriverReadinessStep[] = [
     {
       id: 'account_role',
       label: 'Driver role enabled',
-      description: 'Your account is marked as driver-ready and can request onboarding review.',
+      description: 'Turn on Driver mode.',
       complete: hasDriverRole(user),
     },
     {
       id: 'phone',
       label: 'Phone verified',
-      description: 'A confirmed phone number is required for booking safety and trip coordination.',
+      description: 'Confirm your main phone number.',
       complete: Boolean(user?.phoneVerified),
     },
     {
       id: 'email',
       label: 'Email verified',
-      description: 'A confirmed email is required for receipts, notices, and payouts.',
+      description: 'Confirm your email.',
       complete: Boolean(user?.emailVerified),
     },
     {
       id: 'identity',
       label: 'Identity verified',
-      description: 'Identity verification must reach at least Level 2 before driver review can complete.',
-      complete: Boolean(user?.verificationLevel === 'level_2' || user?.verificationLevel === 'level_3'),
+      description: 'Reach Level 2 or higher.',
+      complete: Boolean(
+        user?.verificationLevel === 'level_2' || user?.verificationLevel === 'level_3',
+      ),
     },
     {
       id: 'driver_clearance',
       label: 'Driver clearance',
-      description: 'Driver operations unlock once the account reaches the highest verification readiness.',
+      description: 'Final approval for live rides.',
       complete: Boolean(user?.verificationLevel === 'level_3'),
     },
   ];
@@ -65,22 +103,11 @@ export function getDriverReadinessSummary(user: WaselUser | null | undefined): D
   const offerRideGate = evaluateTrustCapability(user, 'offer_ride');
   const packageGate = evaluateTrustCapability(user, 'carry_packages');
 
-  if (!user) {
-    return {
-      status: 'not_started',
-      headline: 'Sign in to start driver onboarding',
-      detail: 'Create or open your Wasel account first, then complete the trust and driver steps.',
-      steps,
-      canOfferRide: false,
-      canCarryPackages: false,
-    };
-  }
-
   if (!hasDriverRole(user)) {
     return {
       status: 'not_started',
-      headline: 'Enable your driver role first',
-      detail: 'Switch your account into driver mode before Wasel can review you for ride posting.',
+      headline: 'Turn on Driver mode',
+      detail: 'Switch roles first so Wasel can review your account.',
       steps,
       canOfferRide: false,
       canCarryPackages: false,
@@ -90,8 +117,8 @@ export function getDriverReadinessSummary(user: WaselUser | null | undefined): D
   if (!user.phoneVerified || !user.emailVerified) {
     return {
       status: 'complete_profile',
-      headline: 'Finish account confirmation',
-      detail: 'Confirm both phone and email so your driver application can move into verification review.',
+      headline: 'Confirm your contact info',
+      detail: 'Verify phone and email. Wasel will move you forward automatically.',
       steps,
       canOfferRide: false,
       canCarryPackages: false,
@@ -101,8 +128,8 @@ export function getDriverReadinessSummary(user: WaselUser | null | undefined): D
   if (user.verificationLevel === 'level_0' || user.verificationLevel === 'level_1') {
     return {
       status: 'complete_verification',
-      headline: 'Complete identity checks',
-      detail: 'You are close. Raise your verification level before Wasel unlocks ride posting and package carrying.',
+      headline: 'Verify your identity',
+      detail: 'Reach Level 2 to unlock ride review.',
       steps,
       canOfferRide: false,
       canCarryPackages: false,
@@ -112,8 +139,8 @@ export function getDriverReadinessSummary(user: WaselUser | null | undefined): D
   if (user.verificationLevel === 'level_2') {
     return {
       status: 'pending_review',
-      headline: 'Driver review is in progress',
-      detail: 'Your account is verified enough for review. Final driver clearance unlocks live ride supply and package carrying.',
+      headline: 'Final review in progress',
+      detail: 'Identity is approved. Final driver clearance is next.',
       steps,
       canOfferRide: false,
       canCarryPackages: false,
@@ -122,8 +149,8 @@ export function getDriverReadinessSummary(user: WaselUser | null | undefined): D
 
   return {
     status: 'ready',
-    headline: 'Driver account is ready to operate',
-    detail: 'You can post rides, receive rider demand, and carry approved packages on live corridors.',
+    headline: 'Ready to post',
+    detail: 'You can post rides, carry approved packages, and receive payouts.',
     steps,
     canOfferRide: offerRideGate.allowed,
     canCarryPackages: packageGate.allowed,

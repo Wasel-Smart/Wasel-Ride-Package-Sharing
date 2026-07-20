@@ -1,16 +1,15 @@
-import { useState, type ChangeEvent, type ReactNode } from 'react';
+import { useState, type ChangeEvent, type ReactNode, type RefObject } from 'react';
 import { Bell, Car, CreditCard, Settings } from 'lucide-react';
 import type { WaselUser } from '../../contexts/LocalAuth';
+import { createSupportTicket } from '../../services/supportInbox';
 import { sanitizeText } from '../../utils/sanitize';
-import {
-  buildProfileExportPayload,
-  normalizeProfilePhone,
-} from './profileUtils';
+import { C, F } from '../../utils/wasel-ds';
+import { buildProfileExportPayload, normalizeProfilePhone } from './profileUtils';
 
-export const PROFILE_BG = '#061726';
-export const PROFILE_BORDER = 'rgba(73,190,242,0.14)';
-export const PROFILE_CYAN = '#16C7F2';
-export const PROFILE_FONT = "var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)";
+export const PROFILE_BG = C.bg;
+export const PROFILE_BORDER = C.border;
+export const PROFILE_CYAN = C.cyan;
+export const PROFILE_FONT = F;
 
 export type SavingField = 'name' | 'phone' | 'photo' | null;
 
@@ -43,12 +42,11 @@ interface UseProfilePageControllerArgs {
   user: WaselUser;
   ar: boolean;
   nav: (path: string) => void;
-  updateProfile: (
-    updates: Record<string, unknown>,
-  ) => Promise<{ error: unknown }>;
+  updateProfile: (updates: Record<string, unknown>) => Promise<{ error: unknown }>;
   notificationSupport: NotificationSupport;
   showToast: (message: string) => void;
   signOut: () => Promise<void>;
+  photoInputRef: RefObject<HTMLInputElement | null>;
 }
 
 async function readAvatarFile(file: File): Promise<string> {
@@ -69,34 +67,35 @@ async function readAvatarFile(file: File): Promise<string> {
 }
 
 function getWalletStatus(user: WaselUser, ar: boolean): ProfileStatusChip {
+  if (user.walletStatus === 'closed') {
+    return { label: ar ? 'مغلقة' : 'Closed', color: C.error };
+  }
+
   if (user.walletStatus === 'frozen') {
-    return { label: ar ? 'مجمّد' : 'Frozen', color: '#EF4444' };
+    return { label: ar ? 'مجمّد' : 'Frozen', color: C.error };
   }
 
   if (user.walletStatus === 'limited') {
-    return { label: ar ? 'محدود' : 'Limited', color: '#F59E0B' };
+    return { label: ar ? 'محدود' : 'Limited', color: C.gold };
   }
 
-  return { label: ar ? 'نشط' : 'Active', color: '#22C55E' };
+  return { label: ar ? 'نشط' : 'Active', color: C.green };
 }
 
-function getPermissionStatus(
-  support: NotificationSupport,
-  ar: boolean,
-): ProfileStatusChip {
+function getPermissionStatus(support: NotificationSupport, ar: boolean): ProfileStatusChip {
   if (!support.isSupported) {
-    return { label: ar ? 'غير مدعوم' : 'Unsupported', color: '#94A3B8' };
+    return { label: ar ? 'غير مدعوم' : 'Unsupported', color: C.textDim };
   }
 
   if (support.permission === 'granted') {
-    return { label: ar ? 'مفعل' : 'Enabled', color: '#22C55E' };
+    return { label: ar ? 'مفعل' : 'Enabled', color: C.green };
   }
 
   if (support.permission === 'denied') {
-    return { label: ar ? 'محظور' : 'Blocked', color: '#EF4444' };
+    return { label: ar ? 'محظور' : 'Blocked', color: C.error };
   }
 
-  return { label: ar ? 'غير مفعل' : 'Not enabled', color: '#F59E0B' };
+  return { label: ar ? 'غير مفعل' : 'Not enabled', color: C.gold };
 }
 
 function getTrustTier(trustScore: number, ar: boolean) {
@@ -123,10 +122,7 @@ function getRoleLabel(role: WaselUser['role'], ar: boolean) {
   return ar ? 'راكب' : 'Rider';
 }
 
-function buildVerificationItems(
-  user: WaselUser,
-  ar: boolean,
-): ProfileVerificationItem[] {
+function buildVerificationItems(user: WaselUser, ar: boolean): ProfileVerificationItem[] {
   return [
     {
       label: ar ? 'البريد الإلكتروني' : 'Email',
@@ -137,7 +133,7 @@ function buildVerificationItems(
         : ar
           ? 'غير مؤكد'
           : 'Needs confirmation',
-      color: user.emailVerified ? '#22C55E' : '#F59E0B',
+      color: user.emailVerified ? C.green : C.gold,
     },
     {
       label: ar ? 'رقم الهاتف' : 'Phone',
@@ -152,7 +148,7 @@ function buildVerificationItems(
           : ar
             ? 'غير مضاف'
             : 'Not added',
-      color: user.phoneVerified ? '#22C55E' : '#F59E0B',
+      color: user.phoneVerified ? C.green : C.gold,
     },
     {
       label: ar ? 'الهوية / سند' : 'Identity / Sanad',
@@ -164,7 +160,7 @@ function buildVerificationItems(
           : ar
             ? 'بانتظار التحقق'
             : 'Pending verification',
-      color: user.sanadVerified || user.verified ? PROFILE_CYAN : '#F59E0B',
+      color: user.sanadVerified || user.verified ? PROFILE_CYAN : C.gold,
     },
   ];
 }
@@ -179,38 +175,32 @@ function buildQuickActions(
       label: ar ? 'مركز رحلاتي' : 'My Trips Hub',
       detail: ar
         ? 'أدر حجوزاتك والرحلات القادمة من مكان واحد.'
-        : 'Manage upcoming bookings and travel activity in one place.',
+        : 'Trips and bookings in one place.',
       icon: <Car size={18} />,
       color: PROFILE_CYAN,
       onClick: () => nav('/app/my-trips'),
     },
     {
       label: ar ? 'المحفظة والدفع' : 'Wallet & Payments',
-      detail: ar
-        ? 'راقب الرصيد والمدفوعات وميزات واصل.'
-        : 'Track balance, payments, and wallet access.',
+      detail: ar ? 'راقب الرصيد والمدفوعات وميزات واصل.' : 'Balance and payments.',
       icon: <CreditCard size={18} />,
-      color: '#F59E0B',
+      color: C.gold,
       onClick: () => nav('/app/wallet'),
     },
     {
       label: ar ? 'مركز الإشعارات' : 'Notification Center',
-      detail: ar
-        ? 'ثبت التنبيهات المهمة للحجوزات والرحلات والطرود.'
-        : 'Keep ride, package, and account alerts under control.',
+      detail: ar ? 'ثبت التنبيهات المهمة للحجوزات والرحلات والطرود.' : 'Trip and account alerts.',
       icon: <Bell size={18} />,
-      color: '#22C55E',
+      color: C.green,
       onClick: () => {
         void handleNotificationSetup();
       },
     },
     {
       label: ar ? 'إعدادات الحساب' : 'Account Settings',
-      detail: ar
-        ? 'حدّث لغتك وتفضيلاتك وأمان حسابك.'
-        : 'Update preferences, language, and security controls.',
+      detail: ar ? 'حدّث لغتك وتفضيلاتك وأمان حسابك.' : 'Language, preferences, and security.',
       icon: <Settings size={18} />,
-      color: '#A78BFA',
+      color: C.purple,
       onClick: () => nav('/app/settings?section=account'),
     },
   ];
@@ -224,10 +214,10 @@ export function useProfilePageController({
   notificationSupport,
   showToast,
   signOut,
+  photoInputRef,
 }: UseProfilePageControllerArgs) {
-  const [editingField, setEditingField] = useState<'name' | 'phone' | null>(
-    null,
-  );
+  void photoInputRef;
+  const [editingField, setEditingField] = useState<'name' | 'phone' | null>(null);
   const [nameInput, setNameInput] = useState(user.name ?? '');
   const [phoneInput, setPhoneInput] = useState(user.phone ?? '');
   const [savingField, setSavingField] = useState<SavingField>(null);
@@ -244,9 +234,7 @@ export function useProfilePageController({
     const { error } = await updateProfile({ full_name: clean });
     setSavingField(null);
     if (error) {
-      showToast(
-        ar ? 'تعذر حفظ الاسم حالياً' : 'Unable to save your name right now',
-      );
+      showToast(ar ? 'تعذر حفظ الاسم حالياً' : 'Unable to save your name right now');
       return;
     }
 
@@ -256,14 +244,12 @@ export function useProfilePageController({
 
   const handleSavePhone = async () => {
     const normalized = normalizeProfilePhone(phoneInput);
-    if (normalized === null) {
-      showToast(
-        ar ? 'يرجى إدخال رقم هاتف صالح' : 'Please enter a valid phone number',
-      );
+    if (normalized === null && phoneInput.trim() !== '') {
+      showToast(ar ? 'يرجى إدخال رقم هاتف صالح' : 'Please enter a valid phone number');
       return;
     }
 
-    if (!normalized || normalized === user.phone) {
+    if ((normalized ?? '') === (user.phone ?? '')) {
       setEditingField(null);
       return;
     }
@@ -272,11 +258,7 @@ export function useProfilePageController({
     const { error } = await updateProfile({ phone_number: normalized });
     setSavingField(null);
     if (error) {
-      showToast(
-        ar
-          ? 'تعذر حفظ رقم الهاتف حالياً'
-          : 'Unable to save your phone right now',
-      );
+      showToast(ar ? 'تعذر حفظ رقم الهاتف حالياً' : 'Unable to save your phone right now');
       return;
     }
 
@@ -298,9 +280,7 @@ export function useProfilePageController({
     showToast(ar ? 'تم تصدير بياناتك' : 'Data exported');
   };
 
-  const handlePhotoSelection = async (
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handlePhotoSelection = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -310,9 +290,7 @@ export function useProfilePageController({
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      showToast(
-        ar ? 'الحد الأقصى للصورة 2MB' : 'Please choose an image smaller than 2MB',
-      );
+      showToast(ar ? 'الحد الأقصى للصورة 2MB' : 'Please choose an image smaller than 2MB');
       return;
     }
 
@@ -322,11 +300,7 @@ export function useProfilePageController({
       const { error } = await updateProfile({ avatar_url: avatarUrl });
       setSavingField(null);
       if (error) {
-        showToast(
-          ar
-            ? 'تعذر تحديث الصورة حالياً'
-            : 'Unable to update your photo right now',
-        );
+        showToast(ar ? 'تعذر تحديث الصورة حالياً' : 'Unable to update your photo right now');
         return;
       }
 
@@ -373,10 +347,19 @@ export function useProfilePageController({
   };
 
   const handleDeletionContinue = async () => {
+    const ticket = await createSupportTicket(user.id, {
+      topic: 'cancellation',
+      subject: 'Account deletion request',
+      detail:
+        'User requested account deletion from the profile danger zone and was signed out while support reviews the request.',
+      relatedId: user.id,
+      routeLabel: 'Profile deletion request',
+      priority: 'high',
+    });
     showToast(
       ar
-        ? 'تم تسجيل الخروج. تابع طلب الحذف عبر الدعم.'
-        : 'Signed out. Continue the deletion request through support.',
+        ? `تم تسجيل طلب الحذف عبر التذكرة ${ticket.id}. سيتم تسجيل الخروج الآن.`
+        : `Deletion request logged as support ticket ${ticket.id}. Signing you out now.`,
     );
     await handleSignOut();
   };

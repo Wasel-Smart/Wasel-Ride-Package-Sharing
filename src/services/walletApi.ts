@@ -4,11 +4,17 @@
  * Supabase reads/RPCs so the wallet stays connected to persisted backend data.
  */
 
-import { API_URL, fetchWithRetry, getAuthDetails, publicAnonKey, supabase } from './core';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+import { API_URL, supabase } from './core';
+import { BackendRequestError, requestEdgeJson } from './backendWorkflow';
 
 const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
+const LOCAL_WALLET_KEY = 'wasel-wallet-local-v1';
+// Must match STORAGE_KEY in src/contexts/LocalAuth.tsx so balance reads stay in sync
+const LOCAL_AUTH_USER_KEY = 'wasel_user_session';
 
-type DbClient = any;
+type DbClient = SupabaseClient;
 
 type WalletRow = {
   wallet_id?: string;
@@ -35,6 +41,7 @@ type TransactionRow = {
 };
 
 type PaymentMethodRow = {
+  id?: string;
   payment_method_id?: string;
   method_type?: string | null;
   provider?: string | null;
@@ -45,6 +52,30 @@ type PaymentMethodRow = {
   updated_at?: string | null;
 };
 
+/** Input shape accepted when registering a new payment method. */
+export interface PaymentMethodInput {
+  id?: string;
+  type: string;
+  provider: string;
+  last4?: string;
+  token_reference?: string | null;
+  is_default?: boolean;
+  [key: string]: unknown;
+}
+
+export interface WalletEscrow {
+  escrowId?: string;
+  bookingId?: string;
+  payerId?: string;
+  payeeId?: string;
+  amount: number;
+  currency?: string;
+  status: 'held' | 'released' | 'refunded' | 'disputed';
+  createdAt?: string;
+  releasedAt?: string | null;
+  [key: string]: unknown;
+}
+
 export interface WalletSummary {
   id: string | null;
   userId: string | null;
@@ -54,11 +85,11 @@ export interface WalletSummary {
   autoTopUp: boolean;
   autoTopUpAmount: number;
   autoTopUpThreshold: number;
-  paymentMethods: any[];
+  paymentMethods: PaymentMethodRow[];
   createdAt: string | null;
 }
 
-type RewardItem = {
+export type RewardItem = {
   id: string;
   description: string;
   amount: number;
@@ -72,7 +103,22 @@ export interface WalletTransaction {
   amount: number;
   createdAt: string;
   status?: string;
-};
+}
+
+export interface WalletSubscription {
+  id: string;
+  status: string;
+  plan: string;
+  stripeCustomerId?: string | null;
+  stripePriceId?: string | null;
+  stripeProductId?: string | null;
+  cancelAtPeriodEnd?: boolean;
+  currentPeriodStart?: string | null;
+  currentPeriodEnd?: string | null;
+  cancelledAt?: string | null;
+  trialStart?: string | null;
+  trialEnd?: string | null;
+}
 
 export interface WalletData {
   wallet: WalletSummary;
@@ -86,9 +132,19 @@ export interface WalletData {
   pinSet: boolean;
   autoTopUp: boolean;
   transactions: WalletTransaction[];
-  activeEscrows: any[];
+  activeEscrows: WalletEscrow[];
   activeRewards: RewardItem[];
-  subscription: any | null;
+  subscription: WalletSubscription | null;
+}
+
+export interface WalletCapabilities {
+  topUp: boolean;
+  rewardClaim: boolean;
+  subscription: boolean;
+  pin: boolean;
+  send: boolean;
+  withdraw: boolean;
+  autoTopUp: boolean;
 }
 
 export interface InsightsData {
@@ -111,7 +167,302 @@ function getDb(): DbClient {
 }
 
 function canUseEdgeApi(): boolean {
-  return Boolean(WALLET_API_BASE && publicAnonKey);
+  return Boolean(WALLET_API_BASE);
+}
+
+type LocalWalletRecord = {
+  userId: string;
+  balance: number;
+  pendingBalance: number;
+  currency: string;
+  autoTopUpEnabled: boolean;
+  autoTopUpAmount: number;
+  autoTopUpThreshold: number;
+  pinSet: boolean;
+  paymentMethods: PaymentMethodRow[];
+  transactions: WalletTransaction[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+function canUseLocalWalletStorage(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    return Boolean(window.localStorage);
+  } catch {
+    return false;
+  }
+}
+
+function getLocalWalletStorageKey(userId: string): string {
+  return `${LOCAL_WALLET_KEY}:${userId}`;
+}
+
+function readLocalAuthBalance(userId: string): number {
+  if (!canUseLocalWalletStorage()) return 0;
+
+  try {
+    const raw = window.localStorage.getItem(LOCAL_AUTH_USER_KEY);
+    if (!raw) return 0;
+    const parsed = JSON.parse(raw) as { id?: string; balance?: number | string };
+    if (parsed?.id !== userId) return 0;
+    return toNumber(parsed.balance, 0);
+  } catch {
+    return 0;
+  }
+}
+
+function syncLocalAuthBalance(userId: string, balance: number): void {
+  if (!canUseLocalWalletStorage()) return;
+
+  try {
+    const raw = window.localStorage.getItem(LOCAL_AUTH_USER_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    if (parsed?.id !== userId) return;
+    parsed.balance = Number(balance.toFixed(2));
+    window.localStorage.setItem(LOCAL_AUTH_USER_KEY, JSON.stringify(parsed));
+  } catch {
+    // Ignore local sync failures.
+  }
+}
+
+function buildDefaultLocalWalletRecord(userId: string): LocalWalletRecord {
+  const now = new Date().toISOString();
+  const openingBalance = readLocalAuthBalance(userId);
+
+  return {
+    userId,
+    balance: openingBalance,
+    pendingBalance: 0,
+    currency: 'JOD',
+    autoTopUpEnabled: false,
+    autoTopUpAmount: 20,
+    autoTopUpThreshold: 5,
+    pinSet: false,
+    paymentMethods: [],
+    transactions:
+      openingBalance > 0
+        ? [
+            {
+              id: `local-wallet-opening-${userId}`,
+              type: 'add_funds',
+              description: 'Opening wallet balance',
+              amount: openingBalance,
+              createdAt: now,
+              status: 'posted',
+            },
+          ]
+        : [],
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function normalizeLocalWalletRecord(userId: string, value: unknown): LocalWalletRecord {
+  const fallback = buildDefaultLocalWalletRecord(userId);
+  if (!value || typeof value !== 'object') {
+    return fallback;
+  }
+
+  const record = value as Partial<LocalWalletRecord>;
+  return {
+    userId,
+    balance: toNumber(record.balance, fallback.balance),
+    pendingBalance: toNumber(record.pendingBalance, 0),
+    currency:
+      String(record.currency ?? fallback.currency)
+        .trim()
+        .toUpperCase() || 'JOD',
+    autoTopUpEnabled: Boolean(record.autoTopUpEnabled),
+    autoTopUpAmount: toNumber(record.autoTopUpAmount, 20),
+    autoTopUpThreshold: toNumber(record.autoTopUpThreshold, 5),
+    pinSet: Boolean(record.pinSet),
+    paymentMethods: Array.isArray(record.paymentMethods) ? record.paymentMethods : [],
+    transactions: Array.isArray(record.transactions)
+      ? record.transactions.map(tx => ({
+          id: String(tx.id ?? `local-wallet-tx-${Date.now()}`),
+          type: String(tx.type ?? 'wallet'),
+          description: String(tx.description ?? 'Wallet transaction'),
+          amount: toNumber(tx.amount, 0),
+          createdAt: String(tx.createdAt ?? fallback.updatedAt),
+          status: tx.status ? String(tx.status) : 'posted',
+        }))
+      : fallback.transactions,
+    createdAt: String(record.createdAt ?? fallback.createdAt),
+    updatedAt: String(record.updatedAt ?? fallback.updatedAt),
+  };
+}
+
+function readLocalWalletRecord(userId: string): LocalWalletRecord {
+  if (!canUseLocalWalletStorage()) {
+    return buildDefaultLocalWalletRecord(userId);
+  }
+
+  try {
+    const raw = window.localStorage.getItem(getLocalWalletStorageKey(userId));
+    if (!raw) {
+      return buildDefaultLocalWalletRecord(userId);
+    }
+
+    return normalizeLocalWalletRecord(userId, JSON.parse(raw));
+  } catch {
+    return buildDefaultLocalWalletRecord(userId);
+  }
+}
+
+function writeLocalWalletRecord(userId: string, record: LocalWalletRecord): LocalWalletRecord {
+  const normalized = normalizeLocalWalletRecord(userId, record);
+  if (canUseLocalWalletStorage()) {
+    window.localStorage.setItem(getLocalWalletStorageKey(userId), JSON.stringify(normalized));
+  }
+  syncLocalAuthBalance(userId, normalized.balance);
+  return normalized;
+}
+
+function buildWalletPayloadFromLocal(record: LocalWalletRecord): WalletData {
+  const transactions = [...record.transactions].sort(
+    (left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+  );
+  const totalEarned = transactions
+    .filter(tx => tx.amount > 0)
+    .reduce((total, tx) => total + tx.amount, 0);
+  const totalSpent = transactions
+    .filter(tx => tx.amount < 0)
+    .reduce((total, tx) => total + Math.abs(tx.amount), 0);
+  const totalDeposited = transactions
+    .filter(tx => tx.type === 'add_funds' && tx.amount > 0)
+    .reduce((total, tx) => total + tx.amount, 0);
+
+  return {
+    wallet: {
+      id: `local-wallet-${record.userId}`,
+      userId: record.userId,
+      walletType: 'user',
+      status: 'active',
+      currency: record.currency,
+      autoTopUp: record.autoTopUpEnabled,
+      autoTopUpAmount: record.autoTopUpAmount,
+      autoTopUpThreshold: record.autoTopUpThreshold,
+      paymentMethods: record.paymentMethods,
+      createdAt: record.createdAt,
+    },
+    balance: Number(record.balance.toFixed(2)),
+    pendingBalance: Number(record.pendingBalance.toFixed(2)),
+    rewardsBalance: 0,
+    total_earned: Number(totalEarned.toFixed(2)),
+    total_spent: Number(totalSpent.toFixed(2)),
+    total_deposited: Number(totalDeposited.toFixed(2)),
+    currency: record.currency,
+    pinSet: record.pinSet,
+    autoTopUp: record.autoTopUpEnabled,
+    transactions,
+    activeEscrows: [],
+    activeRewards: [],
+    subscription: null,
+  };
+}
+
+function updateLocalWalletRecord(
+  userId: string,
+  updater: (current: LocalWalletRecord) => LocalWalletRecord,
+): WalletData {
+  const current = readLocalWalletRecord(userId);
+  const next = updater(current);
+  const persisted = writeLocalWalletRecord(userId, {
+    ...next,
+    userId,
+    updatedAt: new Date().toISOString(),
+  });
+  return buildWalletPayloadFromLocal(persisted);
+}
+
+async function fetchWalletLocal(userId: string): Promise<WalletData> {
+  return buildWalletPayloadFromLocal(writeLocalWalletRecord(userId, readLocalWalletRecord(userId)));
+}
+
+async function setAutoTopUpLocal(
+  userId: string,
+  enabled: boolean,
+  amount: number,
+  threshold: number,
+): Promise<WalletData> {
+  return updateLocalWalletRecord(userId, current => ({
+    ...current,
+    autoTopUpEnabled: enabled,
+    autoTopUpAmount: amount,
+    autoTopUpThreshold: threshold,
+  }));
+}
+
+async function getPaymentMethodsLocal(userId: string): Promise<{ methods: PaymentMethodRow[] }> {
+  const wallet = readLocalWalletRecord(userId);
+  return {
+    methods: Array.isArray(wallet.paymentMethods) ? wallet.paymentMethods : [],
+  };
+}
+
+async function addPaymentMethodLocal(
+  userId: string,
+  method: PaymentMethodInput,
+): Promise<PaymentMethodInput> {
+  const nextMethod = {
+    ...method,
+    id: method.id ?? `local-pm-${crypto.randomUUID()}`,
+    type: method.type,
+    provider: method.provider,
+    is_default: Boolean(method.is_default),
+    status: 'active',
+  };
+
+  updateLocalWalletRecord(userId, current => ({
+    ...current,
+    paymentMethods: [
+      nextMethod,
+      ...current.paymentMethods.filter(item => item?.id !== nextMethod.id),
+    ],
+  }));
+
+  return nextMethod;
+}
+
+async function deletePaymentMethodLocal(
+  userId: string,
+  methodId: string,
+): Promise<{ success: true }> {
+  updateLocalWalletRecord(userId, current => ({
+    ...current,
+    paymentMethods: current.paymentMethods.filter(item => item?.id !== methodId),
+  }));
+
+  return { success: true };
+}
+
+async function getTrustScoreLocal(
+  userId: string,
+): Promise<{ totalTrips: number; cashRating: number; onTimePayments: number; deposit: number }> {
+  const wallet = await fetchWalletLocal(userId);
+  return {
+    totalTrips: 0,
+    cashRating: 5,
+    onTimePayments: 98,
+    deposit: wallet.balance,
+  };
+}
+
+export function getWalletCapabilities(): WalletCapabilities {
+  const secureEdgeReady = canUseEdgeApi();
+
+  return {
+    topUp: secureEdgeReady,
+    rewardClaim: secureEdgeReady,
+    subscription: secureEdgeReady,
+    pin: secureEdgeReady,
+    send: true,
+    withdraw: true,
+    autoTopUp: true,
+  };
 }
 
 function toNumber(value: unknown, fallback = 0): number {
@@ -138,16 +489,19 @@ function normalizePaymentMethod(method: string): string {
 }
 
 function currencyFromWallet(wallet: WalletRow | null): string {
-  const code = String(wallet?.currency_code ?? 'JOD').trim().toUpperCase();
+  const code = String(wallet?.currency_code ?? 'JOD')
+    .trim()
+    .toUpperCase();
   return code || 'JOD';
 }
 
 function describeTransaction(row: TransactionRow): string {
-  const metadataLabel = typeof row.metadata?.description === 'string'
-    ? row.metadata.description
-    : typeof row.metadata?.note === 'string'
-      ? row.metadata.note
-      : '';
+  const metadataLabel =
+    typeof row.metadata?.description === 'string'
+      ? row.metadata.description
+      : typeof row.metadata?.note === 'string'
+        ? row.metadata.note
+        : '';
 
   if (metadataLabel) {
     return metadataLabel;
@@ -176,7 +530,7 @@ function toWalletTransaction(row: TransactionRow): WalletTransaction {
   const signedAmount = row.direction === 'debit' ? -Math.abs(amount) : Math.abs(amount);
 
   return {
-    id: String(row.transaction_id ?? `tx-${Math.random().toString(36).slice(2)}`),
+    id: String(row.transaction_id ?? `tx-${crypto.randomUUID()}`),
     type: String(row.transaction_type ?? 'wallet'),
     description: describeTransaction(row),
     amount: signedAmount,
@@ -199,24 +553,25 @@ function buildInsightsFromTransactions(transactions: WalletTransaction[]): Insig
   const previousMonthDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
   const previousMonthKey = `${previousMonthDate.getUTCFullYear()}-${String(previousMonthDate.getUTCMonth() + 1).padStart(2, '0')}`;
 
-  const thisMonth = transactions.filter((tx) => tx.createdAt.startsWith(currentMonthKey));
-  const lastMonth = transactions.filter((tx) => tx.createdAt.startsWith(previousMonthKey));
+  const thisMonth = transactions.filter(tx => tx.createdAt.startsWith(currentMonthKey));
+  const lastMonth = transactions.filter(tx => tx.createdAt.startsWith(previousMonthKey));
 
   const thisMonthSpent = thisMonth
-    .filter((tx) => tx.amount < 0)
+    .filter(tx => tx.amount < 0)
     .reduce((total, tx) => total + Math.abs(tx.amount), 0);
   const lastMonthSpent = lastMonth
-    .filter((tx) => tx.amount < 0)
+    .filter(tx => tx.amount < 0)
     .reduce((total, tx) => total + Math.abs(tx.amount), 0);
   const thisMonthEarned = thisMonth
-    .filter((tx) => tx.amount > 0)
+    .filter(tx => tx.amount > 0)
     .reduce((total, tx) => total + tx.amount, 0);
 
-  const changePercent = lastMonthSpent > 0
-    ? Number((((thisMonthSpent - lastMonthSpent) / lastMonthSpent) * 100).toFixed(1))
-    : thisMonthSpent > 0
-      ? 100
-      : 0;
+  const changePercent =
+    lastMonthSpent > 0
+      ? Number((((thisMonthSpent - lastMonthSpent) / lastMonthSpent) * 100).toFixed(1))
+      : thisMonthSpent > 0
+        ? 100
+        : 0;
 
   const categoryBreakdown = transactions.reduce<Record<string, number>>((acc, tx) => {
     const key = tx.type || 'wallet';
@@ -264,7 +619,7 @@ function buildWalletPayload(
     .filter(isDebit)
     .reduce((total, row) => total + toNumber(row.amount, 0), 0);
   const totalDeposited = transactions
-    .filter((row) => row.transaction_type === 'add_funds' && isCredit(row))
+    .filter(row => row.transaction_type === 'add_funds' && isCredit(row))
     .reduce((total, row) => total + toNumber(row.amount, 0), 0);
 
   return {
@@ -308,11 +663,7 @@ async function resolveCanonicalUserId(userKey: string): Promise<string> {
     return String(byAuth.id);
   }
 
-  const { data: byId, error } = await db
-    .from('users')
-    .select('id')
-    .eq('id', userKey)
-    .maybeSingle();
+  const { data: byId, error } = await db.from('users').select('id').eq('id', userKey).maybeSingle();
 
   if (error) {
     throw error;
@@ -327,32 +678,13 @@ async function resolveCanonicalUserId(userKey: string): Promise<string> {
 
 async function findWalletByUserId(userId: string): Promise<WalletRow | null> {
   const db = getDb();
-  const { data, error } = await db
-    .from('wallets')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
+  const { data, error } = await db.from('wallets').select('*').eq('user_id', userId).maybeSingle();
 
   if (error) {
     throw error;
   }
 
   return (data as WalletRow | null) ?? null;
-}
-
-async function getAuthHeaders() {
-  try {
-    const { token } = await getAuthDetails();
-    return {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    };
-  } catch {
-    return {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${publicAnonKey}`,
-    };
-  }
 }
 
 async function fetchWalletDirect(userId: string): Promise<WalletData> {
@@ -398,7 +730,7 @@ async function fetchWalletDirect(userId: string): Promise<WalletData> {
 
 async function getWalletTransactionRows(userId: string): Promise<TransactionRow[]> {
   const wallet = await fetchWalletDirect(userId);
-  return wallet.transactions.map((tx) => ({
+  return wallet.transactions.map(tx => ({
     transaction_id: tx.id,
     amount: Math.abs(tx.amount),
     direction: tx.amount < 0 ? 'debit' : 'credit',
@@ -407,35 +739,6 @@ async function getWalletTransactionRows(userId: string): Promise<TransactionRow[
     created_at: tx.createdAt,
     metadata: { description: tx.description },
   }));
-}
-
-async function addWalletFundsDirect(userId: string, amount: number, paymentMethod: string) {
-  const db = getDb();
-  let { error } = await db.rpc('app_add_wallet_funds', {
-    p_user_id: userId,
-    p_amount: amount,
-    p_payment_method: normalizePaymentMethod(paymentMethod),
-    p_external_reference: `wallet-topup-${Date.now()}`,
-  });
-
-  if (error) {
-    const canonicalUserId = await resolveCanonicalUserId(userId);
-    if (canonicalUserId !== userId) {
-      const retry = await db.rpc('app_add_wallet_funds', {
-        p_user_id: canonicalUserId,
-        p_amount: amount,
-        p_payment_method: normalizePaymentMethod(paymentMethod),
-        p_external_reference: `wallet-topup-${Date.now()}`,
-      });
-      error = retry.error;
-    }
-  }
-
-  if (error) {
-    throw error;
-  }
-
-  return fetchWalletDirect(userId);
 }
 
 async function transferWalletFundsDirect(userId: string, recipientId: string, amount: number) {
@@ -468,54 +771,26 @@ async function transferWalletFundsDirect(userId: string, recipientId: string, am
   return fetchWalletDirect(userId);
 }
 
-async function withdrawWalletFundsDirect(userId: string, amount: number, bankAccount: string, method: string) {
+async function withdrawWalletFundsDirect(
+  userId: string,
+  amount: number,
+  bankAccount: string,
+  method: string,
+) {
   const db = getDb();
-  let wallet = await findWalletByUserId(userId);
-  if (!wallet?.wallet_id) {
-    const canonicalUserId = await resolveCanonicalUserId(userId);
-    if (canonicalUserId !== userId) {
-      wallet = await findWalletByUserId(canonicalUserId);
-    }
-  }
+  // Use the atomic RPC to prevent the double-spend race condition that existed
+  // when the transaction insert and balance update were two separate DB calls.
+  const canonicalUserId = await resolveCanonicalUserId(userId);
+  const { error } = await db.rpc('app_withdraw_wallet_funds', {
+    p_user_id: canonicalUserId,
+    p_amount: amount,
+    p_bank_account: bankAccount,
+    p_method: method,
+  });
 
-  if (!wallet?.wallet_id) {
-    throw new Error('Wallet not found');
-  }
+  if (error) throw error;
 
-  if (toNumber(wallet.balance, 0) < amount) {
-    throw new Error('Insufficient wallet balance');
-  }
-
-  const { error } = await db
-    .from('transactions')
-    .insert({
-      wallet_id: wallet.wallet_id,
-      amount,
-      transaction_type: 'withdrawal',
-      payment_method: method === 'instant' ? 'bank_transfer' : normalizePaymentMethod(method),
-      transaction_status: 'posted',
-      direction: 'debit',
-      reference_type: 'bank_account',
-      metadata: {
-        bank_account: bankAccount,
-        requested_via: method,
-      },
-    });
-
-  if (error) {
-    throw error;
-  }
-
-  const { error: walletUpdateError } = await db
-    .from('wallets')
-    .update({ balance: Math.max(toNumber(wallet.balance, 0) - amount, 0) })
-    .eq('wallet_id', wallet.wallet_id);
-
-  if (walletUpdateError) {
-    throw walletUpdateError;
-  }
-
-  return fetchWalletDirect(userId);
+  return fetchWalletDirect(canonicalUserId);
 }
 
 async function updateWalletPreferencesDirect(
@@ -523,18 +798,12 @@ async function updateWalletPreferencesDirect(
   patch: Record<string, unknown>,
 ): Promise<WalletData> {
   const db = getDb();
-  let { error } = await db
-    .from('wallets')
-    .update(patch)
-    .eq('user_id', userId);
+  let { error } = await db.from('wallets').update(patch).eq('user_id', userId);
 
   if (error) {
     const canonicalUserId = await resolveCanonicalUserId(userId);
     if (canonicalUserId !== userId) {
-      const retry = await db
-        .from('wallets')
-        .update(patch)
-        .eq('user_id', canonicalUserId);
+      const retry = await db.from('wallets').update(patch).eq('user_id', canonicalUserId);
       error = retry.error;
     }
   }
@@ -546,15 +815,14 @@ async function updateWalletPreferencesDirect(
   return fetchWalletDirect(userId);
 }
 
-async function getPaymentMethodsDirect(userId: string): Promise<{ methods: any[] }> {
+async function getPaymentMethodsDirect(userId: string): Promise<{ methods: PaymentMethodRow[] }> {
   const wallet = await fetchWalletDirect(userId);
-  return { methods: Array.isArray(wallet.wallet.paymentMethods) ? wallet.wallet.paymentMethods : [] };
+  return {
+    methods: Array.isArray(wallet.wallet.paymentMethods) ? wallet.wallet.paymentMethods : [],
+  };
 }
 
-async function addPaymentMethodDirect(
-  userId: string,
-  method: { type: string; provider: string; [key: string]: any },
-) {
+async function addPaymentMethodDirect(userId: string, method: PaymentMethodInput) {
   const db = getDb();
   const { data, error } = await db
     .from('payment_methods')
@@ -633,35 +901,103 @@ async function getTrustScoreDirect(userId: string) {
   };
 }
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers = await getAuthHeaders();
-  const response = await fetchWithRetry(path, {
-    ...init,
-    headers: {
-      ...headers,
-      ...(init?.headers ?? {}),
-    },
-  });
+function getWalletPath(userId: string, suffix = ''): string {
+  return `/wallet/${userId}${suffix}`;
+}
 
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.error || `Wallet request failed: ${response.status}`);
+async function requestWalletJson<T>(
+  userId: string,
+  suffix: string,
+  operation: string,
+  init?: {
+    method?: string;
+    body?: unknown;
+    headers?: HeadersInit;
+    timeout?: number;
+    retries?: number;
+  },
+): Promise<T> {
+  return requestEdgeJson<T>({
+    path: getWalletPath(userId, suffix),
+    operation,
+    authMode: 'required',
+    method: init?.method,
+    body: init?.body,
+    headers: init?.headers,
+    timeout: init?.timeout,
+    retries: init?.retries,
+  });
+}
+
+function isWalletTopUpConnectivityError(error: unknown): boolean {
+  if (error instanceof BackendRequestError) {
+    return error.status === 404;
   }
 
-  return response.json();
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('Route not found') || message.includes('Wallet request failed: 404');
+}
+
+function buildWalletTopUpBackendError(): Error {
+  return new Error(
+    'Secure wallet top-up is unavailable because the checkout backend is not configured. Deploy the wallet edge function and configure Stripe server secrets before adding funds.',
+  );
+}
+
+function isWalletSubscriptionConnectivityError(error: unknown): boolean {
+  if (error instanceof BackendRequestError) {
+    return error.status === 404;
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes('Route not found') || message.includes('Wallet request failed: 404');
+}
+
+function buildWalletSubscriptionBackendError(): Error {
+  return new Error(
+    'Secure subscription checkout is unavailable because the billing backend is not configured. Deploy the wallet edge function and configure Stripe Billing before subscribing.',
+  );
+}
+
+async function fetchSubscriptionViaBackend(userId: string): Promise<WalletSubscription | null> {
+  const result = await requestWalletJson<{ subscription?: WalletSubscription | null }>(
+    userId,
+    '/subscription',
+    'Load wallet subscription',
+  );
+  return result.subscription ?? null;
 }
 
 export const walletApi = {
   async getWallet(userId: string): Promise<WalletData> {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson<WalletData>(`${WALLET_API_BASE}/${userId}`);
+        return await requestWalletJson<WalletData>(userId, '', 'Load wallet');
       } catch {
         // Fall back to direct Supabase below.
       }
     }
 
-    return fetchWalletDirect(userId);
+    let wallet: WalletData;
+    try {
+      wallet = await fetchWalletDirect(userId);
+    } catch (error) {
+      if (!canUseLocalWalletStorage()) {
+        throw error;
+      }
+
+      return fetchWalletLocal(userId);
+    }
+
+    if (canUseEdgeApi()) {
+      try {
+        wallet.subscription = await fetchSubscriptionViaBackend(userId);
+      } catch {
+        // Keep the direct wallet payload if the subscription route is unavailable.
+      }
+    }
+
+    return wallet;
   },
 
   async getTransactions(userId: string, page = 1, limit = 20, type?: string) {
@@ -672,15 +1008,21 @@ export const walletApi = {
           limit: String(limit),
         });
         if (type) params.set('type', type);
-        return await requestJson(`${WALLET_API_BASE}/${userId}/transactions?${params.toString()}`);
+        return await requestWalletJson(
+          userId,
+          `/transactions?${params.toString()}`,
+          'Load wallet transactions',
+        );
       } catch {
         // Fall back to direct Supabase below.
       }
     }
 
-    const wallet = await fetchWalletDirect(userId);
+    const wallet = canUseLocalWalletStorage()
+      ? await fetchWalletDirect(userId).catch(() => fetchWalletLocal(userId))
+      : await fetchWalletDirect(userId);
     const filtered = type
-      ? wallet.transactions.filter((tx) => tx.type === type)
+      ? wallet.transactions.filter(tx => tx.type === type)
       : wallet.transactions;
     const start = (page - 1) * limit;
     return {
@@ -694,27 +1036,39 @@ export const walletApi = {
   async topUp(userId: string, amount: number, paymentMethod: string) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/top-up`, {
+        return await requestWalletJson(userId, '/top-up', 'Create wallet top-up', {
           method: 'POST',
-          body: JSON.stringify({ amount, paymentMethod }),
+          body: { amount, paymentMethod },
+        });
+      } catch (error) {
+        if (isWalletTopUpConnectivityError(error)) {
+          throw buildWalletTopUpBackendError();
+        }
+
+        throw error;
+      }
+    }
+
+    throw buildWalletTopUpBackendError();
+  },
+
+  async withdraw(userId: string, amount: number, bankAccount: string, method = 'bank_transfer') {
+    if (canUseEdgeApi()) {
+      try {
+        return await requestWalletJson(userId, '/withdraw', 'Withdraw wallet funds', {
+          method: 'POST',
+          body: { amount, bankAccount, method },
         });
       } catch {
         // Fall back to direct Supabase below.
       }
     }
 
-    return addWalletFundsDirect(userId, amount, paymentMethod);
-  },
-
-  async withdraw(userId: string, amount: number, bankAccount: string, method = 'bank_transfer') {
-    if (canUseEdgeApi()) {
+    if (canUseLocalWalletStorage()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/withdraw`, {
-          method: 'POST',
-          body: JSON.stringify({ amount, bankAccount, method }),
-        });
+        await withdrawWalletFundsDirect(userId, amount, bankAccount, method);
       } catch {
-        // Fall back to direct Supabase below.
+        throw new Error('Wallet withdrawal requires a backend connection.');
       }
     }
 
@@ -724,27 +1078,31 @@ export const walletApi = {
   async sendMoney(userId: string, recipientId: string, amount: number, note?: string) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/send`, {
+        return await requestWalletJson(userId, '/send', 'Send wallet funds', {
           method: 'POST',
-          body: JSON.stringify({ recipientId, amount, note }),
+          body: { recipientId, amount, note },
         });
       } catch {
         // Fall back to direct Supabase below.
       }
     }
 
-    const wallet = await transferWalletFundsDirect(userId, recipientId, amount);
+    try {
+      await transferWalletFundsDirect(userId, recipientId, amount);
+    } catch {
+      throw new Error('Wallet transfer requires a backend connection.');
+    }
     return {
       success: true,
       note,
-      wallet,
+      wallet: await fetchWalletDirect(userId),
     };
   },
 
   async getRewards(userId: string) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/rewards`);
+        return await requestWalletJson(userId, '/rewards', 'Load wallet rewards');
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -755,19 +1113,19 @@ export const walletApi = {
 
   async claimReward(userId: string, rewardId: string) {
     if (canUseEdgeApi()) {
-      return requestJson(`${WALLET_API_BASE}/${userId}/rewards/claim`, {
+      return requestWalletJson(userId, '/rewards/claim', 'Claim wallet reward', {
         method: 'POST',
-        body: JSON.stringify({ rewardId }),
+        body: { rewardId },
       });
     }
 
     throw new Error('Reward claiming requires the wallet backend.');
   },
 
-  async getSubscription(userId: string) {
+  async getSubscription(userId: string): Promise<{ subscription: WalletSubscription | null }> {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/subscription`);
+        return { subscription: await fetchSubscriptionViaBackend(userId) };
       } catch {
         // Fall back to direct Supabase below.
       }
@@ -778,25 +1136,49 @@ export const walletApi = {
 
   async subscribe(userId: string, planName: string, price: number) {
     if (canUseEdgeApi()) {
-      return requestJson(`${WALLET_API_BASE}/${userId}/subscribe`, {
-        method: 'POST',
-        body: JSON.stringify({ planName, price }),
-      });
+      try {
+        return await requestWalletJson(
+          userId,
+          '/subscribe',
+          'Create wallet subscription checkout',
+          {
+            method: 'POST',
+            body: { planName, price },
+          },
+        );
+      } catch (error) {
+        if (isWalletSubscriptionConnectivityError(error)) {
+          throw buildWalletSubscriptionBackendError();
+        }
+
+        throw error;
+      }
     }
 
-    throw new Error('Subscription changes require the wallet backend.');
+    throw buildWalletSubscriptionBackendError();
   },
 
   async getInsights(userId: string): Promise<InsightsData> {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson<InsightsData>(`${WALLET_API_BASE}/${userId}/insights`);
+        return await requestWalletJson<InsightsData>(userId, '/insights', 'Load wallet insights');
       } catch {
         // Fall back to direct Supabase below.
       }
     }
 
-    const rows = await getWalletTransactionRows(userId);
+    let rows: TransactionRow[];
+    try {
+      rows = await getWalletTransactionRows(userId);
+    } catch (error) {
+      if (!canUseLocalWalletStorage()) {
+        throw error;
+      }
+
+      const localWallet = await fetchWalletLocal(userId);
+      return buildInsightsFromTransactions(localWallet.transactions);
+    }
+
     return buildInsightsFromTransactions(rows.map(toWalletTransaction));
   },
 
@@ -805,7 +1187,7 @@ export const walletApi = {
       throw new Error('Wallet PIN management requires the wallet backend.');
     }
 
-    return requestJson(`${WALLET_API_BASE}/${userId}/pin/set`, {
+    return requestWalletJson(userId, '/pin/set', 'Set wallet PIN', {
       method: 'POST',
       body: JSON.stringify({ pin }),
     });
@@ -816,7 +1198,7 @@ export const walletApi = {
       throw new Error('Wallet PIN verification requires the wallet backend.');
     }
 
-    return requestJson(`${WALLET_API_BASE}/${userId}/pin/verify`, {
+    return requestWalletJson(userId, '/pin/verify', 'Verify wallet PIN', {
       method: 'POST',
       body: JSON.stringify({ pin }),
     });
@@ -825,12 +1207,24 @@ export const walletApi = {
   async setAutoTopUp(userId: string, enabled: boolean, amount: number, threshold: number) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/auto-topup`, {
+        return await requestWalletJson(userId, '/auto-topup', 'Update wallet auto top-up', {
           method: 'POST',
-          body: JSON.stringify({ enabled, amount, threshold }),
+          body: { enabled, amount, threshold },
         });
       } catch {
         // Fall back to direct Supabase below.
+      }
+    }
+
+    if (canUseLocalWalletStorage()) {
+      try {
+        return await updateWalletPreferencesDirect(userId, {
+          auto_top_up_enabled: enabled,
+          auto_top_up_amount: amount,
+          auto_top_up_threshold: threshold,
+        });
+      } catch {
+        return setAutoTopUpLocal(userId, enabled, amount, threshold);
       }
     }
 
@@ -841,27 +1235,47 @@ export const walletApi = {
     });
   },
 
-  async getPaymentMethods(userId: string): Promise<{ methods: any[] }> {
+  async getPaymentMethods(userId: string): Promise<{ methods: PaymentMethodRow[] }> {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson<{ methods: any[] }>(`${WALLET_API_BASE}/${userId}/payment-methods`);
+        return await requestWalletJson<{ methods: PaymentMethodRow[] }>(
+          userId,
+          '/payment-methods',
+          'Load wallet payment methods',
+        );
       } catch {
         // Fall back to direct Supabase below.
+      }
+    }
+
+    if (canUseLocalWalletStorage()) {
+      try {
+        return await getPaymentMethodsDirect(userId);
+      } catch {
+        return getPaymentMethodsLocal(userId);
       }
     }
 
     return getPaymentMethodsDirect(userId);
   },
 
-  async addPaymentMethod(userId: string, method: { type: string; provider: string; [key: string]: any }) {
+  async addPaymentMethod(userId: string, method: PaymentMethodInput) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/payment-methods`, {
+        return await requestWalletJson(userId, '/payment-methods', 'Add wallet payment method', {
           method: 'POST',
-          body: JSON.stringify(method),
+          body: method,
         });
       } catch {
         // Fall back to direct Supabase below.
+      }
+    }
+
+    if (canUseLocalWalletStorage()) {
+      try {
+        return await addPaymentMethodDirect(userId, method);
+      } catch {
+        return addPaymentMethodLocal(userId, method);
       }
     }
 
@@ -871,26 +1285,120 @@ export const walletApi = {
   async deletePaymentMethod(userId: string, methodId: string) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/payment-methods/${methodId}`, {
-          method: 'DELETE',
-        });
+        return await requestWalletJson(
+          userId,
+          `/payment-methods/${methodId}`,
+          'Delete wallet payment method',
+          {
+            method: 'DELETE',
+          },
+        );
       } catch {
         // Fall back to direct Supabase below.
+      }
+    }
+
+    if (canUseLocalWalletStorage()) {
+      try {
+        return await deletePaymentMethodDirect(userId, methodId);
+      } catch {
+        return deletePaymentMethodLocal(userId, methodId);
       }
     }
 
     return deletePaymentMethodDirect(userId, methodId);
   },
 
-  async getTrustScore(userId: string): Promise<{ totalTrips: number; cashRating: number; onTimePayments: number; deposit: number }> {
+  async pay(
+    userId: string,
+    amount: number,
+    referenceType: string,
+    referenceId?: string,
+    metadata?: Record<string, unknown>,
+  ) {
     if (canUseEdgeApi()) {
       try {
-        return await requestJson(`${WALLET_API_BASE}/${userId}/trust-score`);
+        return await requestWalletJson(userId, '/pay', 'Wallet checkout payment', {
+          method: 'POST',
+          body: { amount, referenceType, referenceId, metadata },
+        });
       } catch {
         // Fall back to direct Supabase below.
+      }
+    }
+
+    if (canUseLocalWalletStorage()) {
+      try {
+        await payWithWalletDirect(userId, amount, referenceType, referenceId, metadata);
+      } catch {
+        throw new Error('Wallet payment requires a backend connection.');
+      }
+    }
+
+    return payWithWalletDirect(userId, amount, referenceType, referenceId, metadata);
+  },
+
+  async getTrustScore(
+    userId: string,
+  ): Promise<{ totalTrips: number; cashRating: number; onTimePayments: number; deposit: number }> {
+    if (canUseEdgeApi()) {
+      try {
+        return await requestWalletJson(userId, '/trust-score', 'Load wallet trust score');
+      } catch {
+        // Fall back to direct Supabase below.
+      }
+    }
+
+    if (canUseLocalWalletStorage()) {
+      try {
+        return await getTrustScoreDirect(userId);
+      } catch {
+        return getTrustScoreLocal(userId);
       }
     }
 
     return getTrustScoreDirect(userId);
   },
 };
+
+async function payWithWalletDirect(
+  userId: string,
+  amount: number,
+  referenceType: string,
+  referenceId?: string,
+  metadata?: Record<string, unknown>,
+): Promise<WalletData> {
+  const db = getDb();
+  const transactionType = mapReferenceTypeToTransactionType(referenceType);
+
+  const { error } = await db.rpc('app_pay_with_wallet', {
+    p_user_id: userId,
+    p_amount: amount,
+    p_transaction_type: transactionType,
+    p_payment_method: 'wallet_balance',
+    p_reference_type: referenceType,
+    p_reference_id: referenceId ?? null,
+    p_metadata: metadata ?? {},
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return fetchWalletDirect(userId);
+}
+
+function mapReferenceTypeToTransactionType(referenceType: string): string {
+  switch (referenceType) {
+    case 'ride_booking':
+      return 'ride_payment';
+    case 'package_delivery':
+      return 'package_payment';
+    case 'bus_booking':
+      return 'bus_payment';
+    case 'subscription':
+      return 'subscription_payment';
+    default:
+      return 'purchase';
+  }
+}

@@ -20,6 +20,8 @@ export type DeliveryProcessorEnv = {
   sendgridFromEmail?: string;
   twilioAccountSid?: string;
   twilioAuthToken?: string;
+  twilioApiKeySid?: string;
+  twilioApiKeySecret?: string;
   twilioMessagingServiceSid?: string;
   twilioSmsFrom?: string;
   twilioWhatsappFrom?: string;
@@ -27,6 +29,14 @@ export type DeliveryProcessorEnv = {
   functionBaseUrl?: string;
   maxDeliveryAttempts?: number;
 };
+
+function resolveProviderWebhookBaseUrl(functionBaseUrl?: string): string | undefined {
+  if (!functionBaseUrl) return undefined;
+  const normalized = functionBaseUrl.replace(/\/$/, '');
+  return normalized.includes('/functions/v1/make-server-0b1f4071')
+    ? normalized.replace('/functions/v1/make-server-0b1f4071', '/functions/v1/provider-webhooks')
+    : normalized;
+}
 
 export function determineProviderName(channel: string): string {
   if (channel === 'email') return 'email_provider';
@@ -184,7 +194,15 @@ export function buildTwilioRequest(
   delivery: CommunicationDeliveryRecord,
   env: DeliveryProcessorEnv,
 ) {
-  if (!env.twilioAccountSid || !env.twilioAuthToken) {
+  if (!env.twilioAccountSid) {
+    throw new Error('TWILIO_ACCOUNT_SID is not configured');
+  }
+
+  const hasApiKeyCredentials = Boolean(env.twilioApiKeySid && env.twilioApiKeySecret);
+  const authUser = hasApiKeyCredentials ? env.twilioApiKeySid : env.twilioAccountSid;
+  const authPassword = hasApiKeyCredentials ? env.twilioApiKeySecret : env.twilioAuthToken;
+
+  if (!authUser || !authPassword) {
     throw new Error('Twilio credentials are not configured');
   }
 
@@ -210,10 +228,11 @@ export function buildTwilioRequest(
     throw new Error('TWILIO_MESSAGING_SERVICE_SID or TWILIO_SMS_FROM is required');
   }
 
-  if (env.communicationWebhookToken && env.functionBaseUrl) {
+  const providerWebhookBaseUrl = resolveProviderWebhookBaseUrl(env.functionBaseUrl);
+  if (env.communicationWebhookToken && providerWebhookBaseUrl) {
     params.set(
       'StatusCallback',
-      `${env.functionBaseUrl.replace(/\/$/, '')}/communications/webhooks/twilio?token=${encodeURIComponent(env.communicationWebhookToken)}`,
+      `${providerWebhookBaseUrl}/twilio?token=${encodeURIComponent(env.communicationWebhookToken)}`,
     );
   }
 
@@ -222,7 +241,7 @@ export function buildTwilioRequest(
     init: {
       method: 'POST',
       headers: {
-        Authorization: `Basic ${btoa(`${env.twilioAccountSid}:${env.twilioAuthToken}`)}`,
+        Authorization: `Basic ${btoa(`${authUser}:${authPassword}`)}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: params.toString(),

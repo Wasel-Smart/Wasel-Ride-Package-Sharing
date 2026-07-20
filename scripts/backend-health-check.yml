@@ -1,0 +1,50 @@
+# .github/workflows/backend-health-check.yml
+
+name: Backend Health Check
+
+on:
+  # Run automatically on pushes to the master branch
+  push:
+    branches:
+      - master
+
+  # Run automatically on a schedule (e.g., every hour)
+  schedule:
+    - cron: '0 * * * *'
+
+  # Allow manual runs from the GitHub Actions UI
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: Run Backend Health Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 2. Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+        shell: bash
+
+      - name: 3. Configure API URL
+        # This step securely replaces the placeholder URL in the script
+        # with the production URL stored in GitHub Secrets.
+        run: |
+          sed -i 's#https://YOUR_PROJECT.supabase.co/functions/v1/make-server-0b1f4071#${{ secrets.WASEL_PROD_API_URL }}#g' scripts/test-backend-health.sh
+        shell: bash
+        env:
+          # The secret should contain your full production API URL, e.g.,
+          # https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071
+          WASEL_PROD_API_URL: ${{ secrets.WASEL_PROD_API_URL }}
+
+      - name: 4. Make script executable
+        run: chmod +x scripts/test-backend-health.sh
+        shell: bash
+
+      - name: 5. Run health check script
+        run: ./scripts/test-backend-health.sh
+        shell: bash

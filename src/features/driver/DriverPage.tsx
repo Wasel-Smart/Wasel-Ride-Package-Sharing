@@ -1,184 +1,528 @@
-import { useMemo } from 'react';
-import { Brain, Network, ShieldCheck, Truck } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { AlertTriangle, Brain, Network, ShieldCheck, Truck, Wifi, WifiOff } from 'lucide-react';
+import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { CoreExperienceBanner, DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
+import { C, GRAD_HERO, R, SH } from '../../utils/wasel-ds';
 import { getDriverReadinessSummary } from '../../services/driverOnboarding';
 import { getMovementMembershipSnapshot } from '../../services/movementMembership';
-import {
-  buildDriverRoutePlan,
-  getMarketplaceNodes,
-  getMovementDefensibilityLines,
-} from '../../config/wasel-movement-network';
+import { buildDriverRoutePlan, getMarketplaceNodes } from '../../config/wasel-movement-network';
 
 export default function DriverPage() {
   const { user } = useLocalAuth();
   const navigate = useIframeSafeNavigate();
+  const { t } = useLanguage();
+
+  const [offlineMode, setOfflineMode] = useState(false);
 
   const membership = useMemo(() => getMovementMembershipSnapshot(), []);
-  const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(1), []);
-  const defensibility = useMemo(() => getMovementDefensibilityLines(), []);
+  const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(1, 4), []);
 
-  if (!user) return null;
+  if (!user) return <ProtectedPagePreview pathname="/app/driver" />;
 
   const readiness = getDriverReadinessSummary(user);
-  const completedSteps = readiness.steps.filter((step) => step.complete).length;
+  const completedSteps = readiness.steps.filter(step => step.complete).length;
+  const pendingSteps = readiness.steps.filter(step => !step.complete).slice(0, 4);
   const readinessPercent = Math.round((completedSteps / Math.max(1, readiness.steps.length)) * 100);
   const primaryCorridor = membership.dailyRoute;
   const driverPlan = primaryCorridor
-    ? buildDriverRoutePlan(primaryCorridor.from, primaryCorridor.to, primaryCorridor.fillTargetSeats)
+    ? buildDriverRoutePlan(
+        primaryCorridor.from,
+        primaryCorridor.to,
+        primaryCorridor.fillTargetSeats,
+      )
     : null;
+
+  const pluralSteps = pendingSteps.length === 1 ? '' : 's';
+
+  const capabilityCards = [
+    {
+      label: t('driverPageExpanded.readiness'),
+      value: `${readinessPercent}%`,
+      detail: `${completedSteps}/${readiness.steps.length} ${t('driverPageExpanded.readiness').toLowerCase()}`,
+      color: DS.green,
+    },
+    {
+      label: t('driverPageExpanded.fullTrip'),
+      value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD` : '--',
+      detail: t('driverPageExpanded.seatsFilled'),
+      color: DS.gold,
+    },
+    {
+      label: t('driverPageExpanded.packageAddon'),
+      value: driverPlan ? `${driverPlan.packageBonusJod} JOD` : '--',
+      detail: t('driverPageExpanded.extraLane'),
+      color: DS.cyan,
+    },
+  ];
+
+  const capabilityMatrix = [
+    { label: t('driver.trip.status'), ready: readiness.canOfferRide },
+    { label: t('driverPageExpanded.packageAddon'), ready: readiness.canCarryPackages },
+    {
+      label: t('driverPageExpanded.earnings'),
+      ready:
+        user.emailVerified &&
+        (user.verificationLevel === 'level_2' || user.verificationLevel === 'level_3'),
+    },
+  ];
 
   return (
     <Protected>
       <PageShell>
         <SectionHead
-          emoji="🚗"
-          title="Driver"
-          titleAr="مشغل المسار"
-          sub="Finish approval, unlock package carry, and open your next route with confidence."
+          emoji={<Truck size={24} />}
+          title={t('driverPageExpanded.driverConsole')}
+          titleAr={t('driverPageExpanded.driverConsole')}
+          sub="Own a corridor with earnings, readiness, and route proof in one view."
+          subAr={t('driverPageExpanded.corridorOverview')}
           color={DS.blue}
-          action={{ label: 'Offer a ride', onClick: () => navigate('/app/offer-ride') }}
+          action={{
+            label: 'Offer a ride',
+            labelAr: t('driverPageExpanded.offerRide'),
+            onClick: () => navigate('/app/offer-ride'),
+          }}
         />
 
-        <CoreExperienceBanner
-          title="This page should tell you if you are ready, what to fix, and where to drive next."
-          detail="Keep the setup simple: finish the missing trust steps, check your strongest corridor, and use the earnings guidance below before you publish a route."
-          tone={DS.blue}
-        />
-
-        <div className="sp-4col" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 14, marginBottom: 18 }}>
-          {[
-            { label: 'Readiness', value: `${readinessPercent}%`, detail: `${completedSteps}/${readiness.steps.length} setup checks complete`, color: DS.green },
-            { label: 'Suggested route', value: primaryCorridor?.label ?? 'No daily route yet', detail: 'Best lane for predictable demand', color: DS.cyan },
-            { label: 'Estimated full fare', value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD` : '--', detail: 'Target when all seats are filled', color: DS.gold },
-            { label: 'Driver tier', value: membership.loyaltyTier, detail: `${membership.movementCredits} movement credits earned`, color: DS.blue },
-          ].map((item) => (
-            <div key={item.label} style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.03))', borderRadius: r(18), padding: '18px 18px 16px', border: `1px solid ${DS.border}`, boxShadow: '0 12px 28px rgba(0,0,0,0.16)' }}>
-              <div style={{ color: item.color, fontWeight: 900, fontSize: '1.18rem', marginBottom: 4 }}>{item.value}</div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>{item.label}</div>
-              <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.45 }}>{item.detail}</div>
+        <div
+          className="sp-2col"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1.18fr 0.82fr',
+            gap: 18,
+            marginBottom: 18,
+          }}
+        >
+          <div
+            style={{
+              background: GRAD_HERO,
+              borderRadius: R.xxl,
+              padding: '24px',
+              border: `1px solid ${DS.border}`,
+              boxShadow: SH.lg,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+                flexWrap: 'wrap',
+                marginBottom: 14,
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    color: DS.cyan,
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    letterSpacing: 0,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {t('driverPageExpanded.bestLiveLane')}
+                </div>
+                <h2
+                  style={{
+                    color: C.text,
+                    fontWeight: 900,
+                    fontSize: '2rem',
+                    lineHeight: 1.05,
+                    margin: '8px 0 6px',
+                  }}
+                >
+                  {primaryCorridor?.label ?? t('driverPageExpanded.chooseFirstCorridor')}
+                </h2>
+                <div style={{ color: DS.sub, fontSize: '0.88rem', lineHeight: 1.55 }}>
+                  {driverPlan?.waselBrainNote ?? readiness.detail}
+                </div>
+              </div>
+              <span
+                style={{
+                  background: `${DS.green}16`,
+                  border: `1px solid ${DS.green}2f`,
+                  borderRadius: '999px',
+                  color: DS.green,
+                  fontWeight: 800,
+                  padding: '8px 12px',
+                  fontSize: '0.76rem',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {membership.loyaltyTier} | {membership.movementCredits} {t('driverPage.credits')}
+              </span>
             </div>
-          ))}
-        </div>
 
-        <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: 18, marginBottom: 18 }}>
-          <div style={{ background: DS.card, borderRadius: r(20), padding: '24px', border: `1px solid ${DS.border}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <div
+              className="sp-3col"
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 12,
+                marginBottom: 16,
+              }}
+            >
+              {capabilityCards.map(item => (
+                <div
+                  key={item.label}
+                  style={{
+                    background: C.elevated,
+                    borderRadius: R.xl,
+                    border: `1px solid ${DS.border}`,
+                    padding: '16px 16px 14px',
+                  }}
+                >
+                  <div style={{ color: item.color, fontWeight: 900, fontSize: '1.22rem' }}>
+                    {item.value}
+                  </div>
+                  <div style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem', marginTop: 4 }}>
+                    {item.label}
+                  </div>
+                  <div style={{ color: DS.muted, fontSize: '0.72rem', marginTop: 4 }}>
+                    {item.detail}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gap: 10,
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              }}
+            >
+              <button
+                onClick={() => navigate('/app/offer-ride')}
+                style={{
+                  height: 46,
+                  borderRadius: '999px',
+                  border: 'none',
+                  background: DS.gradC,
+                  color: C.bgDeep,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                {t('driverPageExpanded.openRoute')}
+              </button>
+              <button
+                onClick={() => navigate('/app/trust')}
+                style={{
+                  height: 46,
+                  borderRadius: '999px',
+                  border: `1px solid ${DS.border}`,
+                  background: C.elevated,
+                  color: C.text,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                {t('driverPageExpanded.trust')}
+              </button>
+              <button
+                onClick={() => navigate('/app/settings')}
+                style={{
+                  height: 46,
+                  borderRadius: '999px',
+                  border: `1px solid ${DS.border}`,
+                  background: C.elevated,
+                  color: C.text,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                {t('driverPageExpanded.settings')}
+              </button>
+            </div>
+          </div>
+
+          <div
+            style={{
+              background: DS.card,
+              borderRadius: r(24),
+              padding: '22px',
+              border: `1px solid ${DS.border}`,
+              display: 'grid',
+              gap: 14,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <ShieldCheck size={18} color={DS.green} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Driver readiness</div>
+              <div style={{ color: C.text, fontWeight: 900 }}>
+                {t('driverPageExpanded.readyState')}
+              </div>
             </div>
-            <h3 style={{ color: '#fff', fontWeight: 900, margin: '0 0 10px', fontSize: '1.15rem' }}>
-              {readiness.headline}
-            </h3>
-            <p style={{ color: DS.sub, margin: '0 0 18px', lineHeight: 1.6, fontSize: '0.84rem' }}>
-              {readiness.detail}
-            </p>
+            <div>
+              <div style={{ color: C.text, fontWeight: 900, fontSize: '1.1rem' }}>
+                {readiness.headline}
+              </div>
+              <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.55, marginTop: 6 }}>
+                {pendingSteps.length > 0
+                  ? t('driverPageExpanded.stepsToUnlock')
+                      .replace('{count}', String(pendingSteps.length))
+                      .replace('{plural}', pluralSteps)
+                  : t('driverPageExpanded.allChecksComplete')}
+              </div>
+            </div>
+            <div
+              style={{
+                height: 10,
+                background: C.elevated,
+                borderRadius: R.full,
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  width: `${readinessPercent}%`,
+                  height: '100%',
+                  background: `linear-gradient(90deg, ${DS.green}, ${DS.cyan})`,
+                }}
+              />
+            </div>
 
-            <div style={{ display: 'grid', gap: 12 }}>
-              {readiness.steps.map((step) => (
-                <div key={step.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, background: DS.card2, borderRadius: r(14), padding: '14px 16px', border: `1px solid ${step.complete ? `${DS.green}33` : DS.border}` }}>
-                  <div style={{ width: 32, height: 32, borderRadius: r(10), background: step.complete ? `${DS.green}18` : 'rgba(255,255,255,0.06)', border: `1px solid ${step.complete ? `${DS.green}33` : DS.border}`, color: step.complete ? DS.green : DS.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, flexShrink: 0 }}>
-                    {step.complete ? 'OK' : '...'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 16 }}>
+              <button
+                onClick={() => setOfflineMode(!offlineMode)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 14px',
+                  borderRadius: 8,
+                  border: `1px solid ${DS.border}`,
+                  background: offlineMode ? `${DS.gold}16` : C.elevated,
+                  color: offlineMode ? DS.gold : C.text,
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {offlineMode ? <WifiOff size={14} /> : <Wifi size={14} />}
+                {offlineMode
+                  ? t('driverPageExpanded.offlineMode')
+                  : t('driverPageExpanded.onlineMode')}
+              </button>
+              <span style={{ color: DS.muted, fontSize: '0.72rem' }}>
+                {offlineMode
+                  ? t('driverPageExpanded.localSyncOnly')
+                  : t('driverPageExpanded.liveUpdatesActive')}
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gap: 10 }}>
+              {(pendingSteps.length > 0 ? pendingSteps : readiness.steps.slice(0, 3)).map(step => (
+                <div
+                  key={step.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 12,
+                    background: DS.card2,
+                    borderRadius: r(14),
+                    padding: '12px 14px',
+                    border: `1px solid ${step.complete ? `${DS.green}33` : DS.border}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: R.md,
+                      background: step.complete ? C.greenDim : C.elevated,
+                      border: `1px solid ${step.complete ? `${DS.green}2f` : DS.border}`,
+                      color: step.complete ? DS.green : DS.gold,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 900,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {step.complete ? <ShieldCheck size={15} /> : <AlertTriangle size={15} />}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.84rem' }}>{step.label}</div>
-                    <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 4, lineHeight: 1.55 }}>{step.description}</div>
+                  <div>
+                    <div style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem' }}>
+                      {step.label}
+                    </div>
+                    <div
+                      style={{
+                        color: DS.muted,
+                        fontSize: '0.74rem',
+                        lineHeight: 1.5,
+                        marginTop: 4,
+                      }}
+                    >
+                      {step.description}
+                    </div>
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gap: 18 }}>
-            <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <Brain size={18} color={DS.cyan} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Route guidance</div>
-              </div>
-              <div style={{ display: 'grid', gap: 10 }}>
-                {[
-                  driverPlan?.waselBrainNote ?? 'Pick a daily route to unlock route-specific earnings guidance.',
-                  driverPlan
-                    ? `Best pickup point: ${driverPlan.corridor.pickupPoints[0] ?? 'Trusted corridor node'}. ${driverPlan.corridor.autoGroupWindow}`
-                    : 'A clear pickup point matters once demand is strong enough to predict the next departure window.',
-                  driverPlan
-                    ? `Package-ready supply can add about ${driverPlan.packageBonusJod} JOD while keeping the route ${driverPlan.corridor.savingsPercent}% cheaper than solo movement.`
-                    : 'Package carry becomes a useful earnings boost on the right route.',
-                ].map((item) => (
-                  <div key={item} style={{ background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}`, color: '#fff', fontSize: '0.8rem', lineHeight: 1.55 }}>
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
-              <div style={{ color: '#fff', fontWeight: 900, marginBottom: 10 }}>What is unlocked</div>
-              <div style={{ display: 'grid', gap: 10 }}>
-                {[
-                  { label: 'Offer route', ready: readiness.canOfferRide },
-                  { label: 'Carry packages', ready: readiness.canCarryPackages },
-                  { label: 'Receive payouts', ready: user.emailVerified && (user.verificationLevel === 'level_2' || user.verificationLevel === 'level_3') },
-                ].map((item) => (
-                  <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}` }}>
-                    <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>{item.label}</div>
-                    <span style={{ color: item.ready ? DS.green : DS.gold, fontWeight: 800, fontSize: '0.75rem' }}>
-                      {item.ready ? 'Ready' : 'Blocked'}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </div>
 
-        <div className="sp-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
-          <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <Network size={18} color={DS.green} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Demand signals</div>
+        <div
+          className="sp-2col"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: 18,
+          }}
+        >
+          <div
+            style={{
+              background: DS.card,
+              borderRadius: r(22),
+              padding: '22px',
+              border: `1px solid ${DS.border}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <Brain size={18} color={DS.cyan} />
+              <div style={{ color: C.text, fontWeight: 900 }}>
+                {t('driverPageExpanded.routePulse')}
+              </div>
             </div>
             <div style={{ display: 'grid', gap: 10 }}>
-              {marketplaceNodes.map((node) => (
-                <div key={node.id} style={{ background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}` }}>
-                  <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.8rem' }}>{node.title}</div>
-                  <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.55, marginTop: 4 }}>{node.summary}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <Truck size={18} color={DS.gold} />
-              <div style={{ color: '#fff', fontWeight: 900 }}>Why this route can work</div>
-            </div>
-            <div style={{ display: 'grid', gap: 10 }}>
-              {defensibility.map((line) => (
-                <div key={line} style={{ background: DS.card2, borderRadius: r(12), padding: '12px 14px', border: `1px solid ${DS.border}`, color: '#fff', fontSize: '0.8rem', lineHeight: 1.55 }}>
+              {[
+                primaryCorridor?.label ?? t('driverPageExpanded.noRouteSelected'),
+                driverPlan
+                  ? `Pickup ${driverPlan.corridor.pickupPoints[0] ?? 'Trusted point'} | ${driverPlan.corridor.autoGroupWindow}`
+                  : t('driverPageExpanded.chooseCorridorTiming'),
+                driverPlan
+                  ? `${driverPlan.emptySeatCostJod} JOD lost per empty seat | ${driverPlan.recommendedSeatPriceJod} JOD target`
+                  : t('driverPageExpanded.priceAndFillTargets'),
+              ].map(line => (
+                <div
+                  key={line}
+                  style={{
+                    background: DS.card2,
+                    borderRadius: r(14),
+                    border: `1px solid ${DS.border}`,
+                    padding: '12px 14px',
+                    color: C.text,
+                    fontSize: '0.8rem',
+                    lineHeight: 1.55,
+                  }}
+                >
                   {line}
                 </div>
               ))}
             </div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                gap: 10,
+                marginTop: 14,
+              }}
+            >
+              {capabilityMatrix.map(item => (
+                <div
+                  key={item.label}
+                  style={{
+                    borderRadius: r(14),
+                    padding: '12px 14px',
+                    border: `1px solid ${DS.border}`,
+                    background: C.elevated,
+                  }}
+                >
+                  <div style={{ color: C.text, fontWeight: 800, fontSize: '0.76rem' }}>
+                    {item.label}
+                  </div>
+                  <div
+                    style={{
+                      color: item.ready ? DS.green : DS.gold,
+                      fontWeight: 900,
+                      fontSize: '0.74rem',
+                      marginTop: 6,
+                    }}
+                  >
+                    {item.ready
+                      ? t('driver.dashboard.activeTrip')
+                      : t('driverPageExpanded.readyState')}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div style={{ background: DS.card, borderRadius: r(20), padding: '22px', border: `1px solid ${DS.border}` }}>
-          <div style={{ color: '#fff', fontWeight: 900, marginBottom: 10 }}>Next actions</div>
-          <div style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.6, marginBottom: 14 }}>
-            Finish the missing trust steps, review your strongest route, and then publish only when the lane looks healthy enough to support repeat demand.
-          </div>
-          <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
-            <button onClick={() => navigate('/app/settings')} style={{ height: 44, borderRadius: '999px', border: 'none', background: DS.gradC, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
-              Open settings
-            </button>
-            <button onClick={() => navigate('/app/trust')} style={{ height: 44, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
-              Open trust center
-            </button>
-            <button onClick={() => navigate('/app/offer-ride')} style={{ height: 44, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: '#fff', fontWeight: 800, cursor: 'pointer' }}>
-              Offer a ride
-            </button>
+          <div
+            style={{
+              background: DS.card,
+              borderRadius: r(22),
+              padding: '22px',
+              border: `1px solid ${DS.border}`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <Network size={18} color={DS.green} />
+              <div style={{ color: C.text, fontWeight: 900 }}>
+                {t('driverPageExpanded.demandAddons')}
+              </div>
+            </div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {marketplaceNodes.map(node => (
+                <div
+                  key={node.id}
+                  style={{
+                    background: DS.card2,
+                    borderRadius: r(14),
+                    padding: '12px 14px',
+                    border: `1px solid ${DS.border}`,
+                  }}
+                >
+                  <div style={{ color: C.text, fontWeight: 800, fontSize: '0.82rem' }}>
+                    {node.title}
+                  </div>
+                  <div
+                    style={{
+                      color: DS.muted,
+                      fontSize: '0.74rem',
+                      lineHeight: 1.55,
+                      marginTop: 4,
+                    }}
+                  >
+                    {node.summary}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div
+              style={{
+                marginTop: 14,
+                borderRadius: r(16),
+                border: `1px solid ${DS.border}`,
+                background: `linear-gradient(135deg, ${C.goldDim}, ${C.elevated})`,
+                padding: '14px 16px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: 10,
+              }}
+            >
+              <Truck size={18} color={DS.gold} />
+              <div>
+                <div style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem' }}>
+                  {t('driverPageExpanded.laneExpansion')}
+                </div>
+                <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.55, marginTop: 4 }}>
+                  {driverPlan
+                    ? `${t('driverPageExpanded.packageBonus')
+                        .replace('{bonus}', String(driverPlan.packageBonusJod))
+                        .replace(
+                          '{route}',
+                          primaryCorridor?.label ?? t('driverPageExpanded.corridor'),
+                        )}.`
+                    : t('driverPageExpanded.packageReadyCorridors')}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </PageShell>

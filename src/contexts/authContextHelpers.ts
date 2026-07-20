@@ -1,8 +1,13 @@
-import type { AuthChangeEvent, AuthError, Session, SupabaseClient, User } from '@supabase/supabase-js';
+import type {
+  AuthChangeEvent,
+  AuthError,
+  Session,
+  SupabaseClient,
+  User,
+} from '@supabase/supabase-js';
 import type { WaselUser } from './LocalAuth';
 import { authAPI } from '../services/auth';
-import { getAuthRedirectCandidates } from '../utils/env';
-import { persistAuthReturnTo } from '../utils/authFlow';
+import { getAuthCallbackUrl } from '../utils/env';
 
 export type Profile = {
   id: string;
@@ -66,10 +71,7 @@ export async function loadProfile(): Promise<Profile | null> {
   return (profileData?.profile as Profile | null) || null;
 }
 
-export function normalizeOperationError(
-  error: unknown,
-  fallback: string,
-): Error {
+export function normalizeOperationError(error: unknown, fallback: string): Error {
   return error instanceof Error ? error : new Error(fallback);
 }
 
@@ -83,60 +85,22 @@ export async function signInWithOAuthProvider(
   }
 
   try {
-    if (returnTo) {
-      persistAuthReturnTo(returnTo);
-    }
+    const { error } = await client.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: getAuthCallbackUrl(
+          typeof window !== 'undefined' ? window.location.origin : undefined,
+          returnTo ? { returnTo } : undefined,
+        ),
+      },
+    });
 
-    const redirectCandidates = getAuthRedirectCandidates(
-      typeof window !== 'undefined' ? window.location.origin : undefined,
-    );
-    let lastError: AuthOperationError = null;
-
-    for (const redirectTo of redirectCandidates) {
-      const { data, error } = await client.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo,
-          skipBrowserRedirect: true,
-          scopes: provider === 'facebook' ? 'email,public_profile' : 'email profile',
-          queryParams:
-            provider === 'google'
-              ? { prompt: 'select_account' }
-              : undefined,
-        },
-      });
-
-      if (!error && data?.url) {
-        window.location.assign(data.url);
-        return { error: null };
-      }
-
-      lastError = error ?? new Error(`${provider} sign-in could not start.`);
-
-      const message =
-        error instanceof Error
-          ? error.message.toLowerCase()
-          : '';
-
-      const shouldRetry =
-        message.includes('redirect') ||
-        message.includes('callback') ||
-        message.includes('not allowed') ||
-        message.includes('allow list') ||
-        message.includes('whitelist') ||
-        message.includes('url');
-
-      if (!shouldRetry) {
-        break;
-      }
-    }
-
-    return { error: lastError };
+    return { error: error ?? null };
   } catch (error: unknown) {
     return {
       error: normalizeOperationError(
         error,
-        `${provider[0].toUpperCase()}${provider.slice(1)} login failed`,
+        `${provider.charAt(0).toUpperCase()}${provider.slice(1)} login failed`,
       ),
     };
   }
@@ -147,9 +111,7 @@ export function buildUpdatedLocalUser(
   updates: Partial<Profile>,
 ): Partial<WaselUser> {
   const normalizedPhone =
-    typeof updates.phone_number === 'string'
-      ? updates.phone_number.trim()
-      : undefined;
+    typeof updates.phone_number === 'string' ? updates.phone_number.trim() : undefined;
   const currentPhone = String(localUser.phone ?? '').trim();
   const shouldResetPhoneVerification =
     normalizedPhone !== undefined && normalizedPhone !== currentPhone;
@@ -163,9 +125,6 @@ export function buildUpdatedLocalUser(
   };
 }
 
-export function shouldRefreshProfile(
-  event: AuthChangeEvent,
-  session: Session | null,
-): boolean {
+export function shouldRefreshProfile(event: AuthChangeEvent, session: Session | null): boolean {
   return Boolean(session?.user) && event === 'SIGNED_IN';
 }

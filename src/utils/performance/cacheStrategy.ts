@@ -18,39 +18,39 @@
 
 export const STALE_TIMES = {
   // Real-time data — refresh aggressively
-  TRIP_SEARCH:         30_000,      // 30s — seats change fast
-  PACKAGE_LISTINGS:    60_000,      // 1min
-  ADMIN_DASHBOARDS:    15_000,      // 15s — operational monitoring
-  BOOKING_STATUS:      20_000,      // 20s — time-sensitive
+  TRIP_SEARCH: 30_000, // 30s — seats change fast
+  PACKAGE_LISTINGS: 60_000, // 1min
+  ADMIN_DASHBOARDS: 15_000, // 15s — operational monitoring
+  BOOKING_STATUS: 20_000, // 20s — time-sensitive
 
   // Semi-static data — moderate refresh
-  USER_PROFILE:        5 * 60_000,  // 5min
-  MY_TRIPS:            2 * 60_000,  // 2min
-  MY_PACKAGES:         2 * 60_000,  // 2min
-  NOTIFICATIONS:       60_000,      // 1min
-  WALLET_BALANCE:      60_000,      // 1min
-  TRIP_DETAILS:        2 * 60_000,  // 2min
+  USER_PROFILE: 5 * 60_000, // 5min
+  MY_TRIPS: 2 * 60_000, // 2min
+  MY_PACKAGES: 2 * 60_000, // 2min
+  NOTIFICATIONS: 60_000, // 1min
+  WALLET_BALANCE: 60_000, // 1min
+  TRIP_DETAILS: 2 * 60_000, // 2min
 
   // Stable data — refresh infrequently
-  POPULAR_ROUTES:      24 * 60 * 60_000,  // 24h
-  PRAYER_TIMES:        24 * 60 * 60_000,  // 24h
-  EXCHANGE_RATES:      60 * 60_000,        // 1h
-  COUNTRY_CONFIG:      24 * 60 * 60_000,  // 24h
-  SUBSCRIPTION_PLANS:  60 * 60_000,        // 1h
-  REGION_CONFIG:       24 * 60 * 60_000,  // 24h
-  TRUST_SCORE:         10 * 60_000,        // 10min
+  POPULAR_ROUTES: 24 * 60 * 60_000, // 24h
+  PRAYER_TIMES: 24 * 60 * 60_000, // 24h
+  EXCHANGE_RATES: 60 * 60_000, // 1h
+  COUNTRY_CONFIG: 24 * 60 * 60_000, // 24h
+  SUBSCRIPTION_PLANS: 60 * 60_000, // 1h
+  REGION_CONFIG: 24 * 60 * 60_000, // 24h
+  TRUST_SCORE: 10 * 60_000, // 10min
 } as const;
 
 // ─── GC Times (ms — how long data stays in cache after becoming unused) ───────
 
 export const GC_TIMES = {
-  TRIP_SEARCH:         5 * 60_000,   // 5min — garbage collect search results
-  PACKAGE_LISTINGS:    5 * 60_000,
-  POPULAR_ROUTES:      24 * 60 * 60_000,
-  PRAYER_TIMES:        24 * 60 * 60_000,
-  USER_PROFILE:        30 * 60_000,
-  ADMIN_DASHBOARDS:    2 * 60_000,
-  DEFAULT:             10 * 60_000,
+  TRIP_SEARCH: 5 * 60_000, // 5min — garbage collect search results
+  PACKAGE_LISTINGS: 5 * 60_000,
+  POPULAR_ROUTES: 24 * 60 * 60_000,
+  PRAYER_TIMES: 24 * 60 * 60_000,
+  USER_PROFILE: 30 * 60_000,
+  ADMIN_DASHBOARDS: 2 * 60_000,
+  DEFAULT: 10 * 60_000,
 } as const;
 
 // ─── Retry Config ─────────────────────────────────────────────────────────────
@@ -79,86 +79,86 @@ export const RETRY_CONFIG = {
 export const QUERY_KEYS = {
   // ── Carpooling / Trips ──────────────────────────────────────────────────────
   trips: {
-    all:        ()               => ['trips'] as const,
-    search:     (filters: unknown) => ['trips', 'search', filters] as const,
-    detail:     (id: string)     => ['trips', 'detail', id] as const,
-    myDriverTrips:   (userId: string) => ['trips', 'driver', userId] as const,
-    myPassengerTrips:(userId: string) => ['trips', 'passenger', userId] as const,
-    calendar:   (userId: string, month: string) => ['trips', 'calendar', userId, month] as const,
-    popular:    (country: string) => ['trips', 'popular', country] as const,
+    all: () => ['trips'] as const,
+    search: (filters: unknown) => ['trips', 'search', filters] as const,
+    detail: (id: string) => ['trips', 'detail', id] as const,
+    myDriverTrips: (userId: string) => ['trips', 'driver', userId] as const,
+    myPassengerTrips: (userId: string) => ['trips', 'passenger', userId] as const,
+    calendar: (userId: string, month: string) => ['trips', 'calendar', userId, month] as const,
+    popular: (country: string) => ['trips', 'popular', country] as const,
   },
 
   // ── Bookings ────────────────────────────────────────────────────────────────
   bookings: {
-    all:        ()               => ['bookings'] as const,
-    forTrip:    (tripId: string) => ['bookings', 'trip', tripId] as const,
-    forUser:    (userId: string) => ['bookings', 'user', userId] as const,
-    detail:     (id: string)     => ['bookings', 'detail', id] as const,
-    requests:   (tripId: string) => ['bookings', 'requests', tripId] as const,
+    all: () => ['bookings'] as const,
+    forTrip: (tripId: string) => ['bookings', 'trip', tripId] as const,
+    forUser: (userId: string) => ['bookings', 'user', userId] as const,
+    detail: (id: string) => ['bookings', 'detail', id] as const,
+    requests: (tripId: string) => ['bookings', 'requests', tripId] as const,
   },
 
   // ── Raje3 / Packages ────────────────────────────────────────────────────────
   packages: {
-    all:        ()               => ['packages'] as const,
-    search:     (filters: unknown) => ['packages', 'search', filters] as const,
-    detail:     (id: string)     => ['packages', 'detail', id] as const,
-    sent:       (userId: string) => ['packages', 'sent', userId] as const,
+    all: () => ['packages'] as const,
+    search: (filters: unknown) => ['packages', 'search', filters] as const,
+    detail: (id: string) => ['packages', 'detail', id] as const,
+    sent: (userId: string) => ['packages', 'sent', userId] as const,
     delivering: (userId: string) => ['packages', 'delivering', userId] as const,
-    forTrip:    (tripId: string) => ['packages', 'trip', tripId] as const,
-    tracking:   (id: string)     => ['packages', 'tracking', id] as const,
+    forTrip: (tripId: string) => ['packages', 'trip', tripId] as const,
+    tracking: (id: string) => ['packages', 'tracking', id] as const,
   },
 
   // ── User / Profile ──────────────────────────────────────────────────────────
   profile: {
-    all:        ()               => ['profile'] as const,
-    detail:     (userId: string) => ['profile', userId] as const,
+    all: () => ['profile'] as const,
+    detail: (userId: string) => ['profile', userId] as const,
     trustScore: (userId: string) => ['profile', 'trust', userId] as const,
-    reviews:    (userId: string) => ['profile', 'reviews', userId] as const,
+    reviews: (userId: string) => ['profile', 'reviews', userId] as const,
   },
 
   // ── Payments / Finance ──────────────────────────────────────────────────────
   payments: {
-    methods:    (userId: string) => ['payments', 'methods', userId] as const,
-    history:    (userId: string) => ['payments', 'history', userId] as const,
-    wallet:     (userId: string) => ['payments', 'wallet', userId] as const,
+    methods: (userId: string) => ['payments', 'methods', userId] as const,
+    history: (userId: string) => ['payments', 'history', userId] as const,
+    wallet: (userId: string) => ['payments', 'wallet', userId] as const,
   },
 
   // ── Routes / Region ─────────────────────────────────────────────────────────
   routes: {
-    popular:    (country: string) => ['routes', 'popular', country] as const,
-    detail:     (routeId: string) => ['routes', 'detail', routeId] as const,
-    mosques:    (routeId: string) => ['routes', 'mosques', routeId] as const,
+    popular: (country: string) => ['routes', 'popular', country] as const,
+    detail: (routeId: string) => ['routes', 'detail', routeId] as const,
+    mosques: (routeId: string) => ['routes', 'mosques', routeId] as const,
   },
 
   // ── Cultural / Prayer ───────────────────────────────────────────────────────
   prayer: {
-    times:      (city: string, date: string) => ['prayer', city, date] as const,
-    stops:      (routeId: string, departureTime: string) =>
-                  ['prayer', 'stops', routeId, departureTime] as const,
+    times: (city: string, date: string) => ['prayer', city, date] as const,
+    stops: (routeId: string, departureTime: string) =>
+      ['prayer', 'stops', routeId, departureTime] as const,
   },
 
   // ── Region / Country ────────────────────────────────────────────────────────
   region: {
-    all:        ()               => ['region'] as const,
-    config:     (iso: string)    => ['region', 'config', iso] as const,
-    currencies: ()               => ['region', 'currencies'] as const,
-    exchangeRates: ()            => ['region', 'exchange-rates'] as const,
+    all: () => ['region'] as const,
+    config: (iso: string) => ['region', 'config', iso] as const,
+    currencies: () => ['region', 'currencies'] as const,
+    exchangeRates: () => ['region', 'exchange-rates'] as const,
   },
 
   // ── Admin ───────────────────────────────────────────────────────────────────
   admin: {
-    stats:      ()               => ['admin', 'stats'] as const,
-    users:      (filters: unknown) => ['admin', 'users', filters] as const,
-    liquidity:  (country: string) => ['admin', 'liquidity', country] as const,
-    fraud:      ()               => ['admin', 'fraud'] as const,
-    revenue:    (period: string) => ['admin', 'revenue', period] as const,
-    systemHealth: ()             => ['admin', 'system-health'] as const,
+    stats: () => ['admin', 'stats'] as const,
+    users: (filters: unknown) => ['admin', 'users', filters] as const,
+    liquidity: (country: string) => ['admin', 'liquidity', country] as const,
+    fraud: () => ['admin', 'fraud'] as const,
+    revenue: (period: string) => ['admin', 'revenue', period] as const,
+    systemHealth: () => ['admin', 'system-health'] as const,
   },
 
   // ── Notifications ───────────────────────────────────────────────────────────
   notifications: {
-    all:        (userId: string) => ['notifications', userId] as const,
-    unread:     (userId: string) => ['notifications', 'unread', userId] as const,
+    all: (userId: string) => ['notifications', userId] as const,
+    unread: (userId: string) => ['notifications', 'unread', userId] as const,
   },
 } as const;
 

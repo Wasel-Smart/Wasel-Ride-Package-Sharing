@@ -1,9 +1,0 @@
-date,corridor,channel,persona,contact_name,status,source_group,usual_route_window,action_taken,outcome,objection,next_follow_up,kpi_type,kpi_value,notes
-2026-04-05,Amman<->Zarqa,WhatsApp,Driver,,,,,,,Recruitment,0,
-2026-04-05,Amman<->Zarqa,WhatsApp,Rider,,,,,,,Searches,0,
-2026-04-05,Amman<->Zarqa,Direct,Package sender,,,,,,,Package requests,0,
-2026-04-06,Amman<->Zarqa,Facebook,Driver,,,,,,,Activated supply,0,
-2026-04-06,Amman<->Zarqa,WhatsApp,Rider,,,,,,,Activated demand,0,
-2026-04-06,Amman<->Zarqa,Direct,Rider,,,,,,,Successful matches,0,
-2026-04-07,Amman<->Zarqa,WhatsApp,Rider,,,,,,,Repeat users,0,
-2026-04-07,Amman<->Zarqa,Direct,Driver,,,,,,,Referrals,0,

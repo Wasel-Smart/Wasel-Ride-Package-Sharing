@@ -3,7 +3,7 @@
  * Extracted from WalletDashboard to reduce file size
  */
 
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { ShieldCheck, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
@@ -14,6 +14,7 @@ import type { WalletData } from '../../../services/walletApi';
 
 interface SettingsTabProps {
   walletData: WalletData | null;
+  canManagePin: boolean;
   isRTL: boolean;
   t: Record<string, string>;
   autoTopUpEnabled: boolean;
@@ -26,9 +27,16 @@ interface SettingsTabProps {
 }
 
 export function SettingsTab({
-  walletData, isRTL, t,
-  autoTopUpEnabled, autoTopUpAmount, autoTopUpThreshold,
-  onAutoTopUpToggle, onAutoTopUpAmountChange, onAutoTopUpThresholdChange,
+  walletData,
+  canManagePin,
+  isRTL,
+  t,
+  autoTopUpEnabled,
+  autoTopUpAmount,
+  autoTopUpThreshold,
+  onAutoTopUpToggle,
+  onAutoTopUpAmountChange,
+  onAutoTopUpThresholdChange,
   onShowPinSetup,
 }: SettingsTabProps) {
   return (
@@ -44,9 +52,18 @@ export function SettingsTab({
               <div>
                 <p className="text-sm font-medium text-foreground">{t.securityPin}</p>
                 <p className="text-xs text-muted-foreground">{t.pinDescription}</p>
+                {!canManagePin ? (
+                  <p className="mt-1 text-xs text-muted-foreground">{t.pinUnavailableHint}</p>
+                ) : null}
               </div>
             </div>
-            <Button size="sm" variant="outline" onClick={onShowPinSetup} className="text-xs">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onShowPinSetup}
+              disabled={!canManagePin}
+              className="text-xs"
+            >
               {walletData?.pinSet ? t.changePin : t.setPin}
             </Button>
           </div>
@@ -81,7 +98,7 @@ export function SettingsTab({
                 <Input
                   type="number"
                   value={autoTopUpThreshold}
-                  onChange={(e) => onAutoTopUpThresholdChange(e.target.value)}
+                  onChange={e => onAutoTopUpThresholdChange(e.target.value)}
                   className="mt-1 h-9 text-sm rounded-lg"
                 />
               </div>
@@ -90,7 +107,7 @@ export function SettingsTab({
                 <Input
                   type="number"
                   value={autoTopUpAmount}
-                  onChange={(e) => onAutoTopUpAmountChange(e.target.value)}
+                  onChange={e => onAutoTopUpAmountChange(e.target.value)}
                   className="mt-1 h-9 text-sm rounded-lg"
                 />
               </div>
@@ -103,10 +120,27 @@ export function SettingsTab({
       <Card className="rounded-xl">
         <CardContent className="pt-4 space-y-3">
           {[
-            { label: isRTL ? '\u0627\u0644\u0639\u0645\u0644\u0629' : 'Currency', value: walletData?.currency || 'JOD' },
-            { label: isRTL ? '\u0646\u0648\u0639 \u0627\u0644\u0645\u062D\u0641\u0638\u0629' : 'Wallet Type', value: walletData?.wallet?.walletType || 'user' },
-            { label: isRTL ? '\u062A\u0627\u0631\u064A\u062E \u0627\u0644\u0625\u0646\u0634\u0627\u0621' : 'Created', value: walletData?.wallet?.createdAt ? new Date(walletData.wallet.createdAt).toLocaleDateString(isRTL ? 'ar-JO' : 'en-US') : '\u2014' },
-          ].map((item) => (
+            {
+              label: isRTL ? '\u0627\u0644\u0639\u0645\u0644\u0629' : 'Currency',
+              value: walletData?.currency || 'JOD',
+            },
+            {
+              label: isRTL
+                ? '\u0646\u0648\u0639 \u0627\u0644\u0645\u062D\u0641\u0638\u0629'
+                : 'Wallet Type',
+              value: walletData?.wallet?.walletType || 'user',
+            },
+            {
+              label: isRTL
+                ? '\u062A\u0627\u0631\u064A\u062E \u0627\u0644\u0625\u0646\u0634\u0627\u0621'
+                : 'Created',
+              value: walletData?.wallet?.createdAt
+                ? new Date(walletData.wallet.createdAt).toLocaleDateString(
+                    isRTL ? 'ar-JO' : 'en-US',
+                  )
+                : '\u2014',
+            },
+          ].map(item => (
             <div key={item.label} className="flex items-center justify-between py-1.5">
               <span className="text-sm text-muted-foreground">{item.label}</span>
               <span className="text-sm font-medium text-foreground">{item.value}</span>

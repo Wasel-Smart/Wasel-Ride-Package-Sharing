@@ -1,39 +1,48 @@
-﻿/**
+/**
  * Wasel Raje3 Returns
  * Connected to the shared ride/package network.
  */
 import { useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import {
-  Check, Star, CheckCircle2, AlertCircle, Search, RefreshCw, QrCode,
-} from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { AlertCircle, Check, CheckCircle2, QrCode, RefreshCw, Search, Star } from 'lucide-react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { createConnectedPackage, getConnectedRides, type PackageRequest } from '../../services/journeyLogistics';
-import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
+import { C, F, FM, GRAD_HERO, R, SH } from '../../utils/wasel-ds';
+import {
+  createConnectedPackage,
+  getConnectedRides,
+  type PackageRequest,
+} from '../../services/journeyLogistics';
 
 const D = {
-  bg:'#040C18', card:'#0A1628', card2:'#0D1F38',
-  border:'rgba(199,255,26,0.12)', gold:'#C7FF1A', cyan:'#16C7F2', green:'#60C536',
-  text:'#EFF6FF', sub:'rgba(148,163,184,0.80)', muted:'rgba(100,130,180,0.60)',
-  F:"var(--wasel-font-sans, 'Plus Jakarta Sans', 'Cairo', 'Tajawal', sans-serif)", MONO:"'JetBrains Mono','Fira Mono',monospace",
+  bg: C.bg,
+  card: C.cardSolid,
+  card2: C.card2,
+  border: C.border,
+  gold: C.gold,
+  cyan: C.cyan,
+  green: C.green,
+  text: C.text,
+  sub: C.textSub,
+  muted: C.textMuted,
+  F,
+  MONO: FM,
 } as const;
 
 const RETAILERS = [
-  { id:'noon', name:'Noon', nameAr:'نون', logo:'🟡', color:'#FFEE00' },
-  { id:'amazon', name:'Amazon.jo', nameAr:'أمازون', logo:'📦', color:'#FF9900' },
-  { id:'namshi', name:'Namshi', nameAr:'نمشي', logo:'👗', color:'#E91E8C' },
-  { id:'markavip', name:'MarkaVIP', nameAr:'ماركة VIP', logo:'💎', color:'#8B5CF6' },
-  { id:'other', name:'Other / Custom', nameAr:'أخرى', logo:'📬', color:D.gold },
+  { id: 'noon', name: 'Noon', logo: 'N', color: '#FFEE00' },
+  { id: 'amazon', name: 'Amazon.jo', logo: 'A', color: '#FF9900' },
+  { id: 'namshi', name: 'Namshi', logo: 'N', color: '#E91E8C' },
+  { id: 'markavip', name: 'MarkaVIP', logo: 'M', color: '#8B5CF6' },
+  { id: 'other', name: 'Other', logo: '+', color: D.gold },
 ];
 
 const RETURN_REASONS = [
-  { id:'wrong_size', label:'Wrong size', labelAr:'مقاس خاطئ' },
-  { id:'damaged', label:'Item damaged', labelAr:'منتج تالف' },
-  { id:'not_match', label:'Not as shown', labelAr:'لا يطابق الوصف' },
-  { id:'changed_mind', label:'Changed mind', labelAr:'غيّرت رأيي' },
-  { id:'late_delivery', label:'Late delivery', labelAr:'توصيل متأخر' },
+  { id: 'wrong_size', label: 'Wrong size' },
+  { id: 'damaged', label: 'Item damaged' },
+  { id: 'not_match', label: 'Not as shown' },
+  { id: 'changed_mind', label: 'Changed mind' },
+  { id: 'late_delivery', label: 'Late delivery' },
 ];
 
 function inferWeight(size: 'small' | 'medium' | 'large') {
@@ -43,8 +52,7 @@ function inferWeight(size: 'small' | 'medium' | 'large') {
 }
 
 export function ReturnMatching() {
-  const { language } = useLanguage();
-  const { user } = useLocalAuth();
+  const { language, t } = useLanguage();
   const isRTL = language === 'ar';
   const nav = useIframeSafeNavigate();
 
@@ -52,7 +60,7 @@ export function ReturnMatching() {
   const [retailer, setRetailer] = useState('');
   const [orderId, setOrderId] = useState('');
   const [item, setItem] = useState('');
-  const [size, setSize] = useState<'small'|'medium'|'large'>('small');
+  const [size, setSize] = useState<'small' | 'medium' | 'large'>('small');
   const [reason, setReason] = useState('');
   const [searching, setSearching] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState('');
@@ -78,12 +86,12 @@ export function ReturnMatching() {
   );
 
   const selectedTrip = matches.find(match => match.id === selectedMatch) ?? null;
+  const selectedRetailer = RETAILERS.find(item => item.id === retailer) ?? null;
+  const selectedReason = RETURN_REASONS.find(item => item.id === reason) ?? null;
 
-  const searchMatches = async () => {
-    setSearching(true);
-    setError(null);
-    await new Promise(resolve => setTimeout(resolve, 450));
+  const searchMatches = () => {
     setSearching(false);
+    setError(null);
     setStep(2);
   };
 
@@ -97,8 +105,6 @@ export function ReturnMatching() {
         weight: inferWeight(size),
         note: [orderId && `Order ${orderId}`, item, reason].filter(Boolean).join(' · '),
         packageType: 'return',
-        senderName: user?.name,
-        senderEmail: user?.email,
       });
       setCreatedReturn(created);
       setStep(3);
@@ -109,188 +115,871 @@ export function ReturnMatching() {
     }
   };
 
+  const stageLabels = ['Retailer', 'Details', 'Match', 'Track'];
+  const liveLane = selectedTrip
+    ? `${selectedTrip.fromCity} → ${selectedTrip.toCity}`
+    : 'Aqaba → Amman';
+  const railLines = [
+    selectedRetailer
+      ? `${selectedRetailer.name} • ${orderId || 'Order ID pending'}`
+      : 'Retailer not selected',
+    item ? `${item} • ${inferWeight(size)}` : `Package size ${size}`,
+    selectedReason?.label ?? 'Return reason pending',
+  ];
+
   return (
-    <div style={{ minHeight:'100vh', background:D.bg, fontFamily:D.F, color:D.text, padding:'28px 16px 80px' }} dir={isRTL?'rtl':'ltr'}>
-      <div style={{ maxWidth:860, margin:'0 auto' }}>
-        <div style={{ background:'linear-gradient(135deg,#0B1D45 0%,#2A1A05 60%,#0A1628 100%)', borderRadius:20, padding:'28px 32px', marginBottom:24, border:`1px solid ${D.gold}20` }}>
-          <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:12 }}>
-            <div style={{ width:46, height:46, borderRadius:14, background:`linear-gradient(135deg,${D.gold},#E89200)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.4rem', flexShrink:0 }}>🔄</div>
+    <div
+      style={{
+        minHeight: 'var(--app-min-height)',
+        background: D.bg,
+        fontFamily: D.F,
+        color: D.text,
+        padding: '28px 16px 80px',
+      }}
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
+      <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+        <div
+          style={{
+            background: GRAD_HERO,
+            borderRadius: R.xxl,
+            padding: '26px 28px',
+            marginBottom: 18,
+            border: `1px solid ${C.borderHov}`,
+            boxShadow: SH.lg,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 14,
+              flexWrap: 'wrap',
+            }}
+          >
             <div>
-              <h1 style={{ fontSize:'1.35rem', fontWeight:900, letterSpacing:'-0.03em', margin:0 }}>{isRTL ? 'رجّع — إرجاع ذكي' : 'Raje3 Smart Returns'}</h1>
-              <p style={{ fontSize:'0.72rem', color:D.muted, margin:'3px 0 0' }}>
-                {isRTL ? 'مطابق مع الرحلات الحية التي تقبل الطرود والمتجهة إلى عمّان' : 'Matched against live package-ready rides heading into Amman'}
+              <div
+                style={{
+                  color: D.cyan,
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {t('returnMatching.round_trip_return_lane')}
+              </div>
+              <h1
+                style={{
+                  fontSize: '2rem',
+                  fontWeight: 900,
+                  letterSpacing: '-0.03em',
+                  margin: '8px 0 6px',
+                }}
+              >
+                {t('returnMatching.raje3_round_trip')}
+              </h1>
+              <p style={{ fontSize: '0.82rem', color: D.sub, margin: 0, lineHeight: 1.55 }}>
+                {t(
+                  'returnMatching.build_the_return_match_it_to_a_live_ride_into_amman_and_keep_one_tracking_id',
+                )}
               </p>
+            </div>
+            <div
+              style={{
+                background: C.elevated,
+                border: `1px solid ${D.border}`,
+                borderRadius: R.xl,
+                padding: '14px 16px',
+                minWidth: 220,
+              }}
+            >
+              <div style={{ color: D.gold, fontSize: '0.72rem', fontWeight: 800 }}>
+                {t('returnMatching.live_lane')}
+              </div>
+              <div style={{ color: D.text, fontSize: '1rem', fontWeight: 900, marginTop: 6 }}>
+                {liveLane}
+              </div>
+              <div style={{ color: D.muted, fontSize: '0.74rem', marginTop: 6 }}>
+                {matches.length} {t('returnMatching.package_ready_rides_available_right_now')}
+              </div>
             </div>
           </div>
         </div>
 
-        <div style={{ background:D.card, border:`1px solid ${D.border}`, borderRadius:18, padding:'28px 28px' }}>
-          <AnimatePresence mode="wait">
-            {step === 0 && (
-              <motion.div key="s0" initial={{ opacity:0, x:16 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-16 }}>
-                <h2 style={{ fontSize:'1.05rem', fontWeight:800, margin:'0 0 20px', color:D.text }}>{isRTL?'اختر المتجر':'Select your retailer'}</h2>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))', gap:10, marginBottom:20 }}>
-                  {RETAILERS.map(retailerItem => (
-                    <motion.div key={retailerItem.id} whileHover={{ scale:1.03 }} whileTap={{ scale:0.97 }} onClick={() => setRetailer(retailerItem.id)} style={{
-                      background: retailer===retailerItem.id ? `${retailerItem.color}0E` : D.card2,
-                      border:`1px solid ${retailer===retailerItem.id ? retailerItem.color+'40' : D.border}`,
-                      borderRadius:12, padding:'14px', cursor:'pointer', textAlign:'center',
-                    }}>
-                      <div style={{ fontSize:'1.8rem', marginBottom:6 }}>{retailerItem.logo}</div>
-                      <div style={{ fontSize:'0.78rem', fontWeight:700, color:D.text }}>{isRTL?retailerItem.nameAr:retailerItem.name}</div>
-                    </motion.div>
-                  ))}
-                </div>
-                {retailer ? (
-                  <div style={{ marginBottom:16 }}>
-                    <label style={{ fontSize:'0.75rem', fontWeight:700, color:D.sub, display:'block', marginBottom:7 }}>{isRTL?'رقم الطلب':'Order ID'}</label>
-                    <input
-                      value={orderId}
-                      onChange={e=>setOrderId(e.target.value)}
-                      placeholder="e.g. NOON-2026-XXXXXX"
-                      style={{ width:'100%', background:D.card2, border:`1.5px solid ${D.border}`, borderRadius:10, color:D.text, fontSize:'0.875rem', fontFamily:D.F, padding:'10px 13px', outline:'none', boxSizing:'border-box' }}
-                    />
-                  </div>
-                ) : null}
-                <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => retailer && setStep(1)} disabled={!retailer} style={{ width:'100%', height:48, borderRadius:12, border:'none', background: retailer ? `linear-gradient(135deg,${D.gold},#E89200)` : 'rgba(255,255,255,0.08)', color: retailer ? '#040C18' : D.muted, fontWeight:800, fontSize:'0.9rem', fontFamily:D.F, cursor: retailer ? 'pointer' : 'not-allowed' }}>
-                  {isRTL?'التالي — تفاصيل المرتجع':'Next — Return details'} →
-                </motion.button>
-              </motion.div>
-            )}
-
-            {step === 1 && (
-              <motion.div key="s1" initial={{ opacity:0, x:16 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-16 }}>
-                <h2 style={{ fontSize:'1.05rem', fontWeight:800, margin:'0 0 20px', color:D.text }}>{isRTL?'تفاصيل المنتج المُرجَع':'Return item details'}</h2>
-                <div style={{ display:'flex', flexDirection:'column', gap:14, marginBottom:20 }}>
-                  <div>
-                    <label style={{ fontSize:'0.75rem', fontWeight:700, color:D.sub, display:'block', marginBottom:7 }}>{isRTL?'وصف المنتج':'Item description'}</label>
-                    <input value={item} onChange={e=>setItem(e.target.value)} placeholder={isRTL?'مثال: حذاء رياضي أبيض، مقاس 42':'e.g. White sneakers, size 42'} style={{ width:'100%', background:D.card2, border:`1.5px solid ${D.border}`, borderRadius:10, color:D.text, fontSize:'0.875rem', fontFamily:D.F, padding:'10px 13px', outline:'none', boxSizing:'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize:'0.75rem', fontWeight:700, color:D.sub, display:'block', marginBottom:9 }}>{isRTL?'حجم الطرد':'Package size'}</label>
-                    <div style={{ display:'flex', gap:8 }}>
-                      {([['small','Small','صغير'],['medium','Medium','متوسط'],['large','Large','كبير']] as const).map(([key, en, arText]) => (
-                        <button key={key} onClick={() => setSize(key)} style={{ flex:1, padding:'10px 0', borderRadius:10, border:`1px solid ${size===key ? D.gold+'50' : D.border}`, background: size===key ? `${D.gold}10` : D.card2, color: size===key ? D.gold : D.sub, fontSize:'0.78rem', fontWeight: size===key ? 700 : 400, fontFamily:D.F, cursor:'pointer' }}>
-                          {isRTL?arText:en}
-                        </button>
-                      ))}
+        <div
+          className="sp-2col"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1.08fr 0.92fr',
+            gap: 18,
+            alignItems: 'start',
+          }}
+        >
+          <div
+            style={{
+              background: D.card,
+              border: `1px solid ${D.border}`,
+              borderRadius: 22,
+              padding: '22px',
+            }}
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                gap: 10,
+                marginBottom: 20,
+              }}
+            >
+              {stageLabels.map((label, index) => {
+                const active = step === index;
+                const complete = step > index || (index === 3 && createdReturn);
+                return (
+                  <div
+                    key={label}
+                    style={{
+                      borderRadius: 14,
+                      padding: '12px 12px 10px',
+                      border: `1px solid ${active ? `${D.gold}55` : D.border}`,
+                      background: active ? `${D.gold}10` : D.card2,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: complete ? D.green : active ? D.gold : D.muted,
+                        fontSize: '0.7rem',
+                        fontWeight: 900,
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {complete ? 'Live' : `Step ${index + 1}`}
+                    </div>
+                    <div
+                      style={{ color: D.text, fontSize: '0.8rem', fontWeight: 800, marginTop: 6 }}
+                    >
+                      {label}
                     </div>
                   </div>
-                  <div>
-                    <label style={{ fontSize:'0.75rem', fontWeight:700, color:D.sub, display:'block', marginBottom:9 }}>{isRTL?'سبب الإرجاع':'Return reason'}</label>
-                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                      {RETURN_REASONS.map(reasonItem => (
-                        <button key={reasonItem.id} onClick={() => setReason(reasonItem.id)} style={{ padding:'10px 14px', borderRadius:10, border:`1px solid ${reason===reasonItem.id ? D.gold+'50' : D.border}`, background: reason===reasonItem.id ? `${D.gold}10` : D.card2, color: reason===reasonItem.id ? D.gold : D.sub, fontSize:'0.82rem', fontWeight: reason===reasonItem.id ? 700 : 400, fontFamily:D.F, cursor:'pointer', textAlign:'left', display:'flex', alignItems:'center', gap:8 }}>
-                          {reason===reasonItem.id ? <Check size={14}/> : <div style={{width:14}}/>}
-                          {isRTL?reasonItem.labelAr:reasonItem.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display:'flex', gap:8 }}>
-                  <button onClick={() => setStep(0)} style={{ flex:1, height:48, borderRadius:12, border:`1px solid ${D.border}`, background:'transparent', color:D.sub, fontWeight:600, fontSize:'0.88rem', fontFamily:D.F, cursor:'pointer' }}>← {isRTL?'رجوع':'Back'}</button>
-                  <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => { if (item && reason) void searchMatches(); }} disabled={!item || !reason || searching} style={{ flex:2, height:48, borderRadius:12, border:'none', background: item&&reason ? `linear-gradient(135deg,${D.gold},#E89200)` : 'rgba(255,255,255,0.08)', color: item&&reason ? '#040C18' : D.muted, fontWeight:800, fontSize:'0.9rem', fontFamily:D.F, cursor: item&&reason ? 'pointer' : 'not-allowed', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
-                    {searching ? <><RefreshCw size={16} style={{animation:'spin 1s linear infinite'}}/>{isRTL?'جارٍ البحث…':'Finding matches…'}</> : <><Search size={15}/>{isRTL?'ابحث عن رحلة':'Find matching rides'}</>}
-                  </motion.button>
-                </div>
-              </motion.div>
-            )}
+                );
+              })}
+            </div>
 
-            {step === 2 && (
-              <motion.div key="s2" initial={{ opacity:0, x:16 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-16 }}>
-                <h2 style={{ fontSize:'1.05rem', fontWeight:800, margin:'0 0 6px', color:D.text }}>{isRTL?'رحلات مطابقة':'Matching rides'}</h2>
-                <p style={{ fontSize:'0.76rem', color:D.muted, margin:'0 0 18px' }}>
-                  {matches.length > 0
-                    ? (isRTL ? `${matches.length} رحلة تدعم الطرود ويمكن استخدامها للإرجاع إلى عمّان` : `${matches.length} package-ready rides can be used for this return into Amman`)
-                    : (isRTL ? 'لا توجد رحلات حية مطابقة حالياً، لكن سننشئ طلب إرجاع ونبقيه قيد البحث.' : 'No live rides match right now, but we can still create the return request and keep it searching.')}
-                </p>
-                {matches.length > 0 ? (
-                  <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:18 }}>
-                    {matches.map(match => (
-                      <button key={match.id} onClick={() => setSelectedMatch(match.id)} style={{ background: selectedMatch===match.id ? `rgba(199,255,26,0.07)` : D.card2, border:`1px solid ${selectedMatch===match.id ? D.gold+'50' : D.border}`, borderRadius:14, padding:'16px 18px', cursor:'pointer', textAlign:'left' }}>
-                        <div style={{ display:'flex', justifyContent:'space-between', gap:12 }}>
-                          <div>
-                            <div style={{ fontSize:'0.88rem', fontWeight:800, color:D.text }}>{match.driverName}</div>
-                            <div style={{ display:'flex', gap:8, alignItems:'center', marginTop:6, color:D.sub, fontSize:'0.74rem' }}>
-                              <Star size={11} color={D.gold} fill={D.gold} />
-                              <span>{match.rating}</span>
-                              <span>· {match.trips} trips</span>
-                            </div>
-                            <div style={{ color:D.muted, fontSize:'0.74rem', marginTop:8 }}>{match.fromCity} → {match.toCity} · {match.departureTime}</div>
-                          </div>
-                          <div style={{ color:D.gold, fontFamily:D.MONO, fontWeight:900 }}>JOD {match.priceJOD.toFixed(1)}</div>
+            <AnimatePresence mode="wait">
+              {step === 0 && (
+                <motion.div
+                  key="s0"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -16 }}
+                >
+                  <h2 style={{ fontSize: '1.12rem', fontWeight: 900, margin: '0 0 18px' }}>
+                    {t('returnMatching.select_retailer')}
+                  </h2>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(132px, 1fr))',
+                      gap: 10,
+                      marginBottom: 18,
+                    }}
+                  >
+                    {RETAILERS.map(retailerItem => (
+                      <motion.button
+                        key={retailerItem.id}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setRetailer(retailerItem.id)}
+                        style={{
+                          background:
+                            retailer === retailerItem.id ? `${retailerItem.color}12` : D.card2,
+                          border: `1px solid ${retailer === retailerItem.id ? `${retailerItem.color}55` : D.border}`,
+                          borderRadius: R.lg,
+                          padding: '16px 14px',
+                          cursor: 'pointer',
+                          color: D.text,
+                          textAlign: 'left',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 12,
+                            background: C.elevated,
+                            display: 'grid',
+                            placeItems: 'center',
+                            fontWeight: 900,
+                            marginBottom: 10,
+                          }}
+                        >
+                          {retailerItem.logo}
                         </div>
-                      </button>
+                        <div style={{ fontSize: '0.84rem', fontWeight: 800 }}>
+                          {retailerItem.name}
+                        </div>
+                      </motion.button>
                     ))}
                   </div>
-                ) : (
-                  <div style={{ display:'flex', gap:10, alignItems:'center', background:`${D.gold}12`, border:`1px solid ${D.gold}30`, borderRadius:14, padding:'12px 14px', marginBottom:18, color:D.text, fontSize:'0.82rem' }}>
-                    <AlertCircle size={16} color={D.gold} />
-                    <span>{isRTL ? 'سيُنشأ الطلب بحالة بحث حتى تظهر رحلة مناسبة.' : 'The return will be created in searching mode until a matching ride appears.'}</span>
+                  <div style={{ marginBottom: 18 }}>
+                    <label
+                      style={{
+                        fontSize: '0.74rem',
+                        fontWeight: 800,
+                        color: D.sub,
+                        display: 'block',
+                        marginBottom: 8,
+                      }}
+                    >
+                      {t('returnMatching.order_id')}
+                    </label>
+                    <input
+                      value={orderId}
+                      onChange={event => setOrderId(event.target.value)}
+                      placeholder={t('returnMatching.noon_2026_xxxxxx')}
+                      style={{
+                        width: '100%',
+                        background: D.card2,
+                        border: `1px solid ${D.border}`,
+                        borderRadius: 12,
+                        color: D.text,
+                        fontSize: '0.9rem',
+                        fontFamily: D.F,
+                        padding: '12px 14px',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                    />
                   </div>
-                )}
-                <div style={{ display:'flex', gap:8 }}>
-                  <button onClick={() => setStep(1)} style={{ flex:1, height:48, borderRadius:12, border:`1px solid ${D.border}`, background:'transparent', color:D.sub, fontWeight:600, fontSize:'0.88rem', fontFamily:D.F, cursor:'pointer' }}>← {isRTL?'رجوع':'Back'}</button>
-                  <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => void confirmReturn()} disabled={creating || (matches.length > 0 && !selectedMatch)} style={{ flex:2, height:48, borderRadius:12, border:'none', background: !creating && (matches.length === 0 || selectedMatch) ? `linear-gradient(135deg,${D.gold},#E89200)` : 'rgba(255,255,255,0.08)', color: !creating && (matches.length === 0 || selectedMatch) ? '#040C18' : D.muted, fontWeight:800, fontSize:'0.9rem', fontFamily:D.F, cursor: !creating && (matches.length === 0 || selectedMatch) ? 'pointer' : 'not-allowed' }}>
-                    {creating ? (isRTL?'جارٍ إنشاء طلب الإرجاع…':'Creating return request…') : (isRTL?'مراجعة وتأكيد':'Review & Confirm')} →
-                  </motion.button>
-                </div>
-                {error ? <div style={{ marginTop:14, color:'#FCA5A5', fontSize:'0.8rem' }}>{error}</div> : null}
-              </motion.div>
-            )}
+                  <button
+                    onClick={() => retailer && setStep(1)}
+                    disabled={!retailer}
+                    style={{
+                      width: '100%',
+                      height: 50,
+                      borderRadius: 14,
+                      border: 'none',
+                      background: retailer
+                        ? `linear-gradient(135deg,${D.gold},${C.orange})`
+                        : C.elevated,
+                      color: retailer ? C.bgDeep : D.muted,
+                      fontWeight: 900,
+                      fontSize: '0.92rem',
+                      fontFamily: D.F,
+                      cursor: retailer ? 'pointer' : 'not-allowed',
+                    }}
+                  >
+                    {t('returnMatching.continue_to_return_details')}
+                  </button>
+                </motion.div>
+              )}
 
-            {step === 3 && createdReturn && (
-              <motion.div key="done" initial={{ opacity:0, scale:0.95 }} animate={{ opacity:1, scale:1 }}>
-                <div style={{ textAlign:'center', padding:'16px 0 24px' }}>
-                  <div style={{ width:70, height:70, borderRadius:'50%', background:'rgba(96,197,54,0.12)', border:`2px solid ${D.green}`, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 16px' }}>
-                    <CheckCircle2 size={34} color={D.green}/>
-                  </div>
-                  <h2 style={{ fontSize:'1.3rem', fontWeight:900, color:D.green, margin:'0 0 6px' }}>{isRTL?'تم إنشاء طلب الإرجاع!':'Return Request Created!'}</h2>
-                  <p style={{ fontSize:'0.8rem', color:D.muted, margin:'0 0 24px', lineHeight:1.7 }}>
-                    {createdReturn.matchedRideId
-                      ? (isRTL ? `تم ربط الطلب بمسار حي مع ${createdReturn.matchedDriver ?? 'سائق واصل'}.` : `The request is already matched to a live route with ${createdReturn.matchedDriver ?? 'a Wasel captain'}.`)
-                      : (isRTL ? 'تم إنشاء الطلب بحالة بحث وسيظهر في تتبع الطرود حتى تتم المطابقة.' : 'The request was created in searching mode and will stay visible in package tracking until matched.')}
-                  </p>
-                  <div style={{ background:D.card2, border:`1px solid ${D.gold}30`, borderRadius:16, padding:'24px', marginBottom:20, display:'inline-block' }}>
-                    <div style={{ width:120, height:120, background:'linear-gradient(135deg,rgba(199,255,26,0.15),rgba(22,199,242,0.10))', border:`2px solid ${D.gold}40`, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 10px' }}>
-                      <QrCode size={56} color={D.gold}/>
+              {step === 1 && (
+                <motion.div
+                  key="s1"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -16 }}
+                >
+                  <h2 style={{ fontSize: '1.12rem', fontWeight: 900, margin: '0 0 18px' }}>
+                    {t('returnMatching.return_details')}
+                  </h2>
+                  <div style={{ display: 'grid', gap: 14, marginBottom: 20 }}>
+                    <div>
+                      <label
+                        style={{
+                          fontSize: '0.74rem',
+                          fontWeight: 800,
+                          color: D.sub,
+                          display: 'block',
+                          marginBottom: 8,
+                        }}
+                      >
+                        {t('returnMatching.item_description')}
+                      </label>
+                      <input
+                        value={item}
+                        onChange={event => setItem(event.target.value)}
+                        placeholder={t('returnMatching.white_sneakers_size_42')}
+                        style={{
+                          width: '100%',
+                          background: D.card2,
+                          border: `1px solid ${D.border}`,
+                          borderRadius: 12,
+                          color: D.text,
+                          fontSize: '0.9rem',
+                          fontFamily: D.F,
+                          padding: '12px 14px',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                      />
                     </div>
-                    <div style={{ fontSize:'0.72rem', fontFamily:D.MONO, color:D.gold, letterSpacing:'0.12em' }}>{createdReturn.trackingId}</div>
-                    <div style={{ fontSize:'0.62rem', color:D.muted, marginTop:4 }}>{isRTL?'استخدم هذا المعرّف للمتابعة في صفحة الطرود':'Use this ID to continue tracking from the packages page'}</div>
-                  </div>
-                  <div style={{ display:'flex', gap:10 }}>
-                    <motion.button whileHover={{ scale:1.03 }} onClick={() => nav('/app/raje3')} style={{ flex:1, height:44, borderRadius:12, border:`1px solid ${D.border}`, background:D.card2, color:D.sub, fontWeight:600, fontSize:'0.82rem', fontFamily:D.F, cursor:'pointer' }}>
-                      {isRTL?'طلب جديد':'New return'}
-                    </motion.button>
-                    <motion.button whileHover={{ scale:1.03 }} onClick={() => nav('/app/packages')} style={{ flex:1, height:44, borderRadius:12, border:'none', background:`linear-gradient(135deg,${D.gold},#E89200)`, color:'#040C18', fontWeight:800, fontSize:'0.82rem', fontFamily:D.F, cursor:'pointer' }}>
-                      {isRTL?'افتح التتبع':'Open tracking'}
-                    </motion.button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
 
-        <div style={{ background:D.card, border:`1px solid ${D.border}`, borderRadius:16, padding:'22px 24px', marginTop:16 }}>
-          <div style={{ fontSize:'0.82rem', fontWeight:700, color:D.gold, marginBottom:16 }}>{isRTL?'كيف يعمل رجّع؟':'How Raje3 works'}</div>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))', gap:14 }}>
-            {[
-              { icon:'📦', title:isRTL?'أدخل تفاصيل الإرجاع':'Enter return details' },
-              { icon:'🔍', title:isRTL?'نفحص الرحلات الحية':'We inspect live rides' },
-              { icon:'🤝', title:isRTL?'نربط الطلب بالشبكة':'We connect the request to the network' },
-              { icon:'✅', title:isRTL?'نتابع بنفس معرّف التتبع':'One tracking ID follows the return' },
-            ].map(item => (
-              <div key={item.title} style={{ textAlign:'center' }}>
-                <div style={{ width:40, height:40, borderRadius:12, background:`${D.gold}12`, border:`1px solid ${D.gold}25`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.2rem', margin:'0 auto 8px' }}>{item.icon}</div>
-                <div style={{ fontSize:'0.72rem', color:D.sub, lineHeight:1.5 }}>{item.title}</div>
+                    <div>
+                      <label
+                        style={{
+                          fontSize: '0.74rem',
+                          fontWeight: 800,
+                          color: D.sub,
+                          display: 'block',
+                          marginBottom: 8,
+                        }}
+                      >
+                        {t('returnMatching.package_size')}
+                      </label>
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                          gap: 8,
+                        }}
+                      >
+                        {(['small', 'medium', 'large'] as const).map(option => (
+                          <button
+                            key={option}
+                            onClick={() => setSize(option)}
+                            style={{
+                              height: 42,
+                              borderRadius: 12,
+                              border: `1px solid ${size === option ? `${D.gold}55` : D.border}`,
+                              background: size === option ? `${D.gold}12` : D.card2,
+                              color: size === option ? D.gold : D.sub,
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        style={{
+                          fontSize: '0.74rem',
+                          fontWeight: 800,
+                          color: D.sub,
+                          display: 'block',
+                          marginBottom: 8,
+                        }}
+                      >
+                        {t('returnMatching.return_reason')}
+                      </label>
+                      <div style={{ display: 'grid', gap: 8 }}>
+                        {RETURN_REASONS.map(reasonItem => (
+                          <button
+                            key={reasonItem.id}
+                            onClick={() => setReason(reasonItem.id)}
+                            style={{
+                              padding: '12px 14px',
+                              borderRadius: 12,
+                              border: `1px solid ${reason === reasonItem.id ? `${D.gold}55` : D.border}`,
+                              background: reason === reasonItem.id ? `${D.gold}12` : D.card2,
+                              color: reason === reasonItem.id ? D.gold : D.sub,
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              textAlign: 'left',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 10,
+                            }}
+                          >
+                            {reason === reasonItem.id ? (
+                              <Check size={15} />
+                            ) : (
+                              <div style={{ width: 15 }} />
+                            )}
+                            {reasonItem.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 1.1fr', gap: 8 }}>
+                    <button
+                      onClick={() => setStep(0)}
+                      style={{
+                        height: 48,
+                        borderRadius: 12,
+                        border: `1px solid ${D.border}`,
+                        background: 'transparent',
+                        color: D.sub,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {t('common.back')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (item && reason) void searchMatches();
+                      }}
+                      disabled={!item || !reason || searching}
+                      style={{
+                        height: 48,
+                        borderRadius: R.md,
+                        border: 'none',
+                        background:
+                          item && reason
+                            ? `linear-gradient(135deg,${D.gold},${C.orange})`
+                            : C.elevated,
+                        color: item && reason ? C.bgDeep : D.muted,
+                        fontWeight: 900,
+                        cursor: item && reason ? 'pointer' : 'not-allowed',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                      }}
+                    >
+                      {searching ? (
+                        <>
+                          <RefreshCw size={15} style={{ animation: 'spin 1s linear infinite' }} />
+                          {t('returnMatching.finding_rides')}
+                        </>
+                      ) : (
+                        <>
+                          <Search size={15} />
+                          {t('returnMatching.find_matching_rides')}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 2 && (
+                <motion.div
+                  key="s2"
+                  initial={{ opacity: 0, x: 16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -16 }}
+                >
+                  <h2 style={{ fontSize: '1.12rem', fontWeight: 900, margin: '0 0 8px' }}>
+                    {t('returnMatching.match_a_return_ride')}
+                  </h2>
+                  <p style={{ fontSize: '0.78rem', color: D.muted, margin: '0 0 18px' }}>
+                    {matches.length > 0
+                      ? `${matches.length} package-ready rides are open into Amman right now.`
+                      : 'No live ride is open right now. You can still create the return and keep it searching.'}
+                  </p>
+
+                  {matches.length > 0 ? (
+                    <div style={{ display: 'grid', gap: 10, marginBottom: 18 }}>
+                      {matches.map(match => (
+                        <button
+                          key={match.id}
+                          onClick={() => setSelectedMatch(match.id)}
+                          style={{
+                            background: selectedMatch === match.id ? `${D.gold}10` : D.card2,
+                            border: `1px solid ${selectedMatch === match.id ? `${D.gold}55` : D.border}`,
+                            borderRadius: 16,
+                            padding: '16px 18px',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              gap: 12,
+                              flexWrap: 'wrap',
+                            }}
+                          >
+                            <div>
+                              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: D.text }}>
+                                {match.driverName}
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  gap: 8,
+                                  alignItems: 'center',
+                                  marginTop: 6,
+                                  color: D.sub,
+                                  fontSize: '0.74rem',
+                                }}
+                              >
+                                <Star size={11} color={D.gold} fill={D.gold} />
+                                <span>{match.rating}</span>
+                                <span>
+                                  · {match.trips} {t('returnMatching.trips')}
+                                </span>
+                              </div>
+                              <div style={{ color: D.muted, fontSize: '0.74rem', marginTop: 8 }}>
+                                {match.fromCity} → {match.toCity} · {match.departureTime}
+                              </div>
+                            </div>
+                            <div style={{ color: D.gold, fontFamily: D.MONO, fontWeight: 900 }}>
+                              JOD {match.priceJOD.toFixed(1)}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: 10,
+                        alignItems: 'center',
+                        background: `${D.gold}12`,
+                        border: `1px solid ${D.gold}30`,
+                        borderRadius: 14,
+                        padding: '12px 14px',
+                        marginBottom: 18,
+                        color: D.text,
+                        fontSize: '0.82rem',
+                      }}
+                    >
+                      <AlertCircle size={16} color={D.gold} />
+                      <span>
+                        {t(
+                          'returnMatching.the_return_will_stay_in_searching_mode_until_a_matching_ride_appears',
+                        )}
+                      </span>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 1.1fr', gap: 8 }}>
+                    <button
+                      onClick={() => setStep(1)}
+                      style={{
+                        height: 48,
+                        borderRadius: 12,
+                        border: `1px solid ${D.border}`,
+                        background: 'transparent',
+                        color: D.sub,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {t('common.back')}
+                    </button>
+                    <button
+                      onClick={() => void confirmReturn()}
+                      disabled={creating || (matches.length > 0 && !selectedMatch)}
+                      style={{
+                        height: 48,
+                        borderRadius: R.md,
+                        border: 'none',
+                        background:
+                          !creating && (matches.length === 0 || selectedMatch)
+                            ? `linear-gradient(135deg,${D.gold},${C.orange})`
+                            : C.elevated,
+                        color:
+                          !creating && (matches.length === 0 || selectedMatch) ? C.bgDeep : D.muted,
+                        fontWeight: 900,
+                        cursor:
+                          !creating && (matches.length === 0 || selectedMatch)
+                            ? 'pointer'
+                            : 'not-allowed',
+                      }}
+                    >
+                      {creating ? 'Creating return' : 'Create return'}
+                    </button>
+                  </div>
+                  {error ? (
+                    <div style={{ marginTop: 14, color: C.error, fontSize: '0.8rem' }}>{error}</div>
+                  ) : null}
+                </motion.div>
+              )}
+
+              {step === 3 && createdReturn && (
+                <motion.div
+                  key="done"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                >
+                  <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
+                    <div
+                      style={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: '50%',
+                        background: C.greenDim,
+                        border: `2px solid ${D.green}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 16px',
+                      }}
+                    >
+                      <CheckCircle2 size={34} color={D.green} />
+                    </div>
+                    <h2 style={{ fontSize: '1.36rem', fontWeight: 900, color: D.green, margin: 0 }}>
+                      {t('returnMatching.return_is_live')}
+                    </h2>
+                    <p
+                      style={{
+                        fontSize: '0.8rem',
+                        color: D.muted,
+                        margin: '10px 0 22px',
+                        lineHeight: 1.65,
+                      }}
+                    >
+                      {createdReturn.matchedRideId
+                        ? `Matched to ${createdReturn.matchedDriver ?? 'a Wasel captain'} on a live route.`
+                        : 'Created in searching mode. It will stay visible until a live route picks it up.'}
+                    </p>
+                    <div
+                      style={{
+                        background: D.card2,
+                        border: `1px solid ${D.gold}30`,
+                        borderRadius: 18,
+                        padding: '22px',
+                        marginBottom: 18,
+                        display: 'inline-block',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 116,
+                          height: 116,
+                          background: `linear-gradient(135deg,${C.goldDim},${C.cyanDim})`,
+                          border: `2px solid ${D.gold}40`,
+                          borderRadius: R.lg,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: '0 auto 10px',
+                        }}
+                      >
+                        <QrCode size={54} color={D.gold} />
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '0.72rem',
+                          fontFamily: D.MONO,
+                          color: D.gold,
+                          letterSpacing: '0.12em',
+                        }}
+                      >
+                        {createdReturn.trackingId}
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <button
+                        onClick={() => {
+                          setStep(0);
+                          setRetailer('');
+                          setOrderId('');
+                          setItem('');
+                          setSize('small');
+                          setReason('');
+                          setSelectedMatch('');
+                          setCreatedReturn(null);
+                        }}
+                        style={{
+                          height: 44,
+                          borderRadius: R.md,
+                          border: `1px solid ${D.border}`,
+                          background: D.card2,
+                          color: D.sub,
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {t('returnMatching.new_return')}
+                      </button>
+                      <button
+                        onClick={() => nav('/app/packages')}
+                        style={{
+                          height: 44,
+                          borderRadius: 12,
+                          border: 'none',
+                          background: `linear-gradient(135deg,${D.gold},${C.orange})`,
+                          color: C.bgDeep,
+                          fontWeight: 900,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {t('returnMatching.open_tracking')}
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div style={{ display: 'grid', gap: 16 }}>
+            <div
+              style={{
+                background: `linear-gradient(135deg, ${C.goldDim}, ${C.cardSolid} 68%, ${C.cyanDim})`,
+                borderRadius: R.xxl,
+                padding: '20px',
+                border: `1px solid ${D.border}`,
+              }}
+            >
+              <div
+                style={{
+                  color: D.gold,
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {t('returnMatching.return_state')}
               </div>
-            ))}
+              <h2
+                style={{ color: D.text, fontSize: '1.4rem', fontWeight: 900, margin: '8px 0 10px' }}
+              >
+                {createdReturn ? 'Tracking live' : step >= 2 ? 'Matching now' : 'Building return'}
+              </h2>
+              <div style={{ display: 'grid', gap: 10 }}>
+                {railLines.map(line => (
+                  <div
+                    key={line}
+                    style={{
+                      background: C.elevated,
+                      borderRadius: R.lg,
+                      border: `1px solid ${D.border}`,
+                      padding: '12px 14px',
+                      color: D.text,
+                      fontSize: '0.8rem',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {line}
+                  </div>
+                ))}
+              </div>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                  gap: 10,
+                  marginTop: 14,
+                }}
+              >
+                {[
+                  { label: 'Size', value: size },
+                  { label: 'Lane', value: liveLane.replace(' → ', '-') },
+                  {
+                    label: 'Mode',
+                    value: selectedTrip ? 'Matched' : step >= 2 ? 'Searching' : 'Draft',
+                  },
+                ].map(item => (
+                  <div
+                    key={item.label}
+                    style={{
+                      background: C.elevated,
+                      borderRadius: R.lg,
+                      border: `1px solid ${D.border}`,
+                      padding: '12px 12px 10px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: D.muted,
+                        fontSize: '0.66rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      {item.label}
+                    </div>
+                    <div
+                      style={{ color: D.text, fontSize: '0.78rem', fontWeight: 800, marginTop: 6 }}
+                    >
+                      {item.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: D.card,
+                border: `1px solid ${D.border}`,
+                borderRadius: R.xl,
+                padding: '18px',
+              }}
+            >
+              <div style={{ color: D.text, fontWeight: 900, marginBottom: 12 }}>
+                {t('returnMatching.network_pulse')}
+              </div>
+              <div style={{ display: 'grid', gap: 10 }}>
+                {[
+                  `${matches.length} rides can absorb package returns into Amman.`,
+                  selectedTrip
+                    ? `${selectedTrip.driverName} leaves ${selectedTrip.departureTime}.`
+                    : 'Select a ride to lock pricing and timing.',
+                  createdReturn?.matchedRideId
+                    ? `Tracking ID ${createdReturn.trackingId} is already active.`
+                    : 'One ID will follow the full return flow.',
+                ].map(line => (
+                  <div
+                    key={line}
+                    style={{
+                      background: D.card2,
+                      borderRadius: R.lg,
+                      border: `1px solid ${D.border}`,
+                      padding: '12px 14px',
+                      color: D.text,
+                      fontSize: '0.78rem',
+                      lineHeight: 1.55,
+                    }}
+                  >
+                    {line}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: D.card,
+                border: `1px solid ${D.border}`,
+                borderRadius: R.xl,
+                padding: '18px',
+              }}
+            >
+              <div style={{ color: D.text, fontWeight: 900, marginBottom: 12 }}>
+                {t('returnMatching.actions')}
+              </div>
+              <div style={{ display: 'grid', gap: 10 }}>
+                <button
+                  onClick={() => nav('/app/packages')}
+                  style={{
+                    height: 42,
+                    borderRadius: R.md,
+                    border: 'none',
+                    background: `linear-gradient(135deg,${D.gold},${C.orange})`,
+                    color: C.bgDeep,
+                    fontWeight: 900,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {t('returnMatching.open_package_tracking')}
+                </button>
+                <button
+                  onClick={() => nav('/app/find-ride')}
+                  style={{
+                    height: 42,
+                    borderRadius: R.md,
+                    border: `1px solid ${D.border}`,
+                    background: D.card2,
+                    color: D.text,
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {t('returnMatching.open_ride_network')}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-
-        <ServiceFlowPlaybook focusService="returns" />
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -298,4 +987,3 @@ export function ReturnMatching() {
 }
 
 export default ReturnMatching;
-

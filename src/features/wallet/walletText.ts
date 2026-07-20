@@ -1,4 +1,6 @@
-export const walletText = {
+import { normalizeTextTree } from '../../utils/textEncoding';
+
+const walletTextSource = {
   en: {
     walletTitle: 'Wasel Wallet',
     balance: 'Available Balance',
@@ -17,7 +19,7 @@ export const walletText = {
     settings: 'Settings',
     recentTransactions: 'Recent Transactions',
     viewAll: 'View All',
-    noTransactions: 'Transactions will appear here as soon as your wallet becomes active',
+    noTransactions: 'No transactions yet',
     quickActions: 'Core Actions',
     topUpAmount: 'Top-up Amount (JOD)',
     paymentMethod: 'Payment Method',
@@ -61,16 +63,18 @@ export const walletText = {
     escrow: 'Active Escrows',
     held: 'Held',
     processing: 'Processing...',
+    loadingTitle: 'Loading your wallet',
+    loadingDescription: 'Loading wallet data.',
     pinDigits: 'Enter 4-digit PIN',
     carbonSaved: 'CO2 Saved',
     totalTx: 'Total Transactions',
     jod: 'JOD',
     liveStatus: 'Live',
-    walletSubtitle: 'Payments, balance, and rewards',
+    walletSubtitle: 'Balance and rewards',
     redirectingToSignIn: 'Redirecting to sign in...',
-    walletUnavailableTitle: 'Wallet experience is being finalized',
-    walletUnavailableDescription: 'We are wiring payments, trust checks, and settlement flows. Complete backend setup to unlock the full wallet journey.',
-    walletUnavailableHint: 'A more polished money experience is on the way',
+    walletUnavailableTitle: 'Wallet unavailable',
+    walletUnavailableDescription: 'Complete wallet setup to unlock payments.',
+    walletUnavailableHint: 'Setup still in progress',
     rewardsEmptyHint: 'Complete trips to earn rewards',
     availableLabel: 'Available',
     freeLabel: 'Free',
@@ -90,10 +94,23 @@ export const walletText = {
     autoTopUpEnabledToast: 'Auto top-up enabled',
     autoTopUpDisabledToast: 'Auto top-up disabled',
     welcomeToPlus: 'Welcome to Wasel Plus!',
+    redirectingToSubscriptionCheckout: 'Redirecting to secure subscription checkout',
+    subscriptionCheckoutCompleted: 'Subscription checkout completed. Membership is refreshing.',
+    subscriptionCheckoutCancelled: 'Subscription checkout was cancelled before completion.',
     rewardClaimed: 'Reward claimed!',
     pinSetSuccess: 'PIN set successfully',
+    topUpUnavailableHint: 'Secure wallet top-up is not configured in this environment yet.',
+    subscriptionUnavailableHint:
+      'Subscription checkout is disabled until wallet billing is configured.',
+    rewardClaimUnavailableHint:
+      'Rewards are visible, but claiming stays disabled until the wallet backend is configured.',
+    pinUnavailableHint: 'PIN setup is disabled until the secure wallet backend is configured.',
   },
   ar: {
+    topUpUnavailableHint: 'شحن المحفظة الآمن غير مفعّل في هذه البيئة بعد.',
+    subscriptionUnavailableHint: 'الاشتراك معطّل حتى يكتمل إعداد فوترة المحفظة.',
+    rewardClaimUnavailableHint: 'المكافآت مرئية، لكن استلامها معطّل حتى يكتمل إعداد خلفية المحفظة.',
+    pinUnavailableHint: 'تعيين PIN معطّل حتى يكتمل إعداد خلفية المحفظة الآمنة.',
     walletTitle: 'محفظة واصل',
     balance: 'الرصيد المتاح',
     pending: 'معلق',
@@ -155,6 +172,8 @@ export const walletText = {
     escrow: 'عمليات الضمان النشطة',
     held: 'محجوز',
     processing: 'جارٍ المعالجة...',
+    loadingTitle: 'جارٍ تحميل المحفظة',
+    loadingDescription: 'نجمع الرصيد والمكافآت وآخر النشاطات.',
     pinDigits: 'أدخل رمزاً من 4 أرقام',
     carbonSaved: 'انبعاثات CO2 التي تم توفيرها',
     totalTx: 'إجمالي المعاملات',
@@ -163,9 +182,10 @@ export const walletText = {
     walletSubtitle: 'المدفوعات والرصيد والمكافآت',
     redirectingToSignIn: 'جارٍ تحويلك إلى تسجيل الدخول...',
     walletUnavailableTitle: 'المحفظة قيد الإطلاق',
-    walletUnavailableDescription: 'نجهز تدفق المدفوعات والأمان والتسوية. أكمل إعداد الخلفية لرؤية تجربة المحفظة الكاملة.',
+    walletUnavailableDescription:
+      'نجهز تدفق المدفوعات والأمان والتسوية. أكمل إعداد الخلفية لرؤية تجربة المحفظة الكاملة.',
     walletUnavailableHint: 'تجربة مالية أكثر تنسيقاً قريباً',
-    rewardsEmptyHint: 'أكمل رحلات لربح مكافآت',
+    rewardsEmptyHint: 'أكمل رحلات لتربح مكافآت',
     availableLabel: 'الرصيد المتاح',
     freeLabel: 'مجاني',
     userIdPlaceholder: 'معرف المستلم',
@@ -184,7 +204,12 @@ export const walletText = {
     autoTopUpEnabledToast: 'تم تفعيل الشحن التلقائي',
     autoTopUpDisabledToast: 'تم إيقاف الشحن التلقائي',
     welcomeToPlus: 'مبروك! تم الاشتراك في واصل بلس',
+    redirectingToSubscriptionCheckout: 'جارٍ تحويلك إلى صفحة اشتراك آمنة',
+    subscriptionCheckoutCompleted: 'اكتمل دفع الاشتراك. جارٍ تحديث العضوية.',
+    subscriptionCheckoutCancelled: 'تم إلغاء دفع الاشتراك قبل الاكتمال.',
     rewardClaimed: 'تم استلام المكافأة!',
     pinSetSuccess: 'تم تعيين PIN بنجاح',
   },
 } as const;
+
+export const walletText = normalizeTextTree(walletTextSource);

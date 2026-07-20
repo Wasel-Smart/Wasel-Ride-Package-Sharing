@@ -5,13 +5,30 @@
   "id": "/",
   "start_url": "/?source=pwa",
   "display": "standalone",
-  "display_override": ["standalone", "browser"],
-  "background_color": "#061726",
-  "theme_color": "#061726",
+  "display_override": ["standalone", "browser", "minimal-ui"],
+  "background_color": "#040C18",
+  "theme_color": "#040C18",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en-JO",
   "dir": "ltr",
+  "categories": ["travel", "navigation", "transportation"],
+  "screenshots": [
+    {
+      "src": "/brand/wasellogo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Wasel home screen"
+    },
+    {
+      "src": "/brand/wasellogo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Wasel dashboard"
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -38,7 +55,6 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["travel", "navigation", "transportation"],
   "shortcuts": [
     {
       "name": "Find Ride",
@@ -65,6 +81,16 @@
       "url": "/app/wallet"
     }
   ],
+  "share_target": {
+    "action": "/app/packages",
+    "method": "POST",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
   "related_applications": [],
   "prefer_related_applications": false
 }

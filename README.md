@@ -1,117 +1,136 @@
-# Wasel - Jordan's Shared Ride, Bus, and Parcel Platform
+# Wasel Ride And Package Sharing
 
-Ride marketplace where travelers carry passengers and package handoffs between sender and receiver on the same trip, plus scheduled buses for fixed corridors.
+[![CI](https://img.shields.io/github/actions/workflow/status/Wasel-Smart/Wasel-Ride-Package-Sharing/ci.yml?branch=master&label=ci)](https://github.com/Wasel-Smart/Wasel-Ride-Package-Sharing/actions/workflows/ci.yml)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-6.x-646CFF?logo=vite&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20Auth-3FCF8E?logo=supabase&logoColor=white)
+![OpenAPI](https://img.shields.io/badge/OpenAPI-v1-6BA539?logo=openapiinitiative&logoColor=white)
 
----
+Wasel is a Jordan-focused mobility platform for shared rides, package handoff logistics, bus corridor discovery, trust workflows, and operator-facing mobility surfaces. This repository contains the production web client and the platform contracts that make the project review like a serious system rather than a demo.
 
-## Tech Stack
+## What changed the engineering bar
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 18, TypeScript, Vite 6 |
-| Routing | React Router 7 (lazy-loaded routes) |
-| Styling | Tailwind CSS 4 + Wasel Design System |
-| Data | Supabase (Postgres + Realtime + Auth) |
-| State | TanStack Query v5 |
-| UI Primitives | Radix UI |
-| Payments | Stripe |
-| Notifications | Web Notifications API + Service Worker |
-| Error Monitoring | Sentry |
-| Testing | Vitest + Playwright |
+- Canonical domain modeling for rides, packages, and driver availability
+- Typed domain events and an event-bus contract for async flows
+- Queue and worker ownership contracts for matching, package, payment, notification, and ops workers
+- Explicit service topology, SLO targets, and deployment overlays for dev, staging, and prod
+- Standard API response envelopes with request tracing
+- Structured observability primitives and Sentry integration
+- Runtime environment validation plus dedicated GitHub security workflows
+- Cross-platform CI with browser verification artifacts
+- Dockerized SPA deployment and load-test scaffolding
+- Expanded architecture, API, observability, worker, and scaling docs
+- Kubernetes and observability deployment scaffolding in `infra/`
 
----
+## Platform map
 
-## Getting Started
+```mermaid
+flowchart LR
+  Web["Web Client"] --> Edge["API / Edge Contract"]
+  Edge --> Ride["Ride Matching"]
+  Edge --> Package["Package Delivery"]
+  Edge --> Payment["Payments"]
+  Edge --> Trust["Trust + Operations"]
+  Ride --> Events["Event Stream"]
+  Package --> Events
+  Payment --> Events
+  Events --> Workers["Async Workers"]
+  Ride --> Data["Postgres + PostGIS + Redis GEO"]
+  Package --> Data
+  Payment --> Data
+```
+
+## Repository map
+
+```text
+.github/        CI, automation, templates
+docs/           Architecture, OpenAPI, observability, launch docs
+docker/         Nginx runtime configuration
+scripts/        Build and verification helpers
+supabase/       Local Supabase project, functions, migrations, and seeds
+src/
+  domain/       Canonical lifecycle and event contracts
+  features/     Route-level product areas
+  platform/     Event bus, API envelope, geo stream, RBAC, observability
+  services/     Business workflows and backend adapters
+  utils/        Security, monitoring, config, validation, performance
+tests/
+  unit/         Domain, service, and utility coverage
+  e2e/          Playwright browser verification
+  load/         k6 smoke tests
+```
+
+## Start here
+
+- [Architecture](./docs/architecture.md)
+- [Implementation status](./docs/implementation-status.md)
+- [API contract](./docs/api-contract.md)
+- [Deployment guide](./docs/deployment.md)
+- [OAuth setup guide](./docs/oauth-setup-guide.md)
+- [Security and identity](./docs/security-and-identity.md)
+- [Observability](./docs/observability.md)
+- [Reliability SLOs](./docs/reliability-slos.md)
+- [Workers and queues](./docs/workers-and-queues.md)
+- [Testing](./docs/testing.md)
+- [Docs index](./docs/README.md)
+
+## Local setup
 
 ```bash
-# 1. Install dependencies
 npm install
-
-# 2. Set up environment
 cp .env.example .env
-# Fill in your keys in .env
-
-# 3. Run in development
 npm run dev
 ```
 
----
+## Backend setup
 
-## Scripts
-
-| Command | Description |
-|---|---|
-| `npm run dev` | Start dev server on port 3000 |
-| `npm run build` | Type-check + production build |
-| `npm run preview` | Preview production build locally |
-| `npm run test` | Run unit tests (Vitest) |
-| `npm run test:e2e` | Run end-to-end tests (Playwright) |
-| `npm run type-check` | TypeScript check only |
-| `npm run verify` | Full verification: types + unit tests + build + E2E |
-
----
-
-## Project Structure
-
-```
-src/
-├── App.tsx              # App root with ErrorBoundary
-├── wasel-routes.tsx     # All routes (lazy-loaded)
-├── main.tsx             # React DOM entry point
-│
-├── pages/               # Top-level page components
-├── layouts/             # WaselRoot layout + header
-├── features/            # Feature modules (rides, packages, trust, auth)
-├── components/          # Shared UI components
-│   ├── wasel-ds/        # Wasel Design System primitives
-│   └── wasel-ui/        # Wasel-branded composites
-├── contexts/            # React contexts (Auth, Language, Theme)
-├── hooks/               # Custom React hooks
-├── services/            # API & data services
-├── utils/               # Utilities & helpers
-├── types/               # TypeScript types
-├── styles/              # Global CSS + design tokens
-├── tokens/              # Design token definitions
-├── config/              # App configuration
-├── supabase/            # DB schema & migrations
-└── locales/             # i18n translations
-```
-
----
-
-## Core Services
-
-| Service | Path |
-|---|---|
-| Find a Ride | `/find-ride` |
-| Offer a Ride | `/offer-ride` |
-| Bus | `/bus` |
-| Package Delivery via Rides | `/packages` |
-| Trust Center | `/trust` |
-
----
-
-## Environment Variables
-
-See `.env.example` for all required and optional variables.  
-Use `VITE_EDGE_FUNCTION_NAME` when your backend edge function name differs from the default slug, `VITE_API_URL` for a custom API base, `VITE_SUPPORT_WHATSAPP_NUMBER` / `VITE_AUTH_CALLBACK_PATH` for production auth and support routing, and `VITE_ENABLE_TWO_FACTOR_AUTH=true` only after a secure backend verifier is in place.
-**Never commit `.env` files.** They are in `.gitignore`.
-
----
-
-## Deployment
+Use the repo-local Supabase CLI workflow instead of relying on a global install.
 
 ```bash
-npm run build
-# Output: /build
-# Deploy /build to your static host (Vercel, Netlify, Cloudflare Pages, etc.)
+npm run supabase:start
+npm run supabase:db:reset
+npm run dev
 ```
 
-Recommended: Set `VITE_APP_URL` to your production domain before building.
+Supabase project config lives in `supabase/config.toml`, with migrations in `supabase/migrations`, seed data in `supabase/seeds`, and edge functions in `supabase/functions`.
 
----
+## Quality gate
 
-## Notification Runtime
+```bash
+npm run type-check
+npm run lint
+npm run test:unit
+npm run build
+npm run test:e2e
+```
 
-The live frontend notification path uses the browser Notifications API together with the single service worker at `public/sw.js`.
-Firebase client configuration is not part of the current web runtime.
+For load smoke checks:
+
+```bash
+npm run test:load:smoke
+```
+
+For contract and infra validation:
+
+```bash
+npm run verify:contracts
+```
+
+## Docker
+
+```bash
+docker compose up --build
+```
+
+The container serves the production build on `http://localhost:8080`.
+Local development also supports Supabase via `docker compose --profile supabase up`.
+
+## Environment highlights
+
+Client-safe values live in `.env` and are documented in [.env.example](./.env.example). Provider secrets, service-role keys, and worker secrets must remain outside the browser bundle.
+
+## Collaboration standards
+
+- [Contributing guide](./CONTRIBUTING.md)
+- [Code of conduct](./CODE_OF_CONDUCT.md)
+- [Security policy](./SECURITY.md)

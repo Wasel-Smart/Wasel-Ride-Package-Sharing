@@ -1,0 +1,130 @@
+# For detailed configuration reference documentation, visit:
+# https://supabase.com/docs/guides/local-development/cli/config
+project_id = "wasel"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "api", "graphql_public", "stripe", "pgmq_public"]
+extra_search_path = ["public", "extensions", "realtime", "supabase_migrations", "stripe", "vault", "auth", "storage", "api"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 17
+
+[db.migrations]
+enabled = true
+
+[db.seed]
+enabled = true
+sql_paths = ["./seeds/*.sql"]
+
+[realtime]
+enabled = true
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1"
+
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+[storage.s3_protocol]
+enabled = true
+
+[auth]
+enabled = true
+site_url = "https://wasel14.online"
+additional_redirect_urls = [
+  "https://wasel14.online",
+  "https://www.wasel14.online",
+  "https://wasel14.online/app/auth/callback",
+  "https://www.wasel14.online/app/auth/callback",
+  "https://wasel-ride-package-sharing-ten.vercel.app",
+  "https://wasel-ride-package-sharing-ten.vercel.app/app/auth/callback",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:5173/app/auth/callback",
+  "http://127.0.0.1:5173/app/auth/callback",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
+  "http://localhost:4173/app/auth/callback",
+  "http://127.0.0.1:4173/app/auth/callback",
+]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
+enable_manual_linking = true
+enable_signup = true
+enable_anonymous_sign_ins = true
+minimum_password_length = 7
+password_requirements = "lower_upper_letters_digits_symbols"
+
+[auth.mfa.totp]
+enroll_enabled = false
+verify_enabled = true
+
+[auth.mfa.phone]
+enroll_enabled = false
+verify_enabled = false
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = true
+secure_password_change = true
+max_frequency = "1m0s"
+otp_length = 8
+otp_expiry = 3600
+
+[auth.sms]
+enable_signup = true
+enable_confirmations = false
+template = "Your code is {{ .Code }}"
+max_frequency = "5s"
+
+[auth.sms.twilio]
+enabled = false
+account_sid = ""
+message_service_sid = ""
+auth_token = ""
+
+[auth.sms.twilio_verify]
+enabled = true
+account_sid = "env(SUPABASE_AUTH_SMS_TWILIO_ACCOUNT_SID)"
+message_service_sid = "env(SUPABASE_AUTH_SMS_TWILIO_VERIFY_SERVICE_SID)"
+auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
+
+# OAuth Providers - Google and Facebook
+[auth.external.google]
+enabled = true
+client_id = "235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com"
+secret = "hash:491c975d9a00644dbc960f00f4228e529d9ce89c39ec876f38192f6f3af5e8d9"
+redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
+skip_nonce_check = true
+email_optional = true
+
+[auth.external.facebook]
+enabled = true
+client_id = "939540775374132"
+secret = "hash:709088e067ebef70689fea4cae7b7e7d1ad399b0f8e1331ba485a67c972b0a1e"
+redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
+skip_nonce_check = false
+email_optional = true
+
+[auth.web3.solana]
+enabled = true
+
+[auth.web3.ethereum]
+enabled = true
+
+[functions.make-server-0b1f4071]
+verify_jwt = false
