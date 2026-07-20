@@ -1,6 +1,6 @@
 # Wasel Mobile + Web Completeness Checklist
 
-Wasel is shipped as a responsive web app and installable PWA today, with a native bridge contract ready for Capacitor builds. This checklist is the release gate for a 10/10 mobile + web frontend.
+Wasel ships as a responsive web app, installable PWA, Capacitor-ready bundle, and checked-in native Android/iOS shell scaffold. This checklist is the release gate for a 10/10 mobile + web frontend.
 
 ## Web/PWA gates
 
@@ -13,8 +13,8 @@ Wasel is shipped as a responsive web app and installable PWA today, with a nativ
 ## Native mobile bridge gates
 
 - `capacitor.config.json` defines the Wasel app id, app name, production web output directory, Android HTTPS scheme, splash screen, status bar, and push notification presentation defaults.
-- Native shells can be generated from the built web app with Capacitor using the checked-in config.
-- Android/iOS projects should be generated in release infrastructure and should not drift from this config.
+- Native shell scaffolds exist under `native/android` and `native/ios` and are validated by `npm run verify:mobile-readiness`.
+- Android/iOS store builds should be produced in release infrastructure and should not drift from this config or native shell contract.
 - Store assets must use the canonical Wasel brand mark from `public/brand/wasel-mark-clean.svg`.
 
 ## Backend/runtime gates
@@ -32,4 +32,4 @@ A release can be called 10/10 only when all of these are true:
 2. Mobile readiness verification passes.
 3. Lighthouse/accessibility/PWA checks pass on preview or production.
 4. Production Supabase rollout and auth verification pass.
-5. Android/iOS native shells are generated from the Capacitor config for store release, or the release is explicitly scoped as PWA-only.
+5. Android/iOS native shell scaffolds validate locally, and store binaries are generated from them in release infrastructure.

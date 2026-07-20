@@ -46,12 +46,54 @@ const requiredFiles = [
   'public/brand/wasel-mark-clean.svg',
   'src/components/wasel-ds/WaselLogo.tsx',
   'docs/MOBILE_WEB_COMPLETENESS.md',
+  'native/README.md',
+  'native/android/settings.gradle',
+  'native/android/app/build.gradle',
+  'native/android/app/src/main/AndroidManifest.xml',
+  'native/android/app/src/main/java/online/wasel14/app/MainActivity.kt',
+  'native/ios/Wasel/Info.plist',
+  'native/ios/Wasel/AppDelegate.swift',
 ];
 for (const file of requiredFiles) {
   assert(fs.existsSync(path.join(root, file)), `${file} is required for mobile/web readiness`);
 }
 
-const sourceRoots = ['src', 'public', 'docs'];
+const androidManifest = fs.existsSync(path.join(root, 'native/android/app/src/main/AndroidManifest.xml'))
+  ? fs.readFileSync(path.join(root, 'native/android/app/src/main/AndroidManifest.xml'), 'utf8')
+  : '';
+const androidBuild = fs.existsSync(path.join(root, 'native/android/app/build.gradle'))
+  ? fs.readFileSync(path.join(root, 'native/android/app/build.gradle'), 'utf8')
+  : '';
+assert(androidBuild.includes("namespace 'online.wasel14.app'"), 'Android Gradle config must use the Wasel application namespace');
+assert(androidBuild.includes("applicationId 'online.wasel14.app'"), 'Android Gradle config must use the Wasel application id');
+assert(androidManifest.includes('android.permission.ACCESS_FINE_LOCATION'), 'Android manifest must request location permission for live mobility');
+assert(androidManifest.includes('android.permission.POST_NOTIFICATIONS'), 'Android manifest must request notification permission');
+assert(androidManifest.includes('wasel14.online'), 'Android manifest must include Wasel production deep link host');
+
+const iosInfo = fs.existsSync(path.join(root, 'native/ios/Wasel/Info.plist'))
+  ? fs.readFileSync(path.join(root, 'native/ios/Wasel/Info.plist'), 'utf8')
+  : '';
+assert(iosInfo.includes('online.wasel14.app'), 'iOS Info.plist must use the Wasel bundle id');
+assert(iosInfo.includes('NSLocationWhenInUseUsageDescription'), 'iOS Info.plist must include location permission copy');
+assert(iosInfo.includes('remote-notification'), 'iOS Info.plist must declare remote notification background mode');
+
+
+const indexHtml = fs.existsSync(path.join(root, 'index.html'))
+  ? fs.readFileSync(path.join(root, 'index.html'), 'utf8')
+  : '';
+assert(indexHtml.includes('viewport-fit=cover'), 'index.html must include safe-area viewport support');
+assert(indexHtml.includes('name="theme-color"'), 'index.html must define the mobile browser theme color');
+assert(indexHtml.includes('rel="manifest"'), 'index.html must link the PWA manifest');
+assert(indexHtml.includes('/brand/wasel-mark-clean.svg'), 'index.html must preload and advertise the canonical Wasel mark');
+
+const serviceWorker = fs.existsSync(path.join(root, 'public/sw.js'))
+  ? fs.readFileSync(path.join(root, 'public/sw.js'), 'utf8')
+  : '';
+assert(serviceWorker.includes('/offline.html'), 'service worker must precache the offline page');
+assert(serviceWorker.includes('/manifest.json'), 'service worker must precache the manifest');
+assert(serviceWorker.includes('/brand/wasel-mark-clean.svg'), 'service worker must precache the canonical Wasel mark');
+
+const sourceRoots = ['src', 'public', 'docs', 'native'];
 const mojibakePattern = /[ØÙ]/;
 function walk(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
