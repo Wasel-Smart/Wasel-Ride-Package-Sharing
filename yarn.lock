@@ -925,7 +925,7 @@
     "@radix-ui/react-use-previous" "1.1.2"
     "@radix-ui/react-visually-hidden" "1.2.8"
 
-"@radix-ui/react-popover@^1.1.6":
+"@radix-ui/react-popover@^1.1.20":
   version "1.1.20"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-popover/-/react-popover-1.1.20.tgz#4ad6970a4c5bc5b870c8d24b71842a737024e6e9"
   integrity sha512-/PYqbsyuDkNj+IxMcRx71qNt6GelnuNulMwdCV7AtFEhUyK6XkbwreEN6CCLydMeTiDozBV4uv5aF5d12dDH7w==
