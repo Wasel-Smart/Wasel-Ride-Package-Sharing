@@ -999,7 +999,7 @@
   dependencies:
     "@radix-ui/react-slot" "1.3.0"
 
-"@radix-ui/react-progress@^1.1.2":
+"@radix-ui/react-progress@^1.1.13":
   version "1.1.13"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-progress/-/react-progress-1.1.13.tgz#29c25635b8848cf135334dd52e62c62de940bb88"
   integrity sha512-1dUdKDd63Tz9FfbTw20MVr28ohG4v7HOJ1dsavGBBPBS3KGzLOyLKiMJAC1OdgiY18nTSHpD4fULGK5gsLY/ww==
