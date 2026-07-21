@@ -673,7 +673,7 @@
     "@radix-ui/react-use-controllable-state" "1.2.4"
     "@radix-ui/react-use-size" "1.1.2"
 
-"@radix-ui/react-collapsible@1.1.17":
+"@radix-ui/react-collapsible@1.1.17", "@radix-ui/react-collapsible@^1.1.17":
   version "1.1.17"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-collapsible/-/react-collapsible-1.1.17.tgz#310c4cbc1e9dbe037ba4853ea0003e5de80f47bb"
   integrity sha512-DJgqGsNXa0df3ifz9PFNgvgj/bzIu5QTVWCt5nQWaUkM6y0EarUv4QG4s6mCoeQdOIyVOT/Q1osFuEGub2TDXQ==
@@ -685,20 +685,6 @@
     "@radix-ui/react-presence" "1.1.8"
     "@radix-ui/react-primitive" "2.1.7"
     "@radix-ui/react-use-controllable-state" "1.2.4"
-    "@radix-ui/react-use-layout-effect" "1.1.2"
-
-"@radix-ui/react-collapsible@^1.1.3":
-  version "1.1.16"
-  resolved "https://registry.npmjs.org/@radix-ui/react-collapsible/-/react-collapsible-1.1.16.tgz"
-  integrity sha512-opfXRe6nnzyGmCDPx+l1Aqo/RbqWtQal2FnsBqF9hhePp6j0LsRoBaRxcMOlTv+uYTJVtWYZKg9t9wTe+BA/ZA==
-  dependencies:
-    "@radix-ui/primitive" "1.1.5"
-    "@radix-ui/react-compose-refs" "1.1.3"
-    "@radix-ui/react-context" "1.2.0"
-    "@radix-ui/react-id" "1.1.2"
-    "@radix-ui/react-presence" "1.1.7"
-    "@radix-ui/react-primitive" "2.1.7"
-    "@radix-ui/react-use-controllable-state" "1.2.3"
     "@radix-ui/react-use-layout-effect" "1.1.2"
 
 "@radix-ui/react-collection@1.1.12":
