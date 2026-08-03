@@ -78,7 +78,8 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.26.1",
     "vite": "^6.4.1",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.2",
+    "@testing-library/dom": "^10.4.1"
   },
   "scripts": {
     "dev": "vite",
@@ -93,6 +94,9 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
-    "verify": "npm run type-check && npm run lint && npm run test && npm run build && npm run test:e2e"
+    "verify": "npm run type-check && npm run lint && npm run test && npm run build && npm run test:e2e",
+    "readiness:10": "node scripts/production-readiness-gate.mjs",
+    "verify:ci": "npm run type-check && npm run lint && npm run test && npm run build && npm run readiness:10",
+    "verify:release": "npm run verify:ci && npm run test:e2e"
   }
 }
