@@ -22,7 +22,6 @@ import {
 } from './worker-framework';
 import { domainEventBus, createDomainEvent } from './event-bus';
 import { isSupabaseConfigured, supabase } from '../utils/supabase/client';
-import { notificationsAPI } from '../services/notifications';
 import { trackGrowthEvent } from '../services/growthEngine';
 import { telemetry } from './telemetry';
 
@@ -34,6 +33,36 @@ function ensureBackend(): boolean {
     return false;
   }
   return true;
+}
+
+async function createSystemNotification(args: {
+  userId: string;
+  title: string;
+  message: string;
+  type: string;
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  actionUrl?: string;
+  metadata?: AnyRecord;
+}): Promise<void> {
+  if (!ensureBackend() || !supabase) return;
+
+  const { error } = await supabase.from('notifications').insert({
+    user_id: args.userId,
+    title: args.title,
+    message: args.message,
+    type: args.type,
+    read: false,
+    is_read: false,
+    action_url: args.actionUrl,
+    metadata: {
+      priority: args.priority ?? 'medium',
+      ...(args.metadata ?? {}),
+    },
+  });
+
+  if (error) {
+    throw new Error(`notification insert failed: ${error.message}`);
+  }
 }
 
 // ============================================================================
@@ -76,8 +105,11 @@ const matchingWorker = createWorker<RideMatchRequest>(
 
     const { data: driver } = await client
       .from('drivers')
-      .select('driver_id, user_id')
-      .in('driver_status', ['online', 'approved', 'busy'])
+      .select('driver_id, user_id, driver_status, rating, total_trips, updated_at')
+      .in('driver_status', ['online', 'approved'])
+      .order('rating', { ascending: false, nullsFirst: false })
+      .order('total_trips', { ascending: false, nullsFirst: false })
+      .order('updated_at', { ascending: false, nullsFirst: false })
       .limit(1)
       .maybeSingle();
 
@@ -269,13 +301,15 @@ const notificationWorker = createWorker<AnyRecord>(
     if (topic === 'notifications.dispatch') {
       const dispatch = payload as unknown as NotificationDispatch;
       if (!dispatch.userId) return;
-      await notificationsAPI.createNotification({
+      await createSystemNotification({
+        userId: dispatch.userId,
         title: dispatch.title,
         message: dispatch.message,
         type: dispatch.type,
         priority: dispatch.priority,
-        action_url: dispatch.actionUrl,
-      } as never);
+        actionUrl: dispatch.actionUrl,
+        metadata: { source: 'notification-worker' },
+      });
     } else if (topic === 'rides.assigned') {
       if (!ensureBackend() || !client) return;
       const { data: booking } = await client
@@ -286,13 +320,19 @@ const notificationWorker = createWorker<AnyRecord>(
 
       const userId = (booking?.passenger_id as string) ?? (payload.driverId as string);
       if (userId) {
-        await notificationsAPI.createNotification({
+        await createSystemNotification({
+          userId,
           title: 'Driver assigned',
           message: `A driver has been assigned to your ride.`,
           type: 'booking',
           priority: 'high',
-          action_url: '/app/my-trips?tab=rides',
-        } as never);
+          actionUrl: '/app/my-trips?tab=rides',
+          metadata: {
+            bookingId: payload.bookingId as string,
+            driverId: payload.driverId as string,
+            source: 'notification-worker',
+          },
+        });
       }
     } else if (topic === 'packages.delivered') {
       if (!ensureBackend() || !client) return;
@@ -304,13 +344,18 @@ const notificationWorker = createWorker<AnyRecord>(
 
       const recipients = [pkg?.sender_id, pkg?.receiver_id].filter(Boolean) as string[];
       await Promise.all(
-        recipients.map(() =>
-          notificationsAPI.createNotification({
+        recipients.map(userId =>
+          createSystemNotification({
+            userId,
             title: 'Package Delivered',
             message: 'Your package has been delivered successfully.',
             type: 'booking',
             priority: 'high',
-          } as never),
+            metadata: {
+              packageId: payload.packageId as string,
+              source: 'notification-worker',
+            },
+          }),
         ),
       );
     }
