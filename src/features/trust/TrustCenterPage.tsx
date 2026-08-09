@@ -555,7 +555,7 @@ export default function TrustCenterPage() {
 
         {/* ── 5-segment progress bar ── */}
         <VerificationSteps
-          steps={effectiveStatus?.steps ?? {}}
+          steps={(effectiveStatus?.steps ?? {}) as Record<string, { state: string; detail?: string; failureReason?: string | null; meta?: Record<string, unknown> }>}
           t={t}
         />
 
