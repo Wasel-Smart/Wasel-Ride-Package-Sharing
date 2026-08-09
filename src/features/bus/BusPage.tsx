@@ -16,32 +16,12 @@ import {
   TimerReset,
   Users,
 } from 'lucide-react';
-import { MapWrapper } from '../../components/MapWrapper';
-import { useLocalAuth } from '../../contexts/LocalAuth';
 import {
-  createBusBooking,
-  fetchBusRoutes,
-  getOfficialBusRoutes,
-  type BusRoute,
-} from '../../services/bus';
-import { createSupportTicket } from '../../services/supportInbox';
-import { notificationsAPI } from '../../services/notifications.js';
-import {
-  CITIES,
-  CoreExperienceBanner,
-  DS,
-  midpoint,
-  PageShell,
-  pill,
-  Protected,
-  r,
-  resolveCityCoord,
-  SectionHead,
-} from '../shared/pageShared';
-import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
-import { C, SH } from '../../utils/wasel-ds';
-import { tx } from '../../locales/tx';
-import { useLanguage } from '../../contexts/LanguageContext';
+  BusBookingForm,
+  BusMap,
+  BusRouteList,
+  BusSchedule,
+} from './components';
 
 const CITY_LABELS_AR: Record<string, string> = {
   Amman: 'عمّان', Aqaba: 'العقبة', Irbid: 'إربد', Petra: 'البتراء', 'Wadi Rum': 'وادي رم',
