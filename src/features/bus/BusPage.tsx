@@ -1,22 +1,12 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   ArrowLeftRight,
-  ArrowRight,
-  Award,
   Bus,
-  Calendar,
-  CheckCircle2,
-  Clock,
   CreditCard,
-  ExternalLink,
-  MapPin,
   Route,
-  Shield,
   TimerReset,
   Users,
 } from 'lucide-react';
-import { MapWrapper } from '../../components/MapWrapper';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import {
   createBusBooking,
@@ -32,7 +22,6 @@ import {
   DS,
   midpoint,
   PageShell,
-  pill,
   Protected,
   r,
   resolveCityCoord,
@@ -85,45 +74,6 @@ function getScheduleTimes(route: BusRoute) {
 function toMinutes(time: string) {
   const [hours = 0, minutes = 0] = time.split(':').map(Number);
   return (Number.isFinite(hours) ? hours : 0) * 60 + (Number.isFinite(minutes) ? minutes : 0);
-}
-
-function getRouteStatus(route: BusRoute, tripDate: string, today: string, ar: boolean) {
-  if (tripDate !== today) {
-    return {
-      label: ar ? 'مجدولة' : 'Scheduled',
-      detail: route.scheduleDays ?? (ar ? 'جدول منشور' : 'Published schedule'),
-      color: DS.cyan,
-    };
-  }
-
-  const now = new Date();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-  const times = getScheduleTimes(route)
-    .map(toMinutes)
-    .sort((a, b) => a - b);
-  const next = times.find(minutes => minutes >= currentMinutes);
-
-  if (next === undefined) {
-    return { label: ar ? 'مغلق اليوم' : 'Closed today', detail: ar ? 'لا توجد مغادرات أخرى اليوم' : 'No more departures left today', color: DS.gold };
-  }
-
-  const minutesAway = next - currentMinutes;
-  if (minutesAway <= 15) {
-    return { label: ar ? 'الصعود قريباً' : 'Boarding soon', detail: ar ? `${minutesAway} دقيقة للمغادرة` : `${minutesAway} min to departure`, color: DS.green };
-  }
-  if (minutesAway <= 60) {
-    return {
-      label: ar ? 'مغادرة خلال الساعة' : 'Departing this hour',
-      detail: ar ? `${minutesAway} دقيقة للمغادرة` : `${minutesAway} min to departure`,
-      color: DS.cyan,
-    };
-  }
-
-  return {
-    label: ar ? 'لاحقاً اليوم' : 'Later today',
-    detail: ar ? `${minutesAway} دقيقة للمغادرة التالية` : `${minutesAway} min to the next departure`,
-    color: DS.cyan,
-  };
 }
 
 export function BusPage() {
@@ -249,21 +199,9 @@ export function BusPage() {
   const departureLabel = scheduleMode === 'depart-now'
     ? local(`Next departure today at ${selectedDeparture}`, `المغادرة التالية اليوم الساعة ${selectedDeparture}`)
     : local(`${tripDate} at ${selectedDeparture}`, `${tripDate} الساعة ${selectedDeparture}`);
-  const activeStatus = getRouteStatus(activeBus, tripDate, today, ar);
   const fallbackBuses = busRoutes
     .filter(route => route.id !== activeBus.id && route.seats > 0)
     .slice(0, 2);
-  const selectedSourceLabel = activeBus.dataSource === 'live'
-    ? local('Live operator feed', 'تحديث مباشر من المشغّل')
-    : local('Official schedule', 'الجدول الرسمي');
-  const selectedSourceDetail =
-    activeBus.dataSource === 'live'
-      ? 'Departure times and seat counts are coming from the live route response.'
-      : `Published route data is active. Last verified ${activeBus.lastVerifiedAt ?? today}.`;
-  const exactCoverageText =
-    exactRouteCount > 0
-      ? `${exactRouteCount} exact departures currently match ${origin} to ${destination}.`
-      : 'No exact departure returned, so the closest verified corridor alternatives are shown.';
 
   useEffect(() => {
     setPassengers(value => (activeBus.seats > 0 ? Math.min(value, activeBus.seats) : 1));
