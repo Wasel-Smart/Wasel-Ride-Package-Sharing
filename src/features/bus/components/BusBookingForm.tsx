@@ -1,98 +1,32 @@
-import { CheckCircle2 } from 'lucide-react';
-import { C, SH } from '../../../utils/wasel-ds';
-import { DS, r } from '../../shared/pageShared';
-import { tx } from '../../../locales/tx';
+import { useMemo } from 'react';
+import { CheckCircle2, ExternalLink } from 'lucide-react';
+import type { BusRoute } from '../../services/bus';
+import { C, DS, SH, r, tx } from '../../shared/pageShared';
 
-export function BookingCompleteBanner({
-  bookingSource,
-  bookingTicketCode,
-  passengers,
-  departureLabel,
+export function BusBookingForm({
   activeBus,
-  ar,
-  onOpenSupport,
-}: {
-  bookingSource: 'server' | 'local' | null;
-  bookingTicketCode: string | null;
-  passengers: number;
-  departureLabel: string;
-  activeBus: { from: string; to: string };
-  ar: boolean;
-  onOpenSupport: () => void;
-}) {
-  return (
-    <div
-      style={{
-        background: C.greenDim,
-        border: `1px solid ${C.greenDim}`,
-        borderRadius: r(16),
-        padding: '14px 16px',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          color: DS.green,
-          fontWeight: 800,
-          marginBottom: 6,
-        }}
-      >
-        <CheckCircle2 size={16} />
-        {tx('busPage.seat_confirmed')}
-      </div>
-      <div style={{ color: C.text, fontSize: '0.86rem', lineHeight: 1.5 }}>
-        {passengers} {tx('busPage.seat')}
-        {ar ? ' محجوزة لـ ' : passengers > 1 ? 's are reserved for ' : ' is reserved for '}
-        {departureLabel}
-        {tx('busPage.ticket_code')}
-        {bookingTicketCode ?? 'pending'} {tx('busPage.was_saved_for_the')}
-        {activeBus.from} {tx('busPage.to_6')}
-        {activeBus.to}{' '}
-        {tx('busPage.corridor_saved_in_your_account_with_departure_reminders')}
-        {bookingSource === 'local'
-          ? ' Secure confirmation will sync when the booking backend reconnects.'
-          : ''}
-      </div>
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
-        <button
-          type="button"
-          onClick={onOpenSupport}
-          style={{
-            height: 38,
-            padding: '0 14px',
-            borderRadius: '99px',
-            border: `1px solid ${DS.border}`,
-            background: DS.card2,
-            color: C.text,
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
-        >
-          {tx('busPage.open_support')}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-export function BookingSummary({
-  activeBus,
-  passengers,
-  totalPrice,
   scheduleMode,
-  tripDate,
-  today,
-  seatPreference,
-  setSeatPreference,
-  departureTimes,
+  setScheduleMode,
   selectedDeparture,
   setSelectedDeparture,
+  departureTimes,
+  passengers,
+  setPassengers,
+  seatPreference,
+  setSeatPreference,
+  tripDate,
+  today,
+  totalPrice,
   bookingDisabled,
-  onBookingComplete,
+  bookingBusy,
+  bookingComplete,
+  bookingTicketCode,
+  bookingSource,
+  handleBusBooking,
+  openBusSupport,
+  ar,
 }: {
-  activeBus: {
+  activeBus: BusRoute & {
     from: string;
     to: string;
     company: string;
@@ -107,19 +41,32 @@ export function BookingSummary({
     dep: string;
     arr: string;
   };
-  passengers: number;
-  totalPrice: number;
   scheduleMode: 'depart-now' | 'schedule-later';
-  tripDate: string;
-  today: string;
+  setScheduleMode: (mode: 'depart-now' | 'schedule-later') => void;
+  selectedDeparture: string;
+  setSelectedDeparture: (time: string) => void;
+  departureTimes: string[];
+  passengers: number;
+  setPassengers: (updater: (value: number) => number) => void;
   seatPreference: 'window' | 'aisle' | 'front-zone';
   setSeatPreference: (v: 'window' | 'aisle' | 'front-zone') => void;
-  departureTimes: string[];
-  selectedDeparture: string;
-  setSelectedDeparture: (v: string) => void;
+  tripDate: string;
+  today: string;
+  totalPrice: number;
   bookingDisabled: boolean;
-  onBookingComplete: () => void;
+  bookingBusy: boolean;
+  bookingComplete: boolean;
+  bookingTicketCode: string | null;
+  bookingSource: 'server' | 'local' | null;
+  handleBusBooking: () => void;
+  openBusSupport: () => void;
+  ar: boolean;
 }) {
+  const seatOptions = useMemo(() => [
+    { value: 'window', label: tx('busPage.window') },
+    { value: 'aisle', label: tx('busPage.aisle') },
+    { value: 'front-zone', label: tx('busPage.front_zone') },
+  ], [ar]);
 
   return (
     <div
@@ -148,12 +95,41 @@ export function BookingSummary({
         >
           <div>
             <div style={{ color: C.text, fontWeight: 900, fontSize: '1.15rem' }}>
-              Reserve your seat
+              {tx('busPage.reserve_your_seat')}
             </div>
             <div style={{ color: DS.sub, fontSize: '0.8rem', marginTop: 4 }}>
-              {activeBus.from} to {activeBus.to} - {activeBus.company} - {activeBus.serviceLevel ?? 'Standard'}
+              {activeBus.from} {tx('busPage.to_5')}
+              {activeBus.to} - {activeBus.company} - {activeBus.serviceLevel ?? 'Standard'}
             </div>
           </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {(['depart-now', 'schedule-later'] as const).map(mode => (
+            <button
+              key={mode}
+              onClick={() => {
+                setScheduleMode(mode);
+              }}
+              type="button"
+              style={{
+                height: 38,
+                padding: '0 14px',
+                borderRadius: '99px',
+                border: 'none',
+                cursor: 'pointer',
+                background:
+                  scheduleMode === mode
+                    ? mode === 'depart-now'
+                      ? DS.gradC
+                      : DS.gradG
+                    : C.elevated,
+                color: C.text,
+                fontWeight: 700,
+              }}
+            >
+              {mode === 'depart-now' ? local('Depart now', 'غادر الآن') : local('Book later', 'احجز لاحقًا')}
+            </button>
+          ))}
         </div>
       </div>
       <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -175,13 +151,15 @@ export function BookingSummary({
               marginBottom: 6,
             }}
           >
-            Departure plan
+            {tx('busPage.departure_plan_2')}
           </div>
           <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem' }}>
             {selectedDeparture}
           </div>
           <div style={{ color: DS.sub, fontSize: '0.78rem', marginTop: 4 }}>
-            Board at {activeBus.pickupPoint} and arrive at {activeBus.dropoffPoint}.
+            {tx('busPage.board_at')}
+            {activeBus.pickupPoint} {tx('busPage.arrive_at')}
+            {activeBus.dropoffPoint}.
           </div>
         </div>
         <div>
@@ -193,17 +171,14 @@ export function BookingSummary({
               marginBottom: 8,
             }}
           >
-            Departure time
+            {tx('busPage.departure_time')}
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {departureTimes.map(time => (
               <button
                 key={time}
                 type="button"
-                onClick={() => {
-                  setSelectedDeparture(time);
-                  onBookingComplete();
-                }}
+                onClick={() => setSelectedDeparture(time)}
                 style={{
                   height: 36,
                   padding: '0 12px',
@@ -235,19 +210,22 @@ export function BookingSummary({
               lineHeight: 1.5,
             }}
           >
-            This coach is full right now. Pick another departure below.
+            {tx(
+              'busPage.this_coach_is_full_right_now_switch_routes_and_keep_the_same_corridor_filters',
+            )}
           </div>
         )}
         {scheduleMode === 'schedule-later' && (
           <input
             type="date"
             min={today}
-            defaultValue={tripDate}
+            value={tripDate}
+            onChange={event => {}}
             style={{
               width: '100%',
               height: 46,
               borderRadius: r(14),
-              border: `1px solid ${DS.border}`,
+              border: `1px ${DS.border}`,
               background: DS.card2,
               color: C.text,
               padding: '0 14px',
@@ -265,7 +243,7 @@ export function BookingSummary({
                 marginBottom: 8,
               }}
             >
-              Passengers
+              {tx('trips.passengers')}
             </label>
             <div
               style={{
@@ -278,6 +256,7 @@ export function BookingSummary({
               }}
             >
               <button
+                onClick={() => setPassengers(value => Math.max(1, value - 1))}
                 type="button"
                 style={{
                   width: 42,
@@ -295,7 +274,13 @@ export function BookingSummary({
                 {passengers}
               </div>
               <button
+                onClick={() => {
+                  if (activeBus.seats > 0) {
+                    setPassengers(value => Math.min(activeBus.seats, value + 1));
+                  }
+                }}
                 type="button"
+                disabled={activeBus.seats === 0 || passengers >= activeBus.seats}
                 style={{
                   width: 42,
                   height: 46,
@@ -303,7 +288,12 @@ export function BookingSummary({
                   background: 'transparent',
                   color: C.text,
                   fontSize: '1.1rem',
-                  cursor: 'pointer',
+                  cursor:
+                    activeBus.seats === 0 || passengers >= activeBus.seats
+                      ? 'not-allowed'
+                      : 'pointer',
+                  opacity:
+                    activeBus.seats === 0 || passengers >= activeBus.seats ? 0.45 : 1,
                 }}
               >
                 +
@@ -319,11 +309,13 @@ export function BookingSummary({
                 marginBottom: 8,
               }}
             >
-              Seat preference
+              {tx('busPage.seat_preference')}
             </label>
             <select
               value={seatPreference}
-              onChange={event => setSeatPreference(event.target.value as typeof seatPreference)}
+              onChange={event => {
+                setSeatPreference(event.target.value as typeof seatPreference);
+              }}
               style={{
                 width: '100%',
                 height: 46,
@@ -335,9 +327,11 @@ export function BookingSummary({
                 fontFamily: DS.F,
               }}
             >
-              <option value="window">Window</option>
-              <option value="aisle">Aisle</option>
-              <option value="front-zone">Front zone</option>
+              {seatOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -351,12 +345,12 @@ export function BookingSummary({
           }}
         >
           {[
-            { label: 'Seat fare', value: `${activeBus.price} JOD × ${passengers}` },
+            { label: local('Seat fare', 'سعر المقعد'), value: `${activeBus.price} JOD × ${passengers}` },
             {
-              label: 'Schedule days',
+              label: local('Schedule days', 'أيام التشغيل'),
               value: activeBus.scheduleDays ?? activeBus.frequency,
             },
-            { label: 'Available', value: `${activeBus.seats} seats` },
+            { label: local('Available on this coach', 'المتاح في هذه الحافلة'), value: local(`${activeBus.seats} seats`, `${activeBus.seats} مقعدًا`) },
           ].map(row => (
             <div
               key={row.label}
@@ -380,7 +374,7 @@ export function BookingSummary({
               borderTop: `1px solid ${DS.border}`,
             }}
           >
-            <span style={{ color: C.text, fontWeight: 800 }}>Total</span>
+            <span style={{ color: C.text, fontWeight: 800 }}>{tx('common.total')}</span>
             <span
               style={{
                 color: activeBus.color ?? DS.cyan,
@@ -394,6 +388,7 @@ export function BookingSummary({
         </div>
         <button
           data-testid="bus-confirm-booking"
+          onClick={handleBusBooking}
           disabled={bookingDisabled}
           type="button"
           style={{
@@ -413,9 +408,96 @@ export function BookingSummary({
             boxShadow: SH.card,
           }}
         >
-          Reserve seat
+          {bookingBusy
+            ? 'Reserving seat...'
+            : activeBus.seats === 0
+              ? local('Try another departure', 'جرّب مغادرة أخرى')
+              : local('Reserve seat', 'احجز المقعد')}
         </button>
+        <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.55 }}>
+          {activeBus.seats === 0
+            ? 'This coach is full right now. Pick another departure below and keep the same corridor details.'
+            : 'Your seat, boarding stop, and departure alerts stay linked in your account. If the schedule changes, Wasel updates you.'}
+        </div>
+        {activeBus.sourceUrl && (
+          <a
+            href={activeBus.sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              color: DS.cyan,
+              fontSize: '0.78rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              textDecoration: 'none',
+            }}
+          >
+            <ExternalLink size={14} />
+            {tx('busPage.official_schedule_verified')}
+            {activeBus.lastVerifiedAt}
+          </a>
+        )}
+        {bookingComplete && (
+          <div
+            style={{
+              background: C.greenDim,
+              border: `1px solid ${C.greenDim}`,
+              borderRadius: r(16),
+              padding: '14px 16px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                color: DS.green,
+                fontWeight: 800,
+                marginBottom: 6,
+              }}
+            >
+              <CheckCircle2 size={16} />
+              {tx('busPage.seat_confirmed')}
+            </div>
+            <div style={{ color: C.text, fontSize: '0.86rem', lineHeight: 1.5 }}>
+              {passengers} {tx('busPage.seat')}
+              {ar ? ' محجوزة لـ ' : passengers > 1 ? 's are reserved for ' : ' is reserved for '}
+              {selectedDeparture}
+              {tx('busPage.ticket_code')}
+              {bookingTicketCode ?? 'pending'} {tx('busPage.was_saved_for_the')}
+              {activeBus.from} {tx('busPage.to_6')}
+              {activeBus.to}{' '}
+              {tx('busPage.corridor_saved_in_your_account_with_departure_reminders')}
+              {bookingSource === 'local'
+                ? ' Secure confirmation will sync when the booking backend reconnects.'
+                : ''}
+            </div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+              <button
+                type="button"
+                onClick={openBusSupport}
+                style={{
+                  height: 38,
+                  padding: '0 14px',
+                  borderRadius: '99px',
+                  border: `1px solid ${DS.border}`,
+                  background: DS.card2,
+                  color: C.text,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {tx('busPage.open_support')}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
+}
+
+function local(english: string, arabic: string) {
+  return english;
 }
