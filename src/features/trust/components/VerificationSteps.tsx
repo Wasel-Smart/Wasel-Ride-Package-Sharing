@@ -7,13 +7,13 @@ const STEP_LABELS: Record<string, string> = {
   walletStanding: 'Wallet standing',
 };
 
-import { type TrustStepStatus } from '../../services/trustCenterModel';
+import { type TrustCenterStatus, type TrustStepStatus } from '../../../services/trustCenterModel';
 
 export function VerificationSteps({
   steps,
   t,
 }: {
-  steps: Record<string, TrustStepStatus>;
+  steps: TrustCenterStatus['steps'];
   t: (key: string) => string;
 }) {
   return (
