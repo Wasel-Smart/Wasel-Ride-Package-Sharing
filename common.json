@@ -1,0 +1,13 @@
+{
+    "mobilityOS": {
+        "title": "Mobility OS",
+        "dashboard": {
+            "activeDrivers": "Active Drivers: {{count}}",
+            "totalRides": "Total Rides Today: {{count}}"
+        }
+    },
+    "navigation": {
+        "home": "Home",
+        "mobilityOS": "Mobility OS"
+    }
+}
