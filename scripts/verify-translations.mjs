@@ -15,7 +15,7 @@ const TRANSLATIONS = join(__dir, '../src/locales/translations.ts');
 
 function extractModuleExports(filePath) {
   const content = readFileSync(filePath, 'utf8');
-  const match = content.match(/export\s+const\s+translations\s*=\s*(\{[\s\S]*\});/);
+  const match = content.match(/export\s+const\s+translations\s*[^=]*=\s*(\{[\s\S]*\});/);
   if (!match) {
     throw new Error(`Unable to extract translations from ${filePath}`);
   }
