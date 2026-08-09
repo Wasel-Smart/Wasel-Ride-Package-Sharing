@@ -57,7 +57,7 @@ export default defineConfig(({ mode }) => ({
             id.includes('/node_modules/scheduler/')
           ) return 'react-core';
 
-          if (id.includes('/node_modules/framer-motion/')) return 'motion';
+          if (id.includes('/node_modules/framer-motion/')) return 'vendor';
 
           if (
             id.includes('/node_modules/@radix-ui/') ||
@@ -81,7 +81,6 @@ export default defineConfig(({ mode }) => ({
             id.includes('/node_modules/react-day-picker/')
           ) return 'forms';
 
-          if (id.includes('/node_modules/@sentry/')) return 'monitoring';
           if (id.includes('/node_modules/@stripe/')) return 'payments';
 
           return 'vendor';
