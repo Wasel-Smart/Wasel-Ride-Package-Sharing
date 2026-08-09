@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
 import { CheckCircle2, ExternalLink } from 'lucide-react';
 import type { BusRoute } from '../../../services/bus';
-import { C, DS, SH, r, tx } from '../../../shared/pageShared';
+import { C, SH } from '../../../utils/wasel-ds';
+import { DS, r } from '../../shared/pageShared';
+import { tx } from '../../../locales/tx';
 
 export function BusBookingForm({
   activeBus,
@@ -220,7 +222,7 @@ export function BusBookingForm({
             type="date"
             min={today}
             value={tripDate}
-            onChange={event => {}}
+            onChange={() => {}}
             style={{
               width: '100%',
               height: 46,
@@ -498,6 +500,6 @@ export function BusBookingForm({
   );
 }
 
-function local(english: string, arabic: string) {
+function local(english: string, _arabic: string) {
   return english;
 }

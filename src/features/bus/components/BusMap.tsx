@@ -1,6 +1,8 @@
-import { ArrowRight, ArrowLeftRight, Clock, MapPin } from 'lucide-react';
+import { ArrowRight, Clock, MapPin } from 'lucide-react';
 import { MapWrapper } from '../../../components/MapWrapper';
-import { C, DS, r, pill, tx } from '../../shared/pageShared';
+import { C } from '../../../utils/wasel-ds';
+import { DS, r } from '../../shared/pageShared';
+import { tx } from '../../../locales/tx';
 import { midpoint } from '../../shared/pageShared';
 
 export function BusMap({

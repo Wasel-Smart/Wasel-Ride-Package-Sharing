@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, TimerReset } from 'lucide-react';
-import type { BusRoute } from '../../services/bus';
-import { C, DS, r, tx } from '../../shared/pageShared';
+import { Shield } from 'lucide-react';
+import type { BusRoute } from '../../../services/bus';
+import { C } from '../../../utils/wasel-ds';
+import { DS, r, pill } from '../../shared/pageShared';
+import { tx } from '../../../locales/tx';
 
 function getScheduleTimes(route: BusRoute) {
   return route.departureTimes?.length ? route.departureTimes : [route.dep];
@@ -12,20 +14,12 @@ export function BusSchedule({
   busRoutes,
   origin,
   destination,
-  tripDate,
-  today,
-  ar,
-  selectedId,
   onSelect,
   onBookingComplete,
 }: {
   busRoutes: BusRoute[];
   origin: string;
   destination: string;
-  tripDate: string;
-  today: string;
-  ar: boolean;
-  selectedId: string;
   onSelect: (id: string) => void;
   onBookingComplete: () => void;
 }) {
