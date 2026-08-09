@@ -47,7 +47,7 @@
   resolved "https://registry.npmjs.org/@asamuzakjp/nwsapi/-/nwsapi-2.3.9.tgz"
   integrity sha512-n8GuYSrI9bF7FFZ/SjhwevlHc8xaVlb/7HmHelnc/PZXBD2ZR49NnN9sMMuDdEGPeeRQ5d0hqlSlEpgCX3Wl0Q==
 
-"@babel/code-frame@^7.29.7":
+"@babel/code-frame@^7.10.4", "@babel/code-frame@^7.29.7":
   version "7.29.7"
   resolved "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.29.7.tgz"
   integrity sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw==
@@ -2367,6 +2367,20 @@
   dependencies:
     "@tanstack/query-core" "5.101.4"
 
+"@testing-library/dom@^10.4.1":
+  version "10.4.1"
+  resolved "https://registry.yarnpkg.com/@testing-library/dom/-/dom-10.4.1.tgz#d444f8a889e9a46e9a3b4f3b88e0fcb3efb6cf95"
+  integrity sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==
+  dependencies:
+    "@babel/code-frame" "^7.10.4"
+    "@babel/runtime" "^7.12.5"
+    "@types/aria-query" "^5.0.1"
+    aria-query "5.3.0"
+    dom-accessibility-api "^0.5.9"
+    lz-string "^1.5.0"
+    picocolors "1.1.1"
+    pretty-format "^27.0.2"
+
 "@testing-library/jest-dom@^7.0.0":
   version "7.0.0"
   resolved "https://registry.npmjs.org/@testing-library/jest-dom/-/jest-dom-7.0.0.tgz"
@@ -2407,6 +2421,11 @@
   integrity sha512-F3fo1MYrRJYL3zER0OUOmkutjr1Vp23m7OsSgp7nq4SP6OqX6C/56XFIPAl5bt3zaBRjmW7SGz3u/6LwFpYcOg==
   dependencies:
     tslib "^2.4.0"
+
+"@types/aria-query@^5.0.1":
+  version "5.0.4"
+  resolved "https://registry.yarnpkg.com/@types/aria-query/-/aria-query-5.0.4.tgz#1a31c3d378850d2778dabb6374d036dcba4ba708"
+  integrity sha512-rfT93uj5s0PRL7EzccGMs3brplhcrghnDoV26NqKhCAS1hVo+WdNsPvE/yb6ilfr5hi2MEk6d5EWJTKdxg8jVw==
 
 "@types/babel__core@^7.20.5":
   version "7.20.5"
@@ -2765,6 +2784,11 @@ ajv@^8.6.0:
     json-schema-traverse "^1.0.0"
     require-from-string "^2.0.2"
 
+ansi-regex@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/ansi-regex/-/ansi-regex-5.0.1.tgz#082cb2c89c9fe8659a311a53bd6a4dc5301db304"
+  integrity sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==
+
 ansi-regex@^6.2.2:
   version "6.2.2"
   resolved "https://registry.npmjs.org/ansi-regex/-/ansi-regex-6.2.2.tgz"
@@ -2776,6 +2800,11 @@ ansi-styles@^4.1.0:
   integrity sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==
   dependencies:
     color-convert "^2.0.1"
+
+ansi-styles@^5.0.0:
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-5.2.0.tgz#07449690ad45777d1924ac2abb2fc8895dba836b"
+  integrity sha512-Cxwpt2SfTzTtXcfOlzGEee8O+c+MmUgGrNiBcXnuWxuFJHe6a5Hz7qwhwe5OgaSYI0IJvkLqWX1ASG+cJOkEiA==
 
 ansi-styles@^6.2.1:
   version "6.2.3"
@@ -2794,7 +2823,7 @@ aria-hidden@^1.2.4:
   dependencies:
     tslib "^2.0.0"
 
-aria-query@^5.0.0:
+aria-query@5.3.0, aria-query@^5.0.0:
   version "5.3.0"
   resolved "https://registry.npmjs.org/aria-query/-/aria-query-5.3.0.tgz"
   integrity sha512-b0P0sZPKtyu8HkeRAfCq0IfURZK+SuwMjY1UXGBU27wpAiTwQAIlq56IbIO+ytk/JjS1fMR14ee5WBBfKi5J6A==
@@ -3311,6 +3340,11 @@ detect-node-es@^1.1.0:
   version "1.1.0"
   resolved "https://registry.npmjs.org/detect-node-es/-/detect-node-es-1.1.0.tgz"
   integrity sha512-ypdmJU/TbBby2Dxibuv7ZLW3Bs1QEmM7nHjEANfohJLvE0XVujisn1qPJcZxg+qDucsr+bP6fLD1rPS3AhJ7EQ==
+
+dom-accessibility-api@^0.5.9:
+  version "0.5.16"
+  resolved "https://registry.yarnpkg.com/dom-accessibility-api/-/dom-accessibility-api-0.5.16.tgz#5a7429e6066eb3664d911e33fb0e45de8eb08453"
+  integrity sha512-X7BJ2yElsnOJ30pZF4uIIDfBEVgF4XEBxL9Bxhy6dnrm5hkzqmsWHGTiHqRiITNhMyFLyAiWndIJP7Z1NTteDg==
 
 dom-accessibility-api@^0.6.3:
   version "0.6.3"
@@ -4560,6 +4594,11 @@ lucide-react@^0.487.0:
   resolved "https://registry.npmjs.org/lucide-react/-/lucide-react-0.487.0.tgz"
   integrity sha512-aKqhOQ+YmFnwq8dWgGjOuLc8V1R9/c/yOd+zDY4+ohsR2Jo05lSGc3WsstYPIzcTpeosN7LoCkLReUUITvaIvw==
 
+lz-string@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/lz-string/-/lz-string-1.5.0.tgz#c1ab50f77887b712621201ba9fd4e3a6ed099941"
+  integrity sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==
+
 magic-string@^0.30.17, magic-string@^0.30.21, magic-string@^0.30.3:
   version "0.30.21"
   resolved "https://registry.npmjs.org/magic-string/-/magic-string-0.30.21.tgz"
@@ -4775,7 +4814,7 @@ pathval@^2.0.0:
   resolved "https://registry.npmjs.org/pathval/-/pathval-2.0.1.tgz"
   integrity sha512-//nshmD55c46FuFw26xV/xFAaB5HF9Xdap7HJBBnrKdAd6/GxDBaNA1870O79+9ueg61cZLSVc+OaFlfmObYVQ==
 
-picocolors@^1.1.1:
+picocolors@1.1.1, picocolors@^1.1.1:
   version "1.1.1"
   resolved "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz"
   integrity sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==
@@ -4838,6 +4877,15 @@ pretty-bytes@^6.1.1:
   resolved "https://registry.npmjs.org/pretty-bytes/-/pretty-bytes-6.1.1.tgz"
   integrity sha512-mQUvGU6aUFQ+rNvTIAcZuWGRT9a6f6Yrg9bHs4ImKF+HZCEK+plBvnAZYSIQztknZF2qnzNtr6F8s0+IuptdlQ==
 
+pretty-format@^27.0.2:
+  version "27.5.1"
+  resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-27.5.1.tgz#2181879fdea51a7a5851fb39d920faa63f01d88e"
+  integrity sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==
+  dependencies:
+    ansi-regex "^5.0.1"
+    ansi-styles "^5.0.0"
+    react-is "^17.0.1"
+
 prop-types@^15.6.2, prop-types@^15.8.1:
   version "15.8.1"
   resolved "https://registry.npmjs.org/prop-types/-/prop-types-15.8.1.tgz"
@@ -4873,6 +4921,11 @@ react-is@^16.13.1, react-is@^16.7.0:
   version "16.13.1"
   resolved "https://registry.npmjs.org/react-is/-/react-is-16.13.1.tgz"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
+
+react-is@^17.0.1:
+  version "17.0.2"
+  resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
+  integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
 react-is@^18.3.1:
   version "18.3.1"
