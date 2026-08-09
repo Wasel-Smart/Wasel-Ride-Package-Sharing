@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Bus, MapPin, Calendar, Award } from 'lucide-react';
-import type { BusRoute } from '../../services/bus';
-import { C, DS, r, pill, tx } from '../../shared/pageShared';
+import type { BusRoute } from '../../../services/bus';
+import { C } from '../../../utils/wasel-ds';
+import { DS, r, pill } from '../../shared/pageShared';
+import { tx } from '../../../locales/tx';
 
 function getScheduleTimes(route: BusRoute) {
   return route.departureTimes?.length ? route.departureTimes : [route.dep];
