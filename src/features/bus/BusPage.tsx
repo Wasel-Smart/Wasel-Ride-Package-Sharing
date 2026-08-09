@@ -71,11 +71,6 @@ function getScheduleTimes(route: BusRoute) {
   return route.departureTimes?.length ? route.departureTimes : [route.dep];
 }
 
-function toMinutes(time: string) {
-  const [hours = 0, minutes = 0] = time.split(':').map(Number);
-  return (Number.isFinite(hours) ? hours : 0) * 60 + (Number.isFinite(minutes) ? minutes : 0);
-}
-
 export function BusPage() {
   const { user } = useLocalAuth();
   const { language } = useLanguage();
@@ -199,9 +194,6 @@ export function BusPage() {
   const departureLabel = scheduleMode === 'depart-now'
     ? local(`Next departure today at ${selectedDeparture}`, `المغادرة التالية اليوم الساعة ${selectedDeparture}`)
     : local(`${tripDate} at ${selectedDeparture}`, `${tripDate} الساعة ${selectedDeparture}`);
-  const fallbackBuses = busRoutes
-    .filter(route => route.id !== activeBus.id && route.seats > 0)
-    .slice(0, 2);
 
   useEffect(() => {
     setPassengers(value => (activeBus.seats > 0 ? Math.min(value, activeBus.seats) : 1));
