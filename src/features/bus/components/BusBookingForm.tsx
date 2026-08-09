@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { CheckCircle2, ExternalLink } from 'lucide-react';
-import type { BusRoute } from '../../services/bus';
-import { C, DS, SH, r, tx } from '../../shared/pageShared';
+import type { BusRoute } from '../../../services/bus';
+import { C, DS, SH, r, tx } from '../../../shared/pageShared';
 
 export function BusBookingForm({
   activeBus,

@@ -1,5 +1,5 @@
 import { ArrowRight, ArrowLeftRight, Clock, MapPin } from 'lucide-react';
-import { MapWrapper } from '../../components/MapWrapper';
+import { MapWrapper } from '../../../components/MapWrapper';
 import { C, DS, r, pill, tx } from '../../shared/pageShared';
 import { midpoint } from '../../shared/pageShared';
 
