@@ -40,6 +40,10 @@ import {
 } from '../../services/trustCenterModel';
 import { evaluateTrustCapability } from '../../services/trustRules';
 import { C, F, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import {
+  TrustScoreDisplay,
+  VerificationSteps,
+} from './components';
 
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -539,9 +543,7 @@ export default function TrustCenterPage() {
                   accent={C.green}
                 />
               </div>
-              <div style={{ color: C.text, fontSize: '1.8rem', fontWeight: 900 }}>
-                {user.trustScore}/100
-              </div>
+              <TrustScoreDisplay score={user.trustScore} label={t('trustCenterExpanded.trustScore')} />
               <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7 }}>
                 {ar
                   ? 'كل بطاقة أدناه توضح ما إذا كانت الخطوة لم تبدأ أو قيد التنفيذ أو مكتملة أو فاشلة، مع سبب واضح.'
@@ -552,36 +554,10 @@ export default function TrustCenterPage() {
         />
 
         {/* ── 5-segment progress bar ── */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: SPACE[5] }}>
-          {(
-            [
-              effectiveStatus?.steps.identity.state ?? 'not_started',
-              effectiveStatus?.steps.email.state ?? 'not_started',
-              effectiveStatus?.steps.phone.state ?? 'not_started',
-              effectiveStatus?.steps.driverDocuments.state ?? 'not_started',
-              effectiveStatus?.steps.walletStanding.state ?? 'not_started',
-            ] as TrustStepState[]
-          ).map((state, i) => (
-            <div
-              key={i}
-              title={[
-                t('trustCenterExpanded.identity'),
-                t('trustCenterExpanded.email'),
-                t('trustCenterExpanded.phone'),
-                t('trustCenterExpanded.driverDocuments'),
-                t('trustCenterExpanded.walletStanding'),
-              ][i]}
-              style={{
-                flex: 1,
-                height: 6,
-                borderRadius: 999,
-                background: getPanelAccent(state),
-                opacity: state === 'not_started' ? 0.22 : 1,
-                transition: 'background 300ms, opacity 300ms',
-              }}
-            />
-          ))}
-        </div>
+        <VerificationSteps
+          steps={effectiveStatus?.steps ?? {}}
+          t={t}
+        />
 
         <div
           style={{
