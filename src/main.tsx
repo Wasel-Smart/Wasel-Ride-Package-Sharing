@@ -2,19 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
-import { initializeCsrfProtection } from './utils/csrf';
-import { initializeSessionManagement } from './utils/session';
-import { clearMasterKey } from './utils/encryption';
-import {
-  safeStorageGetItem,
-  safeStorageRemoveItem,
-  safeStorageSetItem,
-} from './utils/browserStorage';
-import { verifyBackendConnection, startHealthCheckMonitoring } from './utils/healthCheck';
 import { sanitizeLogMessage } from './utils/sanitization';
-import { circuitBreakers } from './utils/circuitBreaker';
-import { resetApiCircuitBreaker, getApiCircuitBreakerState } from './services/core';
-import { initializeAppInsights } from './utils/appInsights';
 
 const LOCAL_DEV_RESET_KEY = 'wasel-local-dev-cache-reset';
 
@@ -35,6 +23,8 @@ async function resetLocalDevelopmentArtifacts(): Promise<void> {
   if (!isLocalDevelopmentOrigin() || !('serviceWorker' in navigator)) {
     return;
   }
+
+  const { safeStorageGetItem, safeStorageRemoveItem, safeStorageSetItem } = await import('./utils/browserStorage');
 
   try {
     const registrations = await navigator.serviceWorker.getRegistrations();
@@ -103,9 +93,6 @@ class RootErrorBoundary extends React.Component<React.PropsWithChildren, { hasEr
       diagnostics,
     );
 
-    // Chunk-load failures (e.g. stale SW cache serving a hash that no longer
-    // exists on the server) are the primary cause of app_mount_timeout on
-    // mobile. A plain reload re-hits the same cache; hard-recover clears it.
     const isChunkError =
       /loading chunk/i.test(message) ||
       /failed to fetch dynamically imported module/i.test(message) ||
@@ -183,63 +170,6 @@ if (!rootElement) {
 }
 
 if (environmentIsValid) {
-  // Initialize observability
-  try {
-    initializeAppInsights();
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      console.warn('[Wasel] Application Insights initialization failed.', error);
-    }
-  }
-
-  // Initialize security features
-  try {
-    initializeCsrfProtection();
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      console.warn('[Wasel] CSRF startup initialization failed.', error);
-    }
-  }
-
-  try {
-    initializeSessionManagement();
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      console.warn('[Wasel] Session startup initialization failed.', error);
-    }
-  }
-
-  // Verify backend connectivity on startup (both dev and prod).
-  // In production we log warnings without blocking render.
-  verifyBackendConnection()
-    .then(result => {
-      if (result.connected) {
-        if (import.meta.env.DEV) {
-          console.log('[Wasel] ✓ Backend connected:', sanitizeLogMessage(result.message));
-        }
-        startHealthCheckMonitoring(60_000);
-      } else {
-        if (import.meta.env.DEV) {
-          console.warn('[Wasel] ⚠ Backend connection issue:', sanitizeLogMessage(result.message));
-        }
-        // Still start monitoring so the app recovers when the backend comes up,
-        // but use a longer interval to avoid flooding the console.
-        startHealthCheckMonitoring(5 * 60_000);
-      }
-    })
-    .catch(error => {
-      if (import.meta.env.DEV) {
-        console.warn('[Wasel] Backend health check skipped:', sanitizeLogMessage(String(error)));
-      }
-    });
-
-  // Clear encryption key on logout
-  window.addEventListener('storage', e => {
-    if (e.key === 'wasel-auth-state' && !e.newValue) {
-      clearMasterKey();
-    }
-  });
-
   rootElement.textContent = '';
 
   ReactDOM.createRoot(rootElement).render(
@@ -250,10 +180,6 @@ if (environmentIsValid) {
     </React.StrictMode>,
   );
 
-  // React 19 render() is async — mark mounted after the first paint, not
-  // synchronously after render() returns, so the 15-second timeout in
-  // index.html doesn't fire on slow mobile connections while the app is
-  // still loading normally.
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       document.documentElement.dataset.appMounted = 'true';
@@ -267,33 +193,85 @@ if (environmentIsValid) {
 
   void resetLocalDevelopmentArtifacts();
 
-  // Expose circuit breaker utilities globally — DEV builds only.
-  // In production this block is dead code and tree-shaken by esbuild.
-  if (import.meta.env.DEV && typeof window !== 'undefined') {
-    (
-      window as Window & {
-        __waselDebug?: {
-          resetApiCircuitBreaker: typeof resetApiCircuitBreaker;
-          getApiCircuitBreakerState: typeof getApiCircuitBreakerState;
-          getAllCircuitBreakers: () => ReturnType<typeof circuitBreakers.getAllStats>;
-          resetAllCircuitBreakers: () => void;
-        };
+  // Defer non-critical initializations to reduce initial bundle impact.
+  void (async () => {
+    try {
+      const [
+        { initializeAppInsights },
+        { initializeCsrfProtection },
+        { initializeSessionManagement },
+        { verifyBackendConnection, startHealthCheckMonitoring },
+        { clearMasterKey },
+      ] = await Promise.all([
+        import('./utils/appInsights'),
+        import('./utils/csrf'),
+        import('./utils/session'),
+        import('./utils/healthCheck'),
+        import('./utils/encryption'),
+      ]);
+
+      initializeAppInsights();
+      initializeCsrfProtection();
+      initializeSessionManagement();
+
+      verifyBackendConnection()
+        .then(result => {
+          if (result.connected) {
+            if (import.meta.env.DEV) {
+              console.log('[Wasel] ✓ Backend connected:', sanitizeLogMessage(result.message));
+            }
+            startHealthCheckMonitoring(60_000);
+          } else {
+            if (import.meta.env.DEV) {
+              console.warn('[Wasel] ⚠ Backend connection issue:', sanitizeLogMessage(result.message));
+            }
+            startHealthCheckMonitoring(5 * 60_000);
+          }
+        })
+        .catch(error => {
+          if (import.meta.env.DEV) {
+            console.warn('[Wasel] Backend health check skipped:', sanitizeLogMessage(String(error)));
+          }
+        });
+
+      window.addEventListener('storage', e => {
+        if (e.key === 'wasel-auth-state' && !e.newValue) {
+          clearMasterKey();
+        }
+      });
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.warn('[Wasel] Deferred initialization failed:', error);
       }
-    ).__waselDebug = {
-      resetApiCircuitBreaker,
-      getApiCircuitBreakerState,
-      getAllCircuitBreakers: () => circuitBreakers.getAllStats(),
-      resetAllCircuitBreakers: () => circuitBreakers.resetAll(),
-    };
-    console.info('[Wasel] Debug utilities available at window.__waselDebug');
+    }
+  })();
+
+  // Expose circuit breaker utilities globally — DEV builds only.
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
+    void import('./utils/circuitBreaker').then(({ circuitBreakers }) => {
+      void import('./services/core').then(({ resetApiCircuitBreaker, getApiCircuitBreakerState }) => {
+        (
+          window as Window & {
+            __waselDebug?: {
+              resetApiCircuitBreaker: typeof resetApiCircuitBreaker;
+              getApiCircuitBreakerState: typeof getApiCircuitBreakerState;
+              getAllCircuitBreakers: () => ReturnType<typeof circuitBreakers.getAllStats>;
+              resetAllCircuitBreakers: () => void;
+            };
+          }
+        ).__waselDebug = {
+          resetApiCircuitBreaker,
+          getApiCircuitBreakerState,
+          getAllCircuitBreakers: () => circuitBreakers.getAllStats(),
+          resetAllCircuitBreakers: () => circuitBreakers.resetAll(),
+        };
+        console.info('[Wasel] Debug utilities available at window.__waselDebug');
+      });
+    });
   }
 
   if (import.meta.env.PROD && import.meta.env.MODE !== 'test' && 'serviceWorker' in navigator && !window.location.hostname.includes('127.0.0.1') && window.location.hostname !== 'localhost') {
     window.addEventListener('load', async () => {
-      // Unregister any SW whose scriptURL no longer points at /sw.js
-      // (e.g. a leftover from a previous scope or path change). On mobile,
-      // these zombie workers can intercept fetches and serve stale asset
-      // hashes that no longer exist on the server, causing app_mount_timeout.
       try {
         const existing = await navigator.serviceWorker.getRegistrations();
         await Promise.allSettled(
