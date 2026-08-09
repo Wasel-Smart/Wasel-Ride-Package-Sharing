@@ -576,14 +576,19 @@ async function ensureCanonicalUserForAuth(
   body: Record<string, unknown> = {},
 ) {
   const authUserId = String(authUser.id ?? '');
-  const email = String(body.email ?? authUser.email ?? '').trim() || null;
+  const email = String(
+    body.email ??
+    authUser.email ??
+    `pending-${authUserId}@wasel.local`
+  ).trim();
   const fullName =
     String(
       body.fullName ??
       [body.firstName, body.lastName].filter(Boolean).join(' ') ??
       (authUser.user_metadata as Record<string, unknown> | undefined)?.full_name ??
-      '',
-    ).trim() || null;
+      authUser.phone ??
+      'Wasel User'
+    ).trim() || 'Wasel User';
   const phoneNumber = String(body.phone_number ?? body.phone ?? '').trim() || null;
 
   const { data: existing, error: selectError } = await admin
