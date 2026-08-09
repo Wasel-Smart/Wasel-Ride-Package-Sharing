@@ -3,5 +3,6 @@ export function MapEventHandlers(_props: {
   onMarkerClick?: (markerId: string) => void;
   onZoomChange?: (zoom: number) => void;
 }) {
+  void _props;
   return null;
 }
