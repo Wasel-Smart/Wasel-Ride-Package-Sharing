@@ -1,0 +1,34 @@
+warning: in the working copy of 'src/components/MobileBottomNav.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/system/ProtectedPagePreview.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/preferences/SettingsPage.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/rides/FindRidePage.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/features/trips/MyTripsPage.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/pages/WaselAuth.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'vite.config.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'yarn.lock', LF will be replaced by CRLF the next time Git touches it
+ package-lock.json                                  | 418 [32m++++++++++[m[31m-----------[m
+ package.json                                       |  20 [32m+[m[31m-[m
+ src/App.tsx                                        |   2 [32m+[m[31m-[m
+ src/components/LiveTripTracking.tsx                |   2 [32m+[m[31m-[m
+ src/components/MobileBottomNav.tsx                 |   2 [32m+[m[31m-[m
+ src/components/RateDriverModal.tsx                 |   3 [31m-[m
+ src/components/system/ProtectedPagePreview.tsx     |   2 [32m+[m[31m-[m
+ src/features/operations/OperationsOverviewPage.tsx |   2 [32m+[m[31m-[m
+ src/features/preferences/SettingsPage.tsx          |   2 [32m+[m[31m-[m
+ src/features/rides/FindRidePage.tsx                |   2 [32m+[m[31m-[m
+ src/features/rides/hooks/useRideSearch.ts          |   2 [32m+[m[31m-[m
+ src/features/trips/MyTripsPage.tsx                 |   2 [32m+[m[31m-[m
+ .../wallet/__tests__/WalletDashboard.test.tsx      |   2 [32m+[m[31m-[m
+ .../wallet/useWalletDashboardController.ts         |   2 [32m+[m[31m-[m
+ src/hooks/useIframeSafeNavigate.ts                 |   2 [32m+[m[31m-[m
+ src/layouts/WaselRoot.tsx                          |   2 [32m+[m[31m-[m
+ src/pages/WaselAuth.tsx                            |   2 [32m+[m[31m-[m
+ src/pages/shared/pageUtils.tsx                     |   2 [32m+[m[31m-[m
+ src/pages/waselServiceShared.tsx                   |   2 [32m+[m[31m-[m
+ src/router/ProtectedOutlet.tsx                     |   2 [32m+[m[31m-[m
+ src/router/routeMeta.ts                            |   2 [32m+[m[31m-[m
+ src/wasel-routes.tsx                               |   4 [32m+[m[31m-[m
+ .../20260310_security_performance_fixes.sql        |   5 [32m+[m[31m-[m
+ vite.config.ts                                     |   2 [32m+[m[31m-[m
+ yarn.lock                                          | 227 [32m++++++[m[31m-----[m
+ 25 files changed, 352 insertions(+), 363 deletions(-)

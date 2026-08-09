@@ -1,0 +1,174 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Verify repository quality
+        run: yarn verify:ci
+
+      - name: Audit production dependencies
+        # Yarn v1 doesn't have a direct equivalent to `npm audit --omit=dev`
+        # Using `yarn audit` is the closest alternative.
+        run: yarn audit
+
+      - name: Verify service worker syntax
+        run: node --check public/sw.js
+
+      - name: Build production bundle
+        run: yarn build
+
+      - name: Start preview server
+        run: yarn preview &
+      - name: Wait for preview server
+        run: npx wait-on http://127.0.0.1:4173 -t 30000
+
+      - name: Run Lighthouse CI (headless)
+        run: npx lhci collect --url=http://127.0.0.1:4173/ --numberOfRuns=1 --assert
+
+      - name: Run bundle-size analysis
+        run: yarn bundle:analyze
+
+      - name: Upload bundle analysis report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis
+          path: dist/bundle-analysis.html
+          if-no-files-found: ignore
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: quality
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser verification
+        env:
+          PLAYWRIGHT_USE_DEMO_DATA: 'true'
+        run: yarn test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          if-no-files-found: ignore
+
+  mobile-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: mobile/yarn.lock
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: yarn install --frozen-lockfile
+
+      - name: Verify mobile quality
+        working-directory: mobile
+        run: yarn type-check && yarn lint && yarn test --runInBand --coverage
+
+      - name: Verify mobile release bundle
+        working-directory: mobile
+        run: yarn build
+
+      - name: Upload mobile coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-coverage
+          path: mobile/coverage
+          if-no-files-found: ignore
+
+  edge-payment-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v1.x
+
+      - name: Verify payment Edge Function formatting
+        run: >-
+          deno fmt --check
+          supabase/functions/cliq-payments/index.ts
+          supabase/functions/stripe-payments-v2/index.ts
+
+  database-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start clean Supabase stack
+        run: npx supabase start
+
+      - name: Apply all migrations from scratch
+        run: npx supabase db reset --local
+
+      - name: Lint database functions and schema
+        run: npx supabase db lint --local --level error --fail-on error
+
+      - name: Stop local Supabase stack
+        if: always()
+        run: npx supabase stop --no-backup

@@ -1,0 +1,203 @@
+# Build output
+build/
+dist/
+.vite/
+.next/
+
+# Dependencies
+node_modules/
+with-supabase-app/node_modules/
+
+# Environment variables — never commit real credentials.
+# .env.example is the only env file that should be committed.
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.staging
+.env.staging.local
+.git-rewrite/
+supabase/.branches/
+supabase/.temp/
+
+# Test and coverage output
+coverage/
+test-results/
+playwright-report/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+vite-out.log
+vite-err.log
+
+# Editor artifacts
+.vscode/settings.json
+.idea/
+*.suo
+*.user
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local design and backup artifacts
+.anima/
+backups/
+review-screenshots/
+.codex_tmp/
+.codex/
+.kilo/
+
+# Firebase/GCP service account keys (never commit)
+wasel-planning-with-ai-*.json
+*firebase-adminsdk*.json
+*service-account*.json
+
+# Root-level loose files that should not be committed
+arabic-full-route-leaks.json
+common.json
+find-ride-ar-check.png
+screenshot.png
+ChatGPT*
+d
+20260725023554_add_driver_locations_and_update_notifications.sql
+MobilityOSPage.tsx
+schema.prisma
+schema.test.prisma
+schema.sql
+design-tokens.ts
+i18n.ts
+
+# Playwright MCP session artifacts
+.playwright-mcp/
+
+# Security: never commit backup codes, key exports, or credential docs
+Backup-codes-*.txt
+backup-codes*.txt
+*-backup-codes.txt
+client_secret_*.json
+*.pem
+*.p8
+*.key
+COMPLETE_DEPLOYMENT_GUIDE.md
+
+# Firebase and native mobile config not used by the web client
+src/GoogleService-Info.plist
+src/google-services.json
+src/imports/google-services.json
+
+# Root-level audit exports and screenshots
+landing-axe.json
+landing-desktop.json
+landing-desktop-fold.json
+landing-desktop.png.json
+landing-mobile.json
+landing-mobile-fold.json
+landing-desktop.png
+landing-desktop-fold.png
+landing-mobile.png
+landing-mobile-fold.png
+*-axe.json
+*-desktop*.json
+*-mobile*.json
+*-desktop*.png
+*-mobile*.png
+
+# Legacy config
+vitest.config.mjs
+
+# Cleanup staging area
+_REMOVED/
+
+.vercel
+.env*.local
+# Catch-all: exclude any .env variant not listed above
+.env?*
+
+# Env copies and originals that must not be committed
+.env.original
+.env.testcopy
+
+# Accidental git-paste artifact
+=
+
+# Local write-test and ephemeral output
+public/_write_test.txt
+dev-output.txt
+load-test-results.json
+wasel-fixes.patch
+
+# CI runner and review artifacts (local only)
+actions-runner/
+review-artifacts/
+artifacts/
+
+# IDE run configs (JetBrains/Rider)
+.run/
+
+# Scratch files
+.vscode/Untitled-*.txt
+
+# Nested git repo (wasel/ has its own .git)
+wasel/
+
+# Expo build artifacts
+mobile/.expo/web/cache
+
+# Android Gradle build cache and lock files
+mobile/android/**/.gradle/
+
+# Generated local brand-preview output
+artifacts/brand/
+
+# Large AI-generated images not part of the brand
+"public/ChatGPT Image*"
+"public/brand/ChatGPT Image*"
+public/ChatGPT*
+public/brand/ChatGPT*
+
+# Playwright local state
+.playwright/
+
+# Duplicate -LaithNassar personal copies (use canonical filenames)
+*-LaithNassar.*
+*-LaithNassar/
+.env-LaithNassar.*
+.env.production-LaithNassar.*
+.env*
+
+# Script scan/debug output artifacts (never commit)
+scripts/_*.json
+scripts/hardcoded-*.json
+scripts/mixed-findings.json
+scripts/new-translations.json
+
+# Self-scoring and AI-gate scripts (not part of the product)
+scripts/validate-10-out-of-10.*
+scripts/production-10-gate.*
+scripts/deploy-to-10.*
+mobile/validate-10-out-of-10.*
+mobile/validate-mobile-10x.*
+mobile/MOBILE_10_OUT_OF_10.md
+
+# Root-level scratch test scripts
+test-dist.cjs
+test-fresh-dist.cjs
+test-mobile-*.cjs
+test-new-build.cjs
+test-standalone-sim.cjs
+check-css.cjs
+
+# Stale docs that should not live in source tree
+src/platform/HONEST_AUDIT_REPORT_OUTDATED_*.md
+
+.vercel

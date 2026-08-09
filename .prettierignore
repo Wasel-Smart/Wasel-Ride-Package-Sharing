@@ -1,0 +1,6 @@
+build/
+node_modules/
+dist/
+*.min.js
+public/sw.js
+src/**/*.d.ts

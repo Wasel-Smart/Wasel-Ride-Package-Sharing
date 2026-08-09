@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./styles/globals.css";
+
+@layer base {
+  html,
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+  }
+
+  /* #root must grow to fill the viewport but must NOT be height:100%.
+   * On mobile Safari, height:100% resolves to the body's computed height
+   * (which excludes the dynamic toolbar), making #root shorter than the
+   * screen and clipping all content below the fold — the blank-screen bug.
+   * min-height:100dvh uses the dynamic viewport unit so it always fills
+   * the full visible area on iOS/Android regardless of browser chrome. */
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+}

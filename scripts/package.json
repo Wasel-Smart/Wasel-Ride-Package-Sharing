@@ -1,0 +1,19 @@
+{
+    "name": "@wasel/payment-reconciliation-service",
+    "version": "0.1.0",
+    "private": true,
+    "main": "dist/service.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/service.js",
+        "dev": "ts-node-dev service.ts"
+    },
+    "dependencies": {
+        "stripe": "^16.5.0"
+    },
+    "devDependencies": {
+        "ts-node-dev": "^2.0.0",
+        "typescript": "^5.5.4",
+        "@types/node": "^20.14.12"
+    }
+}

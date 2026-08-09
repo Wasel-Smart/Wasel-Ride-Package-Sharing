@@ -1,0 +1,21 @@
+#boot-status {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #0b0f14;
+  color: #f8fafc;
+  font-family: Montserrat, Cairo, sans-serif;
+  z-index: 9999;
+}
+#boot-status[data-state="hidden"],
+#boot-status[data-app-mounted="true"] { display: none; }
+html[data-app-mounted="true"] #boot-status { display: none; }
+#boot-status[data-state="error"] { background: #450a0a; }
+#boot-status[data-state="error"] h1 { color: #f87171; }
+#boot-status .card { max-width: 560px; background: #111827; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 24px; }
+#boot-status h1 { margin: 0 0 10px; color: #f5b041; font-size: 1.25rem; }
+#boot-status p { margin: 0 0 8px; opacity: .95; }
+#boot-status code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; opacity: .85; }

@@ -1,0 +1,30 @@
+import { defineConfig, devices } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests/e2e',
+  testMatch: ['**/*.spec.ts'],
+  timeout: 60_000,
+  workers: 1,
+  fullyParallel: false,
+  expect: {
+    timeout: 10_000,
+  },
+  use: {
+    baseURL: 'http://127.0.0.1:4173',
+    trace: 'retain-on-failure',
+  },
+  webServer: {
+    command: 'node scripts/start-playwright-dev.mjs',
+    url: 'http://127.0.0.1:4173',
+    // A stale local dev server can silently test an older bundle. Reuse only
+    // when explicitly requested for interactive debugging.
+    reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === 'true',
+    timeout: 120_000,
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
+});

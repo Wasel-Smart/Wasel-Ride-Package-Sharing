@@ -1,0 +1,356 @@
+.appErrorShell {
+  padding: 40px;
+  color: #eef8ff;
+  background: #0a0f1a;
+  min-height: 100vh;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.appErrorTitle {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.appErrorMessage {
+  margin: 0;
+  color: rgba(196, 220, 238, 0.8);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.appErrorButton {
+  width: fit-content;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(20,127,228,0.24);
+  background: rgba(20,127,228,0.14);
+  color: #147fe4;
+  cursor: pointer;
+}
+
+.settingsPageShell {
+  padding-inline: 16px;
+}
+
+.settingsSectionNote {
+  padding: 14px 18px;
+  font-size: 0.8125rem;
+  color: rgba(196, 220, 238, 0.68);
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+}
+
+.settingsSectionInner {
+  padding: 14px 18px;
+}
+
+.settingsSectionBlock {
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.settingsStackSm {
+  display: grid;
+  gap: 10px;
+}
+
+.settingsStackMd {
+  display: grid;
+  gap: 12px;
+}
+
+.settingsActionRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.settingsDivider {
+  height: 1px;
+  background: rgba(141, 184, 218, 0.08);
+}
+
+.settingsSectionTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #eef8ff;
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+}
+
+.settingsSectionCopy {
+  font-size: 0.72rem;
+  color: rgba(196, 220, 238, 0.68);
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+  line-height: 1.5;
+}
+
+.settingsSectionCopyCompact {
+  font-size: 0.72rem;
+  color: rgba(196, 220, 238, 0.68);
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+  line-height: 1.6;
+}
+
+.settingsSectionCaption {
+  font-size: 0.78rem;
+  color: rgba(196, 220, 238, 0.68);
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+}
+
+.settingsSectionHint {
+  font-size: 0.74rem;
+  color: rgba(196, 220, 238, 0.68);
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+}
+
+.settingsRow {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid rgba(141, 184, 218, 0.08);
+  gap: 12px;
+}
+
+.settingsRowContent {
+  flex: 1;
+}
+
+.settingsRowTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #eef8ff;
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+}
+
+.settingsRowSub {
+  font-size: 0.8125rem;
+  color: rgba(196, 220, 238, 0.68);
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+  margin-top: 2px;
+}
+
+.settingsToggle {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.settingsToggleActive {
+  background: #147fe4;
+}
+
+.settingsToggleThumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #eef8ff;
+  transition: left 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.settingsToggleThumbActive {
+  left: 23px;
+}
+
+.settingsSelectWrap {
+  min-width: 220px;
+}
+
+.settingsLinkButton {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(141, 184, 218, 0.08);
+  cursor: pointer;
+  gap: 12px;
+  text-align: left;
+}
+
+.settingsLinkContent {
+  flex: 1;
+}
+
+.settingsLinkTitle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #eef8ff;
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+}
+
+.settingsLinkSub {
+  font-size: 0.8125rem;
+  color: rgba(196, 220, 238, 0.68);
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+  margin-top: 2px;
+}
+
+.settingsLinkChevron {
+  color: rgba(149, 178, 201, 0.56);
+}
+
+.settingsActionPrimary,
+.settingsActionSecondary,
+.settingsActionDanger {
+  height: 38px;
+  border-radius: 12px;
+  padding: 0 14px;
+}
+
+.settingsActionPrimary {
+  background: linear-gradient(135deg, #147fe4 0%, #5aa0f0 52%, #34d8a7 100%);
+  color: #050b12;
+  border: none;
+}
+
+.settingsActionSecondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: #eef8ff;
+  border: 1px solid rgba(141, 184, 218, 0.16);
+}
+
+.settingsActionDanger {
+  background: rgba(255, 124, 139, 0.14);
+  color: #ff7c8b;
+  border: 1px solid rgba(255, 124, 139, 0.2);
+}
+
+.settingsResetButton {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 124, 139, 0.2);
+  background: transparent;
+  color: #ff7c8b;
+  font-size: 0.8125rem;
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+  cursor: pointer;
+}
+
+.settingsSaveMessage {
+  margin-left: 12px;
+  color: #72c70d;
+  font-size: 0.8125rem;
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+}
+
+.settingsFormCard {
+  display: grid;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(141, 184, 218, 0.16);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.settingsQrImage {
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  background: #eef8ff;
+  padding: 8px;
+}
+
+.settingsModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(4, 10, 18, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.settingsModalCard {
+  background: #122538;
+  border: 1px solid rgba(255, 124, 139, 0.14);
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 380px;
+  width: 100%;
+}
+
+.settingsModalTitle {
+  color: #ff7c8b;
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.settingsModalCopy {
+  color: rgba(196, 220, 238, 0.68);
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.settingsModalActions {
+  display: flex;
+  gap: 10px;
+}
+
+.settingsModalButtonSecondary,
+.settingsModalButtonDanger {
+  flex: 1;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.settingsModalButtonSecondary {
+  background: transparent;
+  border: 1px solid rgba(141, 184, 218, 0.16);
+  color: rgba(196, 220, 238, 0.68);
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+}
+
+.settingsModalButtonDanger {
+  background: rgba(255, 124, 139, 0.14);
+  border: 1px solid rgba(255, 124, 139, 0.14);
+  color: #ff7c8b;
+  font-family: 'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif;
+  font-weight: 700;
+}
+
+[dir='rtl'] .settingsToggleThumb {
+  left: auto;
+  right: 3px;
+  transition: right 0.2s;
+}
+
+[dir='rtl'] .settingsToggleThumbActive {
+  left: auto;
+  right: 23px;
+}
+
+[dir='rtl'] .settingsSaveMessage {
+  margin-left: 0;
+  margin-right: 12px;
+}
+
+[dir='rtl'] .settingsLinkButton {
+  text-align: right;
+}
+
+[dir='rtl'] .settingsRow {
+  gap: 0;
+}
+
+[dir='rtl'] .settingsLinkChevron {
+  transform: scaleX(-1);
+}

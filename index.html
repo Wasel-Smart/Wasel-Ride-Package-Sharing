@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+      (function() {
+        try {
+          var stored = localStorage.getItem('wasel-language');
+          var lang = stored || (navigator.language || 'en');
+          if (lang.startsWith('ar')) {
+            document.documentElement.lang = 'ar';
+            document.documentElement.dir = 'rtl';
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <!-- theme-color is intentionally omitted here; PWA theme_color in manifest.webmanifest covers all browsers including the install path. -->
+    <meta name="color-scheme" content="dark" />
+    <meta name="application-name" content="Wasel" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Wasel" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
+    <meta name="supported-color-schemes" content="dark light" />
+    <meta name="apple-touch-fullscreen" content="yes" />
+    <meta name="apple-mobile-web-app-orientation" content="portrait" />
+    <meta name="HandheldFriendly" content="true" />
+    <meta name="MobileOptimized" content="width" />
+    <meta name="apple-itunes-app" content="app-id=com.wasel.smart" />
+
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- iOS PWA startup images (portrait). Replace with actual screenshots
+         matching each device resolution for best results. -->
+    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
+    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
+    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
+
+    <!-- Fonts: load with display=swap so text is visible immediately. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" media="print" onload="this.media='all'" />
+
+    <title>Wasel | Shared Routes That Reduce Travel Cost</title>
+    <meta name="description" content="Wasel connects riders and drivers through shared routes to reduce cost. Book a ride, offer a route, or join the network across Jordan." />
+    <meta name="keywords" content="Wasel, Jordan mobility, intercity rides, package delivery, Raje3, Amman, Aqaba, Irbid, trusted travel" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://wasel14.online" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Wasel" />
+    <meta property="og:title" content="Wasel | Shared Routes That Reduce Travel Cost" />
+    <meta property="og:description" content="Wasel connects riders and drivers through shared routes to reduce cost. Book a ride, offer a route, or join the network across Jordan." />
+    <meta property="og:url" content="https://wasel14.online" />
+    <meta property="og:locale" content="en_JO" />
+    <meta property="og:locale:alternate" content="ar_JO" />
+    <meta property="og:image" content="/brand/wasel-symbol.webp" />
+    <meta property="og:image:alt" content="Wasel | واصل mobility network logo" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Wasel | Shared Routes That Reduce Travel Cost" />
+    <meta name="twitter:description" content="Wasel connects riders and drivers through shared routes to reduce cost. Book a ride, offer a route, or join the network across Jordan." />
+    <meta name="twitter:image" content="/brand/wasel-symbol.webp" />
+    <meta name="twitter:image:alt" content="Wasel | واصل mobility network logo" />
+
+    <link rel="preconnect" href="https://maps.googleapis.com" />
+    <link rel="dns-prefetch" href="https://supabase.co" />
+    <link rel="preload" as="image" href="/brand/wasel-symbol.webp" imagesizes="280px" />
+    <style>
+      #boot-status {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: #0b0f14;
+        color: #f8fafc;
+        font-family: Montserrat, Cairo, sans-serif;
+        z-index: 9999;
+      }
+      #boot-status[data-state="hidden"],
+      #boot-status[data-app-mounted="true"] { display: none; }
+      html[data-app-mounted="true"] #boot-status { display: none; }
+      #boot-status[data-state="error"] { background: #450a0a; }
+      #boot-status[data-state="error"] h1 { color: #f87171; }
+      #boot-status .card { max-width: 560px; background: #111827; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 24px; }
+      #boot-status h1 { margin: 0 0 10px; color: #f5b041; font-size: 1.25rem; }
+      #boot-status p { margin: 0 0 8px; opacity: .95; }
+      #boot-status code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; opacity: .85; }
+    </style>
+  </head>
+
+  <body>
+    <div id="boot-status" data-state="loading" role="status" aria-live="polite">
+      <div class="card">
+        <h1>Loading Wasel...</h1>
+        <p>If this message stays for more than 15 seconds, the app likely failed to start.</p>
+        <code>Pull down to refresh, or open DevTools Console and share the first red error line.</code>
+      </div>
+    </div>
+    <script>
+      window.addEventListener('error', function(event) {
+        document.documentElement.dataset.appMounted = 'true';
+        try {
+          console.error('[Wasel] Boot error:', event.message, 'at', event.filename + ':' + event.lineno);
+        } catch (e) {}
+      }, true);
+
+      window.addEventListener('unhandledrejection', function(event) {
+        document.documentElement.dataset.appMounted = 'true';
+        try {
+          console.error('[Wasel] Unhandled rejection during boot:', event.reason);
+        } catch (e) {}
+      });
+
+      // A plain reload can just re-hit a stuck service worker and load the
+      // same broken cache again. This clears the SW registration and every
+      // Cache Storage entry first, then forces a network-fresh navigation,
+      // so "tap to retry" is an actual fix rather than a suggestion.
+      window.waselHardRecover = function() {
+        var cleanup = Promise.resolve();
+        if ('serviceWorker' in navigator) {
+          cleanup = navigator.serviceWorker.getRegistrations()
+            .then(function(regs) { return Promise.all(regs.map(function(r) { return r.unregister(); })); })
+            .catch(function() {});
+        }
+        if ('caches' in window) {
+          cleanup = cleanup.then(function() {
+            return caches.keys().then(function(keys) { return Promise.all(keys.map(function(k) { return caches.delete(k); })); });
+          }).catch(function() {});
+        }
+        cleanup.finally(function() {
+          window.location.href = window.location.origin + window.location.pathname + '?_r=' + Date.now();
+        });
+      };
+
+      window.setTimeout(function() {
+        if (document.documentElement.dataset.appMounted !== 'true') {
+          var panel = document.getElementById('boot-status');
+          if (panel) {
+            panel.setAttribute('data-state', 'error');
+            panel.innerHTML = '<div class="card"><h1>Taking too long</h1><p>The app is taking longer than expected. This usually means a slow connection or a stale cache.</p><button onclick="window.waselHardRecover()" style="margin-top:12px;padding:10px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1d4ed8;color:#fff;font-size:15px;">Tap to reload</button><code style="display:block;margin-top:12px;">Error: app_mount_timeout</code></div>';
+          }
+        }
+      }, 30000);
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
