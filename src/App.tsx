@@ -10,23 +10,13 @@ import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { LocalAuthProvider } from './contexts/LocalAuth';
 
-import { domainEventBus } from './platform/event-bus';
-import { eventBroker } from './platform/event-broker';
-import { startAsyncRuntime, stopAsyncRuntime } from './platform/async-runtime';
-import { productionWorkerRegistry } from './platform/production-workers';
 import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
 
-// Quick-fix: use static imports for modules that are also imported elsewhere
-// to avoid mixed dynamic/static import warnings from Vite during production builds.
-import * as monitoring from './utils/monitoring';
-import * as performance from './utils/performance';
-import * as core from './services/core';
-
 /* ---------------------------
    PROVIDERS WRAPPER
-----------------------------*/
+---------------------------*/
 function AppProviders({ children }: { children: ReactNode }) {
   return (
     <LanguageProvider>
@@ -39,7 +29,7 @@ function AppProviders({ children }: { children: ReactNode }) {
 
 /* ---------------------------
    BACKGROUND BOOTSTRAP (NON-BLOCKING)
-----------------------------*/
+---------------------------*/
 function AppRuntimeCoordinator() {
   useEffect(() => {
     let cancelled = false;
@@ -55,27 +45,45 @@ function AppRuntimeCoordinator() {
           }
         }
 
-        setTimeout(() => {
+        setTimeout(async () => {
           if (cancelled) return;
 
           try {
-            monitoring.initSentry();
-            performance.initPerformanceMonitoring();
+            const [
+              { initSentry, logger: monitoringLogger, trackDomainEvent },
+              { initPerformanceMonitoring },
+              { warmUpServer, startAvailabilityPolling },
+              { domainEventBus },
+              { eventBroker },
+              { startAsyncRuntime, stopAsyncRuntime },
+              { productionWorkerRegistry },
+            ] = await Promise.all([
+              import('./utils/monitoring'),
+              import('./utils/performance'),
+              import('./services/core'),
+              import('./platform/event-bus'),
+              import('./platform/event-broker'),
+              import('./platform/async-runtime'),
+              import('./platform/production-workers'),
+            ]);
+
+            initSentry();
+            initPerformanceMonitoring();
 
             validation.issues.forEach(issue => {
               if (issue.severity === 'error') {
-                monitoring.logger.error(issue.message);
+                monitoringLogger.error(issue.message);
               } else {
-                monitoring.logger.warning(issue.message);
+                monitoringLogger.warning(issue.message);
               }
             });
 
-            core.warmUpServer();
+            warmUpServer();
 
-            const stopPolling = core.startAvailabilityPolling();
+            const stopPolling = startAvailabilityPolling();
 
             const stopEvents = domainEventBus.subscribeAll(event => {
-              monitoring.trackDomainEvent(event);
+              trackDomainEvent(event);
             });
 
             void startAsyncRuntime()
@@ -121,19 +129,19 @@ function AppRuntimeCoordinator() {
 
 /* ---------------------------
    QUERY CLIENT (stable instance)
-----------------------------*/
+---------------------------*/
 const queryClient = new QueryClient({
   defaultOptions: DEFAULT_QUERY_OPTIONS,
 });
 
 /* ---------------------------
    ROUTER (isolated from providers)
-----------------------------*/
+---------------------------*/
 const Router = () => <RouterProvider router={waselRouter} />;
 
 /* ---------------------------
    APP
-----------------------------*/
+---------------------------*/
 export default function App() {
   return (
     <AppErrorBoundary>

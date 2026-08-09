@@ -74,7 +74,6 @@ MobilityOSPage.tsx
 schema.prisma
 schema.test.prisma
 schema.sql
-design-tokens.ts
 i18n.ts
 
 # Playwright MCP session artifacts
@@ -201,3 +200,4 @@ check-css.cjs
 src/platform/HONEST_AUDIT_REPORT_OUTDATED_*.md
 
 .vercel
+
