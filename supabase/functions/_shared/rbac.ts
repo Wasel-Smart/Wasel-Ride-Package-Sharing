@@ -1,14 +1,3 @@
-/**
- * Wasel RBAC — 14-role security model (Deno-compatible)
- *
- * Roles map to the platform's actual actor surfaces:
- *   Riders, Drivers, Operators, Admins, Finance, Trust, Support,
- *   Corporate, School, Medical, Package, Bus, Guest, and Service accounts.
- *
- * Every permission is additive — no role inherits from another at runtime.
- * Use resolveAccessRole() to map raw DB strings to canonical AccessRole values.
- */
-
 export type AccessRole =
   | 'admin'
   | 'finance'
@@ -73,7 +62,7 @@ export type AccessPermission =
   | 'config:read'
   | 'config:write';
 
-const ROLE_PERMISSIONS: Record<AccessRole, readonly AccessPermission[]> = {
+export const ROLE_PERMISSIONS: Record<AccessRole, readonly AccessPermission[]> = {
   admin: [
     'rides:read', 'rides:write', 'rides:assign', 'rides:cancel_any', 'rides:price_override',
     'packages:read', 'packages:write', 'packages:assign', 'packages:cancel_any',
@@ -91,7 +80,6 @@ const ROLE_PERMISSIONS: Record<AccessRole, readonly AccessPermission[]> = {
     'events:publish', 'events:consume',
     'config:read', 'config:write',
   ],
-
   finance: [
     'payments:read', 'payments:write', 'payments:refund', 'payments:payout', 'payments:reconcile',
     'rides:read', 'packages:read', 'bus:read',
@@ -100,7 +88,6 @@ const ROLE_PERMISSIONS: Record<AccessRole, readonly AccessPermission[]> = {
     'notifications:read',
     'config:read',
   ],
-
   trust: [
     'trust:read', 'trust:moderate', 'trust:ban', 'identity:review',
     'users:read', 'users:write',
@@ -110,7 +97,6 @@ const ROLE_PERMISSIONS: Record<AccessRole, readonly AccessPermission[]> = {
     'notifications:read', 'notifications:send',
     'analytics:read',
   ],
-
   support: [
     'rides:read', 'packages:read', 'bus:read',
     'payments:read',
@@ -120,7 +106,6 @@ const ROLE_PERMISSIONS: Record<AccessRole, readonly AccessPermission[]> = {
     'trust:read',
     'notifications:read',
   ],
-
   operator: [
     'rides:read', 'rides:assign',
     'packages:read', 'packages:assign',
@@ -132,14 +117,12 @@ const ROLE_PERMISSIONS: Record<AccessRole, readonly AccessPermission[]> = {
     'notifications:read', 'notifications:send',
     'analytics:read',
   ],
-
   driver: [
     'rides:read', 'rides:write',
     'packages:read', 'packages:write',
     'payments:read',
     'notifications:read',
   ],
-
   user: [
     'rides:read', 'rides:write',
     'packages:read', 'packages:write',
@@ -147,7 +130,6 @@ const ROLE_PERMISSIONS: Record<AccessRole, readonly AccessPermission[]> = {
     'bus:read',
     'notifications:read',
   ],
-
   corporate: [
     'rides:read', 'rides:write',
     'packages:read', 'packages:write',
@@ -157,27 +139,23 @@ const ROLE_PERMISSIONS: Record<AccessRole, readonly AccessPermission[]> = {
     'notifications:read',
     'analytics:read',
   ],
-
   school: [
     'rides:read', 'rides:write',
     'school:read', 'school:write',
     'payments:read',
     'notifications:read',
   ],
-
   medical: [
     'rides:read', 'rides:write',
     'medical:read', 'medical:write',
     'payments:read',
     'notifications:read',
   ],
-
   package_agent: [
     'packages:read', 'packages:write',
     'payments:read',
     'notifications:read',
   ],
-
   bus_operator: [
     'bus:read', 'bus:write', 'bus:manage_schedules',
     'rides:read',
@@ -185,13 +163,11 @@ const ROLE_PERMISSIONS: Record<AccessRole, readonly AccessPermission[]> = {
     'operations:read',
     'notifications:read',
   ],
-
   guest: [
     'rides:read',
     'bus:read',
     'config:read',
   ],
-
   service: [
     'events:publish', 'events:consume',
     'rides:read', 'packages:read',
@@ -221,10 +197,7 @@ export function resolveAccessRole(role: string | undefined): AccessRole {
   return 'user';
 }
 
-export function userHasPermission(
-  role: string | undefined,
-  permission: AccessPermission,
-): boolean {
+export function userHasPermission(role: string | undefined, permission: AccessPermission): boolean {
   return hasPermission(resolveAccessRole(role), permission);
 }
 
