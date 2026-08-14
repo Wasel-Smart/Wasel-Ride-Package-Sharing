@@ -178,55 +178,40 @@ docker build \
   .
 
 # Push all images
-docker push $REGISTRY/ride-matching-service:$VERSION
-docker push $REGISTRY/ride-matching-service:latest
-docker push $REGISTRY/payment-reconciliation-service:$VERSION
-docker push $REGISTRY/payment-reconciliation-service:latest
-docker push $REGISTRY/ops-analytics-worker:$VERSION
-docker push $REGISTRY/ops-analytics-worker:latest
-docker push $REGISTRY/notification-worker:$VERSION
-docker push $REGISTRY/notification-worker:latest
+docker push $REGISTRY/wasel-web:$VERSION
+docker push $REGISTRY/wasel-web:latest
 ```
 
 ### 2.2 Update Kubernetes Manifests
 
 ```bash
 # Update image references in manifests
-sed -i "s|wasel.azurecr.io/ride-matching-service:latest|$REGISTRY/ride-matching-service:$VERSION|g" \
-  infra/kubernetes/workers/ride-matching-service.yaml
+sed -i "s|wasel.azurecr.io/wasel-web:latest|$REGISTRY/wasel-web:$VERSION|g" \
+  k8s/api-server/deployment.yaml
 
-sed -i "s|wasel.azurecr.io/payment-reconciliation-service:latest|$REGISTRY/payment-reconciliation-service:$VERSION|g" \
-  infra/kubernetes/workers/payment-and-ops-services.yaml
-
-sed -i "s|wasel.azurecr.io/ops-analytics-worker:latest|$REGISTRY/ops-analytics-worker:$VERSION|g" \
-  infra/kubernetes/workers/payment-and-ops-services.yaml
-
-sed -i "s|wasel.azurecr.io/notification-worker:latest|$REGISTRY/notification-worker:$VERSION|g" \
-  infra/kubernetes/workers/notification-worker.yaml
+# Or use the infra/kubernetes path if preferred
+sed -i "s|wasel.azurecr.io/wasel-web:latest|$REGISTRY/wasel-web:$VERSION|g" \
+  infra/kubernetes/api-server/deployment.yaml
 ```
 
 ---
 
 ## Phase 3: Deploy Backend Services
 
-### 3.1 Deploy Ride Matching Service
+### 3.1 Deploy Web Client and Edge Function
 
 ```bash
-kubectl apply -f infra/kubernetes/workers/ride-matching-service.yaml -n wasel-production
+# Deploy the Vercel-hosted web client
+vercel --prod
 
-# Verify deployment
-kubectl get pods -n wasel-production -l app=ride-matching-service
-kubectl get hpa -n wasel-production ride-matching-service-hpa
+# Verify Edge Function deployment
+curl -I https://wasel14.online/functions/v1/make-server-0b1f4071/health
 
-# Check logs
-kubectl logs -f deployment/ride-matching-service -n wasel-production
-
-# Wait for ready state
-kubectl wait --for=condition=available --timeout=300s \
-  deployment/ride-matching-service -n wasel-production
+# Check logs in Supabase dashboard
+# Supabase Edge Functions are managed via the Supabase platform
 ```
 
-### 3.2 Deploy Payment and Ops Services
+### 3.2 Deploy Supporting Services
 
 ```bash
 kubectl apply -f infra/kubernetes/workers/payment-and-ops-services.yaml -n wasel-production
@@ -244,11 +229,11 @@ kubectl logs -f deployment/ops-analytics-worker -n wasel-production
 
 ```bash
 # Port-forward to check health endpoints
-kubectl port-forward deployment/ride-matching-service 8080:8080 -n wasel-production
+kubectl port-forward deployment/api-server 8080:8080 -n wasel-production
 
 # In another terminal
 curl http://localhost:8080/health
-# Expected: {"status":"healthy","service":"ride-matching-service"}
+# Expected: {"status":"healthy","service":"wasel-web"}
 
 curl http://localhost:8080/ready
 # Expected: {"status":"ready"}
@@ -273,7 +258,6 @@ vercel link
 # Set environment variables
 vercel env add VITE_SUPABASE_URL production
 vercel env add VITE_SUPABASE_ANON_KEY production
-vercel env add VITE_REDIS_HOST production
 vercel env add VITE_STRIPE_PUBLISHABLE_KEY production
 ```
 
@@ -294,11 +278,10 @@ git push origin v1.0.0
 
 ```bash
 # Check deployment
-curl https://wasel.jo/health
+curl https://wasel14.online/api/health
 
 # Test critical paths
-curl https://wasel.jo/api/v1/health
-curl https://wasel.jo/ops/observability
+curl https://wasel14.online/functions/v1/make-server-0b1f4071/health
 ```
 
 ---
