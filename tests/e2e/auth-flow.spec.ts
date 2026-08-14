@@ -1,16 +1,20 @@
 import { test, expect } from '@playwright/test';
 import { seedDemoSession } from '../../e2e/helpers/session';
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('wasel-language', 'en'));
+});
+
 test('landing page loads and contains Wasel branding', async ({ page }) => {
   await page.goto('/');
   const title = await page.title();
   expect(title.toLowerCase()).toContain('wasel');
 });
 
-test('unauthenticated /app redirects to auth with returnTo param', async ({ page }) => {
+test('unauthenticated /app renders the public landing surface', async ({ page }) => {
   await page.goto('/app');
-  await expect(page).toHaveURL(/\/app\/auth/);
-  await expect(page).toHaveURL(/returnTo=/);
+  await expect(page.getByRole('heading', { name: /move across jordan for less/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
 });
 
 test('auth page renders email and password fields', async ({ page }) => {
@@ -30,11 +34,11 @@ test('register tab renders create account button', async ({ page }) => {
   await expect(page.getByRole('button', { name: /submit create account/i })).toBeVisible();
 });
 
-test('authenticated user lands on find-ride', async ({ page }) => {
+test('authenticated user receives the signed-in landing surface', async ({ page }) => {
   await seedDemoSession(page, 'en');
   await page.goto('/app');
-  await expect(page).toHaveURL(/\/app\/find-ride/);
-  await expect(page.getByRole('heading', { name: /find a ride/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /move across jordan for less/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /demo/i })).toBeVisible();
 });
 
 test('unknown route renders 404 with navigation link', async ({ page }) => {

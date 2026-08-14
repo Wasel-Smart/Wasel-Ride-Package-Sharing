@@ -124,11 +124,25 @@ class RootErrorBoundary extends React.Component<React.PropsWithChildren, { hasEr
 
 const rootElement = document.getElementById('root');
 
+type E2EConfigOverride = {
+  supabaseUrl?: string;
+  anonKey?: string;
+};
+
+function getE2EConfigOverride(): E2EConfigOverride | undefined {
+  if (!import.meta.env.DEV || typeof window === 'undefined') {
+    return undefined;
+  }
+
+  return (window as Window & { __WASEL_E2E_CONFIG__?: E2EConfigOverride }).__WASEL_E2E_CONFIG__;
+}
+
 // Verify critical environment is configured before the app boots.
 const environmentIsValid = (() => {
   try {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+    const e2eConfig = getE2EConfigOverride();
+    const supabaseUrl = e2eConfig?.supabaseUrl ?? (import.meta.env.VITE_SUPABASE_URL as string | undefined);
+    const anonKey = e2eConfig?.anonKey ?? (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined);
     const isPlaceholder = (v: string | undefined) =>
       !v || v.startsWith('your-') || v === 'undefined' || v === 'null';
     const isValidUrl = (v: string) => {

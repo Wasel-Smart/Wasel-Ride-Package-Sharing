@@ -1,127 +1,91 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# ============================================================
-# Wasel Edge Function Deployment Script
-# Deploys make-server-0b1f4071 to Supabase with all secrets
-# ============================================================
+# Deploy the production edge function without ever placing credentials in source.
+# All credentials must be injected by the CI secret store or the caller's shell.
 
-set -e
+set -euo pipefail
 
-echo "🚀 Wasel Edge Function Deployment"
-echo "=================================="
-echo ""
+PROJECT_REF="zexlxabdcsjefptmjhuq"
+FUNCTION_NAME="make-server-0b1f4071"
+APP_BASE_URL="https://wasel14.online"
 
-# Colors
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+readonly REQUIRED_SECRETS=(
+  SUPABASE_ANON_KEY
+  SUPABASE_SERVICE_ROLE_KEY
+  STRIPE_SECRET_KEY
+  TWILIO_ACCOUNT_SID
+  TWILIO_AUTH_TOKEN
+  TWILIO_API_KEY_SID
+  TWILIO_API_KEY_SECRET
+  TWILIO_SMS_FROM
+  COMMUNICATION_WORKER_SECRET
+  COMMUNICATION_WEBHOOK_TOKEN
+  WASEL_INTERNAL_HEALTH_TOKEN
+)
 
-# Check if supabase CLI is installed
-if ! command -v supabase &> /dev/null; then
-    echo -e "${RED}❌ Supabase CLI not found${NC}"
-    echo "Install it with: npm install -g supabase"
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || {
+    printf 'Required command is not available: %s\n' "$1" >&2
     exit 1
-fi
+  }
+}
 
-echo -e "${GREEN}✓${NC} Supabase CLI found"
-
-# Check if logged in
-if ! supabase projects list &> /dev/null; then
-    echo -e "${YELLOW}⚠${NC} Not logged in to Supabase"
-    echo "Running: supabase login"
-    supabase login
-fi
-
-echo -e "${GREEN}✓${NC} Logged in to Supabase"
-
-# Link to project
-echo ""
-echo "Linking to production project..."
-supabase link --project-ref zexlxabdcsjefptmjhuq
-
-echo -e "${GREEN}✓${NC} Linked to project"
-
-# Deploy edge function
-echo ""
-echo "Deploying edge function..."
-supabase functions deploy make-server-0b1f4071 --no-verify-jwt
-
-echo -e "${GREEN}✓${NC} Edge function deployed"
-
-# Set secrets
-echo ""
-echo "Setting edge function secrets..."
-
-# Core Supabase secrets
-supabase secrets set SUPABASE_URL="https://zexlxabdcsjefptmjhuq.supabase.co"
-supabase secrets set SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NzU3MjYsImV4cCI6MjA5MzM1MTcyNn0.p17L08rXvykUbPpTev82S5WQo_uhSakwP7WI3HbMmA0"
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpleGx4YWJkY3NqZWZwdG1qaHVxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc3NTcyNiwiZXhwIjoyMDkzMzUxNzI2fQ.YT92TwRlZDMvyu11sTzuB2mhlSIHVplxT5EybXio30U"
-
-# App configuration
-supabase secrets set APP_BASE_URL="https://wasel14.online"
-
-# Google OAuth
-supabase secrets set SUPABASE_AUTH_GOOGLE_CLIENT_ID="235290462223-ooc9cnn6r80ruk475p88286hiepqu8b5.apps.googleusercontent.com"
-
-# Stripe
-supabase secrets set STRIPE_SECRET_KEY="sk_test_51SZmpKENhKSYxMCX03sEOKEiljDGWYTX0ZKTVmqKM0NeNH60jWc6pzyW8vaMHr7ahEKfKRNG24UqNrlsELnEGvHZ004Ec5d33u"
-supabase secrets set STRIPE_API_VERSION="2024-11-20.acacia"
-
-# Twilio
-supabase secrets set TWILIO_ACCOUNT_SID="AC1386e065d313ae43d256ca0394d0b4e6"
-supabase secrets set TWILIO_AUTH_TOKEN="5005d351cb6bee711cb5127a7d192728"
-supabase secrets set TWILIO_API_KEY_SID="SK4519926e3b0a4186bee07283ab57b018"
-supabase secrets set TWILIO_API_KEY_SECRET="LCnyYDzwgp4n9qqg7hx2nf0HRvOLnRQU"
-supabase secrets set TWILIO_SMS_FROM="+962790000000"
-
-# Communications worker
-WORKER_SECRET=$(openssl rand -base64 32)
-WEBHOOK_TOKEN=$(openssl rand -base64 32)
-supabase secrets set COMMUNICATION_WORKER_SECRET="$WORKER_SECRET"
-supabase secrets set COMMUNICATION_WEBHOOK_TOKEN="$WEBHOOK_TOKEN"
-supabase secrets set COMMUNICATION_MAX_ATTEMPTS="5"
-supabase secrets set COMMUNICATION_PROCESS_INLINE="false"
-supabase secrets set ENABLE_RUNTIME_ADMIN_ENDPOINTS="false"
-supabase secrets set ALLOWED_ORIGINS="https://wasel14.online"
-
-echo -e "${GREEN}✓${NC} Secrets configured"
-
-# Test deployment
-echo ""
-echo "Testing edge function..."
-HEALTH_URL="https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/health"
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HEALTH_URL")
-
-if [ "$HTTP_CODE" = "200" ]; then
-    echo -e "${GREEN}✓${NC} Edge function is healthy (HTTP $HTTP_CODE)"
-else
-    echo -e "${RED}❌${NC} Edge function health check failed (HTTP $HTTP_CODE)"
-    echo "URL: $HEALTH_URL"
+require_secret() {
+  local name="$1"
+  if [[ -z "${!name:-}" ]]; then
+    printf 'Required secret is not set: %s\n' "$name" >&2
     exit 1
+  fi
+}
+
+for command in supabase curl; do
+  require_command "$command"
+done
+
+for secret_name in "${REQUIRED_SECRETS[@]}"; do
+  require_secret "$secret_name"
+done
+
+if ! supabase projects list >/dev/null 2>&1; then
+  printf 'Supabase CLI is not authenticated. Run supabase login or provide SUPABASE_ACCESS_TOKEN.\n' >&2
+  exit 1
 fi
 
-# Display summary
-echo ""
-echo "=================================="
-echo -e "${GREEN}✅ Deployment Complete!${NC}"
-echo "=================================="
-echo ""
-echo "Edge Function URL:"
-echo "  https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071"
-echo ""
-echo "Health Check:"
-echo "  curl $HEALTH_URL"
-echo ""
-echo "Worker Secret (save this):"
-echo "  $WORKER_SECRET"
-echo ""
-echo "Webhook Token (save this):"
-echo "  $WEBHOOK_TOKEN"
-echo ""
-echo "Next Steps:"
-echo "  1. Update Vercel environment variables"
-echo "  2. Configure OAuth providers in Supabase dashboard"
-echo "  3. Set up Stripe webhook"
-echo "  4. Configure email provider (Resend or SendGrid)"
-echo ""
+supabase link --project-ref "$PROJECT_REF"
+
+# The function performs route-level authorization itself. Keep this explicit so
+# unauthenticated health and browser preflight requests remain available.
+supabase functions deploy "$FUNCTION_NAME" --no-verify-jwt
+
+supabase secrets set \
+  "SUPABASE_URL=https://${PROJECT_REF}.supabase.co" \
+  "SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" \
+  "SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}" \
+  "APP_BASE_URL=${APP_BASE_URL}" \
+  "STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}" \
+  "STRIPE_API_VERSION=${STRIPE_API_VERSION:-2024-11-20.acacia}" \
+  "TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}" \
+  "TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}" \
+  "TWILIO_API_KEY_SID=${TWILIO_API_KEY_SID}" \
+  "TWILIO_API_KEY_SECRET=${TWILIO_API_KEY_SECRET}" \
+  "TWILIO_SMS_FROM=${TWILIO_SMS_FROM}" \
+  "COMMUNICATION_WORKER_SECRET=${COMMUNICATION_WORKER_SECRET}" \
+  "COMMUNICATION_WEBHOOK_TOKEN=${COMMUNICATION_WEBHOOK_TOKEN}" \
+  "WASEL_INTERNAL_HEALTH_TOKEN=${WASEL_INTERNAL_HEALTH_TOKEN}" \
+  "COMMUNICATION_MAX_ATTEMPTS=${COMMUNICATION_MAX_ATTEMPTS:-5}" \
+  "COMMUNICATION_PROCESS_INLINE=false" \
+  "ENABLE_RUNTIME_ADMIN_ENDPOINTS=false" \
+  "ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-${APP_BASE_URL}}"
+
+if [[ -n "${SUPABASE_AUTH_GOOGLE_CLIENT_ID:-}" ]]; then
+  supabase secrets set "SUPABASE_AUTH_GOOGLE_CLIENT_ID=${SUPABASE_AUTH_GOOGLE_CLIENT_ID}"
+fi
+
+health_url="https://${PROJECT_REF}.supabase.co/functions/v1/${FUNCTION_NAME}/health"
+http_code="$(curl --fail --silent --show-error --output /dev/null --write-out '%{http_code}' --max-time 15 "$health_url" || true)"
+if [[ "$http_code" != "200" ]]; then
+  printf 'Edge function health check failed (HTTP %s).\n' "$http_code" >&2
+  exit 1
+fi
+
+printf 'Edge function deployment completed and passed its health check.\n'

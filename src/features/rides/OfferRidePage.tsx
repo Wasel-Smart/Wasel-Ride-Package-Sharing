@@ -27,6 +27,7 @@ import { C } from '../../utils/wasel-ds';
 import { useLocale } from '../../hooks/useLocale';
 import { OfferRideFormPanel } from './components/OfferRideFormPanel';
 import { OfferRideIncomingRequests } from './components/OfferRideIncomingRequests';
+import { cityLabel, packageCapacityLabel } from './offerRideContent';
 import { tx } from '../../locales/tx';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -40,6 +41,8 @@ export function OfferRidePage() {
   const locale = useLocale();
   const { language } = useLanguage();
   const ar = language === 'ar';
+  const city = (value: string) => cityLabel(value, language);
+  const capacity = (value: string) => packageCapacityLabel(value, language);
 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(() => readStoredObject(OFFER_RIDE_DRAFT_KEY, defaultForm));
@@ -349,8 +352,8 @@ export function OfferRidePage() {
                   {tx('offerRidePage.ride_offer_is_live')}
                 </h2>
                 <p style={{ color: DS.sub, margin: 0 }}>
-                  <strong style={{ color: C.text }}>{form.from}</strong> {tx('offerRidePage.to')}{' '}
-                  <strong style={{ color: C.text }}>{form.to}</strong>{' '}
+                  <strong style={{ color: C.text }}>{city(form.from)}</strong> {tx('offerRidePage.to')}{' '}
+                  <strong style={{ color: C.text }}>{city(form.to)}</strong>{' '}
                   {tx('offerRidePage.is_now_open_across_the_movement_network')}
                 </p>
                 <div
@@ -363,18 +366,18 @@ export function OfferRidePage() {
                 >
                   {[
                     {
-                      label: 'Live routes',
+                      label: ar ? 'المسارات المباشرة' : 'Live routes',
                       value: corridorCount > 0 ? `${corridorCount + 1}` : '1',
                     },
                     {
-                      label: 'Full trip',
-                      value: driverPlan ? `${driverPlan.grossWhenFullJod} JOD` : '--',
+                      label: ar ? 'الرحلة الكاملة' : 'Full trip',
+                      value: driverPlan ? `${driverPlan.grossWhenFullJod} ${ar ? 'دينار' : 'JOD'}` : '--',
                     },
                     {
-                      label: 'Mode',
+                      label: ar ? 'الوضع' : 'Mode',
                       value: form.acceptsPackages
-                        ? `Packages ${form.packageCapacity}`
-                        : 'Passengers',
+                        ? ar ? `طرود ${capacity(form.packageCapacity)}` : `Packages ${form.packageCapacity}`
+                        : ar ? 'ركاب' : 'Passengers',
                     },
                   ].map(item => (
                     <div
@@ -478,13 +481,15 @@ export function OfferRidePage() {
                   margin: '8px 0 10px',
                 }}
               >
-                {form.from} {tx('offerRidePage.to_2')}
-                {form.to}
+                {city(form.from)} {tx('offerRidePage.to_2')}
+                {city(form.to)}
               </h2>
               <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>
-                {selectedSignal?.recommendedReason ??
-                  driverPlan?.waselBrainNote ??
-                  'Choose the route, keep the price sharp, and open supply fast.'}
+                {ar
+                  ? 'راقب الطلب والسعة والتسعير قبل نشر هذا المسار.'
+                  : selectedSignal?.recommendedReason ??
+                    driverPlan?.waselBrainNote ??
+                    'Choose the route, keep the price sharp, and open supply fast.'}
               </div>
               <div
                 style={{
@@ -534,16 +539,30 @@ export function OfferRidePage() {
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
                   selectedSignal
-                    ? `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings`
-                    : `${corridorCount} live route${corridorCount === 1 ? '' : 's'} on this lane`,
+                    ? ar
+                      ? `${selectedSignal.activeDemandAlerts} تنبيه | ${selectedSignal.liveBookings} حجز`
+                      : `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings`
+                    : ar
+                      ? `${corridorCount} مسار مباشر على هذا الممر`
+                      : `${corridorCount} live route${corridorCount === 1 ? '' : 's'} on this lane`,
                   selectedSignal
-                    ? `${selectedSignal.nextWaveWindow} | ${selectedSignal.recommendedPickupPoint}`
-                    : (driverPlan?.corridor.autoGroupWindow ?? 'Best pickup window appears here'),
+                    ? ar
+                      ? `نافذة الانطلاق التالية: ${selectedSignal.nextWaveWindow}`
+                      : `${selectedSignal.nextWaveWindow} | ${selectedSignal.recommendedPickupPoint}`
+                    : ar
+                      ? 'تظهر أفضل نافذة للانطلاق هنا'
+                      : (driverPlan?.corridor.autoGroupWindow ?? 'Best pickup window appears here'),
                   selectedSignal
-                    ? selectedSignal.productionSources.slice(0, 3).join(' | ')
+                    ? ar
+                      ? 'بيانات الحركة المباشرة تدعم هذا المسار.'
+                      : selectedSignal.productionSources.slice(0, 3).join(' | ')
                     : driverPlan
-                      ? `${driverPlan.emptySeatCostJod} JOD lost per empty seat`
-                      : 'Route intelligence appears after lane selection',
+                      ? ar
+                        ? `${driverPlan.emptySeatCostJod} دينار تكلفة المقعد الشاغر`
+                        : `${driverPlan.emptySeatCostJod} JOD lost per empty seat`
+                      : ar
+                        ? 'تظهر معلومات المسار بعد الاختيار'
+                        : 'Route intelligence appears after lane selection',
                 ].map(line => (
                   <div
                     key={line}
@@ -589,7 +608,7 @@ export function OfferRidePage() {
                     }}
                   >
                     <div style={{ color: C.text, fontWeight: 700, fontSize: '0.8rem' }}>
-                      {node.title}
+                      {ar ? 'خدمة إضافية مرتبطة بالمسار' : node.title}
                     </div>
                     <div
                       style={{
@@ -599,7 +618,9 @@ export function OfferRidePage() {
                         marginTop: 4,
                       }}
                     >
-                      {node.summary}
+                      {ar
+                        ? 'اربط هذه الخدمة بنفس الممر لتبقى الحركة والطرود والدعم في سياق واحد.'
+                        : node.summary}
                     </div>
                   </div>
                 ))}

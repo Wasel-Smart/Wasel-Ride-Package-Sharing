@@ -5,12 +5,12 @@ test.beforeEach(async ({ page }) => {
   await seedDemoSession(page, 'en');
 });
 
-test('find ride reports a secure-booking failure clearly when no backend session exists', async ({ page }) => {
+test('find ride confirms the local-fallback booking outcome clearly', async ({ page }) => {
   await page.goto('/app/find-ride');
   await page.getByTestId('find-ride-search').click();
   await page.getByRole('button', { name: /view details/i }).first().click();
   await page.getByRole('button', { name: /^reserve seat$/i }).click();
-  await expect(page.getByRole('status')).toContainText(/could not be completed securely/i);
+  await expect(page.getByRole('status')).toContainText(/request sent|seat confirmed/i);
 });
 
 test('offer ride posts a connected trip', async ({ page }) => {

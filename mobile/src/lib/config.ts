@@ -36,6 +36,7 @@ const supabaseFunctionUrl = readPublicEnv(
 const authRedirectUrl = readPublicEnv('EXPO_PUBLIC_AUTH_REDIRECT_URL', extra.authRedirectUrl);
 const apiUrl = readPublicEnv('EXPO_PUBLIC_API_URL', extra.apiUrl);
 const wsUrl = readPublicEnv('EXPO_PUBLIC_WS_URL', extra.wsUrl);
+const hasSupabaseConfiguration = Boolean(supabaseUrl && supabaseAnonKey);
 
 export const waselMobileConfig = {
   supabaseUrl,
@@ -46,7 +47,7 @@ export const waselMobileConfig = {
   authRedirectUrl: authRedirectUrl || 'wasel://auth/callback',
   apiUrl,
   wsUrl,
-  hasSupabase: Boolean(supabaseUrl && supabaseAnonKey),
+  hasSupabase: hasSupabaseConfiguration,
   hasMaps: Boolean(googleMapsKey),
   hasStripe: Boolean(stripePublishableKey),
   hasFunctions: Boolean(supabaseFunctionUrl),
@@ -67,7 +68,12 @@ const secureSessionStorage = {
   removeItem: (key: string) => SecureStore.deleteItemAsync(key),
 };
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Keep module initialization safe when a release is misconfigured. App.tsx
+// gates all workflows before this inert client can be used.
+const clientUrl = hasSupabaseConfiguration ? supabaseUrl : 'https://configuration-required.invalid';
+const clientKey = hasSupabaseConfiguration ? supabaseAnonKey : 'configuration-required';
+
+export const supabase = createClient(clientUrl, clientKey, {
   auth: {
     storage: secureSessionStorage,
     detectSessionInUrl: false,

@@ -52,7 +52,7 @@ function quantityStep(mode: BookingType): number {
 }
 
 function shortTime(value: string): string {
-  return new Date(value).toLocaleTimeString([], {
+  return new Date(value).toLocaleTimeString(getCurrentLang() === 'ar' ? 'ar-JO' : undefined, {
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -63,6 +63,14 @@ const CITY_LABELS_AR: Record<string, string> = {
 };
 function cityLabel(city: string): string {
   return getCurrentLang() === 'ar' ? CITY_LABELS_AR[city] ?? city : city;
+}
+
+function localizedCorridorLabel(value: string): string {
+  const separator = value.includes('->') ? '->' : value.includes('←') ? '←' : null;
+  if (!separator) return cityLabel(value);
+  const [origin, destination] = value.split(separator).map(part => part.trim());
+  if (!origin || !destination) return cityLabel(value);
+  return `${cityLabel(origin)} ${getCurrentLang() === 'ar' ? '←' : '->'} ${cityLabel(destination)}`;
 }
 
 function routeLabel(projection: CorridorProjection | null): string {
@@ -1068,7 +1076,9 @@ export default function MobilityOSCore() {
                 {chip(tx('mobilityOSCore.runtime_label'), runtimeModeLabel, runtimeAccent)}
                 {chip(
                   tx('mobilityOSCore.hottest_label'),
-                  snapshot.metrics.hottest_corridor || tx('mobilityOSCore.quiet_label'),
+                  snapshot.metrics.hottest_corridor
+                    ? localizedCorridorLabel(snapshot.metrics.hottest_corridor)
+                    : tx('mobilityOSCore.quiet_label'),
                 )}
                 {chip(tx('mobilityOSCore.updated_label'), shortTime(snapshot.updated_at))}
               </div>

@@ -25,7 +25,7 @@ interface AdminApiResponse<T> {
 const RANGE_LABELS: Record<Range, string> = { '1d': 'Today', '7d': '7 days', '30d': '30 days' };
 
 export function AdminDashboardPage() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export function AdminDashboardPage() {
   async function fetchMetrics(r: Range) {
     setLoading(true);
     try {
-      const token = localStorage.getItem('wasel-auth-token');
+      const token = session?.access_token;
       if (!token) throw new Error('Missing admin session token');
 
       const response = await apiRequest<AdminApiResponse<AdminMetrics>>(
@@ -65,7 +65,7 @@ export function AdminDashboardPage() {
   useEffect(() => {
     if (user?.role === 'admin') void fetchMetrics(range);
     else setLoading(false);
-  }, [user?.role, range]);
+  }, [range, session?.access_token, user?.role]);
 
   if (!user || user.role !== 'admin') {
     return (

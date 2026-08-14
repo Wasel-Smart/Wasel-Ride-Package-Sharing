@@ -3,18 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <script>
-      (function() {
-        try {
-          var stored = localStorage.getItem('wasel-language');
-          var lang = stored || (navigator.language || 'en');
-          if (lang.startsWith('ar')) {
-            document.documentElement.lang = 'ar';
-            document.documentElement.dir = 'rtl';
-          }
-        } catch (e) {}
-      })();
-    </script>
+    <script src="/initial-locale.js"></script>
     <!-- theme-color is intentionally omitted here; PWA theme_color in manifest.webmanifest covers all browsers including the install path. -->
     <meta name="color-scheme" content="dark" />
     <meta name="application-name" content="Wasel" />
@@ -107,52 +96,7 @@
         <code>Pull down to refresh, or open DevTools Console and share the first red error line.</code>
       </div>
     </div>
-    <script>
-      window.addEventListener('error', function(event) {
-        document.documentElement.dataset.appMounted = 'true';
-        try {
-          console.error('[Wasel] Boot error:', event.message, 'at', event.filename + ':' + event.lineno);
-        } catch (e) {}
-      }, true);
-
-      window.addEventListener('unhandledrejection', function(event) {
-        document.documentElement.dataset.appMounted = 'true';
-        try {
-          console.error('[Wasel] Unhandled rejection during boot:', event.reason);
-        } catch (e) {}
-      });
-
-      // A plain reload can just re-hit a stuck service worker and load the
-      // same broken cache again. This clears the SW registration and every
-      // Cache Storage entry first, then forces a network-fresh navigation,
-      // so "tap to retry" is an actual fix rather than a suggestion.
-      window.waselHardRecover = function() {
-        var cleanup = Promise.resolve();
-        if ('serviceWorker' in navigator) {
-          cleanup = navigator.serviceWorker.getRegistrations()
-            .then(function(regs) { return Promise.all(regs.map(function(r) { return r.unregister(); })); })
-            .catch(function() {});
-        }
-        if ('caches' in window) {
-          cleanup = cleanup.then(function() {
-            return caches.keys().then(function(keys) { return Promise.all(keys.map(function(k) { return caches.delete(k); })); });
-          }).catch(function() {});
-        }
-        cleanup.finally(function() {
-          window.location.href = window.location.origin + window.location.pathname + '?_r=' + Date.now();
-        });
-      };
-
-      window.setTimeout(function() {
-        if (document.documentElement.dataset.appMounted !== 'true') {
-          var panel = document.getElementById('boot-status');
-          if (panel) {
-            panel.setAttribute('data-state', 'error');
-            panel.innerHTML = '<div class="card"><h1>Taking too long</h1><p>The app is taking longer than expected. This usually means a slow connection or a stale cache.</p><button onclick="window.waselHardRecover()" style="margin-top:12px;padding:10px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:#1d4ed8;color:#fff;font-size:15px;">Tap to reload</button><code style="display:block;margin-top:12px;">Error: app_mount_timeout</code></div>';
-          }
-        }
-      }, 30000);
-    </script>
+    <script src="/boot-status.js"></script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
