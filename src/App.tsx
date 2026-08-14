@@ -1,4 +1,3 @@
-import { sanitizeLogMessage } from '@/utils/sanitization';
 import { useEffect, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from 'react-router';
