@@ -36,7 +36,6 @@ export function initPerformanceMonitoring() {
       enableTracing: true,
       enableAutoPerformanceTracing: true,
       enableNativeCrashHandling: true,
-      enableNdkCrashHandling: true,
       enableWatchdogTerminationTracking: true,
       enableAppHangTracking: true,
       appHangTimeoutIntervalMillis: 5000,
@@ -73,7 +72,7 @@ function captureException(error: unknown, context?: Record<string, unknown>) {
   Sentry.captureException(error, { extra: context });
 }
 
-function addBreadcrumb(message: string, category: string, level: Sentry.SeverityLevel = 'info', data?: Record<string, unknown>) {
+function addBreadcrumb(message: string, category: string, level: 'info' | 'warning' | 'error' = 'info', data?: Record<string, unknown>) {
   if (!isSentryInitialized) return;
   Sentry.addBreadcrumb({
     category,
@@ -89,15 +88,9 @@ export function recordColdStart(): void {
     coldStartMs,
     platform: 'react-native',
   });
-  if (isSentryInitialized) {
-    Sentry.metrics.gauge('app.cold_start_ms', coldStartMs, {
-      unit: 'millisecond',
-      tags: { platform: 'react-native' },
-    });
-  }
 }
 
-export function recordNavigation(name: string, from: string, to: string): void {
+export function recordNavigation(from: string, to: string): void {
   addBreadcrumb(`Navigation: ${from} -> ${to}`, 'navigation', 'info', { from, to });
   startTransaction(`${to}_screen`, 'ui.screen', { from, to });
 }
@@ -120,7 +113,7 @@ export function recordApiCall(endpoint: string, method: string, status: number, 
     status,
     durationMs,
   });
-  startTransaction(`api.${method}.${endpoint.replace(/\\//g, '_')}`, 'http.client', {
+  startTransaction(`api.${method}.${endpoint.replace(/\//g, '_')}`, 'http.client', {
     endpoint,
     method,
     status: String(status),
