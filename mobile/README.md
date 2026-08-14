@@ -102,6 +102,13 @@ yarn test         # jest unit tests (services, stores, utils)
 yarn test:e2e     # detox end-to-end (requires a built native app)
 ```
 
+## Documentation
+
+- [Architecture Guide](./ARCHITECTURE.md) — Architecture patterns, state management, navigation, design system
+- [Testing Guide](./TESTING.md) — Unit, component, and E2E testing patterns and coverage targets
+- [Observability Guide](./OBSERVABILITY.md) — Sentry instrumentation, tracing primitives, dashboard queries
+- [Audit Report](./HONEST_AUDIT_REPORT.md) — Detailed audit scores and findings
+
 ## Notes / known limitations
 
 - Native builds (iOS/Android) require the Google Maps key and (for FCM) `google-services.json`
