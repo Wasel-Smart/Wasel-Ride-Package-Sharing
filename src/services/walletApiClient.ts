@@ -22,13 +22,13 @@ async function requireUserId(): Promise<string> {
 
 export async function getBalance() {
   const userId = await requireUserId();
-  const response = await api.get(`/wallet/${userId}/balance`);
+  const response = await api.get(`/v1/wallet/${userId}/balance`);
   return response as { data: WalletBalance };
 }
 
 export async function getTransactions(page = 1, limit = 20) {
   const userId = await requireUserId();
-  const response = await api.get(`/wallet/${userId}/transactions?page=${page}&limit=${limit}`);
+  const response = await api.get(`/v1/wallet/${userId}/transactions?page=${page}&limit=${limit}`);
   return response as {
     data: WalletTransaction[];
     meta: { total: number; page: number; limit: number };
@@ -37,6 +37,6 @@ export async function getTransactions(page = 1, limit = 20) {
 
 export async function topUp(amount: number) {
   const userId = await requireUserId();
-  const response = await api.post(`/wallet/${userId}/topup`, { amount });
+  const response = await api.post(`/v1/wallet/${userId}/topup`, { amount });
   return response as { data: WalletTransaction };
 }

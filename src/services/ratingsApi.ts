@@ -20,11 +20,11 @@ export async function createRating(input: {
   comment?: string;
   tags?: string[];
 }) {
-  const response = await api.post('/ratings', input);
+  const response = await api.post('/v1/ratings', input);
   return response as { data: Rating };
 }
 
 export async function getTripRatings(tripId: string) {
-  const response = await api.get(`/ratings/trip/${tripId}`);
+  const response = await api.get(`/v1/ratings/trip/${tripId}`);
   return response as { data: Rating[] };
 }

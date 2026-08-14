@@ -30,7 +30,7 @@ export async function createOrganization(input: {
   billingAddress?: string;
   taxId?: string;
 }) {
-  const response = await api.post('/corporate/organizations', input);
+  const response = await api.post('/v1/corporate/organizations', input);
   return response as { data: Organization };
 }
 
@@ -42,7 +42,7 @@ export async function addOrganizationMember(
     costCenter?: string;
   },
 ) {
-  const response = await api.post(`/corporate/organizations/${orgId}/members`, input);
+  const response = await api.post(`/v1/corporate/organizations/${orgId}/members`, input);
   return response as { data: unknown };
 }
 
@@ -54,7 +54,7 @@ export async function addOrganizationCredits(
     expiresAt?: string;
   },
 ) {
-  const response = await api.post(`/corporate/organizations/${orgId}/credits`, input);
+  const response = await api.post(`/v1/corporate/organizations/${orgId}/credits`, input);
   return response as { data: unknown };
 }
 
@@ -63,11 +63,11 @@ export async function generateInvoice(input: {
   billingPeriodStart: string;
   billingPeriodEnd: string;
 }) {
-  const response = await api.post('/corporate/invoices/generate', input);
+  const response = await api.post('/v1/corporate/invoices/generate', input);
   return response as { data: Invoice };
 }
 
 export async function getOrganizationInvoices(orgId: string) {
-  const response = await api.get(`/corporate/organizations/${orgId}/invoices`);
+  const response = await api.get(`/v1/corporate/organizations/${orgId}/invoices`);
   return response as { data: Invoice[] };
 }
