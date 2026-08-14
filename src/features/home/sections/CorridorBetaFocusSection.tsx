@@ -84,45 +84,17 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
   const lead = plan.focusCorridors[0];
 
   return (
-    <motion.section initial={false} style={{ marginTop: 38 }}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          gap: 16,
-          marginBottom: 18,
-        }}
-      >
+    <motion.section initial={false} className="wasel-home-section">
+      <div className="wasel-home-section-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span
             aria-hidden="true"
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: 10,
-              display: 'grid',
-              placeItems: 'center',
-              background: C.cyanDim,
-              border: `1px solid ${C.borderFaint}`,
-              color: C.cyan,
-              fontSize: '0.72rem',
-              fontWeight: TYPE.weight.black,
-              flexShrink: 0,
-            }}
+            className="wasel-home-section-icon"
           >
             <Target size={15} />
           </span>
           <div>
-            <h2
-              style={{
-                fontWeight: TYPE.weight.black,
-                color: C.text,
-                fontSize: '1.12rem',
-                letterSpacing: 0,
-                margin: 0,
-              }}
-            >
+            <h2 className="wasel-home-section-title">
               {ar ? 'تجربة المسارات المركزة' : 'Corridor beta focus'}
             </h2>
             <p
@@ -142,20 +114,7 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
         <button
           type="button"
           onClick={() => onNavigate(lead?.path ?? '/find-ride', 'corridor_beta_focus')}
-          style={{
-            height: 36,
-            padding: '0 14px',
-            borderRadius: R.full,
-            background: C.cyanDim,
-            border: `1px solid ${C.cyan}`,
-            cursor: 'pointer',
-            color: C.text,
-            fontSize: TYPE.size.sm,
-            fontWeight: TYPE.weight.semibold,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
+          className="wasel-home-section-action"
         >
           {ar ? 'ابدأ المسار' : 'Start focus'}
           <ArrowRight size={12} color={C.cyan} />

@@ -59,109 +59,83 @@ export function HomePageStyles() {
         padding: 28px 28px 64px;
       }
 
-      /* Sticky bottom CTA for mobile */
-      .wasel-home-sticky-cta {
-        display: none;
+      .wasel-home-section {
+        margin-top: 36px;
       }
 
-      @media (max-width: 760px) {
-        .wasel-home-sticky-cta {
-          display: flex;
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          z-index: 90;
-          padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-          background: rgba(3, 8, 15, 0.96);
-          border-top: 1px solid rgba(20,127,228,0.12);
-          backdrop-filter: blur(12px);
-          gap: 10px;
-        }
-        .wasel-home-sticky-cta > button {
-          flex: 1;
-        }
-        .wasel-home-container {
-          padding-bottom: 100px;
-        }
+      .wasel-home-section:first-child {
+        margin-top: 0;
       }
 
-      .wasel-home-hero {
+      .wasel-home-section-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .wasel-home-section-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
         display: grid;
-        grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
-        gap: 28px;
+        place-items: center;
+        background: rgba(20,127,228,0.1);
+        border: 1px solid rgba(20,127,228,0.08);
+        color: #147fe4;
+        font-size: 0.72rem;
+        font-weight: 800;
+        flex-shrink: 0;
+      }
+
+      .wasel-home-section-title {
+        font-weight: 900;
+        color: #f8fbff;
+        font-size: 1.12rem;
+        letter-spacing: 0;
+        margin: 0;
+        line-height: 1.3;
+      }
+
+      .wasel-home-section-action {
+        height: 36px;
+        padding: 0 14px;
+        border-radius: 9999px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(20,127,228,0.16);
+        cursor: pointer;
+        color: rgba(196,220,238,0.86);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        display: inline-flex;
         align-items: center;
-        min-height: min(780px, calc(100svh - 92px));
-        animation: wasel-home-rise 420ms ease both;
+        gap: 6px;
+        font-family: ${F};
+        transition: background 160ms ease, border-color 160ms ease;
       }
 
-      @media (max-width: 1100px) {
-        .wasel-home-hero {
-          min-height: auto;
-        }
+      .wasel-home-section-action:hover {
+        background: rgba(255,255,255,0.1);
+        border-color: rgba(20,127,228,0.28);
       }
 
-      .wasel-home-hero-copy {
-        position: relative;
-        overflow: visible;
-        padding: 38px 12px 34px 0;
+      .wasel-home-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
       }
 
-      .wasel-home-preview-panel {
-        position: relative;
-        overflow: hidden;
-        border-radius: 18px;
-        background:
-          linear-gradient(180deg, rgba(15, 35, 51, 0.9), rgba(6, 17, 27, 0.96));
-        border: 1px solid rgba(20,127,228,0.14);
-        box-shadow: 0 32px 80px rgba(8,29,57,0.45);
-        min-height: 100%;
-        padding: 18px;
-      }
-
-      .wasel-home-hero-copy::before,
-      .wasel-home-preview-panel::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        background: linear-gradient(120deg, rgba(255, 255, 255, 0.06), transparent 30%, transparent 76%, rgba(20,127,228,0.08));
-      }
-
-      .wasel-home-hero-copy::before {
-        display: none;
-      }
-
-      .wasel-home-preview-panel::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        width: 34%;
-        pointer-events: none;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
-        animation: wasel-scan 4.8s ease-in-out infinite;
-      }
-
-      .wasel-home-identity-row,
-      .wasel-home-preview-top,
-      .wasel-home-window-toolbar,
-      .wasel-home-window-route,
-      .wasel-home-live-chip,
-      .wasel-home-assurance-strip,
-      .wasel-home-hero-actions,
-      .wasel-home-primary-actions {
+      .wasel-home-nav-left {
         display: flex;
         align-items: center;
       }
 
-      .wasel-home-identity-row,
-      .wasel-home-preview-top {
-        position: relative;
-        z-index: 1;
-        justify-content: space-between;
-        gap: 16px;
+      .wasel-home-nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
 
       .wasel-home-brand-stack {
@@ -169,8 +143,7 @@ export function HomePageStyles() {
         gap: 12px;
       }
 
-      .wasel-home-eyebrow,
-      .wasel-home-kicker {
+      .wasel-home-eyebrow {
         display: inline-flex;
         align-items: center;
         gap: 8px;
@@ -193,8 +166,8 @@ export function HomePageStyles() {
         margin: 30px 0 0;
         max-width: 720px;
         color: #f8fbff;
-        font-size: clamp(3.6rem, 5.4vw, 5.4rem);
-        line-height: 0.94;
+        font-size: clamp(3.2rem, 4.8vw, 4.8rem);
+        line-height: 1.05;
         letter-spacing: 0;
         font-weight: 900;
         text-wrap: balance;
@@ -210,6 +183,15 @@ export function HomePageStyles() {
         line-height: 1.68;
       }
 
+      .wasel-home-hero-actions {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
       .wasel-home-proof-row {
         position: relative;
         z-index: 1;
@@ -219,72 +201,29 @@ export function HomePageStyles() {
         margin-top: 28px;
       }
 
-      .wasel-home-proof-item {
-        min-height: auto;
+      .wasel-home-proof-pill {
         display: flex;
         align-items: flex-start;
         gap: 10px;
-        padding: 0 0 0 14px;
-        border-left: 1px solid rgba(20,127,228,0.18);
+        padding: 14px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(20,127,228,0.12);
+        transition: background 160ms ease, border-color 160ms ease;
       }
 
-      .wasel-home-proof-item > span {
+      .wasel-home-proof-pill:hover {
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(20,127,228,0.22);
+      }
+
+      .wasel-home-proof-pill-icon {
         width: 32px;
         height: 32px;
         display: grid;
         place-items: center;
         border-radius: 8px;
         flex: 0 0 auto;
-      }
-
-      .wasel-home-proof-item strong,
-      .wasel-home-window-grid strong,
-      .wasel-home-mode-button strong {
-        display: block;
-        color: #f8fbff;
-        font-size: 0.88rem;
-        font-weight: 850;
-        letter-spacing: 0;
-      }
-
-      .wasel-home-proof-item small,
-      .wasel-home-window-grid small,
-      .wasel-home-mode-button small {
-        display: block;
-        margin-top: 6px;
-        color: rgba(196,220,238,0.66);
-        font-size: 0.75rem;
-        line-height: 1.55;
-      }
-
-      .wasel-home-hero-actions {
-        position: relative;
-        z-index: 1;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 24px;
-      }
-
-      .wasel-home-assurance-strip {
-        position: relative;
-        z-index: 1;
-        flex-wrap: wrap;
-        gap: 9px;
-        margin-top: 18px;
-      }
-
-      .wasel-home-assurance-strip span {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        min-height: 34px;
-        padding: 0 11px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(20,127,228,0.1);
-        color: rgba(248,251,255,0.86);
-        font-size: 0.75rem;
-        font-weight: 700;
       }
 
       .wasel-home-start-panel {
@@ -300,6 +239,23 @@ export function HomePageStyles() {
       .wasel-home-start-copy {
         display: grid;
         gap: 8px;
+      }
+
+      .wasel-home-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        min-height: 30px;
+        padding: 0 11px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.055);
+        border: 1px solid rgba(20,127,228,0.12);
+        color: rgba(196,220,238,0.82);
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
       }
 
       .wasel-home-start-text {
@@ -326,16 +282,395 @@ export function HomePageStyles() {
         cursor: pointer;
         text-align: left;
         font-family: ${F};
-        transition: transform var(--wasel-motion-fast), border-color var(--wasel-motion-fast), background var(--wasel-motion-fast);
+        background: transparent;
+        transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
       }
 
       .wasel-home-mode-button:hover {
         transform: translateY(-1px);
       }
 
-      .wasel-home-primary-actions {
+      .wasel-home-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 14px;
+      }
+
+      .wasel-home-action-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 18px;
+        border-radius: 16px;
+        background: rgba(8,29,57,0.72);
+        border: 1px solid rgba(20,127,228,0.14);
+        cursor: pointer;
+        text-align: left;
+        font-family: ${F};
+        transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .wasel-home-action-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(20,127,228,0.28);
+        box-shadow: 0 8px 24px rgba(8,29,57,0.28);
+      }
+
+      .wasel-home-action-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .wasel-home-action-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+      }
+
+      .wasel-home-action-kicker {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: rgba(248,251,255,0.72);
+      }
+
+      .wasel-home-action-kicker-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .wasel-home-action-title {
+        color: #f8fbff;
+        font-size: 1rem;
+        font-weight: 850;
+        line-height: 1.25;
+      }
+
+      .wasel-home-action-desc {
+        color: rgba(196,220,238,0.66);
+        font-size: 0.84rem;
+        line-height: 1.6;
+      }
+
+      .wasel-home-action-outcome {
+        color: rgba(196,220,238,0.78);
+        font-size: 0.78rem;
+        line-height: 1.55;
+      }
+
+      .wasel-home-action-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 4px;
+        font-weight: 800;
+        font-size: 0.78rem;
+      }
+
+      .wasel-home-corridors {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .wasel-home-corridor {
+        position: relative;
+        display: flex;
+        flex-direction: column;
         gap: 10px;
+        padding: 18px;
+        border-radius: 16px;
+        background: rgba(8,29,57,0.72);
+        border: 1px solid rgba(20,127,228,0.14);
+        cursor: pointer;
+        text-align: left;
+        font-family: ${F};
+        transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .wasel-home-corridor:hover {
+        transform: translateY(-2px);
+        border-color: rgba(20,127,228,0.28);
+        box-shadow: 0 8px 24px rgba(8,29,57,0.28);
+      }
+
+      .wasel-home-corridor-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        border: 1px solid;
+        width: fit-content;
+      }
+
+      .wasel-home-corridor-badge-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .wasel-home-corridor-title {
+        color: #f8fbff;
+        font-size: 0.96rem;
+        font-weight: 850;
+        line-height: 1.3;
+      }
+
+      .wasel-home-corridor-detail {
+        color: rgba(196,220,238,0.66);
+        font-size: 0.82rem;
+        line-height: 1.55;
+      }
+
+      .wasel-home-corridor-insight {
+        color: rgba(196,220,238,0.72);
+        font-size: 0.78rem;
+        line-height: 1.55;
+      }
+
+      .wasel-home-corridor-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: auto;
+        font-weight: 800;
+        font-size: 0.78rem;
+      }
+
+      .wasel-home-corridor-beta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .wasel-home-stats-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .wasel-home-stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 6px;
+        padding: 18px 14px;
+        border-radius: 16px;
+        background: rgba(8,29,57,0.72);
+        border: 1px solid rgba(20,127,228,0.14);
+      }
+
+      .wasel-home-stat-value {
+        color: #f8fbff;
+        font-size: 1.5rem;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      .wasel-home-stat-label {
+        color: rgba(196,220,238,0.66);
+        font-size: 0.78rem;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      .wasel-home-steps {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .wasel-home-step {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 18px;
+        border-radius: 16px;
+        background: rgba(8,29,57,0.72);
+        border: 1px solid rgba(20,127,228,0.14);
+      }
+
+      .wasel-home-step-number {
+        color: rgba(20,127,228,0.35);
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+      }
+
+      .wasel-home-step-title {
+        color: #f8fbff;
+        font-size: 0.96rem;
+        font-weight: 850;
+        line-height: 1.3;
+      }
+
+      .wasel-home-step-desc {
+        color: rgba(196,220,238,0.66);
+        font-size: 0.82rem;
+        line-height: 1.6;
+      }
+
+      .wasel-home-testimonials {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .wasel-home-testimonial {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 20px;
+        border-radius: 16px;
+        background: rgba(8,29,57,0.72);
+        border: 1px solid rgba(20,127,228,0.14);
+      }
+
+      .wasel-home-testimonial-stars {
+        display: flex;
+        gap: 4px;
+      }
+
+      .wasel-home-testimonial-text {
+        color: rgba(196,220,238,0.82);
+        font-size: 0.92rem;
+        line-height: 1.65;
+        font-style: italic;
+      }
+
+      .wasel-home-testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: auto;
+        padding-top: 12px;
+        border-top: 1px solid rgba(20,127,228,0.1);
+      }
+
+      .wasel-home-testimonial-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(20,127,228,0.12);
+        border: 1px solid rgba(20,127,228,0.16);
+        display: grid;
+        place-items: center;
+        color: #147fe4;
+        font-size: 0.85rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      .wasel-home-testimonial-name {
+        color: #f8fbff;
+        font-size: 0.88rem;
+        font-weight: 700;
+      }
+
+      .wasel-home-testimonial-role {
+        color: rgba(196,220,238,0.56);
+        font-size: 0.75rem;
+      }
+
+      .wasel-home-cta-banner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 14px;
+        padding: 40px 28px;
+        border-radius: 24px;
+        background: linear-gradient(180deg, rgba(20,127,228,0.08), rgba(8,29,57,0.88));
+        border: 1px solid rgba(20,127,228,0.2);
+      }
+
+      .wasel-home-cta-title {
+        color: #f8fbff;
+        font-size: 2rem;
+        font-weight: 900;
+        line-height: 1.1;
+        max-width: 640px;
+        margin: 0;
+      }
+
+      .wasel-home-cta-subtitle {
+        color: rgba(196,220,238,0.72);
+        font-size: 1rem;
+        line-height: 1.7;
+        max-width: 580px;
+        margin: 0;
+      }
+
+      .wasel-home-cta-actions {
+        display: flex;
+        gap: 12px;
         flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 8px;
+      }
+
+      .wasel-home-primary-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .wasel-home-assurance-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 18px;
+      }
+
+      .wasel-home-assurance-strip span {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 34px;
+        padding: 0 11px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(20,127,228,0.1);
+        color: rgba(248,251,255,0.86);
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      .wasel-home-preview-panel {
+        position: relative;
+        overflow: hidden;
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, rgba(15, 35, 51, 0.9), rgba(6, 17, 27, 0.96));
+        border: 1px solid rgba(20,127,228,0.14);
+        box-shadow: 0 32px 80px rgba(8,29,57,0.45);
+        min-height: 100%;
+        padding: 18px;
+      }
+
+      .wasel-home-preview-top {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
       }
 
       .wasel-home-preview-title {
@@ -346,8 +681,10 @@ export function HomePageStyles() {
       }
 
       .wasel-home-live-chip {
-        min-height: 34px;
+        display: inline-flex;
+        align-items: center;
         gap: 8px;
+        min-height: 34px;
         padding: 0 11px;
         border-radius: 999px;
         background: rgba(114,199,13,0.12);
@@ -397,6 +734,8 @@ export function HomePageStyles() {
       }
 
       .wasel-home-window-toolbar {
+        display: flex;
+        align-items: center;
         gap: 7px;
         color: rgba(196,220,238,0.72);
         font-size: 0.72rem;
@@ -415,6 +754,8 @@ export function HomePageStyles() {
       }
 
       .wasel-home-window-route {
+        display: flex;
+        align-items: center;
         justify-content: space-between;
         gap: 10px;
         margin-top: 14px;
@@ -528,9 +869,37 @@ export function HomePageStyles() {
         font-weight: 800;
       }
 
+      /* Sticky bottom CTA for mobile */
+      .wasel-home-sticky-cta {
+        display: none;
+      }
+
+      @media (max-width: 760px) {
+        .wasel-home-sticky-cta {
+          display: flex;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 90;
+          padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+          background: rgba(3, 8, 15, 0.96);
+          border-top: 1px solid rgba(20,127,228,0.12);
+          backdrop-filter: blur(12px);
+          gap: 10px;
+        }
+        .wasel-home-sticky-cta > button {
+          flex: 1;
+        }
+        .wasel-home-container {
+          padding-bottom: 100px;
+        }
+      }
+
       @media (max-width: 1100px) {
         .wasel-home-hero {
           grid-template-columns: 1fr;
+          min-height: auto;
         }
 
         .wasel-home-preview-panel {
@@ -545,12 +914,22 @@ export function HomePageStyles() {
         .wasel-home-demo-grid,
         .wasel-home-outcome-grid,
         .wasel-home-outcome-strip,
-        .wasel-home-trust-grid {
+        .wasel-home-trust-grid,
+        .wasel-home-corridors,
+        .wasel-home-corridor-beta-grid,
+        .wasel-home-actions,
+        .wasel-home-steps,
+        .wasel-home-testimonials,
+        .wasel-home-stats-strip {
           grid-template-columns: 1fr !important;
         }
 
         .wasel-home-title {
           font-size: 3rem;
+        }
+
+        .wasel-home-proof-row {
+          grid-template-columns: 1fr !important;
         }
       }
 
@@ -603,6 +982,11 @@ export function HomePageStyles() {
 
         .wasel-home-phone-frame {
           min-height: 218px;
+        }
+
+        .wasel-home-section-header {
+          flex-direction: column;
+          align-items: flex-start;
         }
       }
 
