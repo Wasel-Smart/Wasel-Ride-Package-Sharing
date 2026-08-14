@@ -952,6 +952,8 @@ export function MobilityOSLandingMap({
 
       <canvas
         ref={canvasRef}
+        role="img"
+        aria-label={tx('mobilityOSLandingMap.network_visualization')}
         style={{
           position: 'relative',
           zIndex: 0,
