@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { act } from 'react';
 import { Text } from 'react-native';
-import { act } from 'react';
 import TestRenderer from 'react-test-renderer';
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { MobileErrorBoundary } from '../components/MobileErrorBoundary';

@@ -30,7 +30,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get('/notifications');
+      const response = await api.get('/v1/notifications');
       const data = response as { data: Notification[]; meta: { total: number } };
       setNotifications(data.data);
     } catch {
@@ -42,7 +42,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const markAsRead = useCallback(async (id: string) => {
     try {
-      await api.patch(`/notifications/${id}/read`, {});
+      await api.patch(`/v1/notifications/${id}/read`, {});
       setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
     } catch {
       // Silently fail - notification read is non-critical

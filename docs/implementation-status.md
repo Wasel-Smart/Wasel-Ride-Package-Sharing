@@ -1,6 +1,6 @@
 # Implementation Status
 
-This document is the honest, up-to-date record of what is live, what is contractually defined but pending backend infrastructure, and what is on the roadmap. It exists so contributors and reviewers can assess the platform's current state without confusion.
+This document is the honest, up-to-date record of what is live, what is contractually defined but pending backend infrastructure, and what is on the roadmap.
 
 ---
 
@@ -39,18 +39,21 @@ These capabilities are fully implemented and running in the current deployment.
 - Durable outbox (`event_outbox`) and dead-letter (`dead_letter_messages`) tables for async workers
 - `ops_aggregates` table for operational analytics
 
-### Async runtime
+### Server-side async runtime
 
-- Pluggable event broker: `SupabaseEventBroker` (Postgres outbox + Realtime + polling fallback) is the default when Supabase is configured; `InMemoryEventBroker` is the fallback when Supabase is unavailable
-- Durable outbox table `event_outbox` with status tracking (`pending` → `processed` / `failed`)
+- Domain events flow from services → in-memory bus → durable broker → Supabase Edge Function handlers
+- Server-side processing in Edge Function:
+  - Driver matching during booking creation (`POST /v1/bookings`)
+  - Package assignment during package creation (`POST /v1/packages`)
+  - Payment reconciliation via Stripe webhooks
+  - Notification delivery via Twilio/Resend/SendGrid
+- In-process event broker for same-tab real-time UI updates
 - Dead-letter table `dead_letter_messages` for worker failures
-- Five production workers with retry, circuit breaker, and DLQ: matching, package, payment, notification, ops
-- `async-runtime.ts` starts broker + worker pool on app bootstrap
-- Domain events flow from services → in-memory bus → durable broker → workers
 
 ### Edge runtime
 
 - Supabase Edge Function serving as the API gateway for authenticated operations
+- Versioned `/v1/` API with standard response envelopes
 - Communications worker: email (Resend/SendGrid), SMS and WhatsApp (Twilio), push notifications
 - Stripe webhook publishes `PaymentCaptured` events to the outbox for the payment-worker
 - `event-broker-proxy` edge function for durable publish/poll/ack/fail operations
@@ -66,17 +69,15 @@ These capabilities are fully implemented and running in the current deployment.
 
 ## Contractually defined — fully implemented
 
-These capabilities were previously listed as "pending backend infrastructure" but are now fully operational:
-
 | Capability | Implementation |
 | --- | --- |
-| Ride matching service | `matching-worker` consumes `rides.requested` from broker; assigns driver via Supabase |
-| Package delivery service | `package-worker` consumes `packages.created` and `packages.location-updated` |
-| Package tracking worker | `package-worker` writes tracking events to `package_events` table |
-| Payment reconciliation worker | `payment-worker` updates `transactions` status to `posted` on capture |
-| Notification service | `dispatchNotification()` publishes `notifications.dispatch` to broker; `notification-worker` delivers via Twilio/push |
+| Ride matching service | Edge function assigns driver server-side during `POST /v1/bookings` |
+| Package delivery service | Edge function assigns package to trip server-side during `POST /v1/packages` |
+| Package tracking worker | `package-worker` writes tracking events to `package_events` table (legacy in-browser worker retained for backward compat) |
+| Payment reconciliation worker | Edge function handles Stripe webhooks and updates `transactions` status |
+| Notification service | `dispatchNotification()` publishes `notifications.dispatch` to broker; edge function delivers via Twilio/push |
 | Event broker | `SupabaseEventBroker` with Postgres outbox, Realtime, and polling fallback |
-| Ops/analytics worker | `ops-worker` consumes `rides.completed` and `payments.captured`; writes to `ops_aggregates` |
+| Ops/analytics worker | Edge function and growth engine update `ops_aggregates` |
 
 ---
 
@@ -86,6 +87,8 @@ These capabilities were previously listed as "pending backend infrastructure" bu
 |-----|----------|------|
 | Redis GEO not deployed | Low | PostGIS with GiST indexes is adequate for current Jordan-market volume; switch when query latency exceeds 500ms |
 | Kafka/Redis Streams not deployed | Low | `SupabaseEventBroker` is the production transport; `EventBroker` interface is abstracted for future swap |
+| Separate worker services | Low | Current architecture uses synchronous edge function processing; separate workers can be introduced when scaling requires it |
+| Mobile app React version sync | Medium | Update mobile app from React 18 to React 19 to match web client |
 
 ---
 

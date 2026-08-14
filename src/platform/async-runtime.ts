@@ -1,17 +1,15 @@
 /**
  * Async Runtime
  *
- * Single entry point that starts the durable event broker and the production
- * worker pool. Call `startAsyncRuntime()` once from the app bootstrap (browser
- * only) so domain events flow into the broker and are processed by workers.
+ * Provides lightweight client-side utilities for cross-component communication
+ * and server-side RPC calls. Production async workflows (matching, payments,
+ * notifications) are handled server-side by the edge function; this module no
+ * longer starts in-browser worker pools.
  */
 
-import { eventBroker, startEventBroker, stopEventBroker, type BrokerMessage } from './event-broker';
+import { eventBroker, type BrokerMessage } from './event-broker';
 import { supabase } from '../utils/supabase/client';
 import { sanitizeLogMessage } from '../utils/sanitization';
-import { productionWorkerRegistry } from './production-workers';
-
-let started = false;
 
 function makeId(prefix: string): string {
   return `${prefix}-${Date.now()}-${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`;
@@ -23,7 +21,7 @@ export interface TripMatchInput {
   originLng: number;
   destinationLat: number;
   destinationLng: number;
-  requestedDate: string; // YYYY-MM-DD
+  requestedDate: string;
   seatsNeeded: number;
 }
 
@@ -42,11 +40,6 @@ export interface NotificationDispatchInput {
   actionUrl?: string;
 }
 
-/**
- * Publishes a notification dispatch to the broker. The notification-worker
- * consumes `notifications.dispatch` and persists the notification, so callers
- * fire-and-forget without blocking the request path.
- */
 export function dispatchNotification(input: NotificationDispatchInput): void {
   const message: BrokerMessage = {
     id: makeId('ntf'),
@@ -60,20 +53,6 @@ export function dispatchNotification(input: NotificationDispatchInput): void {
   void eventBroker.publish(message);
 }
 
-/**
- * Finds a matching trip by calling the atomic PostgreSQL function `match_alert_atomic`.
- * This function represents a production-ready backend architecture for trip matching.
- * @param input The criteria for finding a matching trip.
- * @returns A Promise that resolves to a `TripMatchResult` indicating if a match was found and details.
- * @throws An error if the Supabase client is not configured or if the RPC call fails.
- */
-/**
- * Finds a matching trip by calling the hardened, atomic PostgreSQL function.
- * This replaces the previous mock implementation and represents the new,
- * production-ready backend architecture.
- *
- * @returns A TripMatchResult indicating if a match was found.
- */
 export async function findMatchingTrip(input: TripMatchInput): Promise<TripMatchResult> {
   if (!supabase) {
     throw new Error('Supabase client is not configured');
@@ -90,32 +69,8 @@ export async function findMatchingTrip(input: TripMatchInput): Promise<TripMatch
   });
 
   if (error) {
-    // error details are not logged to console in production
     throw new Error(`Failed to match trip: ${sanitizeLogMessage(error.message)}`);
   }
 
   return data as unknown as TripMatchResult;
-}
-
-export async function startAsyncRuntime(): Promise<void> {
-  if (started || typeof window === 'undefined') return;
-  started = true;
-  try {
-    await startEventBroker();
-    await productionWorkerRegistry.startAll();
-  } catch (error) {
-    started = false;
-    throw error;
-  }
-}
-
-export async function stopAsyncRuntime(): Promise<void> {
-  if (!started) return;
-  started = false;
-  try {
-    await productionWorkerRegistry.stopAll();
-    await stopEventBroker();
-  } catch {
-    // best-effort shutdown
-  }
 }

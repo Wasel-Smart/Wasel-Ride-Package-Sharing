@@ -1,6 +1,6 @@
 # Workers And Queues
 
-Wasel should not process ride matching, package coordination, payments, and notifications as one synchronous request chain. This document defines the async topology expected in production.
+Wasel processes ride matching, package coordination, payments, and notifications server-side in the Supabase Edge Function rather than as separate worker services. This document describes the async topology used in production.
 
 ## Queue topics
 
@@ -19,7 +19,6 @@ The typed queue contract lives in `src/platform/queue-contracts.ts`.
 - `notifications.dispatch`
 
 Every topic includes:
-
 - owning worker
 - retry policy
 - dead-letter queue suffix
@@ -28,43 +27,39 @@ Every topic includes:
 
 ### Matching worker
 
-- Consumes `rides.requested`
-- Produces `rides.assigned`
+- **Production implementation**: Edge function assigns driver synchronously during `POST /v1/bookings`
+- **Legacy**: In-browser worker consumed `rides.requested` from broker; retained for backward compatibility but not started in production
 - Handles driver supply and route matching
 
 ### Package worker
 
-- Consumes `packages.created`
-- Consumes `packages.location-updated`
-- Produces `packages.delivered`
+- **Production implementation**: Edge function assigns package to trip synchronously during `POST /v1/packages`
+- **Legacy**: In-browser worker consumed `packages.created` and `packages.location-updated`; retained for backward compatibility but not started in production
 - Handles package assignment, handoff, and live logistics state
 
 ### Payment worker
 
-- Consumes `payments.authorized`
-- Produces `payments.captured`
+- **Production implementation**: Edge function handles Stripe webhooks (`/v1/payments/webhooks/stripe`) and updates `transactions` status
 - Handles escrow settlement, refund orchestration, and reconciliation
 
 ### Notification worker
 
-- Consumes `rides.assigned`
-- Consumes `packages.delivered`
-- Consumes `notifications.dispatch`
+- **Production implementation**: Edge function delivers notifications directly via Twilio/Resend/SendGrid in request handlers
+- **Legacy**: In-browser worker consumed `rides.assigned`, `packages.delivered`, `notifications.dispatch`; retained for backward compatibility but not started in production
 - Sends push, email, SMS, and WhatsApp events
 
 ### Ops worker
 
-- Consumes `rides.completed`
-- Consumes `payments.captured`
-- Builds reporting, corridor intelligence, and operational aggregates
+- **Production implementation**: Edge function and growth engine update `ops_aggregates` on ride completion and payment capture
+- Handles reporting, corridor intelligence, and operational aggregates
 
 ## Failure handling
 
-- All workers must use dead-letter queues for terminal message failures.
-- Matching and notification retries should use exponential backoff.
-- Analytics and settlement rollups can use simpler fixed backoff.
-- Every job must carry trace metadata and the original entity id.
+- All edge function handlers use structured error responses with request tracing
+- Matching and notification retries use exponential backoff at the client level
+- Analytics and settlement rollups use fixed backoff
+- Every job carries trace metadata and the original entity id
 
 ## Deployment
 
-Kubernetes worker deployment scaffolding lives under `infra/kubernetes/workers`.
+Kubernetes worker deployment scaffolding lives under `k8s/`. The current production deployment uses Supabase Edge Functions with synchronous request handling.
