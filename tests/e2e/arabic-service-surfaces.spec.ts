@@ -41,7 +41,9 @@ test.describe('Arabic service surfaces', () => {
     await page.goto('/app/packages', { waitUntil: 'domcontentloaded' });
 
     for (const tab of ['تتبع طرد', 'إرجاعات راجع', 'أرسل طرد']) {
-      await page.getByRole('button', { name: tab, exact: true }).click();
+      const tabButton = page.getByRole('button', { name: tab, exact: true });
+      await expect(tabButton).toBeVisible();
+      await tabButton.click();
       await page.waitForTimeout(150);
       expectArabicInterface(await page.locator('body').innerText());
     }

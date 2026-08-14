@@ -30,7 +30,9 @@ export default defineConfig(({ mode }) => ({
     buildTimePlugin,
     mode === 'analyze' && visualizer({
       filename: 'dist/bundle-analysis.html',
-      open: true,
+      // CI runners have no interactive browser. Keep the report as an
+      // artifact instead of attempting to open it during the release gate.
+      open: false,
       gzipSize: true,
       brotliSize: true,
     }),
