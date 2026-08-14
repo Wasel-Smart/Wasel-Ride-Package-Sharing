@@ -264,7 +264,7 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
   const metrics = ar ? proofMetricsAr : proofMetrics;
 
   return (
-    <motion.section initial={false} style={{ marginTop: 34 }}>
+    <motion.section initial={false} className="wasel-home-section">
       <SectionHeader
         title={ar ? 'إثبات قبل التسجيل' : 'Proof before signup'}
         icon="P"
@@ -394,7 +394,7 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
   const steps = ar ? onboardingStepsAr : onboardingSteps;
 
   return (
-    <motion.section initial={false} style={{ marginTop: 38 }}>
+    <motion.section initial={false} className="wasel-home-section">
       <SectionHeader
         title={ar ? 'تدفق تجريبي موجه' : 'Guided demo flow'}
         icon="D"
@@ -509,7 +509,7 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
   const cards = ar ? outcomeCardsAr : outcomeCards;
 
   return (
-    <motion.section initial={false} style={{ marginTop: 38 }}>
+    <motion.section initial={false} className="wasel-home-section">
       <SectionHeader title={ar ? 'نتائج المنتج' : 'Product outcomes'} icon="O" />
       <div
         className="wasel-home-outcome-grid"
@@ -672,7 +672,7 @@ export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
   const links = ar ? trustLinksAr : trustLinks;
 
   return (
-    <motion.section initial={false} style={{ marginTop: 38 }}>
+    <motion.section initial={false} className="wasel-home-section">
       <SectionHeader title={ar ? 'صفحات الثقة' : 'Trust pages'} icon="S" />
       <div
         className="wasel-home-trust-grid"

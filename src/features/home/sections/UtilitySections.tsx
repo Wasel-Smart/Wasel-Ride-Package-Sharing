@@ -32,7 +32,7 @@ export function SignedInUtilitySection({
   user,
 }: SignedInUtilitySectionProps) {
   return (
-    <motion.section initial={false} style={{ marginTop: 34 }}>
+    <motion.section initial={false} className="wasel-home-section">
       <SectionHeader title={ar ? 'الجاهزية قبل الانطلاق' : 'Readiness before you move'} icon="T" />
       <div
         className="wasel-home-utility-grid"
@@ -132,7 +132,7 @@ export function SignedInUtilitySection({
 
 export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps) {
   return (
-    <motion.section initial={false} style={{ marginTop: 36, marginBottom: 24 }}>
+    <motion.section initial={false} className="wasel-home-section" style={{ marginBottom: 24 }}>
       <div
         style={{
           borderRadius: R.xxl,

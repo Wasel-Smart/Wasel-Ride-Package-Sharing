@@ -153,42 +153,16 @@ export function SectionHeader({
   onAction?: () => void;
 }) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'space-between',
-        gap: 16,
-        marginBottom: 18,
-      }}
-    >
+    <div className="wasel-home-section-header">
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
         <span
           aria-hidden="true"
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: 10,
-            display: 'grid',
-            placeItems: 'center',
-            background: C.cyanDim,
-            border: `1px solid ${C.borderFaint}`,
-            color: C.cyan,
-            fontSize: '0.72rem',
-            fontWeight: TYPE.weight.black,
-            flexShrink: 0,
-          }}
+          className="wasel-home-section-icon"
         >
           {icon}
         </span>
         <h2
-          style={{
-            fontWeight: TYPE.weight.black,
-            color: C.text,
-            fontSize: '1.12rem',
-            letterSpacing: 0,
-            margin: 0,
-          }}
+          className="wasel-home-section-title"
         >
           {title}
         </h2>
@@ -196,21 +170,7 @@ export function SectionHeader({
       {action && onAction ? (
         <button
           onClick={onAction}
-          style={{
-            height: 36,
-            padding: '0 14px',
-            borderRadius: R.full,
-            background: C.elevated,
-            border: `1px solid ${C.border}`,
-            cursor: 'pointer',
-            color: C.textSub,
-            fontSize: TYPE.size.sm,
-            fontWeight: TYPE.weight.semibold,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontFamily: F,
-          }}
+          className="wasel-home-section-action"
         >
           {action}
           <ChevronRight size={12} color={C.cyan} />
