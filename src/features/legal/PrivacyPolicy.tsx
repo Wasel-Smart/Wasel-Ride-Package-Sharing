@@ -6,7 +6,7 @@ import {
   SectionCard,
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
-import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import { WaselLogo } from '../../components/wasel-ui/WaselLogo';
 import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';

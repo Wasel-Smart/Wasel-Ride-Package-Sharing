@@ -1,7 +1,7 @@
 import { Suspense, lazy, useCallback, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { SkipToContent } from '../components/SkipToContent';
-import { WaselLogo } from '../components/wasel-ds/WaselLogo';
+import { WaselLogo } from '../components/wasel-ui/WaselLogo';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';

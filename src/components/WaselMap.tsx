@@ -18,26 +18,16 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Locate,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  Minimize2,
-  Radio,
   AlertTriangle,
-  X,
-  Navigation2,
-  Wifi,
-  WifiOff,
   MapPin,
-  Map,
-  Satellite,
-  Mountain,
 } from 'lucide-react';
+
+import { MapControls, type MapType } from './MapControls';
+import { MapOverlays } from './MapOverlays';
 import { WaselLogo } from './wasel-ds/WaselLogo';
 import { tx } from '../locales/tx';
 import { sanitizeHtml, sanitizeLogMessage } from '../utils/sanitization';
-import { colors, typography, radii, shadows, effects, gradients } from '../styles/design-tokens';
+import { colors, typography, radii, shadows, effects } from '../styles/design-tokens';
 import { JORDAN_RADARS, FALLBACK_MOSQUES, TILE_CONFIGS } from './MapConfig';
 import type {
   Map as LeafletMap,
@@ -202,80 +192,6 @@ const SVG = {
     <div style="position:absolute;inset:19px;border-radius:50%;background:white;"></div>
   </div>`,
 };
-
-const CONTROL_PANEL_STYLE = {
-  background: colors.background.panel,
-  backdropFilter: effects.backdropFilter,
-  WebkitBackdropFilter: effects.backdropFilter,
-  border: `1px solid ${colors.border.primary}`,
-  boxShadow: shadows.lg,
-} as const;
-
-const CONTROL_BUTTON_BASE = {
-  appearance: 'none' as const,
-  border: 'none',
-  outline: 'none',
-  cursor: 'pointer',
-  transition: 'all 180ms ease',
-  color: colors.text.light,
-  background: 'transparent',
-} as const;
-
-function mapTypeButtonStyle(active: boolean) {
-  return {
-    ...CONTROL_BUTTON_BASE,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    width: '100%',
-    minHeight: 40,
-    padding: '0 14px',
-    justifyContent: 'flex-start',
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.extrabold,
-    letterSpacing: '0.02em',
-    color: active ? colors.text.dark : colors.text.primary,
-    background: active ? gradients.primary : colors.background.input,
-    boxShadow: active ? shadows.active : 'none',
-  } as const;
-}
-
-function compactControlButtonStyle(active = false) {
-  return {
-    ...CONTROL_BUTTON_BASE,
-    width: 40,
-    height: 40,
-    borderRadius: radii.xl,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: active ? gradients.primaryActive : colors.background.light,
-    border: `1px solid ${active ? colors.border.activeLight : colors.border.primary}`,
-    color: active ? colors.text.dark : colors.text.light,
-    boxShadow: active ? shadows.active : shadows.md,
-  } as const;
-}
-
-function wideControlButtonStyle(active = false) {
-  return {
-    ...CONTROL_BUTTON_BASE,
-    minHeight: 40,
-    padding: '0 14px',
-    borderRadius: radii.xl,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    background: active ? gradients.primaryActive : colors.background.light,
-    border: `1px solid ${active ? colors.border.activeLight : colors.border.primary}`,
-    color: active ? colors.text.dark : colors.text.light,
-    boxShadow: active ? shadows.active : shadows.md,
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.extrabold,
-    letterSpacing: '0.02em',
-    whiteSpace: 'nowrap' as const,
-  } as const;
-}
 
 /* ─── Leaflet divIcon factory ────────────────────────────────────────── */
 function makeDivIcon(
@@ -727,7 +643,7 @@ function WaselMapFull(props: WaselMapProps) {
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [mapType, setMapType] = useState<'roadmap' | 'satellite' | 'terrain'>('roadmap');
+  const [mapType, setMapType] = useState<MapType>('roadmap');
   const [mosquesOn, setMosquesOn] = useState(showMosques);
   const [radarsOn, setRadarsOn] = useState(showRadars);
   const [isTracking, setIsTracking] = useState(false);
@@ -1109,18 +1025,19 @@ function WaselMapFull(props: WaselMapProps) {
   }, []);
 
   /* ── Map type switcher ── */
-  const changeMapType = useCallback((t: 'roadmap' | 'satellite' | 'terrain') => {
+/* ── Layer toggles ── */
+  const changeMapType = useCallback((type: MapType) => {
     if (!mapRef.current || !LRef.current) return;
+
     const L = LRef.current;
-    setMapType(t);
     tileLayerRef.current?.remove();
-    tileLayerRef.current = L.tileLayer(TILES[t].url, {
-      maxZoom: TILES[t].maxZoom,
-      subdomains: t === 'roadmap' ? 'abcd' : 'abc',
+    tileLayerRef.current = L.tileLayer(TILES[type].url, {
+      maxZoom: TILES[type].maxZoom,
+      subdomains: type === 'roadmap' ? 'abcd' : 'abc',
     }).addTo(mapRef.current);
+    setMapType(type);
   }, []);
 
-  /* ── Layer toggles ── */
   const toggleMosques = useCallback(() => {
     const next = !mosquesOn;
     setMosquesOn(next);
@@ -1254,246 +1171,34 @@ function WaselMapFull(props: WaselMapProps) {
       {/* ── Controls (only when loaded) ── */}
       {isLoaded && (
         <>
-          {/* -- Top-right: Map type + Zoom + Fullscreen -- */}
-          <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
-            {/* Map type */}
-            <div className="flex flex-col overflow-hidden" style={{ ...CONTROL_PANEL_STYLE, borderRadius: radii['2xl'] }}>
-              {(['roadmap', 'satellite', 'terrain'] as const).map(t => (
-                <button
-                  key={t}
-                  onClick={() => changeMapType(t)}
-                  style={mapTypeButtonStyle(mapType === t)}
-                >
-                  {t === 'roadmap' ? (
-                    <Map className="w-3.5 h-3.5" />
-                  ) : t === 'satellite' ? (
-                    <Satellite className="w-3.5 h-3.5" />
-                  ) : (
-                    <Mountain className="w-3.5 h-3.5" />
-                  )}
-                  <span>{t === 'roadmap' ? 'المدينة' : t === 'satellite' ? 'جوي' : 'تضاريس'}</span>
-                </button>
-              ))}
-            </div>
 
-            {/* Zoom */}
-            <div className="flex flex-col overflow-hidden" style={{ ...CONTROL_PANEL_STYLE, borderRadius: radii['2xl'] }}>
-              <button onClick={zoomIn} style={compactControlButtonStyle()}>
-                <ZoomIn className="w-4 h-4" />
-              </button>
-              <div style={{ height: 1, background: colors.border.light }} />
-              <button onClick={zoomOut} style={compactControlButtonStyle()}>
-                <ZoomOut className="w-4 h-4" />
-              </button>
-            </div>
+          <MapControls
+            isFullscreen={isFullscreen}
+            toggleFullscreen={toggleFullscreen}
+            zoomIn={zoomIn}
+            zoomOut={zoomOut}
+            mapType={mapType}
+            changeMapType={changeMapType}
+            mosquesOn={mosquesOn}
+            toggleMosques={toggleMosques}
+            radarsOn={radarsOn}
+            toggleRadars={toggleRadars}
+            isTracking={isTracking}
+            startTracking={startTracking}
+            stopTracking={stopTracking}
+            centerOnMe={centerOnMe}
+            compact={compact}
+            tx={tx}
+          />
 
-            {/* Fullscreen */}
-            <button onClick={toggleFullscreen} style={compactControlButtonStyle(isFullscreen)}>
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-            </button>
-          </div>
-
-          {/* -- Top-left: Live HUD -- */}
-          <AnimatePresence>
-            {isTracking && liveLocation && (
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="absolute top-3 left-3 z-20 rounded-2xl border shadow-xl"
-                style={{
-                  background: colors.background.panel,
-                  backdropFilter: effects.backdropFilter,
-                  borderColor: colors.border.active,
-                }}
-              >
-                <div className="px-4 py-3 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: colors.primary.brandLight }} />
-                    <span className="text-xs font-bold uppercase tracking-widest" style={{ color: colors.primary.brandLight }}>
-                      {tx('waselMap.live')}
-                    </span>
-                    <Wifi className="w-3 h-3" style={{ color: colors.primary.brandLight }} />
-                  </div>
-                  {liveLocation.speed !== null && liveLocation.speed !== undefined && (
-                    <div className="flex items-end gap-1">
-                      <span className="text-3xl font-black leading-none" style={{ color: colors.text.light }}>
-                        {Math.round((liveLocation.speed ?? 0) * 3.6)}
-                      </span>
-                      <span className="text-xs mb-0.5" style={{ color: colors.text.secondary }}>{tx('waselMap.km_h')}</span>
-                    </div>
-                  )}
-                  {liveLocation.accuracy !== null && liveLocation.accuracy !== undefined && (
-                    <p className="text-xs" style={{ color: colors.text.muted }}>
-                      ±{Math.round(liveLocation.accuracy)}
-                      {tx('waselMap.m_accuracy')}
-                    </p>
-                  )}
-                  <p className="text-xs font-mono" style={{ color: colors.text.muted }}>
-                    {liveLocation.lat.toFixed(5)}, {liveLocation.lng.toFixed(5)}
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* ── Center-top: Selected POI panel ── */}
-          <AnimatePresence>
-            {selectedPOI && (
-              <motion.div
-                initial={{ opacity: 0, y: -12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                className="absolute top-3 left-1/2 -translate-x-1/2 z-30 w-[300px] max-w-[calc(100%-80px)] rounded-2xl border shadow-2xl"
-                style={{
-                  background: colors.background.panel,
-                  backdropFilter: effects.backdropFilterLg,
-                  borderColor: colors.border.active,
-                }}
-              >
-                <div className="flex items-start gap-3 p-4">
-                  <span className="text-2xl mt-0.5 shrink-0">
-                    {selectedPOI.type === 'mosque'
-                      ? '🕌'
-                      : selectedPOI.type === 'radar'
-                        ? '📸'
-                        : selectedPOI.type === 'police'
-                          ? '🚔'
-                          : '⚠️'}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold leading-tight" style={{ color: colors.text.light }}>
-                      {selectedPOI.name}
-                    </p>
-                    {selectedPOI.vicinity && (
-                      <p className="text-xs mt-0.5 truncate" style={{ color: colors.text.secondary }}>
-                        {selectedPOI.vicinity}
-                      </p>
-                    )}
-                    {selectedPOI.info && (
-                      <p className="text-xs mt-1 font-medium" style={{ color: colors.primary.brandLight }}>{selectedPOI.info}</p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setSelectedPOI(null)}
-                    className="shrink-0 p-1 rounded-lg transition-colors" style={{ color: colors.text.muted }}
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* ── Location error ── */}
-          <AnimatePresence>
-            {locationError && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="absolute bottom-28 left-3 right-3 z-20 rounded-xl border border-red-500/30 px-4 py-2.5"
-                style={{ background: 'rgba(127, 29, 29, 0.9)', backdropFilter: 'blur(8px)' }}
-              >
-                <div className="flex items-start gap-2">
-                  <WifiOff className="w-4 h-4 shrink-0 mt-0.5" style={{ color: colors.status.error }} />
-                  <p className="text-xs" style={{ color: colors.text.light }}>{locationError}</p>
-                  <button
-                    onClick={() => setLocationError(null)}
-                    className="ml-auto shrink-0" style={{ color: colors.status.error }}
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* -- Bottom: Layer controls -- */}
-          {!compact && (
-            <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-20">
-              <div
-                className="flex items-center gap-1 px-3 py-2" style={{ ...CONTROL_PANEL_STYLE, borderRadius: radii['2xl'] }}
-              >
-                <button
-                  onClick={toggleMosques}
-                  style={wideControlButtonStyle(mosquesOn)}
-                  title={tx('waselMap.mosques')}
-                >
-                  <MapPin className="w-3.5 h-3.5" />
-                  <span>{tx('waselMap.mosques_2')}</span>
-                </button>
-                <div style={{ width: 1, height: 24, background: colors.border.light }} />
-                <button
-                  onClick={toggleRadars}
-                  style={wideControlButtonStyle(radarsOn)}
-                  title={tx('waselMap.radars')}
-                >
-                  <Radio className="w-3.5 h-3.5" />
-                  <span>{tx('waselMap.radars_2')}</span>
-                </button>
-              </div>
-            </div>
-          )}
-          {/* -- Bottom: GPS controls -- */}
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
-            {isTracking && (
-              <button
-                onClick={centerOnMe}
-                style={compactControlButtonStyle()}
-                title={tx('waselMap.center_on_my_location')}
-              >
-                <Navigation2 className="w-4 h-4" />
-              </button>
-            )}
-
-            <button
-              onClick={isTracking ? stopTracking : startTracking}
-              style={
-                isTracking
-                  ? {
-                      ...CONTROL_BUTTON_BASE,
-                      minHeight: 44,
-                      padding: '0 18px', borderRadius: 18,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      fontSize: '0.86rem', fontWeight: typography.weight.extrabold,
-                      color: colors.text.dark,
-                      background: gradients.primary,
-                      border: `1px solid ${colors.border.activeLight}`,
-                      boxShadow: shadows.activeLg,
-                    }
-                  : {
-                      ...CONTROL_BUTTON_BASE,
-                      minHeight: 44,
-                      padding: '0 18px', borderRadius: 18,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      fontSize: '0.86rem', fontWeight: typography.weight.extrabold,
-                      color: colors.text.light,
-                      background: colors.background.panel,
-                      border: `1px solid ${colors.border.primary}`,
-                      boxShadow: shadows.md,
-                    }
-              }
-            >
-              {isTracking ? (
-                <>
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                  <Locate className="w-4 h-4" />
-                  <span>{tx('waselMap.live_active')}</span>
-                </>
-              ) : (
-                <>
-                  <Locate className="w-4 h-4" />
-                  <span>{tx('waselMap.share_my_location')}</span>
-                </>
-              )}
-            </button>
-          </div>
-
+          <MapOverlays
+            isTracking={isTracking}
+            liveLocation={liveLocation}
+            selectedPOI={selectedPOI}
+            locationError={locationError}
+            onClosePOI={() => setSelectedPOI(null)}
+            onCloseError={() => setLocationError(null)}
+          />
           {/* ── Wasel watermark ── */}
           <div
             className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2 py-1 rounded-lg"

@@ -14,7 +14,7 @@ import {
   UserRound,
   Zap,
 } from 'lucide-react';
-import { WaselHeroMark, WaselLogo } from '../components/wasel-ds/WaselLogo';
+import { WaselHeroMark, WaselLogo } from '../components/wasel-ui/WaselLogo';
 import { WaselButton } from '../components/wasel-ui/WaselButton';
 import { WaselInput } from '../components/wasel-ui/WaselInput';
 import { WaselCard } from '../components/wasel-ui/WaselCard';
