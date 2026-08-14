@@ -3,42 +3,100 @@ info:
   title: Wasel Platform API
   version: 1.0.0
   description: >
-    Versioned API contract for ride matching, package delivery, payments,
-    and operational health.
+    Versioned API contract for the Wasel mobility platform.
+    All endpoints are prefixed with /v1 and served by the
+    Supabase Edge Function at /functions/v1/make-server-0b1f4071.
 servers:
-  - url: https://api.wasel.example.com/v1
+  - url: https://wasel14.online/functions/v1/make-server-0b1f4071
 paths:
-  /rides:
+  /v1/trips:
+    get:
+      summary: Search available trips
+      operationId: searchTrips
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: seats
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Trip search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trip'
     post:
-      summary: Create a ride request
-      operationId: createRide
+      summary: Create a new trip
+      operationId: createTrip
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateRideRequest'
+              $ref: '#/components/schemas/CreateTripRequest'
       responses:
         '201':
-          description: Ride created
+          description: Trip created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RideResponseEnvelope'
-  /rides/{rideId}/accept:
-    post:
-      summary: Accept a matched ride
-      operationId: acceptRide
+                $ref: '#/components/schemas/Trip'
+  /v1/trips/{tripId}:
+    get:
+      summary: Get trip details
+      operationId: getTrip
       parameters:
-        - $ref: '#/components/parameters/RideId'
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: Ride accepted
+          description: Trip details
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RideResponseEnvelope'
-  /packages:
+                $ref: '#/components/schemas/Trip'
+        '404':
+          description: Trip not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /v1/bookings:
+    post:
+      summary: Create a booking
+      operationId: createBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        '201':
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+  /v1/packages:
     post:
       summary: Create a package delivery request
       operationId: createPackage
@@ -54,42 +112,33 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PackageResponseEnvelope'
-  /packages/{packageId}/location:
-    patch:
-      summary: Push a throttled location update
-      operationId: updatePackageLocation
-      parameters:
-        - $ref: '#/components/parameters/PackageId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LocationUpdateRequest'
-      responses:
-        '200':
-          description: Location accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PackageResponseEnvelope'
-  /payments/packages/{packageId}/authorize:
-    post:
-      summary: Authorize a package payment
-      operationId: authorizePackagePayment
-      parameters:
-        - $ref: '#/components/parameters/PackageId'
-      responses:
-        '200':
-          description: Payment authorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaymentResponseEnvelope'
-  /ops/health:
+                $ref: '#/components/schemas/Package'
+  /v1/packages/{packageId}:
     get:
-      summary: Platform health check
+      summary: Get package details
+      operationId: getPackage
+      parameters:
+        - name: packageId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Package details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Package'
+        '404':
+          description: Package not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /v1/health:
+    get:
+      summary: Health check
       operationId: getHealth
       responses:
         '200':
@@ -97,21 +146,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HealthResponseEnvelope'
+                $ref: '#/components/schemas/HealthResponse'
 components:
-  parameters:
-    RideId:
-      name: rideId
-      in: path
-      required: true
-      schema:
-        type: string
-    PackageId:
-      name: packageId
-      in: path
-      required: true
-      schema:
-        type: string
   schemas:
     Metadata:
       type: object
@@ -141,133 +177,166 @@ components:
       properties:
         metadata:
           $ref: '#/components/schemas/Metadata'
-    Ride:
+    Trip:
       type: object
-      required: [id, status, lifecycleStatus, origin, destination]
+      required: [trip_id, origin_city, destination_city, departure_time]
       properties:
-        id:
+        trip_id:
           type: string
-        status:
+        origin_city:
           type: string
-        lifecycleStatus:
+        destination_city:
           type: string
-          enum: [requested, matched, accepted, in_progress, completed, cancelled]
-        origin:
+        departure_time:
           type: string
-        destination:
+          format: date-time
+        available_seats:
+          type: integer
+        price_per_seat:
+          type: number
+        trip_status:
           type: string
-    Package:
+        allow_packages:
+          type: boolean
+    Booking:
       type: object
-      required: [id, status, lifecycleStatus, trackingCode]
+      required: [booking_id, trip_id, passenger_id]
       properties:
-        id:
+        booking_id:
           type: string
-        status:
+        trip_id:
           type: string
-        lifecycleStatus:
+        passenger_id:
           type: string
-          enum: [created, assigned, picked_up, in_transit, delivered, cancelled]
-        trackingCode:
-          type: string
-    Payment:
-      type: object
-      required: [entityId, amount, status]
-      properties:
-        entityId:
+        seats_requested:
+          type: integer
+        booking_status:
           type: string
         amount:
           type: number
+    Package:
+      type: object
+      required: [package_id, tracking_number, sender_id]
+      properties:
+        package_id:
+          type: string
+        tracking_number:
+          type: string
+        sender_id:
+          type: string
+        origin_name:
+          type: string
+        destination_name:
+          type: string
         status:
           type: string
-    Health:
+        delivery_fee:
+          type: number
+    HealthResponse:
       type: object
-      required: [status]
+      required: [status, service]
       properties:
         status:
           type: string
-        services:
-          type: array
-          items:
-            type: object
-            additionalProperties: true
-    CreateRideRequest:
-      type: object
-      required: [origin, destination, departureAt, seatsRequested]
-      properties:
-        origin:
+        service:
           type: string
-        destination:
+        runtime:
           type: string
-        departureAt:
+        timestamp:
           type: string
           format: date-time
-        seatsRequested:
+        traceId:
+          type: string
+        ready:
+          type: boolean
+        checks:
+          type: object
+        broker:
+          type: object
+          properties:
+            kind:
+              type: string
+            outboxPending:
+              type: integer
+            deadLetterCount:
+              type: integer
+    CreateTripRequest:
+      type: object
+      required: [from, to, date, time, seats, carModel]
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+        seats:
           type: integer
+        carModel:
+          type: string
+        acceptsPackages:
+          type: boolean
+        packageCapacity:
+          type: string
+          enum: [none, small, medium, large]
+        note:
+          type: string
+    CreateBookingRequest:
+      type: object
+      required: [trip_id, seats_requested]
+      properties:
+        trip_id:
+          type: string
+        seats_requested:
+          type: integer
+        total_price:
+          type: number
+        pickup_stop:
+          type: string
+        dropoff_stop:
+          type: string
+        status:
+          type: string
     CreatePackageRequest:
       type: object
-      required: [origin, destination, size, value]
+      required: [receiver_name, receiver_phone, origin_name, destination_name, size]
       properties:
-        origin:
+        receiver_name:
           type: string
-        destination:
+        receiver_phone:
           type: string
+        origin_name:
+          type: string
+        origin_coords:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+        destination_name:
+          type: string
+        destination_coords:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
         size:
           type: string
           enum: [small, medium, large]
-        value:
+        weight:
           type: number
-    LocationUpdateRequest:
-      type: object
-      required: [latitude, longitude]
-      properties:
-        latitude:
+        description:
+          type: string
+        declared_value:
           type: number
-        longitude:
-          type: number
-    RideResponseEnvelope:
-      allOf:
-        - $ref: '#/components/schemas/EnvelopeBase'
-        - type: object
-          required: [success, data]
-          properties:
-            success:
-              type: boolean
-              const: true
-            data:
-              $ref: '#/components/schemas/Ride'
-    PackageResponseEnvelope:
-      allOf:
-        - $ref: '#/components/schemas/EnvelopeBase'
-        - type: object
-          required: [success, data]
-          properties:
-            success:
-              type: boolean
-              const: true
-            data:
-              $ref: '#/components/schemas/Package'
-    PaymentResponseEnvelope:
-      allOf:
-        - $ref: '#/components/schemas/EnvelopeBase'
-        - type: object
-          required: [success, data]
-          properties:
-            success:
-              type: boolean
-              const: true
-            data:
-              $ref: '#/components/schemas/Payment'
-    HealthResponseEnvelope:
-      allOf:
-        - $ref: '#/components/schemas/EnvelopeBase'
-        - type: object
-          required: [success, data]
-          properties:
-            success:
-              type: boolean
-              const: true
-            data:
-              $ref: '#/components/schemas/Health'
+        fragile:
+          type: boolean
     ErrorEnvelope:
       allOf:
         - $ref: '#/components/schemas/EnvelopeBase'
