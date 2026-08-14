@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useMemo } from 'react';
-import { I18nManager } from 'react-native';
+import React, { createContext, useCallback, useContext, useMemo } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface RTLContextType {
   isRTL: boolean;
@@ -10,17 +10,15 @@ interface RTLContextType {
 const RTLContext = createContext<RTLContextType | undefined>(undefined);
 
 export function RTLProvider({ children }: { children: React.ReactNode }) {
-  const isRTL = true;
-  const language = 'ar' as const;
+  const { isRTL, language, setLanguage } = useLanguage();
 
-  const toggleLanguage = () => {
-    const next = language === 'ar' ? 'en' : 'ar';
-    I18nManager.forceRTL(next === 'ar');
-  };
+  const toggleLanguage = useCallback(() => {
+    setLanguage(language === 'ar' ? 'en' : 'ar');
+  }, [language, setLanguage]);
 
   const value = useMemo(
     () => ({ isRTL, language, toggleLanguage }),
-    [language],
+    [isRTL, language, toggleLanguage],
   );
 
   return <RTLContext.Provider value={value}>{children}</RTLContext.Provider>;

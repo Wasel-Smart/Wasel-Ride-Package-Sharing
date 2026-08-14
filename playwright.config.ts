@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const port = Number(process.env.PLAYWRIGHT_PORT ?? '4173');
+const baseURL = `http://127.0.0.1:${port}`;
+
 export default defineConfig({
   testDir: './tests/e2e',
   testMatch: ['**/*.spec.ts'],
@@ -10,12 +13,12 @@ export default defineConfig({
     timeout: 10_000,
   },
   use: {
-    baseURL: 'http://127.0.0.1:4173',
+    baseURL,
     trace: 'retain-on-failure',
   },
   webServer: {
     command: 'node scripts/start-playwright-dev.mjs',
-    url: 'http://127.0.0.1:4173',
+    url: baseURL,
     // A stale local dev server can silently test an older bundle. Reuse only
     // when explicitly requested for interactive debugging.
     reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === 'true',

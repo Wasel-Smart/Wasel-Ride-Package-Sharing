@@ -5,7 +5,7 @@ import { C } from '../../../utils/wasel-ds';
 import type { PostedRide } from '../../../services/journeyLogistics';
 import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
 import type { DriverRoutePlan } from '../../../config/wasel-movement-network';
-import { OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS } from '../offerRideContent';
+import { cityLabel, OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS, packageCapacityLabel } from '../offerRideContent';
 import { tx } from '../../../locales/tx';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
@@ -59,6 +59,8 @@ export function OfferRideFormPanel({
   const { language } = useLanguage();
   const ar = language === 'ar';
   const local = (en: string, arText: string) => (ar ? arText : en);
+  const city = (value: string) => cityLabel(value, language);
+  const capacity = (value: string) => packageCapacityLabel(value, language);
   const errorDisplay = formError ? (
     <div
       style={{
@@ -115,9 +117,9 @@ export function OfferRideFormPanel({
               {
                 label: local('Route signal', 'إشارة المسار'),
                 value: liveSignal
-                  ? local(`${liveSignal.forecastDemandScore}/100 demand score with ${liveSignal.pricePressure} pricing`, `درجة الطلب ${liveSignal.forecastDemandScore}/100 مع تسعير ${liveSignal.pricePressure}`)
+                  ? local(`${liveSignal.forecastDemandScore}/100 demand score with ${liveSignal.pricePressure} pricing`, `درجة الطلب ${liveSignal.forecastDemandScore}/100 مع تسعير متوازن`)
                   : driverPlan
-                    ? `${driverPlan.corridor.predictedDemandScore}/100 demand score with ${driverPlan.corridor.density} density`
+                    ? local(`${driverPlan.corridor.predictedDemandScore}/100 demand score with ${driverPlan.corridor.density} density`, `درجة الطلب ${driverPlan.corridor.predictedDemandScore}/100 مع كثافة مناسبة`)
                     : local('Pick a corridor to unlock route intelligence', 'اختر مسارًا لعرض ذكاء الطريق'),
               },
               {
@@ -132,7 +134,7 @@ export function OfferRideFormPanel({
               {
                 label: local('Package visibility', 'توفّر الطرود'),
                 value: form.acceptsPackages
-                  ? local(`Eligible for package matching (${form.packageCapacity})`, `مؤهل لمطابقة الطرود (${form.packageCapacity})`)
+                  ? local(`Eligible for package matching (${form.packageCapacity})`, `مؤهل لمطابقة الطرود (${capacity(form.packageCapacity)})`)
                   : local('Passengers only', 'للركاب فقط'),
               },
               { label: local('Draft status', 'حالة المسودة'), value: draftMessage || local('Draft autosaves on this device.', 'يتم حفظ المسودة تلقائيًا على هذا الجهاز.') },
@@ -187,12 +189,12 @@ export function OfferRideFormPanel({
                   }}
                 >
                   <div style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem' }}>
-                    {ride.from} {tx('offerRideFormPanel.to')}
-                    {ride.to}
+                    {city(ride.from)} {tx('offerRideFormPanel.to')}
+                    {city(ride.to)}
                   </div>
                   <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>
                     {ride.date} {tx('offerRideFormPanel.at')}
-                    {ride.time} | {ride.carModel || 'Vehicle pending'}
+                    {ride.time} | {ride.carModel || local('Vehicle pending', 'السيارة قيد التحديد')}
                   </div>
                 </div>
               ))}
@@ -227,8 +229,8 @@ export function OfferRideFormPanel({
             {tx('offerRideFormPanel.route_details')}
           </h3>
           {[
-            { label: 'From', key: 'from' as const },
-            { label: 'To', key: 'to' as const },
+            { label: local('From', 'من'), key: 'from' as const },
+            { label: local('To', 'إلى'), key: 'to' as const },
           ].map(field => (
             <div key={field.label}>
               <label
@@ -262,7 +264,7 @@ export function OfferRideFormPanel({
               >
                 {CITIES.map(city => (
                   <option key={city} value={city} style={{ background: DS.card }}>
-                    {city}
+                    {cityLabel(city, language)}
                   </option>
                 ))}
               </select>
@@ -567,7 +569,7 @@ export function OfferRideFormPanel({
               >
                 {OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS.map(size => (
                   <option key={size} value={size} style={{ background: DS.card }}>
-                    {size}
+                    {capacity(size)}
                   </option>
                 ))}
               </select>

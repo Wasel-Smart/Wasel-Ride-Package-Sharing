@@ -14,16 +14,12 @@ const MAX_ATTEMPTS = 5;
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+    },
   });
-}
-
-function corsHeaders(): Record<string, string> {
-  return {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'authorization, content-type, x-event-broker-secret',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  };
 }
 
 function constantTimeEqual(a: string, b: string): boolean {
@@ -50,27 +46,36 @@ async function handlePublish(request: Request): Promise<Response> {
   const body = await request.json().catch(() => ({}));
   const { id, topic, payload, producer, traceId, occurredAt, attempts } = body as Record<string, unknown>;
 
-  if (!id || !topic || !payload) {
+  if (
+    typeof id !== 'string' ||
+    id.length > 128 ||
+    typeof topic !== 'string' ||
+    topic.length > 128 ||
+    !payload ||
+    typeof payload !== 'object' ||
+    Array.isArray(payload)
+  ) {
     return json({ error: 'Missing required fields: id, topic, payload' }, 400);
   }
 
   const admin = getAdminClient();
-  const { error } = await admin.from(OUTBOX_TABLE).insert({
-    id: id as string,
-    topic: topic as string,
+  const { error } = await admin.from(OUTBOX_TABLE).upsert({
+    id,
+    topic,
     payload: payload as never,
-    producer: (producer as string | null) ?? null,
-    trace_id: (traceId as string | null) ?? null,
+    producer: typeof producer === 'string' ? producer.slice(0, 128) : null,
+    trace_id: typeof traceId === 'string' ? traceId.slice(0, 128) : null,
     status: 'pending',
-    attempts: (attempts as number | null) ?? 0,
-    created_at: (occurredAt as string | null) ?? new Date().toISOString(),
-  });
+    attempts: Number.isInteger(attempts) && (attempts as number) >= 0 ? attempts : 0,
+    created_at: typeof occurredAt === 'string' ? occurredAt : new Date().toISOString(),
+  }, { onConflict: 'id', ignoreDuplicates: true });
 
   if (error) {
-    return json({ error: error.message }, 500);
+    console.error('[event-broker] Failed to publish event');
+    return json({ error: 'Unable to publish event' }, 500);
   }
 
-  return json({ ok: true, id: id as string });
+  return json({ ok: true, id });
 }
 
 async function handlePoll(): Promise<Response> {
@@ -84,7 +89,8 @@ async function handlePoll(): Promise<Response> {
     .limit(BATCH_SIZE);
 
   if (error || !data) {
-    return json({ error: error?.message ?? 'Poll failed' }, 500);
+    console.error('[event-broker] Failed to poll events');
+    return json({ error: 'Unable to poll events' }, 500);
   }
 
   return json({ events: data });
@@ -106,7 +112,8 @@ async function handleAck(request: Request): Promise<Response> {
     .eq('status', 'pending');
 
   if (error) {
-    return json({ error: error.message }, 500);
+    console.error('[event-broker] Failed to acknowledge event');
+    return json({ error: 'Unable to acknowledge event' }, 500);
   }
 
   return json({ ok: true });
@@ -120,7 +127,10 @@ async function handleFail(request: Request): Promise<Response> {
     return json({ error: 'Missing required field: id' }, 400);
   }
 
-  const nextAttempts = Number(attempts ?? 0) + 1;
+  const currentAttempts = Number.isInteger(attempts) && (attempts as number) >= 0
+    ? attempts as number
+    : 0;
+  const nextAttempts = Math.min(currentAttempts + 1, MAX_ATTEMPTS);
   const nextStatus = nextAttempts >= MAX_ATTEMPTS ? 'failed' : 'pending';
 
   const admin = getAdminClient();
@@ -131,7 +141,8 @@ async function handleFail(request: Request): Promise<Response> {
     .eq('status', 'pending');
 
   if (error) {
-    return json({ error: error.message }, 500);
+    console.error('[event-broker] Failed to mark event as failed');
+    return json({ error: 'Unable to mark event as failed' }, 500);
   }
 
   return json({ ok: true, attempts: nextAttempts, status: nextStatus });
@@ -158,7 +169,8 @@ async function handleDeadLetter(request: Request): Promise<Response> {
   });
 
   if (error) {
-    return json({ error: error.message }, 500);
+    console.error('[event-broker] Failed to dead-letter event');
+    return json({ error: 'Unable to dead-letter event' }, 500);
   }
 
   return json({ ok: true });
@@ -166,10 +178,9 @@ async function handleDeadLetter(request: Request): Promise<Response> {
 
 Deno.serve(async (request: Request) => {
   if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: corsHeaders(),
-    });
+    // This endpoint is exclusively for trusted workers using a secret header;
+    // it intentionally has no browser CORS surface.
+    return json({ error: 'Method not allowed' }, 405);
   }
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {

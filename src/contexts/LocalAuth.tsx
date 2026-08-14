@@ -219,6 +219,12 @@ function createLocalUser(name: string, email: string, phone?: string): WaselUser
 }
 
 function loadUser(): WaselUser | null {
+  // Browser-stored user records are only an E2E fixture. In production the
+  // Supabase session is the authority; accepting a cached record while the
+  // backend is unavailable would let a tampered localStorage value look like
+  // an authenticated user in the UI.
+  if (!isLocalE2EAuthEnabled()) return null;
+
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
@@ -267,7 +273,9 @@ function toMessage(error: unknown): string {
 }
 
 export function LocalAuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<WaselUser | null>(loadUser);
+  const [user, setUser] = useState<WaselUser | null>(() =>
+    isLocalE2EAuthEnabled() ? loadUser() : null,
+  );
   // Use a ref for pending optimistic patches so setting them never re-triggers
   // the profile-sync effect, eliminating the update loop.
   const optimisticRef = useRef<Partial<WaselUser> | null>(null);
@@ -280,7 +288,7 @@ export function LocalAuthProvider({ children }: { children: ReactNode }) {
     }
 
     if (!auth.user) {
-      if (isLocalE2EAuthEnabled() || !auth.isBackendConnected) {
+      if (isLocalE2EAuthEnabled()) {
         const storedUser = loadUser();
         setUser(storedUser);
         return;

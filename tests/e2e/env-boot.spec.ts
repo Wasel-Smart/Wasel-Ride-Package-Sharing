@@ -8,20 +8,10 @@
 import { expect, test } from '@playwright/test';
 
 test('app shows config error when VITE_SUPABASE_URL is missing', async ({ page }) => {
-  // Intercept the HTML and strip the env vars injected by Vite so the
-  // browser-side guard in main.tsx sees them as missing.
-  await page.route('**/*', async (route, request) => {
-    if (request.resourceType() === 'document') {
-      const response = await route.fetch();
-      let body = await response.text();
-      // Blank out the two critical vars that main.tsx checks at boot time.
-      body = body
-        .replace(/VITE_SUPABASE_URL\s*=\s*["'][^"']*["']/g, 'VITE_SUPABASE_URL=""')
-        .replace(/VITE_SUPABASE_ANON_KEY\s*=\s*["'][^"']*["']/g, 'VITE_SUPABASE_ANON_KEY=""');
-      await route.fulfill({ response, body });
-    } else {
-      await route.continue();
-    }
+  await page.addInitScript(() => {
+    Object.assign(window, {
+      __WASEL_E2E_CONFIG__: { supabaseUrl: '', anonKey: '' },
+    });
   });
 
   await page.goto('/');

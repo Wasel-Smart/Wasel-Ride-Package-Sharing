@@ -7,8 +7,8 @@ interface RateLimitEntry {
   count: number;
   resetAt: number;
 }
-
 const store = new Map<string, RateLimitEntry>();
+let requestsSinceCleanup = 0;
 
 export interface RateLimitConfig {
   windowMs: number;
@@ -33,6 +33,15 @@ export function checkRateLimit(
   key: string,
   config: RateLimitConfig = DEFAULT_CONFIG
 ): { allowed: boolean; remaining: number; resetAt: number } {
+  // Edge isolates can be short- or long-lived. Clean opportunistically instead
+  // of installing a perpetual timer for every isolate, and avoid allowing an
+  // all-success traffic pattern to grow this in-memory map indefinitely.
+  requestsSinceCleanup += 1;
+  if (requestsSinceCleanup >= 100) {
+    cleanup();
+    requestsSinceCleanup = 0;
+  }
+
   const now = Date.now();
   const entry = store.get(key);
 
@@ -85,7 +94,3 @@ export function createRateLimitMiddleware(config: RateLimitConfig = DEFAULT_CONF
   };
 }
 
-// Run cleanup periodically
-if (typeof setInterval !== 'undefined') {
-  setInterval(cleanup, 300000);
-}

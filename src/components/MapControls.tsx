@@ -12,6 +12,7 @@ import {
   Satellite,
 } from 'lucide-react';
 import { colors, radii, shadows, effects, gradients, typography } from '../styles/design-tokens';
+import { getCurrentLang } from '../locales/tx';
 
 export type MapType = 'roadmap' | 'satellite' | 'terrain';
 
@@ -125,6 +126,13 @@ export function MapControls({
   compact: boolean;
   tx: (key: string) => string;
 }) {
+  const mapTypeLabel = (type: MapType) => {
+    const ar = getCurrentLang() === 'ar';
+    if (type === 'roadmap') return ar ? 'خريطة الطرق' : 'Road map';
+    if (type === 'satellite') return ar ? 'قمر صناعي' : 'Satellite';
+    return ar ? 'تضاريس' : 'Terrain';
+  };
+
   return (
     <>
       {/* -- Top-right: Map type + zoom + fullscreen -- */}
@@ -139,7 +147,7 @@ export function MapControls({
               ) : (
                 <Mountain className="w-3.5 h-3.5" />
               )}
-              <span>{type === 'roadmap' ? 'المدينة' : type === 'satellite' ? 'جوي' : 'تضاريس'}</span>
+              <span>{mapTypeLabel(type)}</span>
             </button>
           ))}
         </div>

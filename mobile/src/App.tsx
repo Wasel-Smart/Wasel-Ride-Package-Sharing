@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StatusBar, StyleSheet, View } from 'react-native';
+import { StatusBar, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { StripeProvider } from '@stripe/stripe-react-native';
@@ -61,6 +61,19 @@ const App = () => {
     }
   }, [deepLinkUrl]);
 
+  if (!waselMobileConfig.hasSupabase) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.configurationError}>
+          <Text style={styles.configurationErrorTitle}>تعذّر إعداد التطبيق</Text>
+          <Text style={styles.configurationErrorBody}>
+            لا تتوفر إعدادات الاتصال الآمنة اللازمة لبدء واصل. يرجى تحديث التطبيق أو التواصل مع الدعم.
+          </Text>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <StripeProvider
@@ -70,17 +83,19 @@ const App = () => {
       >
         <SafeAreaProvider>
           <MobileErrorBoundary>
-            <RTLProvider>
-              <AuthProvider>
-                <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-                  <StatusBar backgroundColor={colors.bg} barStyle="light-content" />
-                  <OfflineBanner />
-                  <NavigationContainer linking={linking} fallback={<View style={{ flex: 1, backgroundColor: colors.bg }} />}>
-                    <AppNavigator />
-                  </NavigationContainer>
-                </SafeAreaView>
-              </AuthProvider>
-            </RTLProvider>
+            <LanguageProvider>
+              <RTLProvider>
+                <AuthProvider>
+                  <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+                    <StatusBar backgroundColor={colors.bg} barStyle="light-content" />
+                    <OfflineBanner />
+                    <NavigationContainer linking={linking} fallback={<View style={{ flex: 1, backgroundColor: colors.bg }} />}>
+                      <AppNavigator />
+                    </NavigationContainer>
+                  </SafeAreaView>
+                </AuthProvider>
+              </RTLProvider>
+            </LanguageProvider>
           </MobileErrorBoundary>
         </SafeAreaProvider>
       </StripeProvider>
@@ -92,6 +107,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
+  },
+  configurationError: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: colors.bg,
+  },
+  configurationErrorTitle: {
+    marginBottom: 12,
+    color: colors.error,
+    fontSize: 22,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  configurationErrorBody: {
+    color: colors.muted,
+    fontSize: 16,
+    lineHeight: 24,
+    textAlign: 'center',
   },
 });
 

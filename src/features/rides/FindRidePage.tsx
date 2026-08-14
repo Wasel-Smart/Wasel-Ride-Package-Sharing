@@ -698,6 +698,8 @@ export function FindRidePage() {
 
               {bookingMessage && (
                 <div
+                  role="status"
+                  aria-live="polite"
                   style={{
                     marginTop: 14,
                     display: 'flex',

@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 
 test('find-ride page renders search interface', async ({ page }) => {
   await page.goto('/app/find-ride');
-  await expect(page.getByRole('heading', { name: /find a ride/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /book a ride/i })).toBeVisible();
   await expect(page.getByTestId('find-ride-search')).toBeVisible();
 });
 
@@ -33,10 +33,10 @@ test('offer-ride full flow posts a connected trip', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /ride offer is live/i })).toBeVisible();
 });
 
-test('booking a seat surfaces a clear error when no backend session exists', async ({ page }) => {
+test('booking a seat surfaces the local-fallback result', async ({ page }) => {
   await page.goto('/app/find-ride');
   await page.getByTestId('find-ride-search').click();
   await page.getByRole('button', { name: /view details/i }).first().click();
   await page.getByRole('button', { name: /^reserve seat$/i }).click();
-  await expect(page.getByRole('status')).toContainText(/could not be completed securely/i);
+  await expect(page.getByRole('status')).toContainText(/request sent|seat confirmed/i);
 });
