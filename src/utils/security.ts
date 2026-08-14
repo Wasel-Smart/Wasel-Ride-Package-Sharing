@@ -210,7 +210,7 @@ export function isTwoFactorAvailable(): boolean {
 }
 
 export async function enable2FA(_userId: string): Promise<TwoFactorSetup> {
-  const payload = await callTwoFactorEndpoint<{ setup: TwoFactorSetup }>('/auth/2fa/setup');
+  const payload = await callTwoFactorEndpoint<{ setup: TwoFactorSetup }>('/v1/auth/2fa/setup');
   logger.info('2FA setup started', { important: true });
   return payload.setup;
 }
@@ -221,7 +221,7 @@ export async function verify2FACode(_userId: string, code: string): Promise<bool
   }
 
   try {
-    const payload = await callTwoFactorEndpoint<{ valid: boolean }>('/auth/2fa/verify', { code });
+    const payload = await callTwoFactorEndpoint<{ valid: boolean }>('/v1/auth/2fa/verify', { code });
     return payload.valid === true;
   } catch (error) {
     logger.error('2FA verification failed', error);
@@ -235,7 +235,7 @@ export async function disable2FA(_userId: string, code: string): Promise<boolean
   }
 
   try {
-    const payload = await callTwoFactorEndpoint<{ disabled: boolean }>('/auth/2fa/disable', {
+    const payload = await callTwoFactorEndpoint<{ disabled: boolean }>('/v1/auth/2fa/disable', {
       code,
     });
     if (payload.disabled) {

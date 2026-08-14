@@ -56,7 +56,7 @@ export type {
   RewardItem,
 } from './walletTypes';
 
-const WALLET_API_BASE = API_URL ? `${API_URL}/wallet` : '';
+const WALLET_API_BASE = API_URL ? `${API_URL}/v1/wallet` : '';
 
 function canUseEdgeApi(): boolean {
   return Boolean(WALLET_API_BASE);
@@ -79,7 +79,7 @@ async function tryEdgeThenDirect<T>(edgeFn: () => Promise<T>, directFn: () => Pr
 }
 
 function getWalletPath(userId: string, suffix = ''): string {
-  return `/wallet/${userId}${suffix}`;
+  return `/v1/wallet/${userId}${suffix}`;
 }
 
 async function requestWalletJson<T>(

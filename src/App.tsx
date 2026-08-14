@@ -54,17 +54,11 @@ function AppRuntimeCoordinator() {
               { initPerformanceMonitoring },
               { warmUpServer, startAvailabilityPolling },
               { domainEventBus },
-              { eventBroker },
-              { startAsyncRuntime, stopAsyncRuntime },
-              { productionWorkerRegistry },
             ] = await Promise.all([
               import('./utils/monitoring'),
               import('./utils/performance'),
               import('./services/core'),
               import('./platform/event-bus'),
-              import('./platform/event-broker'),
-              import('./platform/async-runtime'),
-              import('./platform/production-workers'),
             ]);
 
             initSentry();
@@ -86,22 +80,9 @@ function AppRuntimeCoordinator() {
               trackDomainEvent(event);
             });
 
-            void startAsyncRuntime()
-              .then(() => {
-                if (cancelled) return;
-                console.info('[Wasel] async runtime started', {
-                  broker: eventBroker.kind,
-                  workers: productionWorkerRegistry.list(),
-                });
-              })
-              .catch(err => {
-                console.warn('[Wasel] async runtime failed to start', sanitizeLogMessage(err));
-              });
-
             cleanup = () => {
               stopPolling?.();
               stopEvents?.();
-              void stopAsyncRuntime();
             };
           } catch (e) {
             if (import.meta.env.DEV) {
