@@ -25,28 +25,28 @@ export interface CreatePackageInput {
 }
 
 export async function createPackage(input: CreatePackageInput) {
-  const response = await api.post('/packages', input);
+  const response = await api.post('/v1/packages', input);
   return response as { data: Package };
 }
 
 export async function getPackage(id: string) {
-  const response = await api.get(`/packages/${id}`);
+  const response = await api.get(`/v1/packages/${id}`);
   return response as { data: Package };
 }
 
 export async function getMyPackages() {
   const userId = await getSessionUserId();
   if (!userId) throw new Error('Not authenticated');
-  const response = await api.get(`/packages/sender/${userId}`);
+  const response = await api.get(`/v1/packages/sender/${userId}`);
   return response as { data: Package[] };
 }
 
 export async function updatePackageStatus(id: string, status: string, carrierId?: string) {
-  const response = await api.post(`/packages/${id}/status`, { status, carrierId });
+  const response = await api.post(`/v1/packages/${id}/status`, { status, carrierId });
   return response as { data: Package };
 }
 
 export async function assignToTrip(packageId: string, tripId: string) {
-  const response = await api.post(`/packages/${packageId}/assign-to-trip`, { tripId });
+  const response = await api.post(`/v1/packages/${packageId}/assign-to-trip`, { tripId });
   return response as { data: Package };
 }
