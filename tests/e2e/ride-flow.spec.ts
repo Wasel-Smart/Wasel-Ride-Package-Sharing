@@ -13,18 +13,20 @@ test('find-ride page renders search interface', async ({ page }) => {
 
 test('find-ride search returns results', async ({ page }) => {
   await page.goto('/app/find-ride');
+  await expect(page.getByTestId('find-ride-search')).toBeVisible();
   await page.getByTestId('find-ride-search').click();
   await expect(page.getByRole('button', { name: /view details/i }).first()).toBeVisible();
 });
 
 test('offer-ride page renders the form', async ({ page }) => {
   await page.goto('/app/offer-ride');
-  await expect(page.locator('input[type="date"]')).toBeVisible();
   await expect(page.getByTestId('offer-ride-step-1')).toBeVisible();
+  await expect(page.locator('input[type="date"]')).toBeVisible();
 });
 
 test('offer-ride full flow posts a connected trip', async ({ page }) => {
   await page.goto('/app/offer-ride');
+  await expect(page.getByTestId('offer-ride-step-1')).toBeVisible();
   await page.locator('input[type="date"]').fill('2026-05-01');
   await page.getByTestId('offer-ride-step-1').click();
   await page.getByPlaceholder(/toyota camry 2023/i).fill('Toyota Camry 2024');
@@ -35,8 +37,11 @@ test('offer-ride full flow posts a connected trip', async ({ page }) => {
 
 test('booking a seat surfaces the local-fallback result', async ({ page }) => {
   await page.goto('/app/find-ride');
+  await expect(page.getByTestId('find-ride-search')).toBeVisible();
   await page.getByTestId('find-ride-search').click();
   await page.getByRole('button', { name: /view details/i }).first().click();
   await page.getByRole('button', { name: /^reserve seat$/i }).click();
+  // Wait for the modal to close before checking the status banner in the page
+  await expect(page.getByRole('heading', { name: /trip details/i })).not.toBeVisible();
   await expect(page.getByRole('status')).toContainText(/request sent|seat confirmed/i);
 });

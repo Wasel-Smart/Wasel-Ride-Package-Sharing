@@ -20,7 +20,8 @@ test('unauthenticated /app renders the public landing surface', async ({ page })
 test('auth page renders email and password fields', async ({ page }) => {
   await page.goto('/app/auth');
   await expect(page.getByLabel(/email/i)).toBeVisible();
-  await expect(page.getByLabel(/password/i)).toBeVisible();
+  // Use textbox role to avoid matching the "Show password" toggle button
+  await expect(page.getByRole('textbox', { name: /password/i })).toBeVisible();
 });
 
 test('submitting empty auth form shows validation feedback', async ({ page }) => {
@@ -31,14 +32,16 @@ test('submitting empty auth form shows validation feedback', async ({ page }) =>
 
 test('register tab renders create account button', async ({ page }) => {
   await page.goto('/app/auth?tab=register');
-  await expect(page.getByRole('button', { name: /submit create account/i })).toBeVisible();
+  // Actual button aria-label is "Submit sign up", not "Submit create account"
+  await expect(page.getByRole('button', { name: /submit sign up/i })).toBeVisible();
 });
 
 test('authenticated user receives the signed-in landing surface', async ({ page }) => {
   await seedDemoSession(page, 'en');
   await page.goto('/app');
   await expect(page.getByRole('heading', { name: /move across jordan for less/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /demo/i })).toBeVisible();
+  // Use the avatar button which has a stable name "DR Demo"
+  await expect(page.getByRole('button', { name: /DR Demo/i })).toBeVisible();
 });
 
 test('unknown route renders 404 with navigation link', async ({ page }) => {
