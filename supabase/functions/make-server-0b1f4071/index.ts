@@ -282,6 +282,15 @@ function json(data: unknown, status = 200) {
   });
 }
 
+function addVersionHeader(response: Response): Response {
+  const headers = new Headers(response.headers);
+  headers.set('X-Api-Version', 'v1');
+  return new Response(response.body, {
+    status: response.status,
+    headers,
+  });
+}
+
 function noContent(status = 204) {
   return new Response(null, {
     status,
@@ -313,9 +322,11 @@ function buildResponseHeaders(request: Request, extra?: HeadersInit) {
 
 function finalizeResponse(request: Request, response: Response | undefined): Response {
   const resolvedResponse = response ?? json({ error: 'Route not found' }, 404);
+  const headers = buildResponseHeaders(request, resolvedResponse.headers);
+  headers.set('X-Api-Version', 'v1');
   return new Response(resolvedResponse.body, {
     status: resolvedResponse.status,
-    headers: buildResponseHeaders(request, resolvedResponse.headers),
+    headers,
   });
 }
 
@@ -1071,6 +1082,26 @@ async function handleBookingRequest(request: Request, path: string) {
         })
         .eq('trip_id', tripId);
     }
+
+    const { data: driver } = await auth.admin
+      .from('drivers')
+      .select('driver_id, user_id')
+      .in('driver_status', ['online', 'approved', 'busy'])
+      .limit(1)
+      .maybeSingle();
+
+    if (driver && status !== 'pending_driver') {
+      await auth.admin
+        .from('trips')
+        .update({ driver_id: driver.driver_id, trip_status: 'booked' })
+        .eq('trip_id', tripId);
+
+      await auth.admin
+        .from('bookings')
+        .update({ driver_id: driver.driver_id, confirmed_by_driver: true })
+        .eq('booking_id', data.booking_id);
+    }
+
     return json({ booking: mapBookingRow(data) });
   }
 
@@ -5433,6 +5464,11 @@ const ROUTES: RouteDescriptor[] = [
     handle: (request, path) => handleBookingRequest(request, path),
   },
   {
+    id: 'packages',
+    test: (path) => path === '/packages' || path.startsWith('/packages/'),
+    handle: (request, path) => handlePackageRequest(request, path),
+  },
+  {
     id: 'ratings-submit',
     methods: ['POST'],
     test: (path) => path === '/ratings',
@@ -5731,7 +5767,11 @@ async function handleWalletDispatch(request: Request, path: string): Promise<Res
 
 async function resolveRoute(request: Request): Promise<Response> {
   const url = new URL(request.url);
-  const path = url.pathname.replace(/^.*make-server-0b1f4071/, '') || '/';
+  let path = url.pathname.replace(/^.*make-server-0b1f4071/, '') || '/';
+
+  if (path.startsWith('/v1')) {
+    path = path.slice(3) || '/';
+  }
 
   for (const route of ROUTES) {
     if (route.methods && !route.methods.includes(request.method)) continue;

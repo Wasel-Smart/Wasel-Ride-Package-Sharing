@@ -28,12 +28,36 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            debuggable true
         }
         release {
             signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            crunchPngs true
+        }
+    }
+    packagingOptions {
+        pickFirst '**/libc++_shared.so'
+        pickFirst '**/libhermes.so'
+        pickFirst '**/libjsc.so'
+    }
+    bundle {
+        language {
+            enableSplit = false
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
+            include = ['armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64']
+            reset()
+            include 'armeabi-v7a'
+            include 'arm64-v8a'
+            include 'x86'
+            include 'x86_64'
         }
     }
 }

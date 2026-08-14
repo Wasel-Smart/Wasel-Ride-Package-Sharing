@@ -1,0 +1,35 @@
+-keep class com.wasel.** { *; }
+-keep class expo.modules.** { *; }
+-dontwarn com.wasel.**
+-dontwarn expo.modules.**
+-keepclassmembers class * {
+    @expo.modules.kotlin.ExpoModule *;
+}
+-keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes SourceFile,LineNumberTable
+-keep class com.bumptech.glide.** { *; }
+-keep class com.sentry.** { *; }
+-dontwarn com.bumptech.glide.**
+-dontwarn com.sentry.**
+-keep class kotlin.** { *; }
+-keep class kotlinx.** { *; }
+-dontnote kotlin.**
+-dontnote kotlinx.**
+-keep class com.facebook.react.** { *; }
+-keep class com.swmansion.reanimated.** { *; }
+-keep class com.facebook.fresco.** { *; }
+-keep class javax.annotation.** { *; }
+-dontwarn com.facebook.react.**
+-dontwarn com.swmansion.reanimated.**
+-dontwarn com.facebook.fresco.**
+-dontwarn javax.annotation.**
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.**
+-dontwarn com.google.android.gms.**
+-keep class com.stripe.android.** { *; }
+-dontwarn com.stripe.android.**
+-optimizations !code/simplification/arithmetic
+-allowaccessmodification
+-repackageclasses
