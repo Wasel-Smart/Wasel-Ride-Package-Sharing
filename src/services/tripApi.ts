@@ -33,12 +33,12 @@ export async function searchTrips(filters: TripSearchFilters = {}) {
   if (filters.limit) params.set('limit', String(filters.limit));
 
   const query = params.toString();
-  const response = await api.get(`/trips/search${query ? `?${query}` : ''}`);
+  const response = await api.get(`/v1/trips/search${query ? `?${query}` : ''}`);
   return response as { data: Trip[]; meta: { total: number; page: number; limit: number } };
 }
 
 export async function getTripDetails(tripId: string) {
-  const response = await api.get(`/trips/${tripId}`);
+  const response = await api.get(`/v1/trips/${tripId}`);
   return response as { data: Trip & { bookings: unknown[] } };
 }
 
@@ -55,21 +55,21 @@ export async function createTrip(input: {
   packageCapacityKg?: number;
   notes?: string;
 }) {
-  const response = await api.post('/trips', input);
+  const response = await api.post('/v1/trips', input);
   return response as { data: Trip };
 }
 
 export async function bookTrip(tripId: string, seats: number, pricePaid: number) {
-  const response = await api.post(`/trips/${tripId}/book`, { seats, pricePaid });
+  const response = await api.post(`/v1/trips/${tripId}/book`, { seats, pricePaid });
   return response as { data: unknown };
 }
 
 export async function updateTripStatus(tripId: string, status: string) {
-  const response = await api.patch(`/trips/${tripId}/status`, { status });
+  const response = await api.patch(`/v1/trips/${tripId}/status`, { status });
   return response as { data: Trip };
 }
 
 export async function cancelBooking(bookingId: string) {
-  const response = await api.patch(`/trips/bookings/${bookingId}/cancel`, {});
+  const response = await api.patch(`/v1/trips/bookings/${bookingId}/cancel`, {});
   return response as { data: unknown };
 }
