@@ -28,7 +28,10 @@ export function HomePageStyles() {
         overflow-x: hidden;
         overflow-y: visible;
         background:
-          linear-gradient(180deg, #081d39 0%, #0a1f3a 34%, #0e2240 100%);
+          radial-gradient(circle at 16% 8%, rgba(20,127,228,0.34), transparent 30%),
+          radial-gradient(circle at 84% 16%, rgba(255,138,11,0.18), transparent 26%),
+          radial-gradient(circle at 50% 56%, rgba(114,199,13,0.09), transparent 32%),
+          linear-gradient(180deg, #06172d 0%, #081d39 38%, #0c203b 100%);
       }
 
       .wasel-home-shell::before {
@@ -56,7 +59,11 @@ export function HomePageStyles() {
       .wasel-home-container {
         width: min(100%, 1360px);
         margin: 0 auto;
-        padding: 28px 28px 64px;
+        padding: 28px 28px 72px;
+      }
+
+      .wasel-home-container > .wasel-home-section {
+        animation: wasel-home-rise 520ms ease both;
       }
 
       /* Sticky bottom CTA for mobile */
@@ -95,8 +102,67 @@ export function HomePageStyles() {
         animation: wasel-home-rise 420ms ease both;
       }
 
-      @media (max-width: 1100px) {
-        .wasel-home-hero {
+
+      .wasel-home-stats-strip,
+      .wasel-home-steps,
+      .wasel-home-testimonials {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .wasel-home-stats-strip {
+        padding: 16px;
+        border-radius: 24px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(20,127,228,0.06));
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 24px 70px rgba(3,8,15,0.24);
+      }
+
+      .wasel-home-stat-item,
+      .wasel-home-step,
+      .wasel-home-testimonial,
+      .wasel-home-cta-banner {
+        position: relative;
+        overflow: hidden;
+        border-radius: 20px;
+        background: linear-gradient(180deg, rgba(15,35,51,0.86), rgba(6,17,27,0.92));
+        border: 1px solid rgba(255,255,255,0.09);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 18px 50px rgba(3,8,15,0.22);
+      }
+
+      .wasel-home-stat-item { padding: 18px; }
+      .wasel-home-stat-value { color: #f8fbff; font-size: 2rem; font-weight: 950; line-height: 1; }
+      .wasel-home-stat-label { margin-top: 7px; color: rgba(196,220,238,0.72); font-size: 0.8rem; font-weight: 750; }
+
+      .wasel-home-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .wasel-home-step { padding: 18px; min-height: 190px; }
+      .wasel-home-step-number { color: rgba(20,127,228,0.32); font-size: 2.2rem; font-weight: 950; line-height: 1; margin-bottom: 18px; }
+      .wasel-home-step-title { color: #f8fbff; font-size: 1rem; font-weight: 900; }
+      .wasel-home-step-desc { margin-top: 14px; color: rgba(196,220,238,0.72); font-size: 0.86rem; line-height: 1.65; }
+
+      .wasel-home-testimonials { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .wasel-home-testimonial { padding: 20px; }
+      .wasel-home-testimonial-stars { display: flex; gap: 4px; }
+      .wasel-home-testimonial-text { margin-top: 16px; color: rgba(248,251,255,0.88); font-size: 0.96rem; line-height: 1.65; }
+      .wasel-home-testimonial-author { display: flex; align-items: center; gap: 12px; margin-top: 22px; }
+      .wasel-home-testimonial-avatar { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px; background: linear-gradient(135deg, rgba(20,127,228,0.32), rgba(255,138,11,0.22)); color: #fff; font-weight: 950; }
+      .wasel-home-testimonial-name { color: #f8fbff; font-weight: 900; }
+      .wasel-home-testimonial-role { margin-top: 3px; color: rgba(196,220,238,0.62); font-size: 0.78rem; }
+
+      .wasel-home-cta-banner {
+        padding: clamp(28px, 5vw, 54px);
+        text-align: center;
+        background:
+          radial-gradient(circle at top left, rgba(20,127,228,0.25), transparent 36%),
+          radial-gradient(circle at bottom right, rgba(255,138,11,0.19), transparent 34%),
+          linear-gradient(135deg, rgba(15,35,51,0.96), rgba(6,17,27,0.94));
+      }
+      .wasel-home-cta-title { margin: 0; color: #f8fbff; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1; font-weight: 950; text-wrap: balance; }
+      .wasel-home-cta-subtitle { max-width: 620px; margin: 16px auto 0; color: rgba(196,220,238,0.76); line-height: 1.7; }
+      .wasel-home-cta-actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+
+      @media (max-width: 1100px) {        .wasel-home-hero {
           min-height: auto;
         }
       }
@@ -105,6 +171,30 @@ export function HomePageStyles() {
         position: relative;
         overflow: visible;
         padding: 38px 12px 34px 0;
+      }
+
+      .wasel-home-nav {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .wasel-home-nav-left,
+      .wasel-home-nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .wasel-home-nav-actions {
+        padding: 6px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.045);
+        border: 1px solid rgba(255,255,255,0.08);
+        backdrop-filter: blur(18px);
       }
 
       .wasel-home-preview-panel {
@@ -217,6 +307,37 @@ export function HomePageStyles() {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 16px;
         margin-top: 28px;
+      }
+
+      .wasel-home-proof-pill {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.035));
+        border: 1px solid rgba(255,255,255,0.09);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 14px 34px rgba(3,8,15,0.18);
+      }
+
+      .wasel-home-proof-pill-icon {
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        flex: 0 0 auto;
+      }
+
+      .wasel-home-proof-pill strong,
+      .wasel-home-proof-pill small {
+        display: block;
+      }
+
+      .wasel-home-proof-pill small {
+        margin-top: 5px;
+        font-size: 0.74rem;
+        line-height: 1.45;
       }
 
       .wasel-home-proof-item {
@@ -545,7 +666,10 @@ export function HomePageStyles() {
         .wasel-home-demo-grid,
         .wasel-home-outcome-grid,
         .wasel-home-outcome-strip,
-        .wasel-home-trust-grid {
+        .wasel-home-trust-grid,
+        .wasel-home-stats-strip,
+        .wasel-home-steps,
+        .wasel-home-testimonials {
           grid-template-columns: 1fr !important;
         }
 
@@ -558,6 +682,9 @@ export function HomePageStyles() {
         .wasel-home-container {
           padding: 18px 14px 44px;
         }
+
+        .wasel-home-nav { flex-direction: column; }
+        .wasel-home-nav-actions { width: fit-content; }
 
         .wasel-home-actions,
         .wasel-home-route-grid,
