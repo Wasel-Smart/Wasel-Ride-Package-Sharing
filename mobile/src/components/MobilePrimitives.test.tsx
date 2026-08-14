@@ -1,6 +1,16 @@
 import React from 'react';
 import { Text, View } from 'react-native';
-import { render } from '@testing-library/react-native';
+import TestRenderer from 'react-test-renderer';
+
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: 'Ionicons',
+}));
+
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(),
+  ImpactFeedbackStyle: { Light: 0, Medium: 1, Heavy: 2 },
+}));
+
 import {
   ScreenShell,
   SectionHeader,
@@ -16,59 +26,65 @@ import {
 
 describe('MobilePrimitives', () => {
   it('renders ScreenShell with children', () => {
-    const { getByText } = render(<ScreenShell><Text>Hello</Text></ScreenShell>);
-    expect(getByText('Hello')).toBeTruthy();
+    const renderer = TestRenderer.create(<ScreenShell><Text>Hello</Text></ScreenShell>);
+    expect(JSON.stringify(renderer.toJSON())).toContain('Hello');
   });
 
   it('renders SectionHeader with title and body', () => {
-    const { getByText } = render(<SectionHeader eyebrow="EYEBROW" title="Title" body="Body text" />);
-    expect(getByText('Title')).toBeTruthy();
-    expect(getByText('Body text')).toBeTruthy();
+    const renderer = TestRenderer.create(<SectionHeader eyebrow="EYEBROW" title="Title" body="Body text" />);
+    const tree = JSON.stringify(renderer.toJSON());
+    expect(tree).toContain('Title');
+    expect(tree).toContain('Body text');
   });
 
   it('renders PremiumPanel with children', () => {
-    const { getByText } = render(<PremiumPanel><Text>Premium</Text></PremiumPanel>);
-    expect(getByText('Premium')).toBeTruthy();
+    const renderer = TestRenderer.create(<PremiumPanel><Text>Premium</Text></PremiumPanel>);
+    expect(JSON.stringify(renderer.toJSON())).toContain('Premium');
   });
 
   it('renders InfoCard with icon, title, and body', () => {
-    const { getByText } = render(<InfoCard icon="car" title="Ride" body="Book a ride" />);
-    expect(getByText('Ride')).toBeTruthy();
-    expect(getByText('Book a ride')).toBeTruthy();
+    const renderer = TestRenderer.create(<InfoCard icon="car" title="Ride" body="Book a ride" />);
+    const tree = JSON.stringify(renderer.toJSON());
+    expect(tree).toContain('Ride');
+    expect(tree).toContain('Book a ride');
   });
 
   it('renders MetricTile with label and value', () => {
-    const { getByText } = render(<MetricTile label="Distance" value="12 km" />);
-    expect(getByText('Distance')).toBeTruthy();
-    expect(getByText('12 km')).toBeTruthy();
+    const renderer = TestRenderer.create(<MetricTile label="Distance" value="12 km" />);
+    const tree = JSON.stringify(renderer.toJSON());
+    expect(tree).toContain('Distance');
+    expect(tree).toContain('12 km');
   });
 
   it('renders StatusPill with label', () => {
-    const { getByText } = render(<StatusPill label="In Progress" />);
-    expect(getByText('In Progress')).toBeTruthy();
+    const renderer = TestRenderer.create(<StatusPill label="In Progress" />);
+    expect(JSON.stringify(renderer.toJSON())).toContain('In Progress');
   });
 
   it('renders StateNotice with loading indicator', () => {
-    const { getByTestId } = render(<StateNotice icon="car" title="Loading..." loading testID="state-notice" />);
-    expect(getByTestId('state-notice')).toBeTruthy();
+    const renderer = TestRenderer.create(<StateNotice icon="car" title="Loading..." loading testID="state-notice" />);
+    const tree = JSON.stringify(renderer.toJSON());
+    expect(tree).toContain('state-notice');
   });
 
   it('renders PrimaryButton with label and icon', () => {
-    const { getByText } = render(<PrimaryButton label="Continue" icon="arrow-forward" onPress={() => {}} />);
-    expect(getByText('Continue')).toBeTruthy();
+    const renderer = TestRenderer.create(<PrimaryButton label="Continue" icon="arrow-forward" onPress={() => {}} />);
+    expect(JSON.stringify(renderer.toJSON())).toContain('Continue');
   });
 
   it('renders ActionRow with label and value', () => {
-    const { getByText } = render(<ActionRow icon="car" label="Ride" value="2 km" onPress={() => {}} />);
-    expect(getByText('Ride')).toBeTruthy();
-    expect(getByText('2 km')).toBeTruthy();
+    const renderer = TestRenderer.create(<ActionRow icon="car" label="Ride" value="2 km" onPress={() => {}} />);
+    const tree = JSON.stringify(renderer.toJSON());
+    expect(tree).toContain('Ride');
+    expect(tree).toContain('2 km');
   });
 
   it('renders RoutePreview with endpoints and stats', () => {
-    const { getByText } = render(<RoutePreview from="Amman" to="Zarqa" eta="25 min" distance="22 km" />);
-    expect(getByText('Amman')).toBeTruthy();
-    expect(getByText('Zarqa')).toBeTruthy();
-    expect(getByText('25 min')).toBeTruthy();
-    expect(getByText('22 km')).toBeTruthy();
+    const renderer = TestRenderer.create(<RoutePreview from="Amman" to="Zarqa" eta="25 min" distance="22 km" />);
+    const tree = JSON.stringify(renderer.toJSON());
+    expect(tree).toContain('Amman');
+    expect(tree).toContain('Zarqa');
+    expect(tree).toContain('25 min');
+    expect(tree).toContain('22 km');
   });
 });
