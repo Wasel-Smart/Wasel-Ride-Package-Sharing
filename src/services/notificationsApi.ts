@@ -12,11 +12,11 @@ export interface Notification {
 }
 
 export async function getNotifications(page = 1, limit = 20) {
-  const response = await api.get(`/notifications?page=${page}&limit=${limit}`);
+  const response = await api.get(`/v1/notifications?page=${page}&limit=${limit}`);
   return response as { data: Notification[]; meta: { total: number; page: number; limit: number } };
 }
 
 export async function markNotificationRead(id: string) {
-  const response = await api.patch(`/notifications/${id}/read`, {});
+  const response = await api.patch(`/v1/notifications/${id}/read`, {});
   return response as { data: Notification };
 }

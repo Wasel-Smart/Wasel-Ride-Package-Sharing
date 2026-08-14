@@ -31,22 +31,22 @@ export async function searchBusRoutes(originCity?: string, destinationCity?: str
   if (originCity) params.set('originCity', originCity);
   if (destinationCity) params.set('destinationCity', destinationCity);
   const query = params.toString();
-  const response = await api.get(`/bus/routes${query ? `?${query}` : ''}`);
+  const response = await api.get(`/v1/bus/routes${query ? `?${query}` : ''}`);
   return response as { data: BusRoute[] };
 }
 
 export async function getRouteSchedules(routeId: string, date?: string) {
   const query = date ? `?date=${date}` : '';
-  const response = await api.get(`/bus/routes/${routeId}/schedules${query}`);
+  const response = await api.get(`/v1/bus/routes/${routeId}/schedules${query}`);
   return response as { data: BusSchedule[] };
 }
 
 export async function bookBusSeat(scheduleId: string, seats: number) {
-  const response = await api.post('/bus/bookings', { scheduleId, seats });
+  const response = await api.post('/v1/bus/bookings', { scheduleId, seats });
   return response as { data: BusBooking };
 }
 
 export async function cancelBusBooking(bookingId: string) {
-  const response = await api.patch(`/bus/bookings/${bookingId}/cancel`, {});
+  const response = await api.patch(`/v1/bus/bookings/${bookingId}/cancel`, {});
   return response as { data: BusBooking };
 }

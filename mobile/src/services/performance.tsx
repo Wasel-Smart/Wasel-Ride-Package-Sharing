@@ -38,11 +38,10 @@ export function initPerformanceMonitoring() {
       enableNativeCrashHandling: true,
       enableWatchdogTerminationTracking: true,
       enableAppHangTracking: true,
-      appHangTimeoutInterval: 5000,
-      enableTimeToInitialDisplayTracking: true,
-      enableTimeToFullDisplayTracking: true,
-      enableScreenTracking: true,
-      enableAutoComponentTracking: true,
+      appHangTimeoutInterval: 5,
+      enableAppStartTracking: true,
+      enableNativeFramesTracking: true,
+      enableCaptureFailedRequests: true,
     });
 
     isSentryInitialized = true;
