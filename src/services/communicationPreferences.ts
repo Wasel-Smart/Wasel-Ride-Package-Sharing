@@ -252,7 +252,7 @@ export async function getCommunicationPreferences(
         requestEdgeJson<{
           preferences?: Partial<CommunicationPreferences>;
         }>({
-          path: '/communications/preferences',
+          path: '/v1/communications/preferences',
           authMode: 'required',
           context,
           operation: 'Failed to load communication preferences',
@@ -285,7 +285,7 @@ export async function updateCommunicationPreferences(
         ),
       edge: context =>
         requestEdgeJson<CommunicationPreferences>({
-          path: '/communications/preferences',
+          path: '/v1/communications/preferences',
           method: 'PATCH',
           authMode: 'required',
           context,
@@ -338,7 +338,7 @@ export async function queueCommunicationDeliveries(args: {
         ).then(() => undefined),
       edge: context =>
         requestEdgeJson<void>({
-          path: '/communications/deliver',
+          path: '/v1/communications/deliver',
           method: 'POST',
           authMode: 'required',
           context,
