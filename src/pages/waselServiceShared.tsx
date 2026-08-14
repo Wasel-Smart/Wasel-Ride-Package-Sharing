@@ -4,7 +4,7 @@ import { Shield } from 'lucide-react';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { WaselLogo } from '../components/wasel-ds/WaselLogo';
+import { WaselLogo } from '../components/wasel-ui/WaselLogo';
 import {
   DS as PAGE_DS,
   midpoint as sharedMidpoint,

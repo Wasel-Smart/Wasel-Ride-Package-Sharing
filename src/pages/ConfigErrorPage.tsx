@@ -1,4 +1,4 @@
-import { WaselLogo } from '../components/wasel-ds/WaselLogo';
+import { WaselLogo } from '../components/wasel-ui/WaselLogo';
 import type { RuntimeConfigIssue } from '../utils/env';
 import { tx } from '../locales/tx';
 
