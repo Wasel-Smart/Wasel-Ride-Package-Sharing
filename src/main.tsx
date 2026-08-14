@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { getStartupConfigurationError } from './utils/runtimeConfigGuard';
 import { sanitizeLogMessage } from './utils/sanitization';
 
 const LOCAL_DEV_RESET_KEY = 'wasel-local-dev-cache-reset';
@@ -124,40 +125,11 @@ class RootErrorBoundary extends React.Component<React.PropsWithChildren, { hasEr
 
 const rootElement = document.getElementById('root');
 
-type E2EConfigOverride = {
-  supabaseUrl?: string;
-  anonKey?: string;
-};
-
-function getE2EConfigOverride(): E2EConfigOverride | undefined {
-  if (!import.meta.env.DEV || typeof window === 'undefined') {
-    return undefined;
-  }
-
-  return (window as Window & { __WASEL_E2E_CONFIG__?: E2EConfigOverride }).__WASEL_E2E_CONFIG__;
-}
-
 // Verify critical environment is configured before the app boots.
 const environmentIsValid = (() => {
   try {
-    const e2eConfig = getE2EConfigOverride();
-    const supabaseUrl = e2eConfig?.supabaseUrl ?? (import.meta.env.VITE_SUPABASE_URL as string | undefined);
-    const anonKey = e2eConfig?.anonKey ?? (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined);
-    const isPlaceholder = (v: string | undefined) =>
-      !v || v.startsWith('your-') || v === 'undefined' || v === 'null';
-    const isValidUrl = (v: string) => {
-      try { return /^https?:\/\//.test(new URL(v).href); } catch { return false; }
-    };
-    if (isPlaceholder(supabaseUrl) || !isValidUrl(supabaseUrl ?? '')) {
-      throw new Error(
-        'VITE_SUPABASE_URL is not configured. Set a real Supabase project URL in .env.',
-      );
-    }
-    if (isPlaceholder(anonKey)) {
-      throw new Error(
-        'VITE_SUPABASE_ANON_KEY is not configured. Set a real anon key in .env.',
-      );
-    }
+    const configError = getStartupConfigurationError(import.meta.env);
+    if (configError) throw new Error(configError);
     return true;
   } catch (envError) {
     console.error('[Wasel] Environment not configured:', envError);
