@@ -206,6 +206,15 @@ export function getRuntimeConfigIssues(
   const mode = envSource.MODE || envSource.VITE_MODE || envSource.NODE_ENV || 'development';
   const isProd = mode === 'production';
   const isBuildTime = typeof window === 'undefined';
+  const isLocalE2E = !isProd && isTruthy(envSource.VITE_E2E_LOCAL_AUTH);
+
+  // Playwright uses the local-auth implementation and never exposes this flag
+  // in production. Do not require real public credentials in that isolated
+  // development test mode.
+  if (isLocalE2E) {
+    return issues;
+  }
+
   const hasApiTransport = Boolean(apiUrl) || (Boolean(supabaseUrl) && Boolean(supabasePublicKey));
 
   if (!appUrl) {
