@@ -172,6 +172,10 @@ function lerp(start: number, end: number, t: number) {
   return start + (end - start) * t;
 }
 
+function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(value, max));
+}
+
 const MAP_LAYER = {
   focus: C.gold,
   focusGhost: withAlpha(C.gold, 0.58),
@@ -354,14 +358,15 @@ export function MobilityOSLandingMap({
       ctx.fillStyle = innerGlow;
       ctx.fillRect(0, 0, width, height);
 
-      // Subtle ambient network dots
-      ctx.fillStyle = MAP_LAYER.ambientDot;
+      // Subtle ambient network dots. Their gentle breathing gives the empty space
+      // depth without competing with the corridor signals.
       for (let i = 0; i < 24; i++) {
         const ax = width * (0.1 + ((i * 0.037) % 0.8));
-        const ay = height * (0.08 + ((i * 0.053) % 0.84));
-        const ar = 1.2 + ((i * 0.7) % 2.4);
+        const ay = height * (0.08 + ((i * 0.053) % 0.84)) + Math.sin(time * 0.00055 + i) * 1.6;
+        const ar = 1.2 + ((i * 0.7) % 2.4) + Math.sin(time * 0.001 + i) * 0.35;
         ctx.beginPath();
         ctx.arc(ax, ay, ar, 0, Math.PI * 2);
+        ctx.fillStyle = withAlpha(FLOW, 0.028 + (0.5 + Math.sin(time * 0.0012 + i)) * 0.045);
         ctx.fill();
       }
 
@@ -596,6 +601,26 @@ export function MobilityOSLandingMap({
         ctx.stroke();
         ctx.shadowBlur = 0;
 
+        if (isFocused) {
+          // A travelling signal stream makes the selected lane read as active at
+          // a glance, while its fading trail clarifies the direction of travel.
+          const streamHead = (time * 0.00017 + index * 0.19) % 1;
+          const streamLength = 12;
+          for (let trail = 0; trail < streamLength; trail += 1) {
+            const trailProgress = clamp(streamHead - trail * 0.018, 0, 1);
+            const point = pointOnCurve(from, control, to, trailProgress);
+            const intensity = 1 - trail / streamLength;
+            const radius = 1.8 + intensity * (3.8 + focusStrength * 1.6);
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = withAlpha(C.text, 0.14 + intensity * 0.76);
+            ctx.shadowBlur = 10 + intensity * 18;
+            ctx.shadowColor = withAlpha(focusStroke, 0.24 + intensity * 0.68);
+            ctx.fill();
+          }
+          ctx.shadowBlur = 0;
+        }
+
         // Parcel dashed line
         ctx.beginPath();
         ctx.moveTo(from.x, from.y);
@@ -614,7 +639,7 @@ export function MobilityOSLandingMap({
           ),
         );
         for (let i = 0; i < riderCount; i += 1) {
-          const t = (time * 0.000055 * (1 + i * 0.08) + i / riderCount + index * 0.06) % 1;
+          const t = (time * 0.000085 * (1 + i * 0.08) + i / riderCount + index * 0.06) % 1;
           const point = pointOnCurve(from, control, to, t);
           const isBus = i % 3 === 0;
           ctx.beginPath();
