@@ -6,7 +6,7 @@
  * while giving every caller a real, live Google Map.
  */
 
-import { Suspense, lazy } from 'react';
+import { Component, Suspense, lazy, type ErrorInfo, type ReactNode } from 'react';
 import { MapPin } from 'lucide-react';
 import type { WaselMapProps, WaselMapRoute } from './WaselMap';
 import { tx } from '../locales/tx';
@@ -53,6 +53,48 @@ function MapLoader({ height }: { height?: string | number }) {
   );
 }
 
+/**
+ * Maps depend on browser APIs, third-party tiles, and geolocation.  A map
+ * failure must never make a booking, bus, or tracking screen unusable.
+ */
+class MapErrorBoundary extends Component<
+  { children: ReactNode; height?: string | number },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError(): { hasError: true } {
+    return { hasError: true };
+  }
+
+  componentDidCatch(_error: Error, _errorInfo: ErrorInfo) {
+    // Intentionally contained: the surrounding service flow remains usable.
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div
+          role="img"
+          aria-label={tx('mapWrapper.map_unavailable')}
+          className="flex flex-col items-center justify-center bg-[#081d39] rounded-2xl gap-2 text-[#95b2c9]"
+          style={{
+            height:
+              typeof this.props.height === 'number'
+                ? `${this.props.height}px`
+                : (this.props.height ?? '400px'),
+          }}
+        >
+          <MapPin className="w-7 h-7 text-[#147fe4]" aria-hidden="true" />
+          <p className="text-sm">{tx('mapWrapper.map_unavailable')}</p>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 function LazyWaselMap(props: WaselMapProps) {
   return <WaselMap {...props} />;
 }
@@ -84,20 +126,22 @@ export function MapWrapper({
   const waselMarkers = markers.map(m => ({ lat: m.lat, lng: m.lng }));
 
   return (
-    <Suspense fallback={<MapLoader height={height} />}>
-      <LazyWaselMap
-        center={center}
-        zoom={zoom}
-        height={height}
-        className={className}
-        route={route.length >= 2 ? route : undefined}
-        markers={waselMarkers.length > 0 ? waselMarkers : undefined}
-        showTraffic={showTraffic}
-        showMosques={showMosques}
-        showRadars={showRadars}
-        autoTrack={mode === 'live'}
-        compact={isCompact}
-      />
-    </Suspense>
+    <MapErrorBoundary height={height}>
+      <Suspense fallback={<MapLoader height={height} />}>
+        <LazyWaselMap
+          center={center}
+          zoom={zoom}
+          height={height}
+          className={className}
+          route={route.length >= 2 ? route : undefined}
+          markers={waselMarkers.length > 0 ? waselMarkers : undefined}
+          showTraffic={showTraffic}
+          showMosques={showMosques}
+          showRadars={showRadars}
+          autoTrack={mode === 'live'}
+          compact={isCompact}
+        />
+      </Suspense>
+    </MapErrorBoundary>
   );
 }

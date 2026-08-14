@@ -265,7 +265,7 @@ export const authAPI = {
 
       try {
         const data = await requestEdgeJson<Record<string, unknown>>({
-          path: `/profile/${context.userId}`,
+          path: `/v1/profile/${context.userId}`,
           authMode: 'required',
           context,
           operation: 'Failed to load profile',
@@ -289,7 +289,7 @@ export const authAPI = {
         fallback: ({ userId }) => updateDirectProfile(userId ?? '', updates),
         edge: context =>
           requestEdgeJson<Record<string, unknown>>({
-            path: `/profile/${context.userId}`,
+            path: `/v1/profile/${context.userId}`,
             method: 'PATCH',
             authMode: 'required',
             context,

@@ -63,7 +63,7 @@ export async function getTrustCenterStatus(user?: WaselUser | null): Promise<Tru
 
   try {
     const payload = await requestEdgeJson<{ status: TrustCenterStatus }>({
-      path: '/trust/status',
+      path: '/v1/trust/status',
       authMode: 'required',
       operation: 'Trust Center status',
     });
@@ -87,7 +87,7 @@ export async function startTrustPhoneVerification(payload: StartPhoneVerificatio
     fallbackPolicy: 'writes-if-enabled',
     edge: context =>
       requestEdgeJson({
-        path: '/trust/phone/start',
+        path: '/v1/trust/phone/start',
         method: 'POST',
         body: payload,
         authMode: 'required',
@@ -113,7 +113,7 @@ export async function confirmTrustPhoneVerification(payload: ConfirmPhoneVerific
     fallbackPolicy: 'writes-if-enabled',
     edge: context =>
       requestEdgeJson({
-        path: '/trust/phone/confirm',
+        path: '/v1/trust/phone/confirm',
         method: 'POST',
         body: payload,
         authMode: 'required',
@@ -139,7 +139,7 @@ export async function submitTrustIdentityVerification(payload: IdentityVerificat
     fallbackPolicy: 'writes-if-enabled',
     edge: context =>
       requestEdgeJson({
-        path: '/trust/identity/submit',
+        path: '/v1/trust/identity/submit',
         method: 'POST',
         body: payload,
         authMode: 'required',
@@ -165,7 +165,7 @@ export async function enableTrustDriverMode() {
     fallbackPolicy: 'writes-if-enabled',
     edge: context =>
       requestEdgeJson({
-        path: '/trust/driver-mode/enable',
+        path: '/v1/trust/driver-mode/enable',
         method: 'POST',
         authMode: 'required',
         context,
@@ -187,7 +187,7 @@ export async function submitTrustDriverDocuments(payload: DriverDocumentsPayload
     fallbackPolicy: 'writes-if-enabled',
     edge: context =>
       requestEdgeJson({
-        path: '/trust/driver-documents/submit',
+        path: '/v1/trust/driver-documents/submit',
         method: 'POST',
         body: payload,
         authMode: 'required',
