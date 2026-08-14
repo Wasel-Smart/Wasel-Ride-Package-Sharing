@@ -769,6 +769,191 @@ export default function MobilityOSCore() {
       </section>
 
       <section
+        aria-labelledby="mobility-map-guide-title"
+        style={panelStyle({
+          padding: isMobile ? 16 : 18,
+          borderRadius: R['3xl'],
+          background: `linear-gradient(135deg, ${C.cyanDim}, ${C.card})`,
+        })}
+      >
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 14,
+            flexWrap: 'wrap',
+            alignItems: 'flex-start',
+          }}
+        >
+          <div style={{ maxWidth: 680 }}>
+            <div
+              style={{
+                color: C.cyan,
+                fontSize: '0.66rem',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                fontWeight: 800,
+              }}
+            >
+              {tx('mobilityOSCore.map_guide_eyebrow')}
+            </div>
+            <h2
+              id="mobility-map-guide-title"
+              style={{ margin: '6px 0 0', fontSize: isMobile ? '1.15rem' : '1.3rem', lineHeight: 1.2 }}
+            >
+              {tx('mobilityOSCore.map_guide_title')}
+            </h2>
+            <p style={{ margin: '8px 0 0', color: C.textSub, fontSize: '0.9rem', lineHeight: 1.55 }}>
+              {tx('mobilityOSCore.map_guide_overview')}
+            </p>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              gap: 8,
+              flexWrap: 'wrap',
+              maxWidth: 440,
+            }}
+          >
+            {[
+              tx('mobilityOSCore.map_benefit_read'),
+              tx('mobilityOSCore.map_benefit_compare'),
+              tx('mobilityOSCore.map_benefit_act'),
+            ].map(benefit => (
+              <span
+                key={benefit}
+                style={{
+                  borderRadius: R.full,
+                  border: `1px solid ${C.borderHov}`,
+                  background: C.elevated,
+                  color: C.textSub,
+                  padding: '6px 9px',
+                  fontSize: '0.72rem',
+                  lineHeight: 1.25,
+                }}
+              >
+                {benefit}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))',
+            gap: 10,
+            marginTop: 16,
+          }}
+        >
+          {[
+            {
+              key: 'rider',
+              label: tx('mobilityOSCore.map_legend_rider_label'),
+              detail: tx('mobilityOSCore.map_legend_rider_detail'),
+              sample: (
+                <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <span style={{ width: 30, height: 4, borderRadius: R.full, background: C.cyan, boxShadow: SH.blue }} />
+                  <span style={{ width: 7, height: 7, borderRadius: R.full, background: C.text }} />
+                </span>
+              ),
+            },
+            {
+              key: 'capacity',
+              label: tx('mobilityOSCore.map_legend_capacity_label'),
+              detail: tx('mobilityOSCore.map_legend_capacity_detail'),
+              sample: (
+                <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 25, height: 3, borderRadius: R.full, background: C.cyanDark }} />
+                  <span style={{ width: 10, height: 10, borderRadius: R.full, background: C.green, boxShadow: SH.green }} />
+                </span>
+              ),
+            },
+            {
+              key: 'parcel',
+              label: tx('mobilityOSCore.map_legend_parcel_label'),
+              detail: tx('mobilityOSCore.map_legend_parcel_detail'),
+              sample: (
+                <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 30, borderTop: `2px dashed ${C.blueLight}` }} />
+                  <span style={{ width: 8, height: 8, background: C.blueLight }} />
+                </span>
+              ),
+            },
+            {
+              key: 'city',
+              label: tx('mobilityOSCore.map_legend_city_label'),
+              detail: tx('mobilityOSCore.map_legend_city_detail'),
+              sample: (
+                <span
+                  aria-hidden="true"
+                  style={{
+                    width: 17,
+                    height: 17,
+                    borderRadius: R.full,
+                    border: `2px solid ${C.cyan}`,
+                    background: C.text,
+                    boxShadow: `0 0 0 5px ${C.cyanDim}`,
+                  }}
+                />
+              ),
+            },
+            {
+              key: 'focus',
+              label: tx('mobilityOSCore.map_legend_focus_label'),
+              detail: tx('mobilityOSCore.map_legend_focus_detail'),
+              sample: (
+                <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 30, height: 5, borderRadius: R.full, background: C.gold, boxShadow: SH.orange }} />
+                  <span style={{ width: 10, height: 10, borderRadius: R.full, background: C.gold, boxShadow: `0 0 0 5px ${C.goldDim}` }} />
+                </span>
+              ),
+            },
+            {
+              key: 'intensity',
+              label: tx('mobilityOSCore.map_legend_intensity_label'),
+              detail: tx('mobilityOSCore.map_legend_intensity_detail'),
+              sample: (
+                <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'end', gap: 3 }}>
+                  <span style={{ width: 5, height: 5, borderRadius: R.full, background: C.cyan }} />
+                  <span style={{ width: 7, height: 7, borderRadius: R.full, background: C.cyan }} />
+                  <span style={{ width: 10, height: 10, borderRadius: R.full, background: C.cyan }} />
+                </span>
+              ),
+            },
+          ].map(item => (
+            <article
+              key={item.key}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'auto minmax(0, 1fr)',
+                gap: 10,
+                alignItems: 'start',
+                minHeight: 76,
+                padding: '11px 12px',
+                borderRadius: R.xl,
+                border: `1px solid ${C.border}`,
+                background: C.card,
+              }}
+            >
+              <div style={{ minWidth: 36, paddingTop: 5 }}>{item.sample}</div>
+              <div>
+                <div style={{ color: C.text, fontSize: '0.78rem', fontWeight: 800 }}>{item.label}</div>
+                <div style={{ marginTop: 4, color: C.textMuted, fontSize: '0.72rem', lineHeight: 1.45 }}>
+                  {item.detail}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <p style={{ margin: '13px 0 0', color: C.textMuted, fontSize: '0.75rem', lineHeight: 1.5 }}>
+          {tx('mobilityOSCore.map_guide_note')}
+        </p>
+      </section>
+
+      <section
         style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))',
