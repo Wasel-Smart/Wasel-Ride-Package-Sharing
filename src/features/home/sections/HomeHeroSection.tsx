@@ -180,6 +180,7 @@ function ProductCommandPreview({ ar }: { ar: boolean }) {
           utilization={0.78}
           preferredHeight={330}
           minimalText
+          showOverlay={false}
         />
       </div>
 
