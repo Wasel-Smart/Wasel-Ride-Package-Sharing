@@ -35,12 +35,12 @@ const phoneField = z
       try {
         const normalized = normalizePhone(value);
         return isValidE164Phone(normalized);
-      } catch {
+      } catch (e) {
         return false;
       }
     },
     {
-      message: 'Phone must be in international format: +962xxxxxxxxx (Jordan) or +964xxxxxxxxx (Iraq)',
+      message: 'Phone must be a valid international format for Jordan (+962) or Iraq (+964).',
     },
   )
   .optional()
