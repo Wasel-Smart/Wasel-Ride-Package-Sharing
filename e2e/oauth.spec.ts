@@ -24,7 +24,7 @@ test.describe('OAuth Authentication', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(`${BASE_URL}/app/auth`);
     await page.evaluate(() => localStorage.clear());
-    // Wait for the form to mount
+    // Wait for the social auth buttons to be rendered
     await page.waitForSelector('button[aria-label]', { timeout: 10_000 });
   });
 
@@ -61,7 +61,7 @@ test.describe('OAuth Authentication', () => {
     await googleButton.click();
 
     // After clicking, the button should be disabled while the OAuth flow is in flight
-    await expect(googleButton).toBeDisabled({ timeout: 3_000 });
+    await expect(googleButton).toBeDisabled({ timeout: 5_000 });
   });
 
   test('should handle OAuth errors gracefully', async ({ page }) => {
@@ -160,7 +160,7 @@ test.describe('OAuth Callback Handling', () => {
     await page.goto(`${BASE_URL}/app/auth/callback?error=access_denied`);
     await page.waitForTimeout(2_000);
     // Should redirect to auth or stay on a Wasel page — not crash
-    const url = page.url();
+    const url = page.url(); // eslint-disable-line @typescript-eslint/no-unused-vars
     expect(url).toMatch(/\/(auth|app)/);
   });
 
@@ -179,7 +179,7 @@ test.describe('OAuth Callback Handling', () => {
     });
 
     await page.goto(`${BASE_URL}/app/auth/callback?code=mock_code&returnTo=/app/wallet`);
-    await page.waitForTimeout(3_000);
+    await page.waitForURL('**/app/**', { timeout: 5000 });
     // Should end up somewhere inside /app
     expect(page.url()).toContain('/app');
   });

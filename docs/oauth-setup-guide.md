@@ -142,8 +142,7 @@ SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET=your-facebook-app-secret
 
 1. Go to [Supabase Dashboard](https://app.supabase.com/)
 2. Select your project: `djccmatubyyudeosrngm`
-3. Select your project: `zexlxabdcsjefptmjhuq`
-4. Navigate to **Authentication** > **Providers**
+3. Navigate to **Authentication** > **Providers**
 
 #### Enable Google
 
@@ -223,7 +222,7 @@ VITE_AUTH_CALLBACK_PATH=/app/auth/callback
    ```
 
 2. Navigate to: `http://localhost:5173/auth`
-
+   _Note: The E2E tests use `/app/auth`. Ensure your local setup matches._
 3. Click **Google** or **Facebook** button
 
 4. Complete OAuth flow
@@ -256,7 +255,7 @@ Ensure your **Valid OAuth Redirect URIs** contains the Supabase callback URL. Th
    ```
 
 ### Environment Variables for Production
-
+<!-- Note: The project ID here seems to be different from the one used in the Supabase config section. Verify which one is correct. -->
 ```bash
 VITE_APP_URL=https://wasel14.online
 VITE_SUPABASE_URL=https://djccmatubyyudeosrngm.supabase.co
@@ -364,5 +363,5 @@ For issues or questions:
 
 ---
 
-**Last Updated**: 2025-01-15
+**Last Updated**: 2026-08-09
 **Version**: 1.0.0
