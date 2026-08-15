@@ -121,10 +121,7 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
         </button>
       </div>
 
-      <div
-        className="wasel-home-corridor-beta-grid"
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14 }}
-      >
+      <div className="wasel-home-corridor-beta-grid">
         {plan.focusCorridors.map(corridor => {
           const accent = stageColor(corridor.stage);
           return (
