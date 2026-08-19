@@ -274,57 +274,37 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
       <div
         className="wasel-home-proof-grid"
         style={{
-          display: 'grid',
           gridTemplateColumns: '1.05fr 0.95fr',
-          gap: 14,
-          alignItems: 'stretch',
         }}
       >
         <div
+          className="wasel-home-proof-hero-card"
           style={{
-            borderRadius: R.xxl,
-            padding: '24px 24px 22px',
             background: C.card,
             border: `1px solid ${C.border}`,
             boxShadow: SH.sm,
           }}
         >
           <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              color: C.cyan,
-              fontSize: '0.72rem',
-              fontWeight: 850,
-              letterSpacing: 0,
-              textTransform: 'uppercase',
-            }}
+            className="wasel-home-proof-hero-badge"
+            style={{ color: C.cyan }}
           >
             <ShieldCheck size={14} />
             {ar ? 'مصداقية مدمجة' : 'Built-in credibility'}
           </div>
           <h2
-            style={{
-              margin: '14px 0 0',
-              color: C.text,
-              fontSize: '1.75rem',
-              lineHeight: 1.08,
-              fontWeight: 950,
-              letterSpacing: 0,
-              maxWidth: 560,
-            }}
+            className="wasel-home-proof-hero-title"
           >
             {ar
               ? 'الثقة والدعم واقتصاديات المسار واضحة قبل أن يلتزم المستخدم.'
               : 'Trust, support, and route economics are visible before users commit.'}
           </h2>
-          <p style={{ margin: '14px 0 0', color: C.textMuted, lineHeight: 1.72, maxWidth: 620 }}>
+          <p className="wasel-home-proof-hero-desc">
             {ar
               ? 'لا يطلب Wasel من الناس تنسيق الحركة بلا وضوح. يعرض المنتج سياق المسار وجاهزية الثقة ومسارات الدعم وضوابط الخصوصية في نفس نقاط قرار الحجز أو العرض أو الإرسال.'
               : 'Wasel does not ask people to coordinate movement blindly. The product exposes route context, trust readiness, support paths, and privacy controls at the same points where users decide whether to book, offer, or send.'}
           </p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 20 }}>
+          <div className="wasel-home-proof-hero-actions">
             <WaselButton
               type="button"
               variant="primary"
@@ -344,41 +324,24 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
           </div>
         </div>
 
-        <div className="wasel-home-proof-metrics" style={{ display: 'grid', gap: 12 }}>
+        <div className="wasel-home-proof-metrics">
           {metrics.map(metric => (
             <div
               key={metric.label}
+              className="wasel-home-proof-metric-card"
               style={{
-                display: 'grid',
-                gridTemplateColumns: '88px minmax(0, 1fr)',
-                gap: 14,
-                alignItems: 'center',
-                borderRadius: R.xl,
-                padding: '16px 18px',
-                background: C.elevated,
-                border: `1px solid ${metric.accent}24`,
+                borderColor: `${metric.accent}24`,
               }}
             >
               <div
-                style={{
-                  color: metric.accent,
-                  fontSize: '1.35rem',
-                  fontWeight: 950,
-                  lineHeight: 1,
-                }}
+                className="wasel-home-proof-metric-value"
+                style={{ color: metric.accent }}
               >
                 {metric.value}
               </div>
               <div>
-                <div style={{ color: C.text, fontWeight: 850 }}>{metric.label}</div>
-                <div
-                  style={{
-                    marginTop: 4,
-                    color: C.textMuted,
-                    fontSize: '0.78rem',
-                    lineHeight: 1.55,
-                  }}
-                >
+                <div className="wasel-home-proof-metric-label">{metric.label}</div>
+                <div className="wasel-home-proof-metric-detail">
                   {metric.detail}
                 </div>
               </div>

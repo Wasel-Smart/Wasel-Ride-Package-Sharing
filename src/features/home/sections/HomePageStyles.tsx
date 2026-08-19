@@ -869,6 +869,445 @@ export function HomePageStyles() {
         font-weight: 800;
       }
 
+      .wasel-home-proof-grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 14px;
+      }
+
+      .wasel-home-proof-metrics {
+        display: grid;
+        gap: 12px;
+      }
+
+      .wasel-home-proof-metric-card {
+        display: grid;
+        grid-template-columns: 88px minmax(0, 1fr);
+        gap: 14px;
+        align-items: center;
+        border-radius: 18px;
+        padding: 16px 18px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(20,127,228,0.1);
+      }
+
+      .wasel-home-proof-metric-value {
+        color: #147fe4;
+        font-size: 1.35rem;
+        font-weight: 950;
+        line-height: 1;
+      }
+
+      .wasel-home-proof-metric-label {
+        color: #f8fbff;
+        font-weight: 850;
+        font-size: 0.88rem;
+      }
+
+      .wasel-home-proof-metric-detail {
+        margin-top: 4px;
+        color: rgba(196,220,238,0.66);
+        font-size: 0.78rem;
+        line-height: 1.55;
+      }
+
+      .wasel-home-proof-hero-card {
+        border-radius: 18px;
+        padding: 24px 24px 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .wasel-home-proof-hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.72rem;
+        font-weight: 850;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .wasel-home-proof-hero-title {
+        margin: 14px 0 0;
+        color: #f8fbff;
+        font-size: 1.75rem;
+        line-height: 1.08;
+        font-weight: 950;
+        letter-spacing: 0;
+        max-width: 560px;
+      }
+
+      .wasel-home-proof-hero-desc {
+        margin: 14px 0 0;
+        color: rgba(196,220,238,0.66);
+        line-height: 1.72;
+        max-width: 620px;
+        font-size: 1rem;
+      }
+
+      .wasel-home-proof-hero-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+      }
+
+      .wasel-home-demo-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .wasel-home-demo-card {
+        display: flex;
+        flex-direction: column;
+        border-radius: 18px;
+        padding: 18px;
+        background: rgba(8,29,57,0.72);
+        border: 1px solid rgba(20,127,228,0.14);
+        gap: 14px;
+      }
+
+      .wasel-home-demo-card-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        color: #147fe4;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(20,127,228,0.08);
+      }
+
+      .wasel-home-demo-card-number {
+        color: rgba(149,178,201,0.56);
+        font-size: 0.72rem;
+        font-weight: 850;
+      }
+
+      .wasel-home-demo-card-title {
+        color: #f8fbff;
+        font-size: 0.98rem;
+        font-weight: 900;
+        line-height: 1.25;
+      }
+
+      .wasel-home-demo-card-detail {
+        color: rgba(196,220,238,0.66);
+        font-size: 0.8rem;
+        line-height: 1.62;
+      }
+
+      .wasel-home-outcome-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .wasel-home-outcome-card {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+        border-radius: 18px;
+        padding: 20px;
+        background: linear-gradient(180deg, rgba(8,29,57,0.88), rgba(255,255,255,0.04));
+        border: 1px solid rgba(20,127,228,0.12);
+        gap: 14px;
+        cursor: pointer;
+        transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .wasel-home-outcome-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(20,127,228,0.28);
+        box-shadow: 0 8px 24px rgba(8,29,57,0.28);
+      }
+
+      .wasel-home-outcome-label {
+        font-size: 0.68rem;
+        font-weight: 850;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .wasel-home-outcome-title {
+        color: #f8fbff;
+        font-size: 1.08rem;
+        font-weight: 950;
+        line-height: 1.16;
+      }
+
+      .wasel-home-outcome-detail {
+        color: rgba(196,220,238,0.66);
+        font-size: 0.83rem;
+        line-height: 1.7;
+      }
+
+      .wasel-home-outcome-strip {
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+        gap: 14px;
+      }
+
+      .wasel-home-outcome-strip-card {
+        border-radius: 18px;
+        padding: 18px 20px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(20,127,228,0.1);
+      }
+
+      .wasel-home-trust-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .wasel-home-trust-card {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+        border-radius: 18px;
+        padding: 18px;
+        background: rgba(8,29,57,0.72);
+        border: 1px solid rgba(20,127,228,0.14);
+        gap: 14px;
+        cursor: pointer;
+        transition: transform 160ms ease, border-color 160ms ease;
+      }
+
+      .wasel-home-trust-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(20,127,228,0.28);
+      }
+
+      .wasel-home-trust-card-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+      }
+
+      .wasel-home-trust-card-title {
+        color: #f8fbff;
+        font-size: 0.96rem;
+        font-weight: 900;
+        line-height: 1.3;
+      }
+
+      .wasel-home-trust-card-detail {
+        color: rgba(196,220,238,0.66);
+        font-size: 0.78rem;
+        line-height: 1.62;
+      }
+
+      .wasel-home-utility-grid {
+        display: grid;
+        grid-template-columns: 0.92fr 1.08fr;
+        gap: 14px;
+      }
+
+      .wasel-home-utility-card {
+        border-radius: 18px;
+        padding: 20px 20px 18px;
+        background: rgba(8,29,57,0.72);
+        border: 1px solid rgba(20,127,228,0.14);
+      }
+
+      .wasel-home-utility-card--accent {
+        background: rgba(20,127,228,0.08);
+        border-color: rgba(20,127,228,0.22);
+      }
+
+      .wasel-home-cta-banner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 14px;
+        padding: 40px 28px;
+        border-radius: 24px;
+        background: linear-gradient(180deg, rgba(20,127,228,0.08), rgba(8,29,57,0.88));
+        border: 1px solid rgba(20,127,228,0.2);
+      }
+
+      .wasel-home-cta-title {
+        color: #f8fbff;
+        font-size: 2rem;
+        font-weight: 900;
+        line-height: 1.1;
+        max-width: 640px;
+        margin: 0;
+      }
+
+      .wasel-home-cta-subtitle {
+        color: rgba(196,220,238,0.72);
+        font-size: 1rem;
+        line-height: 1.7;
+        max-width: 580px;
+        margin: 0;
+      }
+
+      .wasel-home-cta-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 8px;
+      }
+
+      .wasel-home-route-grid,
+      .wasel-home-utility-grid,
+      .wasel-home-proof-grid,
+      .wasel-home-demo-grid,
+      .wasel-home-outcome-grid,
+      .wasel-home-outcome-strip,
+      .wasel-home-trust-grid,
+      .wasel-home-corridors,
+      .wasel-home-corridor-beta-grid,
+      .wasel-home-actions,
+      .wasel-home-steps,
+      .wasel-home-testimonials,
+      .wasel-home-stats-strip {
+        display: grid;
+        gap: 14px;
+      }
+
+      .wasel-home-section {
+        margin-top: 36px;
+      }
+
+      .wasel-home-section:first-child {
+        margin-top: 0;
+      }
+
+      .wasel-home-section-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+
+      .wasel-home-section-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        background: rgba(20,127,228,0.1);
+        border: 1px solid rgba(20,127,228,0.08);
+        color: #147fe4;
+        font-size: 0.72rem;
+        font-weight: 800;
+        flex-shrink: 0;
+      }
+
+      .wasel-home-section-title {
+        font-weight: 900;
+        color: #f8fbff;
+        font-size: 1.12rem;
+        letter-spacing: 0;
+        margin: 0;
+        line-height: 1.3;
+      }
+
+      .wasel-home-section-action {
+        height: 36px;
+        padding: 0 14px;
+        border-radius: 9999px;
+        background: rgba(20,127,228,0.08);
+        border: 1px solid rgba(20,127,228,0.22);
+        cursor: pointer;
+        color: rgba(196,220,238,0.86);
+        font-size: 0.8125rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: ${F};
+        transition: background 160ms ease, border-color 160ms ease;
+      }
+
+      .wasel-home-section-action:hover {
+        background: rgba(20,127,228,0.14);
+        border-color: rgba(20,127,228,0.32);
+      }
+
+      .wasel-home-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+
+      .wasel-home-nav-left {
+        display: flex;
+        align-items: center;
+      }
+
+      .wasel-home-nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .wasel-home-brand-stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .wasel-home-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        min-height: 30px;
+        padding: 0 11px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.055);
+        border: 1px solid rgba(20,127,228,0.12);
+        color: rgba(196,220,238,0.82);
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .wasel-home-title {
+        position: relative;
+        z-index: 1;
+        margin: 30px 0 0;
+        max-width: 720px;
+        color: #f8fbff;
+        font-size: clamp(3.2rem, 4.8vw, 4.8rem);
+        line-height: 1.05;
+        letter-spacing: 0;
+        font-weight: 900;
+        text-wrap: balance;
+      }
+
+      .wasel-home-lead {
+        position: relative;
+        z-index: 1;
+        max-width: 650px;
+        margin: 16px 0 0;
+        color: rgba(196,220,238,0.78);
+        font-size: 1rem;
+        line-height: 1.68;
+      }
+
+      .wasel-home-hero-actions {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
       /* Sticky bottom CTA for mobile */
       .wasel-home-sticky-cta {
         display: none;

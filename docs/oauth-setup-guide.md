@@ -61,8 +61,8 @@ This guide walks you through configuring Google and Facebook OAuth for Wasel aut
      _Note: For the default local development setup, only the `supabase.co` URL is needed as the app connects to the cloud instance._
 
      ```
-     # For local Supabase CLI only: http://localhost:54321/auth/v1/callback
-     https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback
+     # For local Supabase CLI (if used): http://localhost:54321/auth/v1/callback
+     https://djccmatubyyudeosrngm.supabase.co/auth/v1/callback
      ```
 
 5. Click **Create**
@@ -107,7 +107,7 @@ SUPABASE_AUTH_GOOGLE_CLIENT_SECRET=your-client-secret
    ```
    # Note: Only the supabase.co URL is needed for the default local setup.
    # The localhost URL is for developers running the Supabase stack locally via Docker.
-   https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback
+   https://djccmatubyyudeosrngm.supabase.co/auth/v1/callback
    ```
 
 3. Save changes
@@ -195,7 +195,7 @@ npm run supabase:start
 
 ```bash
 # Supabase
-VITE_SUPABASE_URL=https://zexlxabdcsjefptmjhuq.supabase.co
+VITE_SUPABASE_URL=https://djccmatubyyudeosrngm.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 VITE_SUPABASE_PUBLISHABLE_KEY=your-anon-key
 

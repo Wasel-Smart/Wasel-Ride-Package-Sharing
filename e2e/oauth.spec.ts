@@ -160,8 +160,7 @@ test.describe('OAuth Callback Handling', () => {
     await page.goto(`${BASE_URL}/app/auth/callback?error=access_denied`);
     await page.waitForTimeout(2_000);
     // Should redirect to auth or stay on a Wasel page — not crash
-    const url = page.url(); // eslint-disable-line @typescript-eslint/no-unused-vars
-    expect(url).toMatch(/\/(auth|app)/);
+    expect(page.url()).toMatch(/\/(auth|app)/);
   });
 
   test('should handle OAuth callback with returnTo', async ({ page, context }) => {
