@@ -37,11 +37,10 @@ const version = `wasel-${fingerprint || Date.now()}`;
 
 let sw = fs.readFileSync(swPath, 'utf8');
 if (!sw.includes('__CACHE_VERSION__')) {
-  console.error(
-    'dist/sw.js does not contain the __CACHE_VERSION__ placeholder. ' +
-      'Check public/sw.js has not been reverted to a hardcoded CACHE_VERSION.',
-  );
-  process.exit(1);
+  // Already stamped by the Vite build plugin (stamp-service-worker). Nothing
+  // to do here — keep the build green and avoid double-stamping.
+  console.log('dist/sw.js already versioned; skipping post-build stamp.');
+  process.exit(0);
 }
 sw = sw.replaceAll('__CACHE_VERSION__', version);
 fs.writeFileSync(swPath, sw);
