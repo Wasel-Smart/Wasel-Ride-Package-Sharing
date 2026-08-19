@@ -2,6 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
+import crypto from 'crypto';
+import fs from 'fs';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 const buildTimePlugin = {
@@ -23,11 +25,50 @@ const buildTimePlugin = {
   },
 };
 
+// Stamps dist/sw.js with a content-derived cache version at build time.
+// Running this inside Vite's writeBundle guarantees the service worker is
+// always versioned for every build (including Vercel), so we never ship the
+// __CACHE_VERSION__ placeholder that makes the SW throw on evaluation and
+// leave returning users stuck on a stale cached shell.
+const stampServiceWorkerPlugin = {
+  name: 'stamp-service-worker',
+  apply: 'build' as const,
+  writeBundle() {
+    const swPath = path.resolve('dist/sw.js');
+    if (!fs.existsSync(swPath)) return;
+
+    let sw = fs.readFileSync(swPath, 'utf-8');
+    if (!sw.includes('__CACHE_VERSION__')) return;
+
+    const assetsDir = path.resolve('dist/assets');
+    let fingerprint = '';
+    if (fs.existsSync(assetsDir)) {
+      const walk = (dir: string): string[] =>
+        fs.readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+          const full = path.join(dir, entry.name);
+          return entry.isDirectory() ? walk(full) : [full];
+        });
+      const hash = crypto.createHash('sha256');
+      for (const file of walk(assetsDir).sort()) {
+        hash.update(path.relative('dist', file));
+      }
+      fingerprint = hash.digest('hex').slice(0, 12);
+    }
+
+    const version = `wasel-${fingerprint || Date.now()}`;
+    sw = sw.replaceAll('__CACHE_VERSION__', version);
+    fs.writeFileSync(swPath, sw);
+    // eslint-disable-next-line no-console
+    console.log(`[stamp-service-worker] versioned dist/sw.js as ${version}`);
+  },
+};
+
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     tailwindcss(),
     buildTimePlugin,
+    stampServiceWorkerPlugin,
     mode === 'analyze' && visualizer({
       filename: 'dist/bundle-analysis.html',
       // CI runners have no interactive browser. Keep the report as an

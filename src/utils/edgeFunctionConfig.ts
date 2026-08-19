@@ -31,16 +31,45 @@ export const STRIPE_PAYMENTS_FUNCTION: EdgeFunctionConfig = {
 };
 
 /**
+ * Placeholder markers that must never be used as a real edge function name.
+ * If a deployment accidentally ships the `.env.example` value
+ * (`your-edge-function-name`) the backend would 404 on every call. Treat those
+ * as "not configured" and fall back to the canonical function hash so the app
+ * keeps working instead of silently breaking every data-driven flow.
+ */
+const EDGE_FUNCTION_PLACEHOLDER_MARKERS = [
+  'your-edge-function-name',
+  'your-edge-function',
+  'your-function',
+  'replace-with',
+  'replace_with',
+  'example',
+];
+
+function isPlaceholderEdgeFunctionName(value: unknown): boolean {
+  if (typeof value !== 'string') return true;
+  const normalized = value.trim().toLowerCase();
+  if (!normalized) return true;
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(normalized)) return true;
+  return EDGE_FUNCTION_PLACEHOLDER_MARKERS.some(marker => normalized.includes(marker));
+}
+
+/**
  * Get the active edge function name
- * Supports override via environment variable
+ * Supports override via environment variable. A placeholder/misconfigured
+ * override is ignored so the app never targets a non-existent function.
  */
 export function getEdgeFunctionName(): string {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_EDGE_FUNCTION_NAME) {
-    return String(import.meta.env.VITE_EDGE_FUNCTION_NAME);
-  }
+  const candidates: Array<string | undefined> = [
+    typeof import.meta !== 'undefined' ? import.meta.env?.VITE_EDGE_FUNCTION_NAME : undefined,
+    typeof process !== 'undefined' ? process.env?.VITE_EDGE_FUNCTION_NAME : undefined,
+  ];
 
-  if (typeof process !== 'undefined' && process.env?.VITE_EDGE_FUNCTION_NAME) {
-    return String(process.env.VITE_EDGE_FUNCTION_NAME);
+  for (const candidate of candidates) {
+    const value = typeof candidate === 'string' ? candidate.trim() : '';
+    if (value && !isPlaceholderEdgeFunctionName(value)) {
+      return value;
+    }
   }
 
   return WASEL_EDGE_FUNCTION.hash;
