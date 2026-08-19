@@ -110,22 +110,23 @@ export default defineConfig(({ mode }) => ({
             id.includes('/node_modules/embla-carousel')
           ) return 'ui-primitives';
 
-          if (
-            id.includes('/node_modules/@supabase/') ||
-            id.includes('/node_modules/@tanstack/')
-          ) return 'data-layer';
+           if (
+              id.includes('/node_modules/@supabase/') ||
+              id.includes('/node_modules/@tanstack/')
+            ) return 'data-layer';
 
-          if (id.includes('/node_modules/leaflet/')) return 'maps';
-          if (id.includes('/node_modules/recharts/')) return 'charts';
+            if (id.includes('/node_modules/leaflet/')) return 'maps';
+            if (id.includes('/node_modules/recharts/')) return 'charts';
+            if (id.includes('/node_modules/motion/')) return 'motion';
 
-          if (
-            id.includes('/node_modules/react-hook-form/') ||
-            id.includes('/node_modules/react-day-picker/')
-          ) return 'forms';
+            if (
+              id.includes('/node_modules/react-hook-form/') ||
+              id.includes('/node_modules/react-day-picker/')
+            ) return 'forms';
 
-          if (id.includes('/node_modules/@stripe/')) return 'payments';
+            if (id.includes('/node_modules/@stripe/')) return 'payments';
 
-          return 'vendor';
+            return 'vendor';
         },
         assetFileNames: (assetInfo) => {
           if (assetInfo.name?.endsWith('.css')) return 'assets/css/[name]-[hash][extname]';
@@ -142,6 +143,7 @@ export default defineConfig(({ mode }) => ({
       },
     },
     reportCompressedSize: true,
+    chunkSizeWarningLimit: 1200,
   },
 
   server: {

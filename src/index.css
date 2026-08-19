@@ -10,6 +10,27 @@
     margin: 0;
   }
 
+  /* Accessibility: a single, consistent, high-contrast focus ring for every
+   * keyboard-focused control. Mouse users are unaffected (:focus-visible).
+   * This satisfies WCAG 2.4.7 (Focus Visible) across light and dark themes. */
+  :focus-visible {
+    outline: 2px solid #00c8e8;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Respect users who request reduced motion (WCAG 2.3.3). Disable non-essential
+   * animation/transition everywhere and let components opt back in if needed. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
   /* #root must grow to fill the viewport but must NOT be height:100%.
    * On mobile Safari, height:100% resolves to the body's computed height
    * (which excludes the dynamic toolbar), making #root shorter than the
