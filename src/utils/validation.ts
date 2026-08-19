@@ -180,7 +180,6 @@ export const updateProfileSchema = z.object({
   avatarUrl: z
     .string()
     .url('Invalid image URL')
-    .refine(url => url === '' || /^https?:\/\//i.test(url), 'Avatar URL must use http or https')
     .optional()
     .or(z.literal('')),
 });
@@ -189,10 +188,7 @@ export type UpdateProfileFields = z.infer<typeof updateProfileSchema>;
 export const changePasswordSchema = z
   .object({
     currentPassword: passwordField,
-    newPassword: passwordField.refine(
-      pw => /[A-Z]/.test(pw) && /[0-9]/.test(pw),
-      'New password must contain at least one uppercase letter and one number',
-    ),
+    newPassword: passwordField,
     confirmNewPassword: z.string(),
   })
   .refine(data => data.newPassword === data.confirmNewPassword, {

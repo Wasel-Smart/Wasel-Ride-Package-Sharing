@@ -21,8 +21,7 @@
   --wasel-bronze: #ffbe5c;
   --wasel-lime: #9af1cf;
   --wasel-teal: #58ddff;
-  --wasel-cyan: #147fe4;
-  --wasel-green-soft: #47d69e;
+  --wasel-cyan: var(--wasel-brand-blue);
 
   /* Semantic surfaces */
   --background: #081d39;
@@ -77,10 +76,6 @@
   /* Brand shortcuts */
   --wasel-brand-primary: var(--wasel-brand-blue);
   --wasel-brand-green: #72c70d;
-  --wasel-brand-bronze: var(--wasel-brand-orange);
-  --wasel-brand-lime: #9af1cf;
-
-  /* Motion tokens (brand-compliant: brief, purposeful, no distracting glow) */
   --wasel-motion-fast: 150ms;
   --wasel-motion-normal: 200ms;
   --wasel-motion-slow: 280ms;
@@ -112,13 +107,6 @@
   --sp-10: 40px;
   --sp-12: 48px;
   --sp-16: 64px;
-
-  /* Typography scale */
-  --text-h1: clamp(1.75rem, 5vw, 2.25rem);
-  --text-h2: clamp(1.25rem, 3.5vw, 1.75rem);
-  --text-body: 0.9375rem;
-  --text-caption: 0.8125rem;
-  --text-micro: 0.75rem;
 
   /* Radius scale */
   --radius-sm: 8px;
