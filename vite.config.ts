@@ -58,7 +58,6 @@ const stampServiceWorkerPlugin = {
     const version = `wasel-${fingerprint || Date.now()}`;
     sw = sw.replaceAll('__CACHE_VERSION__', version);
     fs.writeFileSync(swPath, sw);
-    // eslint-disable-next-line no-console
     console.log(`[stamp-service-worker] versioned dist/sw.js as ${version}`);
   },
 };

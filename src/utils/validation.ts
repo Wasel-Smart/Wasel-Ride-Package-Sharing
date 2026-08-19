@@ -35,7 +35,7 @@ const phoneField = z
       try {
         const normalized = normalizePhone(value);
         return isValidE164Phone(normalized);
-      } catch (e) {
+      } catch {
         return false;
       }
     },
