@@ -21,13 +21,14 @@ import { telemetry } from './telemetry';
 import { sanitizeLogMessage } from '../utils/sanitization';
 
 function resolveWorkerSecret(): string | null {
+  // The worker secret is a server-side credential and must never be inlined
+  // into the browser bundle (import.meta.env.VITE_*). Only a Node/edge-server
+  // context may supply it via process.env.
   try {
-    return (
-      (typeof import.meta !== 'undefined' &&
-        (import.meta.env.VITE_EVENT_BROKER_WORKER_SECRET as string | undefined)) ||
-      (typeof process !== 'undefined' && process.env.VITE_EVENT_BROKER_WORKER_SECRET) ||
-      null
-    );
+    if (typeof window !== 'undefined' || typeof import.meta === 'undefined') {
+      return typeof process !== 'undefined' ? process.env.VITE_EVENT_BROKER_WORKER_SECRET ?? null : null;
+    }
+    return null;
   } catch {
     return null;
   }
