@@ -111,13 +111,16 @@ function resolveProxyBaseUrl(): string | null {
 }
 
 function resolveWorkerSecret(): string | null {
+  // The worker secret is a server-side credential. It must never be inlined
+  // into the browser bundle (import.meta.env.VITE_*), so we deliberately do
+  // not read it from the client. Only a Node/edge-server context may supply
+  // it via process.env; in the browser this always resolves to null and the
+  // event-broker falls back to the configured Supabase transport.
   try {
-    return (
-      (typeof import.meta !== 'undefined' &&
-        (import.meta.env.VITE_EVENT_BROKER_WORKER_SECRET as string | undefined)) ||
-      (typeof process !== 'undefined' && process.env.VITE_EVENT_BROKER_WORKER_SECRET) ||
-      null
-    );
+    if (typeof window !== 'undefined' || typeof import.meta === 'undefined') {
+      return typeof process !== 'undefined' ? process.env.VITE_EVENT_BROKER_WORKER_SECRET ?? null : null;
+    }
+    return null;
   } catch {
     return null;
   }
