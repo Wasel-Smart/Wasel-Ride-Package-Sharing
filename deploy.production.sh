@@ -18,10 +18,13 @@ echo '==========================================================================
 rm -rf deploy
 mkdir deploy
 cp -r ./dist ./deploy/dist
-cp -r ./src/ssl/production/ ./deploy/dist/src/ssl/
 cp -r ./package.json ./deploy/package.json
 cp -r ./package-lock.json ./deploy/package-lock.json
-cp -r .env.production ./deploy/.env
+# .env.production is consumed at build time by Vite (production mode); copy it
+# into the deploy payload only when it exists so the script does not fail.
+if [ -f .env.production ]; then
+  cp -r .env.production ./deploy/.env
+fi
 cd deploy
 
 git init
