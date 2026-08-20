@@ -231,12 +231,13 @@ export async function createRideBooking(input: {
 
   // ── 2. Build canonical record using the persisted ID (or local fallback) ───
   const persistedId = String(persisted?.booking_id ?? persisted?.id ?? '');
+  const persistedStatus = persisted?.status;
   const remoteStatus: RideBookingStatus =
-    persisted?.status === 'confirmed' ||
-    persisted?.status === 'cancelled' ||
-    persisted?.status === 'completed'
-      ? persisted.status!
-      : persisted?.status === 'accepted'
+    persistedStatus === 'confirmed' ||
+    persistedStatus === 'cancelled' ||
+    persistedStatus === 'completed'
+      ? persistedStatus
+      : persistedStatus === 'accepted'
         ? 'confirmed'
         : persistedId
           ? input.routeMode === 'live_post'
