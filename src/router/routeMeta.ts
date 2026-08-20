@@ -117,6 +117,13 @@ export const ROUTE_META: WaselRouteMeta[] = [
   },
   { path: '/app/terms', title: 'Terms of Service', titleAr: 'شروط الخدمة', analyticsKey: 'terms' },
   { path: '/app/security', title: 'Security', titleAr: 'الأمان', analyticsKey: 'security' },
+  {
+    path: '/app/admin',
+    requiresAuth: true,
+    title: 'Admin',
+    titleAr: 'الإدارة',
+    analyticsKey: 'admin',
+  },
 ];
 
 export function getRouteMeta(pathname: string): WaselRouteMeta | undefined {

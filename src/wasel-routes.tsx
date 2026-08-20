@@ -235,34 +235,76 @@ const buildMainChildren = () => [
 
   // ── Raje3 Returns ─────────────────────────────────────────────────────────
 
-  // ── B2B / B2S / Ops ──────────────────────────────────────────────────────
+  // ── B2B / B2S / Ops — each route guards itself with a per-route permission gate ─
   {
-    Component: ProtectedOutlet,
+    Component: () => <ProtectedOutlet require="corporate:read" />,
     children: [
       {
         path: 'services/corporate',
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
+    ],
+  },
+  {
+    Component: () => <ProtectedOutlet require="school:read" />,
+    children: [
       {
         path: 'services/school',
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
+    ],
+  },
+  {
+    Component: () => <ProtectedOutlet require="analytics:read" />,
+    children: [
       {
         path: 'innovation-hub',
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
+    ],
+  },
+  {
+    Component: () => <ProtectedOutlet require="analytics:read" />,
+    children: [
       {
         path: 'analytics',
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
+    ],
+  },
+  {
+    Component: () => <ProtectedOutlet require="operations:read" />,
+    children: [
       { path: 'mobility-os', lazy: lazy(() => import('./features/mobility-os')) },
+    ],
+  },
+  {
+    Component: () => <ProtectedOutlet require="analytics:read" />,
+    children: [
       {
         path: 'ai-intelligence',
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
+    ],
+  },
+  {
+    Component: () => <ProtectedOutlet require="trust:moderate" />,
+    children: [
       {
         path: 'moderation',
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+      },
+    ],
+  },
+
+  // ── Admin ─────────────────────────────────────────────────────────────────
+  // Registered admin metrics route (AdminDashboardPage) — admin-only gate.
+  {
+    Component: () => <ProtectedOutlet require="config:write" />,
+    children: [
+      {
+        path: 'admin',
+        lazy: lazy(() => import('./features/admin/AdminDashboardPage'), 'AdminDashboardPage'),
       },
     ],
   },
