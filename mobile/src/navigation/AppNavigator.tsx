@@ -57,7 +57,7 @@ const iconByRoute: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 
 const screenOptions = ({ route }: { route: { name: string } }): BottomTabNavigationOptions => ({
-  tabBarIcon: ({ color, size }) => <Ionicons name={iconByRoute[route.name] ?? 'ellipse'} size={size} color={color} />,
+  tabBarIcon: ({ color, size }: { color: string; size: number }) => <Ionicons name={iconByRoute[route.name] ?? 'ellipse'} size={size} color={color} />,
   freezeOnBlur: true,
   headerStyle: { backgroundColor: colors.bg, shadowColor: 'transparent' },
   headerShadowVisible: false,

@@ -1,6 +1,5 @@
 import '@testing-library/jest-native/extend-expect';
 
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
 jest.mock('react-native-screens', () => ({
   ...jest.requireActual('react-native-screens'),
   enableScreens: jest.fn(),

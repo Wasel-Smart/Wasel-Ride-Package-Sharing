@@ -40,7 +40,7 @@ export const ChatThread = React.memo(function ChatThread({
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<any>>(null);
 
   // Seed a welcome message
   useEffect(() => {
@@ -114,7 +114,7 @@ export const ChatThread = React.memo(function ChatThread({
       <FlatList
         ref={flatListRef}
         data={messages}
-        keyExtractor={item => item.id}
+        keyExtractor={(item: any) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.messagesList}
         showsVerticalScrollIndicator={false}

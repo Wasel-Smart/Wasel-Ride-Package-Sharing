@@ -61,7 +61,7 @@ export default function SecuritySettingsScreen() {
     Alert.prompt(
       'Change Email',
       'Enter your new email address:',
-      async (newEmail) => {
+      async (newEmail: string) => {
         if (!newEmail) return;
         try {
           await updateEmail(newEmail);
@@ -80,7 +80,7 @@ export default function SecuritySettingsScreen() {
     Alert.prompt(
       'Change Phone',
       'Enter your new phone number (+962XXXXXXXXX):',
-      async (newPhone) => {
+      async (newPhone: string) => {
         if (!newPhone) return;
         try {
           await updatePhone(newPhone);
