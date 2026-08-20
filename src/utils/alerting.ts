@@ -43,6 +43,7 @@ export interface MetricValue {
 
 class AlertingSystem {
   private alerts: Alert[] = [];
+  private readonly MAX_ALERTS = 1_000;
   private rules: Map<string, AlertRule> = new Map();
   private lastAlertTime: Map<string, number> = new Map();
   private listeners: Array<(alert: Alert) => void> = [];
@@ -201,6 +202,9 @@ class AlertingSystem {
    */
   private triggerAlert(alert: Alert): void {
     this.alerts.push(alert);
+    if (this.alerts.length > this.MAX_ALERTS) {
+      this.alerts.shift();
+    }
 
     // Log alert
     const logLevel =
