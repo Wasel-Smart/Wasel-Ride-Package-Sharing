@@ -156,9 +156,6 @@ class GDPRCompliance {
         consents: consents.data,
       };
 
-      const exportJson = JSON.stringify(exportData);
-      // Store the export payload server-side; the download URL is a signed
-      // storage path resolved by the server — never a data: URI in the DB.
       const downloadUrl = `exports/${userId}/${Date.now()}.json`;
 
       await supabase
