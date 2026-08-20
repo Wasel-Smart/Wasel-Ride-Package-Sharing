@@ -158,24 +158,15 @@ if (!rootElement) {
 if (environmentIsValid) {
   rootElement.textContent = '';
 
+  const AppTree = import.meta.env.DEV ? React.StrictMode : React.Fragment;
+
   ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
+    <AppTree>
       <RootErrorBoundary>
         <App />
       </RootErrorBoundary>
-    </React.StrictMode>,
+    </AppTree>,
   );
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      document.documentElement.dataset.appMounted = 'true';
-      const bootStatus = document.getElementById('boot-status');
-      if (bootStatus) {
-        bootStatus.setAttribute('data-state', 'hidden');
-        bootStatus.style.display = 'none';
-      }
-    });
-  });
 
   void resetLocalDevelopmentArtifacts();
 
