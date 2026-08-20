@@ -12,6 +12,22 @@
  * All handlers execute real Supabase operations and are resilient: when the
  * backend is unavailable they log and no-op rather than throwing, so the
  * worker pool stays healthy.
+ *
+ * ARCHITECTURE NOTE — in-browser workers
+ * These workers currently run inside the browser bundle. This is intentional
+ * for the current Jordan-market scale where Supabase Edge Functions handle the
+ * critical server-side paths (matching, payments, notifications). The in-browser
+ * workers act as a supplementary layer for same-session optimistic updates.
+ *
+ * Migration path to dedicated server-side workers:
+ *   1. Extract each worker handler into a standalone Supabase Edge Function
+ *      (see supabase/functions/matching-worker/ as the reference pattern).
+ *   2. Replace the in-process `domainEventBus.publish()` calls with
+ *      `SupabaseEventBroker.publish()` writes to the `event_outbox` table.
+ *   3. Remove this file from the browser bundle once all handlers are
+ *      confirmed live in the edge runtime.
+ * Trigger: when ride-matching or payment-capture query latency exceeds SLO
+ * targets defined in docs/reliability-slos.md.
  */
 
 import {

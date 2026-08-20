@@ -79,6 +79,20 @@ i18n.ts
 # Playwright MCP session artifacts
 .playwright-mcp/
 
+# Test result artifacts (traces, screenshots, last-run state)
+test-results/
+
+# Temporary and scratch files
+mobile/file.tmp
+*.tmp
+
+# AI-generated images committed under src/assets
+src/assets/ChatGPT*
+src/assets/*.png
+
+# Duplicate Kubernetes overlay — k8s/ is canonical
+infra/kubernetes/
+
 # Security: never commit backup codes, key exports, or credential docs
 Backup-codes-*.txt
 backup-codes*.txt
