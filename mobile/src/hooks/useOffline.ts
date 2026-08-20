@@ -3,7 +3,7 @@
  * React hook for offline mode state and actions
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { offlineService } from '../services/offline';
 
 interface UseOfflineReturn {
@@ -21,6 +21,7 @@ export function useOffline(): UseOfflineReturn {
   const [queueSize, setQueueSize] = useState(0);
   const [cacheSize, setCacheSize] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
+  const statsLoadedRef = useRef(false);
 
   const applyStats = useCallback((stats: { queueSize: number; cacheSize: number }) => {
     setQueueSize(stats.queueSize);
@@ -43,10 +44,12 @@ export function useOffline(): UseOfflineReturn {
     return unsubscribe;
   }, [applyStats]);
 
-  // Load stats on mount and when online state changes
+  // Load stats on mount
   useEffect(() => {
+    if (statsLoadedRef.current) return;
+    statsLoadedRef.current = true;
     void loadStats();
-  }, [isOnline, loadStats]);
+  }, [loadStats]);
 
   const sync = useCallback(async () => {
     setIsSyncing(true);
