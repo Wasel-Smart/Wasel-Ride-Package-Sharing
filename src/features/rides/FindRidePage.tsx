@@ -429,6 +429,14 @@ export function FindRidePage() {
 
       notifyTripConfirmed(ride.driver.name, `${ride.from} to ${ride.to}`);
       void recordMovementActivity('ride_booked', corridorPlan?.id ?? null);
+    } catch (error) {
+      setSelected(null);
+      setBookingSuccess(null);
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      setBookingMessage(
+        `Could not complete booking for ${ride.from} to ${ride.to}. ${message}. Please check your connection and try again.`,
+      );
+      console.error('[FindRide] Booking failed:', error);
     } finally {
       setBookingInFlightId(null);
     }
