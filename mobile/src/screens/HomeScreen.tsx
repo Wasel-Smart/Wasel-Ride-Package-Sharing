@@ -127,7 +127,7 @@ const QuickActionCard = React.memo(({
 }) => {
   return (
     <Pressable
-      style={({ pressed }) => [styles.quickAction, pressed && styles.quickActionPressed]}
+      style={({ pressed }: { pressed: boolean }) => [styles.quickAction, pressed && styles.quickActionPressed]}
       onPress={onPress}
     >
       <View style={styles.quickActionIcon}>

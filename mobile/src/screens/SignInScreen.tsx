@@ -212,7 +212,7 @@ const SignInScreen = React.memo(function SignInScreen() {
               accessibilityLabel={t('auth.passwordLabel')}
               autoCapitalize="none"
               autoComplete="password"
-              onChangeText={text => {
+              onChangeText={(text: string) => {
                 setPassword(text);
                 setShowPasswordStrength(text.length > 0);
               }}

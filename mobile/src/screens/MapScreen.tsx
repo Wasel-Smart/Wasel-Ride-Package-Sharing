@@ -168,7 +168,7 @@ function MapScreen() {
                 return (
                   <React.Fragment key={corridor.id}>
                     <Pressable
-                      style={({ pressed }) => [
+                      style={({ pressed }: { pressed: boolean }) => [
                         styles.corridorPressable,
                         {
                           left: Math.min(path.x1, path.x2),
@@ -223,7 +223,7 @@ function MapScreen() {
                 return (
                   <Pressable
                     key={city.id}
-                    style={({ pressed }) => [
+                    style={({ pressed }: { pressed: boolean }) => [
                       styles.cityNode,
                       {
                         left: city.x * mapWidth - 28,
@@ -342,7 +342,7 @@ function MapScreen() {
                 return (
                   <Pressable
                     key={corridor.id}
-                    style={({ pressed }) => [
+                    style={({ pressed }: { pressed: boolean }) => [
                       styles.corridorCard,
                       pressed && styles.corridorCardPressed,
                     ]}
@@ -395,7 +395,7 @@ function MapScreen() {
               .map(corridor => (
                 <Pressable
                   key={corridor.id}
-                  style={({ pressed }) => [
+                  style={({ pressed }: { pressed: boolean }) => [
                     styles.topCorridorCard,
                     pressed && styles.topCorridorCardPressed,
                   ]}

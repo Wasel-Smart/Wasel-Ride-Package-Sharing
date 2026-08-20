@@ -90,7 +90,7 @@ export function usePushNotifications() {
 
     void initialize();
 
-    const tokenSubscription = Notifications.addPushTokenListener(({ data }) => {
+    const tokenSubscription = Notifications.addPushTokenListener(({ data }: { data: any }) => {
       if (mounted) setPushToken(data);
     });
 

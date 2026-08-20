@@ -1,7 +1,3 @@
-/**
- * @jest-environment node
- */
-
 import { t, getTranslations } from './i18n';
 
 describe('i18n', () => {
@@ -26,9 +22,9 @@ describe('i18n', () => {
   });
 
   it('getTranslations returns full dictionary', () => {
-    const en = getTranslations('en');
-    expect(en.profile.title).toBe('My Account');
-    const ar = getTranslations('ar');
-    expect(ar.profile.title).toBe('حسابي');
+    const en = getTranslations('en') as Record<string, unknown>;
+    expect((en.profile as Record<string, string>).title).toBe('My Account');
+    const ar = getTranslations('ar') as Record<string, unknown>;
+    expect((ar.profile as Record<string, string>).title).toBe('حسابي');
   });
 });

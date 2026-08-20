@@ -54,7 +54,7 @@ export const OfflineBanner = React.memo(function OfflineBanner() {
           disabled={isSyncing}
           hitSlop={hitSlop}
           onPress={handleSync}
-          style={({ pressed }) => [
+          style={({ pressed }: { pressed: boolean }) => [
             styles.button,
             { borderColor: `${tone}44`, opacity: isSyncing ? 0.65 : 1 },
             pressed ? styles.buttonPressed : null,

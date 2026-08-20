@@ -272,7 +272,7 @@ export function PrimaryButton({
       disabled={isDisabled}
       hitSlop={hitSlop}
       onPress={handlePress}
-      style={({ pressed }) => [
+      style={({ pressed }: { pressed: boolean }) => [
         styles.button,
         {
           backgroundColor: isDisabled ? colors.line : tone,
@@ -320,7 +320,7 @@ export function ActionRow({
       accessibilityRole="button"
       hitSlop={hitSlop}
       onPress={handlePress}
-      style={({ pressed }) => [styles.action, pressed ? styles.actionPressed : null]}
+      style={({ pressed }: { pressed: boolean }) => [styles.action, pressed ? styles.actionPressed : null]}
     >
       <Ionicons name={icon} size={18} color={tone} />
       <Text style={[styles.actionText, destructive ? styles.destructiveText : null]}>{sanitizeText(label)}</Text>
