@@ -204,11 +204,6 @@ export async function createRideBooking(input: {
   routeMode: 'live_post' | 'network_inventory';
 }): Promise<RideBookingRecord> {
   const now = new Date().toISOString();
-  const status: RideBookingStatus = persistedId
-    ? input.routeMode === 'live_post'
-      ? 'pending_driver'
-      : 'confirmed'
-    : 'pending_driver';
   const seatsRequested = Math.max(1, input.seatsRequested ?? 1);
 
   if (!input.passengerId) {
@@ -216,7 +211,7 @@ export async function createRideBooking(input: {
   }
 
   // ── 1. Write to Supabase (primary store) ──────────────────────────────────
-  let persisted: { booking_id?: string; id?: string; status?: string } | null = null;
+  let persisted: { booking_id?: string; id?: string; status?: string | null } | null = null;
   try {
     const result = await createDirectBooking({
       tripId: input.rideId,
@@ -224,7 +219,7 @@ export async function createRideBooking(input: {
       seatsRequested,
       pickup: input.from,
       dropoff: input.to,
-      bookingStatus: status,
+      bookingStatus: input.routeMode === 'live_post' ? 'pending_driver' : 'confirmed',
       metadata: {
         total_price: input.pricePerSeatJod ? seatsRequested * input.pricePerSeatJod : seatsRequested,
       },
@@ -240,10 +235,14 @@ export async function createRideBooking(input: {
     persisted?.status === 'confirmed' ||
     persisted?.status === 'cancelled' ||
     persisted?.status === 'completed'
-      ? persisted.status
+      ? persisted.status!
       : persisted?.status === 'accepted'
         ? 'confirmed'
-        : status;
+        : persistedId
+          ? input.routeMode === 'live_post'
+            ? 'pending_driver'
+            : 'confirmed'
+          : 'pending_driver';
 
   const booking: RideBookingRecord = {
     id: persistedId || makeTicketCode(),
