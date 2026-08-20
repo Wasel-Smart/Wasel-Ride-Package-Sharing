@@ -1,11 +1,12 @@
-import { projectId, publicAnonKey } from '../utils/supabase/info.ts';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
 import {
   checkSupabaseConnection,
   supabase as supabaseClient,
   supabaseUrl,
-} from '../utils/supabase/client.ts';
+} from '../utils/supabase/client';
 import { addCSRFHeader } from '../utils/csrf';
 import { circuitBreakers, CircuitState } from '../utils/circuitBreaker';
+import { getConfig } from '../utils/env';
 import { validateApiUrl } from '../utils/sanitization';
 
 export { projectId, publicAnonKey };

@@ -183,7 +183,7 @@ export function buildSendgridPayload(
         reply_to: env.resendReplyToEmail ? { email: env.resendReplyToEmail } : undefined,
         content: [
           { type: 'text/plain', value: body },
-          { type: 'text/html', value: body.split('\n').map((line) => `<p>${line}</p>`).join('') },
+          { type: 'text/html', value: body.split('\n').map((line) => `<p>${line.replace(/[<>&"]/g, (char) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[char] ?? char))}</p>`).join('') },
         ],
       }),
     },

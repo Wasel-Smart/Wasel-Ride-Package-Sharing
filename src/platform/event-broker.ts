@@ -276,9 +276,9 @@ class SupabaseEventBroker implements EventBroker {
         attempts: message.attempts,
         created_at: message.occurredAt,
       });
-if (error) {
-          console.error('[broker] failed to persist event', sanitizeLogMessage(message.topic), sanitizeLogMessage(error.message));
-        }
+      if (error) {
+        console.error('[broker] failed to persist event', sanitizeLogMessage(message.topic), sanitizeLogMessage(error.message));
+      }
     } catch (err) {
       console.error('[broker] persist threw', sanitizeLogMessage(message.topic), sanitizeLogMessage(err));
     }
