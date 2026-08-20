@@ -164,18 +164,18 @@ describe('cancellation.test.ts', () => {
           single: vi.fn().mockResolvedValue({ data: { id: 'b1', status: 'pending', passenger_id: 'user-1', trip_id: 't1', payment_status: 'pending' }, error: null }),
         })),
       })),
-    }).mockReturnValueOnce({
+    } as any).mockReturnValueOnce({
       update: vi.fn(() => ({
         eq: vi.fn().mockResolvedValue({ data: null, error: null }),
       })),
       insert: vi.fn().mockResolvedValue({ data: null, error: null }),
-    }).mockReturnValueOnce({
+    } as any).mockReturnValueOnce({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
           single: vi.fn().mockResolvedValue({ data: { driver_id: 'driver-1' }, error: null }),
         })),
       })),
-    });
+    } as any);
 
     const { cancellationService: cs } = await import('@/services/cancellation');
     await expect(cs.cancelBooking({ bookingId: 'b1', reason: 'test', refundRequested: false })).resolves.toBeUndefined();
@@ -202,7 +202,7 @@ describe('cancellation.test.ts', () => {
           single: vi.fn().mockResolvedValue({ data: null, error: { message: 'not found' } }),
         })),
       })),
-    });
+    } as any);
 
     const { cancellationService: cs } = await import('@/services/cancellation');
     await expect(cs.cancelTrip({ tripId: 't1', reason: 'test' })).rejects.toThrow('Trip not found');
@@ -219,7 +219,7 @@ describe('cancellation.test.ts', () => {
           single: vi.fn().mockResolvedValue({ data: { id: 't1', status: 'cancelled', driver_id: 'user-1' }, error: null }),
         })),
       })),
-    });
+    } as any);
 
     const { cancellationService: cs } = await import('@/services/cancellation');
     await expect(cs.cancelTrip({ tripId: 't1', reason: 'test' })).rejects.toThrow('Trip already cancelled');
@@ -233,14 +233,14 @@ describe('cancellation.test.ts', () => {
           single: vi.fn().mockResolvedValue({ data: { status: 'pending', trip_id: 't1' }, error: null }),
         })),
       })),
-    });
+    } as any);
     mockSupabase.from.mockReturnValueOnce({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
           single: vi.fn().mockResolvedValue({ data: { departure_time: futureTime }, error: null }),
         })),
       })),
-    });
+    } as any);
 
     const { cancellationService: cs } = await import('@/services/cancellation');
     const result = await cs.canCancelBooking('b1');
@@ -254,7 +254,7 @@ describe('cancellation.test.ts', () => {
           single: vi.fn().mockResolvedValue({ data: { status: 'completed', trip_id: 't1' }, error: null }),
         })),
       })),
-    });
+    } as any);
 
     const { cancellationService: cs } = await import('@/services/cancellation');
     const result = await cs.canCancelBooking('b1');
@@ -270,14 +270,14 @@ describe('cancellation.test.ts', () => {
           single: vi.fn().mockResolvedValue({ data: { status: 'pending', trip_id: 't1' }, error: null }),
         })),
       })),
-    });
+    } as any);
     mockSupabase.from.mockReturnValueOnce({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
           single: vi.fn().mockResolvedValue({ data: { departure_time: pastTime }, error: null }),
         })),
       })),
-    });
+    } as any);
 
     const { cancellationService: cs } = await import('@/services/cancellation');
     const result = await cs.canCancelBooking('b1');
