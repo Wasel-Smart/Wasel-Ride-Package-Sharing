@@ -42,6 +42,9 @@ jobs:
       - name: Verify service worker syntax
         run: node --check public/sw.js
 
+      - name: Check for .env secret exposure
+        run: node scripts/check-env-exposure.mjs
+
       - name: Build production bundle
         run: yarn build
 
