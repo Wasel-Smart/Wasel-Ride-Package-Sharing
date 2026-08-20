@@ -14,6 +14,23 @@ interface RateLimitState {
 }
 
 const rateLimitStore = new Map<string, RateLimitState>();
+const MAX_RATE_LIMIT_ENTRIES = 5_000;
+
+function evictExpiredRateLimitEntries(): void {
+  const now = Date.now();
+  for (const [key, state] of rateLimitStore.entries()) {
+    if (now > state.resetAt) rateLimitStore.delete(key);
+  }
+  if (rateLimitStore.size > MAX_RATE_LIMIT_ENTRIES) {
+    const toDelete = rateLimitStore.size - MAX_RATE_LIMIT_ENTRIES;
+    let deleted = 0;
+    for (const key of rateLimitStore.keys()) {
+      if (deleted >= toDelete) break;
+      rateLimitStore.delete(key);
+      deleted++;
+    }
+  }
+}
 
 /**
  * Check if request is within rate limit
@@ -26,6 +43,7 @@ export function checkRateLimit(
   const state = rateLimitStore.get(key);
 
   if (!state || now > state.resetAt) {
+    evictExpiredRateLimitEntries();
     rateLimitStore.set(key, { count: 1, resetAt: now + config.windowMs });
     return true;
   }

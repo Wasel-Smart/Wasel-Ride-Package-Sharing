@@ -190,10 +190,12 @@ export function parseOrReject<T>(
 
 // ── Type exports ──────────────────────────────────────────────────────────────
 
-export type BookingCreate   = any;
-export type BookingUpdate   = any;
-export type RideRequest     = any;
-export type DemandAlert     = any;
-export type LocationUpdate  = any;
-export type Rating          = any;
-export type GeoPoint        = any;
+import { z } from 'https://deno.land/x/zod@v3.23.8/mod.ts';
+
+export type BookingCreate   = z.infer<typeof BookingCreateSchema>;
+export type BookingUpdate   = z.infer<typeof BookingUpdateSchema>;
+export type RideRequest     = z.infer<typeof RideRequestSchema>;
+export type DemandAlert     = z.infer<typeof DemandAlertSchema>;
+export type LocationUpdate  = z.infer<typeof LocationUpdateSchema>;
+export type Rating          = z.infer<typeof RatingSchema>;
+export type GeoPoint        = z.infer<typeof GeoPointSchema>;

@@ -4,8 +4,8 @@
  * allowing a login, OTP, payment, or withdrawal after the distributed check
  * fails creates an abuse bypass precisely when the system is degraded.
  */
-import { supabase } from './supabase/client.ts';
-import { sanitizeLogMessage } from './sanitization.ts';
+import { supabase } from './supabase/client';
+import { sanitizeLogMessage } from './sanitization';
 
 export interface RateLimitResult {
   allowed: boolean;

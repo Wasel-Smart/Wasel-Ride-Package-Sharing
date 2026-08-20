@@ -13,9 +13,7 @@ const CLIQ_API_KEY = Deno.env.get("CLIQ_API_KEY") ??
 const CLIQ_CHECKOUT_URL_TEMPLATE = Deno.env.get("CLIQ_CHECKOUT_URL_TEMPLATE") ??
   Deno.env.get("JOPACC_CHECKOUT_URL_TEMPLATE") ?? "";
 
-if (!CLIQ_API_BASE_URL || !CLIQ_MERCHANT_ID || !CLIQ_API_KEY) {
-  console.warn("CliQ payment configuration incomplete");
-}
+// CliQ config is validated per-request; missing vars return 503 at runtime.
 
 const supabase = SUPABASE_URL && SUPABASE_KEY
   ? createClient(SUPABASE_URL, SUPABASE_KEY)
@@ -24,7 +22,7 @@ const cliqRateLimit = createRateLimitMiddleware(
   { windowMs: 60_000, maxRequests: 30 },
 );
 
-console.info("cliq-payments function started");
+
 
 function jsonResponse(
   body: Record<string, unknown>,

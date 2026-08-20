@@ -10,9 +10,7 @@ const APP_ORIGIN = Deno.env.get("APP_ORIGIN") ??
   Deno.env.get("PUBLIC_SITE_URL") ?? "";
 
 if (!STRIPE_SECRET) throw new Error("Missing STRIPE_SECRET_KEY");
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.warn("Supabase env vars missing; payments will not be persisted.");
-}
+// Supabase persistence is optional; payments are still processed without it.
 
 const stripe = new Stripe(STRIPE_SECRET, { apiVersion: "2024-11-20" });
 const supabase = SUPABASE_URL && SUPABASE_KEY
@@ -24,7 +22,7 @@ const paymentRateLimit = createRateLimitMiddleware(
 const ALLOWED_CURRENCIES = new Set(["jod", "usd"]);
 const MAX_PAYMENT_AMOUNT_MINOR = 500_000;
 
-console.info("stripe-payments-v2 function started");
+
 
 function jsonResponse(
   body: Record<string, unknown>,

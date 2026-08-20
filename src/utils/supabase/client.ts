@@ -12,7 +12,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
-import { hasSupabasePublicConfig, publicAnonKey, publicSupabaseUrl } from './info.ts';
+import { hasSupabasePublicConfig, publicAnonKey, publicSupabaseUrl } from './info';
 
 function isPlaceholderValue(value: string | undefined): boolean {
   if (!value) return true;
