@@ -1,10 +1,4 @@
 
-function sanitizeLogValue(value: unknown): string {
-  if (value === null || value === undefined) return String(value);
-  const str = String(value);
-  return str.replace(/[\r\n\t\x00-\x1f\x7f-\x9f]/g, ' ').trim();
-}
-
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createRateLimitMiddleware } from "../_shared/rate-limiter.ts";
 
