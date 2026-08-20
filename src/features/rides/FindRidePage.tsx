@@ -70,7 +70,7 @@ import {
   resolveCityCoord,
   SectionHead,
 } from '../../pages/waselServiceShared';
-import { WaselButton, WaselInput, WaselSelect } from '../../design-system';
+import { WaselButton, WaselInput, WaselSelect } from '../../components/wasel-ui';
 import { C } from '../../utils/wasel-ds';
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { FindRideCard } from './components/FindRideCard';
