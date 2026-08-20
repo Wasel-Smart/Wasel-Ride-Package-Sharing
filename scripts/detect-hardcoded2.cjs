@@ -1,15 +1,25 @@
 const ts = require('C:/Users/user/OneDrive/Desktop/Wdoubleme/node_modules/typescript');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 const ROOT = 'C:/Users/user/OneDrive/Desktop/Wdoubleme/src';
 
 // --- load translations for reverse map ---
 let srcT = fs.readFileSync('C:/Users/user/OneDrive/Desktop/Wdoubleme/src/locales/translations.ts', 'utf8');
+srcT = srcT.replace(/export type [^=;]+=[^;]+;/g, '');
 srcT = srcT.replace(/export type Language[^;]*;/g, '');
-srcT = srcT.replace(/export const translations: Record<Language, any> =/, 'var translations =');
-const transFn = new Function('var module={exports:{}};' + srcT + '\nreturn translations;');
-const translations = transFn();
+srcT = srcT.replace(/export const translations:[^=]+=/, 'module.exports =');
+srcT = srcT.replace(/export default/g, '// export default');
+
+const tmpFile = path.join(os.tmpdir(), `wasel-translations-${Date.now()}.cjs`);
+fs.writeFileSync(tmpFile, srcT, 'utf8');
+let translations;
+try {
+  translations = require(tmpFile);
+} finally {
+  fs.unlinkSync(tmpFile);
+}
 
 function flatten(obj, prefix = '', out = {}) {
   for (const k of Object.keys(obj)) {

@@ -3,17 +3,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
+const env = process.env || {};
+
 const mode =
-  process.env.MODE ||
-  process.env.VITE_MODE ||
-  process.env.NODE_ENV ||
-  process.env.VERCEL_ENV ||
+  env.MODE ||
+  env.VITE_MODE ||
+  env.NODE_ENV ||
+  env.VERCEL_ENV ||
   'development';
 
 const envFileMode =
-  process.env.MODE ||
-  process.env.VITE_MODE ||
-  process.env.NODE_ENV ||
+  env.MODE ||
+  env.VITE_MODE ||
+  env.NODE_ENV ||
   'production';
 
 const SUPABASE_URL_KEYS = [
@@ -28,7 +30,7 @@ const SUPABASE_PUBLIC_KEY_KEYS = [
   'VITE_PUBLIC_SUPABASE_ANON_KEY',
 ];
 
-const presetEnvKeys = new Set(Object.keys(process.env));
+const presetEnvKeys = new Set(Object.keys(env));
 
 const PROJECT_CWD = process.cwd();
 
@@ -71,7 +73,7 @@ function loadEnvFile(filePath) {
       }
 
       if (/^[A-Z_][A-Z0-9_]*$/.test(key)) {
-        process.env[key] = value;
+        env[key] = value;
       }
     }
   } catch {
@@ -94,7 +96,7 @@ function hydrateBuildEnv() {
 
 function getFirstConfiguredValue(keys) {
   for (const key of keys) {
-    const value = process.env[key]?.trim();
+    const value = env[key]?.trim();
     if (value) {
       return value;
     }
@@ -179,7 +181,7 @@ if (missingVars.length > 0) {
 
 // Validate URLs in production
 if (mode === 'production') {
-  const appUrl = process.env.VITE_APP_URL ?? process.env.VITE_PRODUCTION_APP_URL;
+  const appUrl = env.VITE_APP_URL ?? env.VITE_PRODUCTION_APP_URL;
 
   if (!appUrl) {
     console.error('\n❌ Build failed: VITE_APP_URL is not set for production build.');

@@ -16,6 +16,7 @@
     "node_modules",
     "build",
     "dist",
-    "src/supabase/functions"
+    "src/supabase/functions",
+    "tests/unit/rbac-denomd.test.ts"
   ]
 }

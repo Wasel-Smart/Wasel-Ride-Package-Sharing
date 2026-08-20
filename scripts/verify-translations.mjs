@@ -6,9 +6,13 @@
  * Exits 0 when balanced, 1 when drift is detected.
  */
 
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync, unlinkSync } from 'fs';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
+import os from 'os';
+import { createRequire } from 'module';
+
+const requireModule = createRequire(import.meta.url);
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const TRANSLATIONS = join(__dir, '../src/locales/translations.ts');
@@ -19,12 +23,20 @@ function extractModuleExports(filePath) {
   if (!resolvedPath.startsWith(PROJECT_ROOT)) {
     throw new Error(`Path traversal detected: ${filePath} resolves outside project root`);
   }
-  const content = readFileSync(resolvedPath, 'utf8');
-  const match = content.match(/export\s+const\s+translations\s*[^=]*=\s*(\{[\s\S]*\});/);
-  if (!match) {
-    throw new Error(`Unable to extract translations from ${filePath}`);
+  let src = readFileSync(resolvedPath, 'utf8');
+  src = src.replace(/export type [^=;]+=[^;]+;/g, '');
+  src = src.replace(/export type Language[^;]*;/g, '');
+  src = src.replace(/export const translations:[^=]+=/, 'module.exports =');
+  src = src.replace(/export const translations =/, 'module.exports =');
+  src = src.replace(/export default/g, '// export default');
+
+  const tmpFile = join(os.tmpdir(), `wasel-translations-${Date.now()}.cjs`);
+  writeFileSync(tmpFile, src, 'utf8');
+  try {
+    return requireModule(tmpFile);
+  } finally {
+    unlinkSync(tmpFile);
   }
-  return new Function(`return ${match[1]};`)();
 }
 
 function flatten(obj, prefix = '', out = {}) {

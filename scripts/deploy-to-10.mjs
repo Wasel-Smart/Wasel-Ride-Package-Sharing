@@ -12,6 +12,8 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+const env = process.env || {};
+
 // Load .env file manually
 const envPath = resolve(__dirname, '../.env');
 if (existsSync(envPath)) {
@@ -23,7 +25,7 @@ if (existsSync(envPath)) {
     if (eqIndex === -1) continue;
     const key = trimmed.slice(0, eqIndex).trim();
     const val = trimmed.slice(eqIndex + 1).trim().replace(/^"|"$/g, '');
-    if (!process.env[key]) process.env[key] = val;
+    if (!env[key]) env[key] = val;
   }
 }
 
@@ -33,7 +35,7 @@ const SERVICES = [
   'ops-analytics',
 ];
 
-const REGISTRY = process.env.DOCKER_REGISTRY || 'ghcr.io/wasel-smart';
+const REGISTRY = env.DOCKER_REGISTRY || 'ghcr.io/wasel-smart';
 
 function log(message, type = 'info') {
   const colors = {
@@ -81,13 +83,13 @@ async function checkPrerequisites() {
   }
 
   // Check environment variables
-  if (!process.env.DATABASE_URL) {
+  if (!env.DATABASE_URL) {
     log('✗ DATABASE_URL not set', 'error');
     process.exit(1);
   }
   log('✓ DATABASE_URL is set', 'success');
 
-  if (!process.env.REDIS_URL) {
+  if (!env.REDIS_URL) {
     log('✗ REDIS_URL not set', 'error');
     process.exit(1);
   }

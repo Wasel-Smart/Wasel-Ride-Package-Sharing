@@ -1,6 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const os = require('os');
+
+const PROJECT_ROOT = path.resolve(__dirname, '..');
+const TMP_DIR = path.join(PROJECT_ROOT, '.tmp');
+if (!fs.existsSync(TMP_DIR)) {
+  fs.mkdirSync(TMP_DIR, { recursive: true });
+}
 
 const file = 'C:/Users/user/OneDrive/Desktop/Wdoubleme/src/locales/translations.ts';
 let src = fs.readFileSync(file, 'utf8');
@@ -13,7 +18,7 @@ src = src.replace(/export const translations =/, 'module.exports =');
 src = src.replace(/export default/g, '// export default');
 
 // Write to temp file and require it safely instead of using new Function
-const tmpFile = path.join(os.tmpdir(), `wasel-translations-${Date.now()}.cjs`);
+const tmpFile = path.join(TMP_DIR, `wasel-translations-${Date.now()}.cjs`);
 fs.writeFileSync(tmpFile, src, 'utf8');
 let translations;
 try {
