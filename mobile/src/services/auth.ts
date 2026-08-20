@@ -35,7 +35,7 @@ export class MobileAuthService {
 
   constructor() {}
 
-  private async initialize(): Promise<void> {
+  public async initialize(): Promise<void> {
     Linking.addEventListener('url', (event: { url: string }) => {
       void this.completeAuthFromUrl(event.url).catch(error => {
         if (__DEV__) {
