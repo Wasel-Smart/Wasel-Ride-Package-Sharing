@@ -85,16 +85,19 @@ function cacheSecret(key: string, value: string): void {
  * Get secret from environment variables
  */
 function getSecretFromEnv(key: string): string | null {
-  // Try process.env first (Node.js)
+  // Try process.env first (Node.js / server-side only)
   if (typeof process !== 'undefined' && process.env) {
     const value = process.env[key];
     if (value) return value;
   }
 
-  // Try import.meta.env (Vite)
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    const value = import.meta.env[key];
-    if (value) return String(value);
+  // Only read import.meta.env for non-server-only secrets
+  // Server-only secrets must never be bundled into the client
+  if (!SERVER_ONLY_SECRETS.includes(key as ServerSecretKey)) {
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      const value = import.meta.env[key];
+      if (value) return String(value);
+    }
   }
 
   return null;

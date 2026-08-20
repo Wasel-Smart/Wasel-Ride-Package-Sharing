@@ -47,8 +47,14 @@ export function initSentry(): void {
     dsn,
     environment,
     integrations: [
-      ...(typeof (Sentry as unknown as Record<string, unknown>).browserTracingIntegration === 'function' ? [(Sentry as unknown as { browserTracingIntegration: () => unknown }).browserTracingIntegration()] : []),
-      ...(typeof (Sentry as unknown as Record<string, unknown>).replayIntegration === 'function' ? [(Sentry as unknown as { replayIntegration: (o: unknown) => unknown }).replayIntegration({ maskAllText: true, blockAllMedia: true })] : []),
+      ...(typeof (Sentry as unknown as Record<string, () => unknown>).browserTracingIntegration === 'function'
+        ? [(Sentry as unknown as Record<string, () => unknown>).browserTracingIntegration()]
+        : []
+      ) as import('@sentry/react').Integration[],
+      ...(typeof (Sentry as unknown as Record<string, (o: unknown) => unknown>).replayIntegration === 'function'
+        ? [(Sentry as unknown as Record<string, (o: unknown) => unknown>).replayIntegration({ maskAllText: true, blockAllMedia: true })]
+        : []
+      ) as import('@sentry/react').Integration[],
     ],
     tracesSampleRate: environment === 'production' ? 0.1 : 1,
     replaysSessionSampleRate: environment === 'production' ? 0.05 : 0,
@@ -78,8 +84,8 @@ export function initSentry(): void {
             typeof (userData as Record<string, unknown>).id === 'string'
           ) {
             const id = (userData as Record<string, string>).id;
-            // Validate UUID format before attaching to prevent arbitrary string injection
-            if (typeof id === 'string' && /^[0-9a-f-]{36}$/i.test(id)) {
+            // Validate strict UUID v4 format before attaching to prevent arbitrary string injection
+            if (typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
               event.user = { id };
             }
           }

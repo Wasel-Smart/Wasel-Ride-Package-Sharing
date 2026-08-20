@@ -102,10 +102,20 @@ class PaymentService {
   async getPaymentStatus(bookingId: string): Promise<string> {
     const client = requireSupabaseClient();
 
+    const {
+      data: { user },
+      error: userError,
+    } = await client.auth.getUser();
+
+    if (userError || !user) {
+      throw new Error('Not authenticated');
+    }
+
     const { data, error } = await client
       .from('bookings')
       .select('payment_status')
       .eq('id', bookingId)
+      .eq('user_id', user.id)
       .single();
 
     if (error) throw error;

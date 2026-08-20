@@ -93,6 +93,9 @@ export function resetRateLimit(key: string): void {
   rateLimitStore.delete(key);
 }
 
+// Cap store size to prevent unbounded memory growth
+const MAX_RATE_LIMIT_ENTRIES = 10_000;
+
 let _rateLimitCleanupInterval: ReturnType<typeof setInterval> | undefined;
 
 if (typeof setInterval !== 'undefined' && !_rateLimitCleanupInterval) {
@@ -102,6 +105,16 @@ if (typeof setInterval !== 'undefined' && !_rateLimitCleanupInterval) {
       for (const [key, record] of rateLimitStore.entries()) {
         if (now > record.resetAt) {
           rateLimitStore.delete(key);
+        }
+      }
+      // Emergency eviction: if still over cap, remove oldest entries
+      if (rateLimitStore.size > MAX_RATE_LIMIT_ENTRIES) {
+        const toDelete = rateLimitStore.size - MAX_RATE_LIMIT_ENTRIES;
+        let deleted = 0;
+        for (const key of rateLimitStore.keys()) {
+          if (deleted >= toDelete) break;
+          rateLimitStore.delete(key);
+          deleted++;
         }
       }
     },
