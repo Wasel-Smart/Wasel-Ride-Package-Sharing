@@ -76,7 +76,6 @@ export function initSentry(): void {
     ],
     beforeSend(event) {
       try {
-        // Attempt to enrich the event with the user's ID for better traceability.
         const raw = localStorage.getItem('wasel_local_user_v2');
         if (raw) {
           const userData = JSON.parse(raw) as unknown;
@@ -100,8 +99,14 @@ export function initSentry(): void {
 
       const allowedLanguages = ['ar', 'en'];
       const allowedThemes = ['dark', 'light'];
-      const lang = localStorage.getItem('wasel_language') || 'ar';
-      const theme = localStorage.getItem('wasel_theme') || 'dark';
+      let lang = 'ar';
+      let theme = 'dark';
+      try {
+        lang = localStorage.getItem('wasel_language') || 'ar';
+        theme = localStorage.getItem('wasel_theme') || 'dark';
+      } catch {
+        // localStorage unavailable — use defaults
+      }
 
       event.tags = {
         ...event.tags,

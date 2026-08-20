@@ -228,8 +228,8 @@ Deno.serve(async (req: Request) => {
       }
 
       const session = await stripe.checkout.sessions.create({
-        line_items,
-        mode,
+        line_items: line_items as Stripe.Checkout.SessionCreateParams.LineItem[],
+        mode: mode === 'subscription' ? 'subscription' : 'payment',
         success_url,
         cancel_url,
         customer_email,

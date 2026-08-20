@@ -238,6 +238,7 @@ export function MobilityOSLandingMap({
   const targetFocusStrengthRef = useRef(0);
   const sizeRef = useRef({ width: 720, height: preferredHeight ?? 560 });
   const [size, setSize] = useState(sizeRef.current);
+  const [visible, setVisible] = useState(true);
   const visibleRef = useRef(true);
 
   const uiFocusStroke = runtimeMode === 'fallback' ? MAP_LAYER.focus : FLOW;
@@ -267,7 +268,11 @@ export function MobilityOSLandingMap({
     window.addEventListener('resize', update, { passive: true });
 
     const io = new IntersectionObserver(
-      ([entry]) => { visibleRef.current = entry?.isIntersecting ?? true; },
+      ([entry]) => {
+        const next = entry?.isIntersecting ?? true;
+        visibleRef.current = next;
+        setVisible(next);
+      },
       { threshold: 0 },
     );
     if (wrapRef.current) io.observe(wrapRef.current);
@@ -302,7 +307,7 @@ export function MobilityOSLandingMap({
   useEffect(() => {
     const render = (time: number) => {
       if (!visibleRef.current) {
-        frameRef.current = requestAnimationFrame(render);
+        frameRef.current = null;
         return;
       }
 
@@ -802,6 +807,7 @@ export function MobilityOSLandingMap({
     routes,
     runtimeMode,
     utilization,
+    visible,
   ]);
 
   const resolvedHeight = preferredHeight ?? (size.width < 480 ? 460 : 520);

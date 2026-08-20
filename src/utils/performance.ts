@@ -129,7 +129,11 @@ function sendToAnalytics(vital: WebVital) {
   if (typeof window === 'undefined') return;
 
   // Check analytics consent before sending
-  if (!localStorage.getItem('consent-analytics')) {
+  try {
+    if (!localStorage.getItem('consent-analytics')) {
+      return;
+    }
+  } catch {
     return;
   }
 

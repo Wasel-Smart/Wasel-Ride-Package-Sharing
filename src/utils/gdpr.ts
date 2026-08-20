@@ -156,6 +156,7 @@ class GDPRCompliance {
         consents: consents.data,
       };
 
+      const exportJson = JSON.stringify(exportData, null, 2);
       const downloadUrl = `exports/${userId}/${Date.now()}.json`;
 
       await supabase
