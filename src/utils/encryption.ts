@@ -54,7 +54,8 @@ async function getSessionKeyAndSalt(): Promise<{ key: CryptoKey; salt: Uint8Arra
     salt = Uint8Array.from(atob(storedSalt), c => c.charCodeAt(0));
   } else {
     salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
-    sessionStorage.setItem(SESSION_SALT_KEY, btoa(String.fromCharCode(...salt)));
+    const saltBase64 = btoa(Array.from(salt, b => String.fromCharCode(b)).join(''));
+    sessionStorage.setItem(SESSION_SALT_KEY, saltBase64);
   }
 
   const key = await deriveKey(sessionId, salt);
@@ -79,8 +80,8 @@ export async function encryptData(data: string): Promise<string> {
     combined.set(iv, salt.length);
     combined.set(new Uint8Array(encryptedData), salt.length + iv.length);
 
-    // Convert to base64
-    return btoa(String.fromCharCode(...combined));
+    // Convert to base64 using Array.from to avoid stack overflow on large buffers
+    return btoa(Array.from(combined, b => String.fromCharCode(b)).join(''));
   } catch {
     // Encryption failed — rethrow with a safe message
     throw new Error('Failed to encrypt data');

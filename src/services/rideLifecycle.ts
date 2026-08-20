@@ -404,12 +404,13 @@ export async function hydrateRideBookings(
     try {
       const { supabase: db } = await import('../utils/supabase/client');
       if (db) {
-        const { data: users } = await db
-          .from('users')
+        // Only query profiles (not the auth users table) to respect RLS
+        const { data: profiles } = await db
+          .from('profiles')
           .select('id, full_name, email')
           .in('id', passengerIds);
-        if (Array.isArray(users)) {
-          for (const u of users as { id: string; full_name?: string; email?: string }[]) {
+        if (Array.isArray(profiles)) {
+          for (const u of profiles as { id: string; full_name?: string; email?: string }[]) {
             nameMap.set(String(u.id), u.full_name?.trim() || u.email?.split('@')[0] || 'Passenger');
           }
         }

@@ -120,10 +120,8 @@ export const sanitizeText = sanitizeHtml;
 // DOM-based HTML sanitizer (strips tags entirely via browser parser)
 export function sanitizeHTMLStrict(html: string): string {
   if (!html) return '';
-  if (typeof document === 'undefined') return sanitizeHtml(html);
-  const temp = document.createElement('div');
-  temp.textContent = html;
-  return temp.innerHTML;
+  // Use regex-based stripping to avoid XSS via innerHTML assignment
+  return stripHTML(html);
 }
 
 /**

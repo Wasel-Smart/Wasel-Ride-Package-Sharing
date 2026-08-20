@@ -3,9 +3,9 @@ import Stripe from "npm:stripe@12.12.0";
 import { createClient } from "npm:@supabase/supabase-js@2.36.0";
 import { createRateLimitMiddleware } from "../_shared/rate-limiter.ts";
 
-const STRIPE_SECRET = Deno.env.get("STRIPE_SECRET_KEY")!;
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const STRIPE_SECRET = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const APP_ORIGIN = Deno.env.get("APP_ORIGIN") ??
   Deno.env.get("PUBLIC_SITE_URL") ?? "";
 
@@ -143,7 +143,14 @@ Deno.serve(async (req: Request) => {
         customer_id,
         metadata,
         idempotency_key,
-      } = body;
+      } = body as {
+        action?: string;
+        amount?: unknown;
+        currency?: string;
+        customer_id?: string;
+        metadata?: Record<string, string>;
+        idempotency_key?: string;
+      };
       if (pathname.endsWith("/stripe-payments-v2") && action !== "create-payment-intent") {
         return jsonResponse({ error: "Unsupported payment action" }, { status: 400 });
       }
@@ -202,7 +209,13 @@ Deno.serve(async (req: Request) => {
       const auth = await requireAuthenticatedUser(req);
       if (auth instanceof Response) return auth;
 
-      const body = await req.json();
+      const body = await req.json() as {
+        line_items?: unknown[];
+        mode?: string;
+        success_url?: unknown;
+        cancel_url?: unknown;
+        customer_email?: string;
+      };
       const {
         line_items,
         mode = "payment",

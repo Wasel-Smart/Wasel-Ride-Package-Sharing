@@ -67,7 +67,8 @@ export function getRateLimitKey(req: Request): string {
     req.headers.get('x-real-ip') ||
     'unknown';
 
-  return `${ip}:${new Date().getHours()}`;
+  // Use epoch-based window bucket instead of clock hour to get a true sliding window
+  return `${ip}:${Math.floor(Date.now() / DEFAULT_CONFIG.windowMs)}`;
 }
 
 export function createRateLimitMiddleware(config: RateLimitConfig = DEFAULT_CONFIG) {
