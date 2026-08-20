@@ -48,7 +48,7 @@ function createBroker(): EventBroker {
     (typeof process !== 'undefined' && process.env.VITE_EVENT_BROKER);
 
   if (brokerEnv === 'memory') {
-    console.info('[broker] using InMemoryEventBroker (explicit override)');
+    if (import.meta.env.DEV) console.info('[broker] using InMemoryEventBroker (explicit override)');
     return new InMemoryEventBroker();
   }
 
@@ -77,11 +77,11 @@ function createBroker(): EventBroker {
   }
 
   if (isSupabaseConfigured && defaultSupabase) {
-    console.info('[broker] using SupabaseEventBroker (default when Supabase is configured)');
+    if (import.meta.env.DEV) console.info('[broker] using SupabaseEventBroker (default when Supabase is configured)');
     return new SupabaseEventBroker(defaultSupabase);
   }
 
-  console.warn('[broker] Supabase not configured, falling back to InMemoryEventBroker');
+  if (import.meta.env.DEV) console.warn('[broker] Supabase not configured, falling back to InMemoryEventBroker');
   return new InMemoryEventBroker();
 }
 

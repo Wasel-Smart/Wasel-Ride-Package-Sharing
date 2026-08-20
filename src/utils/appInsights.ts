@@ -44,9 +44,12 @@ export function initializeAppInsights(): void {
         // Track unhandled promise rejections
         window.addEventListener('unhandledrejection', (event) => {
             if (appInsights) {
+                const exception = event.reason instanceof Error
+                    ? event.reason
+                    : new Error(String(event.reason ?? 'Unhandled promise rejection'));
                 appInsights.trackException({
-                    exception: event.reason,
-                    severityLevel: 2, // Error
+                    exception,
+                    severityLevel: 2,
                 });
             }
         });
