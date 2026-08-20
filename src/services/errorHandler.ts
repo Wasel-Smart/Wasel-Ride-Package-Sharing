@@ -29,7 +29,7 @@ export async function withErrorHandling<T>(
         logger.error(`Operation failed: ${options.operation}`, waselError, waselError.context);
       }
 
-      if (options.notifyUser && typeof window !== 'undefined') {
+      if (options.notifyUser && typeof window !== 'undefined' && import.meta.env.DEV) {
         const message = getUserMessage(waselError);
         console.error(`[Wasel] ${message}`);
       }

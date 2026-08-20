@@ -20,7 +20,6 @@ import {
 describe('currency utils', () => {
   // Reset the CurrencyService singleton between tests
   beforeEach(() => {
-    // @ts-expect-error — reset private singleton for test isolation
     CurrencyService['_instance'] = null;
   });
 

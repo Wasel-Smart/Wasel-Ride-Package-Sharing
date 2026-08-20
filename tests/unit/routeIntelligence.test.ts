@@ -17,6 +17,7 @@ describe('routeIntelligence.test.ts', () => {
         id: 't1',
         originCity: 'Amman',
         destinationCity: 'Aqaba',
+        country: 'JO' as const,
         availableSeats: 3,
         totalSeats: 4,
         allowsPackages: true,
@@ -32,6 +33,7 @@ describe('routeIntelligence.test.ts', () => {
         id: 't2',
         originCity: 'Amman',
         destinationCity: 'Aqaba',
+        country: 'JO' as const,
         availableSeats: 1,
         totalSeats: 4,
         allowsPackages: true,
@@ -69,9 +71,9 @@ describe('routeIntelligence.test.ts', () => {
     const trips = [
       {
         id: 't1',
-        originCity: 'Amman',
+        originCity: 'Irbid',
         destinationCity: 'Aqaba',
-        country: 'JO',
+        country: 'JO' as const,
         availableSeats: 0,
         totalSeats: 4,
         allowsPackages: true,
@@ -109,22 +111,32 @@ describe('routeIntelligence.test.ts', () => {
         id: 't1',
         originCity: 'Amman',
         destinationCity: 'Aqaba',
-        country: 'JO',
+        country: 'JO' as const,
+        availableSeats: 1,
+        totalSeats: 4,
         allowsPackages: true,
         maxPackageWeightKg: 30,
         genderPreference: 'mixed' as const,
+        driverRating: 4.0,
         driverTrustScore: 80,
+        pricePerSeatJOD: 15,
+        departureTime: '2026-08-10T08:00:00Z',
         estimatedArrivalTime: '2026-08-10T12:00:00Z',
       },
       {
         id: 't2',
         originCity: 'Amman',
         destinationCity: 'Aqaba',
-        country: 'JO',
+        country: 'JO' as const,
+        availableSeats: 1,
+        totalSeats: 4,
         allowsPackages: false,
         maxPackageWeightKg: 30,
         genderPreference: 'mixed' as const,
+        driverRating: 4.0,
         driverTrustScore: 80,
+        pricePerSeatJOD: 15,
+        departureTime: '2026-08-10T08:00:00Z',
         estimatedArrivalTime: '2026-08-10T12:00:00Z',
       },
     ];
@@ -155,11 +167,16 @@ describe('routeIntelligence.test.ts', () => {
         id: 't1',
         originCity: 'Amman',
         destinationCity: 'Irbid',
-        country: 'JO',
+        country: 'JO' as const,
+        availableSeats: 1,
+        totalSeats: 4,
         allowsPackages: true,
         maxPackageWeightKg: 30,
         genderPreference: 'mixed' as const,
+        driverRating: 4.0,
         driverTrustScore: 80,
+        pricePerSeatJOD: 15,
+        departureTime: '2026-08-10T08:00:00Z',
         estimatedArrivalTime: '2026-08-10T12:00:00Z',
       },
     ];
@@ -233,10 +250,10 @@ describe('routeIntelligence.test.ts', () => {
       id: 'r1',
       originCity: 'Amman',
       destinationCity: 'Aqaba',
-      country: 'JO',
+      country: 'JO' as const,
       date: '2026-08-10',
       passengersCount: 1,
-      genderPreference: 'mixed',
+      genderPreference: 'mixed' as const,
     });
     expect(results).toHaveLength(0);
   });
@@ -248,6 +265,7 @@ describe('routeIntelligence.test.ts', () => {
         id: 't1',
         originCity: 'Amman',
         destinationCity: 'Aqaba',
+        country: 'JO' as const,
         availableSeats: 3,
         totalSeats: 4,
         allowsPackages: true,
@@ -264,13 +282,13 @@ describe('routeIntelligence.test.ts', () => {
       id: 'r1',
       originCity: 'Amman',
       destinationCity: 'Aqaba',
-      country: 'JO',
+      country: 'JO' as const,
       date: '2026-08-10',
       passengersCount: 1,
-      genderPreference: 'mixed',
+      genderPreference: 'mixed' as const,
     });
     expect(results).toHaveLength(1);
-    expect(results[0].trip.id).toBe('t1');
+    expect(results[0]!.trip.id).toBe('t1');
   });
 
   it('scores trip with waypoints', async () => {
@@ -280,6 +298,7 @@ describe('routeIntelligence.test.ts', () => {
         id: 't1',
         originCity: 'Amman',
         destinationCity: 'Irbid',
+        country: 'JO' as const,
         availableSeats: 3,
         totalSeats: 4,
         allowsPackages: true,
@@ -297,14 +316,14 @@ describe('routeIntelligence.test.ts', () => {
       id: 'r1',
       originCity: 'Amman',
       destinationCity: 'Aqaba',
-      country: 'JO',
+      country: 'JO' as const,
       date: '2026-08-10',
       passengersCount: 1,
-      genderPreference: 'mixed',
+      genderPreference: 'mixed' as const,
     };
     const results = rankTripsForPassenger(trips, request);
     expect(results.length).toBeGreaterThanOrEqual(1);
-    expect(results[0].score.routeEfficiency).toBeGreaterThanOrEqual(0);
+    expect(results[0]!.score.routeEfficiency).toBeGreaterThanOrEqual(0);
   });
 
   it('scores trip for passengers with package carriage', async () => {
@@ -314,6 +333,7 @@ describe('routeIntelligence.test.ts', () => {
         id: 't1',
         originCity: 'Amman',
         destinationCity: 'Aqaba',
+        country: 'JO' as const,
         availableSeats: 3,
         totalSeats: 4,
         allowsPackages: true,
@@ -330,16 +350,16 @@ describe('routeIntelligence.test.ts', () => {
       id: 'r1',
       originCity: 'Amman',
       destinationCity: 'Aqaba',
-      country: 'JO',
+      country: 'JO' as const,
       date: '2026-08-10',
       passengersCount: 1,
-      genderPreference: 'mixed',
+      genderPreference: 'mixed' as const,
       requiresPackageCarriage: true,
       packageWeightKg: 5,
     };
     const results = rankTripsForPassenger(trips, request);
     expect(results).toHaveLength(1);
-    expect(results[0].score.packageCompatibility).toBe(100);
+    expect(results[0]!.score.packageCompatibility).toBe(100);
   });
 
   it('scores trip without price budget', async () => {
@@ -349,6 +369,7 @@ describe('routeIntelligence.test.ts', () => {
         id: 't1',
         originCity: 'Amman',
         destinationCity: 'Aqaba',
+        country: 'JO' as const,
         availableSeats: 3,
         totalSeats: 4,
         allowsPackages: true,
@@ -365,10 +386,10 @@ describe('routeIntelligence.test.ts', () => {
       id: 'r1',
       originCity: 'Amman',
       destinationCity: 'Aqaba',
-      country: 'JO',
+      country: 'JO' as const,
       date: '2026-08-10',
       passengersCount: 1,
-      genderPreference: 'mixed',
+      genderPreference: 'mixed' as const,
     };
     const results = rankTripsForPassenger(trips, request);
     expect(results).toHaveLength(1);
