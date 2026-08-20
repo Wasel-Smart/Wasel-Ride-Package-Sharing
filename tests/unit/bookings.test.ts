@@ -40,8 +40,8 @@ describe('bookings.test.ts', () => {
     const { bookingsAPI: api } = await import('@/services/bookings');
     const result = await api.getUserBookings();
 
-    expect(result.bookings!).toHaveLength(1);
-    expect(result.bookings![0].booking_id).toBe('b1');
+    expect((result as any).bookings).toHaveLength(1);
+    expect((result as any).bookings[0].booking_id).toBe('b1');
   });
 
   it('getTripBookings requests correct path', async () => {
@@ -51,8 +51,8 @@ describe('bookings.test.ts', () => {
     const { bookingsAPI: api } = await import('@/services/bookings');
     const result = await api.getTripBookings('trip-1');
 
-    expect(result.bookings!).toHaveLength(1);
-    expect(result.bookings![0].trip_id).toBe('t1');
+    expect((result as any).bookings).toHaveLength(1);
+    expect((result as any).bookings[0].trip_id).toBe('t1');
   });
 
   it('updateBookingStatus updates status', async () => {
