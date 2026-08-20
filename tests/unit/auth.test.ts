@@ -134,6 +134,6 @@ describe('auth.test.ts', () => {
     await api.signUp('test@example.com', 'password', 'John', 'Doe', '');
 
     const callArgs = mockSupabase.auth.signUp.mock.calls[0];
-    expect(callArgs[0].options.data).toEqual({ full_name: 'John Doe' });
+    expect((callArgs as unknown as any[])[0].options.data).toEqual({ full_name: 'John Doe' });
   });
 });

@@ -1,4 +1,4 @@
-import { supabase } from '@/utils/supabase/client.ts';
+import { supabase } from '@/utils/supabase/client';
 import { paymentService } from './payment';
 
 export interface CancelBookingRequest {
@@ -70,8 +70,8 @@ class CancellationService {
           bookingId,
           reason,
         });
-      } catch (refundError) {
-        console.error('Refund failed:', refundError);
+      } catch {
+        // Refund failure is non-fatal; cancellation proceeds regardless.
       }
     }
 
@@ -169,8 +169,8 @@ class CancellationService {
               bookingId: booking.id,
               reason: `Trip cancelled: ${reason}`,
             });
-          } catch (refundError) {
-            console.error(`Refund failed for booking ${booking.id}:`, refundError);
+          } catch {
+            // Refund failure is non-fatal; cancellation proceeds regardless.
           }
         }
 
