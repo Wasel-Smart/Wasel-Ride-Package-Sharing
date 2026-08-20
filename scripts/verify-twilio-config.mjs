@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const PROJECT_ROOT = path.resolve(process.cwd());
+const env = process.env || {};
 
 function safeResolve(filePath) {
   const resolved = path.resolve(PROJECT_ROOT, filePath);
@@ -29,7 +30,7 @@ function loadEnvFile(filePath) {
 
     const key = normalized.slice(0, separatorIndex).trim();
     if (!ALLOWED_ENV_VAR_PATTERN.test(key)) continue;
-    if (process.env[key]) continue;
+    if (env[key]) continue;
 
     let value = normalized.slice(separatorIndex + 1).trim();
     if (
@@ -40,7 +41,7 @@ function loadEnvFile(filePath) {
     }
 
     if (/^[A-Z_][A-Z0-9_]*$/.test(key)) {
-      process.env[key] = value;
+      env[key] = value;
     }
   }
 }
@@ -55,21 +56,21 @@ const requiredTwilioEnvVars = [
 ];
 
 for (const varName of requiredTwilioEnvVars) {
-  if (!process.env[varName]) {
+  if (!env[varName]) {
     console.error(`Missing required environment variable: ${varName}`);
     process.exit(1);
   }
 }
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim();
-const authToken = process.env.TWILIO_AUTH_TOKEN?.trim();
-const apiKeySid = process.env.TWILIO_API_KEY_SID?.trim();
-const apiKeySecret = process.env.TWILIO_API_KEY_SECRET?.trim();
-const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID?.trim();
-const smsFrom = process.env.TWILIO_SMS_FROM?.trim();
-const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID?.trim();
-const whatsappFrom = process.env.TWILIO_WHATSAPP_FROM?.trim();
-const requireApiKeyAuth = process.env.REQUIRE_TWILIO_API_KEY_AUTH === 'true';
+const accountSid = env.TWILIO_ACCOUNT_SID?.trim();
+const authToken = env.TWILIO_AUTH_TOKEN?.trim();
+const apiKeySid = env.TWILIO_API_KEY_SID?.trim();
+const apiKeySecret = env.TWILIO_API_KEY_SECRET?.trim();
+const messagingServiceSid = env.TWILIO_MESSAGING_SERVICE_SID?.trim();
+const smsFrom = env.TWILIO_SMS_FROM?.trim();
+const verifyServiceSid = env.TWILIO_VERIFY_SERVICE_SID?.trim();
+const whatsappFrom = env.TWILIO_WHATSAPP_FROM?.trim();
+const requireApiKeyAuth = env.REQUIRE_TWILIO_API_KEY_AUTH === 'true';
 
 function requireValue(name, value, pattern) {
   if (!value) {

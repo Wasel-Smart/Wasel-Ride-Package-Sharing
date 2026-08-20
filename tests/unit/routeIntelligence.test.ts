@@ -59,8 +59,8 @@ describe('routeIntelligence.test.ts', () => {
 
     const results = rankTripsForPassenger(trips, request);
     expect(results.length).toBeGreaterThanOrEqual(1);
-    expect(results[0].trip.id).toBe('t1');
-    expect(results[0].score.overall).toBeGreaterThan(results[1].score.overall);
+    expect(results[0]!.trip.id).toBe('t1');
+    expect(results[0]!.score.overall).toBeGreaterThan(results[1]!.score.overall);
   });
 
   it('filters out trips with score <= 30', async () => {
@@ -69,8 +69,9 @@ describe('routeIntelligence.test.ts', () => {
     const trips = [
       {
         id: 't1',
-        originCity: 'Irbid',
+        originCity: 'Amman',
         destinationCity: 'Aqaba',
+        country: 'JO',
         availableSeats: 0,
         totalSeats: 4,
         allowsPackages: true,
@@ -108,6 +109,7 @@ describe('routeIntelligence.test.ts', () => {
         id: 't1',
         originCity: 'Amman',
         destinationCity: 'Aqaba',
+        country: 'JO',
         allowsPackages: true,
         maxPackageWeightKg: 30,
         genderPreference: 'mixed' as const,
@@ -118,6 +120,7 @@ describe('routeIntelligence.test.ts', () => {
         id: 't2',
         originCity: 'Amman',
         destinationCity: 'Aqaba',
+        country: 'JO',
         allowsPackages: false,
         maxPackageWeightKg: 30,
         genderPreference: 'mixed' as const,
@@ -140,8 +143,8 @@ describe('routeIntelligence.test.ts', () => {
 
     const results = rankTripsForPackage(trips, pkg);
     expect(results).toHaveLength(1);
-    expect(results[0].trip.id).toBe('t1');
-    expect(results[0].result.compatible).toBe(true);
+    expect(results[0]!.trip.id).toBe('t1');
+    expect(results[0]!.result.compatible).toBe(true);
   });
 
   it('returns empty array for package with no compatible trips', async () => {
@@ -152,6 +155,7 @@ describe('routeIntelligence.test.ts', () => {
         id: 't1',
         originCity: 'Amman',
         destinationCity: 'Irbid',
+        country: 'JO',
         allowsPackages: true,
         maxPackageWeightKg: 30,
         genderPreference: 'mixed' as const,
@@ -200,7 +204,7 @@ describe('routeIntelligence.test.ts', () => {
 
     const result = calculateLiquidityHealth(15, 100, 80);
     expect(typeof result).toBe('object');
-    expect(result.healthScore).toBeGreaterThan(0);
+    expect((result as any).healthScore).toBeGreaterThan(0);
   });
 
   it('calculates liquidity health with object input', async () => {
@@ -220,7 +224,7 @@ describe('routeIntelligence.test.ts', () => {
 
     const result = calculateLiquidityHealth(15, 100, 80);
     expect(typeof result).toBe('object');
-    expect(result.healthScore).toBeGreaterThan(0);
+    expect((result as any).healthScore).toBeGreaterThan(0);
   });
 
   it('handles empty results in rankTripsForPassenger', async () => {
