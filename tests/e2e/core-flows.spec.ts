@@ -11,7 +11,12 @@ test('find ride confirms the local-fallback booking outcome clearly', async ({ p
   await page.getByTestId('find-ride-search').click();
   await page.getByRole('button', { name: /view details/i }).first().click();
   await page.getByRole('button', { name: /^reserve seat$/i }).click();
-  // Wait for the modal to close before checking the status banner in the page
+  // After booking the button label changes — wait for that before checking the page
+  await expect(
+    page.getByRole('button', { name: /open in my trips|reserving seat/i }),
+  ).toBeVisible({ timeout: 10000 });
+  // Close the modal so the page-level status banner is reachable
+  await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: /trip details/i })).not.toBeVisible();
   await expect(page.getByRole('status')).toContainText(/request sent|seat confirmed/i);
 });
