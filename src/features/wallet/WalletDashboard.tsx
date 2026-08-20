@@ -160,9 +160,9 @@ export function WalletDashboard() {
     <PageShell maxWidth={1120} dir={isRTL ? 'rtl' : 'ltr'}>
       <div style={{ paddingInline: SPACE[4] }}>
         <PageHero
-          eyebrow={isRTL ? 'محفظة واصل' : 'Wasel Wallet'}
+          eyebrow={isRTL ? 'المدفوعات' : 'Payments'}
           icon={<StatusBadge label={activeLabel} accent={C.green} />}
-          title={walletTitle}
+          title={isRTL ? 'محفظة واصل' : 'Wasel Wallet'}
           description={heroDescription}
           accent={C.cyan}
           actions={

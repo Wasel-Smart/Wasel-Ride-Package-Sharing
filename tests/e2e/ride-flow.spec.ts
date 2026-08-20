@@ -41,7 +41,8 @@ test('booking a seat surfaces the local-fallback result', async ({ page }) => {
   await page.getByTestId('find-ride-search').click();
   await page.getByRole('button', { name: /view details/i }).first().click();
   await page.getByRole('button', { name: /^reserve seat$/i }).click();
-  // Wait for the modal to close before checking the status banner in the page
-  await expect(page.getByRole('heading', { name: /trip details/i })).not.toBeVisible();
+  // The local-fallback result surfaces as a status banner; wait for that first
+  // (it is the source of truth), then confirm the trip-detail modal has closed.
   await expect(page.getByRole('status')).toContainText(/request sent|seat confirmed/i);
+  await expect(page.getByRole('heading', { name: /trip details/i })).not.toBeVisible();
 });
