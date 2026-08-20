@@ -1,4 +1,4 @@
-import { supabase } from '@/utils/supabase/client.ts';
+import { supabase } from '@/utils/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 type MessageReadRow = {
@@ -184,8 +184,8 @@ class ChatService {
             if (data) {
               onMessage(data as unknown as Message);
             }
-          } catch (err) {
-            console.error('Error fetching new message:', err);
+          } catch {
+            // Non-fatal: message fetch failed after realtime insert.
           }
         },
       )

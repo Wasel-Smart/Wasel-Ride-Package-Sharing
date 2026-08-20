@@ -2938,10 +2938,10 @@ async function finalizeTopUpTransaction(
   try {
     await client.queryArray('begin');
 
-    const transactionResult = await (client as any).queryObject(
+    const transactionResult = await client.queryObject<{ wallet_id: string; amount: number; transaction_status: string; metadata: unknown }>(
       'select wallet_id, amount, transaction_status, metadata from public.transactions where transaction_id = $1 for update',
       [transactionId],
-    ) as { rows: Array<{ wallet_id: string; amount: number; transaction_status: string; metadata: unknown }> };
+    );
 
     const transaction = transactionResult.rows[0];
     if (!transaction) {
@@ -5236,7 +5236,19 @@ async function handleRequestDataExport(request: Request) {
     transactions: transactions.data,
     consents: consents.data,
   };
-  const downloadUrl = `data:application/json;base64,${btoa(JSON.stringify(exportData))}`;
+  const exportJson = JSON.stringify(exportData);
+  // Store the export payload in Supabase Storage and return a storage path.
+  // The client must request a signed URL separately — never embed data: URIs in the DB.
+  const storagePath = `exports/${userId}/${requestedAt}.json`;
+  const admin = getAdminClient();
+  await admin.storage
+    .from('gdpr-exports')
+    .upload(storagePath, new Blob([exportJson], { type: 'application/json' }), {
+      upsert: true,
+      contentType: 'application/json',
+    });
+  const downloadUrl = storagePath;
+
   const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
 
   const { error } = await auth.admin.from('data_export_requests').insert({

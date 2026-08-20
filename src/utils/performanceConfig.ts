@@ -3,7 +3,7 @@
  * Implements smooth scrolling, lazy loading, and navigation optimization
  */
 
-import { publicSupabaseUrl } from './supabase/info.ts';
+import { publicSupabaseUrl } from './supabase/info';
 
 export const PERFORMANCE_CONFIG = {
   // Scroll optimization

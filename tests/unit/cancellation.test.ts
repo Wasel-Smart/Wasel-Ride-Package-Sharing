@@ -66,7 +66,7 @@ describe('cancellation.test.ts', () => {
           single: vi.fn().mockResolvedValue({ data: null, error: { message: 'not found' } }),
         })),
       })),
-    });
+    } as unknown as Parameters<typeof mockSupabase.from.mockReturnValueOnce>[0]);
 
     const { cancellationService: cs } = await import('@/services/cancellation');
     await expect(cs.cancelBooking({ bookingId: 'b1', reason: 'test' })).rejects.toThrow('Booking not found');
@@ -83,7 +83,7 @@ describe('cancellation.test.ts', () => {
           single: vi.fn().mockResolvedValue({ data: { id: 'b1', status: 'cancelled', passenger_id: 'user-1' }, error: null }),
         })),
       })),
-    });
+    } as unknown as Parameters<typeof mockSupabase.from.mockReturnValueOnce>[0]);
 
     const { cancellationService: cs } = await import('@/services/cancellation');
     await expect(cs.cancelBooking({ bookingId: 'b1', reason: 'test' })).rejects.toThrow('Booking already cancelled');
@@ -100,7 +100,7 @@ describe('cancellation.test.ts', () => {
           single: vi.fn().mockResolvedValue({ data: { id: 'b1', status: 'completed', passenger_id: 'user-1' }, error: null }),
         })),
       })),
-    });
+    } as unknown as Parameters<typeof mockSupabase.from.mockReturnValueOnce>[0]);
 
     const { cancellationService: cs } = await import('@/services/cancellation');
     await expect(cs.cancelBooking({ bookingId: 'b1', reason: 'test' })).rejects.toThrow('Cannot cancel completed booking');
@@ -117,7 +117,7 @@ describe('cancellation.test.ts', () => {
           single: vi.fn().mockResolvedValue({ data: { id: 'b1', status: 'pending', passenger_id: 'user-1' }, error: null }),
         })),
       })),
-    });
+    } as unknown as Parameters<typeof mockSupabase.from.mockReturnValueOnce>[0]);
 
     const { cancellationService: cs } = await import('@/services/cancellation');
     await expect(cs.cancelBooking({ bookingId: 'b1', reason: 'test' })).rejects.toThrow('Unauthorized');
@@ -135,18 +135,18 @@ describe('cancellation.test.ts', () => {
           single: vi.fn().mockResolvedValue({ data: { id: 'b1', status: 'pending', passenger_id: 'user-1', trip_id: 't1', payment_status: 'succeeded' }, error: null }),
         })),
       })),
-    }).mockReturnValueOnce({
+    } as unknown as Parameters<typeof mockSupabase.from.mockReturnValueOnce>[0]).mockReturnValueOnce({
       update: vi.fn(() => ({
         eq: vi.fn().mockResolvedValue({ data: null, error: null }),
       })),
       insert: vi.fn().mockResolvedValue({ data: null, error: null }),
-    }).mockReturnValueOnce({
+    } as unknown as Parameters<typeof mockSupabase.from.mockReturnValueOnce>[0]).mockReturnValueOnce({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
           single: vi.fn().mockResolvedValue({ data: { driver_id: 'driver-1' }, error: null }),
         })),
       })),
-    });
+    } as unknown as Parameters<typeof mockSupabase.from.mockReturnValueOnce>[0]);
 
     const { cancellationService: cs } = await import('@/services/cancellation');
     await expect(cs.cancelBooking({ bookingId: 'b1', reason: 'test' })).resolves.toBeUndefined();

@@ -1,4 +1,4 @@
-import { supabase } from '@/utils/supabase/client.ts';
+import { supabase } from '@/utils/supabase/client';
 import { toMinorUnits } from '../shared/currency/currency';
 
 export interface PaymentIntentRequest {

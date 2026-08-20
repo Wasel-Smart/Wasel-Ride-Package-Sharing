@@ -167,12 +167,12 @@ export const walletApi = {
   },
 
   async getTransactions(userId: string, page = 1, limit = 20, type?: string) {
-  const edgeFn = async () => {
-    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-    if (type) params.set('type', type);
-    const result = await requestWalletJson<{ transactions: WalletTransaction[]; page: number; limit: number; total: number }>(userId, `/transactions?${params.toString()}`, 'Load wallet transactions');
-    return { ...result, transactions: sanitizeTransactions(result.transactions) };
-  };
+    const edgeFn = async () => {
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (type) params.set('type', type);
+      const result = await requestWalletJson<{ transactions: WalletTransaction[]; page: number; limit: number; total: number }>(userId, `/transactions?${params.toString()}`, 'Load wallet transactions');
+      return { ...result, transactions: sanitizeTransactions(result.transactions) };
+    };
     const directFn = async () => {
       const wallet = canUseLocalWalletStorage()
         ? await fetchWalletDirect(userId).catch(() => fetchWalletLocal(userId))

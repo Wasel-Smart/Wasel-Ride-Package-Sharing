@@ -34,7 +34,7 @@ describe('bookings.test.ts', () => {
   });
 
   it('getUserBookings requests correct path', async () => {
-    const { requestEdgeJson } = await import('@/services/backendWorkflow');
+    const { requestEdgeJson } = await import('@/services/backendWorkflow') as Record<string, { mockResolvedValueOnce: (value: unknown) => void }>;
     requestEdgeJson.mockResolvedValueOnce({ bookings: [{ booking_id: 'b1', trip_id: 't1', status: 'pending' }] });
 
     const { bookingsAPI: api } = await import('@/services/bookings');
@@ -45,7 +45,7 @@ describe('bookings.test.ts', () => {
   });
 
   it('getTripBookings requests correct path', async () => {
-    const { requestEdgeJson } = await import('@/services/backendWorkflow');
+    const { requestEdgeJson } = await import('@/services/backendWorkflow') as Record<string, { mockResolvedValueOnce: (value: unknown) => void }>;
     requestEdgeJson.mockResolvedValueOnce({ bookings: [{ booking_id: 'b1', trip_id: 't1', status: 'pending' }] });
 
     const { bookingsAPI: api } = await import('@/services/bookings');
@@ -56,7 +56,7 @@ describe('bookings.test.ts', () => {
   });
 
   it('updateBookingStatus updates status', async () => {
-    const { requestEdgeJson } = await import('@/services/backendWorkflow');
+    const { requestEdgeJson } = await import('@/services/backendWorkflow') as Record<string, { mockResolvedValueOnce: (value: unknown) => void }>;
     requestEdgeJson.mockResolvedValueOnce({ booking_id: 'b1', status: 'accepted' });
 
     const { bookingsAPI: api } = await import('@/services/bookings');
