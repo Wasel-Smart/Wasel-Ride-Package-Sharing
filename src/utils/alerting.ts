@@ -207,7 +207,7 @@ class AlertingSystem {
     }
 
     // Log alert
-    const logLevel =
+    const logLevel: 'error' | 'warning' =
       alert.severity === AlertSeverity.CRITICAL || alert.severity === AlertSeverity.ERROR
         ? 'error'
         : 'warning';
