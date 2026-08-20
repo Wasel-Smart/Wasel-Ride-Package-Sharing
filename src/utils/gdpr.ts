@@ -146,18 +146,21 @@ class GDPRCompliance {
       )?.error;
       if (firstError) throw firstError;
 
-      const exportData = {
-        exportDate: new Date().toISOString(),
-        userId,
-        profile: profile.data,
-        bookings: bookings.data,
-        packages: packages.data,
-        transactions: transactions.data,
-        consents: consents.data,
-      };
-
-      const exportJson = JSON.stringify(exportData, null, 2);
       const downloadUrl = `exports/${userId}/${Date.now()}.json`;
+
+      const exportJson = JSON.stringify(
+        {
+          exportDate: new Date().toISOString(),
+          userId,
+          profile: profile.data,
+          bookings: bookings.data,
+          packages: packages.data,
+          transactions: transactions.data,
+          consents: consents.data,
+        },
+        null,
+        2,
+      );
 
       await supabase
         .from('data_export_requests')

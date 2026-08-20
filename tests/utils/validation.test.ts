@@ -18,6 +18,7 @@ import {
 } from '@/utils/validation';
 
 const TEST_PASSWORD = process.env.TEST_PASSWORD ?? 'TestPass123!';
+const TEST_PASSWORD_MISMATCH = process.env.TEST_PASSWORD_MISMATCH ?? 'Different@1';
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 
@@ -81,7 +82,7 @@ describe('signUpSchema', () => {
   });
 
   it('rejects when passwords do not match', () => {
-    const mismatch = 'Different@1';
+    const mismatch = TEST_PASSWORD_MISMATCH;
     expect(isValid(signUpSchema, { ...valid, confirmPassword: mismatch })).toBe(false);
     const msgs = errorMessages(signUpSchema, { ...valid, confirmPassword: mismatch });
     expect(msgs.some(m => m.toLowerCase().includes('match'))).toBe(true);
