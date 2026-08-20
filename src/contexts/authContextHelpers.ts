@@ -2,9 +2,9 @@ import type {
   AuthChangeEvent,
   AuthError,
   Session,
-  SupabaseClient,
   User,
-} from '@supabase/supabase-js';
+} from '@supabase/auth-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { WaselUser } from './LocalAuth';
 import { authAPI } from '../services/auth';
 import { getAuthCallbackUrl } from '../utils/env';

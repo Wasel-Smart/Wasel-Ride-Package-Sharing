@@ -6,7 +6,7 @@
  * but no longer owns a second auth/session subscription.
  */
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import type { User } from '@supabase/supabase-js';
+import type { User } from '@supabase/auth-js';
 import type { Profile } from './authContextHelpers';
 import { useAuth } from './AuthContext';
 import { deriveAccountTrustScore } from '../domain/trust/score';

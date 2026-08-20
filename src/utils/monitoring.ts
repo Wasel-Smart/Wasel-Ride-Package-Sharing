@@ -47,8 +47,10 @@ export function initSentry(): void {
     dsn,
     environment,
     integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
+      // @ts-expect-error — Sentry v8 exposes these on the namespace at runtime
+      ...(typeof Sentry.browserTracingIntegration === 'function' ? [Sentry.browserTracingIntegration()] : []),
+      // @ts-expect-error — Sentry v8 exposes these on the namespace at runtime
+      ...(typeof Sentry.replayIntegration === 'function' ? [Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true })] : []),
     ],
     tracesSampleRate: environment === 'production' ? 0.1 : 1,
     replaysSessionSampleRate: environment === 'production' ? 0.05 : 0,
@@ -111,17 +113,19 @@ export const logger = {
   error(message: string, error?: unknown, context?: Record<string, unknown>): void {
     const safeMessage = sanitizeLogMessage(message);
     writeConsole('error', safeMessage, context);
-    Sentry.captureException(error || new Error(safeMessage), {
-      level: 'error',
-      tags: { type: 'application_error' },
-      extra: context,
-    });
+    if (typeof (Sentry as unknown as Record<string, unknown>).captureException === 'function') {
+      (Sentry as unknown as { captureException: (e: unknown, o: unknown) => void }).captureException(error || new Error(safeMessage), {
+        level: 'error',
+        tags: { type: 'application_error' },
+        extra: context,
+      });
+    }
   },
 
   warning(message: string, context?: Record<string, unknown>): void {
     writeConsole('warning', sanitizeLogMessage(message), context);
-    if (import.meta.env.PROD) {
-      Sentry.captureMessage(sanitizeLogMessage(message), {
+    if (import.meta.env.PROD && typeof (Sentry as unknown as Record<string, unknown>).captureMessage === 'function') {
+      (Sentry as unknown as { captureMessage: (m: string, o: unknown) => void }).captureMessage(sanitizeLogMessage(message), {
         level: 'warning',
         tags: { type: 'application_warning' },
         extra: context,
@@ -131,8 +135,8 @@ export const logger = {
 
   info(message: string, context?: Record<string, unknown>): void {
     writeConsole('info', sanitizeLogMessage(message), context);
-    if (import.meta.env.PROD && context?.important) {
-      Sentry.captureMessage(sanitizeLogMessage(message), {
+    if (import.meta.env.PROD && context?.important && typeof (Sentry as unknown as Record<string, unknown>).captureMessage === 'function') {
+      (Sentry as unknown as { captureMessage: (m: string, o: unknown) => void }).captureMessage(sanitizeLogMessage(message), {
         level: 'info',
         tags: { type: 'application_info' },
         extra: context,
@@ -143,15 +147,14 @@ export const logger = {
   metric(name: string, value: number, tags?: Record<string, string>): void {
     const safeName = sanitizeLogMessage(name);
     writeConsole('info', `metric:${safeName}`, { value, tags });
-    Sentry.addBreadcrumb({
-      category: 'metric',
-      message: safeName,
-      level: 'info',
-      data: {
-        value,
-        ...tags,
-      },
-    });
+    if (typeof (Sentry as unknown as Record<string, unknown>).addBreadcrumb === 'function') {
+      (Sentry as unknown as { addBreadcrumb: (b: unknown) => void }).addBreadcrumb({
+        category: 'metric',
+        message: safeName,
+        level: 'info',
+        data: { value, ...tags },
+      });
+    }
   },
 
   startTransaction(name: string, op: string) {
@@ -161,7 +164,9 @@ export const logger = {
   },
 
   addBreadcrumb(message: string, category: string, data?: Record<string, unknown>): void {
-    Sentry.addBreadcrumb({ message, category, level: 'info', data });
+    if (typeof (Sentry as unknown as Record<string, unknown>).addBreadcrumb === 'function') {
+      (Sentry as unknown as { addBreadcrumb: (b: unknown) => void }).addBreadcrumb({ message, category, level: 'info', data });
+    }
   },
 };
 

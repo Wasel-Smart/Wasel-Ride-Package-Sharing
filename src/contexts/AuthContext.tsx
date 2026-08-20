@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
+import type { AuthChangeEvent, Session, User } from '@supabase/auth-js';
 import { authAPI } from '../services/auth';
 import { getAuthCallbackUrl } from '../utils/env';
 import { isSupabaseConfigured, supabase } from '../utils/supabase/client';
