@@ -165,8 +165,8 @@ test.describe('OAuth Callback Handling', () => {
 
   test('should handle OAuth callback with returnTo', async ({ page, context }) => {
     const mockSession = {
-      access_token: 'mock-token-e2e',
-      refresh_token: 'mock-refresh-e2e',
+      access_token: process.env.E2E_MOCK_ACCESS_TOKEN ?? 'mock-access-token',
+      refresh_token: process.env.E2E_MOCK_REFRESH_TOKEN ?? 'mock-refresh-token',
       user: { id: 'test-user', email: 'test@example.test', aud: 'authenticated' },
     };
 
@@ -190,8 +190,8 @@ test.describe('OAuth Profile Creation', () => {
   test('should handle OAuth profile creation errors gracefully', async ({ page, context }) => {
     await context.route('**/rest/v1/profiles**', route => route.abort('connectionfailed'));
 
-    const at = 'mock-token-e2e';
-    const rt = 'mock-refresh-e2e';
+    const at = process.env.E2E_MOCK_ACCESS_TOKEN ?? 'mock-access-token';
+    const rt = process.env.E2E_MOCK_REFRESH_TOKEN ?? 'mock-refresh-token';
     await context.addInitScript(({ a, r }: { a: string; r: string }) => {
       const key = 'wasel-auth-token';
       window.localStorage.setItem(key, JSON.stringify({

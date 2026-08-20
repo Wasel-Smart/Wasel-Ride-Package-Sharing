@@ -640,6 +640,7 @@ function WaselMapFull(props: WaselMapProps) {
   const watchIdRef = useRef<number | null>(null);
   const initDone = useRef(false);
   const LRef = useRef<LeafletNamespace | null>(null); // Leaflet instance
+  const moveEndDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -981,10 +982,12 @@ function WaselMapFull(props: WaselMapProps) {
           .addTo(map);
 
         // Reload mosques when map moves significantly
-        let debounceTimer: ReturnType<typeof setTimeout>;
         map.on('moveend', () => {
-          clearTimeout(debounceTimer);
-          debounceTimer = setTimeout(() => {
+          if (moveEndDebounceRef.current !== null) {
+            clearTimeout(moveEndDebounceRef.current);
+          }
+          moveEndDebounceRef.current = setTimeout(() => {
+            moveEndDebounceRef.current = null;
             if (mosquesOn) loadMosques(map);
           }, 1000);
         });
@@ -1021,6 +1024,10 @@ function WaselMapFull(props: WaselMapProps) {
       mapRef.current?.remove();
       mapRef.current = null;
       initDone.current = false;
+      if (moveEndDebounceRef.current !== null) {
+        clearTimeout(moveEndDebounceRef.current);
+        moveEndDebounceRef.current = null;
+      }
     };
   }, []);
 

@@ -109,6 +109,14 @@ export const FindRideCard = React.memo(function FindRideCard({
 
   return (
     <motion.div
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.06, type: 'spring', stiffness: 380, damping: 28 }}
