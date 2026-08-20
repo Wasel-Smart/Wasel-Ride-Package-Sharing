@@ -1,7 +1,7 @@
 jest.mock('../lib/config', () => ({
   waselMobileConfig: {
     hasSupabase: true,
-    apiUrl: 'https://api.test.wasel',
+    apiUrl: 'https://wasel14.online',
     authRedirectUrl: 'wasel://auth/callback',
   },
   supabase: {
@@ -115,7 +115,7 @@ describe('RideLifecycleService', () => {
     });
 
     it('sends cancel request to API on success', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true, status: 200 });
+      mockFetch.mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({}) });
 
       const result = await service.cancelRide('ride-1');
       expect(result).toEqual({});
@@ -139,7 +139,7 @@ describe('RideLifecycleService', () => {
     });
 
     it('sends rating to API on success', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true, status: 200 });
+      mockFetch.mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({}) });
 
       const result = await service.rateRide('ride-1', 5, 'Great ride');
       expect(result).toEqual({});
