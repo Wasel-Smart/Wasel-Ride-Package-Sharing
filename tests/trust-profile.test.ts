@@ -93,7 +93,6 @@ describe('trust profile derivation', () => {
       deriveAccountTrustScore({
         emailVerified: true,
         phoneVerified: true,
-        sanadVerified: true,
         rating: 5,
       }),
     ).toBe(90);

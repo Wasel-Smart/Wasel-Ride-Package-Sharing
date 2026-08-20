@@ -112,8 +112,8 @@ export const InfoCard = React.memo(function InfoCard({
         <Ionicons name={icon} size={20} color={tone} />
       </View>
       <View style={styles.cardText}>
-        <Text style={styles.cardTitle}>{title}</Text>
-        <Text style={styles.cardBody}>{body}</Text>
+        <Text style={styles.cardTitle}>{sanitizeText(title)}</Text>
+        <Text style={styles.cardBody}>{sanitizeText(body)}</Text>
       </View>
     </View>
   );
@@ -130,8 +130,8 @@ export const MetricTile = React.memo(function MetricTile({
 }) {
   return (
     <View style={styles.metric}>
-      <Text style={[styles.metricValue, { color: tone }]}>{value}</Text>
-      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={[styles.metricValue, { color: tone }]}>{sanitizeText(value)}</Text>
+      <Text style={styles.metricLabel}>{sanitizeText(label)}</Text>
     </View>
   );
 });
@@ -147,8 +147,8 @@ export const InlineStat = React.memo(function InlineStat({
 }) {
   return (
     <View style={styles.inlineStat}>
-      <Text style={[styles.inlineValue, { color: tone }]}>{value}</Text>
-      <Text style={styles.inlineLabel}>{label}</Text>
+      <Text style={[styles.inlineValue, { color: tone }]}>{sanitizeText(value)}</Text>
+      <Text style={styles.inlineLabel}>{sanitizeText(label)}</Text>
     </View>
   );
 });
@@ -165,7 +165,7 @@ export const StatusPill = React.memo(function StatusPill({
   return (
     <View style={[styles.pill, { borderColor: `${tone}50`, backgroundColor: `${tone}15` }]}>
       <Ionicons name={icon} size={12} color={tone} />
-      <Text style={[styles.pillText, { color: tone }]}>{label}</Text>
+      <Text style={[styles.pillText, { color: tone }]}>{sanitizeText(label)}</Text>
     </View>
   );
 });
@@ -192,9 +192,9 @@ export const RoutePreview = React.memo(function RoutePreview({
       </View>
       <View style={styles.routeCopy}>
         <View style={styles.routeEndpoints}>
-          <Text style={styles.routeCity}>{from}</Text>
+          <Text style={styles.routeCity}>{sanitizeText(from)}</Text>
           <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
-          <Text style={styles.routeCity}>{to}</Text>
+          <Text style={styles.routeCity}>{sanitizeText(to)}</Text>
         </View>
         <View style={styles.routeStats}>
           <InlineStat label="وقت الوصول" value={eta} tone={tone} />
@@ -226,8 +226,8 @@ export const StateNotice = React.memo(function StateNotice({
         {loading ? <ActivityIndicator color={tone} /> : <Ionicons name={icon} size={20} color={tone} />}
       </View>
       <View style={styles.noticeCopy}>
-        <Text style={styles.noticeTitle}>{title}</Text>
-        {body ? <Text style={styles.noticeBody}>{body}</Text> : null}
+        <Text style={styles.noticeTitle}>{sanitizeText(title)}</Text>
+        {body ? <Text style={styles.noticeBody}>{sanitizeText(body)}</Text> : null}
       </View>
     </View>
   );
@@ -286,7 +286,7 @@ export function PrimaryButton({
         <ActivityIndicator color={isOutline ? tone : '#FFFFFF'} />
       ) : (
         <>
-          <Text style={styles.buttonText}>{label}</Text>
+          <Text style={styles.buttonText}>{sanitizeText(label)}</Text>
           <Ionicons name={icon} size={18} color={colors.bg} />
         </>
       )}
@@ -323,8 +323,8 @@ export function ActionRow({
       style={({ pressed }) => [styles.action, pressed ? styles.actionPressed : null]}
     >
       <Ionicons name={icon} size={18} color={tone} />
-      <Text style={[styles.actionText, destructive ? styles.destructiveText : null]}>{label}</Text>
-      {value ? <Text style={styles.actionValue}>{value}</Text> : null}
+      <Text style={[styles.actionText, destructive ? styles.destructiveText : null]}>{sanitizeText(label)}</Text>
+      {value ? <Text style={styles.actionValue}>{sanitizeText(value)}</Text> : null}
       <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
     </Pressable>
   );

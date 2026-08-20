@@ -13,6 +13,15 @@ const RATE_LIMITS: Record<string, { windowMs: number; maxRequests: number }> = {
   write: { windowMs: 60_000, maxRequests: 20 },
 };
 
+function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -109,6 +118,6 @@ Deno.serve(async (request: Request) => {
       headers: responseHeaders,
     });
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : 'Upstream request failed' }, 502);
+    return json({ error: escapeHtml(error instanceof Error ? error.message : 'Upstream request failed') }, 502);
   }
 });

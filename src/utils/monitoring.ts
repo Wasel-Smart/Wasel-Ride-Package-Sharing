@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react';
+import type { Integration } from '@sentry/core';
 import type { DomainEventEnvelope } from '../domain/events';
 import { createCorrelationId, createStructuredLogEntry } from '../platform/observability';
 import { sanitizeLogMessage } from './sanitization';
@@ -43,16 +44,16 @@ export function initSentry(): void {
     return;
   }
 
-  const sentryIntegrations: unknown[] = [];
+  const sentryIntegrations: Integration[] = [];
 
   const browserTracingIntegration = (Sentry as unknown as Record<string, () => unknown>).browserTracingIntegration;
   if (typeof browserTracingIntegration === 'function') {
-    sentryIntegrations.push(browserTracingIntegration());
+    sentryIntegrations.push(browserTracingIntegration() as Integration);
   }
 
   const replayIntegration = (Sentry as unknown as Record<string, (o: unknown) => unknown>).replayIntegration;
   if (typeof replayIntegration === 'function') {
-    sentryIntegrations.push(replayIntegration({ maskAllText: true, blockAllMedia: true }));
+    sentryIntegrations.push(replayIntegration({ maskAllText: true, blockAllMedia: true }) as Integration);
   }
 
   Sentry.init({
