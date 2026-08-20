@@ -138,7 +138,12 @@ function secureRandomInt(maxExclusive: number): number {
   return value % maxExclusive;
 }
 
+const TRACKING_CODE_PATTERN = /^WSL-PKG-[A-Z0-9]{6}$/;
+
 function generateQRCodeUrl(trackingCode: string): string {
+  if (!TRACKING_CODE_PATTERN.test(trackingCode)) {
+    throw new Error('Invalid tracking code format');
+  }
   return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(trackingCode)}`;
 }
 
