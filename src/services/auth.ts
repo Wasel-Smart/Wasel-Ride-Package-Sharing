@@ -238,7 +238,12 @@ export const authAPI = {
     const client = requireSupabase();
     const { data, error } = await client.auth.signInWithPassword({ email, password });
 
-    if (error) throw new Error(normalizeAuthError(error.message, 'signin'));
+    if (error) {
+      if (import.meta.env?.DEV) {
+        console.error('[auth.signIn]', error.status, error.code, error.message);
+      }
+      throw new Error(normalizeAuthError(error.message, 'signin'));
+    }
     return data;
   },
 
