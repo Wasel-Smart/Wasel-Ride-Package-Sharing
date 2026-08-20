@@ -54,14 +54,14 @@ describe('packageApi.test.ts', () => {
   });
 
   it('getMyPackages throws when not authenticated', async () => {
-    const { getSessionUserId } = await import('@/utils/api');
+    const { getSessionUserId } = await import('@/utils/api') as any;
     getSessionUserId.mockResolvedValue(null);
 
     await expect(packageApi.getMyPackages()).rejects.toThrow('Not authenticated');
   });
 
   it('getMyPackages fetches sender packages', async () => {
-    const { getSessionUserId } = await import('@/utils/api');
+    const { getSessionUserId } = await import('@/utils/api') as any;
     getSessionUserId.mockResolvedValue('user-1');
     mockApi.get.mockResolvedValue({ data: [{ id: 'p1' }] });
 

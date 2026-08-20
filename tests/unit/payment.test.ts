@@ -88,7 +88,7 @@ describe('payment.test.ts', () => {
     });
 
     const callArgs = mockSupabase.mockFunctionsInvoke.mock.calls[0];
-    expect(callArgs[1].body.amount).toBe(1500);
+    expect((callArgs as unknown as any[])[1].body.amount).toBe(1500);
   });
 
   it('normalizes non-JOD amount to minor units (multiplier 100)', async () => {
