@@ -186,7 +186,6 @@ public/brand/ChatGPT*
 *-LaithNassar/
 .env-LaithNassar.*
 .env.production-LaithNassar.*
-.env*
 
 # Script scan/debug output artifacts (never commit)
 scripts/_*.json
@@ -213,5 +212,69 @@ check-css.cjs
 # Stale docs that should not live in source tree
 src/platform/HONEST_AUDIT_REPORT_OUTDATED_*.md
 
-.vercel
+# OneDrive sync artifacts and conflicts
+*.oneDrive
+*.onedrive
+*.conflict*
+*.tmp.OneDrive*
+
+# Windows thumbnail cache
+ehthumbs.db
+ehthumbs_vista.db
+
+# macOS
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+# Recycle Bin
+$RECYCLE.BIN/
+
+# System files
+Icon?
+Thumbs.db
+ehthumbs.db
+Dockerfile.*
+docker-compose.*.local
+
+# Supabase local temp
+supabase/.temp/
+
+# Backup files
+*.bak
+*.backup
+*.swp
+*~
+
+# Yarn integrity
+.yarn/install-state.gz
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+
+# pnpm
+.pnpm-store/
+
+# IDE
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/.browse.VC*
+.idea/*
+*.iml
+*.ipr
+*.iws
+
+# Local env overrides
+.envrc
+.direnv/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfplan
+
+# k8s secrets
+k8s/secrets/
 

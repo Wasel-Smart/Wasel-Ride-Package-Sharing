@@ -7,6 +7,7 @@ import {
 import { addCSRFHeader } from '../utils/csrf';
 import { circuitBreakers, CircuitState } from '../utils/circuitBreaker';
 import { getConfig } from '../utils/env';
+import { getEdgeFunctionName } from '../utils/edgeFunctionConfig';
 import { validateApiUrl } from '../utils/sanitization';
 
 export { projectId, publicAnonKey };
@@ -40,7 +41,7 @@ const configuredFunctionName = isPlaceholderEdgeFunctionName(rawConfiguredFuncti
   : rawConfiguredFunctionName;
 const defaultFunctionsBaseUrl = supabaseUrl ? `${supabaseUrl}/functions/v1` : '';
 const resolvedFunctionsBaseUrl = configuredFunctionsBaseUrl || defaultFunctionsBaseUrl;
-const resolvedFunctionName = configuredFunctionName || 'make-server-0b1f4071';
+const resolvedFunctionName = configuredFunctionName || getEdgeFunctionName();
 
 export const API_URL = configuredApiUrl
   ? configuredApiUrl.replace(/\/$/, '')
