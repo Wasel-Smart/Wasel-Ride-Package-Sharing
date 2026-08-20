@@ -40,7 +40,7 @@ function collectFiles(dir) {
     if (!resolvedFull.startsWith(baseDir)) continue;
     if (e.isDirectory()) {
       if (e.name === 'locales' || e.name === 'node_modules') continue;
-      out.push(...collectFiles(full));
+      out.push(...collectFiles(resolvedFull));
     } else if (e.isFile() && /\.(tsx?)$/.test(e.name)) out.push(resolvedFull);
   }
   return out;

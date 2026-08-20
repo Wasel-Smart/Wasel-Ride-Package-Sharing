@@ -98,7 +98,7 @@ function collectFiles(dir) {
     if (!resolvedFull.startsWith(baseDir)) continue;
     if (entry.isDirectory()) {
       if (entry.name === 'locales' || entry.name === 'node_modules') continue;
-      out.push(...collectFiles(full));
+      out.push(...collectFiles(resolvedFull));
     } else if (entry.isFile() && /\.(tsx?)$/.test(entry.name)) {
       out.push(resolvedFull);
     }
