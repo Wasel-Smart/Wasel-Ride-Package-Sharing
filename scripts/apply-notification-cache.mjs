@@ -92,5 +92,9 @@ if (edgeInsertIdx === -1) throw new Error('edge serverNotifications line not fou
 lines.splice(edgeInsertIdx, 0, '      notificationCache.set(userId, { data: serverNotifications, timestamp: Date.now() });');
 
 // Write back
-writeFileSync(safeResolve(filePath), lines.join('\n'), 'utf8');
+const resolvedWritePath = safeResolve(filePath);
+if (!resolve(resolvedWritePath).startsWith(PROJECT_ROOT)) {
+  throw new Error(`Path traversal detected: ${resolvedWritePath} resolves outside project root`);
+}
+writeFileSync(resolvedWritePath, lines.join('\n'), 'utf8');
 console.log('notifications.ts patched successfully');
