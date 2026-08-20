@@ -100,7 +100,7 @@
         "@testing-library/user-event": "^14.6.3",
         "@types/deno": "^2.7.0",
         "@types/leaflet": "^1.9.22",
-        "@types/node": "^20.19.0",
+        "@types/node": "^26.2.0",
         "@types/react": "^19.2.7",
         "@types/react-dom": "^19.2.3",
         "@typescript-eslint/eslint-plugin": "^8.65.0",
