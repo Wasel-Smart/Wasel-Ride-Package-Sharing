@@ -4,7 +4,7 @@
  */
 
 import { logger } from './monitoring';
-import { supabase } from './supabase/client.ts';
+import { supabase } from './supabase/client';
 import { sanitizeLogMessage } from './sanitization';
 
 export interface ConsentRecord {
