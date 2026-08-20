@@ -479,7 +479,7 @@ export class LocationTrackingService {
 
   // ── Private: permissions ────────────────────────────────────────────────────
 
-  private async requestLocationPermission(): Promise<boolean> {
+  private async requestLocationPermission(options?: { background?: boolean }): Promise<boolean> {
     try {
       if (Platform.OS === 'android') {
         const coarse = await PermissionsAndroid.request(
@@ -494,8 +494,7 @@ export class LocationTrackingService {
         );
         if (coarse !== PermissionsAndroid.RESULTS.GRANTED) return false;
 
-        // Android 10+ background permission for driver mode
-        if (Platform.Version >= 29) {
+        if (options?.background && Platform.Version >= 29) {
           const bg = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.ACCESS_BACKGROUND_LOCATION,
             {
@@ -506,7 +505,6 @@ export class LocationTrackingService {
               buttonPositive: 'Allow',
             },
           );
-          // Background permission is best-effort — don't block if denied
           if (bg !== PermissionsAndroid.RESULTS.GRANTED) {
             console.warn('[LocationTracking] Background location denied — foreground only');
           }
