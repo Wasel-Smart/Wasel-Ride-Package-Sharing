@@ -11,6 +11,9 @@ const apiBreaker = new CircuitBreaker('mobile-api', 5, 1, 5_000);
 const ALLOWED_API_DOMAINS = ['supabase.co', 'supabase.net', 'wasel14.online', 'localhost'];
 
 function isValidApiUrl(url: string): boolean {
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return false;
+  }
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
@@ -87,37 +90,37 @@ async request<T>(path: string, config: ApiRequestConfig = {}): Promise<ApiRespon
      const timeout = config.timeout ?? this.defaultTimeout;
      const retries = config.retries ?? 2;
 
-     if (!isValidApiUrl(url)) {
-       return { data: null, error: 'Invalid or unauthorized URL', status: 0 };
-     }
+      if (!isValidApiUrl(url)) {
+        return { data: null, error: 'Invalid or unauthorized URL', status: 0 };
+      }
 
-     const executeRequest = async (): Promise<ApiResponse<T>> => {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      const executeRequest = async (): Promise<ApiResponse<T>> => {
+       const controller = new AbortController();
+       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      try {
-        const headers = {
-          ...(await this.getAuthHeaders()),
-          ...config.headers,
-        };
+       try {
+         const headers = {
+           ...(await this.getAuthHeaders()),
+           ...config.headers,
+         };
 
-        const fetchOptions: RequestInit = {
-          method: config.method ?? 'GET',
-          headers,
-          signal: controller.signal,
-        };
-        if (config.body) {
-          fetchOptions.body = JSON.stringify(config.body);
-        }
-        const response = await fetch(url, fetchOptions);
+         const fetchOptions: RequestInit = {
+           method: config.method ?? 'GET',
+           headers,
+           signal: controller.signal,
+         };
+         if (config.body) {
+           fetchOptions.body = JSON.stringify(config.body);
+         }
+          const response = await fetch(url, fetchOptions);
 
-        const data = response.status === 204 ? null : await response.json().catch(() => null);
+          const data = response.status === 204 ? null : await response.json().catch(() => null);
 
-        return {
-          data: data as T,
-          error: data?.error ?? (response.ok ? null : `HTTP ${response.status}`),
-          status: response.status,
-        };
+         return {
+           data: data as T,
+           error: data?.error ?? (response.ok ? null : `HTTP ${response.status}`),
+           status: response.status,
+         };
       } catch (error) {
         const message =
           error instanceof Error
@@ -125,17 +128,23 @@ async request<T>(path: string, config: ApiRequestConfig = {}): Promise<ApiRespon
               ? 'Request timeout'
               : error.message
             : 'Network error';
-        return { data: null, error: message, status: 0 };
+        throw new Error(message);
       } finally {
         clearTimeout(timeoutId);
       }
     };
 
-    try {
-      return await apiBreaker.execute(executeRequest);
-    } catch {
-      return { data: null, error: 'Request failed after retries', status: 0 };
-    }
+     try {
+       return await this.withRetry(() => apiBreaker.execute(executeRequest), retries, 1000);
+     } catch (error) {
+       const message =
+         error instanceof Error
+           ? error.name === 'AbortError'
+             ? 'Request timeout'
+             : error.message
+           : 'Network error';
+       return { data: null, error: message, status: 0 };
+     }
   }
 
   async get<T>(path: string, config?: Omit<ApiRequestConfig, 'method'>): Promise<ApiResponse<T>> {
