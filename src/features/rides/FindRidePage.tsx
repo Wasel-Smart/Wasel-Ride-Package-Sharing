@@ -361,6 +361,7 @@ export function FindRidePage() {
       });
 
       setRideBookings(getRideBookings());
+      setSelected(null);
       setBookingSuccess({
         status: booking.status === 'pending_driver' ? 'pending_driver' : 'confirmed',
         routeLabel: `${ride.from} to ${ride.to}`,
