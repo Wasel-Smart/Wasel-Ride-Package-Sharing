@@ -13,8 +13,7 @@ import {
   TimerReset,
   Users,
 } from 'lucide-react';
-import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
-import { WaselButton } from '../../design-system';
+import { WaselButton, WaselLogo } from '../../components/wasel-ui';
 import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
 import { tx } from '../../locales/tx';
 

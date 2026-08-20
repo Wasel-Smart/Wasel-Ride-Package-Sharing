@@ -22,7 +22,7 @@ import {
   SectionCard,
   StatusBadge as PageStatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
-import { WaselButton } from '../../design-system';
+import { WaselButton } from '../../components/wasel-ui';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';

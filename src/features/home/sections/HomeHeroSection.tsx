@@ -12,7 +12,7 @@ import {
   Shield,
 } from 'lucide-react';
 import type { User } from '@supabase/auth-js';
-import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
+import { WaselLogo } from '../../../components/wasel-ui';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../../contexts/LanguageContext';
 

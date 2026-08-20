@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import { PageHero, PageShell, StatusBadge } from '../../components/wasel-ui/WaselPagePrimitives';
-import { WaselButton } from '../../design-system';
+import { WaselButton } from '../../components/wasel-ui';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';

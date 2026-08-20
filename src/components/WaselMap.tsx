@@ -24,7 +24,7 @@ import {
 
 import { MapControls, type MapType } from './MapControls';
 import { MapOverlays } from './MapOverlays';
-import { WaselLogo } from './wasel-ds/WaselLogo';
+import { WaselLogo } from './wasel-ui/WaselLogo';
 import { tx } from '../locales/tx';
 import { sanitizeHtml, sanitizeLogMessage } from '../utils/sanitization';
 import { colors, typography, radii, shadows, effects } from '../styles/design-tokens';
