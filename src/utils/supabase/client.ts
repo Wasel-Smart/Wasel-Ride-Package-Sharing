@@ -183,7 +183,6 @@ export function initSupabaseListeners(): () => void {
   };
 
   window.addEventListener('online', onOnline, { passive: true });
-  window.addEventListener('offline', () => {}, { passive: true });
 
   healthCheckTimer = setInterval(() => {
     if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;

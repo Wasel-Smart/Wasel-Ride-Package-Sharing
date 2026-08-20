@@ -305,6 +305,8 @@ export function MobilityOSLandingMap({
   }, [routes]);
 
   useEffect(() => {
+    if (!visible) return;
+
     const render = (time: number) => {
       if (!visibleRef.current) {
         frameRef.current = null;

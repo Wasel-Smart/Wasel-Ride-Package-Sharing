@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -52,6 +52,14 @@ export function HomePage() {
   const [tripMode, setTripMode] = useState<TripMode>('one-way');
   const [cookieConsented, setCookieConsented] = useState(false);
   const [cookieDeclined, setCookieDeclined] = useState(false);
+  const cookieBannerRef = useRef<HTMLDivElement>(null);
+  const acceptButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!cookieConsented && !cookieDeclined && acceptButtonRef.current) {
+      acceptButtonRef.current.focus();
+    }
+  }, [cookieConsented, cookieDeclined]);
   const [liveCorridors, setLiveCorridors] = useState<LiveCorridor[]>([]);
   const [corridorsLoading, setCorridorsLoading] = useState(true);
 
@@ -288,6 +296,12 @@ export function HomePage() {
         {/* Cookie banner — bottom position, non-blocking */}
         {!cookieConsented && !cookieDeclined && (
           <div
+            ref={cookieBannerRef}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                declineCookies();
+              }
+            }}
             style={{
               position: 'fixed',
               bottom: 0,
@@ -306,6 +320,7 @@ export function HomePage() {
               backdropFilter: 'blur(16px)',
             }}
             role="dialog"
+            aria-modal="true"
             aria-label={t('cookies.title')}
           >
             <span
@@ -343,6 +358,7 @@ export function HomePage() {
                 {t('cookies.reject_all')}
               </button>
               <button
+                ref={acceptButtonRef}
                 onClick={acceptCookies}
                 style={{
                   padding: '8px 18px',
