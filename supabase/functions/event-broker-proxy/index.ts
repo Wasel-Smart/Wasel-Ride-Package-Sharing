@@ -71,7 +71,6 @@ async function handlePublish(request: Request): Promise<Response> {
   }, { onConflict: 'id', ignoreDuplicates: true });
 
   if (error) {
-    console.error('[event-broker] Failed to publish event');
     return json({ error: 'Unable to publish event' }, 500);
   }
 
@@ -89,7 +88,6 @@ async function handlePoll(): Promise<Response> {
     .limit(BATCH_SIZE);
 
   if (error || !data) {
-    console.error('[event-broker] Failed to poll events');
     return json({ error: 'Unable to poll events' }, 500);
   }
 
@@ -112,7 +110,6 @@ async function handleAck(request: Request): Promise<Response> {
     .eq('status', 'pending');
 
   if (error) {
-    console.error('[event-broker] Failed to acknowledge event');
     return json({ error: 'Unable to acknowledge event' }, 500);
   }
 
@@ -141,7 +138,6 @@ async function handleFail(request: Request): Promise<Response> {
     .eq('status', 'pending');
 
   if (error) {
-    console.error('[event-broker] Failed to mark event as failed');
     return json({ error: 'Unable to mark event as failed' }, 500);
   }
 
@@ -169,7 +165,6 @@ async function handleDeadLetter(request: Request): Promise<Response> {
   });
 
   if (error) {
-    console.error('[event-broker] Failed to dead-letter event');
     return json({ error: 'Unable to dead-letter event' }, 500);
   }
 

@@ -103,11 +103,8 @@ async function publishEvent(
       attempts: 0,
       created_at: event.occurred_at as string,
     });
-  } catch (e) {
-    console.warn(
-      "Failed to publish event to outbox",
-      e instanceof Error ? e.message : "unknown",
-    );
+  } catch {
+    // outbox publish failure is non-fatal
   }
 }
 
@@ -185,11 +182,8 @@ Deno.serve(async (req: Request) => {
               raw: pi,
             }],
           );
-        } catch (e) {
-          console.warn(
-            "Failed to persist payment:",
-            e instanceof Error ? e.message : "unknown error",
-          );
+        } catch {
+          // persistence failure is non-fatal; payment intent already created
         }
       }
 
@@ -255,11 +249,7 @@ Deno.serve(async (req: Request) => {
       let event;
       try {
         event = stripe.webhooks.constructEvent(payload, sig, webhookSecret);
-      } catch (err) {
-        console.warn(
-          "Webhook signature verification failed:",
-          err instanceof Error ? err.message : "unknown error",
-        );
+      } catch {
         return jsonResponse({ error: "Invalid signature" }, { status: 400 });
       }
 
@@ -345,7 +335,7 @@ Deno.serve(async (req: Request) => {
           break;
         }
         default:
-          console.info("Unhandled event type", String(event.type).replace(/[\r\n]+/g, ' ').trim());
+          break;
       }
 
       return jsonResponse({ received: true }, { status: 200 });
@@ -361,8 +351,7 @@ Deno.serve(async (req: Request) => {
         ],
       },
     );
-  } catch (err) {
-    console.error(err instanceof Error ? err.message : err);
+  } catch {
     return jsonResponse({ error: "Payment request failed" }, { status: 500 });
   }
 });

@@ -1,4 +1,10 @@
 
+function sanitizeLogValue(value: unknown): string {
+  if (value === null || value === undefined) return String(value);
+  const str = String(value);
+  return str.replace(/[\r\n\t\x00-\x1f\x7f-\x9f]/g, ' ').trim();
+}
+
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createRateLimitMiddleware } from "../_shared/rate-limiter.ts";
 
@@ -158,8 +164,6 @@ Deno.serve(async (req: Request) => {
         status: "pending",
       }]);
       if (error) {
-        const sanitizedMessage = String(error.message).replace(/[\r\n]+/g, ' ').trim();
-        console.error("Failed to create CliQ payment record:", Deno.inspect(sanitizedMessage));
         return jsonResponse(
           { error: "Unable to initialize payment" },
           { status: 503 },
@@ -246,7 +250,6 @@ Deno.serve(async (req: Request) => {
         })
         .eq("id", merchantReference || paymentId);
       if (error) {
-        console.error("Failed to update CliQ payment status", Deno.inspect(error.message));
         return jsonResponse(
           { error: "Payment update failed" },
           { status: 500 },

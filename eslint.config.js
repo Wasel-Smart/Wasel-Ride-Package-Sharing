@@ -21,8 +21,6 @@ export default tseslint.config(
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
-      // Use ESLint 10's built-in env globals instead of the globals package
-      // to avoid the scopeManager.addGlobals incompatibility.
       globals: {
         window: 'readonly',
         document: 'readonly',
@@ -100,6 +98,13 @@ export default tseslint.config(
       'no-var': 'error',
       'eqeqeq': ['error', 'always'],
       'no-duplicate-imports': 'error',
+    },
+  },
+  {
+    files: ['tests/**/*.ts', 'tests/**/*.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-non-null-assertion': 'off',
     },
   },
 );
