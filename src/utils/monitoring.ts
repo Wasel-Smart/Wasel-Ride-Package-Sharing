@@ -47,10 +47,8 @@ export function initSentry(): void {
     dsn,
     environment,
     integrations: [
-      // @ts-expect-error — Sentry v8 exposes these on the namespace at runtime
-      ...(typeof Sentry.browserTracingIntegration === 'function' ? [Sentry.browserTracingIntegration()] : []),
-      // @ts-expect-error — Sentry v8 exposes these on the namespace at runtime
-      ...(typeof Sentry.replayIntegration === 'function' ? [Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true })] : []),
+      ...(typeof (Sentry as unknown as Record<string, unknown>).browserTracingIntegration === 'function' ? [(Sentry as unknown as { browserTracingIntegration: () => unknown }).browserTracingIntegration()] : []),
+      ...(typeof (Sentry as unknown as Record<string, unknown>).replayIntegration === 'function' ? [(Sentry as unknown as { replayIntegration: (o: unknown) => unknown }).replayIntegration({ maskAllText: true, blockAllMedia: true })] : []),
     ],
     tracesSampleRate: environment === 'production' ? 0.1 : 1,
     replaysSessionSampleRate: environment === 'production' ? 0.05 : 0,

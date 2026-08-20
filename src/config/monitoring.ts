@@ -476,7 +476,7 @@ export function initializeMonitoring() {
         dsn: sentryDsn,
         environment: import.meta.env.MODE,
         tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-        beforeSend(event: Record<string, unknown>) {
+        beforeSend(event) {
           // Filter out ignored errors
           const ignoredErrors = [
             'IframeMessageAbortError',
@@ -484,8 +484,9 @@ export function initializeMonitoring() {
             'ResizeObserver loop limit exceeded',
           ];
 
-          if (event.exception?.values?.[0]?.value) {
-            const errorMessage = event.exception.values[0].value;
+          const values = (event as { exception?: { values?: Array<{ value?: string }> } }).exception?.values;
+          if (values?.[0]?.value) {
+            const errorMessage = values[0].value;
             if (ignoredErrors.some(ignored => errorMessage.includes(ignored))) {
               return null;
             }
