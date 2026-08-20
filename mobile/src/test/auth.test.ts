@@ -66,7 +66,7 @@ describe('MobileAuthService', () => {
   let service: MobileAuthService;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
     mockAuth.onAuthStateChange.mockImplementation(() => undefined);
     mockAuth.getSession.mockResolvedValue({ data: { session: null } });
     service = new MobileAuthService();

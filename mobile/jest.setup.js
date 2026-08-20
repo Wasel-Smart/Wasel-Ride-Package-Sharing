@@ -1,5 +1,44 @@
 import '@testing-library/jest-native/extend-expect';
 
+console.log('jest.setup.js BEFORE polyfill: crypto.randomUUID type:', typeof globalThis.crypto?.randomUUID);
+console.log('jest.setup.js BEFORE polyfill: fetch type:', typeof globalThis.fetch);
+
+if (typeof globalThis.crypto !== 'undefined' && !globalThis.crypto.randomUUID) {
+  try {
+    globalThis.crypto.randomUUID = () => {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+    };
+  } catch (e) {
+    globalThis.crypto = {
+      ...globalThis.crypto,
+      randomUUID: () => {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+          const r = (Math.random() * 16) | 0;
+          const v = c === 'x' ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        });
+      },
+    };
+  }
+}
+
+if (typeof globalThis.fetch === 'undefined') {
+  const fetchPolyfill = async () => {
+    throw new Error('fetch is not defined');
+  };
+  globalThis.fetch = fetchPolyfill;
+  if (typeof global !== 'undefined') {
+    global.fetch = fetchPolyfill;
+  }
+}
+
+console.log('jest.setup.js AFTER polyfill: crypto.randomUUID type:', typeof globalThis.crypto?.randomUUID);
+console.log('jest.setup.js AFTER polyfill: fetch type:', typeof globalThis.fetch);
+
 jest.mock('react-native-screens', () => ({
   ...jest.requireActual('react-native-screens'),
   enableScreens: jest.fn(),

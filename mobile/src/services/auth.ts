@@ -33,9 +33,7 @@ export class MobileAuthService {
     loading: true,
   };
 
-  constructor() {
-    this.initialize();
-  }
+  constructor() {}
 
   private async initialize(): Promise<void> {
     Linking.addEventListener('url', (event: { url: string }) => {
@@ -314,4 +312,5 @@ export class MobileAuthService {
 }
 
 export const mobileAuth = new MobileAuthService();
+void mobileAuth.initialize();
 export const authService = mobileAuth;
