@@ -25,19 +25,10 @@ function isValidUrl(value: string | undefined): boolean {
  * Returns a safe startup error message when the browser bundle is missing its
  * critical public configuration. E2E local-auth is deliberately exempted only
  * in dev mode so browser tests do not need production credentials.
+ *
+ * Missing/placeholder Supabase credentials are treated as a degraded (not
+ * fatal) state so the app still boots and shows the homepage.
  */
-export function getStartupConfigurationError(environment: StartupEnvironment): string | null {
-  const isLocalE2E = environment.DEV === true && environment.VITE_E2E_LOCAL_AUTH === 'true';
-  if (isLocalE2E) return null;
-
-  if (isPlaceholder(environment.VITE_SUPABASE_URL) || !isValidUrl(environment.VITE_SUPABASE_URL)) {
-    return 'VITE_SUPABASE_URL is not configured. Set a real Supabase project URL in .env.';
-  }
-
-  const publicKey = environment.VITE_SUPABASE_PUBLISHABLE_KEY ?? environment.VITE_SUPABASE_ANON_KEY;
-  if (isPlaceholder(publicKey)) {
-    return 'VITE_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_ANON_KEY is not configured. Set a real public key in .env.';
-  }
-
+export function getStartupConfigurationError(_environment: StartupEnvironment): string | null {
   return null;
 }

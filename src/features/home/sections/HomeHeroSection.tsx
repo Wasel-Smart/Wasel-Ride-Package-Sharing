@@ -10,7 +10,7 @@ import {
   Route,
   Shield,
 } from 'lucide-react';
-import type { User } from '@supabase/supabase-js';
+import type { User } from '@supabase/auth-js';
 import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../../contexts/LanguageContext';

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { AuthChangeEvent } from '@supabase/supabase-js';
+import type { AuthChangeEvent } from '@supabase/auth-js';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { supabase } from '../utils/supabase/client';
 import { normalizeReturnToPath } from '../utils/env';

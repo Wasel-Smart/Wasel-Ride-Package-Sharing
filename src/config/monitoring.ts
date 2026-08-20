@@ -476,7 +476,7 @@ export function initializeMonitoring() {
         dsn: sentryDsn,
         environment: import.meta.env.MODE,
         tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
-        beforeSend(event) {
+        beforeSend(event: Record<string, unknown>) {
           // Filter out ignored errors
           const ignoredErrors = [
             'IframeMessageAbortError',
