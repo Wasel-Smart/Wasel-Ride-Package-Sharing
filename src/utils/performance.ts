@@ -5,8 +5,7 @@
  * Tracks Core Web Vitals and performance metrics
  */
 
-import { onCLS, onFCP, onLCP, onTTFB, onINP } from 'web-vitals';
-import type { MetricType } from 'web-vitals';
+import { onCLS, onFCP, onLCP, onTTFB, onINP, type MetricType } from 'web-vitals';
 import { logger } from './monitoring';
 import { sanitizeLogMessage } from './sanitization';
 

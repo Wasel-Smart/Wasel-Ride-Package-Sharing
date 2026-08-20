@@ -43,19 +43,22 @@ export function initSentry(): void {
     return;
   }
 
+  const sentryIntegrations: unknown[] = [];
+
+  const browserTracingIntegration = (Sentry as unknown as Record<string, () => unknown>).browserTracingIntegration;
+  if (typeof browserTracingIntegration === 'function') {
+    sentryIntegrations.push(browserTracingIntegration());
+  }
+
+  const replayIntegration = (Sentry as unknown as Record<string, (o: unknown) => unknown>).replayIntegration;
+  if (typeof replayIntegration === 'function') {
+    sentryIntegrations.push(replayIntegration({ maskAllText: true, blockAllMedia: true }));
+  }
+
   Sentry.init({
     dsn,
     environment,
-    integrations: [
-      ...(typeof (Sentry as unknown as Record<string, () => unknown>).browserTracingIntegration === 'function'
-        ? [(Sentry as unknown as Record<string, () => unknown>).browserTracingIntegration()]
-        : []
-      ) as import('@sentry/react').Integration[],
-      ...(typeof (Sentry as unknown as Record<string, (o: unknown) => unknown>).replayIntegration === 'function'
-        ? [(Sentry as unknown as Record<string, (o: unknown) => unknown>).replayIntegration({ maskAllText: true, blockAllMedia: true })]
-        : []
-      ) as import('@sentry/react').Integration[],
-    ],
+    integrations: sentryIntegrations,
     tracesSampleRate: environment === 'production' ? 0.1 : 1,
     replaysSessionSampleRate: environment === 'production' ? 0.05 : 0,
     replaysOnErrorSampleRate: 1.0,

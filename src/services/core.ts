@@ -6,6 +6,7 @@ import {
 } from '../utils/supabase/client.ts';
 import { addCSRFHeader } from '../utils/csrf';
 import { circuitBreakers, CircuitState } from '../utils/circuitBreaker';
+import { validateApiUrl } from '../utils/sanitization';
 
 export { projectId, publicAnonKey };
 
@@ -340,6 +341,15 @@ export async function fetchWithRetry(
     throw new Error(
       'Backend API is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.',
     );
+  }
+
+  const { allowedApiDomain } = getConfig();
+  const allowedDomains = ['supabase.co', 'supabase.net', 'localhost', allowedApiDomain].filter(
+    Boolean,
+  );
+
+  if (!validateApiUrl(url, allowedDomains)) {
+    throw new Error('Invalid or unauthorized URL');
   }
 
   // Use circuit breaker for API calls

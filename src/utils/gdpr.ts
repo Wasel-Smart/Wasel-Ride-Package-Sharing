@@ -55,7 +55,7 @@ class GDPRCompliance {
         granted: consent.granted,
       });
     } catch (error) {
-      logger.error('Failed to record consent', error, { consentType: consent.consentType });
+      logger.error('Failed to record consent', error, { consentType: sanitizeLogMessage(consent.consentType) });
       throw error; // Re-throw to allow upstream handling
     }
   }

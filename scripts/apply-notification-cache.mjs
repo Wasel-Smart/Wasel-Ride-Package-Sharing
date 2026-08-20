@@ -17,6 +17,10 @@ function safeResolve(filePath) {
 
 const filePath = safeResolve(join(root, 'src/services/notifications.ts'));
 
+if (!resolve(filePath).startsWith(PROJECT_ROOT)) {
+  throw new Error(`Path traversal detected: ${filePath} resolves outside project root`);
+}
+
 const original = readFileSync(filePath, 'utf8');
 const lines = original.split(/\r?\n/);
 

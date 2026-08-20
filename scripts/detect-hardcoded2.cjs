@@ -103,13 +103,16 @@ function walk(node, filePath) {
 }
 
 function collectFiles(dir) {
+  const baseDir = path.resolve(dir);
   const out = [];
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, e.name);
+    const resolvedFull = path.resolve(dir, e.name);
+    if (!resolvedFull.startsWith(baseDir)) continue;
     if (e.isDirectory()) {
       if (e.name === 'locales' || e.name === 'node_modules') continue;
-      out.push(...collectFiles(full));
-    } else if (e.isFile() && /\.(tsx?)$/.test(e.name)) out.push(full);
+      out.push(...collectFiles(resolvedFull));
+    } else if (e.isFile() && /\.(tsx?)$/.test(e.name)) out.push(resolvedFull);
   }
   return out;
 }

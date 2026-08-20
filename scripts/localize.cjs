@@ -149,7 +149,7 @@ function collectFiles(dir, out = []) {
     if (e.isDirectory()) {
       if (e.name === 'locales' || e.name === 'node_modules') continue;
       if (e.name === '__tests__') continue;
-      collectFiles(full, out);
+      collectFiles(resolvedFull, out);
     } else if (e.isFile() && /\.(tsx?)$/.test(e.name) && !/\.(test|spec)\./.test(e.name)) {
       out.push(resolvedFull);
     }

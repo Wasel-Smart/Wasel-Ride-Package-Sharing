@@ -7,14 +7,19 @@
  */
 
 import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const TRANSLATIONS = join(__dir, '../src/locales/translations.ts');
+const PROJECT_ROOT = resolve(__dir, '..');
 
 function extractModuleExports(filePath) {
-  const content = readFileSync(filePath, 'utf8');
+  const resolvedPath = resolve(filePath);
+  if (!resolvedPath.startsWith(PROJECT_ROOT)) {
+    throw new Error(`Path traversal detected: ${filePath} resolves outside project root`);
+  }
+  const content = readFileSync(resolvedPath, 'utf8');
   const match = content.match(/export\s+const\s+translations\s*[^=]*=\s*(\{[\s\S]*\});/);
   if (!match) {
     throw new Error(`Unable to extract translations from ${filePath}`);
