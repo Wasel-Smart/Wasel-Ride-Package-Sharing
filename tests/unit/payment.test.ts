@@ -277,7 +277,12 @@ describe('payment.test.ts', () => {
   });
 
   it('gets payment status', async () => {
+    mockSupabase.mockAuthGetUser.mockResolvedValue({
+      data: { user: { id: 'user-1' } },
+      error: null,
+    });
     mockSupabase.mockEq.mockReturnValue({
+      eq: mockSupabase.mockEq,
       single: mockSupabase.mockSingle,
     });
     mockSupabase.mockSingle.mockResolvedValue({
