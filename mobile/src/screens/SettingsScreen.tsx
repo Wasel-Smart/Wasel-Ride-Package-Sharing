@@ -72,17 +72,17 @@ export default function SettingsScreen() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+const Section = React.memo(function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return <View style={styles.section}><Text style={styles.sectionTitle}>{title}</Text><View style={styles.sectionSurface}>{children}</View></View>;
-}
+});
 
-function SettingsLink({ label, onPress, testID }: { label: string; onPress: () => void; testID: string }) {
+const SettingsLink = React.memo(function SettingsLink({ label, onPress, testID }: { label: string; onPress: () => void; testID: string }) {
   return <TouchableOpacity accessibilityLabel={label} accessibilityRole="button" onPress={onPress} style={styles.row} testID={testID}><Text style={styles.rowText}>{label}</Text><Text accessibilityElementsHidden style={styles.chevron}>‹</Text></TouchableOpacity>;
-}
+});
 
-function SettingSwitch({ label, value, disabled, onChange, testID }: { label: string; value: boolean; disabled: boolean; onChange: (value: boolean) => void; testID: string }) {
+const SettingSwitch = React.memo(function SettingSwitch({ label, value, disabled, onChange, testID }: { label: string; value: boolean; disabled: boolean; onChange: (value: boolean) => void; testID: string }) {
   return <View style={styles.row}><Text style={styles.rowText}>{label}</Text><Switch accessibilityLabel={label} accessibilityRole="switch" accessibilityState={{ checked: value, disabled }} disabled={disabled} onValueChange={onChange} testID={testID} value={value} /></View>;
-}
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

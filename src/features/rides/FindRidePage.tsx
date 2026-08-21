@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import { useRideFilters } from './hooks/useRideFilters';
@@ -210,12 +210,12 @@ export function FindRidePage() {
   const resolveSignalForRoute = (routeFrom: string, routeTo: string) =>
     signalLookup.get(`${routeFrom}::${routeTo}`) ??
     getLiveCorridorSignal(routeFrom, routeTo, routeIntelligence.membership);
-  const openMyTrips = () => nav('/app/my-trips?tab=rides');
+  const openMyTrips = useCallback(() => nav('/app/my-trips?tab=rides'), [nav]);
   const selectedBooking = selected ? (bookingByRideId.get(selected.id) ?? null) : null;
-  const getRideBookingStatus = (rideId: string): 'pending_driver' | 'confirmed' | null => {
+  const getRideBookingStatus = useCallback((rideId: string): 'pending_driver' | 'confirmed' | null => {
     const status = bookingByRideId.get(rideId)?.status;
     return status === 'pending_driver' || status === 'confirmed' ? status : null;
-  };
+  }, [bookingByRideId]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -266,27 +266,23 @@ export function FindRidePage() {
     setBookingMessage(null);
     setBookingSuccess(null);
     setLoading(true);
-
-    setTimeout(() => {
-      setLoading(false);
-      setSearched(true);
-      setRecentSearches(previous => {
-        const label = `${from} to ${to}${date ? ` on ${date}` : ''}`;
-        return [label, ...previous.filter(item => item !== label)].slice(0, 4);
-      });
-      void trackGrowthEvent({
-        userId: user?.id,
-        eventName: 'ride_search_executed',
-        funnelStage: 'searched',
-        serviceType: 'ride',
-        from,
-        to,
-        metadata: { date: date || null },
-      });
-    }, 700);
+    setSearched(true);
+    setRecentSearches(previous => {
+      const label = `${from} to ${to}${date ? ` on ${date}` : ''}`;
+      return [label, ...previous.filter(item => item !== label)].slice(0, 4);
+    });
+    void trackGrowthEvent({
+      userId: user?.id,
+      eventName: 'ride_search_executed',
+      funnelStage: 'searched',
+      serviceType: 'ride',
+      from,
+      to,
+      metadata: { date: date || null },
+    });
   };
 
-  const handleOpenRide = (ride: Ride) => {
+  const handleOpenRide = useCallback((ride: Ride) => {
     const rideSignal = resolveSignalForRoute(ride.from, ride.to);
     const priceQuote = getMovementPriceQuote({
       basePriceJod: ride.pricePerSeat,
@@ -308,9 +304,9 @@ export function FindRidePage() {
         driverName: ride.driver.name,
       },
     });
-  };
+  }, [routeIntelligence.membership, user?.id]);
 
-  const handleBook = async (ride: Ride) => {
+  const handleBook = useCallback(async (ride: Ride) => {
     if (bookingInFlightId) return;
     const existingBooking = bookingByRideId.get(ride.id);
     if (existingBooking) {
@@ -375,8 +371,6 @@ export function FindRidePage() {
           : `Seat confirmed for ${ride.from} to ${ride.to}.`,
       );
 
-      // Payment must succeed for confirmed bookings. For pending_driver bookings
-      // payment is deferred until the driver accepts — wallet failure is non-fatal.
       if (booking.status === 'confirmed') {
         try {
           await walletApi.pay(user.id, finalPrice, 'ride_booking', booking.id, {
@@ -386,9 +380,8 @@ export function FindRidePage() {
             seats: 1,
           });
         } catch (paymentError) {
-          // Payment failed on a confirmed booking — cancel it to keep data consistent.
           console.error('[Wallet] ride booking payment failed, cancelling booking:', paymentError);
-          await updateRideBooking(booking.id, { status: 'cancelled' }).catch(() => { });
+          await updateRideBooking(booking.id, { status: 'cancelled' }).catch(() => {});
           setRideBookings(getRideBookings());
           setBookingSuccess(null);
           setBookingMessage(
@@ -397,7 +390,6 @@ export function FindRidePage() {
           return;
         }
       } else {
-        // pending_driver: attempt payment but do not cancel on failure.
         walletApi
           .pay(user.id, finalPrice, 'ride_booking', booking.id, {
             rideId: ride.id,
@@ -421,10 +413,10 @@ export function FindRidePage() {
           priority: 'high',
           action_url: '/app/my-trips?tab=rides',
         })
-        .catch(() => { });
+        .catch(() => {});
 
       if (permission === 'default') {
-        requestPermission().catch(() => { });
+        requestPermission().catch(() => {});
       }
 
       notifyTripConfirmed(ride.driver.name, `${ride.from} to ${ride.to}`);
@@ -440,7 +432,7 @@ export function FindRidePage() {
     } finally {
       setBookingInFlightId(null);
     }
-  };
+  }, [bookingInFlightId, bookingByRideId, nav, openMyTrips, t, user, routeIntelligence.membership, corridorPlan, permission, requestPermission, notifyTripConfirmed]);
 
   const handleDemandCapture = () => {
     const alert = createDemandAlert({

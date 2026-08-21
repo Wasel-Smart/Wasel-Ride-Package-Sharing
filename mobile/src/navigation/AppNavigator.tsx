@@ -56,49 +56,37 @@ const iconByRoute: Record<string, keyof typeof Ionicons.glyphMap> = {
   Settings: 'settings',
 };
 
-const screenOptions = ({ route }: { route: { name: string } }): BottomTabNavigationOptions => ({
-  tabBarIcon: ({ color, size }: { color: string; size: number }) => <Ionicons name={iconByRoute[route.name] ?? 'ellipse'} size={size} color={color} />,
+const getTabScreenOptions = ({ route }: { route: { name: string } }): BottomTabNavigationOptions => ({
+  tabBarAccessibilityLabel: route.name,
+  tabBarIcon: ({ color, size }: { color: string; size: number }) => (
+    <Ionicons name={iconByRoute[route.name] ?? 'ellipse'} size={size} color={color} />
+  ),
   freezeOnBlur: true,
   headerStyle: { backgroundColor: colors.bg, shadowColor: 'transparent' },
   headerShadowVisible: false,
+  headerTitleAlign: 'center',
   headerTitleStyle: { color: colors.ink, fontWeight: '900' },
   lazy: true,
   tabBarActiveTintColor: colors.teal,
   tabBarHideOnKeyboard: true,
   tabBarInactiveTintColor: colors.muted,
-  tabBarLabelStyle: { fontSize: 12, fontWeight: '800' },
-  tabBarStyle: { backgroundColor: colors.surface, borderTopColor: 'transparent', elevation: 6, height: 70, paddingBottom: 10, paddingTop: 8 },
+  tabBarLabelStyle: { fontSize: 11, fontWeight: '800' },
+  tabBarStyle: {
+    backgroundColor: colors.surface,
+    borderTopColor: colors.line,
+    borderTopWidth: 1,
+    elevation: 8,
+    height: 70,
+    paddingBottom: 10,
+    paddingTop: 8,
+  },
 });
 
 function TabNavigator() {
   return (
     <Tab.Navigator
       initialRouteName="Home"
-      screenOptions={({ route }: { route: { name: string } }): BottomTabNavigationOptions => ({
-        tabBarAccessibilityLabel: route.name,
-        tabBarIcon: ({ color, size }: { color: string; size: number }) => (
-          <Ionicons name={iconByRoute[route.name] ?? 'ellipse'} size={size} color={color} />
-        ),
-        freezeOnBlur: true,
-        headerStyle: { backgroundColor: colors.bg, shadowColor: 'transparent' },
-        headerShadowVisible: false,
-        headerTitleAlign: 'center',
-        headerTitleStyle: { color: colors.ink, fontWeight: '900' },
-        lazy: true,
-        tabBarActiveTintColor: colors.teal,
-        tabBarHideOnKeyboard: true,
-        tabBarInactiveTintColor: colors.muted,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '800' },
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.line,
-          borderTopWidth: 1,
-          elevation: 8,
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 8,
-        },
-      })}
+      screenOptions={getTabScreenOptions}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'الرئيسية' }} />
       <Tab.Screen name="Rides" component={RideRequestScreen} options={{ title: 'المشاوير' }} />

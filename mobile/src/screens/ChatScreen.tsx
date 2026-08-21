@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  FlatList,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -51,6 +52,15 @@ function upsertMessage(next: TripMessage) {
   };
 }
 
+function formatTime(iso: string) {
+  const date = new Date(iso);
+  return date.toLocaleTimeString('ar-JO', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 const ChatScreen = React.memo(function ChatScreen({ route }: ChatScreenProps) {
   const { user, loading: authLoading } = useAuth();
   const [messages, setMessages] = useState<TripMessage[]>([]);
@@ -58,7 +68,7 @@ const ChatScreen = React.memo(function ChatScreen({ route }: ChatScreenProps) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<FlatList>(null);
 
   const tripId = route?.params?.tripId ?? route?.params?.rideId ?? '';
   const driverName = route?.params?.driverName?.trim() || 'السائق';
@@ -286,45 +296,51 @@ const ChatScreen = React.memo(function ChatScreen({ route }: ChatScreenProps) {
         </View>
 
         {/* Messages */}
-        <ScrollView
+        <FlatList
           ref={scrollRef}
-          style={styles.messagesContainer}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item, index }) => renderMessage(item, index)}
+          ListHeaderComponent={
+            <View style={styles.dateHeader}>
+              <Text style={styles.dateHeaderText}>اليوم</Text>
+            </View>
+          }
+          ListEmptyComponent={
+            loading ? (
+              <StateNotice
+                icon="chatbubbles"
+                title="جاري تحميل الرسائل"
+                body="بنفتح دردشة المشوار المباشرة."
+                loading
+                tone={colors.blue}
+                testID="chat-loading-state"
+              />
+            ) : error ? (
+              <StateNotice
+                icon="warning"
+                title="الدردشة غير متاحة"
+                body={error}
+                tone={colors.amber}
+                testID="chat-error-state"
+              />
+            ) : (
+              <StateNotice
+                icon="chatbubble-ellipses"
+                title="لسه ما في رسائل"
+                body="أرسل أول تحديث لما تحتاج السائق."
+                tone={colors.muted}
+                testID="chat-empty-state"
+              />
+            )
+          }
           contentContainerStyle={styles.messagesContent}
           showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.dateHeader}>
-            <Text style={styles.dateHeaderText}>اليوم</Text>
-          </View>
-
-          {loading ? (
-            <StateNotice
-              icon="chatbubbles"
-              title="جاري تحميل الرسائل"
-              body="بنفتح دردشة المشوار المباشرة."
-              loading
-              tone={colors.blue}
-              testID="chat-loading-state"
-            />
-          ) : error ? (
-            <StateNotice
-              icon="warning"
-              title="الدردشة غير متاحة"
-              body={error}
-              tone={colors.amber}
-              testID="chat-error-state"
-            />
-          ) : messages.length === 0 ? (
-            <StateNotice
-              icon="chatbubble-ellipses"
-              title="لسه ما في رسائل"
-              body="أرسل أول تحديث لما تحتاج السائق."
-              tone={colors.muted}
-              testID="chat-empty-state"
-            />
-          ) : (
-            messages.map((msg, idx) => renderMessage(msg, idx))
-          )}
-        </ScrollView>
+          removeClippedSubviews
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          initialNumToRender={15}
+        />
 
         {/* Quick Replies */}
         <ScrollView
