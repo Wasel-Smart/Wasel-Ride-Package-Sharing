@@ -11,7 +11,7 @@ import { getMovementMembershipSnapshot } from './movementMembership';
 import { getMovementPriceQuote, type MovementPriceQuote } from './movementPricing';
 import { getRideBookings } from './rideLifecycle';
 
-const REFRESH_MS = 15_000;
+const REFRESH_MS = 30_000;
 const DAY_MS = 86_400_000;
 const LOOKBACK_MS = 14 * DAY_MS;
 

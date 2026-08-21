@@ -157,85 +157,88 @@ function MapScreen() {
 
           <View style={styles.mapFrame}>
               <View style={[styles.mapInner, { width: mapWidth }]}>
-              {CORRIDORS.map(corridor => {
-                const path = getCorridorPath(corridor);
-                const isHighlighted = hoveredCorridor === corridor.id;
-                const isDimmed = hoveredCorridor !== null && !isHighlighted;
-                const demandColor = getDemandColor(corridor.demand);
-                const midX = (path.x1 + path.x2) / 2;
-                const midY = (path.y1 + path.y2) / 2 - 10;
+              {useMemo(() => {
+                return selectedCorridors.map(corridor => {
+                  const path = getCorridorPath(corridor);
+                  const isHighlighted = hoveredCorridor === corridor.id;
+                  const isDimmed = hoveredCorridor !== null && !isHighlighted;
+                  const demandColor = getDemandColor(corridor.demand);
+                  const midX = (path.x1 + path.x2) / 2;
+                  const midY = (path.y1 + path.y2) / 2 - 10;
 
-                return (
-                  <React.Fragment key={corridor.id}>
-                    <Pressable
-                      style={({ pressed }: { pressed: boolean }) => [
-                        styles.corridorPressable,
-                        {
-                          left: Math.min(path.x1, path.x2),
-                          top: Math.min(path.y1, path.y2),
-                          width: Math.abs(path.x2 - path.x1) || 1,
-                          height: Math.abs(path.y2 - path.y1) || 1,
-                          opacity: isDimmed ? 0.15 : 1,
-                        },
-                        pressed && styles.corridorPressable,
-                      ]}
-                      onPressIn={() => setHoveredCorridor(corridor.id)}
-                      onPressOut={() => setHoveredCorridor(null)}
-                      testID={`corridor-${corridor.id}`}
-                    >
-                      <View
-                        style={[
-                          styles.corridorLine,
+                  return (
+                    <React.Fragment key={corridor.id}>
+                      <Pressable
+                        style={({ pressed }: { pressed: boolean }) => [
+                          styles.corridorPressable,
                           {
-                            backgroundColor: demandColor,
-                            opacity: isHighlighted ? 1 : 0.5,
-                            transform: [
-                              { rotate: `${Math.atan2(path.y2 - path.y1, path.x2 - path.x1)}rad` },
-                            ],
+                            left: Math.min(path.x1, path.x2),
+                            top: Math.min(path.y1, path.y2),
+                            width: Math.abs(path.x2 - path.x1) || 1,
+                            height: Math.abs(path.y2 - path.y1) || 1,
+                            opacity: isDimmed ? 0.15 : 1,
                           },
+                          pressed && styles.corridorPressable,
                         ]}
-                      />
-                      <View
-                        style={[
-                          styles.corridorLabel,
-                          { left: midX, top: midY },
-                          isHighlighted && styles.corridorLabelActive,
-                        ]}
+                        onPressIn={() => setHoveredCorridor(corridor.id)}
+                        onPressOut={() => setHoveredCorridor(null)}
+                        testID={`corridor-${corridor.id}`}
                       >
-                        <Text style={[styles.corridorPrice, { color: demandColor }]}>
-                          JOD {corridor.avgPrice}
-                        </Text>
-                        <Text style={styles.corridorDuration}>{corridor.avgDuration}</Text>
-                      </View>
-                    </Pressable>
-                  </React.Fragment>
-                );
-              })}
+                        <View
+                          style={[
+                            styles.corridorLine,
+                            {
+                              backgroundColor: demandColor,
+                              opacity: isHighlighted ? 1 : 0.5,
+                              transform: [
+                                { rotate: `${Math.atan2(path.y2 - path.y1, path.x2 - path.x1)}rad` },
+                              ],
+                            },
+                          ]}
+                        />
+                        <View
+                          style={[
+                            styles.corridorLabel,
+                            { left: midX, top: midY },
+                            isHighlighted && styles.corridorLabelActive,
+                          ]}
+                        >
+                          <Text style={[styles.corridorPrice, { color: demandColor }]}>
+                            JOD {corridor.avgPrice}
+                          </Text>
+                          <Text style={styles.corridorDuration}>{corridor.avgDuration}</Text>
+                        </View>
+                      </Pressable>
+                    </React.Fragment>
+                  );
+                });
+              }, [selectedCorridors, hoveredCorridor, mapWidth])}
 
-              {CITIES.map(city => {
-                const isSelected = selectedCity === city.id;
-                const isRelatedToHover = hoveredCorridor
-                  ? CORRIDORS.find(c => c.id === hoveredCorridor)?.from === city.id
-                    || CORRIDORS.find(c => c.id === hoveredCorridor)?.to === city.id
-                  : true;
-                const regionColor = getRegionColor(city.region);
+              {useMemo(() => {
+                return CITIES.map(city => {
+                  const isSelected = selectedCity === city.id;
+                  const isRelatedToHover = hoveredCorridor
+                    ? CORRIDORS.find(c => c.id === hoveredCorridor)?.from === city.id
+                      || CORRIDORS.find(c => c.id === hoveredCorridor)?.to === city.id
+                    : true;
+                  const regionColor = getRegionColor(city.region);
 
-                return (
-                  <Pressable
-                    key={city.id}
-                    style={({ pressed }: { pressed: boolean }) => [
-                      styles.cityNode,
-                      {
-                        left: city.x * mapWidth - 28,
-                        top: city.y * MAP_HEIGHT - 28,
-                        opacity: isRelatedToHover ? 1 : 0.25,
-                      },
-                      pressed && styles.cityPressed,
-                      isSelected && { transform: [{ scale: 1.15 }] },
-                    ]}
-                    onPress={() => setSelectedCity(isSelected ? null : city.id)}
-                    testID={`city-${city.id}`}
-                  >
+                  return (
+                    <Pressable
+                      key={city.id}
+                      style={({ pressed }: { pressed: boolean }) => [
+                        styles.cityNode,
+                        {
+                          left: city.x * mapWidth - 28,
+                          top: city.y * MAP_HEIGHT - 28,
+                          opacity: isRelatedToHover ? 1 : 0.25,
+                        },
+                        pressed && styles.cityPressed,
+                        isSelected && { transform: [{ scale: 1.15 }] },
+                      ]}
+                      onPress={() => setSelectedCity(isSelected ? null : city.id)}
+                      testID={`city-${city.id}`}
+                    >
                     <View
                       style={[
                         styles.cityDot,
@@ -280,7 +283,7 @@ function MapScreen() {
                     </View>
                   </Pressable>
                 );
-              })}
+              })}, [hoveredCorridor, selectedCity, mapWidth])}
             </View>
           </View>
 

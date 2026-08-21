@@ -233,7 +233,7 @@ export const StateNotice = React.memo(function StateNotice({
   );
 });
 
-export function PrimaryButton({
+export const PrimaryButton = React.memo(function PrimaryButton({
   label,
   icon = 'arrow-forward',
   loading,

@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
-import { motion } from 'framer-motion';
 import { Bus, MapPin, Calendar, Award } from 'lucide-react';
 import type { BusRoute } from '../../../services/bus';
 import { C } from '../../../utils/wasel-ds';
 import { DS, r, pill } from '../../shared/pageShared';
 import { tx } from '../../../locales/tx';
+import '../../../styles/animations.css';
 
 function getScheduleTimes(route: BusRoute) {
   return route.departureTimes?.length ? route.departureTimes : [route.dep];
@@ -93,12 +93,11 @@ export function BusRouteList({
         const exactMatch = isExactRoute(route, origin, destination);
         const routeStatus = getRouteStatus(route, tripDate, today, ar);
         return (
-          <motion.div
+          <div
             key={route.id}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
+            className="stagger-item animate-optimized"
             style={{
+              animationDelay: `${index * 0.05}s`,
               background: DS.card,
               borderRadius: r(20),
               border: `1px solid ${isSelected ? (route.color ?? DS.cyan) : DS.border}`,
@@ -320,7 +319,7 @@ export function BusRouteList({
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
         );
       })}
     </div>
