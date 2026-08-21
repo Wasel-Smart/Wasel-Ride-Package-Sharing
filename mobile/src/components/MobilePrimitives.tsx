@@ -292,7 +292,7 @@ export const PrimaryButton = React.memo(function PrimaryButton({
       )}
     </Pressable>
   );
-}
+});
 
 export function ActionRow({
   destructive,

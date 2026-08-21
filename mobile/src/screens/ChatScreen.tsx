@@ -68,7 +68,7 @@ const ChatScreen = React.memo(function ChatScreen({ route }: ChatScreenProps) {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const scrollRef = useRef<FlatList>(null);
+  const scrollRef = useRef<FlatList<TripMessage>>(null);
 
   const tripId = route?.params?.tripId ?? route?.params?.rideId ?? '';
   const driverName = route?.params?.driverName?.trim() || 'السائق';
@@ -299,8 +299,8 @@ const ChatScreen = React.memo(function ChatScreen({ route }: ChatScreenProps) {
         <FlatList
           ref={scrollRef}
           data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) => renderMessage(item, index)}
+          keyExtractor={(item: TripMessage) => item.id}
+          renderItem={({ item, index }: { item: TripMessage; index: number }) => renderMessage(item, index)}
           ListHeaderComponent={
             <View style={styles.dateHeader}>
               <Text style={styles.dateHeaderText}>اليوم</Text>
