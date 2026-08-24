@@ -936,7 +936,7 @@ export function FindRidePage() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
+            <div className="sp-results-list" style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
               <AnimatePresence>
                 {results.length === 0 ? (
                   <motion.div

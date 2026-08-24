@@ -4,6 +4,7 @@
  * Shared wallet primitives used across the dashboard surface.
  */
 
+import React from 'react';
 import { type MouseEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -76,7 +77,7 @@ const COMPLETED_STATUS_META = {
 };
 
 // Shared transaction row used across wallet tabs
-export function TransactionRow({
+export const TransactionRow = React.memo(function TransactionRow({
   tx: transaction,
   isRTL,
   jodLabel,
@@ -136,7 +137,7 @@ export function TransactionRow({
       </span>
     </motion.div>
   );
-}
+});
 
 // Shared modal shell for wallet actions
 export function ActionModal({

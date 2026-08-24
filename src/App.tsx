@@ -33,6 +33,7 @@ function AppRuntimeCoordinator() {
   useEffect(() => {
     let cancelled = false;
     let cleanup: (() => void) | undefined;
+    let idleHandle: number | ReturnType<typeof setTimeout> | undefined;
 
     const run = async () => {
       try {
@@ -44,7 +45,12 @@ function AppRuntimeCoordinator() {
           }
         }
 
-        setTimeout(async () => {
+        const scheduleIdle = (callback: () => void, delay = 0) =>
+          typeof requestIdleCallback !== 'undefined'
+            ? requestIdleCallback(callback, { timeout: delay + 1000 })
+            : setTimeout(callback, delay);
+
+        idleHandle = scheduleIdle(async () => {
           if (cancelled) return;
 
           try {
@@ -101,6 +107,11 @@ function AppRuntimeCoordinator() {
     return () => {
       cancelled = true;
       cleanup?.();
+      if (typeof cancelIdleCallback !== 'undefined' && idleHandle !== undefined) {
+        cancelIdleCallback(idleHandle as number);
+      } else if (idleHandle !== undefined) {
+        clearTimeout(idleHandle as ReturnType<typeof setTimeout>);
+      }
     };
   }, []);
 

@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import React from 'react';
 import { Brain, CheckCircle2, Clock, Package, Star, Users } from 'lucide-react';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
@@ -8,6 +7,7 @@ import { getMovementPriceQuote } from '../../../services/movementPricing';
 import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
 import { createGenderMeta, type Ride } from '../../../pages/waselCoreRideData';
 import { getCurrentLang, tx } from '../../../locales/tx';
+import '../../../styles/animations.css';
 
 const GENDER_META = createGenderMeta(DS);
 const CITY_LABELS_AR: Record<string, string> = {
@@ -108,7 +108,7 @@ export const FindRideCard = React.memo(function FindRideCard({
   });
 
   return (
-    <motion.div
+    <div
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -117,25 +117,27 @@ export const FindRideCard = React.memo(function FindRideCard({
           onOpen();
         }
       }}
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: idx * 0.06, type: 'spring', stiffness: 380, damping: 28 }}
-      whileHover={{ y: -3, boxShadow: `0 12px 40px ${C.cyanDim}` }}
-      onClick={onOpen}
+      className="sp-ride-card animate-optimized"
       style={{
+        animationDelay: `${idx * 0.06}s`,
         background: DS.card,
         borderRadius: r(20),
         border: `1px solid ${DS.border}`,
         cursor: 'pointer',
         overflow: 'hidden',
-        transition: 'border-color 0.2s',
+        transition: 'border-color 0.2s, transform 0.2s, box-shadow 0.2s',
       }}
       onMouseEnter={(event: React.MouseEvent<HTMLDivElement>) => {
         event.currentTarget.style.borderColor = DS.borderH;
+        event.currentTarget.style.transform = 'translateY(-3px)';
+        event.currentTarget.style.boxShadow = `0 12px 40px ${C.cyanDim}`;
       }}
       onMouseLeave={(event: React.MouseEvent<HTMLDivElement>) => {
         event.currentTarget.style.borderColor = DS.border;
+        event.currentTarget.style.transform = '';
+        event.currentTarget.style.boxShadow = '';
       }}
+      onClick={onOpen}
     >
       <div style={{ height: 2, background: DS.gradC }} />
       <div className="sp-ride-card-body" style={{ padding: '20px 24px' }}>
@@ -368,8 +370,7 @@ export const FindRideCard = React.memo(function FindRideCard({
                     ? ar ? `${localizeSignalText(signal.nextWaveWindow)} التالي` : `${signal.nextWaveWindow} next`
                     : ar ? 'جاهز للحجز' : 'Ready to reserve'}
             </span>
-            <motion.button
-              whileTap={{ scale: 0.94 }}
+            <button
               onClick={(event: React.MouseEvent) => {
                 event.stopPropagation();
                 if (hasBooking) {
@@ -414,10 +415,10 @@ export const FindRideCard = React.memo(function FindRideCard({
                  : soldOut
                    ? ar ? 'ممتلئ' : 'Sold out'
                    : ar ? 'عرض التفاصيل' : 'View details'}
-            </motion.button>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
+             </button>
+           </div>
+         </div>
+       </div>
+     </div>
+   );
 });

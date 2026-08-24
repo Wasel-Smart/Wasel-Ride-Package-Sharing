@@ -1,9 +1,8 @@
 /**
  * MapWrapper — canonical map entry-point for Wasel
  *
- * All modes ('google', 'static', 'live') now render WaselMap.
- * This preserves the MapWrapper API used across 40+ components
- * while giving every caller a real, live Google Map.
+ * Static mode renders a lightweight StaticMapPreview instead of loading
+ * Leaflet/Google Maps, keeping the 180px preview snappy.
  */
 
 import { Component, Suspense, lazy, type ErrorInfo, type ReactNode } from 'react';
@@ -39,6 +38,30 @@ interface MapWrapperProps {
   showMosques?: boolean;
   showRadars?: boolean;
   compact?: boolean;
+}
+
+function StaticMapPreview({ height, route }: { height?: string | number; route?: WaselMapRoute[] }) {
+  const hasRoute = route && route.length >= 2;
+  return (
+    <div
+      className="flex items-center justify-center rounded-2xl"
+      style={{
+        height: typeof height === 'number' ? `${height}px` : (height ?? '400px'),
+        background: 'linear-gradient(180deg, #0a1f3d 0%, #081d39 100%)',
+        border: '1px solid rgba(103,232,255,0.15)',
+      }}
+    >
+      <div className="flex flex-col items-center gap-2 text-[#95b2c9]">
+        <MapPin className="w-6 h-6 text-[#147fe4]" />
+        <p className="text-xs font-medium">{tx('mapWrapper.static_preview')}</p>
+        {hasRoute && route && route.length >= 2 && (
+          <p className="text-[0.65rem] opacity-80">
+            {route[0]!.label} → {route[route.length - 1]!.label}
+          </p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function MapLoader({ height }: { height?: string | number }) {
@@ -115,6 +138,14 @@ export function MapWrapper({
   compact,
 }: MapWrapperProps) {
   const isCompact = compact ?? mode === 'static';
+
+  if (mode === 'static') {
+    const route: WaselMapRoute[] = [];
+    if (pickupLocation) route.push({ ...pickupLocation, label: 'Pickup' });
+    if (driverLocation) route.push({ ...driverLocation, label: 'Driver' });
+    if (dropoffLocation) route.push({ ...dropoffLocation, label: 'Dropoff' });
+    return <StaticMapPreview height={height} route={route.length >= 2 ? route : undefined} />;
+  }
 
   // Build route from location props (live mode)
   const route: WaselMapRoute[] = [];
