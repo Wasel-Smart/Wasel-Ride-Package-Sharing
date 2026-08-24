@@ -15,10 +15,12 @@ import { MobileErrorBoundary } from './components/MobileErrorBoundary';
 import { RTLProvider } from './utils/rtl';
 import { colors } from './theme';
 import { mobileAuth } from './services/auth';
+import { initPerformanceMonitoring, recordColdStart } from './services/performance';
 import * as Linking from 'expo-linking';
 
 enableScreens(true);
 enableFreeze(true);
+initPerformanceMonitoring();
 
 const APP_SCHEME = process.env.EXPO_PUBLIC_APP_SCHEME ?? 'wasel';
 const APP_DOMAIN = process.env.EXPO_PUBLIC_APP_DOMAIN ?? 'wasel.app';
@@ -47,6 +49,8 @@ const App = () => {
   const [deepLinkUrl, setDeepLinkUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    recordColdStart();
+
     const subscription = Linking.addEventListener('url', ({ url }) => {
       setDeepLinkUrl(url);
     });

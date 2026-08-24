@@ -1,4 +1,10 @@
 import '@testing-library/jest-native/extend-expect';
+import React from 'react';
+import TestRenderer from 'react-test-renderer';
+
+if (typeof React.act !== 'function' && typeof TestRenderer.act === 'function') {
+  React.act = TestRenderer.act;
+}
 
 console.log('jest.setup.js BEFORE polyfill: crypto.randomUUID type:', typeof globalThis.crypto?.randomUUID);
 console.log('jest.setup.js BEFORE polyfill: fetch type:', typeof globalThis.fetch);

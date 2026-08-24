@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -43,6 +43,28 @@ interface LiveCorridor {
   updatedAt: string;
 }
 
+const COOKIE_CONSENT_KEY = 'wasel-cookie-consent';
+const LANGUAGE_KEY = 'wasel-language';
+
+function readBrowserStorage(key: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch (error) {
+    console.error('[Wasel] failed to read browser storage:', error);
+    return null;
+  }
+}
+
+function writeBrowserStorage(key: string, value: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch (error) {
+    console.error('[Wasel] failed to write browser storage:', error);
+  }
+}
+
 export function HomePage() {
   const { language, dir, setLanguage, t } = useLanguage();
   const { user } = useAuth();
@@ -77,8 +99,8 @@ export function HomePage() {
    };
 
     useEffect(() => {
-      const savedCookieConsent = localStorage.getItem('wasel-cookie-consent');
-      const savedLanguage = localStorage.getItem('wasel-language');
+      const savedCookieConsent = readBrowserStorage(COOKIE_CONSENT_KEY);
+      const savedLanguage = readBrowserStorage(LANGUAGE_KEY);
       if (savedCookieConsent) {
         setCookieConsented(true);
       }
@@ -125,14 +147,50 @@ export function HomePage() {
     }, [API_URL]);
 
   const acceptCookies = () => {
-    localStorage.setItem('wasel-cookie-consent', 'accepted');
+    writeBrowserStorage(COOKIE_CONSENT_KEY, 'accepted');
     setCookieConsented(true);
   };
 
   const declineCookies = () => {
-    localStorage.setItem('wasel-cookie-consent', 'declined');
+    writeBrowserStorage(COOKIE_CONSENT_KEY, 'declined');
     setCookieDeclined(true);
     setCookieConsented(true); // hide banner
+  };
+
+  const trapCookieBannerFocus = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      declineCookies();
+      return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    const banner = cookieBannerRef.current;
+    if (!banner) return;
+
+    const focusable = Array.from(
+      banner.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter(element => !element.hasAttribute('disabled') && element.tabIndex !== -1);
+
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!first || !last) return;
+    const active = document.activeElement;
+
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+      return;
+    }
+
+    if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
   };
 
   useEffect(() => {
@@ -297,11 +355,7 @@ export function HomePage() {
         {!cookieConsented && !cookieDeclined && (
           <div
             ref={cookieBannerRef}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                declineCookies();
-              }
-            }}
+            onKeyDown={trapCookieBannerFocus}
             style={{
               position: 'fixed',
               bottom: 0,
@@ -342,6 +396,7 @@ export function HomePage() {
             </span>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button
+                type="button"
                 onClick={declineCookies}
                 style={{
                   padding: '8px 14px',
@@ -358,6 +413,7 @@ export function HomePage() {
                 {t('cookies.reject_all')}
               </button>
               <button
+                type="button"
                 ref={acceptButtonRef}
                 onClick={acceptCookies}
                 style={{
@@ -381,6 +437,7 @@ export function HomePage() {
         {/* Sticky mobile CTA */}
         <div className="wasel-home-sticky-cta">
           <button
+            type="button"
             onClick={() => handleNavigate(primaryTripPath, 'sticky_find')}
             style={{
               height: 48,
@@ -397,6 +454,7 @@ export function HomePage() {
             {t('homeSections.findRideCTA')}
           </button>
           <button
+            type="button"
             onClick={() => handleNavigate('/offer-ride', 'sticky_offer')}
             style={{
               height: 48,
