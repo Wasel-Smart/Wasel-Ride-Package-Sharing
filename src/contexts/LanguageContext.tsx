@@ -45,17 +45,20 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
-    try {
-      localStorage.setItem('wasel-language', lang);
-    } catch (error) {
-      console.error('Failed to save language to localStorage:', error);
-    }
 
     // Update HTML dir attribute
     setCurrentLang(lang);
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.lang = lang;
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('wasel-language', language);
+    } catch (error) {
+      console.error('Failed to save language to localStorage:', error);
+    }
+  }, [language]);
 
   const toggleLanguage = useCallback(() => {
     setLanguage(language === 'ar' ? 'en' : 'ar');

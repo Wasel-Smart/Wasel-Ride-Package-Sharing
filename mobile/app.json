@@ -7,6 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "wasel",
     "userInterfaceStyle": "automatic",
+    "jsEngine": "hermes",
     "newArchEnabled": true,
     "runtimeVersion": {
       "policy": "appVersion"
@@ -32,6 +33,9 @@
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "يستخدم واصل موقعك للعثور على المشاوير القريبة وإظهار موقعك على الخريطة. Wasel uses your location to find nearby rides and show your position on the map.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "يستخدم واصل موقعك أثناء الرحلة النشطة لتحديث موقع السائق بأمان. Wasel uses your location during an active trip to update the driver's position safely.",
+        "NSCameraUsageDescription": "يستخدم واصل الكاميرا لإضافة وثائق التحقق وإثبات التسليم فقط. Wasel uses the camera only for verification documents and delivery proof.",
+        "NSPhotoLibraryUsageDescription": "يستخدم واصل مكتبة الصور لاختيار وثائق التحقق أو إثبات التسليم بموافقتك. Wasel uses your photo library to choose verification or proof-of-delivery images with your consent.",
+        "NSFaceIDUsageDescription": "يستخدم واصل Face ID لحماية الدخول إلى حسابك ومحفظتك. Wasel uses Face ID to protect access to your account and wallet.",
         "UIBackgroundModes": ["location", "fetch"]
       },
       "privacyManifests": {

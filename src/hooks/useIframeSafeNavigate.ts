@@ -83,5 +83,13 @@ export { useIframeSafeNavigate as useNavigate };
 export default useIframeSafeNavigate;
 
 export function isInsideIframe(): boolean {
-  return false;
+  if (typeof window === 'undefined') return false;
+
+  try {
+    return window.self !== window.top;
+  } catch {
+    // Cross-origin iframe access throws in hardened browser contexts; treating
+    // that as embedded keeps iframe-specific callers on the safe path.
+    return true;
+  }
 }

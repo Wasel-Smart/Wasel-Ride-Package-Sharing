@@ -119,6 +119,11 @@ describe('MobileErrorBoundary', () => {
 
     expect(instance.state.hasError).toBe(true);
     await act(async () => {
+      testRenderer.update(
+        <MobileErrorBoundary>
+          <Text>Recovered screen</Text>
+        </MobileErrorBoundary>,
+      );
       instance.handleReset();
     });
     expect(instance.state.hasError).toBe(false);
