@@ -1,116 +1,34 @@
-# Wasel Brand
+# Wasel | واصل — Brand Hub
 
-Canonical brand assets, guidelines, and manifest for the Wasel mobility platform.
+This folder is the entry point for anyone touching the Wasel brand. It doesn't hold the
+production assets itself — it points to where each piece actually lives, so there's one
+place to start instead of guessing across three folders.
 
-## Directory Structure
+## Where things live
 
-```
-brand/
-├── assets/                    # Static brand assets (copied to public/ by build)
-│   ├── logos/
-│   │   ├── primary/          # Full wordmark logos
-│   │   │   ├── logo-default.{svg,png,webp,avif}
-│   │   │   ├── logo-dark.{svg,png,webp,avif}
-│   │   │   ├── logo-light.{svg,png,webp,avif}
-│   │   │   ├── logo-white.svg
-│   │   │   ├── logo-black.svg
-│   │   │   ├── logo-monochrome.svg
-│   │   │   └── logo-default-{64,96,160,280,512}.{png,webp,avif}
-│   │   └── symbols/          # Symbol/icon-only logos
-│   │       ├── symbol-default.{svg,png,webp,avif}
-│   │       ├── symbol-white.svg
-│   │       └── w-mark.{png,webp,avif}
-│   ├── icons/                # App icons and favicons
-│   │   ├── app-icon.{svg,png,webp,avif}
-│   │   ├── app-icon-white.svg
-│   │   └── favicon.svg
-│   ├── og/                   # Open Graph images
-│   │   └── og-default.{png,webp,avif}
-│   └── social/               # Social media assets
-│       └── social-dark.{svg,png,webp,avif}
-├── docs/
-│   └── BRAND_GUIDELINES.md   # Comprehensive brand guidelines
-├── brand-manifest.json       # Machine-readable asset registry
-└── README.md                 # This file
-```
+| What | Where | Notes |
+| --- | --- | --- |
+| Brand rules (palette, logo usage, motion, RTL) | [`/docs/BRAND_GUIDELINES.md`](../docs/BRAND_GUIDELINES.md) | Source of truth. Read this first. |
+| Design tokens (code) | [`/src/utils/wasel-ds.ts`](../src/utils/wasel-ds.ts) → re-exported by [`/src/tokens/wasel-tokens.ts`](../src/tokens/wasel-tokens.ts) | Colours, type scale, shadows, motion — must match the guidelines doc above. If they ever drift, the guidelines doc wins and the tokens get fixed. |
+| Production logo/icon/social assets | [`/public/brand/`](../public/brand/) | Every exported PNG/SVG/WEBP/AVIF actually served to users. This is the canonical asset library. |
+| Logo component | [`/src/components/wasel-ui/WaselLogo.tsx`](../src/components/wasel-ui/WaselLogo.tsx) | The only place a logo should be rendered in the app. Don't `<img>` a brand asset directly in a page — use `WaselLogo` / `WaselMark` / `WaselHeroMark` / `WaselIcon`. |
+| Design reference | [`reference/wasel-bilingual-reference.png`](./reference/wasel-bilingual-reference.png) | Static reference render of the bilingual (AR/EN) lockup, kept for design review. Not served to users — see `/public/brand/` for that. |
 
-## Usage
+## Core palette (see BRAND_GUIDELINES.md for full rules)
 
-### React Components
+| Role | Value |
+| --- | --- |
+| Brand ink | `#081D39` |
+| Connection blue | `#147FE4` |
+| Movement green | `#72C70D` |
+| Journey orange | `#FF8A0B` |
 
-```tsx
-import { WaselLogo, WaselMark, WaselHeroMark, WaselIcon } from '@/components/wasel-ui/WaselLogo';
+Every surface — web, mobile, PWA manifest, social previews — should trace back to these four
+values. If you find a hex code in the wild that isn't one of these (or a documented supporting
+accent from BRAND_GUIDELINES.md), it's drift, not a variant.
 
-// Full logo with wordmark
-<WaselLogo size={120} showWordmark={true} theme="dark" />
+## Cleanup status
 
-// Symbol only
-<WaselMark size={40} />
-
-// Hero/large framed symbol
-<WaselHeroMark size={200} />
-
-// Compact icon
-<WaselIcon size={20} />
-```
-
-### Asset Resolver
-
-```ts
-import { logoPath, symbolPath, iconPath, ogPath, socialPath } from '@/utils/brand-assets';
-
-// Get path to a specific brand asset
-const logoSvg = logoPath('default', 'svg', 512);
-const symbolWebp = symbolPath('default', 'webp');
-const ogImage = ogPath('png');
-```
-
-### Brand Manifest
-
-```ts
-import brandManifest from '@/brand/brand-manifest.json';
-
-// Access asset metadata programmatically
-console.log(brandManifest.logos.primary.variants.default.path);
-```
-
-## Naming Convention
-
-```
-{type}-{variant}-{size}.{format}
-
-Examples:
-- logo-default-512.png
-- symbol-dark.svg
-- icon-app-192.webp
-- og-default.png
-```
-
-## Variants
-
-| Variant | Background | Usage |
-|---------|-----------|-------|
-| `default` | Transparent | General purpose |
-| `dark` | Light backgrounds | Headers, light mode |
-| `light` | Dark backgrounds | Dark mode, navy backgrounds |
-| `white` | Colored/dark | Over photos, gradients |
-| `black` | Light backgrounds | Print, high contrast |
-| `monochrome` | Any | Single-color applications |
-
-## Formats
-
-| Format | Usage |
-|--------|-------|
-| SVG | Vector, icons, logos (preferred) |
-| PNG | Raster, fallback |
-| WebP | Web optimized raster |
-| AVIF | Next-gen web raster |
-
-## Guidelines
-
-See `docs/BRAND_GUIDELINES.md` for complete brand guidelines including:
-- Color system
-- Typography
-- Logo clear space and minimum sizes
-- Accessibility requirements
-- Component API documentation
+Orphaned brand assets, backup folders, and duplicate manifests previously listed here have been
+removed. This folder, `/docs/BRAND_GUIDELINES.md`, and `/public/brand/` are now the complete,
+non-duplicated brand system.

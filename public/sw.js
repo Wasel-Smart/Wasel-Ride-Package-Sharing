@@ -34,6 +34,7 @@ const NETWORK_TIMEOUT_MS = 8000;
 // hiccuped, which is what produced app_mount_timeout on mobile.
 const PRECACHE_STATIC = [
   '/offline.html',
+  '/initial-locale.js',
   '/manifest.webmanifest',
   '/favicon.ico',
   '/favicon-16x16.png',

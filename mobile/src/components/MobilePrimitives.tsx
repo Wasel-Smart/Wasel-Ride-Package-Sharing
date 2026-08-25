@@ -112,8 +112,8 @@ export const InfoCard = React.memo(function InfoCard({
         <Ionicons name={icon} size={20} color={tone} />
       </View>
       <View style={styles.cardText}>
-        <Text style={styles.cardTitle}>{sanitizeText(title)}</Text>
-        <Text style={styles.cardBody}>{sanitizeText(body)}</Text>
+        <Text style={styles.cardTitle}>{title}</Text>
+        <Text style={styles.cardBody}>{body}</Text>
       </View>
     </View>
   );
@@ -123,15 +123,17 @@ export const MetricTile = React.memo(function MetricTile({
   label,
   value,
   tone = colors.textPrimary,
+  testID,
 }: {
   label: string;
   value: string;
   tone?: string;
+  testID?: string;
 }) {
   return (
-    <View style={styles.metric}>
-      <Text style={[styles.metricValue, { color: tone }]}>{sanitizeText(value)}</Text>
-      <Text style={styles.metricLabel}>{sanitizeText(label)}</Text>
+    <View style={styles.metric} testID={testID}>
+      <Text style={[styles.metricValue, { color: tone }]}>{value}</Text>
+      <Text style={styles.metricLabel}>{label}</Text>
     </View>
   );
 });
@@ -147,8 +149,8 @@ export const InlineStat = React.memo(function InlineStat({
 }) {
   return (
     <View style={styles.inlineStat}>
-      <Text style={[styles.inlineValue, { color: tone }]}>{sanitizeText(value)}</Text>
-      <Text style={styles.inlineLabel}>{sanitizeText(label)}</Text>
+      <Text style={[styles.inlineValue, { color: tone }]}>{value}</Text>
+      <Text style={styles.inlineLabel}>{label}</Text>
     </View>
   );
 });
@@ -165,7 +167,7 @@ export const StatusPill = React.memo(function StatusPill({
   return (
     <View style={[styles.pill, { borderColor: `${tone}50`, backgroundColor: `${tone}15` }]}>
       <Ionicons name={icon} size={12} color={tone} />
-      <Text style={[styles.pillText, { color: tone }]}>{sanitizeText(label)}</Text>
+      <Text style={[styles.pillText, { color: tone }]}>{label}</Text>
     </View>
   );
 });
@@ -192,9 +194,9 @@ export const RoutePreview = React.memo(function RoutePreview({
       </View>
       <View style={styles.routeCopy}>
         <View style={styles.routeEndpoints}>
-          <Text style={styles.routeCity}>{sanitizeText(from)}</Text>
+          <Text style={styles.routeCity}>{from}</Text>
           <Ionicons name="arrow-forward" size={16} color={colors.textMuted} />
-          <Text style={styles.routeCity}>{sanitizeText(to)}</Text>
+          <Text style={styles.routeCity}>{to}</Text>
         </View>
         <View style={styles.routeStats}>
           <InlineStat label="وقت الوصول" value={eta} tone={tone} />
@@ -226,14 +228,14 @@ export const StateNotice = React.memo(function StateNotice({
         {loading ? <ActivityIndicator color={tone} /> : <Ionicons name={icon} size={20} color={tone} />}
       </View>
       <View style={styles.noticeCopy}>
-        <Text style={styles.noticeTitle}>{sanitizeText(title)}</Text>
-        {body ? <Text style={styles.noticeBody}>{sanitizeText(body)}</Text> : null}
+        <Text style={styles.noticeTitle}>{title}</Text>
+        {body ? <Text style={styles.noticeBody}>{body}</Text> : null}
       </View>
     </View>
   );
 });
 
-export const PrimaryButton = React.memo(function PrimaryButton({
+export function PrimaryButton({
   label,
   icon = 'arrow-forward',
   loading,
@@ -272,7 +274,7 @@ export const PrimaryButton = React.memo(function PrimaryButton({
       disabled={isDisabled}
       hitSlop={hitSlop}
       onPress={handlePress}
-      style={({ pressed }: { pressed: boolean }) => [
+      style={({ pressed }) => [
         styles.button,
         {
           backgroundColor: isDisabled ? colors.line : tone,
@@ -286,13 +288,13 @@ export const PrimaryButton = React.memo(function PrimaryButton({
         <ActivityIndicator color={isOutline ? tone : '#FFFFFF'} />
       ) : (
         <>
-          <Text style={styles.buttonText}>{sanitizeText(label)}</Text>
+          <Text style={styles.buttonText}>{label}</Text>
           <Ionicons name={icon} size={18} color={colors.bg} />
         </>
       )}
     </Pressable>
   );
-});
+}
 
 export function ActionRow({
   destructive,
@@ -320,11 +322,11 @@ export function ActionRow({
       accessibilityRole="button"
       hitSlop={hitSlop}
       onPress={handlePress}
-      style={({ pressed }: { pressed: boolean }) => [styles.action, pressed ? styles.actionPressed : null]}
+      style={({ pressed }) => [styles.action, pressed ? styles.actionPressed : null]}
     >
       <Ionicons name={icon} size={18} color={tone} />
-      <Text style={[styles.actionText, destructive ? styles.destructiveText : null]}>{sanitizeText(label)}</Text>
-      {value ? <Text style={styles.actionValue}>{sanitizeText(value)}</Text> : null}
+      <Text style={[styles.actionText, destructive ? styles.destructiveText : null]}>{label}</Text>
+      {value ? <Text style={styles.actionValue}>{value}</Text> : null}
       <Ionicons name="chevron-forward" size={16} color={colors.textMuted} />
     </Pressable>
   );

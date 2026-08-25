@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script src="/initial-locale.js"></script>
     <!-- theme-color is intentionally omitted here; PWA theme_color in manifest.webmanifest covers all browsers including the install path. -->
     <meta name="color-scheme" content="dark" />
     <meta name="application-name" content="Wasel" />
@@ -32,28 +33,12 @@
     <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" />
     <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
 
-    <!-- Fonts: self-hosted with CDN fallback for performance and offline resilience -->
+    <!-- Fonts: load with display=swap so text is visible immediately. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" media="print" onload="this.media='all'" />
-    <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" />
-    </noscript>
 
     <title>Wasel | Shared Routes That Reduce Travel Cost</title>
-    <script>
-      (function setInitialLocale() {
-        try {
-          var stored = window.localStorage.getItem('wasel-language');
-          var language = stored || navigator.language || 'en';
-          if (language.toLowerCase().indexOf('ar') === 0) {
-            document.documentElement.lang = 'ar';
-            document.documentElement.dir = 'rtl';
-          }
-        } catch (_error) {}
-      })();
-    </script>
     <meta name="description" content="Wasel connects riders and drivers through shared routes to reduce cost. Book a ride, offer a route, or join the network across Jordan." />
     <meta name="keywords" content="Wasel, Jordan mobility, intercity rides, package delivery, Raje3, Amman, Aqaba, Irbid, trusted travel" />
     <meta name="robots" content="index, follow" />
@@ -66,20 +51,25 @@
     <meta property="og:url" content="https://wasel14.online" />
     <meta property="og:locale" content="en_JO" />
     <meta property="og:locale:alternate" content="ar_JO" />
-    <meta property="og:image" content="/brand/assets/og/og-default.png" />
-    <meta property="og:image:alt" content="Wasel | واصل mobility network logo" />
+    <meta property="og:image" content="https://wasel14.online/brand/wasel-og.png" />
+    <meta property="og:image:secure_url" content="https://wasel14.online/brand/wasel-og.png" />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Wasel | واصل — Jordan's bilingual mobility network" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Wasel | Shared Routes That Reduce Travel Cost" />
     <meta name="twitter:description" content="Wasel connects riders and drivers through shared routes to reduce cost. Book a ride, offer a route, or join the network across Jordan." />
-    <meta name="twitter:image" content="/brand/assets/social/social-dark.png" />
-    <meta name="twitter:image:alt" content="Wasel | واصل mobility network logo" />
+    <meta name="twitter:image" content="https://wasel14.online/brand/wasel-og.png" />
+    <meta name="twitter:image:alt" content="Wasel | واصل — Jordan's bilingual mobility network" />
 
-    <link rel="preconnect" href="https://maps.googleapis.com" />
     <link rel="dns-prefetch" href="https://supabase.co" />
-    <link rel="preload" as="image" href="/brand/assets/logos/symbols/symbol-default.webp" imagesizes="280px" />
+    <link rel="preload" as="image" href="/brand/wasel-symbol.webp" imagesizes="280px" />
+    <style>
+      html, body, #root { min-height: 100%; }
+      body { margin: 0; background: #071521; }
+    </style>
   </head>
 
   <body>

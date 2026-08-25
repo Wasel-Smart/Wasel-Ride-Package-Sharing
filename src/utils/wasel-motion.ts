@@ -5,21 +5,21 @@
  * All motion respects `prefers-reduced-motion` for accessibility.
  */
 
-import { ANIM, EASE, DUR } from './wasel-ds';
+import { ANIM } from './wasel-ds';
 
 export const MOTION = {
   duration: {
-    instant: DUR.instant,
-    fast: DUR.fast,
-    normal: DUR.normal,
-    slow: DUR.slow,
-    slower: DUR.slower,
+    instant: '0ms',
+    fast: ANIM.dur.fast,
+    normal: ANIM.dur.normal,
+    slow: ANIM.dur.slow,
+    slower: ANIM.dur.slower,
   },
   easing: {
-    default: EASE.default,
-    spring: EASE.spring,
-    inOut: EASE.inOut,
-    decel: EASE.decel,
+    default: ANIM.ease.default,
+    spring: ANIM.ease.spring,
+    inOut: ANIM.ease.inOut,
+    decel: ANIM.ease.decel,
   },
 } as const;
 
@@ -43,9 +43,11 @@ export const motionConfig = {
 };
 
 export function getMotionStyle(config: MotionConfig): React.CSSProperties {
+  const duration = config.duration === 'instant' ? '0ms' : ANIM.dur[config.duration as keyof typeof ANIM.dur];
+  const easing = ANIM.ease[config.easing as keyof typeof ANIM.ease];
   return {
-    transitionDuration: ANIM.dur[config.duration],
-    transitionTimingFunction: ANIM.ease[config.easing],
+    transitionDuration: duration,
+    transitionTimingFunction: easing,
     transitionDelay: config.delay ? `${config.delay}ms` : undefined,
   };
 }
@@ -56,11 +58,13 @@ export function prefersReducedMotion(): boolean {
 }
 
 export function getSafeDuration(duration: MotionDuration): string {
-  return prefersReducedMotion() ? '0ms' : ANIM.dur[duration];
+  if (prefersReducedMotion()) return '0ms';
+  return duration === 'instant' ? '0ms' : ANIM.dur[duration as keyof typeof ANIM.dur];
 }
 
 export function getSafeEasing(easing: MotionEasing): string {
-  return prefersReducedMotion() ? 'linear' : ANIM.ease[easing];
+  if (prefersReducedMotion()) return 'linear';
+  return ANIM.ease[easing as keyof typeof ANIM.ease];
 }
 
 export const CSS_CLASSES = {

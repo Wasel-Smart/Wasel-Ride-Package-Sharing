@@ -78,7 +78,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
               >
                 <div
                   style={{
-                    color: '#FCA5A5',
+                    color: '#FF7C8B',
                     fontSize: '0.88rem',
                     fontWeight: 700,
                     marginBottom: 6,

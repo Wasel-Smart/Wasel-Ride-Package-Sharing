@@ -61,6 +61,8 @@ export function HomePageStyles() {
 
       .wasel-home-section {
         margin-top: 36px;
+        content-visibility: auto;
+        contain-intrinsic-size: auto 400px;
       }
 
       .wasel-home-section:first-child {
@@ -1177,6 +1179,8 @@ export function HomePageStyles() {
 
       .wasel-home-section {
         margin-top: 36px;
+        content-visibility: auto;
+        contain-intrinsic-size: auto 400px;
       }
 
       .wasel-home-section:first-child {

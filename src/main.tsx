@@ -109,9 +109,9 @@ class RootErrorBoundary extends React.Component<React.PropsWithChildren, { hasEr
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', color: '#fff', background: '#0B0F14' }}>
-          <div style={{ maxWidth: '560px', background: '#111827', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '16px', padding: '28px' }}>
-            <h1 style={{ margin: 0, color: '#F5B041' }}>Application Error</h1>
+        <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', color: '#fff', background: '#050B12' }}>
+          <div style={{ maxWidth: '560px', background: '#0e2240', border: '1px solid rgba(20,127,228,0.16)', borderRadius: '16px', padding: '28px' }}>
+            <h1 style={{ margin: 0, color: '#FF8A0B' }}>Application Error</h1>
             <p style={{ marginTop: '12px' }}>A runtime error prevented the app from rendering.</p>
             <p style={{ fontFamily: 'monospace', fontSize: '13px', opacity: 0.85 }}>{this.state.message}</p>
           </div>

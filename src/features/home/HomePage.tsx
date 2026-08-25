@@ -1,8 +1,7 @@
-﻿import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, ArrowLeft, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { Language } from '../../locales/translations';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -43,51 +42,21 @@ interface LiveCorridor {
   updatedAt: string;
 }
 
-const COOKIE_CONSENT_KEY = 'wasel-cookie-consent';
-const LANGUAGE_KEY = 'wasel-language';
-
-function readBrowserStorage(key: string): string | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    return window.localStorage.getItem(key);
-  } catch (error) {
-    console.error('[Wasel] failed to read browser storage:', error);
-    return null;
-  }
-}
-
-function writeBrowserStorage(key: string, value: string): void {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(key, value);
-  } catch (error) {
-    console.error('[Wasel] failed to write browser storage:', error);
-  }
-}
-
 export function HomePage() {
   const { language, dir, setLanguage, t } = useLanguage();
-  const { user } = useAuth();
-  const { user: waselUser } = useLocalAuth();
+  const { user, waselUser } = useAuth();
   const navigate = useIframeSafeNavigate();
   const { stats: liveStats, loading } = useLiveUserStats();
   const [tripMode, setTripMode] = useState<TripMode>('one-way');
   const [cookieConsented, setCookieConsented] = useState(false);
   const [cookieDeclined, setCookieDeclined] = useState(false);
-  const cookieBannerRef = useRef<HTMLDivElement>(null);
-  const acceptButtonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!cookieConsented && !cookieDeclined && acceptButtonRef.current) {
-      acceptButtonRef.current.focus();
-    }
-  }, [cookieConsented, cookieDeclined]);
   const [liveCorridors, setLiveCorridors] = useState<LiveCorridor[]>([]);
   const [corridorsLoading, setCorridorsLoading] = useState(true);
 
   const ar = language === 'ar';
   const svc = CurrencyService.getInstance();
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
+  const role = waselUser?.role;
 
    const detectBrowserLanguage = (): Language | null => {
      if (typeof navigator === 'undefined') return null;
@@ -99,8 +68,8 @@ export function HomePage() {
    };
 
     useEffect(() => {
-      const savedCookieConsent = readBrowserStorage(COOKIE_CONSENT_KEY);
-      const savedLanguage = readBrowserStorage(LANGUAGE_KEY);
+      const savedCookieConsent = localStorage.getItem('wasel-cookie-consent');
+      const savedLanguage = localStorage.getItem('wasel-language');
       if (savedCookieConsent) {
         setCookieConsented(true);
       }
@@ -147,50 +116,14 @@ export function HomePage() {
     }, [API_URL]);
 
   const acceptCookies = () => {
-    writeBrowserStorage(COOKIE_CONSENT_KEY, 'accepted');
+    localStorage.setItem('wasel-cookie-consent', 'accepted');
     setCookieConsented(true);
   };
 
   const declineCookies = () => {
-    writeBrowserStorage(COOKIE_CONSENT_KEY, 'declined');
+    localStorage.setItem('wasel-cookie-consent', 'declined');
     setCookieDeclined(true);
     setCookieConsented(true); // hide banner
-  };
-
-  const trapCookieBannerFocus = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') {
-      declineCookies();
-      return;
-    }
-
-    if (event.key !== 'Tab') return;
-
-    const banner = cookieBannerRef.current;
-    if (!banner) return;
-
-    const focusable = Array.from(
-      banner.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      ),
-    ).filter(element => !element.hasAttribute('disabled') && element.tabIndex !== -1);
-
-    if (focusable.length === 0) return;
-
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (!first || !last) return;
-    const active = document.activeElement;
-
-    if (event.shiftKey && active === first) {
-      event.preventDefault();
-      last.focus();
-      return;
-    }
-
-    if (!event.shiftKey && active === last) {
-      event.preventDefault();
-      first.focus();
-    }
   };
 
   useEffect(() => {
@@ -218,8 +151,8 @@ export function HomePage() {
     trackUserAction('homepage.trip_mode_select', { mode });
   };
 
-  const quickActions = useMemo<QuickAction[]>(
-    () => [
+  const quickActions = useMemo<QuickAction[]>(() => {
+    const base: QuickAction[] = [
       {
         icon: Search,
         kicker: t('homeSections.findRideKicker'),
@@ -275,9 +208,16 @@ export function HomePage() {
         border: C.blueDim,
         path: '/schedule',
       },
-    ],
-    [t],
-  );
+    ];
+
+    if (role === 'driver' || role === 'both') {
+      return [base[1]!, base[0]!, base[2]!, base[3]!, base[4]!];
+    }
+    if (role === 'admin') {
+      return [base[0]!, base[2]!, base[1]!, base[3]!, base[4]!];
+    }
+    return base;
+  }, [role, t]);
 
   const corridorCards = useMemo<CorridorCard[]>(() => {
     if (!corridorsLoading && liveCorridors.length > 0) {
@@ -354,8 +294,6 @@ export function HomePage() {
         {/* Cookie banner — bottom position, non-blocking */}
         {!cookieConsented && !cookieDeclined && (
           <div
-            ref={cookieBannerRef}
-            onKeyDown={trapCookieBannerFocus}
             style={{
               position: 'fixed',
               bottom: 0,
@@ -374,7 +312,6 @@ export function HomePage() {
               backdropFilter: 'blur(16px)',
             }}
             role="dialog"
-            aria-modal="true"
             aria-label={t('cookies.title')}
           >
             <span
@@ -396,7 +333,6 @@ export function HomePage() {
             </span>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button
-                type="button"
                 onClick={declineCookies}
                 style={{
                   padding: '8px 14px',
@@ -413,8 +349,6 @@ export function HomePage() {
                 {t('cookies.reject_all')}
               </button>
               <button
-                type="button"
-                ref={acceptButtonRef}
                 onClick={acceptCookies}
                 style={{
                   padding: '8px 18px',
@@ -437,7 +371,6 @@ export function HomePage() {
         {/* Sticky mobile CTA */}
         <div className="wasel-home-sticky-cta">
           <button
-            type="button"
             onClick={() => handleNavigate(primaryTripPath, 'sticky_find')}
             style={{
               height: 48,
@@ -454,7 +387,6 @@ export function HomePage() {
             {t('homeSections.findRideCTA')}
           </button>
           <button
-            type="button"
             onClick={() => handleNavigate('/offer-ride', 'sticky_offer')}
             style={{
               height: 48,
@@ -488,7 +420,60 @@ export function HomePage() {
 
           {user && <ActiveTripsBanner onNavigate={handleNavigate} />}
 
-          <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={handleNavigate} />
+          {user && role && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="wasel-home-section"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '14px 18px',
+                borderRadius: 16,
+                background: C.cyanDim,
+                border: `1px solid ${C.borderHov}`,
+              }}
+            >
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: C.brandBlue,
+                  color: C.text,
+                  display: 'grid',
+                  placeItems: 'center',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                }}
+              >
+                {role === 'admin' ? 'A' : role === 'driver' ? 'D' : role === 'both' ? 'B' : 'R'}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: C.text }}>
+                  {role === 'admin'
+                    ? t('homeSections.roleBannerAdmin')
+                    : role === 'driver'
+                      ? t('homeSections.roleBannerDriver')
+                      : role === 'both'
+                        ? t('homeSections.roleBannerBoth')
+                        : t('homeSections.roleBannerRider')}
+                </div>
+                <div style={{ fontSize: '0.78rem', color: C.textMuted, marginTop: 2 }}>
+                  {role === 'admin'
+                    ? t('homeSections.roleBannerAdminDesc')
+                    : role === 'driver'
+                      ? t('homeSections.roleBannerDriverDesc')
+                      : role === 'both'
+                        ? t('homeSections.roleBannerBothDesc')
+                        : t('homeSections.roleBannerRiderDesc')}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          <QuickActionsSection quickActions={quickActions} onNavigate={handleNavigate} />
 
           {/* Show onboarding demo only for new/signed-out users */}
           {!user && <OnboardingDemoSection ar={ar} onNavigate={handleNavigate} />}
@@ -496,7 +481,7 @@ export function HomePage() {
           <CorridorBetaFocusSection ar={ar} plan={corridorBetaPlan} onNavigate={handleNavigate} />
 
           {/* Single corridor section — OutcomesSection removed to eliminate redundancy */}
-          <CorridorsSection ar={ar} corridorCards={corridorCards} onNavigate={handleNavigate} />
+          <CorridorsSection corridorCards={corridorCards} onNavigate={handleNavigate} />
 
           <TrustPagesSection ar={ar} onNavigate={handleNavigate} />
 
@@ -525,7 +510,7 @@ export function HomePage() {
               }
             />
           ) : (
-            <SignedOutCtaSection ar={ar} onNavigate={handleNavigate} />
+            <SignedOutCtaSection onNavigate={handleNavigate} />
           )}
         </div>
       </div>
@@ -689,7 +674,7 @@ function FinalCtaBanner({ ar, onNavigate }: { ar: boolean; onNavigate: (path: st
             variant="primary"
             size="lg"
             icon={<Route size={17} />}
-            iconEnd={<ArrowRight size={16} />}
+            iconEnd={ar ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
             onClick={() => onNavigate('/find-ride', 'final_cta_find')}
           >
             {ar ? 'اعرض المسارات المتاحة' : 'Find a lower-cost route'}

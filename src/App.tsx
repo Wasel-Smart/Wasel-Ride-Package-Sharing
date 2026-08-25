@@ -7,11 +7,28 @@ import { AppErrorBoundary } from './components/system/ErrorBoundary';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
-import { LocalAuthProvider } from './contexts/LocalAuth';
 
 import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
+
+function scheduleWhenIdle(callback: () => void): () => void {
+  if (typeof window === 'undefined') {
+    return () => {};
+  }
+
+  const idleWindow = window as Window & {
+    requestIdleCallback?: (callback: () => void, options: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  };
+  if (typeof idleWindow.requestIdleCallback === 'function') {
+    const idleCallback = idleWindow.requestIdleCallback(callback, { timeout: 4_000 });
+    return () => idleWindow.cancelIdleCallback?.(idleCallback);
+  }
+
+  const timeout = window.setTimeout(callback, 2_500);
+  return () => window.clearTimeout(timeout);
+}
 
 /* ---------------------------
    PROVIDERS WRAPPER
@@ -20,7 +37,7 @@ function AppProviders({ children }: { children: ReactNode }) {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <LocalAuthProvider>{children}</LocalAuthProvider>
+        {children}
       </AuthProvider>
     </LanguageProvider>
   );
@@ -33,7 +50,7 @@ function AppRuntimeCoordinator() {
   useEffect(() => {
     let cancelled = false;
     let cleanup: (() => void) | undefined;
-    let idleHandle: number | ReturnType<typeof setTimeout> | undefined;
+    let cancelScheduledWork = () => {};
 
     const run = async () => {
       try {
@@ -45,12 +62,7 @@ function AppRuntimeCoordinator() {
           }
         }
 
-        const scheduleIdle = (callback: () => void, delay = 0) =>
-          typeof requestIdleCallback !== 'undefined'
-            ? requestIdleCallback(callback, { timeout: delay + 1000 })
-            : setTimeout(callback, delay);
-
-        idleHandle = scheduleIdle(async () => {
+        cancelScheduledWork = scheduleWhenIdle(async () => {
           if (cancelled) return;
 
           try {
@@ -66,7 +78,7 @@ function AppRuntimeCoordinator() {
               import('./platform/event-bus'),
             ]);
 
-            initSentry();
+            void initSentry();
             initPerformanceMonitoring();
 
             validation.issues.forEach(issue => {
@@ -94,7 +106,7 @@ function AppRuntimeCoordinator() {
               console.warn('[Runtime deferred tasks failed]', e);
             }
           }
-        }, 1500);
+        });
       } catch (e) {
         if (import.meta.env.DEV) {
           console.warn('[Runtime bootstrap failed]', e);
@@ -106,12 +118,8 @@ function AppRuntimeCoordinator() {
 
     return () => {
       cancelled = true;
+      cancelScheduledWork();
       cleanup?.();
-      if (typeof cancelIdleCallback !== 'undefined' && idleHandle !== undefined) {
-        cancelIdleCallback(idleHandle as number);
-      } else if (idleHandle !== undefined) {
-        clearTimeout(idleHandle as ReturnType<typeof setTimeout>);
-      }
     };
   }, []);
 

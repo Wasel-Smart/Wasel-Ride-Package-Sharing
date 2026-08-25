@@ -1,1 +1,284 @@
-[]
+[
+  {
+    "kind": "attr:title",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Book a Ride",
+    "start": 17427,
+    "end": 17440,
+    "keys": [
+      "findRidePage.book_a_ride"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "active booking",
+    "start": 18410,
+    "end": 18424,
+    "keys": [
+      "findRidePage.active_booking"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "in progress",
+    "start": 18460,
+    "end": 18487,
+    "keys": [
+      "findRidePage.in_progress"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "View in My Trips",
+    "start": 18607,
+    "end": 18637,
+    "keys": [
+      "findRidePage.view_in_my_trips"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Route preview",
+    "start": 24282,
+    "end": 24317,
+    "keys": [
+      "findRidePage.route_preview"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "/100 demand score",
+    "start": 24909,
+    "end": 24948,
+    "keys": [
+      "findRidePage.100_demand_score"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Open My Trips",
+    "start": 28554,
+    "end": 28589,
+    "keys": [
+      "liveTripTracking.open_my_trips",
+      "findRidePage.open_my_trips"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Keep browsing",
+    "start": 28821,
+    "end": 28856,
+    "keys": [
+      "findRidePage.keep_browsing"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Ticket",
+    "start": 29046,
+    "end": 29053,
+    "keys": [
+      "findRidePage.ticket"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Best price",
+    "start": 34342,
+    "end": 34353,
+    "keys": [
+      "findRidePage.best_price"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "No ride found yet. Save this route and get alerted when one opens",
+    "start": 36141,
+    "end": 36230,
+    "keys": [
+      "findRidePage.no_ride_found_yet_save_this_route_and_get_alerted_when_one_opens"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "to",
+    "start": 40050,
+    "end": 40053,
+    "keys": [
+      "liveTripTracking.to",
+      "busPage.to",
+      "busPage.to_2",
+      "busPage.to_3",
+      "busPage.to_4",
+      "busPage.to_5",
+      "busPage.to_6",
+      "busPage.to_7",
+      "packageSendPanel.to",
+      "packageSendPanel.to_2",
+      "packageTrackPanel.to",
+      "offerRideFormPanel.to",
+      "offerRideFormPanel.to_2",
+      "offerRideIncomingRequests.to",
+      "findRidePage.to",
+      "findRidePage.to_2",
+      "offerRidePage.to",
+      "offerRidePage.to_2",
+      "myTripsPage.to"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Why this route fits",
+    "start": 43093,
+    "end": 43112,
+    "keys": [
+      "findRidePage.why_this_route_fits"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Demand signals for",
+    "start": 43232,
+    "end": 43251,
+    "keys": [
+      "findRidePage.demand_signals_for"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Popular routes right now",
+    "start": 46085,
+    "end": 46109,
+    "keys": [
+      "findRidePage.popular_routes_right_now"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Routes with strong live activity.",
+    "start": 46233,
+    "end": 46290,
+    "keys": [
+      "findRidePage.routes_with_strong_live_activity"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Demand",
+    "start": 47796,
+    "end": 47803,
+    "keys": [
+      "findRideCard.demand",
+      "findRideCard.demand_2",
+      "findRidePage.demand"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Rides that also carry packages",
+    "start": 49287,
+    "end": 49317,
+    "keys": [
+      "findRidePage.rides_that_also_carry_packages"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Some rides accept parcels on the same route.",
+    "start": 49441,
+    "end": 49509,
+    "keys": [
+      "findRidePage.some_rides_accept_parcels_on_the_same_route"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Suggested reminders",
+    "start": 51370,
+    "end": 51407,
+    "keys": [
+      "findRidePage.suggested_reminders"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "signals",
+    "start": 53102,
+    "end": 53141,
+    "keys": [
+      "findRidePage.signals"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Search route",
+    "start": 54267,
+    "end": 54309,
+    "keys": [
+      "findRidePage.search_route"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Book more rides to unlock reminders.",
+    "start": 54990,
+    "end": 55046,
+    "keys": [
+      "findRidePage.book_more_rides_to_unlock_reminders"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Saved reminders",
+    "start": 55462,
+    "end": 55495,
+    "keys": [
+      "waselPlusPage.saved_reminders",
+      "findRidePage.saved_reminders"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Save a route to see reminders here.",
+    "start": 56623,
+    "end": 56678,
+    "keys": [
+      "findRidePage.save_a_route_to_see_reminders_here"
+    ]
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\features\\rides\\FindRidePage.tsx",
+    "text": "Best ride matches",
+    "start": 57374,
+    "end": 57409,
+    "keys": [
+      "findRidePage.best_ride_matches"
+    ]
+  }
+]

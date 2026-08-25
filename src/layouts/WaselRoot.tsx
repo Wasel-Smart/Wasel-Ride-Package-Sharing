@@ -1,11 +1,12 @@
-import { Suspense, lazy, useCallback, useEffect, useRef } from 'react';
+import React, { memo, Suspense, lazy, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { SkipToContent } from '../components/SkipToContent';
 import { WaselLogo } from '../components/wasel-ui/WaselLogo';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { C, F, FA, GLOBAL_STYLES, GRAD } from '../utils/wasel-ds';
+import { useRoutePrefetch } from '../hooks/useRoutePrefetch';
+import { C, F, FA, GLOBAL_STYLES, GRAD, R, Z } from '../utils/wasel-ds';
 import { trackPageView } from '../platform/telemetry';
 import { getRouteMeta } from '../router/routeMeta';
 import { resetBodyScrollLock } from '../utils/bodyScrollLock';
@@ -22,7 +23,83 @@ const MobileBottomNav = lazy(async () => {
   return { default: module.MobileBottomNav };
 });
 
-export default function WaselRoot() {
+const HEADER_STYLE: React.CSSProperties = {
+  position: 'sticky',
+  top: 0,
+  zIndex: Z.sticky,
+  transition: 'all 0.25s ease',
+  willChange: 'transform',
+  transform: 'translateZ(0)',
+};
+
+const HEADER_INNER_STYLE: React.CSSProperties = {
+  maxWidth: 1320,
+  margin: '0 auto',
+  padding: '0 20px',
+  minHeight: 72,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 18,
+};
+
+const MAIN_CONTENT_STYLE: React.CSSProperties = {
+  position: 'relative',
+  isolation: 'isolate',
+};
+
+const BACKGROUND_OVERLAY_STYLE: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  pointerEvents: 'none',
+  background:
+    'radial-gradient(circle at top center, rgba(88,221,255,0.07), transparent 30%), radial-gradient(circle at 80% 20%, rgba(71,214,158,0.06), transparent 24%)',
+  zIndex: -1,
+};
+
+const GLOBAL_HEADER_STYLES = `
+  .wrl-header {
+    background: linear-gradient(180deg, rgba(7,21,33,0.9), rgba(7,21,33,0.84));
+    border-bottom: 1px solid ${C.border};
+    box-shadow: 0 6px 18px rgba(0,0,0,0.14);
+  }
+  .wrl-header.scrolled {
+    background: linear-gradient(180deg, rgba(7,21,33,0.98), rgba(7,21,33,0.95));
+    border-bottom: 1px solid ${C.borderHov};
+    box-shadow: 0 12px 34px rgba(0,0,0,0.28);
+  }
+  .wrl-dropdown-item:hover {
+    background: ${C.cardSolid};
+    transform: translateY(-1px);
+  }
+  @media (max-width: 639px) {
+    .wrl-desk-actions { display: none !important; }
+  }
+  .wrl-main-content {
+    flex: 1;
+    min-height: 0;
+  }
+  @media (max-width: 899px) {
+    .wrl-main-content {
+      padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom, 0px)));
+    }
+  }
+`;
+
+const ShellCopy = {
+  notifications: 'Notifications',
+  signIn: 'Sign in',
+  getStarted: 'Get started',
+  mainContent: 'Main content',
+} as const;
+
+const ShellCopyAr = {
+  notifications: 'الإشعارات',
+  signIn: 'تسجيل الدخول',
+  getStarted: 'ابدأ الآن',
+  mainContent: 'المحتوى الرئيسي',
+} as const;
+
+const WaselRootInner = memo(function WaselRootInner() {
   const { user, signOut } = useLocalAuth();
   const { language } = useLanguage();
   const nav = useIframeSafeNavigate();
@@ -32,12 +109,9 @@ export default function WaselRoot() {
   const navRef = useRef<HTMLElement>(null);
   const isDriverMode = user?.role === 'driver' || user?.role === 'both';
 
-  const shellCopy = {
-    notifications: ar ? 'الإشعارات' : 'Notifications',
-    signIn: ar ? 'تسجيل الدخول' : 'Sign in',
-    getStarted: ar ? 'ابدأ الآن' : 'Get started',
-    mainContent: ar ? 'المحتوى الرئيسي' : 'Main content',
-  };
+  const shellCopy = useMemo(() => (ar ? ShellCopyAr : ShellCopy), [ar]);
+
+  const navigate = useCallback((path: string) => nav(path), [nav]);
 
   useEffect(() => {
     const isPwa =
@@ -52,7 +126,6 @@ export default function WaselRoot() {
       navRef.current.classList.toggle('scrolled', scrollTop > 8);
     };
 
-    // Also re-evaluate on resize/orientation change so the class is never stale.
     const onResize = () => onScroll();
 
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
@@ -66,10 +139,8 @@ export default function WaselRoot() {
   }, []);
 
   useEffect(() => {
-    // Release any leaked scroll locks from the previous route.
     resetBodyScrollLock();
 
-    // In installed-PWA mode #root is the scroll container, not window.
     const isPwa =
       window.matchMedia('(display-mode: standalone)').matches ||
       (navigator as Navigator & { standalone?: boolean }).standalone === true;
@@ -87,7 +158,7 @@ export default function WaselRoot() {
     }
   }, [location.pathname]);
 
-  const navigate = useCallback((path: string) => nav(path), [nav]);
+  useRoutePrefetch();
 
   return (
     <>
@@ -102,67 +173,14 @@ export default function WaselRoot() {
         }}
       >
         <SkipToContent targetId="main-content" />
-        <style>{`
-          @keyframes fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-          @keyframes spin { to { transform: rotate(360deg); } }
-          * { box-sizing: border-box; }
-          input, select, button, textarea { font-family: inherit; }
-          :focus-visible { outline: 2px solid ${C.gold}; outline-offset: 2px; }
-          .wrl-header {
-            background: linear-gradient(180deg, rgba(7,21,33,0.9), rgba(7,21,33,0.84));
-            border-bottom: 1px solid ${C.border};
-            box-shadow: 0 6px 18px rgba(0,0,0,0.14);
-          }
-          .wrl-header.scrolled {
-            background: linear-gradient(180deg, rgba(7,21,33,0.98), rgba(7,21,33,0.95));
-            border-bottom: 1px solid ${C.borderHov};
-            box-shadow: 0 12px 34px rgba(0,0,0,0.28);
-          }
-          .wrl-dropdown-item:hover {
-            background: ${C.cardSolid};
-            transform: translateY(-1px);
-          }
-          /* Hide desktop nav actions on mobile — prevents header overflow
-             that collapses the layout and causes a blank screen. */
-          @media (max-width: 639px) {
-            .wrl-desk-actions { display: none !important; }
-          }
-          /* Ensure main content area always has bottom clearance for the
-             mobile bottom nav, even before MobileBottomNav lazy-loads. */
-          .wrl-main-content {
-            flex: 1;
-            min-height: 0;
-          }
-          @media (max-width: 899px) {
-            .wrl-main-content {
-              padding-bottom: max(80px, calc(80px + env(safe-area-inset-bottom, 0px)));
-            }
-          }
-        `}</style>
+        <style>{GLOBAL_HEADER_STYLES}</style>
 
         <header
           ref={navRef}
           className="wrl-header"
-          style={{
-            position: 'sticky',
-            top: 0,
-            zIndex: 500,
-            transition: 'all 0.25s ease',
-            willChange: 'transform',
-            transform: 'translateZ(0)',
-          }}
+          style={HEADER_STYLE}
         >
-          <div
-            style={{
-              maxWidth: 1320,
-              margin: '0 auto',
-              padding: '0 20px',
-              minHeight: 72,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 18,
-            }}
-          >
+          <div style={HEADER_INNER_STYLE}>
             <button
               onClick={() => navigate('/app')}
               style={{
@@ -204,7 +222,7 @@ export default function WaselRoot() {
                       position: 'relative',
                       width: 38,
                       height: 38,
-                      borderRadius: 12,
+                      borderRadius: R.md,
                       background: C.card,
                       border: `1px solid ${C.border}`,
                       cursor: 'pointer',
@@ -247,7 +265,7 @@ export default function WaselRoot() {
                     style={{
                       height: 38,
                       padding: '0 16px',
-                      borderRadius: 12,
+                      borderRadius: R.md,
                       fontSize: '0.82rem',
                       fontWeight: 600,
                       background: 'transparent',
@@ -266,7 +284,7 @@ export default function WaselRoot() {
                     style={{
                       height: 40,
                       padding: '0 18px',
-                      borderRadius: 12,
+                      borderRadius: R.md,
                       fontSize: '0.82rem',
                       fontWeight: 800,
                       background: GRAD,
@@ -284,8 +302,6 @@ export default function WaselRoot() {
                 </>
               )}
             </div>
-
-
           </div>
         </header>
 
@@ -293,24 +309,17 @@ export default function WaselRoot() {
           <AvailabilityBanner ar={ar} />
         </Suspense>
 
-        <div className="wrl-main-content">
+        <div className="wrl-main-content content-visibility-auto">
           <main
             id="main-content"
             role="main"
             aria-label={shellCopy.mainContent}
             tabIndex={-1}
-            style={{ position: 'relative', isolation: 'isolate' }}
+            style={MAIN_CONTENT_STYLE}
           >
             <div
               aria-hidden="true"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                pointerEvents: 'none',
-                background:
-                  'radial-gradient(circle at top center, rgba(88,221,255,0.07), transparent 30%), radial-gradient(circle at 80% 20%, rgba(71,214,158,0.06), transparent 24%)',
-                zIndex: -1,
-              }}
+              style={BACKGROUND_OVERLAY_STYLE}
             />
             <Outlet />
           </main>
@@ -322,4 +331,8 @@ export default function WaselRoot() {
       </div>
     </>
   );
-}
+});
+
+export default memo(function WaselRoot() {
+  return <WaselRootInner />;
+});

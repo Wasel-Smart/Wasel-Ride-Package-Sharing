@@ -70,7 +70,7 @@ export function usePushNotifications() {
           name: 'Wasel Ride Updates',
           importance: Notifications.AndroidImportance.MAX,
           vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#22C55E',
+          lightColor: '#72C70D',
         });
       }
 
