@@ -34,7 +34,6 @@ export const admin = {
       viewDetails: 'View Details',
       exportData: 'Export Data',
       generateReport: 'Generate Report',
-    },
   },
   ar: {
       title: 'لوحة تحكم الإدارة',
@@ -71,7 +70,6 @@ export const admin = {
       viewDetails: 'عرض التفاصيل',
       exportData: 'تصدير البيانات',
       generateReport: 'إنشاء تقرير',
-    },
   }
 } as const;
 

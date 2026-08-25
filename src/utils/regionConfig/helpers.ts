@@ -1,3 +1,6 @@
+import type { CountryCode, RegionConfig, CityRoute, RegionFuelConfig, CulturalRules } from './types';
+import { REGIONS } from './regions';
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Get config for a country code. Falls back to Jordan. */

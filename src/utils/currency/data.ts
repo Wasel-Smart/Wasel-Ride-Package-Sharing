@@ -1,3 +1,6 @@
+import type { SupportedCurrency, CurrencyConfig } from './types';
+export { SUPPORTED_CURRENCY_CODES, PLATFORM_CURRENCY } from './types';
+
 export const CURRENCIES: Record<SupportedCurrency, CurrencyConfig> = {
   JOD: {
     code: 'JOD',
@@ -148,6 +151,3 @@ export const EXCHANGE_RATES_FROM_JOD: Record<SupportedCurrency, number> = {
   IQD: 1850,
 };
 
-// ─── Typed monetary value ─────────────────────────────────────────────────────
-
-/** A monetary value that always carries its currency. */

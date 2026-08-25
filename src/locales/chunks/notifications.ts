@@ -17,7 +17,6 @@ export const notifications = {
       pushNotifications: 'Push Notifications',
       emailNotifications: 'Email Notifications',
       smsNotifications: 'SMS Notifications',
-    },
   },
   ar: {
       title: 'الإشعارات',
@@ -37,7 +36,6 @@ export const notifications = {
       pushNotifications: 'إشعارات الدفع',
       emailNotifications: 'إشعارات البريد الإلكتروني',
       smsNotifications: 'إشعارات الرسائل النصية',
-    },
   }
 } as const;
 

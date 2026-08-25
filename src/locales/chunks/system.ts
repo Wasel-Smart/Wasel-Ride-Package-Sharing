@@ -30,7 +30,6 @@ export const system = {
       mainContent: 'Main application content',
       loading: 'Loading...',
       pageNotFound: 'Page not found',
-    },
   },
   ar: {
       app_error: 'خطأ في التطبيق',
@@ -110,7 +109,6 @@ export const system = {
       expectedResponse2Hours: 'دعم واصل • رد متوقع ساعتين • مشاكل سلامة: فوري',
       pageNotFound: 'الصفحة غير موجودة',
       loading: 'جارٍ التحميل...',
-    },
   }
 } as const;
 

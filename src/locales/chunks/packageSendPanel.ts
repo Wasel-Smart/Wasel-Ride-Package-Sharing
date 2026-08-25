@@ -25,7 +25,6 @@ export const packageSendPanel = {
       to_2: 'to',
       your_recent_package_requests_appear_here_for_one_click_tracking:
         'Your recent package requests appear here for one-click tracking.',
-    },
   },
   ar: {
       package_request_created: 'تم إنشاء طلب الطرد',
@@ -53,7 +52,6 @@ export const packageSendPanel = {
       to_2: 'إلى',
       your_recent_package_requests_appear_here_for_one_click_tracking:
         'تظهر طلبات الطرود الأخيرة هنا للتتبّع بنقرة واحدة.',
-    },
   }
 } as const;
 

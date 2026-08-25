@@ -43,7 +43,6 @@ export const payments = {
       tax: 'Tax',
       tip: 'Tip',
       addTip: 'Add Tip',
-    },
   },
   ar: {
       title: 'المدفوعات',
@@ -89,7 +88,6 @@ export const payments = {
       tax: 'الضريبة',
       tip: 'إكرامية',
       addTip: 'إضافة إكرامية',
-    },
   }
 } as const;
 

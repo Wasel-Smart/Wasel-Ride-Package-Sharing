@@ -9,7 +9,6 @@ export const header = {
       help: 'Help',
       switchToArabic: 'العربية',
       switchToEnglish: 'English',
-    },
   },
   ar: {
       search: 'دوّر...',
@@ -21,7 +20,6 @@ export const header = {
       help: 'مساعدة',
       switchToArabic: 'العربية',
       switchToEnglish: 'English',
-    },
   }
 } as const;
 

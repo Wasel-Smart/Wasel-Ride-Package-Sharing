@@ -44,7 +44,6 @@ export const trips = {
       inProgress: 'In Progress',
       completed: 'Completed',
       cancelled: 'Cancelled',
-    },
   },
   ar: {
       title: 'رحلاتي',
@@ -91,7 +90,6 @@ export const trips = {
       inProgress: 'قيد التنفيذ',
       completed: 'مكتمل',
       cancelled: 'ملغي',
-    },
   }
 } as const;
 

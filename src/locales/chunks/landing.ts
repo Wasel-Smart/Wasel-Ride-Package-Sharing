@@ -65,7 +65,6 @@ export const landing = {
         cities: 'Cities Covered',
         drivers: 'Verified Drivers',
       },
-    },
   },
   ar: {
       hero: {
@@ -132,7 +131,6 @@ export const landing = {
         cities: 'مدن مغطاة',
         drivers: 'سواقين موثوقين',
       },
-    },
   }
 } as const;
 

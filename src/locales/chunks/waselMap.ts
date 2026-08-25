@@ -12,7 +12,6 @@ export const waselMap = {
       center_on_my_location: 'Center on my location',
       live_active: 'Live · Active',
       share_my_location: 'Share My Location',
-    },
   },
   ar: {
       loading_map: 'جارٍ تحميل الخريطة',
@@ -27,7 +26,6 @@ export const waselMap = {
       center_on_my_location: 'توسيط على موقعي',
       live_active: 'مباشر · نشط',
       share_my_location: 'شارك موقعي',
-    },
   }
 } as const;
 

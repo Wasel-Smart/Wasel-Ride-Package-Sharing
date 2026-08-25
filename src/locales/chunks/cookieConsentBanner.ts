@@ -6,7 +6,6 @@ export const cookieConsentBanner = {
       for_details: 'for details.',
       decline: 'Decline',
       accept: 'Accept',
-    },
   },
   ar: {
       cookie_consent: 'موافقة ملفات التتبّع',
@@ -15,7 +14,6 @@ export const cookieConsentBanner = {
       for_details: 'للتفاصيل.',
       decline: 'رفض',
       accept: 'موافقة',
-    },
   }
 } as const;
 

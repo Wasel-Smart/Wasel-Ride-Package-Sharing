@@ -1,4 +1,6 @@
-const UAE: RegionConfig = {
+import type { RegionConfig } from '../types';
+
+export const UAE: RegionConfig = {
   iso: 'AE',
   name: 'United Arab Emirates',
   nameAr: 'الإمارات العربية المتحدة',

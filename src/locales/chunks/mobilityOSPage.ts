@@ -15,7 +15,6 @@ export const mobilityOSPage = {
       corridor_leaderboard: 'Corridor leaderboard',
       km_eta: 'km / ETA',
       decision_engine: 'Decision engine',
-    },
   },
   ar: {
       mobility_os_neural_corridor_engine: 'نظام التنقّل / محرّك الممرّات العصبي',
@@ -33,7 +32,6 @@ export const mobilityOSPage = {
       corridor_leaderboard: 'لوحة تصدّر الممرّات',
       km_eta: 'كم / الوصول',
       decision_engine: 'محرّك القرار',
-    },
   }
 } as const;
 

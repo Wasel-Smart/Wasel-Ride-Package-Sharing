@@ -11,7 +11,6 @@ export const waselPlusPage = {
       saved_reminders: 'Saved reminders',
       save_a_route_suggestion_to_see_reminders_here:
         'Save a route suggestion to see reminders here.',
-    },
   },
   ar: {
       wasel_plus: 'واصل بلس',
@@ -24,7 +23,6 @@ export const waselPlusPage = {
       at: 'عند',
       saved_reminders: 'التذكيرات المحفوظة',
       save_a_route_suggestion_to_see_reminders_here: 'احفظ اقتراح مسار لرؤية التذكيرات هنا.',
-    },
   }
 } as const;
 

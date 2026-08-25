@@ -1,7 +1,5 @@
-export interface Money {
-  amount: number;
-  currency: SupportedCurrency;
-}
+import type { SupportedCurrency, CurrencyConfig, Money } from './types';
+import { PLATFORM_CURRENCY, CURRENCIES, EXCHANGE_RATES_FROM_JOD, SUPPORTED_CURRENCY_CODES } from './data';
 
 /** Create a Money object with explicit currency. */
 export function money(amount: number, currency: SupportedCurrency = PLATFORM_CURRENCY): Money {

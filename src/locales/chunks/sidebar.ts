@@ -44,7 +44,6 @@ export const sidebar = {
       support: 'Support',
       about: 'About',
       logout: 'Logout',
-    },
   },
   ar: {
       home: 'الرئيسية',
@@ -91,7 +90,6 @@ export const sidebar = {
       support: 'الدعم',
       about: 'عن واصل',
       logout: 'تسجيل الخروج',
-    },
   }
 } as const;
 

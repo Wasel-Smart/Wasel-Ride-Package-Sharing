@@ -42,7 +42,6 @@ export const verification = {
       businessDesc: 'Verify your business for corporate services',
       businessLicense: 'Business License',
       taxId: 'Tax ID',
-    },
   },
   ar: {
       title: 'مركز التحقق',
@@ -87,7 +86,6 @@ export const verification = {
       businessDesc: 'تحقق من نشاطك التجاري للخدمات المؤسسية',
       businessLicense: 'ترخيص الأعمال',
       taxId: 'الرقم الضريبي',
-    },
   }
 } as const;
 

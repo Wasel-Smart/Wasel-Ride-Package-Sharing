@@ -12,7 +12,6 @@ export const cliq = {
       noFees: 'Zero-fee instant transfers',
       allBanks: 'All Jordanian banks supported',
       linkAccount: 'Link CliQ Account',
-    },
   },
   ar: {
       title: 'دفع CliQ',
@@ -27,7 +26,6 @@ export const cliq = {
       noFees: 'تحويل فوري بدون رسوم',
       allBanks: 'جميع البنوك الأردنية مدعومة',
       linkAccount: 'ربط حساب CliQ',
-    },
   }
 } as const;
 

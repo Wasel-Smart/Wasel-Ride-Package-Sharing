@@ -5,7 +5,6 @@ export const waselAuthCallback = {
       confirm_password: 'Confirm password',
       re_enter_your_new_password: 'Re-enter your new password',
       back_to_sign_in: 'Back to sign in',
-    },
   },
   ar: {
       reset_your_password: 'إعادة تعيين كلمة المرور',
@@ -13,7 +12,6 @@ export const waselAuthCallback = {
       confirm_password: 'تأكيد كلمة المرور',
       re_enter_your_new_password: 'أعد إدخال كلمة المرور الجديدة',
       back_to_sign_in: 'العودة لتسجيل الدخول',
-    },
   }
 } as const;
 

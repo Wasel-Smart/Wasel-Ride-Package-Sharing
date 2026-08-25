@@ -30,7 +30,6 @@ export const offerRideFormPanel = {
       wasel_brain_target: 'Wasel Brain target:',
       jod_seat_2: 'JOD/seat,',
       cheaper_than_solo_movement_best_pickup_at: '% cheaper than solo movement, best pickup at',
-    },
   },
   ar: {
       posting_confidence: 'ثقة النشر',
@@ -63,7 +62,6 @@ export const offerRideFormPanel = {
       wasel_brain_target: 'هدف عقل واصل:',
       jod_seat_2: 'دينار/مقعد،',
       cheaper_than_solo_movement_best_pickup_at: '% أرخص من التنقل بمفردك، وأفضل انطلاق عند',
-    },
   }
 } as const;
 

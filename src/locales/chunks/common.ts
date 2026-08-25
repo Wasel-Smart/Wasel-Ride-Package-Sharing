@@ -97,7 +97,6 @@ export const common = {
       directions: 'Directions',
       selectLocation: 'Select Location',
       currentLocation: 'Current Location',
-    },
   },
   ar: {
       wasel: 'واصل',
@@ -197,7 +196,6 @@ export const common = {
       directions: 'الاتجاهات',
       selectLocation: 'اختار موقع',
       currentLocation: 'موقعك الحالي',
-    },
   }
 } as const;
 

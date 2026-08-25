@@ -41,7 +41,6 @@ export const waselAuth = {
       error_reset_failed: 'Password reset failed.',
       sign_in: 'Sign in',
       create_account: 'Create account',
-    },
   },
   ar: {
       one_identity: 'هوية واحدة',
@@ -85,7 +84,6 @@ export const waselAuth = {
       error_reset_failed: 'فشلت إعادة تعيين كلمة المرور.',
       sign_in: 'تسجيل الدخول',
       create_account: 'إنشاء حساب',
-    },
   }
 } as const;
 

@@ -1,4 +1,6 @@
-const PALESTINE: RegionConfig = {
+import type { RegionConfig } from '../types';
+
+export const PALESTINE: RegionConfig = {
   iso: 'PS',
   name: 'Palestine',
   nameAr: 'فلسطين',

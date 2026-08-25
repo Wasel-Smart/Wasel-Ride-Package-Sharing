@@ -7,7 +7,6 @@ export const offerRideIncomingRequests = {
       at: 'at',
       accept: 'Accept',
       decline: 'Decline',
-    },
   },
   ar: {
       incoming_booking_requests: 'طلبات حجز واردة',
@@ -17,7 +16,6 @@ export const offerRideIncomingRequests = {
       at: 'عند',
       accept: 'موافقة',
       decline: 'رفض',
-    },
   }
 } as const;
 

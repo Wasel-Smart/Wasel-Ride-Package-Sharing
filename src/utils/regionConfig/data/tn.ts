@@ -1,4 +1,6 @@
-const TUNISIA: RegionConfig = {
+import type { RegionConfig } from '../types';
+
+export const TUNISIA: RegionConfig = {
   iso: 'TN',
   name: 'Tunisia',
   nameAr: 'تونس',

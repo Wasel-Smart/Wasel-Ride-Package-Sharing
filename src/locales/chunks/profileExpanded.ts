@@ -60,7 +60,6 @@ export const profileExpanded = {
       fullAccountDeletionBody:
         'Full account deletion is not available from this screen yet. We will create a support ticket for you, then sign you out while the team reviews the request.',
       continue: 'Continue',
-    },
   },
   ar: {
       accountIdentity: 'هوية الحساب',
@@ -130,7 +129,6 @@ export const profileExpanded = {
       legal: 'القانوني',
       fullAccountDeletionBody:
         'الحذف الكامل غير متاح من هذا السطح حالياً. سننشئ تذكرة دعم باسمك ثم نسجل خروجك لتأمين الحساب حتى يراجع الفريق الطلب.',
-    },
   }
 } as const;
 

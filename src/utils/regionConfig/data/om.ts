@@ -1,4 +1,6 @@
-const OMAN: RegionConfig = {
+import type { RegionConfig } from '../types';
+
+export const OMAN: RegionConfig = {
   iso: 'OM',
   name: 'Oman',
   nameAr: 'عُمان',

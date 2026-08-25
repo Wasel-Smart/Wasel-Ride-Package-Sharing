@@ -15,7 +15,6 @@ export const observabilityDashboard = {
       compliance: 'Compliance',
       ms: 'ms',
       processing_lag: 'Processing lag',
-    },
   },
   ar: {
       loading_metrics: 'جارٍ تحميل المؤشرات...',
@@ -33,7 +32,6 @@ export const observabilityDashboard = {
       compliance: 'الامتثال',
       ms: 'مث',
       processing_lag: 'تأخّر المعالجة',
-    },
   }
 } as const;
 

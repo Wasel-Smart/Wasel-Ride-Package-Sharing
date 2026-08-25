@@ -23,7 +23,6 @@ export const dashboard = {
       recentActivity: 'Recent Activity',
       popularRoutes: 'Popular Routes',
       quickStats: 'Quick Stats',
-    },
   },
   ar: {
       title: 'لوحة التحكم',
@@ -49,7 +48,6 @@ export const dashboard = {
       recentActivity: 'النشاط الأخير',
       popularRoutes: 'المسارات الشائعة',
       quickStats: 'إحصائيات سريعة',
-    },
   }
 } as const;
 

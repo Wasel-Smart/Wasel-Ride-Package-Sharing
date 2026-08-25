@@ -283,4 +283,3 @@ export const translations: Record<Language, TranslationNode> = {
   },
 };
 
-export { type Language, type TranslationNode };

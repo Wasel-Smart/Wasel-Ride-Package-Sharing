@@ -60,7 +60,6 @@ export const busPage = {
       seats_2: 'seats',
       more_departures_will_appear_here_as_the_corridor_refreshes_if_the_route_is_urgent_try_another_coach_or_a_shared_ride_on_the_same_day:
         'More departures will appear here as the corridor refreshes. If the route is urgent, try another coach or a shared ride on the same day.',
-    },
   },
   ar: {
       book_a_bus: 'احجز حافلة',
@@ -123,7 +122,6 @@ export const busPage = {
       seats_2: 'مقاعد',
       more_departures_will_appear_here_as_the_corridor_refreshes_if_the_route_is_urgent_try_another_coach_or_a_shared_ride_on_the_same_day:
         'ستظهر مغادرات أكثر هنا مع تحديث الممرّ. إن كان المسار عاجلاً، جرّب حافلة أخرى أو رحلة مشتركة في نفس اليوم.',
-    },
   }
 } as const;
 

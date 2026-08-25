@@ -18,7 +18,6 @@ export const findRideTripDetailModal = {
       cheaper_than_solo_movement: '% cheaper than solo movement',
       solo_reference: 'Solo reference:',
       jod_best_pickup: 'JOD | Best pickup:',
-    },
   },
   ar: {
       close_trip_details: 'إغلاق تفاصيل الرحلة',
@@ -39,7 +38,6 @@ export const findRideTripDetailModal = {
       cheaper_than_solo_movement: '% أرخص من التنقل بمفردك',
       solo_reference: 'المرجع الفردي:',
       jod_best_pickup: 'دينار | أفضل انطلاق:',
-    },
   }
 } as const;
 

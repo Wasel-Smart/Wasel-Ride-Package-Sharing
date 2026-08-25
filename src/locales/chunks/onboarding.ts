@@ -24,7 +24,6 @@ export const onboarding = {
         description: "Start exploring Wasel's services and enjoy the ride.",
         action: 'Get Started',
       },
-    },
   },
   ar: {
       skip: 'تخطي',
@@ -79,7 +78,6 @@ export const onboarding = {
         allow: 'السماح',
         skip_for_now: 'تخطي الآن',
       },
-    },
   }
 } as const;
 

@@ -31,7 +31,6 @@ export const driverPageExpanded = {
       laneExpansion: 'Lane expansion',
       packageBonus: 'Packages can add {bonus} JOD on {route}.',
       pickupPoint: 'Pickup {point} | {window}',
-    },
   },
   ar: {
       driverConsole: 'واجهة السائق',
@@ -65,7 +64,6 @@ export const driverPageExpanded = {
       laneExpansion: 'توسيع المسار',
       packageBonus: 'الطرود يمكن أن تضيف {bonus} دينار على {route}.',
       pickupPoint: 'استلام {point} | {window}',
-    },
   }
 } as const;
 

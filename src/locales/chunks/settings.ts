@@ -99,7 +99,6 @@ export const settings = {
         comfortable: 'Comfortable',
         spacious: 'Spacious',
       },
-    },
   },
   ar: {
       danger: {
@@ -201,7 +200,6 @@ export const settings = {
         comfortable: 'مريح',
         spacious: 'واسع',
       },
-    },
   }
 } as const;
 

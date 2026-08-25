@@ -16,7 +16,6 @@ export const privacySettings = {
         'We retain your data for as long as your account is active. Trip history is kept for 7 years for legal compliance.',
       permanently_delete_your_account_and_all_associated_data_this_action_cannot_be_undone:
         'Permanently delete your account and all associated data. This action cannot be undone.',
-    },
   },
   ar: {
       privacy_settings: 'إعدادات الخصوصية',
@@ -35,7 +34,6 @@ export const privacySettings = {
         'نحتفظ ببياناتك طالما حسابك نشط. يُحفظ سجل الرحلات 7 سنوات للامتثال القانوني.',
       permanently_delete_your_account_and_all_associated_data_this_action_cannot_be_undone:
         'حذف حسابك وكل البيانات المرتبطة به نهائياً. لا يمكن التراجع عن هذا الإجراء.',
-    },
   }
 } as const;
 

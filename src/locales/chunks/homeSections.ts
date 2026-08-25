@@ -29,7 +29,6 @@ export const homeSections = {
       readyForComparison: 'Ready for quick comparison and search',
       findRideCTA: 'Find a ride',
       offerRideCTA: 'Offer seats',
-    },
   },
   ar: {
       findRideKicker: 'للحجز السريع',
@@ -57,7 +56,6 @@ export const homeSections = {
       readyForComparison: 'جاهز للمقارنة والبحث الفوري',
       findRideCTA: 'ابحث عن رحلة',
       offerRideCTA: 'اعرض مقاعد',
-    },
   }
 } as const;
 

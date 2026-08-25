@@ -17,7 +17,6 @@ export const iraq = {
       phone_hint: 'Iraqi phone format: +964xxxxxxxxxx',
       national_id: 'Iraqi National ID',
       driver_license: 'Iraqi Driver License',
-    },
   },
   ar: {
       cities: {
@@ -37,7 +36,6 @@ export const iraq = {
       phone_hint: 'رقم الهاتف العراقي: +964xxxxxxxxxx',
       national_id: 'الهوية الوطنية العراقية',
       driver_license: 'رخصة القيادة العراقية',
-    },
   }
 } as const;
 

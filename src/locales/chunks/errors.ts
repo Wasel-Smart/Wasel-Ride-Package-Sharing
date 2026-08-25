@@ -20,7 +20,6 @@ export const errors = {
       serverError: 'Server error',
       maintenanceMode: "We're currently under maintenance",
       comingSoon: 'Coming soon',
-    },
   },
   ar: {
       somethingWrong: 'حدث خطأ ما',
@@ -43,7 +42,6 @@ export const errors = {
       serverError: 'خطأ في الخادم',
       maintenanceMode: 'نحن حالياً في وضع الصيانة',
       comingSoon: 'قريباً',
-    },
   }
 } as const;
 

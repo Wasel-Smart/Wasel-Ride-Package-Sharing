@@ -42,7 +42,6 @@ export const homeContent = {
       trust_terms_detail: 'Eligibility, payments, conduct, cancellation, dispute flow, and platform role.',
       trust_support_title: 'Support',
       trust_support_detail: 'Escalation paths for rides, parcels, account access, payments, and safety issues.',
-    },
   },
   ar: {
       proof_verified_label: 'تسليم موثق',
@@ -87,7 +86,6 @@ export const homeContent = {
       trust_terms_detail: 'الأهلية، المدفوعات، السلوك، الإلغاء، مسار النزاعات، ودور المنصة.',
       trust_support_title: 'الدعم',
       trust_support_detail: 'مسارات التصعيد للرحلات، الطرود، الوصول للحساب، المدفوعات، والسلامة.',
-    },
   }
 } as const;
 

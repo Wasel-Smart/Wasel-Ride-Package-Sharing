@@ -11,7 +11,6 @@ export const activity = {
       scheduledReturn: 'Scheduled return',
       noItemsYet: 'Nothing here yet.',
       noActivityYet: 'No activity yet.',
-    },
   },
   ar: {
       pageTitle: 'نشاطي',
@@ -25,7 +24,6 @@ export const activity = {
       scheduledReturn: 'إرجاع مجدول',
       noItemsYet: 'لا توجد عناصر بعد.',
       noActivityYet: 'لا يوجد نشاط بعد.',
-    },
   }
 } as const;
 

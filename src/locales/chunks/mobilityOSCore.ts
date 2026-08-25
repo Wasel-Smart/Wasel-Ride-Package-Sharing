@@ -71,7 +71,6 @@ export const mobilityOSCore = {
       map_legend_intensity_detail: 'More, larger, and brighter moving dots show a stronger modeled flow on that corridor.',
       map_guide_note:
         'Movement dots animate in their travel direction. Pressure and utilization cards summarize demand and capacity for the selected corridor.',
-    },
   },
   ar: {
       x: 'س',
@@ -145,7 +144,6 @@ export const mobilityOSCore = {
       map_legend_intensity_detail: 'تشير النقاط الأكثر عددًا وحجمًا وسطوعًا إلى تدفق مُنمذج أقوى على الممر.',
       map_guide_note:
         'تتحرك النقاط في اتجاه الرحلة. وتلخّص بطاقات الضغط والاستغلال الطلب والسعة للممر المختار.',
-    },
   }
 } as const;
 

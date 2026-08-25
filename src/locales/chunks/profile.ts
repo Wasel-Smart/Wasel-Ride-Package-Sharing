@@ -16,7 +16,6 @@ export const profile = {
         preferNotToSay: 'Prefer not to say',
         profilePhoto: 'Profile Photo',
         coverPhoto: 'Cover Photo',
-      },
   },
   ar: {
         title: 'معلومات الملف الشخصي',
@@ -35,7 +34,6 @@ export const profile = {
         preferNotToSay: 'أفضل عدم الإفصاح',
         profilePhoto: 'صورة الملف الشخصي',
         coverPhoto: 'صورة الغلاف',
-      },
   }
 } as const;
 
