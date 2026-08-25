@@ -56,6 +56,7 @@ export function HomePage() {
   const ar = language === 'ar';
   const svc = CurrencyService.getInstance();
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
+  const role = waselUser?.role;
 
    const detectBrowserLanguage = (): Language | null => {
      if (typeof navigator === 'undefined') return null;
@@ -210,10 +211,10 @@ export function HomePage() {
     ];
 
     if (role === 'driver' || role === 'both') {
-      return [base[1], base[0], base[2], base[3], base[4]];
+      return [base[1]!, base[0]!, base[2]!, base[3]!, base[4]!];
     }
     if (role === 'admin') {
-      return [base[0], base[2], base[1], base[3], base[4]];
+      return [base[0]!, base[2]!, base[1]!, base[3]!, base[4]!];
     }
     return base;
   }, [role, t]);
@@ -282,7 +283,6 @@ export function HomePage() {
   const corridorBetaPlan = useMemo(() => buildCorridorBetaPlan(), []);
 
   const trustScore = waselUser?.trustScore ?? 87;
-  const role = waselUser?.role;
 
   const primaryTripPath = tripMode === 'round' ? '/find-ride?mode=round' : '/find-ride';
 
