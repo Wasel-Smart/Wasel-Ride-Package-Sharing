@@ -5,9 +5,9 @@ import type {
   User,
 } from '@supabase/auth-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { WaselUser } from './LocalAuth';
 import { authAPI } from '../services/auth';
 import { getAuthCallbackUrl } from '../utils/env';
+import { deriveAccountTrustScore } from '../domain/trust/score';
 
 export type Profile = {
   id: string;
@@ -31,6 +31,29 @@ export type Profile = {
 };
 
 export type AuthOperationError = AuthError | Error | null;
+
+export interface WaselUser {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: 'rider' | 'driver' | 'both' | 'admin';
+  balance: number;
+  rating: number;
+  trips: number;
+  verified: boolean;
+  sanadVerified: boolean;
+  verificationLevel: string;
+  walletStatus: 'active' | 'limited' | 'frozen' | 'closed';
+  avatar?: string;
+  joinedAt: string;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  twoFactorEnabled: boolean;
+  trustScore: number;
+  driverStatus?: string;
+  backendMode: 'supabase';
+}
 
 export function createLocalAuthUser(localUser: WaselUser): User {
   return {
@@ -110,4 +133,123 @@ export async function signInWithOAuthProvider(
 
 export function shouldRefreshProfile(event: AuthChangeEvent, session: Session | null): boolean {
   return Boolean(session?.user) && event === 'SIGNED_IN';
+}
+
+function splitFullName(fullName: string) {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] ?? 'Wasel',
+    lastName: parts.slice(1).join(' ') || 'User',
+  };
+}
+
+function computeTrustScore(
+  user: Pick<
+    WaselUser,
+    'verified' | 'sanadVerified' | 'emailVerified' | 'phoneVerified' | 'trips' | 'rating'
+  >,
+) {
+  return deriveAccountTrustScore(user);
+}
+
+export function mapBackendProfile({
+  authUser,
+  profile,
+}: {
+  authUser: Pick<
+    User,
+    | 'id'
+    | 'email'
+    | 'phone'
+    | 'created_at'
+    | 'email_confirmed_at'
+    | 'phone_confirmed_at'
+    | 'user_metadata'
+  >;
+  profile: Profile | null;
+}): WaselUser {
+  const name =
+    profile?.full_name ||
+    authUser?.user_metadata?.full_name ||
+    authUser?.user_metadata?.name ||
+    authUser?.email?.split('@')?.[0] ||
+    'Wasel User';
+  const phone = profile?.phone_number ?? authUser?.phone ?? undefined;
+  const verified = Boolean(profile?.verified ?? profile?.sanad_verified ?? false);
+  const sanadVerified = Boolean(profile?.sanad_verified ?? verified);
+  const emailVerified = Boolean(profile?.email_verified ?? authUser?.email_confirmed_at ?? false);
+  const phoneVerified = Boolean(profile?.phone_verified ?? authUser?.phone_confirmed_at ?? false);
+  const role =
+    profile?.role === 'driver' || profile?.role === 'both'
+      ? profile.role
+      : profile?.role === 'admin'
+        ? 'admin'
+        : 'rider';
+  const verificationLevel =
+    profile?.verification_level ||
+    (sanadVerified
+      ? role === 'driver' || role === 'both'
+        ? 'level_3'
+        : 'level_2'
+      : phoneVerified || emailVerified
+        ? 'level_1'
+        : 'level_0');
+  const walletStatus: WaselUser['walletStatus'] =
+    profile?.wallet_status === 'limited' ||
+    profile?.wallet_status === 'frozen' ||
+    profile?.wallet_status === 'closed'
+      ? profile.wallet_status
+      : 'active';
+
+  const baseUser: WaselUser = {
+    id: authUser?.id || `user-${Date.now()}`,
+    name,
+    email: authUser?.email || profile?.email || '',
+    phone,
+    role,
+    balance: Number(profile?.wallet_balance ?? 0),
+    rating: Number(profile?.rating ?? 5),
+    trips: Number(profile?.trip_count ?? 0),
+    verified,
+    sanadVerified,
+    verificationLevel,
+    walletStatus,
+    avatar: profile?.avatar_url ?? authUser?.user_metadata?.avatar_url ?? undefined,
+    joinedAt: String(authUser?.created_at ?? new Date().toISOString()).slice(0, 10),
+    emailVerified,
+    phoneVerified,
+    twoFactorEnabled: Boolean(profile?.two_factor_enabled),
+    trustScore: 0,
+    driverStatus: profile?.driver_status ?? undefined,
+    backendMode: 'supabase',
+  };
+
+  return {
+    ...baseUser,
+    trustScore: computeTrustScore(baseUser),
+  };
+}
+
+export function applyUserUpdates(user: WaselUser, updates: Partial<WaselUser>): WaselUser {
+  const next = { ...user, ...updates };
+  next.trustScore = computeTrustScore({
+    verified: next.verified,
+    sanadVerified: next.sanadVerified,
+    emailVerified: next.emailVerified,
+    phoneVerified: next.phoneVerified,
+    trips: next.trips,
+    rating: next.rating,
+  });
+
+  next.verificationLevel =
+    next.verificationLevel ||
+    (next.sanadVerified
+      ? next.role === 'driver' || next.role === 'both'
+        ? 'level_3'
+        : 'level_2'
+      : next.phoneVerified || next.emailVerified
+        ? 'level_1'
+        : 'level_0');
+
+  return next;
 }

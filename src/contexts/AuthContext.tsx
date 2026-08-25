@@ -9,6 +9,9 @@ import {
   signInWithOAuthProvider,
   type AuthOperationError,
   type Profile,
+  type WaselUser,
+  mapBackendProfile,
+  applyUserUpdates,
 } from './authContextHelpers';
 
 type SignUpResult = {
@@ -23,6 +26,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isBackendConnected: boolean;
+  waselUser: WaselUser | null;
   signUp: (
     email: string,
     password: string,
@@ -35,6 +39,7 @@ interface AuthContextType {
   signInWithFacebook: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: AuthOperationError }>;
+  updateUser: (updates: Partial<WaselUser>) => Promise<void>;
   refreshProfile: () => Promise<void>;
   resetPassword: (email: string, returnTo?: string) => Promise<{ error: AuthOperationError }>;
   changePassword: (nextPassword: string) => Promise<{ error: AuthOperationError }>;
@@ -46,12 +51,14 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   isBackendConnected: false,
+  waselUser: null,
   signUp: async () => ({ error: null }),
   signIn: async () => ({ error: null }),
   signInWithGoogle: async () => ({ error: null }),
   signInWithFacebook: async () => ({ error: null }),
   signOut: async () => { },
   updateProfile: async () => ({ error: null }),
+  updateUser: async () => { },
   refreshProfile: async () => { },
   resetPassword: async () => ({ error: null }),
   changePassword: async () => ({ error: null }),
