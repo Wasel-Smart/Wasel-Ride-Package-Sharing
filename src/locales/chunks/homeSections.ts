@@ -29,6 +29,25 @@ export const homeSections = {
       readyForComparison: 'Ready for quick comparison and search',
       findRideCTA: 'Find a ride',
       offerRideCTA: 'Offer seats',
+      quickActionsTitle: 'Choose the right mode',
+      quickActionsCTA: 'Open this flow',
+      corridorsReadyNow: 'Corridors ready now',
+      browseRides: 'Browse rides',
+      bestNow: 'Best now',
+      openCorridor: 'Open this corridor',
+      readinessBeforeMove: 'Readiness before you move',
+      walletReady: 'Wallet ready',
+      fastEscalation: 'Fast escalation when needed',
+      startFast: 'Start fast',
+      createAccountOpenNetwork: 'Create an account and open the same network',
+      getStarted: 'Get started',
+      browseRidesAction: 'Browse rides',
+      walletReadyDesc:
+        'Your balance is ready for bookings and upcoming confirmations from the same mobility surface.',
+      fastEscalationDesc:
+        'A clear emergency path without turning the whole surface into visual noise.',
+      signupDesc:
+        'When you sign up, you keep favorite corridors, build trust history, and manage rides and parcels in one place.',
   },
   ar: {
       findRideKicker: 'للحجز السريع',
@@ -56,6 +75,24 @@ export const homeSections = {
       readyForComparison: 'جاهز للمقارنة والبحث الفوري',
       findRideCTA: 'ابحث عن رحلة',
       offerRideCTA: 'اعرض مقاعد',
+      quickActionsTitle: 'ابدأ من الخدمة المناسبة',
+      quickActionsCTA: 'افتح هذا المسار',
+      corridorsReadyNow: 'مسارات جاهزة الآن',
+      browseRides: 'عرض الرحلات',
+      bestNow: 'أفضل الآن',
+      openCorridor: 'افتح هذا المسار',
+      readinessBeforeMove: 'الجاهزية قبل الانطلاق',
+      walletReady: 'المحفظة الجاهزة',
+      fastEscalation: 'تصعيد سريع عند الحاجة',
+      startFast: 'ابدأ بسرعة',
+      createAccountOpenNetwork: 'أنشئ حسابك وافتح نفس الشبكة',
+      getStarted: 'ابدأ الآن',
+      browseRidesAction: 'تصفح الرحلات',
+      walletReadyDesc:
+        'رصيدك حاضر للحجز وتأكيد الطلبات القادمة من نفس سطح الحركة.',
+      fastEscalationDesc:
+        'اختصار واضح للطوارئ بدون تحويل هذه المساحة إلى عنصر بصري صاخب.',
+      signupDesc:
+        'عند التسجيل ستحتفظ بمساراتك المفضلة، وتبني سجل الثقة، وتدير الحجوزات والطرود من مكان واحد.',
   }
 } as const;
-

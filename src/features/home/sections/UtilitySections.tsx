@@ -3,6 +3,7 @@ import { Wallet } from 'lucide-react';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 import { R, SH } from '../../../utils/wasel-ds';
 import { C, SectionHeader, Skeleton, SOSButton, TrustScoreCard } from '../HomePageShared';
+import { tx } from '../../../locales/tx';
 
 interface SignedInUtilitySectionProps {
   ar: boolean;
@@ -33,7 +34,7 @@ export function SignedInUtilitySection({
 }: SignedInUtilitySectionProps) {
   return (
     <motion.section initial={false} className="wasel-home-section">
-      <SectionHeader title={ar ? 'الجاهزية قبل الانطلاق' : 'Readiness before you move'} icon="T" />
+      <SectionHeader title={tx('homeSections.readinessBeforeMove')} icon="T" />
       <div
         className="wasel-home-utility-grid"
         style={{
@@ -66,7 +67,7 @@ export function SignedInUtilitySection({
               }}
             >
               <Wallet size={14} color={C.gold} />
-              {ar ? 'المحفظة الجاهزة' : 'Wallet ready'}
+              {tx('homeSections.walletReady')}
             </div>
             <div
               style={{
@@ -87,9 +88,7 @@ export function SignedInUtilitySection({
                 lineHeight: 1.65,
               }}
             >
-              {ar
-                ? 'رصيدك حاضر للحجز وتأكيد الطلبات القادمة من نفس سطح الحركة.'
-                : 'Your balance is ready for bookings and upcoming confirmations from the same mobility surface.'}
+              {tx('homeSections.walletReadyDesc')}
             </div>
           </div>
 
@@ -111,14 +110,12 @@ export function SignedInUtilitySection({
                 marginBottom: 10,
               }}
             >
-              {ar ? 'تصعيد سريع عند الحاجة' : 'Fast escalation when needed'}
+              {tx('homeSections.fastEscalation')}
             </div>
             <div
               style={{ fontSize: '0.82rem', color: C.textMuted, lineHeight: 1.6, marginBottom: 14 }}
             >
-              {ar
-                ? 'اختصار واضح للطوارئ بدون تحويل هذه المساحة إلى عنصر بصري صاخب.'
-                : 'A clear emergency path without turning the whole surface into visual noise.'}
+              {tx('homeSections.fastEscalationDesc')}
             </div>
             <SOSButton ar={ar} />
           </div>
@@ -152,7 +149,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
             color: C.cyan,
           }}
         >
-          {ar ? 'ابدأ بسرعة' : 'Start fast'}
+          {tx('homeSections.startFast')}
         </div>
         <h2
           style={{
@@ -162,7 +159,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
             letterSpacing: 0,
           }}
         >
-          {ar ? 'أنشئ حسابك وافتح نفس الشبكة' : 'Create an account and open the same network'}
+          {tx('homeSections.createAccountOpenNetwork')}
         </h2>
         <p
           style={{
@@ -173,9 +170,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
             fontSize: '0.94rem',
           }}
         >
-          {ar
-            ? 'عند التسجيل ستحتفظ بمساراتك المفضلة، وتبني سجل الثقة، وتدير الحجوزات والطرود من مكان واحد.'
-            : 'When you sign up, you keep favorite corridors, build trust history, and manage rides and parcels in one place.'}
+          {tx('homeSections.signupDesc')}
         </p>
         <div
           style={{
@@ -198,7 +193,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
               boxShadow: SH.blueL,
             }}
           >
-            {ar ? 'ابدأ الآن' : 'Get started'}
+            {tx('homeSections.getStarted')}
           </WaselButton>
           <WaselButton
             type="button"
@@ -213,7 +208,7 @@ export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps
               color: C.text,
             }}
           >
-            {ar ? 'تصفح الرحلات' : 'Browse rides'}
+            {tx('homeSections.browseRidesAction')}
           </WaselButton>
         </div>
       </div>
