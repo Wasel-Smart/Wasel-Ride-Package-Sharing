@@ -56,7 +56,7 @@ function StaticMapPreview({ height, route }: { height?: string | number; route?:
         <p className="text-xs font-medium">{tx('mapWrapper.static_preview')}</p>
         {hasRoute && route && route.length >= 2 && (
           <p className="text-[0.65rem] opacity-80">
-            {route[0]!.label} → {route[route.length - 1]!.label}
+            {(route[0] as {label: string}).label} → {(route[route.length - 1] as {label: string}).label}
           </p>
         )}
       </div>

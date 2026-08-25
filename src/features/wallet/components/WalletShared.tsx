@@ -4,8 +4,7 @@
  * Shared wallet primitives used across the dashboard surface.
  */
 
-import React from 'react';
-import { type MouseEvent } from 'react';
+import React, { type MouseEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,

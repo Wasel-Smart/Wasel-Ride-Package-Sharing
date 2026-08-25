@@ -1,6 +1,5 @@
-import type { SupportedCurrency } from './types';
+import { type SupportedCurrency, PLATFORM_CURRENCY } from './types';
 import { CurrencyService } from './service';
-import { PLATFORM_CURRENCY } from './types';
 
 export function useCurrency() {
   const svc = CurrencyService.getInstance();

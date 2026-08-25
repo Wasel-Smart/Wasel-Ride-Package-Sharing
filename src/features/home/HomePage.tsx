@@ -211,10 +211,10 @@ export function HomePage() {
     ];
 
     if (role === 'driver' || role === 'both') {
-      return [base[1]!, base[0]!, base[2]!, base[3]!, base[4]!];
+      return [base[1], base[0], base[2], base[3], base[4]] as QuickAction[];
     }
     if (role === 'admin') {
-      return [base[0]!, base[2]!, base[1]!, base[3]!, base[4]!];
+      return [base[0], base[2], base[1], base[3], base[4]] as QuickAction[];
     }
     return base;
   }, [role, t]);
