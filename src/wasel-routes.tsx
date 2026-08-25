@@ -236,23 +236,35 @@ const buildMainChildren = () => [
   // ── Raje3 Returns ─────────────────────────────────────────────────────────
 
   // ── B2B / B2S / Ops ──────────────────────────────────────────────────────
+  // Each surface below is gated by its own permission — do not collapse
+  // these back into one shared ProtectedOutlet, since roles differ per path
+  // (e.g. a 'corporate' user must not reach 'moderation').
   {
     Component: ProtectedOutlet,
+    require: 'corporate:read',
     children: [
       {
         path: 'services/corporate',
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
+    ],
+  },
+  {
+    Component: ProtectedOutlet,
+    require: 'school:read',
+    children: [
       {
         path: 'services/school',
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
+    ],
+  },
+  {
+    Component: ProtectedOutlet,
+    require: 'operations:read',
+    children: [
       {
         path: 'innovation-hub',
-        lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
-      },
-      {
-        path: 'analytics',
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
       { path: 'mobility-os', lazy: lazy(() => import('./features/mobility-os')) },
@@ -260,9 +272,36 @@ const buildMainChildren = () => [
         path: 'ai-intelligence',
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
+    ],
+  },
+  {
+    Component: ProtectedOutlet,
+    require: 'analytics:read',
+    children: [
+      {
+        path: 'analytics',
+        lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+      },
+    ],
+  },
+  {
+    Component: ProtectedOutlet,
+    require: 'trust:moderate',
+    children: [
       {
         path: 'moderation',
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+      },
+    ],
+  },
+  // ── Admin ────────────────────────────────────────────────────────────────
+  {
+    Component: ProtectedOutlet,
+    require: 'config:write',
+    children: [
+      {
+        path: 'admin',
+        lazy: lazy(() => import('./features/admin/AdminDashboardPage'), 'AdminDashboardPage'),
       },
     ],
   },

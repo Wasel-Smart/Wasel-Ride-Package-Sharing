@@ -41,14 +41,31 @@ export const C = {
   greenDark: '#5a6b08',
   greenDim: 'rgba(114,199,13,0.12)',
 
-  gold: '#FF8A0B',
-  goldDim: 'rgba(255,138,11,0.14)',
+  // True brand gold (BRAND_GUIDELINES.md "Supporting accents"). Distinct from journey
+  // orange below — use for premium badges, rewards, Wasel Plus. `orange` stays the
+  // primary CTA/journey colour and is intentionally left pointing at brandOrange.
+  gold: '#FFBE5C',
+  goldDim: 'rgba(255,190,92,0.14)',
+  bronze: '#FFBE5C',
+  bronzeDim: 'rgba(255,190,92,0.14)',
 
   orange: '#FF8A0B',
   orangeDim: 'rgba(255,138,11,0.12)',
 
   purple: '#8FA6FF',
   purpleDim: 'rgba(143,166,255,0.12)',
+
+  // True brand teal/cyan accent (BRAND_GUIDELINES.md). Distinct from `cyan` above,
+  // which is kept as a compatibility alias for `blue` so existing "cyan"-named
+  // usages that actually mean the primary interactive blue don't shift colour.
+  // New info/map/data-viz UI should reference `teal`, not `cyan`.
+  teal: '#58DDFF',
+  tealDim: 'rgba(88,221,255,0.12)',
+  tealGlow: 'rgba(88,221,255,0.2)',
+
+  // Secondary success / eco-movement accent (BRAND_GUIDELINES.md).
+  lime: '#9AF1CF',
+  limeDim: 'rgba(154,241,207,0.12)',
 
   text: '#F8FBFF',
   textSub: 'rgba(248,251,255,0.86)',

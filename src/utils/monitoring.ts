@@ -1,9 +1,10 @@
-import * as Sentry from '@sentry/react';
 import type { DomainEventEnvelope } from '../domain/events';
 import { createCorrelationId, createStructuredLogEntry } from '../platform/observability';
 import { sanitizeLogMessage } from './sanitization';
 
 let sentryInitialized = false;
+let sentryInitializationStarted = false;
+let sentryClient: typeof import('@sentry/react') | null = null;
 
 function writeConsole(
   level: 'info' | 'warning' | 'error',
@@ -28,8 +29,8 @@ function writeConsole(
   }
 }
 
-export function initSentry(): void {
-  if (sentryInitialized) {
+export async function initSentry(): Promise<void> {
+  if (sentryInitialized || sentryInitializationStarted) {
     return;
   }
 
@@ -43,82 +44,91 @@ export function initSentry(): void {
     return;
   }
 
-  Sentry.init({
-    dsn,
-    environment,
-    integrations: [
-      ...(typeof (Sentry as unknown as Record<string, () => unknown>).browserTracingIntegration === 'function'
-        ? [(Sentry as unknown as Record<string, () => unknown>).browserTracingIntegration()]
-        : []
-      ) as import('@sentry/react').Integration[],
-      ...(typeof (Sentry as unknown as Record<string, (o: unknown) => unknown>).replayIntegration === 'function'
-        ? [(Sentry as unknown as Record<string, (o: unknown) => unknown>).replayIntegration({ maskAllText: true, blockAllMedia: true })]
-        : []
-      ) as import('@sentry/react').Integration[],
-    ],
-    tracesSampleRate: environment === 'production' ? 0.1 : 1,
-    replaysSessionSampleRate: environment === 'production' ? 0.05 : 0,
-    replaysOnErrorSampleRate: 1.0,
-    release: `wasel@${import.meta.env.VITE_APP_VERSION || '1.0.0'}`,
-    // Ignore common, non-actionable browser errors to reduce noise.
-    ignoreErrors: [
-      // Often caused by browser extensions or third-party scripts.
-      'ResizeObserver loop limit exceeded',
-      // A generic error that Sentry captures when a Promise is rejected with a non-Error object.
-      'Non-Error promise rejection captured',
-      // General network failures, often due to user's connectivity, not a bug.
-      'Network request failed',
-      'Failed to fetch',
-    ],
-    beforeSend(event) {
-      try {
-        // Attempt to enrich the event with the user's ID for better traceability.
-        const raw = localStorage.getItem('wasel_local_user_v2');
-        if (raw) {
-          const userData = JSON.parse(raw) as unknown;
-          // Only attach the opaque user ID — never PII
-          if (
-            userData !== null &&
-            typeof userData === 'object' &&
-            'id' in (userData as object) &&
-            typeof (userData as Record<string, unknown>).id === 'string'
-          ) {
-            const id = (userData as Record<string, string>).id;
-            // Validate strict UUID v4 format before attaching to prevent arbitrary string injection
-            if (typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
-              event.user = { id };
+  sentryInitializationStarted = true;
+
+  try {
+    // Sentry and Session Replay are sizeable. Only download them after the app
+    // is interactive and only in deployments that have a DSN configured.
+    const Sentry = await import('@sentry/react');
+    sentryClient = Sentry;
+    const integrations = [];
+    if (typeof Sentry.browserTracingIntegration === 'function') {
+      integrations.push(Sentry.browserTracingIntegration());
+    }
+    if (typeof Sentry.replayIntegration === 'function') {
+      integrations.push(Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }));
+    }
+
+    Sentry.init({
+      dsn,
+      environment,
+      integrations,
+      tracesSampleRate: environment === 'production' ? 0.1 : 1,
+      replaysSessionSampleRate: environment === 'production' ? 0.05 : 0,
+      replaysOnErrorSampleRate: 1.0,
+      release: `wasel@${import.meta.env.VITE_APP_VERSION || '1.0.0'}`,
+      // Ignore common, non-actionable browser errors to reduce noise.
+      ignoreErrors: [
+        'ResizeObserver loop limit exceeded',
+        'Non-Error promise rejection captured',
+        'Network request failed',
+        'Failed to fetch',
+      ],
+      beforeSend(event) {
+        try {
+          // Attempt to enrich the event with the user's ID for better traceability.
+          const raw = localStorage.getItem('wasel_local_user_v2');
+          if (raw) {
+            const userData = JSON.parse(raw) as unknown;
+            // Only attach the opaque user ID — never PII
+            if (
+              userData !== null &&
+              typeof userData === 'object' &&
+              'id' in (userData as object) &&
+              typeof (userData as Record<string, unknown>).id === 'string'
+            ) {
+              const id = (userData as Record<string, string>).id;
+              // Validate strict UUID v4 format before attaching to prevent arbitrary string injection
+              if (typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+                event.user = { id };
+              }
             }
           }
+        } catch {
+          // Ignore malformed local state.
         }
-      } catch {
-        // Ignore malformed local state.
-      }
 
-      const allowedLanguages = ['ar', 'en'];
-      const allowedThemes = ['dark', 'light'];
-      const lang = localStorage.getItem('wasel_language') || 'ar';
-      const theme = localStorage.getItem('wasel_theme') || 'dark';
+        const allowedLanguages = ['ar', 'en'];
+        const allowedThemes = ['dark', 'light'];
+        const lang = localStorage.getItem('wasel_language') || 'ar';
+        const theme = localStorage.getItem('wasel_theme') || 'dark';
 
-      event.tags = {
-        ...event.tags,
-        language: allowedLanguages.includes(lang) ? lang : 'ar',
-        theme: allowedThemes.includes(theme) ? theme : 'dark',
-      };
+        event.tags = {
+          ...event.tags,
+          language: allowedLanguages.includes(lang) ? lang : 'ar',
+          theme: allowedThemes.includes(theme) ? theme : 'dark',
+        };
 
-      return event;
-    },
-  });
+        return event;
+      },
+    });
 
-  sentryInitialized = true;
-  writeConsole('info', 'Sentry initialized.');
+    sentryInitialized = true;
+    writeConsole('info', 'Sentry initialized.');
+  } catch (error) {
+    sentryInitializationStarted = false;
+    if (import.meta.env.DEV) {
+      writeConsole('warning', 'Sentry initialization failed.', { error: sanitizeLogMessage(String(error)) });
+    }
+  }
 }
 
 export const logger = {
   error(message: string, error?: unknown, context?: Record<string, unknown>): void {
     const safeMessage = sanitizeLogMessage(message);
     writeConsole('error', safeMessage, context);
-    if (typeof (Sentry as unknown as Record<string, unknown>).captureException === 'function') {
-      (Sentry as unknown as { captureException: (e: unknown, o: unknown) => void }).captureException(error || new Error(safeMessage), {
+    if (typeof (sentryClient as unknown as Record<string, unknown> | null)?.captureException === 'function') {
+      (sentryClient as unknown as { captureException: (e: unknown, o: unknown) => void }).captureException(error || new Error(safeMessage), {
         level: 'error',
         tags: { type: 'application_error' },
         extra: context,
@@ -128,8 +138,8 @@ export const logger = {
 
   warning(message: string, context?: Record<string, unknown>): void {
     writeConsole('warning', sanitizeLogMessage(message), context);
-    if (import.meta.env.PROD && typeof (Sentry as unknown as Record<string, unknown>).captureMessage === 'function') {
-      (Sentry as unknown as { captureMessage: (m: string, o: unknown) => void }).captureMessage(sanitizeLogMessage(message), {
+    if (import.meta.env.PROD && typeof (sentryClient as unknown as Record<string, unknown> | null)?.captureMessage === 'function') {
+      (sentryClient as unknown as { captureMessage: (m: string, o: unknown) => void }).captureMessage(sanitizeLogMessage(message), {
         level: 'warning',
         tags: { type: 'application_warning' },
         extra: context,
@@ -139,8 +149,8 @@ export const logger = {
 
   info(message: string, context?: Record<string, unknown>): void {
     writeConsole('info', sanitizeLogMessage(message), context);
-    if (import.meta.env.PROD && context?.important && typeof (Sentry as unknown as Record<string, unknown>).captureMessage === 'function') {
-      (Sentry as unknown as { captureMessage: (m: string, o: unknown) => void }).captureMessage(sanitizeLogMessage(message), {
+    if (import.meta.env.PROD && context?.important && typeof (sentryClient as unknown as Record<string, unknown> | null)?.captureMessage === 'function') {
+      (sentryClient as unknown as { captureMessage: (m: string, o: unknown) => void }).captureMessage(sanitizeLogMessage(message), {
         level: 'info',
         tags: { type: 'application_info' },
         extra: context,
@@ -151,8 +161,8 @@ export const logger = {
   metric(name: string, value: number, tags?: Record<string, string>): void {
     const safeName = sanitizeLogMessage(name);
     writeConsole('info', `metric:${safeName}`, { value, tags });
-    if (typeof (Sentry as unknown as Record<string, unknown>).addBreadcrumb === 'function') {
-      (Sentry as unknown as { addBreadcrumb: (b: unknown) => void }).addBreadcrumb({
+    if (typeof (sentryClient as unknown as Record<string, unknown> | null)?.addBreadcrumb === 'function') {
+      (sentryClient as unknown as { addBreadcrumb: (b: unknown) => void }).addBreadcrumb({
         category: 'metric',
         message: safeName,
         level: 'info',
@@ -168,8 +178,8 @@ export const logger = {
   },
 
   addBreadcrumb(message: string, category: string, data?: Record<string, unknown>): void {
-    if (typeof (Sentry as unknown as Record<string, unknown>).addBreadcrumb === 'function') {
-      (Sentry as unknown as { addBreadcrumb: (b: unknown) => void }).addBreadcrumb({ message, category, level: 'info', data });
+    if (typeof (sentryClient as unknown as Record<string, unknown> | null)?.addBreadcrumb === 'function') {
+      (sentryClient as unknown as { addBreadcrumb: (b: unknown) => void }).addBreadcrumb({ message, category, level: 'info', data });
     }
   },
 };
@@ -221,13 +231,9 @@ export function trackDomainEvent(event: DomainEventEnvelope): void {
   });
 }
 
-export const ErrorBoundary = Sentry.ErrorBoundary;
-
 export function usePerformanceMonitoring(componentName: string): () => void {
   const transaction = logger.startTransaction(componentName, 'component.render');
   return () => {
     transaction.finish();
   };
 }
-
-export default Sentry;

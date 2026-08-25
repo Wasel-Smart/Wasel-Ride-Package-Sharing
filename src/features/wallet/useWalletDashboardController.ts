@@ -5,12 +5,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import {
-  getWalletCapabilities,
-  walletApi,
-  type InsightsData,
-  type WalletData,
-} from '../../services/walletApi';
+import { getWalletCapabilities, walletApi } from '../../services/wallet/walletApi';
+import type { InsightsData, WalletData } from '../../services/wallet/walletTypes';
 import { setWaselPlusActive } from '../../services/movementMembership';
 import { projectId, publicAnonKey } from '../../utils/supabase/info';
 import { walletText } from './walletText';

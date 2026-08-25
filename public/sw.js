@@ -35,7 +35,6 @@ const NETWORK_TIMEOUT_MS = 8000;
 const PRECACHE_STATIC = [
   '/offline.html',
   '/initial-locale.js',
-  '/boot-status.js',
   '/manifest.webmanifest',
   '/favicon.ico',
   '/favicon-16x16.png',

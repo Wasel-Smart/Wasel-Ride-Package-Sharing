@@ -51,52 +51,28 @@
     <meta property="og:url" content="https://wasel14.online" />
     <meta property="og:locale" content="en_JO" />
     <meta property="og:locale:alternate" content="ar_JO" />
-    <meta property="og:image" content="/brand/wasel-symbol.webp" />
-    <meta property="og:image:alt" content="Wasel | واصل mobility network logo" />
+    <meta property="og:image" content="https://wasel14.online/brand/wasel-og.png" />
+    <meta property="og:image:secure_url" content="https://wasel14.online/brand/wasel-og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Wasel | واصل — Jordan's bilingual mobility network" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Wasel | Shared Routes That Reduce Travel Cost" />
     <meta name="twitter:description" content="Wasel connects riders and drivers through shared routes to reduce cost. Book a ride, offer a route, or join the network across Jordan." />
-    <meta name="twitter:image" content="/brand/wasel-symbol.webp" />
-    <meta name="twitter:image:alt" content="Wasel | واصل mobility network logo" />
+    <meta name="twitter:image" content="https://wasel14.online/brand/wasel-og.png" />
+    <meta name="twitter:image:alt" content="Wasel | واصل — Jordan's bilingual mobility network" />
 
-    <link rel="preconnect" href="https://maps.googleapis.com" />
     <link rel="dns-prefetch" href="https://supabase.co" />
     <link rel="preload" as="image" href="/brand/wasel-symbol.webp" imagesizes="280px" />
     <style>
-      #boot-status {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        background: #0b0f14;
-        color: #f8fafc;
-        font-family: Montserrat, Cairo, sans-serif;
-        z-index: 9999;
-      }
-      #boot-status[data-state="hidden"],
-      #boot-status[data-app-mounted="true"] { display: none; }
-      html[data-app-mounted="true"] #boot-status { display: none; }
-      #boot-status[data-state="error"] { background: #450a0a; }
-      #boot-status[data-state="error"] h1 { color: #f87171; }
-      #boot-status .card { max-width: 560px; background: #111827; border: 1px solid rgba(255,255,255,.14); border-radius: 16px; padding: 24px; }
-      #boot-status h1 { margin: 0 0 10px; color: #f5b041; font-size: 1.25rem; }
-      #boot-status p { margin: 0 0 8px; opacity: .95; }
-      #boot-status code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; opacity: .85; }
+      html, body, #root { min-height: 100%; }
+      body { margin: 0; background: #071521; }
     </style>
   </head>
 
   <body>
-    <div id="boot-status" data-state="loading" role="status" aria-live="polite">
-      <div class="card">
-        <h1>Loading Wasel...</h1>
-        <p>If this message stays for more than 15 seconds, the app likely failed to start.</p>
-        <code>Pull down to refresh, or open DevTools Console and share the first red error line.</code>
-      </div>
-    </div>
-    <script src="/boot-status.js"></script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

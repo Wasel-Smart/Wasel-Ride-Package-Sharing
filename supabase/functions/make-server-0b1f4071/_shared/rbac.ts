@@ -194,7 +194,11 @@ export function resolveAccessRole(role: string | undefined): AccessRole {
   ];
   if (!role) return 'guest';
   if ((VALID as string[]).includes(role)) return role as AccessRole;
-  return 'user';
+  // Fail closed: an unrecognised role string (corrupt data, a new DB enum
+  // value not yet mapped here, an attacker-supplied value, etc.) must never
+  // silently grant the standard 'user' permission set. Default to the
+  // least-privileged role instead.
+  return 'guest';
 }
 
 export function userHasPermission(role: string | undefined, permission: AccessPermission): boolean {

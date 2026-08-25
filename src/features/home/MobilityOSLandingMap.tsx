@@ -853,7 +853,9 @@ export function MobilityOSLandingMap({
                   fontWeight: 800,
                 }}
               >
-                {runtimeMode === 'fallback' ? 'Fallback focus' : 'Live corridor focus'}
+                {runtimeMode === 'fallback'
+                  ? tx('mobilityOSLandingMap.fallback_focus')
+                  : tx('mobilityOSLandingMap.live_corridor_focus')}
               </div>
               <div
                 style={{
@@ -864,7 +866,7 @@ export function MobilityOSLandingMap({
                   lineHeight: 1.35,
                 }}
               >
-                {focusLabel ?? 'Jordan network'}
+                {focusLabel ?? tx('mobilityOSLandingMap.jordan_network')}
               </div>
               {focusLabel && (
                 <div

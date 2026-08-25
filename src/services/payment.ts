@@ -115,7 +115,7 @@ class PaymentService {
       .from('bookings')
       .select('payment_status')
       .eq('id', bookingId)
-      .eq('user_id', user.id)
+      .eq('passenger_id', user.id)
       .single();
 
     if (error) throw error;
