@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /**
  * Wasel Brand Asset Sync
  *
@@ -7,7 +8,9 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const SOURCE = path.join(ROOT, 'brand', 'assets');
 const DESTINATIONS = [
@@ -15,7 +18,7 @@ const DESTINATIONS = [
   path.join(ROOT, 'artifacts', 'brand'),
 ];
 
-function copyRecursive(src: string, dest: string): void {
+function copyRecursive(src, dest) {
   if (!fs.existsSync(dest)) {
     fs.mkdirSync(dest, { recursive: true });
   }
@@ -33,7 +36,7 @@ function copyRecursive(src: string, dest: string): void {
   }
 }
 
-function main(): void {
+function main() {
   console.log('\n🔄 Syncing brand assets...\n');
 
   let totalFiles = 0;
