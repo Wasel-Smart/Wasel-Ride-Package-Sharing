@@ -79,7 +79,7 @@ export function initPerformanceMonitoring() {
   });
 
   if (import.meta.env.DEV) {
-    console.log('✅ Performance monitoring initialized');
+    console.log('Performance monitoring initialized');
   }
 }
 
@@ -95,8 +95,8 @@ function reportWebVital(metric: MetricType) {
   // Log to console in development
   if (import.meta.env.DEV) {
     const emoji =
-      vital.rating === 'good' ? '✅' : vital.rating === 'needs-improvement' ? '⚠️' : '❌';
-    console.log(`${emoji} ${sanitizeLogMessage(vital.name)}: ${sanitizeLogMessage(vital.value.toFixed(2))}ms (${sanitizeLogMessage(vital.rating)})`);
+      vital.rating === 'good' ? 'OK' : vital.rating === 'needs-improvement' ? 'WARN' : 'POOR';
+    console.log(`[perf] ${emoji} ${sanitizeLogMessage(vital.name)}: ${sanitizeLogMessage(vital.value.toFixed(2))}ms (${sanitizeLogMessage(vital.rating)})`);
   }
 
   // Check against performance budget
@@ -129,7 +129,11 @@ function sendToAnalytics(vital: WebVital) {
   if (typeof window === 'undefined') return;
 
   // Check analytics consent before sending
-  if (!localStorage.getItem('consent-analytics')) {
+  try {
+    if (!localStorage.getItem('consent-analytics')) {
+      return;
+    }
+  } catch {
     return;
   }
 
@@ -175,8 +179,8 @@ export function measurePerformance(name: string, startMark: string, endMark?: st
     const measure = performance.measure(name, startMark, endMark);
 
     if (import.meta.env.DEV) {
-      console.log(`⏱️ ${sanitizeLogMessage(name)}: ${sanitizeLogMessage(measure.duration.toFixed(2))}ms`);
-    }
+    console.log(`[perf] ${sanitizeLogMessage(name)}: ${sanitizeLogMessage(measure.duration.toFixed(2))}ms`);
+  }
 
     // Log slow operations
     if (measure.duration > 1000) {

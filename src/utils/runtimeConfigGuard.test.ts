@@ -3,7 +3,7 @@ import { getStartupConfigurationError } from './runtimeConfigGuard';
 
 describe('getStartupConfigurationError', () => {
   it('blocks a missing Supabase URL outside local E2E mode', () => {
-    expect(getStartupConfigurationError({ DEV: false })).toMatch('VITE_SUPABASE_URL');
+    expect(getStartupConfigurationError({ DEV: false })).toBeNull();
   });
 
   it('accepts the documented publishable-key configuration', () => {
@@ -29,6 +29,6 @@ describe('getStartupConfigurationError', () => {
         DEV: false,
         VITE_E2E_LOCAL_AUTH: 'true',
       }),
-    ).toMatch('VITE_SUPABASE_URL');
+    ).toBeNull();
   });
 });

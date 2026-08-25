@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+﻿import { motion } from 'framer-motion';
 import { ArrowRight, Target } from 'lucide-react';
 import type { CorridorBetaPlan } from '../../../services/corridorBeta';
 import { C, R, SH, TYPE } from '../../../utils/wasel-ds';

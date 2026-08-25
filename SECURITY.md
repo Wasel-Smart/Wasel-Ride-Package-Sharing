@@ -1,43 +1,37 @@
 # Security & Secrets Management
 
-## Secret Management
+## CRITICAL: OneDrive Sync Exposure Risk
 
-**Never store real credentials in `.env`, `.env.local`, or any file that may be committed or synced to cloud storage.**
+**This repository is located inside a OneDrive-synced folder (`C:\Users\user\OneDrive\Desktop\`).**
+If OneDrive syncs your Desktop folder, any file in this repo — especially `.env`, `.env.local`, or any file containing credentials — may be **uploaded to OneDrive cloud storage**. This is a **credential leakage risk**.
 
-### Production Secret Sources (in priority order)
-1. **Azure Key Vault** â€” primary secret store for production
-2. **Vercel Environment Variables** â€” for Vercel-hosted deployments
-3. **Supabase Secrets** â€” for edge function secrets (`supabase secrets set`)
-4. **Kubernetes Secrets** â€” for k8s deployments (base64-encoded, not encrypted at rest)
-
-### Local Development
-- Use `.env.local` (gitignored) for local development only
-- Use `.env.example` as a template â€” never copy it as `.env` without replacing values
-- Rotate any credentials that were ever stored in `.env` or `.env.local`
-
-### OneDrive Sync Exposure Risk
-This repository is located at `C:\Users\user\OneDrive\Desktop\Wdoubleme`.
-If OneDrive syncs your Desktop folder, any file in this repo (including `.env`, `.env.local`)
-may be uploaded to OneDrive cloud storage.
-
-**IMMEDIATE ACTION REQUIRED — Choose ONE of these options:**
+### Immediate Actions Required (choose ONE):
 
 **Option A (Recommended): Exclude the project folder from OneDrive sync**
-1. Right-click the Wdoubleme folder -> "Free up space" (this removes it from OneDrive sync while keeping it locally)
-2. Or open OneDrive Settings -> Sync and backup -> Manage backup -> Uncheck "Desktop"
+1. Right-click the `Wdoubleme-master` folder ? "Free up space" (removes it from OneDrive sync while keeping it local)
+2. Or open OneDrive Settings ? Sync and backup ? Manage backup ? Uncheck "Desktop"
 
 **Option B: Store secrets outside OneDrive**
-1. Create C:\Users\user\.env (outside OneDrive tree)
-2. Move your real credentials from Wdoubleme\.env to C:\Users\user\.env
-3. Update ite.config.ts to load env from C:\Users\user\ (see envDir option)
-4. Replace Wdoubleme\.env contents with placeholders only
+1. Create `C:\Users\user\.env` (outside OneDrive tree)
+2. Move real credentials from `Wdoubleme-master\.env` to `C:\Users\user\.env`
+3. Update `vite.config.ts` to load env from `C:\Users\user\` (see `envDir` option)
+4. Replace `Wdoubleme-master\.env` contents with placeholders only
 
 **Option C: Use managed secret stores (Production)**
 - Vercel Environment Variables
 - Azure Key Vault
-- Supabase Secrets (supabase secrets set)
+- Supabase Secrets (`supabase secrets set`)
 
-After applying any option above, verify no .env files with real secrets remain inside the OneDrive sync tree.
+### CI Guard
+A pre-merge check scans for `.env` files containing non-placeholder values. Any `.env` file found inside the repo with real secret patterns will **block CI**.
+
+### Verification
+After applying any option above:
+```bash
+# Scan for .env files with real secrets in the repo
+git ls-files | grep '\.env' || echo "No tracked .env files"
+# Verify no real secrets in OneDrive sync tree
+```
 
 ## Required Environment Variables
 

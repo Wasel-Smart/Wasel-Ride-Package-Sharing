@@ -1,4 +1,4 @@
-import { WaselCard } from '../../design-system';
+import { WaselCard } from '../wasel-ui';
 import { C, R, SPACE, TYPE } from '../../utils/wasel-ds';
 
 type NotificationMetricTone = 'neutral' | 'attention' | 'urgent' | 'archived';

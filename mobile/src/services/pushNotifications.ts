@@ -73,15 +73,15 @@ class PushNotificationsService {
 
     await this.saveTokenToServer(token.data);
 
-    Notifications.addPushTokenListener(({ data }) =>
+    Notifications.addPushTokenListener((data: any) =>
       this.handleTokenRefresh(data),
     );
 
-    Notifications.addNotificationReceivedListener((notification) =>
+    Notifications.addNotificationReceivedListener((notification: any) =>
       this.handleNotificationReceived(notification),
     );
 
-    Notifications.addNotificationResponseReceivedListener((response) =>
+    Notifications.addNotificationResponseReceivedListener((response: any) =>
       this.handleNotificationTap(response),
     );
   }
@@ -93,11 +93,11 @@ class PushNotificationsService {
     }
   }
 
-  private handleNotificationReceived(notification: Notifications.Notification) {
+  private handleNotificationReceived(notification: any) {
     console.log('[PushNotifications] Received:', sanitizeLogValue(notification));
   }
 
-  private handleNotificationTap(response: Notifications.NotificationResponse) {
+  private handleNotificationTap(response: any) {
     const data = (response.notification.request.content.data ?? {}) as Record<string, unknown>;
     const screen = typeof data.screen === 'string' ? data.screen : null;
 
@@ -115,7 +115,7 @@ class PushNotificationsService {
           .join('&')
       : '';
     const url = `wasel://${screen}${query ? '?' + query : ''}`;
-    Linking.openURL(url).catch(error => {
+    Linking.openURL(url).catch((error: any) => {
       console.error('[PushNotifications] Navigation failed:', sanitizeLogValue(error));
     });
   }

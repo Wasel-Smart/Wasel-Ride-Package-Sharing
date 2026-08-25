@@ -36,7 +36,7 @@ describe('sessionManager.test.ts', () => {
     const meta = sm.startSession('user-1');
     expect(meta.sessionId).toBeDefined();
     expect(meta.sessionId.length).toBeGreaterThan(0);
-    expect(meta.userId).toBeUndefined();
+    expect((meta as any).userId).toBeUndefined();
     expect(meta.deviceId).toBeDefined();
   });
 

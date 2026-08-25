@@ -837,6 +837,7 @@ export function LiveTripTracking() {
           <button
             onClick={() => navigate(-1)}
             className="text-slate-500 hover:text-white transition-colors"
+            aria-label="Close trip tracking"
           >
             <X className="w-4 h-4" />
           </button>
@@ -905,6 +906,7 @@ export function LiveTripTracking() {
                     toast.info(`Calling ${trip.driver.name}…`);
                   }}
                   className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/30 transition-all"
+                  aria-label={`Call ${trip.driver.name}`}
                 >
                   <Phone className="w-3.5 h-3.5" />
                 </button>
@@ -917,6 +919,7 @@ export function LiveTripTracking() {
                     );
                   }}
                   className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center text-slate-400 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
+                  aria-label={`Message ${trip.driver.name} on WhatsApp`}
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                 </button>

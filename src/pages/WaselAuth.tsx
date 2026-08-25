@@ -21,7 +21,7 @@ import { WaselCard } from '../components/wasel-ui/WaselCard';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { checkRateLimit, validateEmail } from '../utils/security';
+import { checkRateLimit, resetRateLimit, validateEmail } from '../utils/security';
 import { useAuth } from '../contexts/AuthContext';
 import { getConfig, getWhatsAppSupportUrl, normalizeReturnToPath } from '../utils/env';
 import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
@@ -322,7 +322,7 @@ function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }
               fontWeight: active ? TYPE.weight.black : TYPE.weight.semibold,
               fontFamily: F,
               background: active
-                ? 'linear-gradient(135deg, #147fe4 0%, #0e5cb0 100%)'
+                ? 'linear-gradient(135deg, #00E5FF 0%, #0e5cb0 100%)'
                 : 'transparent',
               color: active ? C.bg : C.textMuted,
               boxShadow: active ? `0 2px 12px ${C.cyanGlow}` : 'none',
@@ -437,6 +437,7 @@ export default function WaselAuth() {
       setError(friendlyAuthError(signInError, tx('waselAuth.error_signin_failed')));
       return;
     }
+    resetRateLimit(`signin:${email}`);
     pushSuccessRedirect();
   };
 
@@ -476,8 +477,10 @@ export default function WaselAuth() {
         tx('waselAuth.confirm_email_notice', { email: registration.email ?? email }),
       );
       setTab('signin');
+      resetRateLimit(`signup:${email}`);
       return;
     }
+    resetRateLimit(`signup:${email}`);
     pushSuccessRedirect();
   };
 

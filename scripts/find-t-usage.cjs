@@ -11,7 +11,7 @@ function walk(dir) {
     const resolvedFull = path.resolve(dir, entry.name);
     if (!resolvedFull.startsWith(baseDir)) continue;
     if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
-    if (entry.isDirectory()) walk(full);
+    if (entry.isDirectory()) walk(resolvedFull);
     else if (full.endsWith('.tsx') || full.endsWith('.ts')) files.push(resolvedFull);
   }
 }

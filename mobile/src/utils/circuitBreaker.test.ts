@@ -1,7 +1,3 @@
-/**
- * @jest-environment node
- */
-
 import { CircuitBreaker, CircuitState } from './circuitBreaker';
 
 describe('CircuitBreaker', () => {

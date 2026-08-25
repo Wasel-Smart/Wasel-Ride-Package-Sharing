@@ -999,6 +999,19 @@ async function handleTripRequest(request: Request, path: string) {
   if ((request.method === 'PUT' || request.method === 'DELETE' || (request.method === 'POST' && tripRoute?.action === 'publish')) && tripRoute?.id) {
     const auth = await authenticateRequest(request);
     if ('error' in auth) return auth.error;
+    // IDOR guard: verify the caller owns the trip or has trip management permission.
+    const { data: tripOwner, error: tripOwnerErr } = await auth.admin
+      .from('trips')
+      .select('trip_id, driver_id')
+      .eq('trip_id', tripRoute.id)
+      .maybeSingle();
+    if (tripOwnerErr) return json({ error: tripOwnerErr.message }, 500);
+    if (!tripOwner) return json({ error: 'Trip not found' }, 404);
+    const isOwner = tripOwner.driver_id === auth.canonicalUser.id;
+    const canManageTrips = hasPermission(auth.role, 'rides:assign');
+    if (!isOwner && !canManageTrips) {
+      return json({ error: 'Not authorized to modify this trip.' }, 403);
+    }
     if (request.method === 'DELETE') {
       const { error } = await auth.admin
         .from('trips')
@@ -1133,6 +1146,28 @@ async function handleBookingRequest(request: Request, path: string) {
 
   if (request.method === 'PUT' && bookingRoute?.id) {
     const body = await request.json().catch(() => ({}));
+    // IDOR guard: verify the caller is the passenger or the trip's driver.
+    const { data: bookingRow, error: bookingErr } = await auth.admin
+      .from('bookings')
+      .select('booking_id, passenger_id, trip_id')
+      .eq('booking_id', bookingRoute.id)
+      .maybeSingle();
+    if (bookingErr) return json({ error: bookingErr.message }, 500);
+    if (!bookingRow) return json({ error: 'Booking not found' }, 404);
+    const isPassenger = bookingRow.passenger_id === auth.canonicalUser.id;
+    let isDriver = false;
+    if (bookingRow.trip_id) {
+      const { data: tripRow } = await auth.admin
+        .from('trips')
+        .select('driver_id')
+        .eq('trip_id', bookingRow.trip_id)
+        .maybeSingle();
+      isDriver = tripRow?.driver_id === auth.canonicalUser.id;
+    }
+    const canManage = hasPermission(auth.role, 'rides:assign');
+    if (!isPassenger && !isDriver && !canManage) {
+      return json({ error: 'Not authorized to update this booking.' }, 403);
+    }
     const status = body.status === 'accepted' ? 'confirmed' : body.status === 'rejected' ? 'cancelled' : String(body.status ?? 'cancelled');
     const { data, error } = await auth.admin
       .from('bookings')
@@ -1229,12 +1264,21 @@ async function handlePackageRequest(request: Request, path: string) {
       .maybeSingle();
     if (error) return json({ error: error.message }, 500);
     if (!data) return json({ error: 'Package not found' }, 404);
+    const isOwner = data.sender_id === auth.canonicalUser.id || data.carrier_id === auth.canonicalUser.id;
+    const isStaff = hasPermission(auth.role, 'packages:read');
+    if (!isOwner && !isStaff) {
+      return json({ error: 'Not authorized to view this package.' }, 403);
+    }
     return json(mapPackageRow(data));
   }
 
   if (request.method === 'GET' && path.startsWith('/packages/sender/')) {
     const userId = path.split('/packages/sender/')[1]?.split('/')[0];
     if (!userId) return json({ error: 'User ID required' }, 400);
+    // IDOR guard: only the sender themselves (or admin) may list their packages.
+    if (!matchesAuthenticatedUser(auth, userId) && !hasPermission(auth.role, 'packages:assign')) {
+      return json({ error: 'Not authorized to view these packages.' }, 403);
+    }
     const { data, error } = await auth.admin
       .from('packages')
       .select('*')
@@ -1245,6 +1289,19 @@ async function handlePackageRequest(request: Request, path: string) {
   }
 
   if (request.method === 'POST' && packageRoute?.id && packageRoute.action === 'deliver') {
+    const { data: pkg, error: pkgErr } = await auth.admin
+      .from('packages')
+      .select('package_id, sender_id, carrier_id')
+      .eq('package_id', packageRoute.id)
+      .maybeSingle();
+    if (pkgErr) return json({ error: pkgErr.message }, 500);
+    if (!pkg) return json({ error: 'Package not found' }, 404);
+    const isCarrier = pkg.carrier_id === auth.canonicalUser.id;
+    const isSender = pkg.sender_id === auth.canonicalUser.id;
+    const isStaff = hasPermission(auth.role, 'packages:write');
+    if (!isCarrier && !isSender && !isStaff) {
+      return json({ error: 'Not authorized to deliver this package.' }, 403);
+    }
     const { data, error } = await auth.admin
       .from('packages')
       .update({ status: 'delivered', delivered_at: new Date().toISOString() })
@@ -2938,10 +2995,10 @@ async function finalizeTopUpTransaction(
   try {
     await client.queryArray('begin');
 
-    const transactionResult = await (client as any).queryObject(
+    const transactionResult = await client.queryObject<{ wallet_id: string; amount: number; transaction_status: string; metadata: unknown }>(
       'select wallet_id, amount, transaction_status, metadata from public.transactions where transaction_id = $1 for update',
       [transactionId],
-    ) as { rows: Array<{ wallet_id: string; amount: number; transaction_status: string; metadata: unknown }> };
+    );
 
     const transaction = transactionResult.rows[0];
     if (!transaction) {
@@ -5236,7 +5293,19 @@ async function handleRequestDataExport(request: Request) {
     transactions: transactions.data,
     consents: consents.data,
   };
-  const downloadUrl = `data:application/json;base64,${btoa(JSON.stringify(exportData))}`;
+  const exportJson = JSON.stringify(exportData);
+  // Store the export payload in Supabase Storage and return a storage path.
+  // The client must request a signed URL separately — never embed data: URIs in the DB.
+  const storagePath = `exports/${userId}/${requestedAt}.json`;
+  const admin = getAdminClient();
+  await admin.storage
+    .from('gdpr-exports')
+    .upload(storagePath, new Blob([exportJson], { type: 'application/json' }), {
+      upsert: true,
+      contentType: 'application/json',
+    });
+  const downloadUrl = storagePath;
+
   const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
 
   const { error } = await auth.admin.from('data_export_requests').insert({

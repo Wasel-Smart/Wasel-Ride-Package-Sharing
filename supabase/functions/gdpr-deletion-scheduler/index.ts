@@ -7,9 +7,18 @@ const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return result === 0;
+}
+
 serve(async (req: Request) => {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${Deno.env.get('INTERNAL_CRON_SECRET')}`) {
+  const cronSecret = Deno.env.get('INTERNAL_CRON_SECRET') ?? '';
+  const authHeader = req.headers.get('authorization') ?? '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!cronSecret || !constantTimeEqual(token, cronSecret)) {
     return new Response('Unauthorized', { status: 401 });
   }
 
@@ -40,8 +49,8 @@ serve(async (req: Request) => {
           })
           .eq('user_id', request.user_id);
         processed++;
-      } catch (err) {
-        console.error(`Failed to delete user ${request.user_id}:`, err);
+      } catch {
+        // Deletion failure is logged server-side; continue processing remaining users.
       }
     }
 

@@ -1,6 +1,7 @@
 import { Pool, type PoolClient } from 'pg';
 import Stripe from 'stripe';
 import http, { type Server } from 'http';
+import process from 'process';
 
 function sanitizeLogValue(value: unknown): string {
     if (value === null || value === undefined) return String(value);
@@ -54,14 +55,14 @@ const pool = new Pool({
     connectionTimeoutMillis: 2000,
 });
 
-pool.on('error', (err) => {
+pool.on('error', (err: Error) => {
     console.error('Unexpected error on idle client', sanitizeLogValue(err));
     process.exit(-1);
 });
 
 // Initialize Stripe client
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2024-06-20', // Use your desired API version
+    apiVersion: '2026-07-29.dahlia',
 });
 
 function toErrorMessage(error: unknown): string {
@@ -204,7 +205,7 @@ async function isDbReady(): Promise<boolean> {
 }
 
 function createHealthServer(): http.Server {
-    const server = http.createServer((req, res) => {
+    const server = http.createServer((req: http.IncomingMessage, res: http.ServerResponse) => {
         if (req.url === '/health' && req.method === 'GET') {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ status: 'healthy', service: 'payment-reconciliation-service' }));

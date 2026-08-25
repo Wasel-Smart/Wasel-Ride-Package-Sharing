@@ -33,12 +33,10 @@ export class MobileAuthService {
     loading: true,
   };
 
-  constructor() {
-    this.initialize();
-  }
+  constructor() {}
 
-  private async initialize(): Promise<void> {
-    Linking.addEventListener('url', event => {
+  public async initialize(): Promise<void> {
+    Linking.addEventListener('url', (event: { url: string }) => {
       void this.completeAuthFromUrl(event.url).catch(error => {
         if (__DEV__) {
           console.warn('[Auth] Deep link session restore failed:', sanitizeLogValue(error));
@@ -46,7 +44,7 @@ export class MobileAuthService {
       });
     });
 
-    this.supabase.auth.onAuthStateChange((_event, session) => {
+    this.supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
       this.updateState({
         session,
         user: session?.user || null,
@@ -319,4 +317,5 @@ export class MobileAuthService {
 }
 
 export const mobileAuth = new MobileAuthService();
+void mobileAuth.initialize();
 export const authService = mobileAuth;

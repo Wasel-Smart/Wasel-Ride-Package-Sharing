@@ -387,6 +387,17 @@
   animation-delay: 350ms;
 }
 
+/* ── Virtualized List Containers ─────────────────────────────────────────── */
+.sp-results-list {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
+}
+
+.sp-ride-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 180px;
+}
+
 /* ── Loading States ──────────────────────────────────────────────────────── */
 .loading-spinner {
   display: inline-block;

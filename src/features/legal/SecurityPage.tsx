@@ -8,7 +8,7 @@ import {
 } from '../../components/wasel-ui/WaselPagePrimitives';
 import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import { WaselInput } from '../../components/wasel-ui/WaselInput';
-import { WaselLogo } from '../../components/wasel-ds/WaselLogo';
+import { WaselLogo } from '../../components/wasel-ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';

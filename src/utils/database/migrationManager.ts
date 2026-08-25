@@ -3,6 +3,8 @@
  * Production-grade migration safety with rollback capabilities
  */
 
+import { sanitizeLogMessage } from '../sanitization';
+
 export interface Migration {
   version: string;
   name: string;
@@ -91,13 +93,13 @@ export class MigrationManager {
     const backupLabel = `pre-rollback-backup-${version}-${Date.now()}`;
     try {
       const { backupId } = await this.createBackup(backupLabel);
-      console.log(`[MigrationManager] Created safety backup ${backupId} before rolling back ${version}.`);
+      console.log(`[MigrationManager] Created safety backup ${sanitizeLogMessage(backupId)} before rolling back ${sanitizeLogMessage(version)}.`);
 
       await this.rollbackMigration(version);
 
       return { backupId };
     } catch (error) {
-      console.error(`[MigrationManager] Failed during rollbackWithBackup for version ${version}:`, error);
+      console.error(`[MigrationManager] Failed during rollbackWithBackup for version ${sanitizeLogMessage(version)}:`, error);
       // Depending on the failure point, manual intervention might be needed.
       throw new Error(`Rollback with backup failed. A backup may have been created with label: ${backupLabel}`);
     }

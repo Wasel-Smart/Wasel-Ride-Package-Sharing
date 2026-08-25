@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync } from 'fs';
+import { resolve } from 'path';
 
 function safeJSONParse(text, fallback = {}) {
   try {
@@ -29,8 +30,14 @@ if (!summaryFile) {
   process.exit(1);
 }
 
+const resolvedSummaryFile = resolve(summaryFile);
+const projectRoot = resolve(process.cwd());
+if (!resolvedSummaryFile.startsWith(projectRoot)) {
+  throw new Error(`Path traversal detected: ${summaryFile} resolves outside project root`);
+}
+
 try {
-  const summary = safeJSONParse(readFileSync(summaryFile, 'utf-8'));
+  const summary = safeJSONParse(readFileSync(resolvedSummaryFile, 'utf-8'));
   
   console.log('');
   console.log('╔═══════════════════════════════════════════════════════════════════╗');

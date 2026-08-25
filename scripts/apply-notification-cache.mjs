@@ -17,6 +17,10 @@ function safeResolve(filePath) {
 
 const filePath = safeResolve(join(root, 'src/services/notifications.ts'));
 
+if (!resolve(filePath).startsWith(PROJECT_ROOT)) {
+  throw new Error(`Path traversal detected: ${filePath} resolves outside project root`);
+}
+
 const original = readFileSync(filePath, 'utf8');
 const lines = original.split(/\r?\n/);
 
@@ -88,5 +92,9 @@ if (edgeInsertIdx === -1) throw new Error('edge serverNotifications line not fou
 lines.splice(edgeInsertIdx, 0, '      notificationCache.set(userId, { data: serverNotifications, timestamp: Date.now() });');
 
 // Write back
-writeFileSync(safeResolve(filePath), lines.join('\n'), 'utf8');
+const resolvedWritePath = safeResolve(filePath);
+if (!resolve(resolvedWritePath).startsWith(PROJECT_ROOT)) {
+  throw new Error(`Path traversal detected: ${resolvedWritePath} resolves outside project root`);
+}
+writeFileSync(resolvedWritePath, lines.join('\n'), 'utf8');
 console.log('notifications.ts patched successfully');

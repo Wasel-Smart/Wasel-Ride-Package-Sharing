@@ -12,7 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { MapWrapper } from '../../../components/MapWrapper';
-import { WaselButton } from '../../../design-system';
+import { WaselButton } from '../../../components/wasel-ui';
 import { getCorridorOpportunity } from '../../../config/wasel-movement-network';
 import { DS, midpoint, pill, r, resolveCityCoord } from '../../../pages/waselServiceShared';
 import { getMovementPriceQuote } from '../../../services/movementPricing';

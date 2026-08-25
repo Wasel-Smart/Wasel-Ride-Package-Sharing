@@ -12,7 +12,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
-import { hasSupabasePublicConfig, publicAnonKey, publicSupabaseUrl } from './info.ts';
+import { hasSupabasePublicConfig, publicAnonKey, publicSupabaseUrl } from './info';
 
 function isPlaceholderValue(value: string | undefined): boolean {
   if (!value) return true;
@@ -183,7 +183,6 @@ export function initSupabaseListeners(): () => void {
   };
 
   window.addEventListener('online', onOnline, { passive: true });
-  window.addEventListener('offline', () => {}, { passive: true });
 
   healthCheckTimer = setInterval(() => {
     if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;

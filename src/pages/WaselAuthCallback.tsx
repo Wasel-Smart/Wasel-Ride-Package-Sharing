@@ -268,7 +268,7 @@ export default function WaselAuthCallback() {
               minHeight: 46,
               borderRadius: 12,
               border: 'none',
-              background: 'linear-gradient(135deg, #147fe4, #0e5cb0)',
+              background: 'linear-gradient(135deg, #00E5FF, #0e5cb0)',
               color: '#EFF6FF',
               fontSize: '0.95rem',
               fontWeight: 800,
@@ -338,7 +338,7 @@ export default function WaselAuthCallback() {
               state === 'error'
                 ? '3px solid rgba(255,68,85,0.3)'
                 : '3px solid rgba(0,200,232,0.15)',
-            borderTop: state === 'error' ? '3px solid #FF7C8B' : '3px solid #147FE4',
+            borderTop: state === 'error' ? '3px solid #FF7C8B' : '3px solid #00E5FF',
             animation:
               state === 'redirecting' || state === 'loading' || state === 'closing'
                 ? 'spin 0.8s linear infinite'

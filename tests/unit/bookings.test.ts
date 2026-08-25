@@ -34,29 +34,29 @@ describe('bookings.test.ts', () => {
   });
 
   it('getUserBookings requests correct path', async () => {
-    const { requestEdgeJson } = await import('@/services/backendWorkflow');
+    const { requestEdgeJson } = await import('@/services/backendWorkflow') as any;
     requestEdgeJson.mockResolvedValueOnce({ bookings: [{ booking_id: 'b1', trip_id: 't1', status: 'pending' }] });
 
     const { bookingsAPI: api } = await import('@/services/bookings');
     const result = await api.getUserBookings();
 
-    expect(result.bookings).toHaveLength(1);
-    expect(result.bookings[0].booking_id).toBe('b1');
+    expect((result as any).bookings).toHaveLength(1);
+    expect((result as any).bookings[0].booking_id).toBe('b1');
   });
 
   it('getTripBookings requests correct path', async () => {
-    const { requestEdgeJson } = await import('@/services/backendWorkflow');
+    const { requestEdgeJson } = await import('@/services/backendWorkflow') as any;
     requestEdgeJson.mockResolvedValueOnce({ bookings: [{ booking_id: 'b1', trip_id: 't1', status: 'pending' }] });
 
     const { bookingsAPI: api } = await import('@/services/bookings');
     const result = await api.getTripBookings('trip-1');
 
-    expect(result.bookings).toHaveLength(1);
-    expect(result.bookings[0].trip_id).toBe('t1');
+    expect((result as any).bookings).toHaveLength(1);
+    expect((result as any).bookings[0].trip_id).toBe('t1');
   });
 
   it('updateBookingStatus updates status', async () => {
-    const { requestEdgeJson } = await import('@/services/backendWorkflow');
+    const { requestEdgeJson } = await import('@/services/backendWorkflow') as any;
     requestEdgeJson.mockResolvedValueOnce({ booking_id: 'b1', status: 'accepted' });
 
     const { bookingsAPI: api } = await import('@/services/bookings');

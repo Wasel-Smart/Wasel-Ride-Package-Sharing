@@ -3,7 +3,7 @@ import { createCorrelationId } from '../platform/observability';
 import { API_URL, publicAnonKey } from '../services/core';
 import { logger, trackAPICall } from './monitoring';
 import { sanitizeString, validateApiUrl } from './sanitization';
-import { supabase } from './supabase/client.ts';
+import { supabase } from './supabase/client';
 import { getConfig } from './env';
 import { addCSRFHeader } from './csrf';
 

@@ -17,7 +17,6 @@ export function initializeAppInsights(): void {
 
     // Only initialize if instrumentation key is provided
     if (!instrumentationKey) {
-        console.debug('Application Insights not configured (VITE_APP_INSIGHTS_KEY not set)');
         return;
     }
 
@@ -45,9 +44,12 @@ export function initializeAppInsights(): void {
         // Track unhandled promise rejections
         window.addEventListener('unhandledrejection', (event) => {
             if (appInsights) {
+                const exception = event.reason instanceof Error
+                    ? event.reason
+                    : new Error(String(event.reason ?? 'Unhandled promise rejection'));
                 appInsights.trackException({
-                    exception: event.reason,
-                    severityLevel: 2, // Error
+                    exception,
+                    severityLevel: 2,
                 });
             }
         });
@@ -62,9 +64,8 @@ export function initializeAppInsights(): void {
             }
         });
 
-        console.debug('Application Insights initialized successfully');
-    } catch (error) {
-        console.error('Failed to initialize Application Insights:', error);
+    } catch {
+        // Initialization failure is non-fatal; telemetry will be unavailable.
     }
 }
 

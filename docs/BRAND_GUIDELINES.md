@@ -11,7 +11,7 @@ Wasel connects people, places, and movement. Use the three-colour symbol as the 
 | Role | Token | Value |
 | --- | --- | --- |
 | Brand ink | `--wasel-brand-ink` | `#081D39` |
-| Connection blue | `--wasel-brand-blue` | `#147FE4` |
+| Connection blue | `--wasel-brand-blue` | `#00E5FF` |
 | Movement green | `--wasel-brand-green` | `#72C70D` |
 | Journey orange | `--wasel-brand-orange` | `#FF8A0B` |
 
@@ -24,7 +24,7 @@ Use brand ink for text and dark surfaces. Use blue as the principal interactive 
 | Gold | `--wasel-gold` | `#FFBE5C` | Premium badges, rewards, Wasel Plus |
 | Bronze | `--wasel-bronze` | `#FFBE5C` | Subscription tier indicators |
 | Purple | `--wasel-purple` | `#8FA6FF` | Special status, VIP, trust signals |
-| Teal / Cyan | `--wasel-teal` | `#58DDFF` | Information, maps, data viz |
+| Teal / Cyan | `--wasel-teal` | `#66e0ff` | Information, maps, data viz |
 | Lime | `--wasel-lime` | `#9AF1CF` | Secondary success, eco/movement themes |
 
 Supporting accents must never overpower the primary brand colours. Use them sparingly for badges, secondary CTAs, and status indicators only.

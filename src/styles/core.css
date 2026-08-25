@@ -7,11 +7,11 @@
 
 /* ── Brand Colors (never change) ────────────────────────────────────────── */
 :root {
-  --wasel-cyan: #58ddff;
+  --wasel-cyan: #66e0ff;
   --wasel-gold: #ffbe5c;
   --wasel-green: #47d69e;
   --wasel-lime: #9af1cf;
-  --wasel-teal: #58ddff;
+  --wasel-teal: #66e0ff;
   --wasel-bronze: #ffbe5c;
 
   /* ── DARK THEME (default) ─── */
@@ -21,7 +21,7 @@
   --card-foreground: #eaf7ff;
   --popover: #0b1d2d;
   --popover-foreground: #eaf7ff;
-  --primary: #67e8ff;
+  --primary: #00E5FF;
   --primary-foreground: #041018;
   --secondary: #11283d;
   --secondary-foreground: #9ab7cc;
@@ -90,7 +90,7 @@
   --card-foreground: #0c2132;
   --popover: #ffffff;
   --popover-foreground: #0c2132;
-  --primary: #149bcb;
+  --primary: #00E5FF;
   --primary-foreground: #ffffff;
   --secondary: #eaf7ff;
   --secondary-foreground: #35556d;
