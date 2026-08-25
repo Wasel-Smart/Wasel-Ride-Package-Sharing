@@ -133,7 +133,7 @@ function BrandPanel() {
           <span
             style={{
               display: 'block',
-              background: 'linear-gradient(90deg, #147FE4, #58DDFF)',
+              background: 'linear-gradient(90deg, #00E5FF, #58DDFF)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
             }}

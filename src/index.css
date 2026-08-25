@@ -25,7 +25,7 @@
    * keyboard-focused control. Mouse users are unaffected (:focus-visible).
    * This satisfies WCAG 2.4.7 (Focus Visible) across light and dark themes. */
   :focus-visible {
-    outline: 2px solid #147FE4;
+    outline: 2px solid #00E5FF;
     outline-offset: 2px;
     border-radius: 4px;
   }

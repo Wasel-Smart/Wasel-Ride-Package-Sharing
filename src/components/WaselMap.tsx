@@ -162,7 +162,7 @@ const SVG = {
   </svg>`,
 
   police: `<svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="19" cy="19" r="17" fill="#147FE4" stroke="white" stroke-width="2"/>
+    <circle cx="19" cy="19" r="17" fill="#00E5FF" stroke="white" stroke-width="2"/>
     <rect x="17" y="9"  width="4" height="20" rx="2" fill="white"/>
     <rect x="9"  y="17" width="20" height="4"  rx="2" fill="white"/>
   </svg>`,
