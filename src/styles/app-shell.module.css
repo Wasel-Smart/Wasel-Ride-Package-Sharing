@@ -24,9 +24,9 @@
   width: fit-content;
   padding: 10px 16px;
   border-radius: 999px;
-  border: 1px solid rgba(20,127,228,0.24);
-  background: rgba(20,127,228,0.14);
-  color: #147fe4;
+  border: 1px solid rgba(0, 229, 255,0.24);
+  background: rgba(0, 229, 255,0.14);
+  color: #00E5FF;
   cursor: pointer;
 }
 
@@ -144,7 +144,7 @@
 }
 
 .settingsToggleActive {
-  background: #147fe4;
+  background: #00E5FF;
 }
 
 .settingsToggleThumb {
@@ -211,7 +211,7 @@
 }
 
 .settingsActionPrimary {
-  background: linear-gradient(135deg, #147fe4 0%, #5aa0f0 52%, #34d8a7 100%);
+  background: linear-gradient(135deg, #00E5FF 0%, #5aa0f0 52%, #34d8a7 100%);
   color: #050b12;
   border: none;
 }

@@ -1,13 +1,14 @@
 /**
- * Wasel Design System Tokens — Brand Single Source of Truth
+ * Wasel Design System Tokens — Brand Single Source of Truth v2.0
  *
- * Palette aligned with mobile app theme:
- *   Brand cyan    #00E5FF
- *   Movement green #72C70D
- *   Journey orange #FF8A0B
- *   Brand ink    #081D39
+ * Canonical palette:
+ *   Orbit Cyan    #00E5FF
+ *   Deep Ink      #081D39
+ *   Motion Lime   #72C70D
+ *   Journey Ember #FF8A0B
  *
- * Semantic aliases preserve backward compatibility with existing components.
+ * All brand colors, gradients, shadows, and motion curves flow from this file.
+ * CSS variables, Tailwind configs, and mobile tokens must derive from here.
  */
 
 export const C = {
@@ -21,31 +22,30 @@ export const C = {
   elevated: 'rgba(255,255,255,0.06)',
 
   brandInk: '#081D39',
-  brandBlue: '#00E5FF',
-  brandGreen: '#72C70D',
-  brandOrange: '#FF8A0B',
+  brandCyan: '#00E5FF',
+  brandLime: '#72C70D',
+  brandEmber: '#FF8A0B',
 
   navy: '#081D39',
   navyMid: '#0e2240',
   navyLight: '#132b4d',
+  navyDeep: '#050B12',
 
-  blue: '#00E5FF',
-  blueLight: '#66e0ff',
-  blueDim: 'rgba(0,229,255,0.12)',
   cyan: '#00E5FF',
+  cyanLight: '#66e0ff',
   cyanDark: '#00b8d4',
   cyanDim: 'rgba(0,229,255,0.1)',
   cyanGlow: 'rgba(0,229,255,0.2)',
+  cyanBorder: 'rgba(0,229,255,0.16)',
+  cyanBorderHover: 'rgba(0,229,255,0.28)',
 
-  green: '#72C70D',
-  greenDark: '#5a6b08',
-  greenDim: 'rgba(114,199,13,0.12)',
+  lime: '#72C70D',
+  limeDark: '#5a6b08',
+  limeDim: 'rgba(114,199,13,0.12)',
 
-  gold: '#FF8A0B',
-  goldDim: 'rgba(255,138,11,0.14)',
-
-  orange: '#FF8A0B',
-  orangeDim: 'rgba(255,138,11,0.12)',
+  ember: '#FF8A0B',
+  emberDark: '#e07500',
+  emberDim: 'rgba(255,138,11,0.12)',
 
   purple: '#8FA6FF',
   purpleDim: 'rgba(143,166,255,0.12)',
@@ -56,7 +56,7 @@ export const C = {
   textDim: 'rgba(149,178,201,0.56)',
 
   border: 'rgba(0,229,255,0.16)',
-  borderHov: 'rgba(0,229,255,0.28)',
+  borderHover: 'rgba(0,229,255,0.28)',
   borderFaint: 'rgba(0,229,255,0.08)',
 
   error: '#FF7C8B',
@@ -74,6 +74,15 @@ export const FA = "'Cairo', 'Tajawal', 'Plus Jakarta Sans', sans-serif";
 export const FM = "'JetBrains Mono', 'Fira Mono', monospace";
 
 export const TYPE = {
+  display: '3rem',
+  h1: '2.25rem',
+  h2: '1.875rem',
+  h3: '1.5rem',
+  h4: '1.25rem',
+  title: '1.125rem',
+  body: '1rem',
+  caption: '0.875rem',
+  overline: '0.75rem',
   size: {
     xs: '0.6875rem',
     sm: '0.8125rem',
@@ -91,7 +100,7 @@ export const TYPE = {
     medium: 500,
     semibold: 600,
     bold: 700,
-    black: 780,
+    black: 800,
     ultra: 880,
   },
   lineHeight: {
@@ -100,6 +109,7 @@ export const TYPE = {
     normal: 1.5,
     relaxed: 1.65,
     loose: 1.8,
+    arabic: 1.95,
   },
   letterSpacing: {
     tighter: '-0.04em',
@@ -135,9 +145,9 @@ export const R = {
   xs: '4px',
   sm: '8px',
   md: '12px',
-  lg: '14px',
-  xl: '18px',
-  xxl: '24px',
+  lg: '16px',
+  xl: '20px',
+  '2xl': '24px',
   '3xl': '32px',
   full: '9999px',
 } as const;
@@ -151,39 +161,30 @@ export const SH = {
   lg: '0 18px 42px rgba(8,29,57,0.38)',
   xl: '0 26px 58px rgba(8,29,57,0.46)',
   navy: '0 8px 26px rgba(8,29,57,0.28)',
-  blue: '0 4px 18px rgba(20,127,228,0.16)',
-  blueL: '0 10px 28px rgba(20,127,228,0.2)',
-  green: '0 8px 20px rgba(114,199,13,0.18)',
-  orange: '0 8px 22px rgba(255,138,11,0.2)',
+  cyan: '0 4px 18px rgba(0,229,255,0.16)',
+  cyanL: '0 10px 28px rgba(0,229,255,0.2)',
+  lime: '0 8px 20px rgba(114,199,13,0.18)',
+  ember: '0 8px 22px rgba(255,138,11,0.2)',
   inner: 'inset 0 1px 3px rgba(8,29,57,0.3)',
 } as const;
 
-export const SH_ALIASES = {
-  cyan: SH.blue,
-  cyanL: SH.blueL,
-  gold: SH.orange,
-} as const;
-
-export const shadows = { ...SH, ...SH_ALIASES } as const;
-
-export const GRAD = 'linear-gradient(135deg, #147FE4 0%, #38BEFF 52%, #32D8A6 100%)';
-export const GRAD_GOLD = 'linear-gradient(135deg, #FF8A0B 0%, #FFB35C 48%, #FF936A 100%)';
-export const GRAD_ORANGE = 'linear-gradient(135deg, #FF8A0B 0%, #FFB35C 48%, #FF936A 100%)';
-export const GRAD_GREEN = 'linear-gradient(135deg, #72C70D 0%, #34D8A7 52%, #209B7D 100%)';
-export const GRAD_NAVY = 'linear-gradient(145deg, #081D39 0%, #0a1f3a 56%, #050B12 100%)';
+export const GRAD = 'linear-gradient(135deg, #00E5FF 0%, #38BEFF 52%, #32D8A6 100%)';
+export const GRAD_EMBER = 'linear-gradient(135deg, #FF8A0B 0%, #FFB35C 48%, #FF936A 100%)';
+export const GRAD_LIME = 'linear-gradient(135deg, #72C70D 0%, #34D8A7 52%, #209B7D 100%)';
+export const GRAD_NAVY = 'linear-gradient(145deg, #081D39 0%, #0a1f3a 56%, #132b4d 100%)';
 export const GRAD_PURPLE = 'linear-gradient(135deg, #B7ABFF 0%, #7F91FF 100%)';
 export const GRAD_HERO = 'linear-gradient(145deg, #081D39 0%, #0a1f3a 56%, #132b4d 100%)';
 export const GRAD_SIGNAL = 'linear-gradient(135deg, #F8FBFF 0%, #8DEBFF 52%, #47D69E 100%)';
 export const GRAD_AURORA =
-  'radial-gradient(circle at top, rgba(20,127,228,0.18), rgba(114,199,13,0.08) 42%, rgba(8,29,57,0) 74%)';
+  'radial-gradient(circle at top, rgba(0,229,255,0.18), rgba(114,199,13,0.08) 42%, rgba(8,29,57,0) 74%)';
 
 export const ANIM = {
   dur: {
-    fast: '100ms',
-    normal: '160ms',
-    slow: '250ms',
-    slower: '400ms',
-    page: '500ms',
+    instant: '80ms',
+    fast: '120ms',
+    normal: '200ms',
+    slow: '300ms',
+    slower: '500ms',
   },
   ease: {
     default: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
@@ -191,6 +192,18 @@ export const ANIM = {
     inOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
     decel: 'cubic-bezier(0, 0, 0.2, 1)',
   },
+} as const;
+
+export const EASE = ANIM.ease;
+export const DUR = ANIM.dur;
+
+export const LS = {
+  tighter: '-0.04em',
+  tight: '-0.02em',
+  normal: '0',
+  wide: '0.03em',
+  wider: '0.06em',
+  widest: '0.1em',
 } as const;
 
 export const BREAK = {
@@ -219,7 +232,7 @@ export function card({
 }: { padding?: string; radius?: string } = {}) {
   return {
     background: C.card,
-    border: `1px solid ${C.border}`,
+    border: `1px solid ${C.cyanBorder}`,
     borderRadius: radius,
     padding,
     boxShadow: SH.card,
@@ -233,23 +246,23 @@ export function solidCard({
 }: { padding?: string; radius?: string } = {}) {
   return {
     background: C.cardSolid,
-    border: `1px solid ${C.border}`,
+    border: `1px solid ${C.cyanBorder}`,
     borderRadius: radius,
     padding,
     boxShadow: SH.card,
   };
 }
 
-export function focusRing(color = C.brandBlue): string {
+export function focusRing(color = C.brandCyan): string {
   return `0 0 0 3px ${color}30`;
 }
 
 export function statusColor(status: 'success' | 'warning' | 'error' | 'info' | 'neutral'): string {
   return {
-    success: C.brandGreen,
-    warning: C.brandOrange,
+    success: C.brandLime,
+    warning: C.brandEmber,
     error: C.error,
-    info: C.brandBlue,
+    info: C.brandCyan,
     neutral: C.textMuted,
   }[status];
 }
@@ -291,8 +304,8 @@ export const GLOBAL_STYLES = `
   50% { opacity: 0.5; transform: scale(0.9); }
 }
 @keyframes pulse-glow {
-  0%,100% { box-shadow: 0 0 12px rgba(88,221,255,0.16); }
-  50% { box-shadow: 0 0 28px rgba(88,221,255,0.34); }
+  0%,100% { box-shadow: 0 0 12px rgba(0,229,255,0.16); }
+  50% { box-shadow: 0 0 28px rgba(0,229,255,0.34); }
 }
 @keyframes shimmer {
   0% { background-position: -1000px 0; }
@@ -308,5 +321,14 @@ export const GLOBAL_STYLES = `
 @keyframes orb-drift {
   0%,100% { transform: translate(0, 0); }
   50% { transform: translate(30px, -20px); }
+}
+@keyframes orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes wasel-pulse {
+  0% { opacity: 0.6; transform: scale(0.95); }
+  70% { opacity: 0; transform: scale(1.3); }
+  100% { opacity: 0; transform: scale(1.3); }
 }
 `;

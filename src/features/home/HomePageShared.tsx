@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ChevronRight, ChevronUp, Info, Phone } from 'lucide-react';
 import { CurrencyService, type SupportedCurrency } from '../../utils/currency';
 import { C as TOKENS, F as FONT_SANS, R, SH, TYPE } from '../../utils/wasel-ds';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { tx } from '../../locales/tx';
 
 export const C = {
   ...TOKENS,
@@ -222,7 +224,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
         }}
       >
         <span style={{ fontSize: TYPE.size.xs, color: C.textMuted }}>
-          {ar ? 'العملة' : 'Currency'}
+          {t('homePage.currency_switcher_label')}
         </span>
         <span>{cur}</span>
         <ChevronDown size={12} color={C.cyan} />
@@ -314,13 +316,9 @@ export function SOSButton({ ar }: { ar: boolean }) {
       >
         <Phone size={14} />
         {pressed
-          ? ar
-            ? 'جار الاتصال...'
-            : 'Calling...'
+          ? t('homePage.connecting')
           : confirm
-            ? ar
-              ? 'اضغط مرة أخرى للتأكيد'
-              : 'Tap again to confirm'
+            ? t('homePage.press_again_to_confirm')
             : 'SOS'}
       </motion.button>
       {confirm && !pressed ? (
@@ -335,7 +333,7 @@ export function SOSButton({ ar }: { ar: boolean }) {
             fontFamily: F,
           }}
         >
-          {ar ? 'إلغاء' : 'Cancel'}
+          {t('homePage.cancel')}
         </button>
       ) : null}
     </div>
@@ -358,6 +356,7 @@ export function TrustScoreCard({
     rating?: number;
   };
 }) {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const pct = score;
   const emailPoints = user?.emailVerified ? 10 : 0;
@@ -367,12 +366,12 @@ export function TrustScoreCard({
   const ratingPoints = Math.max(0, Math.min(5, user?.rating ?? 0)) * 2;
   const basePoints = 45;
   const factors = [
-    { label: ar ? 'المعلومات الأساسية' : 'Base profile', weight: basePoints, yours: basePoints, color: C.cyan },
-    { label: ar ? 'تأكيد البريد الإلكتروني' : 'Email confirmation', weight: 10, yours: emailPoints, color: C.cyan },
-    { label: ar ? 'تأكيد رقم الهاتف' : 'Phone confirmation', weight: 10, yours: phonePoints, color: C.green },
-    { label: ar ? 'التحقق من الهوية' : 'ID verification', weight: 15, yours: identityPoints, color: C.gold },
-    { label: ar ? 'الرحلات المكتملة' : 'Completed trips', weight: 20, yours: Math.min(tripsPoints, 20), color: C.gold },
-    { label: ar ? 'تقييمات المستخدمين' : 'User ratings', weight: 10, yours: Math.min(ratingPoints, 10), color: C.green },
+    { label: t('homePage.trust_score_base_profile'), weight: basePoints, yours: basePoints, color: C.cyan },
+    { label: t('homePage.trust_score_email_confirmation'), weight: 10, yours: emailPoints, color: C.cyan },
+    { label: t('homePage.trust_score_phone_confirmation'), weight: 10, yours: phonePoints, color: C.green },
+    { label: t('homePage.trust_score_id_verification'), weight: 15, yours: identityPoints, color: C.gold },
+    { label: t('homePage.trust_score_completed_trips'), weight: 20, yours: Math.min(tripsPoints, 20), color: C.gold },
+    { label: t('homePage.trust_score_user_ratings'), weight: 10, yours: Math.min(ratingPoints, 10), color: C.green },
   ];
   const color = pct >= 80 ? C.green : pct >= 60 ? C.gold : C.error;
 
@@ -423,20 +422,14 @@ export function TrustScoreCard({
                 fontFamily: F,
               }}
             >
-              {ar ? 'مؤشر الثقة' : 'Trust score'}
+              {t('homePage.trust_score_label')}
             </div>
             <div style={{ fontSize: TYPE.size.sm, color: C.textMuted, fontFamily: F }}>
               {pct >= 80
-                ? ar
-                  ? 'مؤشر قوي قبل الحجز أو العرض'
-                  : 'Strong standing before booking or offering'
+                ? t('homePage.trust_score_strong')
                 : pct >= 60
-                  ? ar
-                    ? 'مؤشر جيد ويستفيد من مزيد من النشاط'
-                    : 'Healthy standing with room to improve'
-                  : ar
-                    ? 'يحتاج إلى تقوية قبل الاعتماد الكامل'
-                    : 'Needs stronger standing before full trust'}
+                  ? t('homePage.trust_score_healthy')
+                  : t('homePage.trust_score_needs_strengthening')}
             </div>
           </div>
         </div>
@@ -459,7 +452,7 @@ export function TrustScoreCard({
           }}
         >
           <Info size={12} color={C.cyan} />
-          {ar ? 'طريقة الحساب' : 'How it works'}
+          {t('homePage.trust_score_how_it_works')}
           {expanded ? (
             <ChevronUp size={12} color={C.textMuted} />
           ) : (
@@ -504,9 +497,7 @@ export function TrustScoreCard({
                   margin: '0 0 14px',
                 }}
               >
-                {ar
-                  ? 'يتكوّن المؤشر من عوامل واضحة تؤثر مباشرة على الثقة في الحجز والحركة.'
-                  : 'The score is built from clear factors that directly affect booking confidence.'}
+                {t('homePage.trust_score_description')}
               </p>
               {factors.map(factor => (
                 <div key={factor.label} style={{ marginBottom: 12 }}>

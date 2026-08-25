@@ -30,7 +30,9 @@
         "verify": "npm run verify:ci && npm run build && npm run test:e2e",
         "audit:rbac": "node scripts/audit-rbac.mjs",
         "sweep:i18n": "node scripts/sweep-i18n.mjs",
-        "cleanup:root": "node scripts/cleanup-root.mjs"
+        "cleanup:root": "node scripts/cleanup-root.mjs",
+        "brand:check": "tsx scripts/brand-check.ts",
+        "brand:sync": "node scripts/sync-brand-assets.mjs"
     },
     "dependencies": {
         "@microsoft/applicationinsights-web": "^3.4.3",
