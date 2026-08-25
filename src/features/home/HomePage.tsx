@@ -228,16 +228,12 @@ export function HomePage() {
         return {
           key: item.id,
           title: ar ? `${item.from} ← ${item.to}` : `${item.from} → ${item.to}`,
-          detail: `${svc.formatFromJOD(item.priceJod)} ${ar ? 'لكرسي' : 'per seat'} · ${occupancy}% ${ar ? 'محجوز' : 'booked'}`,
-          meta: `${ar ? 'الضغط' : 'Pressure'} ${item.demand.toFixed(2)}x`,
+          detail: `${svc.formatFromJOD(item.priceJod)} ${t('homePage.per_seat')} · ${occupancy}% ${t('homePage.booked')}`,
+          meta: `${t('homePage.pressure_label')} ${item.demand.toFixed(2)}x`,
           insight:
             index === 0
-              ? ar
-                ? 'أفضل توازن بين العرض والطلب اليوم'
-                : 'Best balance of supply and demand today'
-              : ar
-                ? 'حركة واضحة على هذا المسار الآن'
-                : 'Visible live movement on this corridor',
+              ? t('homePage.best_balance_today')
+              : t('homePage.visible_live_movement'),
           featured: index === 0,
           path: `/find-ride?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&search=1`,
           accent: C.cyan,
@@ -251,15 +247,11 @@ export function HomePage() {
         key: item.corridor,
         title: item.corridor,
         detail: item.serviceLabel,
-        meta: `${item.active} ${ar ? 'نشط الآن' : 'active now'}`,
+        meta: `${item.active} ${t('homePage.active_now')}`,
         insight:
           index === 0
-            ? ar
-              ? 'أفضل توازن بين العرض والطلب اليوم'
-              : 'Best balance of supply and demand today'
-            : ar
-              ? 'حركة واضحة على هذا المسار الآن'
-              : 'Visible live movement on this corridor',
+            ? t('homePage.best_balance_today')
+            : t('homePage.visible_live_movement'),
         featured: index === 0,
         path: (() => {
           const [from, to] = item.corridor.split(' to ');
@@ -272,7 +264,7 @@ export function HomePage() {
     return POPULAR_ROUTES.slice(0, 3).map((route, index) => ({
       key: `${route.from}-${route.to}`,
       title: ar ? `${route.fromAr} ← ${route.toAr}` : `${route.from} → ${route.to}`,
-      detail: `${route.dist} ${ar ? 'كم' : 'km'} - ${svc.formatFromJOD(route.priceJod)}`,
+      detail: `${route.dist} ${t('homePage.km')} - ${svc.formatFromJOD(route.priceJod)}`,
       meta: t('homeSections.popularCorridor'),
       insight: index === 0 ? t('homeSections.balancedPick') : t('homeSections.readyForComparison'),
       featured: index === 0,
@@ -477,10 +469,10 @@ export function HomePage() {
 function StatsStrip({ ar }: { ar: boolean }) {
   const { t } = useLanguage();
   const stats = [
-    { value: '4', label: t('homePage.stats_active_bookings') },
-    { value: '5', label: t('homePage.stats_verified_drivers') },
-    { value: '0', label: t('homePage.stats_parcels_delivered') },
-    { value: ar ? 'مباشر' : 'Live', label: t('homePage.stats_cities_covered') },
+    { value: '4', label: t('homePage.stats_core_flows_label') },
+    { value: '5', label: t('homePage.stats_trust_checks_label') },
+    { value: '0', label: t('homePage.stats_data_resale_label') },
+    { value: t('homePage.stats_live_value'), label: t('homePage.stats_ux_signals_label') },
   ];
 
   return (
