@@ -11,19 +11,29 @@ interface WaselLogoProps {
   alt?: string;
 }
 
-const WASEL_SYMBOL_SRC = '/brand/wasel-symbol.png';
-const WASEL_SYMBOL_WEBP = '/brand/wasel-symbol.webp';
-const WASEL_SYMBOL_RATIO = 1536 / 1024;
+const SYMBOL_RATIO = 1536 / 1024;
 
-function BrandSymbol({ size, framed = false }: { size: number; framed?: boolean }) {
-  const width = Math.round(size * WASEL_SYMBOL_RATIO);
+function getSymbolSrc(theme: 'dark' | 'light', format: 'webp' | 'png'): string {
+  const variant = theme === 'light' ? 'symbol-default' : 'symbol-default';
+  return `/brand/assets/logos/symbols/${variant}.${format}`;
+}
+
+function getWordmarkSrc(theme: 'dark' | 'light'): string {
+  const variant = theme === 'light' ? 'logo-light' : 'logo-dark';
+  return `/brand/assets/logos/primary/${variant}.svg`;
+}
+
+function BrandSymbol({ size, theme = 'dark', framed = false }: { size: number; theme?: 'dark' | 'light'; framed?: boolean }) {
+  const width = Math.round(size * SYMBOL_RATIO);
   const height = Math.round(size);
-  
+  const webpSrc = getSymbolSrc(theme, 'webp');
+  const pngSrc = getSymbolSrc(theme, 'png');
+
   return (
     <picture>
-      <source srcSet={WASEL_SYMBOL_WEBP} type="image/webp" />
+      <source srcSet={webpSrc} type="image/webp" />
       <img
-        src={WASEL_SYMBOL_SRC}
+        src={pngSrc}
         alt=""
         aria-hidden="true"
         width={width}
@@ -33,7 +43,7 @@ function BrandSymbol({ size, framed = false }: { size: number; framed?: boolean 
         draggable={false}
         style={{
           display: 'block',
-          width: size * WASEL_SYMBOL_RATIO,
+          width: size * SYMBOL_RATIO,
           height: size,
           objectFit: 'contain',
           flexShrink: 0,
@@ -113,7 +123,7 @@ export function WaselLogo({
         ...style,
       }}
     >
-      <BrandSymbol size={symbolSize} framed={framed} />
+      <BrandSymbol size={symbolSize} theme={theme} framed={framed} />
       {!compact && <BrandName theme={theme} size={size} language={language} />}
     </div>
   );

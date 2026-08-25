@@ -1,0 +1,136 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-08-25",
+  "brand": {
+    "name": "Wasel",
+    "nameAr": "واصل",
+    "tagline": "Ride. Share. Move.",
+    "colors": {
+      "brandBlue": "#00E5FF",
+      "brandInk": "#081D39",
+      "brandGreen": "#72C70D",
+      "brandOrange": "#FF8A0B"
+    }
+  },
+  "logos": {
+    "primary": {
+      "description": "Full wordmark with symbol + text",
+      "variants": {
+        "default": {
+          "formats": ["svg", "png", "webp", "avif"],
+          "sizes": [64, 96, 160, 280, 512],
+          "path": "brand/assets/logos/primary/logo-default-{size}.{format}",
+          "minSize": 120,
+          "clearSpace": "1x symbol height"
+        },
+        "dark": {
+          "formats": ["svg", "png", "webp", "avif"],
+          "sizes": [64, 96, 160, 280, 512],
+          "path": "brand/assets/logos/primary/logo-dark-{size}.{format}",
+          "minSize": 120,
+          "clearSpace": "1x symbol height"
+        },
+        "light": {
+          "formats": ["svg", "png", "webp", "avif"],
+          "sizes": [64, 96, 160, 280, 512],
+          "path": "brand/assets/logos/primary/logo-light-{size}.{format}",
+          "minSize": 120,
+          "clearSpace": "1x symbol height"
+        },
+        "white": {
+          "formats": ["svg", "png", "webp", "avif"],
+          "sizes": [64, 96, 160, 280, 512],
+          "path": "brand/assets/logos/primary/logo-white-{size}.{format}",
+          "minSize": 120,
+          "clearSpace": "1x symbol height"
+        },
+        "black": {
+          "formats": ["svg", "png", "webp", "avif"],
+          "sizes": [64, 96, 160, 280, 512],
+          "path": "brand/assets/logos/primary/logo-black-{size}.{format}",
+          "minSize": 120,
+          "clearSpace": "1x symbol height"
+        },
+        "monochrome": {
+          "formats": ["svg"],
+          "path": "brand/assets/logos/primary/logo-monochrome.svg",
+          "minSize": 120,
+          "clearSpace": "1x symbol height"
+        }
+      }
+    },
+    "symbols": {
+      "description": "Symbol/icon-only mark",
+      "variants": {
+        "default": {
+          "formats": ["svg", "png", "webp", "avif"],
+          "path": "brand/assets/logos/symbols/symbol-default.{format}",
+          "minSize": 24,
+          "clearSpace": "0.5x symbol height"
+        },
+        "white": {
+          "formats": ["svg"],
+          "path": "brand/assets/logos/symbols/symbol-white.svg",
+          "minSize": 24,
+          "clearSpace": "0.5x symbol height"
+        }
+      }
+    },
+    "wMark": {
+      "description": "W-only mark for compact contexts",
+      "variants": {
+        "default": {
+          "formats": ["png", "webp", "avif"],
+          "sizes": [64, 96, 160, 280, 512],
+          "path": "brand/assets/logos/symbols/w-mark-{size}.{format}",
+          "minSize": 16
+        }
+      }
+    }
+  },
+  "icons": {
+    "appIcon": {
+      "description": "Mobile app icon",
+      "variants": {
+        "default": {
+          "formats": ["svg", "png", "webp", "avif"],
+          "sizes": [192, 512],
+          "path": "brand/assets/icons/app-icon-{size}.{format}"
+        },
+        "white": {
+          "formats": ["svg"],
+          "path": "brand/assets/icons/app-icon-white.svg"
+        }
+      }
+    },
+    "favicon": {
+      "description": "Browser favicon",
+      "path": "brand/assets/icons/favicon.svg",
+      "formats": ["svg"]
+    }
+  },
+  "og": {
+    "default": {
+      "description": "Open Graph default image",
+      "path": "brand/assets/og/og-default.png",
+      "formats": ["png", "webp", "avif"],
+      "dimensions": "1200x630"
+    }
+  },
+  "social": {
+    "dark": {
+      "description": "Social media card (dark variant)",
+      "path": "brand/assets/social/social-dark.{format}",
+      "formats": ["svg", "png", "webp", "avif"]
+    }
+  },
+  "usage": {
+    "headers": "logo-default or logo-light depending on background",
+    "darkBackgrounds": "logo-light or logo-white",
+    "lightBackgrounds": "logo-dark or logo-default",
+    "favicons": "symbol-default or favicon.svg",
+    "appIcons": "appIcon.default",
+    "socialSharing": "og.default",
+    "marketing": "logo-default at 512px"
+  }
+}

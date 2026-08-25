@@ -102,9 +102,7 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
                 lineHeight: 1.5,
               }}
             >
-              {ar
-                ? 'نضيق التجربة على 3 مسارات، نثبت الرحلات المتكررة، ثم نتوسع مساراً واحداً كل مرة.'
-                : 'Narrow to three corridors, prove repeat rides, then expand one corridor at a time.'}
+              {tx('homePage.corridor_beta_focus_desc')}
             </p>
           </div>
         </div>
@@ -257,14 +255,12 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
             fontWeight: TYPE.weight.black,
           }}
         >
-          {ar ? 'بوابة التوسع' : 'Expansion gate'}
+          {tx('homePage.corridor_beta_expand_gate')}
         </div>
         <p
           style={{ margin: '8px 0 0', color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.6 }}
         >
-          {ar
-            ? 'لا تنتقل لمسار جديد إلا بعد تحقيق الرحلات الأسبوعية، التكرار، ثبات العرض، وثلاثة أسابيع متتالية. بعد ذلك يتكرر نفس المسار للتوسع اللانهائي داخل شبكة المسارات.'
-            : 'Do not open a new corridor until weekly rides, repeat rate, supply reliability, and three consecutive weeks are proven. Then repeat the same gate as the corridor graph expands.'}
+          {tx('homePage.corridor_beta_expand_gate_desc')}
         </p>
         <div
           style={{
@@ -287,7 +283,7 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
                 fontWeight: TYPE.weight.semibold,
               }}
             >
-              {ar ? metricLabel(metric, true) : metric}
+              {metricLabel(metric, ar)}
             </span>
           ))}
         </div>
