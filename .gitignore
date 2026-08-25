@@ -61,6 +61,8 @@ review-screenshots/
 
 # Firebase/GCP service account keys (never commit)
 wasel-planning-with-ai-*.json
+docs/wasel-planning-with-ai.json
+*docs/wasel-planning-with-ai.json
 *firebase-adminsdk*.json
 *service-account*.json
 
