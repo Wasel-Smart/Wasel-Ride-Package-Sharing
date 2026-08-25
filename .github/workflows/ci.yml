@@ -179,3 +179,59 @@ jobs:
       - name: Stop local Supabase stack
         if: always()
         run: npx supabase stop --no-backup
+
+  mobile-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+
+      - name: Install mobile dependencies
+        working-directory: mobile
+        run: npm ci
+
+      - name: Build Android app for Detox
+        working-directory: mobile
+        run: npx detox build --configuration android.emu.debug
+
+      - name: Run Detox E2E tests
+        working-directory: mobile
+        run: npx detox test --configuration android.emu.debug --headless --loglevel verbose
+
+      - name: Upload Detox artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: detox-artifacts
+          path: |
+            mobile/e2e/artifacts
+            mobile/android/app/build
+          if-no-files-found: ignore
