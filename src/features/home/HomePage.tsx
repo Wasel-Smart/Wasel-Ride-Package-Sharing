@@ -420,6 +420,59 @@ export function HomePage() {
 
           {user && <ActiveTripsBanner onNavigate={handleNavigate} />}
 
+          {user && role && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="wasel-home-section"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '14px 18px',
+                borderRadius: 16,
+                background: C.cyanDim,
+                border: `1px solid ${C.borderHov}`,
+              }}
+            >
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: C.brandBlue,
+                  color: C.text,
+                  display: 'grid',
+                  placeItems: 'center',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                }}
+              >
+                {role === 'admin' ? 'A' : role === 'driver' ? 'D' : role === 'both' ? 'B' : 'R'}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: C.text }}>
+                  {role === 'admin'
+                    ? t('homeSections.roleBannerAdmin')
+                    : role === 'driver'
+                      ? t('homeSections.roleBannerDriver')
+                      : role === 'both'
+                        ? t('homeSections.roleBannerBoth')
+                        : t('homeSections.roleBannerRider')}
+                </div>
+                <div style={{ fontSize: '0.78rem', color: C.textMuted, marginTop: 2 }}>
+                  {role === 'admin'
+                    ? t('homeSections.roleBannerAdminDesc')
+                    : role === 'driver'
+                      ? t('homeSections.roleBannerDriverDesc')
+                      : role === 'both'
+                        ? t('homeSections.roleBannerBothDesc')
+                        : t('homeSections.roleBannerRiderDesc')}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={handleNavigate} />
 
           {/* Show onboarding demo only for new/signed-out users */}
