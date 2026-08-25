@@ -166,17 +166,6 @@ if (environmentIsValid) {
     </React.StrictMode>,
   );
 
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      document.documentElement.dataset.appMounted = 'true';
-      const bootStatus = document.getElementById('boot-status');
-      if (bootStatus) {
-        bootStatus.setAttribute('data-state', 'hidden');
-        bootStatus.style.display = 'none';
-      }
-    });
-  });
-
   void resetLocalDevelopmentArtifacts();
 
   // Defer non-critical initializations to reduce initial bundle impact.

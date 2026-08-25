@@ -13,6 +13,24 @@ import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
 
+function scheduleWhenIdle(callback: () => void): () => void {
+  if (typeof window === 'undefined') {
+    return () => {};
+  }
+
+  const idleWindow = window as Window & {
+    requestIdleCallback?: (callback: () => void, options: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  };
+  if (typeof idleWindow.requestIdleCallback === 'function') {
+    const idleCallback = idleWindow.requestIdleCallback(callback, { timeout: 4_000 });
+    return () => idleWindow.cancelIdleCallback?.(idleCallback);
+  }
+
+  const timeout = window.setTimeout(callback, 2_500);
+  return () => window.clearTimeout(timeout);
+}
+
 /* ---------------------------
    PROVIDERS WRAPPER
 ---------------------------*/
@@ -33,6 +51,7 @@ function AppRuntimeCoordinator() {
   useEffect(() => {
     let cancelled = false;
     let cleanup: (() => void) | undefined;
+    let cancelScheduledWork = () => {};
 
     const run = async () => {
       try {
@@ -44,7 +63,7 @@ function AppRuntimeCoordinator() {
           }
         }
 
-        setTimeout(async () => {
+        cancelScheduledWork = scheduleWhenIdle(async () => {
           if (cancelled) return;
 
           try {
@@ -60,7 +79,7 @@ function AppRuntimeCoordinator() {
               import('./platform/event-bus'),
             ]);
 
-            initSentry();
+            void initSentry();
             initPerformanceMonitoring();
 
             validation.issues.forEach(issue => {
@@ -88,7 +107,7 @@ function AppRuntimeCoordinator() {
               console.warn('[Runtime deferred tasks failed]', e);
             }
           }
-        }, 1500);
+        });
       } catch (e) {
         if (import.meta.env.DEV) {
           console.warn('[Runtime bootstrap failed]', e);
@@ -100,6 +119,7 @@ function AppRuntimeCoordinator() {
 
     return () => {
       cancelled = true;
+      cancelScheduledWork();
       cleanup?.();
     };
   }, []);

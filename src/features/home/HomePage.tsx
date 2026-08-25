@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
+import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, ArrowLeft, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
@@ -615,7 +615,7 @@ function FinalCtaBanner({ ar, onNavigate }: { ar: boolean; onNavigate: (path: st
             variant="primary"
             size="lg"
             icon={<Route size={17} />}
-            iconEnd={<ArrowRight size={16} />}
+            iconEnd={ar ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
             onClick={() => onNavigate('/find-ride', 'final_cta_find')}
           >
             {ar ? 'اعرض المسارات المتاحة' : 'Find a lower-cost route'}

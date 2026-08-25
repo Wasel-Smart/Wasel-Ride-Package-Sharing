@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
+  ArrowLeft,
   BadgeCheck,
   CheckCircle,
   CircleDollarSign,
@@ -14,6 +15,7 @@ import type { User } from '@supabase/auth-js';
 import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../../contexts/LanguageContext';
+import { tx } from '../../../locales/tx';
 
 import { C, InlineCurrencySwitcher } from '../HomePageShared';
 import { MobilityOSLandingMap } from '../MobilityOSLandingMap';
@@ -38,41 +40,20 @@ interface TripModeCardProps {
 const heroProof = [
   {
     icon: BadgeCheck,
-    label: 'Verified handoff',
-    detail: 'Identity, wallet, route, and support context stay attached.',
+    labelKey: 'homeContent.proof_verified_label',
+    detailKey: 'homeContent.proof_verified_detail',
     accent: C.green,
   },
   {
     icon: CircleDollarSign,
-    label: 'Price discipline',
-    detail: 'Seat, parcel, and bus fallback decisions share one corridor logic.',
+    labelKey: 'homeContent.proof_price_label',
+    detailKey: 'homeContent.proof_price_detail',
     accent: C.gold,
   },
   {
     icon: Clock,
-    label: 'Less coordination',
-    detail: 'Booking, approval, tracking, and escalation happen in one flow.',
-    accent: C.cyan,
-  },
-] as const;
-
-const heroProofAr = [
-  {
-    icon: BadgeCheck,
-    label: 'تسليم موثق',
-    detail: 'تبقى الهوية والمحفظة والمسار وسياق الدعم مرتبطة.',
-    accent: C.green,
-  },
-  {
-    icon: CircleDollarSign,
-    label: 'وضوح السعر',
-    detail: 'المقاعد والطرود وخيار الباص الاحتياطي تعمل بمنطق مسار واحد.',
-    accent: C.gold,
-  },
-  {
-    icon: Clock,
-    label: 'تنسيق أقل',
-    detail: 'الحجز والموافقة والتتبع والتصعيد تحدث في تدفق واحد.',
+    labelKey: 'homeContent.proof_coordination_label',
+    detailKey: 'homeContent.proof_coordination_detail',
     accent: C.cyan,
   },
 ] as const;
@@ -197,7 +178,7 @@ function ProductCommandPreview({ ar }: { ar: boolean }) {
               <MapPinned size={16} color={C.cyan} />
               {ar ? 'عمان' : 'Amman'}
             </span>
-            <ArrowRight size={14} color={C.textDim} />
+            {ar ? <ArrowLeft size={14} color={C.textDim} /> : <ArrowRight size={14} color={C.textDim} />}
             <span>{ar ? 'العقبة' : 'Aqaba'}</span>
           </div>
           <div className="wasel-home-window-grid">
@@ -262,7 +243,7 @@ export function HomeHeroSection({
   onNavigate,
   primaryTripPath,
 }: HomeHeroSectionProps) {
-  const proofItems = ar ? heroProofAr : heroProof;
+  const proofItems = heroProof;
 
   return (
     <motion.section className="wasel-home-hero" initial={false}>
@@ -301,13 +282,13 @@ export function HomeHeroSection({
           {proofItems.map(item => {
             const Icon = item.icon;
             return (
-              <div key={item.label} className="wasel-home-proof-pill">
+              <div key={item.labelKey} className="wasel-home-proof-pill">
                 <span className="wasel-home-proof-pill-icon" style={{ color: item.accent, background: `${item.accent}14` }}>
                   <Icon size={16} />
                 </span>
                 <div>
-                  <strong style={{ color: C.text }}>{item.label}</strong>
-                  <small style={{ color: C.textMuted }}>{item.detail}</small>
+                  <strong style={{ color: C.text }}>{tx(item.labelKey)}</strong>
+                  <small style={{ color: C.textMuted }}>{tx(item.detailKey)}</small>
                 </div>
               </div>
             );
@@ -321,7 +302,7 @@ export function HomeHeroSection({
             variant="primary"
             size="lg"
             icon={<Route size={17} />}
-            iconEnd={<ArrowRight size={16} />}
+            iconEnd={ar ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
           >
             {ar ? 'اعرض المسارات المتاحة' : 'Find a lower-cost route'}
           </WaselButton>

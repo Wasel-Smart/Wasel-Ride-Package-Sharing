@@ -189,11 +189,15 @@ export function parseOrReject<T>(
 }
 
 // ── Type exports ──────────────────────────────────────────────────────────────
+// Previously these were all widened to `any`, which defeated the point of
+// validating with Zod in the first place — callers got no compile-time
+// guarantee that a "validated" booking actually has the shape the schema
+// enforces. Infer the real types from the schemas instead.
 
-export type BookingCreate   = any;
-export type BookingUpdate   = any;
-export type RideRequest     = any;
-export type DemandAlert     = any;
-export type LocationUpdate  = any;
-export type Rating          = any;
-export type GeoPoint        = any;
+export type BookingCreate   = z.infer<typeof BookingCreateSchema>;
+export type BookingUpdate   = z.infer<typeof BookingUpdateSchema>;
+export type RideRequest     = z.infer<typeof RideRequestSchema>;
+export type DemandAlert     = z.infer<typeof DemandAlertSchema>;
+export type LocationUpdate  = z.infer<typeof LocationUpdateSchema>;
+export type Rating          = z.infer<typeof RatingSchema>;
+export type GeoPoint        = z.infer<typeof GeoPointSchema>;

@@ -1,9 +1,30 @@
 [
   {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\MapRoutes.tsx",
+    "text": "points",
+    "start": 240,
+    "end": 255
+  },
+  {
     "kind": "attr:alt",
     "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\components\\wasel-ds\\__tests__\\WaselLogo.test.tsx",
     "text": "Custom Alt",
-    "start": 796,
-    "end": 808
+    "start": 1005,
+    "end": 1017
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\main.tsx",
+    "text": "Application Error",
+    "start": 4306,
+    "end": 4323
+  },
+  {
+    "kind": "jsx-text",
+    "file": "C:\\Users\\user\\OneDrive\\Desktop\\Wdoubleme\\src\\main.tsx",
+    "text": "A runtime error prevented the app from rendering.",
+    "start": 4375,
+    "end": 4424
   }
 ]
