@@ -14,6 +14,8 @@
         "test:unit": "vitest",
         "test:e2e": "playwright test",
         "test:e2e:oauth": "playwright test --grep @oauth",
+        "test:visual": "playwright test --grep @visual",
+        "test:visual:update": "playwright test --grep @visual --update-snapshots",
         "bundle:analyze": "vite build --mode analyze",
         "test:load:smoke": "k6 run tests/load/k6-smoke.js",
         "type-check:app": "tsc -p tsconfig.build.json --noEmit",
