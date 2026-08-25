@@ -6,8 +6,8 @@
 import { Component, type ErrorInfo, type JSX, type ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { WaselButton } from '@/components/wasel-ui/WaselButton';
+import { WaselCard } from '@/components/wasel-ui/WaselCard';
 import { logger } from '@/utils/monitoring';
 import { sanitizeLogMessage } from '@/utils/sanitization';
 import { tx } from '../../locales/tx';
