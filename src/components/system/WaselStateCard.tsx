@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import { LoaderCircle, type LucideIcon } from 'lucide-react';
 import { C, F, GRAD, R, SH } from '../../utils/wasel-ds';
 
@@ -39,7 +39,7 @@ interface WaselStateCardProps {
   minHeight?: string | number;
 }
 
-export function WaselStateCard({
+export const WaselStateCard = memo(function WaselStateCard({
   title,
   description,
   eyebrow,
@@ -197,4 +197,5 @@ export function WaselStateCard({
       </div>
     </div>
   );
-}
+});
+

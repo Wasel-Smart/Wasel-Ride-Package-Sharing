@@ -199,7 +199,7 @@ export default function WaselAuthCallback() {
           </div>
 
           <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: '0.82rem', color: '#CBD5E1' }}>
+            <span style={{ fontSize: '0.82rem', color: 'rgba(196,220,238,0.68)' }}>
               {tx('settingsExpanded.newPassword')}
             </span>
             <input
@@ -221,7 +221,7 @@ export default function WaselAuthCallback() {
           </label>
 
           <label style={{ display: 'grid', gap: 6 }}>
-            <span style={{ fontSize: '0.82rem', color: '#CBD5E1' }}>
+            <span style={{ fontSize: '0.82rem', color: 'rgba(196,220,238,0.68)' }}>
               {tx('waselAuthCallback.confirm_password')}
             </span>
             <input

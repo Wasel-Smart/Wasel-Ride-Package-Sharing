@@ -6,8 +6,8 @@
 import { Component, type ErrorInfo, type JSX, type ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { WaselButton } from '@/components/wasel-ui/WaselButton';
+import { WaselCard } from '@/components/wasel-ui/WaselCard';
 import { logger } from '@/utils/monitoring';
 import { sanitizeLogMessage } from '@/utils/sanitization';
 import { tx } from '../../locales/tx';
@@ -266,22 +266,20 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, AppErro
 
     return (
       <main className="flex min-h-[var(--app-min-height)] items-center justify-center bg-background p-6 text-foreground">
-        <Card className="w-full max-w-lg border-destructive/30 bg-card shadow-[var(--wasel-shadow-lg)]">
-          <CardHeader className="gap-3">
+        <WaselCard variant="elevated" style={{ width: '100%', maxWidth: '32rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div className="flex size-12 items-center justify-center rounded-[var(--radius-sm)] bg-destructive/10 text-destructive">
               <AlertTriangle className="size-6" aria-hidden="true" />
             </div>
-            <CardTitle className="text-[length:var(--text-h2)]">
+            <h2 className="text-[length:var(--text-h2)]">
               {tx('appErrorBoundary.app_error')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </h2>
             <p className="text-sm text-muted-foreground">{this.state.error}</p>
-            <Button onClick={() => window.location.reload()}>
+            <WaselButton onClick={() => window.location.reload()}>
               {tx('appErrorBoundary.reload')}
-            </Button>
-          </CardContent>
-        </Card>
+            </WaselButton>
+          </div>
+        </WaselCard>
       </main>
     );
   }

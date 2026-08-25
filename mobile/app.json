@@ -18,12 +18,12 @@
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#06111b",
+      "backgroundColor": "#081D39",
       "showLogo": true,
       "logo": {
         "image": "./assets/images/splash-logo.png",
         "resizeMode": "contain",
-        "backgroundColor": "#06111b"
+        "backgroundColor": "#081D39"
       }
     },
     "ios": {
@@ -41,7 +41,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#06111b"
+        "backgroundColor": "#081D39"
       },
       "package": "com.wasel.app",
       "softwareKeyboardLayoutMode": "resize",
@@ -62,7 +62,7 @@
         "expo-notifications",
         {
           "icon": "./assets/images/notification-icon.png",
-          "color": "#00C8E8",
+          "color": "#147FE4",
           "sounds": []
         }
       ],

@@ -10,7 +10,7 @@
  *  - WaselServicePage.tsx retained as the source of truth for FindRide, OfferRide, Packages
  *    until those are individually migrated; BusPage is now fully standalone.
  */
-import { Suspense } from 'react';
+import React, { memo, Suspense } from 'react';
 import { AlertTriangle, LoaderCircle, SearchX } from 'lucide-react';
 import { createBrowserRouter, isRouteErrorResponse, Navigate, useRouteError } from 'react-router';
 import { Button } from './components/ui/button';
@@ -19,8 +19,7 @@ import { useLanguage } from './contexts/LanguageContext';
 import WaselRoot from './layouts/WaselRoot';
 import ProtectedOutlet from './router/ProtectedOutlet';
 
-// ── Page loader fallback ──────────────────────────────────────────────────────
-function PageLoader() {
+const PageLoader = memo(function PageLoader() {
   const { language } = useLanguage();
   const ar = language === 'ar';
 
@@ -38,7 +37,7 @@ function PageLoader() {
       minHeight="60vh"
     />
   );
-}
+});
 
 function lazy(
   importFn: () => Promise<Record<string, React.ComponentType<Record<string, unknown>>>>,
@@ -50,62 +49,21 @@ function lazy(
       Record<string, unknown>
     >;
     return {
-      Component: (props: Record<string, unknown>) => (
+      Component: memo((props: Record<string, unknown>) => (
         <Suspense fallback={<PageLoader />}>
           <Component {...props} />
         </Suspense>
-      ),
+      )),
     };
   };
 }
 
 // ── Utility redirects ─────────────────────────────────────────────────────────
-function RedirectTo({ to }: { to: string }) {
+const RedirectTo = memo(function RedirectTo({ to }: { to: string }) {
   return <Navigate to={to} replace />;
-}
+});
 
-
-
-const LEGACY_APP_ALIASES = [
-  '/auth',
-  '/dashboard',
-  '/home',
-  '/find-ride',
-  '/offer-ride',
-  '/post-ride',
-  '/my-trips',
-  '/booking-requests',
-  '/live-trip',
-  '/routes',
-  '/bus',
-  '/packages',
-  '/awasel/send',
-  '/awasel/track',
-  '/raje3',
-  '/services/raje3',
-  '/services/corporate',
-  '/services/school',
-  '/innovation-hub',
-  '/analytics',
-  '/mobility-os',
-  '/ai-intelligence',
-  '/wallet',
-  '/plus',
-  '/payments',
-  '/profile',
-  '/settings',
-  '/notifications',
-  '/trust',
-  '/driver',
-  '/privacy',
-  '/terms',
-  '/legal/privacy',
-  '/legal/terms',
-  '/moderation',
-] as const;
-
-// ── 404 ───────────────────────────────────────────────────────────────────────
-function NotFound() {
+const NotFound = memo(function NotFound() {
   const { language } = useLanguage();
   const ar = language === 'ar';
 
@@ -127,10 +85,9 @@ function NotFound() {
       }
     />
   );
-}
+});
 
-// ── Route Error Fallback ──────────────────────────────────────────────────────
-function RouteErrorFallback() {
+const RouteErrorFallback = memo(function RouteErrorFallback() {
   const { language } = useLanguage();
   const ar = language === 'ar';
   const error = useRouteError();
@@ -171,7 +128,45 @@ function RouteErrorFallback() {
       }
     />
   );
-}
+});
+
+const LEGACY_APP_ALIASES = [
+  '/auth',
+  '/dashboard',
+  '/home',
+  '/find-ride',
+  '/offer-ride',
+  '/post-ride',
+  '/my-trips',
+  '/booking-requests',
+  '/live-trip',
+  '/routes',
+  '/bus',
+  '/packages',
+  '/awasel/send',
+  '/awasel/track',
+  '/raje3',
+  '/services/raje3',
+  '/services/corporate',
+  '/services/school',
+  '/innovation-hub',
+  '/analytics',
+  '/mobility-os',
+  '/ai-intelligence',
+  '/wallet',
+  '/plus',
+  '/payments',
+  '/profile',
+  '/settings',
+  '/notifications',
+  '/trust',
+  '/driver',
+  '/privacy',
+  '/terms',
+  '/legal/privacy',
+  '/legal/terms',
+  '/moderation',
+] as const;
 
 // ── Route children factory ────────────────────────────────────────────────────
 const buildMainChildren = () => [
@@ -235,9 +230,13 @@ const buildMainChildren = () => [
 
   // ── Raje3 Returns ─────────────────────────────────────────────────────────
 
-  // ── B2B / B2S / Ops — each route guards itself with a per-route permission gate ─
+  // ── B2B / B2S / Ops ──────────────────────────────────────────────────────
+  // Each surface below is gated by its own permission — do not collapse
+  // these back into one shared ProtectedOutlet, since roles differ per path
+  // (e.g. a 'corporate' user must not reach 'moderation').
   {
-    Component: () => <ProtectedOutlet require="corporate:read" />,
+    Component: ProtectedOutlet,
+    require: 'corporate:read',
     children: [
       {
         path: 'services/corporate',
@@ -246,7 +245,8 @@ const buildMainChildren = () => [
     ],
   },
   {
-    Component: () => <ProtectedOutlet require="school:read" />,
+    Component: ProtectedOutlet,
+    require: 'school:read',
     children: [
       {
         path: 'services/school',
@@ -255,16 +255,23 @@ const buildMainChildren = () => [
     ],
   },
   {
-    Component: () => <ProtectedOutlet require="analytics:read" />,
+    Component: ProtectedOutlet,
+    require: 'operations:read',
     children: [
       {
         path: 'innovation-hub',
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
+      { path: 'mobility-os', lazy: lazy(() => import('./features/mobility-os')) },
+      {
+        path: 'ai-intelligence',
+        lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
+      },
     ],
   },
   {
-    Component: () => <ProtectedOutlet require="analytics:read" />,
+    Component: ProtectedOutlet,
+    require: 'analytics:read',
     children: [
       {
         path: 'analytics',
@@ -273,22 +280,8 @@ const buildMainChildren = () => [
     ],
   },
   {
-    Component: () => <ProtectedOutlet require="operations:read" />,
-    children: [
-      { path: 'mobility-os', lazy: lazy(() => import('./features/mobility-os')) },
-    ],
-  },
-  {
-    Component: () => <ProtectedOutlet require="analytics:read" />,
-    children: [
-      {
-        path: 'ai-intelligence',
-        lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
-      },
-    ],
-  },
-  {
-    Component: () => <ProtectedOutlet require="trust:moderate" />,
+    Component: ProtectedOutlet,
+    require: 'trust:moderate',
     children: [
       {
         path: 'moderation',
@@ -296,11 +289,10 @@ const buildMainChildren = () => [
       },
     ],
   },
-
-  // ── Admin ─────────────────────────────────────────────────────────────────
-  // Registered admin metrics route (AdminDashboardPage) — admin-only gate.
+  // ── Admin ────────────────────────────────────────────────────────────────
   {
-    Component: () => <ProtectedOutlet require="config:write" />,
+    Component: ProtectedOutlet,
+    require: 'config:write',
     children: [
       {
         path: 'admin',

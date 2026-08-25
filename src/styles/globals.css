@@ -1855,7 +1855,7 @@ input[type='range']::-moz-range-thumb {
 }
 
 .scrollbar-thumb-slate-700::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #0e2240;
 }
 
 .scrollbar-track-transparent::-webkit-scrollbar-track {
@@ -1863,7 +1863,61 @@ input[type='range']::-moz-range-thumb {
 }
 
 .hover\:scrollbar-thumb-slate-600:hover::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: #132b4d;
+}
+
+/* ========================================
+   PERFORMANCE CONTAINMENT
+   ======================================== */
+
+.wasel-contain {
+  contain: layout style paint;
+}
+
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+/* Apply content-visibility to long page sections */
+section.content-visibility-auto,
+.wasel-home-section,
+[data-section] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 400px;
+}
+
+/* GPU acceleration for animated elements */
+.gpu-accelerated {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize font loading */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: local('Plus Jakarta Sans'), local('PlusJakartaSans');
+}
+
+@font-face {
+  font-family: 'Cairo';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: local('Cairo');
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: local('Tajawal');
 }
 
 /* ========================================

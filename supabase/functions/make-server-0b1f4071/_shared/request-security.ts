@@ -31,7 +31,12 @@ export function buildAllowedOrigins(
   allowLocalOrigins = false,
 ): string[] {
   const normalizedBase = normalizeOrigin(appBaseUrl);
-  const baseWithoutWww = normalizedBase?.replace(/^https?:\/\/www\./, 'http://');
+  // Preserve the original scheme when deriving the non-www variant. The
+  // previous implementation replaced the matched prefix with a hardcoded
+  // 'http://', which silently downgraded an https base URL (e.g.
+  // https://www.wasel14.online) to an insecure http origin
+  // (http://wasel14.online) that should never appear in an allow-list.
+  const baseWithoutWww = normalizedBase?.replace(/^(https?:\/\/)www\./, '$1');
   const baseWithWww = normalizedBase?.startsWith('http://') || normalizedBase?.startsWith('https://')
     ? normalizedBase.replace(/^https?:\/\//, 'https://www.')
     : null;

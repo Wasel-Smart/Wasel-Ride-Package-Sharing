@@ -156,21 +156,21 @@ const SVG = {
   </svg>`,
 
   accident: `<svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
-    <polygon points="19,2 36,34 2,34" fill="#F59E0B" stroke="white" stroke-width="2" stroke-linejoin="round"/>
+    <polygon points="19,2 36,34 2,34" fill="#FF8A0B" stroke="white" stroke-width="2" stroke-linejoin="round"/>
     <rect x="17.5" y="14" width="3" height="10" rx="1.5" fill="white"/>
     <circle cx="19" cy="28.5" r="2" fill="white"/>
   </svg>`,
 
   police: `<svg width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="19" cy="19" r="17" fill="#3B82F6" stroke="white" stroke-width="2"/>
+    <circle cx="19" cy="19" r="17" fill="#147FE4" stroke="white" stroke-width="2"/>
     <rect x="17" y="9"  width="4" height="20" rx="2" fill="white"/>
     <rect x="9"  y="17" width="20" height="4"  rx="2" fill="white"/>
   </svg>`,
 
   pinGreen: `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
-    <path d="M15 0 C6.7 0 0 6.7 0 15 C0 26 15 42 15 42 C15 42 30 26 30 15 C30 6.7 23.3 0 15 0Z" fill="#5a6b08" stroke="white" stroke-width="2"/>
+    <path d="M15 0 C6.7 0 0 6.7 0 15 C0 26 15 42 15 42 C15 42 30 26 30 15 C30 6.7 23.3 0 15 0Z" fill="#72C70D" stroke="white" stroke-width="2"/>
     <circle cx="15" cy="15" r="7" fill="white"/>
-    <circle cx="15" cy="15" r="4.5" fill="#5a6b08"/>
+    <circle cx="15" cy="15" r="4.5" fill="#72C70D"/>
   </svg>`,
 
   pinOrange: `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">

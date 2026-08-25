@@ -1,14 +1,14 @@
 ﻿import { motion } from 'framer-motion';
 import { ArrowRight, Route } from 'lucide-react';
 import type { QuickAction } from './types';
+import { tx } from '../../../locales/tx';
 
 interface QuickActionsSectionProps {
-  ar: boolean;
   quickActions: QuickAction[];
   onNavigate: (path: string, source?: string) => void;
 }
 
-export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActionsSectionProps) {
+export function QuickActionsSection({ quickActions, onNavigate }: QuickActionsSectionProps) {
   return (
     <motion.section initial={false} className="wasel-home-section">
       <div className="wasel-home-section-header">
@@ -17,7 +17,7 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
             <Route size={16} />
           </div>
           <h2 className="wasel-home-section-title">
-            {ar ? 'ابدأ من الخدمة المناسبة' : 'Choose the right mode'}
+            {tx('homeSections.quickActionsTitle')}
           </h2>
         </div>
       </div>
@@ -52,7 +52,7 @@ export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActio
               <div className="wasel-home-action-outcome">{action.outcome}</div>
 
               <div className="wasel-home-action-cta" style={{ color: action.color }}>
-                {ar ? 'افتح هذا المسار' : 'Open this flow'}
+                {tx('homeSections.quickActionsCTA')}
                 <ArrowRight size={13} />
               </div>
             </motion.button>

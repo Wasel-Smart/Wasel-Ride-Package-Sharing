@@ -88,13 +88,13 @@ function TabNavigator() {
       initialRouteName="Home"
       screenOptions={getTabScreenOptions}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'الرئيسية' }} />
-      <Tab.Screen name="Rides" component={RideRequestScreen} options={{ title: 'المشاوير' }} />
-      <Tab.Screen name="Packages" component={PackagesScreen} options={{ title: 'الطرود' }} />
-      <Tab.Screen name="Networks" component={NetworksScreen} options={{ title: 'الشبكات' }} />
-      <Tab.Screen name="Map" component={MapScreen} options={{ title: 'الخريطة' }} />
-      <Tab.Screen name="Wallet" component={WalletScreen} options={{ title: 'المحفظة' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'حسابي' }} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'الرئيسية', tabBarButtonTestID: 'home-tab' }} />
+      <Tab.Screen name="Rides" component={RideRequestScreen} options={{ title: 'المشاوير', tabBarButtonTestID: 'rides-tab' }} />
+      <Tab.Screen name="Packages" component={PackagesScreen} options={{ title: 'الطرود', tabBarButtonTestID: 'packages-tab' }} />
+      <Tab.Screen name="Networks" component={NetworksScreen} options={{ title: 'الشبكات', tabBarButtonTestID: 'networks-tab' }} />
+      <Tab.Screen name="Map" component={MapScreen} options={{ title: 'الخريطة', tabBarButtonTestID: 'map-tab' }} />
+      <Tab.Screen name="Wallet" component={WalletScreen} options={{ title: 'المحفظة', tabBarButtonTestID: 'wallet-tab' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'حسابي', tabBarButtonTestID: 'profile-tab' }} />
     </Tab.Navigator>
   );
 }

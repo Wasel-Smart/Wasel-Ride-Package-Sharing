@@ -85,10 +85,26 @@ These capabilities are fully implemented and running in the current deployment.
 
 | Gap | Severity | Plan |
 |-----|----------|------|
-| Redis GEO not deployed | Low | PostGIS with GiST indexes is adequate for current Jordan-market volume; switch when query latency exceeds 500ms |
-| Kafka/Redis Streams not deployed | Low | `SupabaseEventBroker` is the production transport; `EventBroker` interface is abstracted for future swap |
-| Separate worker services | Low | Current architecture uses synchronous edge function processing; separate workers can be introduced when scaling requires it |
-| Mobile app React version sync | Medium | Update mobile app from React 18 to React 19 to match web client |
+| Redis GEO not deployed | Low | PostGIS with GiST indexes is adequate for current Jordan-market volume; switch when query latency exceeds 500ms. Local dev addon now available: `docker-compose.redis.yml` + `infra/redis/redis.conf` |
+| Kafka/Redis Streams not deployed | Low | `SupabaseEventBroker` is the production transport; `EventBroker` interface is abstracted for future swap. No config or scaffolding exists yet for either |
+| Separate worker services | Low | Current architecture uses synchronous edge function processing. Draft (unreviewed, not deployed) k8s manifests for notification/ops/payment/ride-matching workers now live in `infra/k8s-draft/` — needs a security/resource-limits review before anything is applied to a cluster |
+| Mobile app React version sync | Medium | Update mobile app from React 18 to React 19 to match web client. Not done in this pass — this is a dependency bump that needs a real test run (`yarn install && yarn test`) before merging, which this session cannot execute against your machine |
+
+## Correction (this pass)
+
+A prior pass's `mobile/HONEST_AUDIT_REPORT.md` claimed 9/10 "Excellent" test coverage.
+On inspection, the Detox specs in `mobile/e2e/` asserted against testIDs and screens
+that did not exist anywhere in `mobile/src` (`login-button`, `packages-tab`,
+`new-package-button`, a nonexistent `package-form-screen`, `seats-selector`, a
+nonexistent `phone-auth-screen` reachable from sign-in, `quick-link-trips`, and more).
+These specs could not have passed against a real build. They've been rewritten to
+match the actual components, and two dead-end navigation buttons on `SignInScreen`
+(sign-up and forgot-password links with empty `onPress`) were fixed as a result of
+writing a real test against them. `mobile/30_DAY_PRODUCTION_REPORT.md` also reports
+specific DAU/crash-rate figures for a wallet feature and general usage that this pass
+could not verify against any real telemetry source in the repo — treat those numbers
+as unverified until confirmed against actual Sentry/analytics dashboards, not as
+launch-ready facts.
 
 ---
 

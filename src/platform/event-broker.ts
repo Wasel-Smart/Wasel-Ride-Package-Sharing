@@ -48,7 +48,7 @@ function createBroker(): EventBroker {
     (typeof process !== 'undefined' && process.env.VITE_EVENT_BROKER);
 
   if (brokerEnv === 'memory') {
-    if (import.meta.env.DEV) console.info('[broker] using InMemoryEventBroker (explicit override)');
+    console.info('[broker] using InMemoryEventBroker (explicit override)');
     return new InMemoryEventBroker();
   }
 
@@ -77,11 +77,11 @@ function createBroker(): EventBroker {
   }
 
   if (isSupabaseConfigured && defaultSupabase) {
-    if (import.meta.env.DEV) console.info('[broker] using SupabaseEventBroker (default when Supabase is configured)');
+    console.info('[broker] using SupabaseEventBroker (default when Supabase is configured)');
     return new SupabaseEventBroker(defaultSupabase);
   }
 
-  if (import.meta.env.DEV) console.warn('[broker] Supabase not configured, falling back to InMemoryEventBroker');
+  console.warn('[broker] Supabase not configured, falling back to InMemoryEventBroker');
   return new InMemoryEventBroker();
 }
 
@@ -277,8 +277,8 @@ class SupabaseEventBroker implements EventBroker {
         created_at: message.occurredAt,
       });
       if (error) {
-        console.error('[broker] failed to persist event', sanitizeLogMessage(message.topic), sanitizeLogMessage(error.message));
-      }
+          console.error('[broker] failed to persist event', sanitizeLogMessage(message.topic), sanitizeLogMessage(error.message));
+        }
     } catch (err) {
       console.error('[broker] persist threw', sanitizeLogMessage(message.topic), sanitizeLogMessage(err));
     }
@@ -303,21 +303,38 @@ class SupabaseEventBroker implements EventBroker {
   async start(): Promise<void> {
     if (this.stopped) return;
 
+    const startPolling = () => {
+      if (this.pollTimer) return;
+      if (typeof setInterval === 'undefined') return;
+      this.pollTimer = setInterval(() => {
+        void this.processPending();
+      }, POLL_INTERVAL_MS);
+    };
+
+    const stopPolling = () => {
+      if (this.pollTimer) {
+        clearInterval(this.pollTimer);
+        this.pollTimer = null;
+      }
+    };
+
     try {
       this.channel = this.client
         .channel(`outbox:${crypto.randomUUID().split('-')[0]}`)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: OUTBOX_TABLE }, () => {
           void this.processPending();
         })
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            stopPolling();
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            startPolling();
+          }
+        });
+      stopPolling();
     } catch (err) {
       console.warn('[broker] realtime subscribe failed, relying on poll', sanitizeLogMessage(err));
-    }
-
-    if (typeof setInterval !== 'undefined') {
-      this.pollTimer = setInterval(() => {
-        void this.processPending();
-      }, POLL_INTERVAL_MS);
+      startPolling();
     }
 
     void this.processPending();

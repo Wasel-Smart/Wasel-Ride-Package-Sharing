@@ -238,12 +238,8 @@ export function MobilityOSLandingMap({
   const targetFocusStrengthRef = useRef(0);
   const sizeRef = useRef({ width: 720, height: preferredHeight ?? 560 });
   const [size, setSize] = useState(sizeRef.current);
-  const [visible, setVisible] = useState(true);
   const visibleRef = useRef(true);
-  // Tracks whether the browser tab is visible so the rAF loop can restart on focus.
-  const [tabVisible, setTabVisible] = useState(() =>
-    typeof document === 'undefined' ? true : !document.hidden,
-  );
+  const renderRef = useRef<(time: number) => void>(() => {});
 
   const uiFocusStroke = runtimeMode === 'fallback' ? MAP_LAYER.focus : FLOW;
   const uiFocusStrength = Math.max(
@@ -273,9 +269,11 @@ export function MobilityOSLandingMap({
 
     const io = new IntersectionObserver(
       ([entry]) => {
-        const next = entry?.isIntersecting ?? true;
-        visibleRef.current = next;
-        setVisible(next);
+        const wasVisible = visibleRef.current;
+        visibleRef.current = entry?.isIntersecting ?? true;
+        if (visibleRef.current && !wasVisible && frameRef.current === null) {
+          frameRef.current = requestAnimationFrame(renderRef.current);
+        }
       },
       { threshold: 0 },
     );
@@ -308,29 +306,16 @@ export function MobilityOSLandingMap({
     targetFocusStrengthRef.current = routes.some(r => r.focused) ? 1 : 0;
   }, [routes]);
 
-  // Pause the animation loop when the browser tab is hidden to save CPU/GPU.
   useEffect(() => {
-    const onVis = () => {
-      const isVisible = !document.hidden;
-      setTabVisible(isVisible);
-      visibleRef.current = isVisible;
-    };
-    document.addEventListener('visibilitychange', onVis);
-    return () => document.removeEventListener('visibilitychange', onVis);
-  }, []);
-
-  useEffect(() => {
-    if (!visible || !tabVisible) return;
-
     const render = (time: number) => {
-      if (!visibleRef.current || document.hidden) {
+      if (!visibleRef.current) {
         frameRef.current = null;
         return;
       }
 
       const canvas = canvasRef.current;
       if (!canvas) {
-        frameRef.current = requestAnimationFrame(render);
+        frameRef.current = null;
         return;
       }
 
@@ -809,9 +794,11 @@ export function MobilityOSLandingMap({
       frameRef.current = requestAnimationFrame(render);
     };
 
+    renderRef.current = render;
     frameRef.current = requestAnimationFrame(render);
     return () => {
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
     };
   }, [
     demandPressure,
@@ -823,9 +810,7 @@ export function MobilityOSLandingMap({
     preferredHeight,
     routes,
     runtimeMode,
-    tabVisible,
     utilization,
-    visible,
   ]);
 
   const resolvedHeight = preferredHeight ?? (size.width < 480 ? 460 : 520);
@@ -877,7 +862,9 @@ export function MobilityOSLandingMap({
                   fontWeight: 800,
                 }}
               >
-                {runtimeMode === 'fallback' ? 'Fallback focus' : 'Live corridor focus'}
+                {runtimeMode === 'fallback'
+                  ? tx('mobilityOSLandingMap.fallback_focus')
+                  : tx('mobilityOSLandingMap.live_corridor_focus')}
               </div>
               <div
                 style={{
@@ -888,7 +875,7 @@ export function MobilityOSLandingMap({
                   lineHeight: 1.35,
                 }}
               >
-                {focusLabel ?? 'Jordan network'}
+                {focusLabel ?? tx('mobilityOSLandingMap.jordan_network')}
               </div>
               {focusLabel && (
                 <div

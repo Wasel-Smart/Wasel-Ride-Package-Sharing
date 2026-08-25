@@ -1,0 +1,45 @@
+export const supportPage = {
+  en: {
+      support_that_keeps_the_movement_context: 'Support that keeps the movement context',
+      contact_channels: 'Contact Channels',
+      what_we_can_help_with: 'What We Can Help With',
+      send_us_a_message: 'Send us a message',
+      message_received: 'Message received',
+      we_ll_reply_to: "We'll reply to",
+      within_2_hours: 'within 2 hours.',
+      send_another_message: 'Send another message',
+      your_email: 'Your email',
+      topic: 'Topic',
+      ride_issue: 'Ride issue',
+      package_issue: 'Package issue',
+      wallet_question: 'Wallet question',
+      account_access: 'Account access',
+      driver_verification: 'Driver verification',
+      how_can_we_help: 'How can we help?',
+      send_message: 'Send message',
+      wasel_support_expected_response_2_hours_safety_issues_immediate:
+        'Wasel Support • Expected response 2 hours • Safety issues: immediate',
+  },
+  ar: {
+      support_that_keeps_the_movement_context: 'دعم يحفظ سياق الحركة',
+      contact_channels: 'قنوات التواصل',
+      what_we_can_help_with: 'بماذا يمكننا المساعدة',
+      send_us_a_message: 'أرسل لنا رسالة',
+      message_received: 'تم استلام الرسالة',
+      we_ll_reply_to: 'سنرد على',
+      within_2_hours: 'خلال ساعتين.',
+      send_another_message: 'أرسل رسالة أخرى',
+      your_email: 'بريدك الإلكتروني',
+      topic: 'الموضوع',
+      ride_issue: 'مشكلة رحلة',
+      package_issue: 'مشكلة طرد',
+      wallet_question: 'سؤال عن المحفظة',
+      account_access: 'الوصول للحساب',
+      driver_verification: 'توثيق السائق',
+      how_can_we_help: 'كيف يمكننا المساعدة؟',
+      send_message: 'أرسل رسالة',
+      wasel_support_expected_response_2_hours_safety_issues_immediate:
+        'دعم واصل • الرد المتوقع خلال ساعتين • مشاكل السلامة: فورية',
+  }
+} as const;
+

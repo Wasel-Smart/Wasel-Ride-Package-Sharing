@@ -1,6 +1,7 @@
 ﻿import { motion } from 'framer-motion';
 import {
   ArrowRight,
+  ArrowLeft,
   BadgeCheck,
   BarChart3,
   Headphones,
@@ -27,222 +28,54 @@ interface OutcomesSectionProps extends SectionNavigationProps {
 }
 
 const proofMetrics = [
-  {
-    label: 'Core flows',
-    value: '4',
-    detail: 'Rides, driver supply, parcels, and scheduled bus fallback.',
-    accent: C.cyan,
-  },
-  {
-    label: 'Trust checks',
-    value: '5',
-    detail: 'Identity, email, phone, driver documents, and wallet standing.',
-    accent: C.green,
-  },
-  {
-    label: 'Ad resale',
-    value: '0',
-    detail: 'The privacy model is explicit: no advertising resale of user data.',
-    accent: C.gold,
-  },
-  {
-    label: 'UX signals',
-    value: 'Live',
-    detail: 'Web Vitals and funnel events are ready for consent-based iteration.',
-    accent: C.blueLight,
-  },
-] as const;
-
-const proofMetricsAr = [
-  {
-    label: 'التدفقات الأساسية',
-    value: '٤',
-    detail: 'الرحلات، عرض السواقين، الطرود، وبديل الباص المجدول.',
-    accent: C.cyan,
-  },
-  {
-    label: 'فحوصات الثقة',
-    value: '٥',
-    detail: 'الهوية، البريد، الهاتف، وثائق السواق، ووضع المحفظة.',
-    accent: C.green,
-  },
-  {
-    label: 'بيع الإعلانات',
-    value: '٠',
-    detail: 'نموذج الخصوصية واضح: لا نعيد بيع بيانات المستخدمين للإعلانات.',
-    accent: C.gold,
-  },
-  {
-    label: 'إشارات التجربة',
-    value: 'مباشر',
-    detail: 'مؤشرات الويب ومسار التحويل جاهزة للتحسين بعد موافقة المستخدم.',
-    accent: C.blueLight,
-  },
+  { labelKey: 'homeContent.metric_flows_label', value: '4', detailKey: 'homeContent.metric_flows_detail', accent: C.cyan },
+  { labelKey: 'homeContent.metric_trust_label', value: '5', detailKey: 'homeContent.metric_trust_detail', accent: C.green },
+  { labelKey: 'homeContent.metric_ads_label', value: '0', detailKey: 'homeContent.metric_ads_detail', accent: C.gold },
+  { labelKey: 'homeContent.metric_ux_label', value: 'Live', valueAr: 'مباشر', detailKey: 'homeContent.metric_ux_detail', accent: C.blueLight },
 ] as const;
 
 const onboardingSteps = [
-  {
-    icon: Route,
-    title: 'Choose the corridor',
-    detail: 'Start with Amman, Aqaba, Irbid, Zarqa, Dead Sea, Petra, or your saved route.',
-  },
-  {
-    icon: BarChart3,
-    title: 'Compare real options',
-    detail: 'See seat supply, scheduled fallback, route price, and trust context together.',
-  },
-  {
-    icon: BadgeCheck,
-    title: 'Confirm with confidence',
-    detail: 'Book, offer seats, or send a parcel only after the right details are visible.',
-  },
-  {
-    icon: Headphones,
-    title: 'Track and resolve',
-    detail: 'Live tracking, handoff proof, wallet status, and support stay attached.',
-  },
-] as const;
-
-const onboardingStepsAr = [
-  {
-    icon: Route,
-    title: 'اختار المسار',
-    detail: 'ابدأ من عمّان، العقبة، إربد، الزرقاء، البحر الميت، البتراء، أو مسارك المحفوظ.',
-  },
-  {
-    icon: BarChart3,
-    title: 'قارن الخيارات الحقيقية',
-    detail: 'شاهد المقاعد المتاحة، البديل المجدول، سعر المسار، وسياق الثقة معاً.',
-  },
-  {
-    icon: BadgeCheck,
-    title: 'أكد بثقة',
-    detail: 'احجز، اعرض مقاعد، أو أرسل طرداً فقط بعد ظهور التفاصيل الصحيحة.',
-  },
-  {
-    icon: Headphones,
-    title: 'تتبع وحل',
-    detail: 'التتبع المباشر، إثبات التسليم، حالة المحفظة، والدعم تبقى مرتبطة.',
-  },
+  { icon: Route, titleKey: 'homeContent.step_choose_title', detailKey: 'homeContent.step_choose_detail' },
+  { icon: BarChart3, titleKey: 'homeContent.step_compare_title', detailKey: 'homeContent.step_compare_detail' },
+  { icon: BadgeCheck, titleKey: 'homeContent.step_confirm_title', detailKey: 'homeContent.step_confirm_detail' },
+  { icon: Headphones, titleKey: 'homeContent.step_track_title', detailKey: 'homeContent.step_track_detail' },
 ] as const;
 
 const outcomeCards = [
   {
-    label: 'For riders',
-    title: 'Pay less without guessing',
-    detail: 'Route-level price, seats, and bus fallback help riders choose before committing.',
-    cta: 'Find a route',
+    labelKey: 'homeContent.outcome_riders_label',
+    titleKey: 'homeContent.outcome_riders_title',
+    detailKey: 'homeContent.outcome_riders_detail',
+    ctaKey: 'homeContent.outcome_riders_cta',
     path: '/find-ride',
     accent: C.cyan,
   },
   {
-    label: 'For drivers',
-    title: 'Turn empty seats into demand',
-    detail: 'Drivers see request context, trust readiness, and route economics in one flow.',
-    cta: 'Offer seats',
+    labelKey: 'homeContent.outcome_drivers_label',
+    titleKey: 'homeContent.outcome_drivers_title',
+    detailKey: 'homeContent.outcome_drivers_detail',
+    ctaKey: 'homeContent.outcome_drivers_cta',
     path: '/offer-ride',
     accent: C.gold,
   },
   {
-    label: 'For parcels',
-    title: 'Move packages with proof',
-    detail: 'Pickup, delivery, tracking, and support are part of the same corridor record.',
-    cta: 'Send a parcel',
-    path: '/packages',
-    accent: C.orange,
-  },
-] as const;
-
-const outcomeCardsAr = [
-  {
-    label: 'للركاب',
-    title: 'ادفع أقل بدون تخمين',
-    detail: 'سعر المسار، المقاعد، وبديل الباص تساعد الراكب يختار قبل الالتزام.',
-    cta: 'ابحث عن مسار',
-    path: '/find-ride',
-    accent: C.cyan,
-  },
-  {
-    label: 'للسواقين',
-    title: 'حوّل المقاعد الفارغة إلى طلب',
-    detail: 'السواق يشوف سياق الطلب، جاهزية الثقة، واقتصاديات المسار في تدفق واحد.',
-    cta: 'اعرض مقاعد',
-    path: '/offer-ride',
-    accent: C.gold,
-  },
-  {
-    label: 'للطرود',
-    title: 'حرّك الطرود بإثبات',
-    detail: 'الاستلام، التسليم، التتبع، والدعم جزء من نفس سجل المسار.',
-    cta: 'أرسل طرد',
+    labelKey: 'homeContent.outcome_parcels_label',
+    titleKey: 'homeContent.outcome_parcels_title',
+    detailKey: 'homeContent.outcome_parcels_detail',
+    ctaKey: 'homeContent.outcome_parcels_cta',
     path: '/packages',
     accent: C.orange,
   },
 ] as const;
 
 const trustLinks = [
-  {
-    icon: Lock,
-    title: 'Privacy',
-    detail: 'What Wasel collects, why it is used, how users control it, and what is never sold.',
-    path: '/app/privacy',
-    accent: C.cyan,
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Security',
-    detail: 'Account protection, encryption, two-factor setup, trust gates, and monitoring.',
-    path: '/app/security',
-    accent: C.green,
-  },
-  {
-    icon: BadgeCheck,
-    title: 'Terms',
-    detail: 'Eligibility, payments, conduct, cancellation, dispute flow, and platform role.',
-    path: '/app/terms',
-    accent: C.gold,
-  },
-  {
-    icon: Headphones,
-    title: 'Support',
-    detail: 'Escalation paths for rides, parcels, account access, payments, and safety issues.',
-    path: '/app/support',
-    accent: C.blueLight,
-  },
+  { icon: Lock, titleKey: 'homeContent.trust_privacy_title', detailKey: 'homeContent.trust_privacy_detail', path: '/app/privacy', accent: C.cyan },
+  { icon: ShieldCheck, titleKey: 'homeContent.trust_security_title', detailKey: 'homeContent.trust_security_detail', path: '/app/security', accent: C.green },
+  { icon: BadgeCheck, titleKey: 'homeContent.trust_terms_title', detailKey: 'homeContent.trust_terms_detail', path: '/app/terms', accent: C.gold },
+  { icon: Headphones, titleKey: 'homeContent.trust_support_title', detailKey: 'homeContent.trust_support_detail', path: '/app/support', accent: C.blueLight },
 ] as const;
 
-const trustLinksAr = [
-  {
-    icon: Lock,
-    title: 'الخصوصية',
-    detail: 'ما الذي يجمعه واصل، لماذا يستخدمه، كيف يتحكم المستخدمون به، وما الذي لا يتم بيعه أبداً.',
-    path: '/app/privacy',
-    accent: C.cyan,
-  },
-  {
-    icon: ShieldCheck,
-    title: 'الأمان',
-    detail: 'حماية الحساب، التشفير، إعداد التحقق بخطوتين، بوابات الثقة، والمراقبة.',
-    path: '/app/security',
-    accent: C.green,
-  },
-  {
-    icon: BadgeCheck,
-    title: 'الشروط',
-    detail: 'الأهلية، المدفوعات، السلوك، الإلغاء، مسار النزاعات، ودور المنصة.',
-    path: '/app/terms',
-    accent: C.gold,
-  },
-  {
-    icon: Headphones,
-    title: 'الدعم',
-    detail: 'مسارات التصعيد للرحلات، الطرود، الوصول للحساب، المدفوعات، والسلامة.',
-    path: '/app/support',
-    accent: C.blueLight,
-  },
-] as const;
-
-function ArrowCta({ label, accent }: { label: string; accent: string }) {
+function ArrowCta({ label, accent, ar }: { label: string; accent: string; ar?: boolean }) {
   return (
     <span
       style={{
@@ -255,13 +88,13 @@ function ArrowCta({ label, accent }: { label: string; accent: string }) {
       }}
     >
       {label}
-      <ArrowRight size={13} />
+      {ar ? <ArrowLeft size={13} /> : <ArrowRight size={13} />}
     </span>
   );
 }
 
 export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
-  const metrics = ar ? proofMetricsAr : proofMetrics;
+  const metrics = proofMetrics;
 
   return (
     <motion.section initial={false} className="wasel-home-section">
@@ -308,7 +141,7 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
             <WaselButton
               type="button"
               variant="primary"
-              iconEnd={<ArrowRight size={15} />}
+              iconEnd={ar ? <ArrowLeft size={15} /> : <ArrowRight size={15} />}
               onClick={() => onNavigate('/auth?tab=register', 'proof_register')}
             >
               {ar ? 'أنشئ حسابا موثوقا' : 'Create trusted account'}
@@ -327,7 +160,7 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
         <div className="wasel-home-proof-metrics">
           {metrics.map(metric => (
             <div
-              key={metric.label}
+              key={metric.labelKey}
               className="wasel-home-proof-metric-card"
               style={{
                 borderColor: `${metric.accent}24`,
@@ -337,12 +170,12 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
                 className="wasel-home-proof-metric-value"
                 style={{ color: metric.accent }}
               >
-                {metric.value}
+                {ar && 'valueAr' in metric ? metric.valueAr : metric.value}
               </div>
               <div>
-                <div className="wasel-home-proof-metric-label">{metric.label}</div>
+                <div className="wasel-home-proof-metric-label">{tx(metric.labelKey)}</div>
                 <div className="wasel-home-proof-metric-detail">
-                  {metric.detail}
+                  {tx(metric.detailKey)}
                 </div>
               </div>
             </div>
@@ -354,7 +187,7 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
 }
 
 export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps) {
-  const steps = ar ? onboardingStepsAr : onboardingSteps;
+  const steps = onboardingSteps;
 
   return (
     <motion.section initial={false} className="wasel-home-section">
@@ -376,7 +209,7 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
           const Icon = step.icon;
           return (
             <div
-              key={step.title}
+              key={step.titleKey}
               style={{
                 minHeight: 190,
                 display: 'flex',
@@ -415,15 +248,16 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
                 </span>
               </div>
               <div style={{ marginTop: 18, color: C.text, fontSize: '0.98rem', fontWeight: 900 }}>
-                {step.title}
+                {tx(step.titleKey)}
               </div>
               <div
                 style={{ marginTop: 8, color: C.textMuted, fontSize: '0.8rem', lineHeight: 1.62 }}
               >
-                {step.detail}
+                {tx(step.detailKey)}
               </div>
               <div style={{ marginTop: 'auto', paddingTop: 16 }}>
                 <ArrowCta
+                  ar={ar}
                   label={index === 0 ? (ar ? 'ابدأ هنا' : 'Begin here') : ar ? 'مشمول' : 'Included'}
                   accent={index === 0 ? C.cyan : C.textDim}
                 />
@@ -457,7 +291,7 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
         <WaselButton
           type="button"
           variant="outline"
-          iconEnd={<ArrowRight size={14} />}
+          iconEnd={ar ? <ArrowLeft size={14} /> : <ArrowRight size={14} />}
           onClick={() => onNavigate('/find-ride?demo=1', 'demo_start_footer')}
           style={{ background: C.card, color: C.text }}
         >
@@ -469,7 +303,7 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
 }
 
 export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSectionProps) {
-  const cards = ar ? outcomeCardsAr : outcomeCards;
+  const cards = outcomeCards;
 
   return (
     <motion.section initial={false} className="wasel-home-section">
@@ -481,9 +315,9 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
         {cards.map(card => (
           <button
             type="button"
-            key={card.title}
+            key={card.titleKey}
             onClick={() =>
-              onNavigate(card.path, `outcome_${card.label.toLowerCase().replace(/\s+/g, '_')}`)
+              onNavigate(card.path, `outcome_${card.path.replace(/\//g, '')}`)
             }
             style={{
               minHeight: 210,
@@ -507,7 +341,7 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
                 textTransform: 'uppercase',
               }}
             >
-              {card.label}
+              {tx(card.labelKey)}
             </div>
             <div
               style={{
@@ -518,15 +352,15 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
                 lineHeight: 1.16,
               }}
             >
-              {card.title}
+              {tx(card.titleKey)}
             </div>
             <div
               style={{ marginTop: 10, color: C.textMuted, fontSize: '0.83rem', lineHeight: 1.7 }}
             >
-              {card.detail}
+              {tx(card.detailKey)}
             </div>
             <div style={{ marginTop: 'auto', paddingTop: 20 }}>
-              <ArrowCta label={card.cta} accent={card.accent} />
+              <ArrowCta ar={ar} label={tx(card.ctaKey)} accent={card.accent} />
             </div>
           </button>
         ))}
@@ -632,7 +466,7 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
 }
 
 export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
-  const links = ar ? trustLinksAr : trustLinks;
+  const links = trustLinks;
 
   return (
     <motion.section initial={false} className="wasel-home-section">
@@ -646,8 +480,8 @@ export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
           return (
             <button
               type="button"
-              key={link.title}
-              onClick={() => onNavigate(link.path, `trust_${link.title.toLowerCase()}`)}
+              key={link.titleKey}
+              onClick={() => onNavigate(link.path, `trust_${link.path.split('/').pop()}`)}
               style={{
                 minHeight: 172,
                 display: 'flex',
@@ -674,14 +508,14 @@ export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
               >
                 <Icon size={18} />
               </span>
-              <div style={{ marginTop: 16, color: C.text, fontWeight: 900 }}>{link.title}</div>
+              <div style={{ marginTop: 16, color: C.text, fontWeight: 900 }}>{tx(link.titleKey)}</div>
               <div
                 style={{ marginTop: 8, color: C.textMuted, fontSize: '0.78rem', lineHeight: 1.62 }}
               >
-                {link.detail}
+                {tx(link.detailKey)}
               </div>
               <div style={{ marginTop: 'auto', paddingTop: 16 }}>
-                <ArrowCta label={ar ? 'افتح الصفحة' : 'Open page'} accent={link.accent} />
+                <ArrowCta ar={ar} label={ar ? 'افتح الصفحة' : 'Open page'} accent={link.accent} />
               </div>
             </button>
           );

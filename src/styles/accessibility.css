@@ -19,13 +19,13 @@
   --interactive-primary: #00E5FF;
   --interactive-hover: #7fedff;
   --interactive-active: #4dd4ff;
-  --interactive-disabled: #475569;
+  --interactive-disabled: rgba(196,220,238,0.35);
 }
 
 .light {
   /* Text on light backgrounds - minimum 4.5:1 contrast */
   --text-primary-light: #0f172a;
-  --text-secondary-light: #334155;
+  --text-secondary-light: rgba(8,29,57,0.68);
   --text-muted-light: #64748b;
 
   /* Interactive elements for light mode */

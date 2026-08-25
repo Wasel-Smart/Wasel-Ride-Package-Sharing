@@ -130,6 +130,18 @@ export class RideLifecycleService {
       })(),
       seats: request.seats,
       notes: request.notes,
+      // Coordinates and vehicle preference were previously dropped from the
+      // online request path (they were only present in the offline-queue
+      // payload below), which meant a PostGIS-backed matching call never saw
+      // exact pickup/dropoff coordinates for online requests. Included here
+      // additively so nothing already read by the backend changes shape.
+      origin_lat: request.origin.latitude,
+      origin_lng: request.origin.longitude,
+      origin_address: request.origin.address,
+      dest_lat: request.destination.latitude,
+      dest_lng: request.destination.longitude,
+      dest_address: request.destination.address,
+      preferred_vehicle_type: request.preferredVehicleType,
     };
     const queuedPayload = {
       rider_id: user.id,
