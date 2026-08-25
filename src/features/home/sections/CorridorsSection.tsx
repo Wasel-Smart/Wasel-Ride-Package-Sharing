@@ -5,12 +5,11 @@ import type { CorridorCard } from './types';
 import { tx } from '../../../locales/tx';
 
 interface CorridorsSectionProps {
-  ar: boolean;
   corridorCards: CorridorCard[];
   onNavigate: (path: string, source?: string) => void;
 }
 
-export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSectionProps) {
+export function CorridorsSection({ corridorCards, onNavigate }: CorridorsSectionProps) {
   return (
     <motion.section initial={false} className="wasel-home-section">
       <div className="wasel-home-section-header">

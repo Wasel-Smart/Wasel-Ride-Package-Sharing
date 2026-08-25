@@ -4,12 +4,11 @@ import type { QuickAction } from './types';
 import { tx } from '../../../locales/tx';
 
 interface QuickActionsSectionProps {
-  ar: boolean;
   quickActions: QuickAction[];
   onNavigate: (path: string, source?: string) => void;
 }
 
-export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActionsSectionProps) {
+export function QuickActionsSection({ quickActions, onNavigate }: QuickActionsSectionProps) {
   return (
     <motion.section initial={false} className="wasel-home-section">
       <div className="wasel-home-section-header">

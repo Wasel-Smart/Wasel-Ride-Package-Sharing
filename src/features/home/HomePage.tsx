@@ -473,7 +473,7 @@ export function HomePage() {
             </motion.div>
           )}
 
-          <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={handleNavigate} />
+          <QuickActionsSection quickActions={quickActions} onNavigate={handleNavigate} />
 
           {/* Show onboarding demo only for new/signed-out users */}
           {!user && <OnboardingDemoSection ar={ar} onNavigate={handleNavigate} />}
@@ -481,7 +481,7 @@ export function HomePage() {
           <CorridorBetaFocusSection ar={ar} plan={corridorBetaPlan} onNavigate={handleNavigate} />
 
           {/* Single corridor section — OutcomesSection removed to eliminate redundancy */}
-          <CorridorsSection ar={ar} corridorCards={corridorCards} onNavigate={handleNavigate} />
+          <CorridorsSection corridorCards={corridorCards} onNavigate={handleNavigate} />
 
           <TrustPagesSection ar={ar} onNavigate={handleNavigate} />
 
@@ -510,7 +510,7 @@ export function HomePage() {
               }
             />
           ) : (
-            <SignedOutCtaSection ar={ar} onNavigate={handleNavigate} />
+            <SignedOutCtaSection onNavigate={handleNavigate} />
           )}
         </div>
       </div>

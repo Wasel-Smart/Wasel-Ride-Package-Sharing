@@ -21,7 +21,6 @@ interface SignedInUtilitySectionProps {
 }
 
 interface SignedOutCtaSectionProps {
-  ar: boolean;
   onNavigate: (path: string, source?: string) => void;
 }
 
@@ -127,7 +126,7 @@ export function SignedInUtilitySection({
   );
 }
 
-export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps) {
+export function SignedOutCtaSection({ onNavigate }: SignedOutCtaSectionProps) {
   return (
     <motion.section initial={false} className="wasel-home-section" style={{ marginBottom: 24 }}>
       <div
