@@ -14,7 +14,6 @@ const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled
 export function CookieConsentBanner() {
   const [showBanner, setShowBanner] = useState(false);
   const bannerRef = useRef<HTMLDivElement | null>(null);
-  const acceptRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     const consent = safeStorageGetItem('localStorage', CONSENT_KEY);
@@ -72,8 +71,8 @@ export function CookieConsentBanner() {
       const focusable = Array.from(banner.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
       if (focusable.length === 0) return;
 
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
 
       if (event.shiftKey) {
         if (document.activeElement === first) {
@@ -147,7 +146,7 @@ export function CookieConsentBanner() {
             {tx('cookieConsentBanner.decline')}
           </WaselButton>
           <WaselButton
-            ref={acceptRef}
+            id="cookie-accept-btn"
             onClick={handleAccept}
             style={{
               background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 100%)',

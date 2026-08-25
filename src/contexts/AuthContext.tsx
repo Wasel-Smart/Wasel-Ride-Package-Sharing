@@ -321,10 +321,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signIn = useCallback(
     async (email: string, password: string): Promise<{ error: AuthOperationError }> => {
-      if (!supabase) {
-        return { error: new Error('Backend not configured') };
-      }
-
       setBusy(true);
       try {
         const { authAPI } = await import('../services/auth');
