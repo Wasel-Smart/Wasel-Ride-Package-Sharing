@@ -1,0 +1,45 @@
+export const findRideTripDetailModal = {
+  en: {
+      close_trip_details: 'Close trip details',
+      km: 'km',
+      trips: 'trips',
+      production_route_proof: 'Production route proof',
+      route_map: 'Route Map',
+      a_clear_preview_of_pickup_destination_and_route_direction:
+        'A clear preview of pickup, destination, and route direction.',
+      friendly_map_preview: 'Friendly map preview',
+      prayer_stops: 'Prayer stops',
+      ramadan_friendly: 'Ramadan-friendly',
+      route_stops: 'Route Stops',
+      passenger_reviews: 'Passenger Reviews',
+      price_per_seat: 'Price per seat',
+      base: 'Base',
+      jod_save: 'JOD | Save',
+      cheaper_than_solo_movement: '% cheaper than solo movement',
+      solo_reference: 'Solo reference:',
+      jod_best_pickup: 'JOD | Best pickup:',
+    },
+  },
+  ar: {
+      close_trip_details: 'إغلاق تفاصيل الرحلة',
+      km: 'كم',
+      trips: 'رحلات',
+      production_route_proof: 'إثبات مسار الإنتاج',
+      route_map: 'خريطة المسار',
+      a_clear_preview_of_pickup_destination_and_route_direction:
+        'معاينة واضحة لنقطة الانطلاق والوجهة واتجاه المسار.',
+      friendly_map_preview: 'معاينة خريطة ودودة',
+      prayer_stops: 'محطّات الصلاة',
+      ramadan_friendly: 'مناسب للرمضان',
+      route_stops: 'محطّات المسار',
+      passenger_reviews: 'تقييمات الركاب',
+      price_per_seat: 'السعر لكل مقعد',
+      base: 'الأساس',
+      jod_save: 'دينار | حفظ',
+      cheaper_than_solo_movement: '% أرخص من التنقل بمفردك',
+      solo_reference: 'المرجع الفردي:',
+      jod_best_pickup: 'دينار | أفضل انطلاق:',
+    },
+  }
+} as const;
+
