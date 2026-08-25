@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Se_arch, C_ar, Package, Bus, Calend_ar, Route, B_arCh_art3, BadgeCheck, Headphones, Play, ArrowRight, MessageSqu_areQuote, St_ar, Globe2 } from 'lucide-react';
+﻿import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
+import { useLanguage } from '../../contexts/LanguageContext';
+import type { Language } from '../../locales/translations';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import { useLiveUserStats } from '../../services/liveDataService';
@@ -11,25 +13,24 @@ import { getCorridorDemandLeaders } from '../../services/growthEngine';
 import { CurrencyService } from '../../utils/currency';
 import { trackUserAction } from '../../utils/monitoring';
 import { API_URL } from '../../services/core';
-import { WaselErrorBound_ary } from '../../components/ErrorBound_ary';
-import { ActiveTripsBanner } from '../../components/TripProgressC_ard';
-import { C, F, POPULAR_ROUTES } from './HomePageSh_ared';
+import { WaselErrorBoundary } from '../../components/ErrorBoundary';
+import { ActiveTripsBanner } from '../../components/TripProgressCard';
+import { C, F, POPULAR_ROUTES } from './HomePageShared';
 import {
   CorridorsSection,
   CorridorBetaFocusSection,
   HomeHeroSection,
   HomePageStyles,
-  Onbo_ardingDemoSection,
+  OnboardingDemoSection,
   ProofSection,
   QuickActionsSection,
   SignedInUtilitySection,
   SignedOutCtaSection,
   TrustPagesSection,
-  type CorridorC_ard,
+  type CorridorCard,
   type QuickAction,
   type TripMode,
 } from './HomePageSections';
-import { _tx } from '../../locales/_tx';
 
 interface LiveCorridor {
   id: string;
@@ -40,6 +41,28 @@ interface LiveCorridor {
   seatsTotal: number;
   seatsBooked: number;
   updatedAt: string;
+}
+
+const COOKIE_CONSENT_KEY = 'wasel-cookie-consent';
+const LANGUAGE_KEY = 'wasel-language';
+
+function readBrowserStorage(key: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(key);
+  } catch (error) {
+    console.error('[Wasel] failed to read browser storage:', error);
+    return null;
+  }
+}
+
+function writeBrowserStorage(key: string, value: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch (error) {
+    console.error('[Wasel] failed to write browser storage:', error);
+  }
 }
 
 export function HomePage() {
@@ -62,22 +85,22 @@ export function HomePage() {
   const [liveCorridors, setLiveCorridors] = useState<LiveCorridor[]>([]);
   const [corridorsLoading, setCorridorsLoading] = useState(true);
 
-  const _ar = language === '_ar';
+  const ar = language === 'ar';
   const svc = CurrencyService.getInstance();
   const firstName = user?.user_metadata?.name?.split(' ')[0] || user?.email?.split('@')[0] || '';
 
    const detectBrowserLanguage = (): Language | null => {
      if (typeof navigator === 'undefined') return null;
      const browserLang = navigator.language.split('-')[0];
-     if (browserLang === '_ar' || browserLang === 'en') {
+     if (browserLang === 'ar' || browserLang === 'en') {
        return browserLang;
      }
      return null;
    };
 
     useEffect(() => {
-      const savedCookieConsent = localStorage.getItem('wasel-cookie-consent');
-      const savedLanguage = localStorage.getItem('wasel-language');
+      const savedCookieConsent = readBrowserStorage(COOKIE_CONSENT_KEY);
+      const savedLanguage = readBrowserStorage(LANGUAGE_KEY);
       if (savedCookieConsent) {
         setCookieConsented(true);
       }
@@ -124,19 +147,55 @@ export function HomePage() {
     }, [API_URL]);
 
   const acceptCookies = () => {
-    localStorage.setItem('wasel-cookie-consent', 'accepted');
+    writeBrowserStorage(COOKIE_CONSENT_KEY, 'accepted');
     setCookieConsented(true);
   };
 
   const declineCookies = () => {
-    localStorage.setItem('wasel-cookie-consent', 'declined');
+    writeBrowserStorage(COOKIE_CONSENT_KEY, 'declined');
     setCookieDeclined(true);
     setCookieConsented(true); // hide banner
   };
 
+  const trapCookieBannerFocus = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      declineCookies();
+      return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    const banner = cookieBannerRef.current;
+    if (!banner) return;
+
+    const focusable = Array.from(
+      banner.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter(element => !element.hasAttribute('disabled') && element.tabIndex !== -1);
+
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (!first || !last) return;
+    const active = document.activeElement;
+
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+      return;
+    }
+
+    if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined' && 'performance' in window) {
-      window.performance.m_ark('wasel_home_visible');
+      window.performance.mark('wasel_home_visible');
     }
     trackUserAction('homepage.view', {
       signedIn: Boolean(user?.id),
@@ -162,7 +221,7 @@ export function HomePage() {
   const quickActions = useMemo<QuickAction[]>(
     () => [
       {
-        icon: Se_arch,
+        icon: Search,
         kicker: t('homeSections.findRideKicker'),
         title: t('homeSections.findRideTitle'),
         desc: t('homeSections.findRideDesc'),
@@ -173,7 +232,7 @@ export function HomePage() {
         path: '/find-ride',
       },
       {
-        icon: C_ar,
+        icon: Car,
         kicker: t('homeSections.offerRideKicker'),
         title: t('homeSections.offerRideTitle'),
         desc: t('homeSections.offerRideDesc'),
@@ -206,7 +265,7 @@ export function HomePage() {
         path: '/bus',
       },
       {
-        icon: Calend_ar,
+        icon: Calendar,
         kicker: t('homeSections.scheduleKicker'),
         title: t('homeSections.scheduleTitle'),
         desc: t('homeSections.scheduleDesc'),
@@ -220,22 +279,26 @@ export function HomePage() {
     [t],
   );
 
-  const corridorC_ards = useMemo<CorridorC_ard[]>(() => {
+  const corridorCards = useMemo<CorridorCard[]>(() => {
     if (!corridorsLoading && liveCorridors.length > 0) {
       return liveCorridors.map((item, index) => {
         const [from, to] = item.from && item.to ? [item.from, item.to] : ['', ''];
         const occupancy = item.seatsTotal > 0 ? Math.round((item.seatsBooked / item.seatsTotal) * 100) : 0;
         return {
           key: item.id,
-          title: _ar ? `${item.from} ← ${item.to}` : `${item.from} → ${item.to}`,
-          detail: `${svc.formatFromJOD(item.priceJod)} ${t('homePage.per_seat')} · ${occupancy}% ${t('homePage.booked')}`,
-          meta: `${t('homePage.pressure_label')} ${item.demand.toFixed(2)}x`,
+          title: ar ? `${item.from} ← ${item.to}` : `${item.from} → ${item.to}`,
+          detail: `${svc.formatFromJOD(item.priceJod)} ${ar ? 'لكرسي' : 'per seat'} · ${occupancy}% ${ar ? 'محجوز' : 'booked'}`,
+          meta: `${ar ? 'الضغط' : 'Pressure'} ${item.demand.toFixed(2)}x`,
           insight:
             index === 0
-              ? t('homePage.best_balance_today')
-              : t('homePage.visible_live_movement'),
+              ? ar
+                ? 'أفضل توازن بين العرض والطلب اليوم'
+                : 'Best balance of supply and demand today'
+              : ar
+                ? 'حركة واضحة على هذا المسار الآن'
+                : 'Visible live movement on this corridor',
           featured: index === 0,
-          path: `/find-ride?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&se_arch=1`,
+          path: `/find-ride?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&search=1`,
           accent: C.cyan,
         };
       });
@@ -247,15 +310,19 @@ export function HomePage() {
         key: item.corridor,
         title: item.corridor,
         detail: item.serviceLabel,
-        meta: `${item.active} ${t('homePage.active_now')}`,
+        meta: `${item.active} ${ar ? 'نشط الآن' : 'active now'}`,
         insight:
           index === 0
-            ? t('homePage.best_balance_today')
-            : t('homePage.visible_live_movement'),
+            ? ar
+              ? 'أفضل توازن بين العرض والطلب اليوم'
+              : 'Best balance of supply and demand today'
+            : ar
+              ? 'حركة واضحة على هذا المسار الآن'
+              : 'Visible live movement on this corridor',
         featured: index === 0,
         path: (() => {
           const [from, to] = item.corridor.split(' to ');
-          return `/find-ride?from=${encodeURIComponent(from ?? '')}&to=${encodeURIComponent(to ?? '')}&se_arch=1`;
+          return `/find-ride?from=${encodeURIComponent(from ?? '')}&to=${encodeURIComponent(to ?? '')}&search=1`;
         })(),
         accent: C.cyan,
       }));
@@ -263,24 +330,24 @@ export function HomePage() {
 
     return POPULAR_ROUTES.slice(0, 3).map((route, index) => ({
       key: `${route.from}-${route.to}`,
-      title: _ar ? `${route.fromAr} ← ${route.toAr}` : `${route.from} → ${route.to}`,
-      detail: `${route.dist} ${t('homePage.km')} - ${svc.formatFromJOD(route.priceJod)}`,
-      meta: t('homeSections.popul_arCorridor'),
-      insight: index === 0 ? t('homeSections.balancedPick') : t('homeSections.readyForComp_arison'),
+      title: ar ? `${route.fromAr} ← ${route.toAr}` : `${route.from} → ${route.to}`,
+      detail: `${route.dist} ${ar ? 'كم' : 'km'} - ${svc.formatFromJOD(route.priceJod)}`,
+      meta: t('homeSections.popularCorridor'),
+      insight: index === 0 ? t('homeSections.balancedPick') : t('homeSections.readyForComparison'),
       featured: index === 0,
       path: `/find-ride?from=${encodeURIComponent(route.from)}&to=${encodeURIComponent(route.to)}`,
       accent: route.color,
     }));
-  }, [_ar, svc, t, liveCorridors, corridorsLoading]);
+  }, [ar, svc, t, liveCorridors, corridorsLoading]);
 
   const corridorBetaPlan = useMemo(() => buildCorridorBetaPlan(), []);
 
   const trustScore = waselUser?.trustScore ?? 87;
 
-  const prim_aryTripPath = tripMode === 'round' ? '/find-ride?mode=round' : '/find-ride';
+  const primaryTripPath = tripMode === 'round' ? '/find-ride?mode=round' : '/find-ride';
 
   return (
-    <WaselErrorBound_ary>
+    <WaselErrorBoundary>
       <div className="wasel-home-shell" dir={dir} style={{ color: C.text, fontFamily: F }}>
         <HomePageStyles />
 
@@ -288,11 +355,7 @@ export function HomePage() {
         {!cookieConsented && !cookieDeclined && (
           <div
             ref={cookieBannerRef}
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') {
-                declineCookies();
-              }
-            }}
+            onKeyDown={trapCookieBannerFocus}
             style={{
               position: 'fixed',
               bottom: 0,
@@ -300,7 +363,7 @@ export function HomePage() {
               right: 0,
               background: C.glass,
               color: C.text,
-              padding: '14px 20px calc(14px + env(safe-_area-inset-bottom))',
+              padding: '14px 20px calc(14px + env(safe-area-inset-bottom))',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -311,8 +374,8 @@ export function HomePage() {
               backdropFilter: 'blur(16px)',
             }}
             role="dialog"
-            _aria-modal="true"
-            _aria-label={t('cookies.title')}
+            aria-modal="true"
+            aria-label={t('cookies.title')}
           >
             <span
               style={{
@@ -333,11 +396,12 @@ export function HomePage() {
             </span>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button
+                type="button"
                 onClick={declineCookies}
                 style={{
                   padding: '8px 14px',
                   borderRadius: 10,
-                  background: 'transp_arent',
+                  background: 'transparent',
                   color: C.textMuted,
                   border: `1px solid ${C.border}`,
                   fontWeight: 600,
@@ -349,6 +413,7 @@ export function HomePage() {
                 {t('cookies.reject_all')}
               </button>
               <button
+                type="button"
                 ref={acceptButtonRef}
                 onClick={acceptCookies}
                 style={{
@@ -372,7 +437,8 @@ export function HomePage() {
         {/* Sticky mobile CTA */}
         <div className="wasel-home-sticky-cta">
           <button
-            onClick={() => handleNavigate(prim_aryTripPath, 'sticky_find')}
+            type="button"
+            onClick={() => handleNavigate(primaryTripPath, 'sticky_find')}
             style={{
               height: 48,
               borderRadius: 12,
@@ -388,6 +454,7 @@ export function HomePage() {
             {t('homeSections.findRideCTA')}
           </button>
           <button
+            type="button"
             onClick={() => handleNavigate('/offer-ride', 'sticky_offer')}
             style={{
               height: 48,
@@ -407,40 +474,40 @@ export function HomePage() {
 
         <div className="wasel-home-container relative z-10">
           <HomeHeroSection
-            _ar={_ar}
+            ar={ar}
             user={user}
             firstName={firstName}
             tripMode={tripMode}
             onTripModeChange={handleTripModeChange}
             onNavigate={handleNavigate}
-            prim_aryTripPath={prim_aryTripPath}
+            primaryTripPath={primaryTripPath}
           />
 
           {/* Proof section only for signed-out users; signed-in users see active trips instead */}
-          {!user && <ProofSection _ar={_ar} onNavigate={handleNavigate} />}
+          {!user && <ProofSection ar={ar} onNavigate={handleNavigate} />}
 
           {user && <ActiveTripsBanner onNavigate={handleNavigate} />}
 
-          <QuickActionsSection _ar={_ar} quickActions={quickActions} onNavigate={handleNavigate} />
+          <QuickActionsSection ar={ar} quickActions={quickActions} onNavigate={handleNavigate} />
 
-          {/* Show onbo_arding demo only for new/signed-out users */}
-          {!user && <Onbo_ardingDemoSection _ar={_ar} onNavigate={handleNavigate} />}
+          {/* Show onboarding demo only for new/signed-out users */}
+          {!user && <OnboardingDemoSection ar={ar} onNavigate={handleNavigate} />}
 
-          <CorridorBetaFocusSection _ar={_ar} plan={corridorBetaPlan} onNavigate={handleNavigate} />
+          <CorridorBetaFocusSection ar={ar} plan={corridorBetaPlan} onNavigate={handleNavigate} />
 
           {/* Single corridor section — OutcomesSection removed to eliminate redundancy */}
-          <CorridorsSection _ar={_ar} corridorC_ards={corridorC_ards} onNavigate={handleNavigate} />
+          <CorridorsSection ar={ar} corridorCards={corridorCards} onNavigate={handleNavigate} />
 
-          <TrustPagesSection _ar={_ar} onNavigate={handleNavigate} />
+          <TrustPagesSection ar={ar} onNavigate={handleNavigate} />
 
-          <StatsStrip _ar={_ar} />
-          <HowItWorksSection _ar={_ar} />
-          <TestimonialsSection _ar={_ar} />
-          <FinalCtaBanner _ar={_ar} onNavigate={handleNavigate} />
+          <StatsStrip ar={ar} />
+          <HowItWorksSection ar={ar} />
+          <TestimonialsSection ar={ar} />
+          <FinalCtaBanner ar={ar} onNavigate={handleNavigate} />
 
           {user ? (
             <SignedInUtilitySection
-              _ar={_ar}
+              ar={ar}
               loading={loading}
               walletBalance={svc.formatFromJOD(liveStats?.walletBalance ?? 0)}
               trustScore={trustScore}
@@ -458,21 +525,20 @@ export function HomePage() {
               }
             />
           ) : (
-            <SignedOutCtaSection _ar={_ar} onNavigate={handleNavigate} />
+            <SignedOutCtaSection ar={ar} onNavigate={handleNavigate} />
           )}
         </div>
       </div>
-    </WaselErrorBound_ary>
+    </WaselErrorBoundary>
   );
 }
 
-function StatsStrip({ _ar }: { _ar: boolean }) {
-  const { t } = useLanguage();
+function StatsStrip({ ar }: { ar: boolean }) {
   const stats = [
-    { value: '4', label: t('homePage.stats_core_flows_label') },
-    { value: '5', label: t('homePage.stats_trust_checks_label') },
-    { value: '0', label: t('homePage.stats_data_resale_label') },
-    { value: t('homePage.stats_live_value'), label: t('homePage.stats_ux_signals_label') },
+    { value: '4', label: ar ? 'تدفقات أساسية' : 'Core flows' },
+    { value: '5', label: ar ? 'فحوصات ثقة' : 'Trust checks' },
+    { value: '0', label: ar ? 'بيع بيانات' : 'Data resale' },
+    { value: ar ? 'مباشر' : 'Live', label: ar ? 'إشارات تجربة' : 'UX signals' },
   ];
 
   return (
@@ -489,28 +555,27 @@ function StatsStrip({ _ar }: { _ar: boolean }) {
   );
 }
 
-function HowItWorksSection({ _ar }: { _ar: boolean }) {
-  const { t } = useLanguage();
+function HowItWorksSection({ ar }: { ar: boolean }) {
   const steps = [
     {
       icon: Route,
-      title: t('homePage.how_step_1_title'),
-      detail: t('homePage.how_step_1_detail'),
+      title: ar ? 'اختار المسار' : 'Choose the corridor',
+      detail: ar ? 'ابدأ من عمّان، العقبة، إربد، الزرقاء، البحر الميت، البتراء، أو مسارك المحفوظ.' : 'Start with Amman, Aqaba, Irbid, Zarqa, Dead Sea, Petra, or your saved route.',
     },
     {
-      icon: B_arCh_art3,
-      title: t('homePage.how_step_2_title'),
-      detail: t('homePage.how_step_2_detail'),
+      icon: BarChart3,
+      title: ar ? 'قارن الخيارات' : 'Compare real options',
+      detail: ar ? 'شاهد المقاعد المتاحة، البديل المجدول، سعر المسار، وسياق الثقة معاً.' : 'See seat supply, scheduled fallback, route price, and trust context together.',
     },
     {
       icon: BadgeCheck,
-      title: t('homePage.how_step_3_title'),
-      detail: t('homePage.how_step_3_detail'),
+      title: ar ? 'أكد بثقة' : 'Confirm with confidence',
+      detail: ar ? 'احجز، اعرض مقاعد، أو أرسل طرداً فقط بعد ظهور التفاصيل الصحيحة.' : 'Book, offer seats, or send a parcel only after the right details are visible.',
     },
     {
       icon: Headphones,
-      title: t('homePage.how_step_4_title'),
-      detail: t('homePage.how_step_4_detail'),
+      title: ar ? 'تتبع وحل' : 'Track and resolve',
+      detail: ar ? 'التتبع المباشر، إثبات التسليم، حالة المحفظة، والدعم تبقى مرتبطة.' : 'Live tracking, handoff proof, wallet status, and support stay attached.',
     },
   ];
 
@@ -522,7 +587,7 @@ function HowItWorksSection({ _ar }: { _ar: boolean }) {
             <Play size={16} />
           </div>
           <h2 className="wasel-home-section-title">
-            {t('homePage.how_it_works_title')}
+            {ar ? 'كيف يعمل Wasel' : 'How Wasel works'}
           </h2>
         </div>
       </div>
@@ -547,26 +612,25 @@ function HowItWorksSection({ _ar }: { _ar: boolean }) {
   );
 }
 
-function TestimonialsSection({ _ar }: { _ar: boolean }) {
-  const { t } = useLanguage();
+function TestimonialsSection({ ar }: { ar: boolean }) {
   const testimonials = [
     {
-      text: t('homePage.testimonial_1_text'),
-      name: t('homePage.testimonial_1_name'),
-      role: t('homePage.testimonial_1_role'),
-      st_ars: 5,
+      text: ar ? 'أفضل طريقة للسفر بين المدن. الأسعار واضحة والسائقون موثوقون.' : 'Best way to travel between cities. Clear prices and trusted drivers.',
+      name: ar ? 'أحمد' : 'Ahmad',
+      role: ar ? 'راكب منتظم' : 'Regular rider',
+      stars: 5,
     },
     {
-      text: t('homePage.testimonial_2_text'),
-      name: t('homePage.testimonial_2_name'),
-      role: t('homePage.testimonial_2_role'),
-      st_ars: 5,
+      text: ar ? 'أعرض مقاعدي بسهولة وأحصل على طلبات موثوقة. التطبيق يثق في المستخدمين.' : 'I offer my seats easily and get trusted requests. The app trusts its users.',
+      name: ar ? 'سارة' : 'Sara',
+      role: ar ? 'سائقة' : 'Driver',
+      stars: 5,
     },
     {
-      text: t('homePage.testimonial_3_text'),
-      name: t('homePage.testimonial_3_name'),
-      role: t('homePage.testimonial_3_role'),
-      st_ars: 5,
+      text: ar ? 'أرسل طرودي مع إثبات التسليم. لم أعد أقلق على شحناتي.' : 'I send parcels with delivery proof. I no longer worry about my shipments.',
+      name: ar ? 'خالد' : 'Khaled',
+      role: ar ? 'مرسل طرود' : 'Parcel sender',
+      stars: 5,
     },
   ];
 
@@ -575,25 +639,25 @@ function TestimonialsSection({ _ar }: { _ar: boolean }) {
       <div className="wasel-home-section-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div className="wasel-home-section-icon">
-            <MessageSqu_areQuote size={16} />
+            <MessageSquareQuote size={16} />
           </div>
           <h2 className="wasel-home-section-title">
-            {t('homePage.testimonials_title')}
+            {ar ? 'ماذا يقول مستخدموا Wasel' : 'What Wasel users say'}
           </h2>
         </div>
       </div>
       <div className="wasel-home-testimonials">
         {testimonials.map((item, index) => (
           <div key={index} className="wasel-home-testimonial">
-            <div className="wasel-home-testimonial-st_ars">
-              {Array.from({ length: item.st_ars }).map((_, i) => (
-                <St_ar key={i} size={14} fill={C.brandOrange} color={C.brandOrange} />
+            <div className="wasel-home-testimonial-stars">
+              {Array.from({ length: item.stars }).map((_, i) => (
+                <Star key={i} size={14} fill={C.brandOrange} color={C.brandOrange} />
               ))}
             </div>
             <div className="wasel-home-testimonial-text">"{item.text}"</div>
             <div className="wasel-home-testimonial-author">
-              <div className="wasel-home-testimonial-avat_ar">
-                {item.name.ch_arAt(0)}
+              <div className="wasel-home-testimonial-avatar">
+                {item.name.charAt(0)}
               </div>
               <div>
                 <div className="wasel-home-testimonial-name">{item.name}</div>
@@ -607,37 +671,38 @@ function TestimonialsSection({ _ar }: { _ar: boolean }) {
   );
 }
 
-function FinalCtaBanner({ _ar, onNavigate }: { _ar: boolean; onNavigate: (path: string, source?: string) => void }) {
-  const { t } = useLanguage();
+function FinalCtaBanner({ ar, onNavigate }: { ar: boolean; onNavigate: (path: string, source?: string) => void }) {
   return (
     <motion.section initial={false} className="wasel-home-section">
       <div className="wasel-home-cta-banner">
         <h2 className="wasel-home-cta-title">
-          {t('homePage.final_cta_title')}
+          {ar ? 'ابدأ رحلتك مع Wasel اليوم' : 'Start your Wasel journey today'}
         </h2>
         <p className="wasel-home-cta-subtitle">
-          {t('homePage.final_cta_subtitle')}
+          {ar
+            ? 'انضم إلى آلاف المستخدمين الذين يثقون بـ Wasel للتنقل الذكي في الأردن.'
+            : 'Join thousands of users who trust Wasel for smart mobility across Jordan.'}
         </p>
         <div className="wasel-home-cta-actions">
           <WaselButton
             type="button"
-            v_ariant="prim_ary"
+            variant="primary"
             size="lg"
             icon={<Route size={17} />}
             iconEnd={<ArrowRight size={16} />}
             onClick={() => onNavigate('/find-ride', 'final_cta_find')}
           >
-            {t('homePage.final_cta_find')}
+            {ar ? 'اعرض المسارات المتاحة' : 'Find a lower-cost route'}
           </WaselButton>
           <WaselButton
             type="button"
-            v_ariant="outline"
+            variant="outline"
             size="lg"
             icon={<Globe2 size={17} />}
             onClick={() => onNavigate('/auth?tab=register', 'final_cta_register')}
             style={{ background: C.elevated, color: C.text, border: `1px solid ${C.border}` }}
           >
-            {t('homePage.final_cta_register')}
+            {ar ? 'أنشئ حسابا مجانيا' : 'Create free account'}
           </WaselButton>
         </div>
       </div>

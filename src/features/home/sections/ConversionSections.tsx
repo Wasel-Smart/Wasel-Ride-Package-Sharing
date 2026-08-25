@@ -1,111 +1,246 @@
-import { motion } from 'framer-motion';
+﻿import { motion } from 'framer-motion';
 import {
   ArrowRight,
   BadgeCheck,
-  B_arCh_art3,
+  BarChart3,
   Headphones,
   Lock,
+  MapPinned,
   MousePointerClick,
   Route,
   ShieldCheck,
+  TimerReset,
 } from 'lucide-react';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 import { R, SH } from '../../../utils/wasel-ds';
-import { C, SectionHeader } from '../HomePageSh_ared';
-import { useLanguage } from '../../../contexts/LanguageContext';
-import { _tx } from '../../../locales/_tx';
+import { C, SectionHeader } from '../HomePageShared';
+import type { CorridorCard } from './types';
+import { tx } from '../../../locales/tx';
 
 interface SectionNavigationProps {
-  _ar: boolean;
+  ar: boolean;
   onNavigate: (path: string, source?: string) => void;
 }
 
-function getProofMetrics(t: (key: string) => string, _ar: boolean) {
-  return [
-    {
-      label: t('conversionSections.proof_metric_core_flows_label'),
-      value: t('conversionSections.proof_metric_core_flows_value'),
-      detail: t('conversionSections.proof_metric_core_flows_detail'),
-      accent: C.cyan,
-    },
-    {
-      label: t('conversionSections.proof_metric_trust_checks_label'),
-      value: t('conversionSections.proof_metric_trust_checks_value'),
-      detail: t('conversionSections.proof_metric_trust_checks_detail'),
-      accent: C.green,
-    },
-    {
-      label: t('conversionSections.proof_metric_ad_resale_label'),
-      value: t('conversionSections.proof_metric_ad_resale_value'),
-      detail: t('conversionSections.proof_metric_ad_resale_detail'),
-      accent: C.gold,
-    },
-    {
-      label: t('conversionSections.proof_metric_ux_signals_label'),
-      value: t('conversionSections.proof_metric_ux_signals_value'),
-      detail: t('conversionSections.proof_metric_ux_signals_detail'),
-      accent: C.blueLight,
-    },
-  ];
+interface OutcomesSectionProps extends SectionNavigationProps {
+  corridorCards: CorridorCard[];
 }
 
-function getOnbo_ardingSteps(t: (key: string) => string, _ar: boolean) {
-  return [
-    {
-      icon: Route,
-      title: t('conversionSections.onbo_arding_step_1_title'),
-      detail: t('conversionSections.onbo_arding_step_1_detail'),
-    },
-    {
-      icon: B_arCh_art3,
-      title: t('conversionSections.onbo_arding_step_2_title'),
-      detail: t('conversionSections.onbo_arding_step_2_detail'),
-    },
-    {
-      icon: BadgeCheck,
-      title: t('conversionSections.onbo_arding_step_3_title'),
-      detail: t('conversionSections.onbo_arding_step_3_detail'),
-    },
-    {
-      icon: Headphones,
-      title: t('conversionSections.onbo_arding_step_4_title'),
-      detail: t('conversionSections.onbo_arding_step_4_detail'),
-    },
-  ];
-}
+const proofMetrics = [
+  {
+    label: 'Core flows',
+    value: '4',
+    detail: 'Rides, driver supply, parcels, and scheduled bus fallback.',
+    accent: C.cyan,
+  },
+  {
+    label: 'Trust checks',
+    value: '5',
+    detail: 'Identity, email, phone, driver documents, and wallet standing.',
+    accent: C.green,
+  },
+  {
+    label: 'Ad resale',
+    value: '0',
+    detail: 'The privacy model is explicit: no advertising resale of user data.',
+    accent: C.gold,
+  },
+  {
+    label: 'UX signals',
+    value: 'Live',
+    detail: 'Web Vitals and funnel events are ready for consent-based iteration.',
+    accent: C.blueLight,
+  },
+] as const;
 
-function getTrustLinks(t: (key: string) => string, _ar: boolean) {
-  return [
-    {
-      icon: Lock,
-      title: t('conversionSections.trust_privacy_title'),
-      detail: t('conversionSections.trust_privacy_detail'),
-      path: '/app/privacy',
-      accent: C.cyan,
-    },
-    {
-      icon: ShieldCheck,
-      title: t('conversionSections.trust_security_title'),
-      detail: t('conversionSections.trust_security_detail'),
-      path: '/app/security',
-      accent: C.green,
-    },
-    {
-      icon: BadgeCheck,
-      title: t('conversionSections.trust_terms_title'),
-      detail: t('conversionSections.trust_terms_detail'),
-      path: '/app/terms',
-      accent: C.gold,
-    },
-    {
-      icon: Headphones,
-      title: t('conversionSections.trust_support_title'),
-      detail: t('conversionSections.trust_support_detail'),
-      path: '/app/support',
-      accent: C.blueLight,
-    },
-  ];
-}
+const proofMetricsAr = [
+  {
+    label: 'التدفقات الأساسية',
+    value: '٤',
+    detail: 'الرحلات، عرض السواقين، الطرود، وبديل الباص المجدول.',
+    accent: C.cyan,
+  },
+  {
+    label: 'فحوصات الثقة',
+    value: '٥',
+    detail: 'الهوية، البريد، الهاتف، وثائق السواق، ووضع المحفظة.',
+    accent: C.green,
+  },
+  {
+    label: 'بيع الإعلانات',
+    value: '٠',
+    detail: 'نموذج الخصوصية واضح: لا نعيد بيع بيانات المستخدمين للإعلانات.',
+    accent: C.gold,
+  },
+  {
+    label: 'إشارات التجربة',
+    value: 'مباشر',
+    detail: 'مؤشرات الويب ومسار التحويل جاهزة للتحسين بعد موافقة المستخدم.',
+    accent: C.blueLight,
+  },
+] as const;
+
+const onboardingSteps = [
+  {
+    icon: Route,
+    title: 'Choose the corridor',
+    detail: 'Start with Amman, Aqaba, Irbid, Zarqa, Dead Sea, Petra, or your saved route.',
+  },
+  {
+    icon: BarChart3,
+    title: 'Compare real options',
+    detail: 'See seat supply, scheduled fallback, route price, and trust context together.',
+  },
+  {
+    icon: BadgeCheck,
+    title: 'Confirm with confidence',
+    detail: 'Book, offer seats, or send a parcel only after the right details are visible.',
+  },
+  {
+    icon: Headphones,
+    title: 'Track and resolve',
+    detail: 'Live tracking, handoff proof, wallet status, and support stay attached.',
+  },
+] as const;
+
+const onboardingStepsAr = [
+  {
+    icon: Route,
+    title: 'اختار المسار',
+    detail: 'ابدأ من عمّان، العقبة، إربد، الزرقاء، البحر الميت، البتراء، أو مسارك المحفوظ.',
+  },
+  {
+    icon: BarChart3,
+    title: 'قارن الخيارات الحقيقية',
+    detail: 'شاهد المقاعد المتاحة، البديل المجدول، سعر المسار، وسياق الثقة معاً.',
+  },
+  {
+    icon: BadgeCheck,
+    title: 'أكد بثقة',
+    detail: 'احجز، اعرض مقاعد، أو أرسل طرداً فقط بعد ظهور التفاصيل الصحيحة.',
+  },
+  {
+    icon: Headphones,
+    title: 'تتبع وحل',
+    detail: 'التتبع المباشر، إثبات التسليم، حالة المحفظة، والدعم تبقى مرتبطة.',
+  },
+] as const;
+
+const outcomeCards = [
+  {
+    label: 'For riders',
+    title: 'Pay less without guessing',
+    detail: 'Route-level price, seats, and bus fallback help riders choose before committing.',
+    cta: 'Find a route',
+    path: '/find-ride',
+    accent: C.cyan,
+  },
+  {
+    label: 'For drivers',
+    title: 'Turn empty seats into demand',
+    detail: 'Drivers see request context, trust readiness, and route economics in one flow.',
+    cta: 'Offer seats',
+    path: '/offer-ride',
+    accent: C.gold,
+  },
+  {
+    label: 'For parcels',
+    title: 'Move packages with proof',
+    detail: 'Pickup, delivery, tracking, and support are part of the same corridor record.',
+    cta: 'Send a parcel',
+    path: '/packages',
+    accent: C.orange,
+  },
+] as const;
+
+const outcomeCardsAr = [
+  {
+    label: 'للركاب',
+    title: 'ادفع أقل بدون تخمين',
+    detail: 'سعر المسار، المقاعد، وبديل الباص تساعد الراكب يختار قبل الالتزام.',
+    cta: 'ابحث عن مسار',
+    path: '/find-ride',
+    accent: C.cyan,
+  },
+  {
+    label: 'للسواقين',
+    title: 'حوّل المقاعد الفارغة إلى طلب',
+    detail: 'السواق يشوف سياق الطلب، جاهزية الثقة، واقتصاديات المسار في تدفق واحد.',
+    cta: 'اعرض مقاعد',
+    path: '/offer-ride',
+    accent: C.gold,
+  },
+  {
+    label: 'للطرود',
+    title: 'حرّك الطرود بإثبات',
+    detail: 'الاستلام، التسليم، التتبع، والدعم جزء من نفس سجل المسار.',
+    cta: 'أرسل طرد',
+    path: '/packages',
+    accent: C.orange,
+  },
+] as const;
+
+const trustLinks = [
+  {
+    icon: Lock,
+    title: 'Privacy',
+    detail: 'What Wasel collects, why it is used, how users control it, and what is never sold.',
+    path: '/app/privacy',
+    accent: C.cyan,
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Security',
+    detail: 'Account protection, encryption, two-factor setup, trust gates, and monitoring.',
+    path: '/app/security',
+    accent: C.green,
+  },
+  {
+    icon: BadgeCheck,
+    title: 'Terms',
+    detail: 'Eligibility, payments, conduct, cancellation, dispute flow, and platform role.',
+    path: '/app/terms',
+    accent: C.gold,
+  },
+  {
+    icon: Headphones,
+    title: 'Support',
+    detail: 'Escalation paths for rides, parcels, account access, payments, and safety issues.',
+    path: '/app/support',
+    accent: C.blueLight,
+  },
+] as const;
+
+const trustLinksAr = [
+  {
+    icon: Lock,
+    title: 'الخصوصية',
+    detail: 'ما الذي يجمعه واصل، لماذا يستخدمه، كيف يتحكم المستخدمون به، وما الذي لا يتم بيعه أبداً.',
+    path: '/app/privacy',
+    accent: C.cyan,
+  },
+  {
+    icon: ShieldCheck,
+    title: 'الأمان',
+    detail: 'حماية الحساب، التشفير، إعداد التحقق بخطوتين، بوابات الثقة، والمراقبة.',
+    path: '/app/security',
+    accent: C.green,
+  },
+  {
+    icon: BadgeCheck,
+    title: 'الشروط',
+    detail: 'الأهلية، المدفوعات، السلوك، الإلغاء، مسار النزاعات، ودور المنصة.',
+    path: '/app/terms',
+    accent: C.gold,
+  },
+  {
+    icon: Headphones,
+    title: 'الدعم',
+    detail: 'مسارات التصعيد للرحلات، الطرود، الوصول للحساب، المدفوعات، والسلامة.',
+    path: '/app/support',
+    accent: C.blueLight,
+  },
+] as const;
 
 function ArrowCta({ label, accent }: { label: string; accent: string }) {
   return (
@@ -125,16 +260,15 @@ function ArrowCta({ label, accent }: { label: string; accent: string }) {
   );
 }
 
-export function ProofSection({ _ar, onNavigate }: SectionNavigationProps) {
-  const { t } = useLanguage();
-  const metrics = getProofMetrics(t, _ar);
+export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
+  const metrics = ar ? proofMetricsAr : proofMetrics;
 
   return (
     <motion.section initial={false} className="wasel-home-section">
       <SectionHeader
-        title={t('conversionSections.proof_title')}
+        title={ar ? 'إثبات قبل التسجيل' : 'Proof before signup'}
         icon="P"
-        action={t('conversionSections.proof_action')}
+        action={ar ? 'افتح الثقة' : 'Open trust'}
         onAction={() => onNavigate('/app/trust', 'proof_trust')}
       />
       <div
@@ -144,9 +278,9 @@ export function ProofSection({ _ar, onNavigate }: SectionNavigationProps) {
         }}
       >
         <div
-          className="wasel-home-proof-hero-c_ard"
+          className="wasel-home-proof-hero-card"
           style={{
-            background: C.c_ard,
+            background: C.card,
             border: `1px solid ${C.border}`,
             boxShadow: SH.sm,
           }}
@@ -156,32 +290,36 @@ export function ProofSection({ _ar, onNavigate }: SectionNavigationProps) {
             style={{ color: C.cyan }}
           >
             <ShieldCheck size={14} />
-            {t('conversionSections.proof_hero_badge')}
+            {ar ? 'مصداقية مدمجة' : 'Built-in credibility'}
           </div>
           <h2
             className="wasel-home-proof-hero-title"
           >
-            {t('conversionSections.proof_hero_title')}
+            {ar
+              ? 'الثقة والدعم واقتصاديات المسار واضحة قبل أن يلتزم المستخدم.'
+              : 'Trust, support, and route economics are visible before users commit.'}
           </h2>
           <p className="wasel-home-proof-hero-desc">
-            {t('conversionSections.proof_hero_desc')}
+            {ar
+              ? 'لا يطلب Wasel من الناس تنسيق الحركة بلا وضوح. يعرض المنتج سياق المسار وجاهزية الثقة ومسارات الدعم وضوابط الخصوصية في نفس نقاط قرار الحجز أو العرض أو الإرسال.'
+              : 'Wasel does not ask people to coordinate movement blindly. The product exposes route context, trust readiness, support paths, and privacy controls at the same points where users decide whether to book, offer, or send.'}
           </p>
           <div className="wasel-home-proof-hero-actions">
             <WaselButton
               type="button"
-              v_ariant="prim_ary"
+              variant="primary"
               iconEnd={<ArrowRight size={15} />}
               onClick={() => onNavigate('/auth?tab=register', 'proof_register')}
             >
-              {t('conversionSections.proof_cta_prim_ary')}
+              {ar ? 'أنشئ حسابا موثوقا' : 'Create trusted account'}
             </WaselButton>
             <WaselButton
               type="button"
-              v_ariant="outline"
+              variant="outline"
               onClick={() => onNavigate('/app/security', 'proof_security')}
               style={{ background: C.elevated, color: C.text }}
             >
-              {t('conversionSections.proof_cta_second_ary')}
+              {ar ? 'راجع الأمان' : 'Review security'}
             </WaselButton>
           </div>
         </div>
@@ -190,7 +328,7 @@ export function ProofSection({ _ar, onNavigate }: SectionNavigationProps) {
           {metrics.map(metric => (
             <div
               key={metric.label}
-              className="wasel-home-proof-metric-c_ard"
+              className="wasel-home-proof-metric-card"
               style={{
                 borderColor: `${metric.accent}24`,
               }}
@@ -215,17 +353,16 @@ export function ProofSection({ _ar, onNavigate }: SectionNavigationProps) {
   );
 }
 
-export function Onbo_ardingDemoSection({ _ar, onNavigate }: SectionNavigationProps) {
-  const { t } = useLanguage();
-  const steps = getOnbo_ardingSteps(t, _ar);
+export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps) {
+  const steps = ar ? onboardingStepsAr : onboardingSteps;
 
   return (
     <motion.section initial={false} className="wasel-home-section">
       <SectionHeader
-        title={t('conversionSections.onbo_arding_title')}
+        title={ar ? 'تدفق تجريبي موجه' : 'Guided demo flow'}
         icon="D"
-        action={t('conversionSections.onbo_arding_action')}
-        onAction={() => onNavigate('/find-ride?demo=1', 'demo_st_art_header')}
+        action={ar ? 'ابدأ التجربة' : 'Start demo'}
+        onAction={() => onNavigate('/find-ride?demo=1', 'demo_start_header')}
       />
       <div
         className="wasel-home-demo-grid"
@@ -246,7 +383,7 @@ export function Onbo_ardingDemoSection({ _ar, onNavigate }: SectionNavigationPro
                 flexDirection: 'column',
                 borderRadius: R.xl,
                 padding: '18px',
-                background: index === 0 ? C.cyanDim : C.c_ard,
+                background: index === 0 ? C.cyanDim : C.card,
                 border: `1px solid ${index === 0 ? C.borderHov : C.border}`,
                 boxShadow: index === 0 ? SH.sm : SH.none,
               }}
@@ -277,17 +414,17 @@ export function Onbo_ardingDemoSection({ _ar, onNavigate }: SectionNavigationPro
                   0{index + 1}
                 </span>
               </div>
-              <div style={{ m_arginTop: 18, color: C.text, fontSize: '0.98rem', fontWeight: 900 }}>
+              <div style={{ marginTop: 18, color: C.text, fontSize: '0.98rem', fontWeight: 900 }}>
                 {step.title}
               </div>
               <div
-                style={{ m_arginTop: 8, color: C.textMuted, fontSize: '0.8rem', lineHeight: 1.62 }}
+                style={{ marginTop: 8, color: C.textMuted, fontSize: '0.8rem', lineHeight: 1.62 }}
               >
                 {step.detail}
               </div>
-              <div style={{ m_arginTop: 'auto', paddingTop: 16 }}>
+              <div style={{ marginTop: 'auto', paddingTop: 16 }}>
                 <ArrowCta
-                  label={index === 0 ? t('conversionSections.onbo_arding_step_cta_begin') : t('conversionSections.onbo_arding_step_cta_included')}
+                  label={index === 0 ? (ar ? 'ابدأ هنا' : 'Begin here') : ar ? 'مشمول' : 'Included'}
                   accent={index === 0 ? C.cyan : C.textDim}
                 />
               </div>
@@ -297,7 +434,7 @@ export function Onbo_ardingDemoSection({ _ar, onNavigate }: SectionNavigationPro
       </div>
       <div
         style={{
-          m_arginTop: 14,
+          marginTop: 14,
           display: 'flex',
           gap: 10,
           flexWrap: 'wrap',
@@ -312,30 +449,194 @@ export function Onbo_ardingDemoSection({ _ar, onNavigate }: SectionNavigationPro
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: C.textMuted }}>
           <MousePointerClick size={16} color={C.cyan} />
           <span style={{ fontSize: '0.84rem', lineHeight: 1.55 }}>
-            {t('conversionSections.onbo_arding_footer_text')}
+            {ar
+              ? 'يحافظ وضع التجربة على تدفق بسيط: المسار أولا، ثم قرار واضح في كل خطوة.'
+              : 'Demo mode keeps the flow low-friction: route first, then one clear decision at a time.'}
           </span>
         </div>
         <WaselButton
           type="button"
-          v_ariant="outline"
+          variant="outline"
           iconEnd={<ArrowRight size={14} />}
-          onClick={() => onNavigate('/find-ride?demo=1', 'demo_st_art_footer')}
-          style={{ background: C.c_ard, color: C.text }}
+          onClick={() => onNavigate('/find-ride?demo=1', 'demo_start_footer')}
+          style={{ background: C.card, color: C.text }}
         >
-          {t('conversionSections.onbo_arding_footer_cta')}
+          {ar ? 'جرب البداية الموجهة' : 'Try the guided start'}
         </WaselButton>
       </div>
     </motion.section>
   );
 }
 
-export function TrustPagesSection({ _ar, onNavigate }: SectionNavigationProps) {
-  const { t } = useLanguage();
-  const links = getTrustLinks(t, _ar);
+export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSectionProps) {
+  const cards = ar ? outcomeCardsAr : outcomeCards;
 
   return (
     <motion.section initial={false} className="wasel-home-section">
-      <SectionHeader title={t('conversionSections.trust_title')} icon="S" />
+      <SectionHeader title={ar ? 'نتائج المنتج' : 'Product outcomes'} icon="O" />
+      <div
+        className="wasel-home-outcome-grid"
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14 }}
+      >
+        {cards.map(card => (
+          <button
+            type="button"
+            key={card.title}
+            onClick={() =>
+              onNavigate(card.path, `outcome_${card.label.toLowerCase().replace(/\s+/g, '_')}`)
+            }
+            style={{
+              minHeight: 210,
+              display: 'flex',
+              flexDirection: 'column',
+              textAlign: 'left',
+              borderRadius: R.xl,
+              padding: '20px',
+              background: `linear-gradient(180deg, ${C.card}, ${C.elevated})`,
+              border: `1px solid ${card.accent}24`,
+              boxShadow: SH.sm,
+              cursor: 'pointer',
+            }}
+          >
+            <div
+              style={{
+                color: card.accent,
+                fontSize: '0.68rem',
+                fontWeight: 850,
+                letterSpacing: 0,
+                textTransform: 'uppercase',
+              }}
+            >
+              {card.label}
+            </div>
+            <div
+              style={{
+                marginTop: 14,
+                color: C.text,
+                fontSize: '1.08rem',
+                fontWeight: 950,
+                lineHeight: 1.16,
+              }}
+            >
+              {card.title}
+            </div>
+            <div
+              style={{ marginTop: 10, color: C.textMuted, fontSize: '0.83rem', lineHeight: 1.7 }}
+            >
+              {card.detail}
+            </div>
+            <div style={{ marginTop: 'auto', paddingTop: 20 }}>
+              <ArrowCta label={card.cta} accent={card.accent} />
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <div
+        className="wasel-home-outcome-strip"
+        style={{
+          marginTop: 14,
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 0.92fr) minmax(0, 1.08fr)',
+          gap: 14,
+        }}
+      >
+        <div
+          style={{
+            borderRadius: R.xl,
+            padding: '18px 20px',
+            background: C.elevated,
+            border: `1px solid ${C.border}`,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              color: C.cyan,
+              fontWeight: 850,
+            }}
+          >
+            <TimerReset size={16} />
+            {tx('conversionSections.less_time_coordinating')}
+          </div>
+          <p
+            style={{
+              margin: '10px 0 0',
+              color: C.textMuted,
+              lineHeight: 1.65,
+              fontSize: '0.84rem',
+            }}
+          >
+            {tx(
+              'conversionSections.the_same_route_context_follows_booking_approval_parcel_handoff_tracking_wallet_and_support_that_is_the_operational_outcome_users_actually_feel',
+            )}
+          </p>
+        </div>
+        <div
+          style={{
+            borderRadius: R.xl,
+            padding: '18px 20px',
+            background: C.elevated,
+            border: `1px solid ${C.border}`,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              color: C.green,
+              fontWeight: 850,
+            }}
+          >
+            <MapPinned size={16} />
+            {tx('conversionSections.live_corridor_focus')}
+          </div>
+          <div
+            style={{
+              marginTop: 12,
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: 8,
+            }}
+          >
+            {corridorCards.slice(0, 3).map(card => (
+              <button
+                type="button"
+                key={card.key}
+                onClick={() => onNavigate(card.path, 'outcome_corridor')}
+                style={{
+                  minHeight: 72,
+                  textAlign: 'left',
+                  borderRadius: R.lg,
+                  padding: '10px 12px',
+                  background: C.card2,
+                  border: `1px solid ${C.borderFaint}`,
+                  color: C.text,
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{ fontSize: '0.78rem', fontWeight: 850 }}>{card.title}</div>
+                <div style={{ marginTop: 4, color: C.textMuted, fontSize: '0.68rem' }}>
+                  {card.meta}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
+  const links = ar ? trustLinksAr : trustLinks;
+
+  return (
+    <motion.section initial={false} className="wasel-home-section">
+      <SectionHeader title={ar ? 'صفحات الثقة' : 'Trust pages'} icon="S" />
       <div
         className="wasel-home-trust-grid"
         style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}
@@ -354,7 +655,7 @@ export function TrustPagesSection({ _ar, onNavigate }: SectionNavigationProps) {
                 textAlign: 'left',
                 borderRadius: R.xl,
                 padding: '18px',
-                background: C.c_ard,
+                background: C.card,
                 border: `1px solid ${link.accent}24`,
                 cursor: 'pointer',
               }}
@@ -373,14 +674,14 @@ export function TrustPagesSection({ _ar, onNavigate }: SectionNavigationProps) {
               >
                 <Icon size={18} />
               </span>
-              <div style={{ m_arginTop: 16, color: C.text, fontWeight: 900 }}>{link.title}</div>
+              <div style={{ marginTop: 16, color: C.text, fontWeight: 900 }}>{link.title}</div>
               <div
-                style={{ m_arginTop: 8, color: C.textMuted, fontSize: '0.78rem', lineHeight: 1.62 }}
+                style={{ marginTop: 8, color: C.textMuted, fontSize: '0.78rem', lineHeight: 1.62 }}
               >
                 {link.detail}
               </div>
-              <div style={{ m_arginTop: 'auto', paddingTop: 16 }}>
-                <ArrowCta label={t('conversionSections.trust_open')} accent={link.accent} />
+              <div style={{ marginTop: 'auto', paddingTop: 16 }}>
+                <ArrowCta label={ar ? 'افتح الصفحة' : 'Open page'} accent={link.accent} />
               </div>
             </button>
           );
