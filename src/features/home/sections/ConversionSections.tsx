@@ -107,91 +107,6 @@ function getTrustLinks(t: (key: string) => string, ar: boolean) {
   ];
 }
 
-const onboardingStepsAr = [
-  {
-    icon: Route,
-    title: 'اختار المسار',
-    detail: 'ابدأ من عمّان، العقبة، إربد، الزرقاء، البحر الميت، البتراء، أو مسارك المحفوظ.',
-  },
-  {
-    icon: BarChart3,
-    title: 'قارن الخيارات الحقيقية',
-    detail: 'شاهد المقاعد المتاحة، البديل المجدول، سعر المسار، وسياق الثقة معاً.',
-  },
-  {
-    icon: BadgeCheck,
-    title: 'أكد بثقة',
-    detail: 'احجز، اعرض مقاعد، أو أرسل طرداً فقط بعد ظهور التفاصيل الصحيحة.',
-  },
-  {
-    icon: Headphones,
-    title: 'تتبع وحل',
-    detail: 'التتبع المباشر، إثبات التسليم، حالة المحفظة، والدعم تبقى مرتبطة.',
-  },
-] as const;
-
-const trustLinks = [
-  {
-    icon: Lock,
-    title: 'Privacy',
-    detail: 'What Wasel collects, why it is used, how users control it, and what is never sold.',
-    path: '/app/privacy',
-    accent: C.cyan,
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Security',
-    detail: 'Account protection, encryption, two-factor setup, trust gates, and monitoring.',
-    path: '/app/security',
-    accent: C.green,
-  },
-  {
-    icon: BadgeCheck,
-    title: 'Terms',
-    detail: 'Eligibility, payments, conduct, cancellation, dispute flow, and platform role.',
-    path: '/app/terms',
-    accent: C.gold,
-  },
-  {
-    icon: Headphones,
-    title: 'Support',
-    detail: 'Escalation paths for rides, parcels, account access, payments, and safety issues.',
-    path: '/app/support',
-    accent: C.blueLight,
-  },
-] as const;
-
-const trustLinksAr = [
-  {
-    icon: Lock,
-    title: 'الخصوصية',
-    detail: 'ما الذي يجمعه واصل، لماذا يستخدمه، كيف يتحكم المستخدمون به، وما الذي لا يتم بيعه أبداً.',
-    path: '/app/privacy',
-    accent: C.cyan,
-  },
-  {
-    icon: ShieldCheck,
-    title: 'الأمان',
-    detail: 'حماية الحساب، التشفير، إعداد التحقق بخطوتين، بوابات الثقة، والمراقبة.',
-    path: '/app/security',
-    accent: C.green,
-  },
-  {
-    icon: BadgeCheck,
-    title: 'الشروط',
-    detail: 'الأهلية، المدفوعات، السلوك، الإلغاء، مسار النزاعات، ودور المنصة.',
-    path: '/app/terms',
-    accent: C.gold,
-  },
-  {
-    icon: Headphones,
-    title: 'الدعم',
-    detail: 'مسارات التصعيد للرحلات، الطرود، الوصول للحساب، المدفوعات، والسلامة.',
-    path: '/app/support',
-    accent: C.blueLight,
-  },
-] as const;
-
 function ArrowCta({ label, accent }: { label: string; accent: string }) {
   return (
     <span
@@ -211,12 +126,13 @@ function ArrowCta({ label, accent }: { label: string; accent: string }) {
 }
 
 export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
-  const metrics = ar ? proofMetricsAr : proofMetrics;
+  const { t } = useLanguage();
+  const metrics = getProofMetrics(t, ar);
 
   return (
     <motion.section initial={false} className="wasel-home-section">
       <SectionHeader
-        title={ar ? 'إثبات قبل التسجيل' : 'Proof before signup'}
+        title={t('conversionSections.proof_title')}
         icon="P"
         action={ar ? 'افتح الثقة' : 'Open trust'}
         onAction={() => onNavigate('/app/trust', 'proof_trust')}
@@ -240,19 +156,15 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
             style={{ color: C.cyan }}
           >
             <ShieldCheck size={14} />
-            {ar ? 'مصداقية مدمجة' : 'Built-in credibility'}
+            {t('conversionSections.proof_hero_badge')}
           </div>
           <h2
             className="wasel-home-proof-hero-title"
           >
-            {ar
-              ? 'الثقة والدعم واقتصاديات المسار واضحة قبل أن يلتزم المستخدم.'
-              : 'Trust, support, and route economics are visible before users commit.'}
+            {t('conversionSections.proof_hero_title')}
           </h2>
           <p className="wasel-home-proof-hero-desc">
-            {ar
-              ? 'لا يطلب Wasel من الناس تنسيق الحركة بلا وضوح. يعرض المنتج سياق المسار وجاهزية الثقة ومسارات الدعم وضوابط الخصوصية في نفس نقاط قرار الحجز أو العرض أو الإرسال.'
-              : 'Wasel does not ask people to coordinate movement blindly. The product exposes route context, trust readiness, support paths, and privacy controls at the same points where users decide whether to book, offer, or send.'}
+            {t('conversionSections.proof_hero_desc')}
           </p>
           <div className="wasel-home-proof-hero-actions">
             <WaselButton
@@ -261,7 +173,7 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
               iconEnd={<ArrowRight size={15} />}
               onClick={() => onNavigate('/auth?tab=register', 'proof_register')}
             >
-              {ar ? 'أنشئ حسابا موثوقا' : 'Create trusted account'}
+              {t('conversionSections.proof_cta_primary')}
             </WaselButton>
             <WaselButton
               type="button"
@@ -269,7 +181,7 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
               onClick={() => onNavigate('/app/security', 'proof_security')}
               style={{ background: C.elevated, color: C.text }}
             >
-              {ar ? 'راجع الأمان' : 'Review security'}
+              {t('conversionSections.proof_cta_secondary')}
             </WaselButton>
           </div>
         </div>
@@ -304,14 +216,15 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
 }
 
 export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps) {
-  const steps = ar ? onboardingStepsAr : onboardingSteps;
+  const { t } = useLanguage();
+  const steps = getOnboardingSteps(t, ar);
 
   return (
     <motion.section initial={false} className="wasel-home-section">
       <SectionHeader
-        title={ar ? 'تدفق تجريبي موجه' : 'Guided demo flow'}
+        title={t('conversionSections.onboarding_title')}
         icon="D"
-        action={ar ? 'ابدأ التجربة' : 'Start demo'}
+        action={t('conversionSections.onboarding_action')}
         onAction={() => onNavigate('/find-ride?demo=1', 'demo_start_header')}
       />
       <div
@@ -374,7 +287,7 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
               </div>
               <div style={{ marginTop: 'auto', paddingTop: 16 }}>
                 <ArrowCta
-                  label={index === 0 ? (ar ? 'ابدأ هنا' : 'Begin here') : ar ? 'مشمول' : 'Included'}
+                  label={index === 0 ? t('conversionSections.onboarding_step_cta_begin') : t('conversionSections.onboarding_step_cta_included')}
                   accent={index === 0 ? C.cyan : C.textDim}
                 />
               </div>
@@ -399,9 +312,7 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: C.textMuted }}>
           <MousePointerClick size={16} color={C.cyan} />
           <span style={{ fontSize: '0.84rem', lineHeight: 1.55 }}>
-            {ar
-              ? 'يحافظ وضع التجربة على تدفق بسيط: المسار أولا، ثم قرار واضح في كل خطوة.'
-              : 'Demo mode keeps the flow low-friction: route first, then one clear decision at a time.'}
+            {t('conversionSections.onboarding_footer_text')}
           </span>
         </div>
         <WaselButton
@@ -411,7 +322,7 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
           onClick={() => onNavigate('/find-ride?demo=1', 'demo_start_footer')}
           style={{ background: C.card, color: C.text }}
         >
-          {ar ? 'جرب البداية الموجهة' : 'Try the guided start'}
+          {t('conversionSections.onboarding_footer_cta')}
         </WaselButton>
       </div>
     </motion.section>
@@ -419,11 +330,12 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
 }
 
 export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
-  const links = ar ? trustLinksAr : trustLinks;
+  const { t } = useLanguage();
+  const links = getTrustLinks(t, ar);
 
   return (
     <motion.section initial={false} className="wasel-home-section">
-      <SectionHeader title={ar ? 'صفحات الثقة' : 'Trust pages'} icon="S" />
+      <SectionHeader title={t('conversionSections.trust_title')} icon="S" />
       <div
         className="wasel-home-trust-grid"
         style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}
@@ -468,7 +380,7 @@ export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
                 {link.detail}
               </div>
               <div style={{ marginTop: 'auto', paddingTop: 16 }}>
-                <ArrowCta label={ar ? 'افتح الصفحة' : 'Open page'} accent={link.accent} />
+                <ArrowCta label={t('conversionSections.trust_open')} accent={link.accent} />
               </div>
             </button>
           );
