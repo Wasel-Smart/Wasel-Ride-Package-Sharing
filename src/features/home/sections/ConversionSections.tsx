@@ -134,7 +134,7 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
       <SectionHeader
         title={t('conversionSections.proof_title')}
         icon="P"
-        action={ar ? 'افتح الثقة' : 'Open trust'}
+        action={t('conversionSections.proof_action')}
         onAction={() => onNavigate('/app/trust', 'proof_trust')}
       />
       <div
