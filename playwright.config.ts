@@ -16,6 +16,7 @@ export default defineConfig({
     baseURL,
     trace: 'retain-on-failure',
     screenshot: {
+      mode: 'only-on-failure',
       fullPage: true,
     },
   },
