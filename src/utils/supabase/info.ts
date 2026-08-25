@@ -14,6 +14,7 @@ const CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY = '';
 
 const PLACEHOLDER_MARKERS = [
   'your-project.supabase.co',
+  'your-project-ref.supabase.co',
   'your-anon-key',
   'your-anon-key-here',
   'your-publishable-key-or-anon-key',

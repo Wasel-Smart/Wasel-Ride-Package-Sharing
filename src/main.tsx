@@ -158,18 +158,25 @@ if (!rootElement) {
 if (environmentIsValid) {
   rootElement.textContent = '';
 
+  const AppTree = import.meta.env.DEV ? React.StrictMode : React.Fragment;
+
   ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
+    <AppTree>
       <RootErrorBoundary>
         <App />
       </RootErrorBoundary>
-    </React.StrictMode>,
+    </AppTree>,
   );
 
   void resetLocalDevelopmentArtifacts();
 
+  const scheduleIdle = (callback: () => void, delay = 0) =>
+    typeof requestIdleCallback !== 'undefined'
+      ? requestIdleCallback(callback, { timeout: delay + 1000 })
+      : setTimeout(callback, delay);
+
   // Defer non-critical initializations to reduce initial bundle impact.
-  void (async () => {
+  void scheduleIdle(async () => {
     try {
       const [
         { initializeAppInsights },
@@ -219,7 +226,7 @@ if (environmentIsValid) {
         console.warn('[Wasel] Deferred initialization failed:', error);
       }
     }
-  })();
+  });
 
   // Expose circuit breaker utilities globally — DEV builds only.
   if (import.meta.env.DEV && typeof window !== 'undefined') {

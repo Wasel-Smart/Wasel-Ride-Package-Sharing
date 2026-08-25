@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ChevronRight, ChevronUp, Info, Phone } from 'lucide-react';
 import { CurrencyService, type SupportedCurrency } from '../../utils/currency';

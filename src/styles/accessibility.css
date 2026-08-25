@@ -6,7 +6,7 @@
 /* ── Enhanced Color Contrast ─────────────────────────────────────────────── */
 :root {
   /* Improved contrast ratios for WCAG AA compliance */
-  --wasel-cyan-accessible: #67e8ff; /* Lightened from #58DDFF for better contrast */
+  --wasel-cyan-accessible: #00E5FF; /* Lightened from #66e0ff for better contrast */
   --wasel-gold-accessible: #ffd070; /* Lightened from #FFBE5C */
   --wasel-green-accessible: #5ee7b0; /* Lightened from #47D69E */
 
@@ -16,7 +16,7 @@
   --text-muted-dark: #94a3b8;
 
   /* Interactive elements - minimum 3:1 contrast */
-  --interactive-primary: #67e8ff;
+  --interactive-primary: #00E5FF;
   --interactive-hover: #7fedff;
   --interactive-active: #4dd4ff;
   --interactive-disabled: rgba(196,220,238,0.35);
@@ -378,8 +378,8 @@ tr:hover {
 
 [role='status'][data-status='info'] {
   background: rgba(103, 232, 255, 0.1);
-  border-color: #67e8ff;
-  color: #67e8ff;
+  border-color: #00E5FF;
+  color: #00E5FF;
 }
 
 /* ── Contrast Utilities ──────────────────────────────────────────────────── */

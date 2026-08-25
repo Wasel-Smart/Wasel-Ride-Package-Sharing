@@ -1,6 +1,6 @@
 import { getEnv } from './env';
 import { logger } from './monitoring';
-import { supabase, isSupabaseConfigured } from '@/utils/supabase/client.ts';
+import { supabase, isSupabaseConfigured } from '@/utils/supabase/client';
 
 export interface HealthCheckResult {
   healthy: boolean;

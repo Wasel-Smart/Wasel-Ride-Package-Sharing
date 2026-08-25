@@ -45,15 +45,18 @@ const JSX_STRING_RE = />([A-Z][a-zA-Z\s]{3,}[a-zA-Z])</g;
 const FALSE_POSITIVE_RE = /^(React|TypeScript|JavaScript|Supabase|Wasel|JoPACC|CliQ|GPS|SOS|OTP|API|URL|JWT|RBAC|SLO|PWA|RTL|LTR|CSS|HTML|JSON|ZIP|PDF|SMS|OTP|2FA|QR|ID|UI|UX|SDK|CDN|CI|CD|PR|MR|TODO|FIXME|NOTE|HACK|XXX)/;
 
 function walk(dir, files = []) {
+  const baseDir = resolve(dir);
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
+    const resolvedFull = resolve(full);
+    if (!resolvedFull.startsWith(baseDir)) continue;
     const stat = statSync(full);
     if (stat.isDirectory()) {
       if (!['node_modules', '.git', 'dist', 'build', '__tests__'].includes(entry)) {
         walk(full, files);
       }
     } else if (['.tsx', '.ts'].includes(extname(entry)) && !ALLOWLIST.includes(entry)) {
-      files.push(full);
+      files.push(resolvedFull);
     }
   }
   return files;

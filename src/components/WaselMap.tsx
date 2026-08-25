@@ -24,7 +24,7 @@ import {
 
 import { MapControls, type MapType } from './MapControls';
 import { MapOverlays } from './MapOverlays';
-import { WaselLogo } from './wasel-ds/WaselLogo';
+import { WaselLogo } from './wasel-ui/WaselLogo';
 import { tx } from '../locales/tx';
 import { sanitizeHtml, sanitizeLogMessage } from '../utils/sanitization';
 import { colors, typography, radii, shadows, effects } from '../styles/design-tokens';
@@ -113,7 +113,7 @@ function ensureLeafletCSS() {
       }
 
       .leaflet-control-attribution a {
-        color: #147fe4 !important;
+        color: #00E5FF !important;
       }
     `;
     document.head.appendChild(style);
@@ -137,7 +137,7 @@ const TILES = TILE_CONFIGS;
 /* ─── SVG icon strings ───────────────────────────────────────────────── */
 const SVG = {
   mosque: `<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="20" cy="20" r="18" fill="#147fe4" stroke="white" stroke-width="2"/>
+    <circle cx="20" cy="20" r="18" fill="#00E5FF" stroke="white" stroke-width="2"/>
     <path d="M20 8 C14 8 9 13 9 19 C9 25 13.5 30 20 31 C24 29.5 27 26.5 27.5 24 C25.5 24.5 23.5 23.5 22 21.5 C19 17.5 20.5 12 24 9.5 C22.8 8.7 21.5 8 20 8Z" fill="white"/>
     <circle cx="27" cy="11.5" r="3" fill="white"/>
     <rect x="18" y="3" width="4" height="6" rx="2" fill="white" opacity="0.8"/>
@@ -180,15 +180,15 @@ const SVG = {
   </svg>`,
 
   pinTeal: `<svg width="30" height="42" viewBox="0 0 30 42" xmlns="http://www.w3.org/2000/svg">
-    <path d="M15 0 C6.7 0 0 6.7 0 15 C0 26 15 42 15 42 C15 42 30 26 30 15 C30 6.7 23.3 0 15 0Z" fill="#147fe4" stroke="white" stroke-width="2"/>
+    <path d="M15 0 C6.7 0 0 6.7 0 15 C0 26 15 42 15 42 C15 42 30 26 30 15 C30 6.7 23.3 0 15 0Z" fill="#00E5FF" stroke="white" stroke-width="2"/>
     <circle cx="15" cy="15" r="7" fill="white"/>
-    <circle cx="15" cy="15" r="4.5" fill="#147fe4"/>
+    <circle cx="15" cy="15" r="4.5" fill="#00E5FF"/>
   </svg>`,
 
   live: `<div style="width:52px;height:52px;position:relative;display:flex;align-items:center;justify-content:center;">
     <div style="position:absolute;inset:0;border-radius:50%;background:rgba(4,173,191,0.15);animation:ping 2s cubic-bezier(0,0,0.2,1) infinite;"></div>
     <div style="position:absolute;inset:6px;border-radius:50%;background:rgba(4,173,191,0.25);"></div>
-    <div style="position:absolute;inset:13px;border-radius:50%;background:#147fe4;"></div>
+    <div style="position:absolute;inset:13px;border-radius:50%;background:#00E5FF;"></div>
     <div style="position:absolute;inset:19px;border-radius:50%;background:white;"></div>
   </div>`,
 };
@@ -415,7 +415,7 @@ function WaselMapCompact({
         lineCap: 'round',
       }).addTo(map);
       const line = L.polyline(latlngs, {
-        color: '#147fe4',
+        color: '#00E5FF',
         weight: 5,
         opacity: 0.95,
         lineCap: 'round',
@@ -446,9 +446,9 @@ function WaselMapCompact({
     mPts.forEach(m => {
       const cm = L.circleMarker([m.lat, m.lng], {
         radius: 5,
-        color: '#147fe4',
+        color: '#00E5FF',
         weight: 2,
-        fillColor: '#147fe4',
+        fillColor: '#00E5FF',
         fillOpacity: 0.8,
       }).addTo(map);
       drawnLayersRef.current.push(cm);
@@ -640,6 +640,7 @@ function WaselMapFull(props: WaselMapProps) {
   const watchIdRef = useRef<number | null>(null);
   const initDone = useRef(false);
   const LRef = useRef<LeafletNamespace | null>(null); // Leaflet instance
+  const moveEndDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -835,7 +836,7 @@ function WaselMapFull(props: WaselMapProps) {
       if (!isMapAlive(mapInstance)) return;
 
       routeLineRef.current = L.polyline(latlngs, {
-        color: '#147fe4',
+        color: '#00E5FF',
         weight: 5,
         opacity: 0.85,
         lineJoin: 'round',
@@ -904,8 +905,8 @@ function WaselMapFull(props: WaselMapProps) {
             );
             liveCircleRef.current = L.circle(latlng, {
               radius: loc.accuracy || 20,
-              color: '#147fe4',
-              fillColor: '#147fe4',
+              color: '#00E5FF',
+              fillColor: '#00E5FF',
               fillOpacity: 0.08,
               weight: 1,
               opacity: 0.35,
@@ -981,10 +982,12 @@ function WaselMapFull(props: WaselMapProps) {
           .addTo(map);
 
         // Reload mosques when map moves significantly
-        let debounceTimer: ReturnType<typeof setTimeout>;
         map.on('moveend', () => {
-          clearTimeout(debounceTimer);
-          debounceTimer = setTimeout(() => {
+          if (moveEndDebounceRef.current !== null) {
+            clearTimeout(moveEndDebounceRef.current);
+          }
+          moveEndDebounceRef.current = setTimeout(() => {
+            moveEndDebounceRef.current = null;
             if (mosquesOn) loadMosques(map);
           }, 1000);
         });
@@ -1021,6 +1024,10 @@ function WaselMapFull(props: WaselMapProps) {
       mapRef.current?.remove();
       mapRef.current = null;
       initDone.current = false;
+      if (moveEndDebounceRef.current !== null) {
+        clearTimeout(moveEndDebounceRef.current);
+        moveEndDebounceRef.current = null;
+      }
     };
   }, []);
 

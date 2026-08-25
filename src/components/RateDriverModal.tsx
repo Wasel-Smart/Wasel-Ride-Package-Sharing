@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { ratingsService, type RatingSubmission } from '@/services/ratings';
-import { Button } from '@/components/ui/button';
+import { WaselButton } from '@/components/wasel-ui/WaselButton';
 import { Card } from '@/components/ui/card';
 import { tx } from '../locales/tx';
 
@@ -147,12 +147,12 @@ export function RateDriverModal({
         )}
 
         <div className="flex gap-3">
-          <Button onClick={onClose} variant="outline" className="flex-1" disabled={loading}>
+          <WaselButton onClick={onClose} variant="outline" style={{ flex: 1 }} disabled={loading}>
             {tx('common.cancel')}
-          </Button>
-          <Button onClick={handleSubmit} className="flex-1" disabled={loading || rating === 0}>
+          </WaselButton>
+          <WaselButton onClick={handleSubmit} style={{ flex: 1 }} disabled={loading || rating === 0}>
             {loading ? 'Submitting...' : 'Submit Rating'}
-          </Button>
+          </WaselButton>
         </div>
       </Card>
     </div>

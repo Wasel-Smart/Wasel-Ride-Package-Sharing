@@ -1,6 +1,6 @@
 import { ChevronRight } from 'lucide-react';
 import { type ReactNode } from 'react';
-import { WaselButton, WaselInput, WaselSelect } from '../../../design-system';
+import { WaselButton, WaselInput, WaselSelect } from '../../../components/wasel-ui';
 import styles from '../../../styles/app-shell.module.css';
 import { C, R, TYPE } from '../../../utils/wasel-ds';
 

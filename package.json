@@ -14,6 +14,8 @@
         "test:unit": "vitest",
         "test:e2e": "playwright test",
         "test:e2e:oauth": "playwright test --grep @oauth",
+        "test:visual": "playwright test --grep @visual",
+        "test:visual:update": "playwright test --grep @visual --update-snapshots",
         "bundle:analyze": "vite build --mode analyze",
         "test:load:smoke": "k6 run tests/load/k6-smoke.js",
         "type-check:app": "tsc -p tsconfig.build.json --noEmit",
@@ -30,7 +32,9 @@
         "verify": "npm run verify:ci && npm run build && npm run test:e2e",
         "audit:rbac": "node scripts/audit-rbac.mjs",
         "sweep:i18n": "node scripts/sweep-i18n.mjs",
-        "cleanup:root": "node scripts/cleanup-root.mjs"
+        "cleanup:root": "node scripts/cleanup-root.mjs",
+        "brand:check": "node scripts/brand-check.mjs",
+        "brand:sync": "node scripts/sync-brand-assets.mjs"
     },
     "dependencies": {
         "@microsoft/applicationinsights-web": "^3.4.3",
@@ -62,12 +66,14 @@
         "@radix-ui/react-tooltip": "^1.1.8",
         "@sentry/react": "^8.0.0",
         "@stripe/stripe-js": "^4.0.0",
-        "@supabase/supabase-js": "^2.105.4",
-        "@tanstack/react-query": "^5.95.2",
+        "@supabase/ssr": "^0.12.4",
+        "@supabase/supabase-js": "^2.112.3",
+        "@tanstack/react-query": "^5.45.1",
         "@vercel/speed-insights": "^2.0.0",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
+        "date-fns": "^3.0.0",
         "embla-carousel-react": "^8.6.0",
         "input-otp": "^1.4.2",
         "leaflet": "^1.9.4",
@@ -82,9 +88,11 @@
         "recharts": "^2.15.2",
         "sonner": "^2.0.3",
         "tailwind-merge": "^3.5.0",
+        "tslib": "^2.1.0",
         "tw-animate-css": "^1.3.8",
         "vaul": "^1.1.2",
         "web-vitals": "^5.2.0",
+        "workbox-window": "^7.4.1",
         "zod": "^3.23.8"
     },
     "devDependencies": {
@@ -116,6 +124,7 @@
         "typescript-eslint": "^8.66.0",
         "vite": "^6.0.0",
         "vite-plugin-pwa": "^1.3.0",
-        "vitest": "^3.2.6"
+        "vitest": "^3.2.6",
+        "workbox-build": "^7.4.1"
     }
 }

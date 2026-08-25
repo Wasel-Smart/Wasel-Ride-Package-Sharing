@@ -19,7 +19,7 @@ function collectFiles(dir, out = []) {
     if (!resolvedFull.startsWith(baseDir)) continue;
     if (e.isDirectory()) {
       if (['locales', 'node_modules', '__tests__'].includes(e.name)) continue;
-      collectFiles(full, out);
+      collectFiles(resolvedFull, out);
     } else if (e.isFile() && /\.(tsx?)$/.test(e.name) && !/\.(test|spec)\./.test(e.name)) {
       out.push(resolvedFull);
     }

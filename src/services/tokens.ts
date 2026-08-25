@@ -9,14 +9,14 @@
 // Colors (from BRAND_GUIDELINES.md)
 export const colors = {
     brandInk: '#081D39',
-    connectionBlue: '#147FE4',
+    connectionBlue: '#00E5FF',
     movementGreen: '#72C70D',
     journeyOrange: '#FF8A0B',
     pearl: '#F8FBFF', // Used for light text/surfaces
     appBackground: '#06111F', // Dark background for app
     black: '#000000',
     // Semantic colors (add as needed, e.g., primary, secondary, success, error)
-    primary: '#147FE4', // Connection blue as primary interactive
+    primary: '#00E5FF', // Connection blue as primary interactive
     success: '#72C70D', // Movement green for success
     warning: '#FF8A0B', // Journey orange for warnings
     text: '#081D39', // Brand ink for text

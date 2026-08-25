@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+﻿import { motion } from 'framer-motion';
 import { ArrowRight, ChevronRight, Route } from 'lucide-react';
 import { C } from '../HomePageShared';
 import type { CorridorCard } from './types';

@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+﻿import type { CSSProperties } from 'react';
 import { C } from '@/utils/wasel-ds';
 
 interface WaselLogoProps {

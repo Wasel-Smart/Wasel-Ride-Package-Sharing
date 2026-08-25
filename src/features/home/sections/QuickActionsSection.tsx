@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+﻿import { motion } from 'framer-motion';
 import { ArrowRight, Route } from 'lucide-react';
 import type { QuickAction } from './types';
 import { tx } from '../../../locales/tx';

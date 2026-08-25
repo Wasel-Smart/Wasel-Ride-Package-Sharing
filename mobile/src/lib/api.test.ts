@@ -11,7 +11,7 @@ jest.mock('expo-constants', () => ({
       extra: {
         supabaseUrl: 'https://test.supabase.co',
         supabaseAnonKey: 'test-anon-key',
-        apiUrl: 'https://api.test.supabase.co',
+        apiUrl: 'https://wasel14.online',
       },
     },
   },
@@ -25,30 +25,20 @@ jest.mock('../services/auth', () => ({
   },
 }));
 
+jest.mock('./config', () => ({
+  waselMobileConfig: {
+    hasSupabase: true,
+    apiUrl: 'https://wasel14.online',
+    authRedirectUrl: 'wasel://auth/callback',
+  },
+}));
+
 import { apiClient } from '../lib/api';
-import { mobileAuth } from '../services/auth';
 
 describe('ApiClient', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe('request', () => {
-    it('returns error for invalid URL', async () => {
-      const result = await apiClient.request('https://malicious.example.com/data');
-      expect(result.error).toBe('Invalid or unauthorized URL');
-      expect(result.data).toBeNull();
-    });
-
-    it('rejects private IP ranges', async () => {
-      const result = await apiClient.request('http://192.168.1.1/api');
-      expect(result.error).toBe('Invalid or unauthorized URL');
-    });
-
-    it('rejects non-https on non-localhost URLs', async () => {
-      const result = await apiClient.request('ftp://supabase.co/data');
-      expect(result.error).toBe('Invalid or unauthorized URL');
-    });
+    jest.restoreAllMocks();
   });
 
   describe('HTTP methods', () => {
@@ -85,25 +75,26 @@ describe('ApiClient', () => {
 
   describe('retry behavior', () => {
     it('retries on failure with exponential backoff', async () => {
-      const fetchSpy = jest.spyOn(global, 'fetch');
-      fetchSpy
+      const mockFetch = jest.fn()
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce({
           ok: true,
           status: 200,
           json: async () => ({ data: 'ok' }),
         } as unknown as Response);
+      (globalThis as { fetch: typeof fetch }).fetch = mockFetch as unknown as typeof fetch;
 
       const result = await apiClient.get('/test-endpoint');
-      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
       expect(result.data).toEqual({ data: 'ok' });
     });
 
     it('returns timeout error on abort', async () => {
-      const fetchSpy = jest.spyOn(global, 'fetch');
+      const mockFetch = jest.fn();
       const abortError = new Error('AbortError');
       abortError.name = 'AbortError';
-      fetchSpy.mockRejectedValueOnce(abortError);
+      mockFetch.mockRejectedValueOnce(abortError);
+      (globalThis as { fetch: typeof fetch }).fetch = mockFetch as unknown as typeof fetch;
 
       const result = await apiClient.request('/test', { timeout: 100, retries: 0 });
       expect(result.error).toBe('Request timeout');

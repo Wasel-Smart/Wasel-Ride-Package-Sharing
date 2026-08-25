@@ -142,6 +142,8 @@ class TelemetryCollector {
     }
   }
 
+  private flushTimer: ReturnType<typeof setInterval> | null = null;
+
   // Flush metrics to backend
   private async flush(): Promise<void> {
     if (this.metrics.length === 0 && this.traces.size === 0) return;
@@ -171,11 +173,19 @@ class TelemetryCollector {
   private startAutoFlush(): void {
     if (typeof window === 'undefined') return;
 
-    setInterval(() => this.flush(), this.flushInterval);
+    this.flushTimer = setInterval(() => this.flush(), this.flushInterval);
 
     window.addEventListener('beforeunload', () => {
       this.flush();
     });
+  }
+
+  /** Stop the auto-flush interval. Call on app unmount to avoid leaks. */
+  stopAutoFlush(): void {
+    if (this.flushTimer !== null) {
+      clearInterval(this.flushTimer);
+      this.flushTimer = null;
+    }
   }
 }
 

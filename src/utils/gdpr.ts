@@ -4,7 +4,7 @@
  */
 
 import { logger } from './monitoring';
-import { supabase } from './supabase/client.ts';
+import { supabase } from './supabase/client';
 import { sanitizeLogMessage } from './sanitization';
 
 export interface ConsentRecord {
@@ -55,7 +55,7 @@ class GDPRCompliance {
         granted: consent.granted,
       });
     } catch (error) {
-      logger.error('Failed to record consent', error, { consentType: consent.consentType });
+      logger.error('Failed to record consent', error, { consentType: sanitizeLogMessage(consent.consentType) });
       throw error; // Re-throw to allow upstream handling
     }
   }
@@ -146,20 +146,21 @@ class GDPRCompliance {
       )?.error;
       if (firstError) throw firstError;
 
-      const exportData = {
-        exportDate: new Date().toISOString(),
-        userId,
-        profile: profile.data,
-        bookings: bookings.data,
-        packages: packages.data,
-        transactions: transactions.data,
-        consents: consents.data,
-      };
-
-      const exportJson = JSON.stringify(exportData);
-      // Store the export payload server-side; the download URL is a signed
-      // storage path resolved by the server — never a data: URI in the DB.
       const downloadUrl = `exports/${userId}/${Date.now()}.json`;
+
+      const exportJson = JSON.stringify(
+        {
+          exportDate: new Date().toISOString(),
+          userId,
+          profile: profile.data,
+          bookings: bookings.data,
+          packages: packages.data,
+          transactions: transactions.data,
+          consents: consents.data,
+        },
+        null,
+        2,
+      );
 
       await supabase
         .from('data_export_requests')

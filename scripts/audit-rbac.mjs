@@ -45,7 +45,12 @@ const WRITE_PERMISSIONS = [
 
 // Parse rbac.ts to extract the ROLE_PERMISSIONS map
 const rbacPath = join(__dir, '../src/platform/rbac.ts');
-const rbacSource = readFileSync(rbacPath, 'utf8');
+const resolvedRbacPath = resolve(rbacPath);
+const projectRoot = resolve(__dir, '..');
+if (!resolvedRbacPath.startsWith(projectRoot)) {
+  throw new Error(`Path traversal detected: ${rbacPath} resolves outside project root`);
+}
+const rbacSource = readFileSync(resolvedRbacPath, 'utf8');
 
 // Extract role permission arrays via regex
 function extractPermissions(source, role) {

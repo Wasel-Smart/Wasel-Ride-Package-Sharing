@@ -1,11 +1,14 @@
-import { projectId, publicAnonKey } from '../utils/supabase/info.ts';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
 import {
   checkSupabaseConnection,
   supabase as supabaseClient,
   supabaseUrl,
-} from '../utils/supabase/client.ts';
+} from '../utils/supabase/client';
 import { addCSRFHeader } from '../utils/csrf';
 import { circuitBreakers, CircuitState } from '../utils/circuitBreaker';
+import { getConfig } from '../utils/env';
+import { getEdgeFunctionName } from '../utils/edgeFunctionConfig';
+import { validateApiUrl } from '../utils/sanitization';
 
 export { projectId, publicAnonKey };
 
@@ -38,7 +41,7 @@ const configuredFunctionName = isPlaceholderEdgeFunctionName(rawConfiguredFuncti
   : rawConfiguredFunctionName;
 const defaultFunctionsBaseUrl = supabaseUrl ? `${supabaseUrl}/functions/v1` : '';
 const resolvedFunctionsBaseUrl = configuredFunctionsBaseUrl || defaultFunctionsBaseUrl;
-const resolvedFunctionName = configuredFunctionName || 'make-server-0b1f4071';
+const resolvedFunctionName = configuredFunctionName || getEdgeFunctionName();
 
 export const API_URL = configuredApiUrl
   ? configuredApiUrl.replace(/\/$/, '')
@@ -340,6 +343,15 @@ export async function fetchWithRetry(
     throw new Error(
       'Backend API is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.',
     );
+  }
+
+  const { allowedApiDomain } = getConfig();
+  const allowedDomains = ['supabase.co', 'supabase.net', 'localhost', allowedApiDomain].filter(
+    Boolean,
+  );
+
+  if (!validateApiUrl(url, allowedDomains)) {
+    throw new Error('Invalid or unauthorized URL');
   }
 
   // Use circuit breaker for API calls

@@ -10,9 +10,7 @@ const APP_ORIGIN = Deno.env.get("APP_ORIGIN") ??
   Deno.env.get("PUBLIC_SITE_URL") ?? "";
 
 if (!STRIPE_SECRET) throw new Error("Missing STRIPE_SECRET_KEY");
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.warn("Supabase env vars missing; payments will not be persisted.");
-}
+// Supabase persistence is optional; payments are still processed without it.
 
 const stripe = new Stripe(STRIPE_SECRET, { apiVersion: "2024-11-20" });
 const supabase = SUPABASE_URL && SUPABASE_KEY
@@ -24,7 +22,7 @@ const paymentRateLimit = createRateLimitMiddleware(
 const ALLOWED_CURRENCIES = new Set(["jod", "usd"]);
 const MAX_PAYMENT_AMOUNT_MINOR = 500_000;
 
-console.info("stripe-payments-v2 function started");
+
 
 function jsonResponse(
   body: Record<string, unknown>,
@@ -105,11 +103,8 @@ async function publishEvent(
       attempts: 0,
       created_at: event.occurred_at as string,
     });
-  } catch (e) {
-    console.warn(
-      "Failed to publish event to outbox",
-      e instanceof Error ? e.message : "unknown",
-    );
+  } catch {
+    // outbox publish failure is non-fatal
   }
 }
 
@@ -187,11 +182,8 @@ Deno.serve(async (req: Request) => {
               raw: pi,
             }],
           );
-        } catch (e) {
-          console.warn(
-            "Failed to persist payment:",
-            e instanceof Error ? e.message : "unknown error",
-          );
+        } catch {
+          // persistence failure is non-fatal; payment intent already created
         }
       }
 
@@ -236,8 +228,8 @@ Deno.serve(async (req: Request) => {
       }
 
       const session = await stripe.checkout.sessions.create({
-        line_items,
-        mode,
+        line_items: line_items as Stripe.Checkout.SessionCreateParams.LineItem[],
+        mode: mode === 'subscription' ? 'subscription' : 'payment',
         success_url,
         cancel_url,
         customer_email,
@@ -257,11 +249,7 @@ Deno.serve(async (req: Request) => {
       let event;
       try {
         event = stripe.webhooks.constructEvent(payload, sig, webhookSecret);
-      } catch (err) {
-        console.warn(
-          "Webhook signature verification failed:",
-          err instanceof Error ? err.message : "unknown error",
-        );
+      } catch {
         return jsonResponse({ error: "Invalid signature" }, { status: 400 });
       }
 
@@ -347,7 +335,7 @@ Deno.serve(async (req: Request) => {
           break;
         }
         default:
-          console.info("Unhandled event type", String(event.type).replace(/[\r\n]+/g, ' ').trim());
+          break;
       }
 
       return jsonResponse({ received: true }, { status: 200 });
@@ -363,8 +351,7 @@ Deno.serve(async (req: Request) => {
         ],
       },
     );
-  } catch (err) {
-    console.error(err instanceof Error ? err.message : err);
+  } catch {
     return jsonResponse({ error: "Payment request failed" }, { status: 500 });
   }
 });

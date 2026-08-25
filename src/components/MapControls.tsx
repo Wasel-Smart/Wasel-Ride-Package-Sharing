@@ -107,7 +107,7 @@ export function MapControls({
   stopTracking,
   centerOnMe,
   compact,
-  tx: t,
+  tx,
 }: {
   isFullscreen: boolean;
   toggleFullscreen: () => void;
@@ -153,16 +153,16 @@ export function MapControls({
         </div>
 
         <div className="flex flex-col overflow-hidden" style={{ ...CONTROL_PANEL_STYLE, borderRadius: radii['2xl'] }}>
-          <button onClick={zoomIn} style={compactControlButtonStyle()}>
+          <button onClick={zoomIn} style={compactControlButtonStyle()} aria-label="Zoom in">
             <ZoomIn className="w-4 h-4" />
           </button>
           <div style={{ height: 1, background: colors.border.light }} />
-          <button onClick={zoomOut} style={compactControlButtonStyle()}>
+          <button onClick={zoomOut} style={compactControlButtonStyle()} aria-label="Zoom out">
             <ZoomOut className="w-4 h-4" />
           </button>
         </div>
 
-        <button onClick={toggleFullscreen} style={compactControlButtonStyle(isFullscreen)}>
+        <button onClick={toggleFullscreen} style={compactControlButtonStyle(isFullscreen)} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
           {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
         </button>
       </div>
@@ -177,19 +177,19 @@ export function MapControls({
             <button
               onClick={toggleMosques}
               style={wideControlButtonStyle(mosquesOn)}
-              title={t('waselMap.mosques')}
+              title={tx('waselMap.mosques')}
             >
               <MapPin className="w-3.5 h-3.5" />
-              <span>{t('waselMap.mosques_2')}</span>
+              <span>{tx('waselMap.mosques_2')}</span>
             </button>
             <div style={{ width: 1, height: 24, background: colors.border.light }} />
             <button
               onClick={toggleRadars}
               style={wideControlButtonStyle(radarsOn)}
-              title={t('waselMap.radars')}
+              title={tx('waselMap.radars')}
             >
               <Radio className="w-3.5 h-3.5" />
-              <span>{t('waselMap.radars_2')}</span>
+              <span>{tx('waselMap.radars_2')}</span>
             </button>
           </div>
         </div>
@@ -201,7 +201,8 @@ export function MapControls({
           <button
             onClick={centerOnMe}
             style={compactControlButtonStyle()}
-            title={t('waselMap.center_on_my_location')}
+            title={tx('waselMap.center_on_my_location')}
+            aria-label="Center on my location"
           >
             <Navigation2 className="w-4 h-4" />
           </button>
@@ -243,12 +244,12 @@ export function MapControls({
             <>
               <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
               <Locate className="w-4 h-4" />
-              <span>{t('waselMap.live_active')}</span>
+              <span>{tx('waselMap.live_active')}</span>
             </>
           ) : (
             <>
               <Locate className="w-4 h-4" />
-              <span>{t('waselMap.share_my_location')}</span>
+              <span>{tx('waselMap.share_my_location')}</span>
             </>
           )}
         </button>

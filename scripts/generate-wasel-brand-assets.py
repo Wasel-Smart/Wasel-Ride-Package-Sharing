@@ -29,7 +29,18 @@ SOURCE = ROOT / "brand" / "reference" / "wasel-bilingual-reference.png"
 BRAND = ROOT / "public" / "brand"
 ARTIFACTS = ROOT / "artifacts" / "brand"
 MOBILE = ROOT / "mobile" / "assets" / "images"
-CHROME = Path(os.environ.get("CHROME_PATH", r"C:\Program Files\Google\Chrome\Application\chrome.exe"))
+def _resolve_chrome() -> Path:
+    env_path = os.environ.get("CHROME_PATH")
+    if env_path:
+        return Path(env_path)
+    for name in ("chrome", "google-chrome", "chromium", "chromium-browser"):
+        found = shutil.which(name)
+        if found:
+            return Path(found)
+    return Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+
+
+CHROME = _resolve_chrome()
 
 NAVY = "#061B4B"
 PEARL = "#F8FBFF"
@@ -56,7 +67,7 @@ def rdp(points: list[tuple[float, float]], epsilon: float) -> list[tuple[float, 
     return [first, last]
 
 
-def trace_mask(mask: np.ndarray, epsilon: float = 1.0) -> str:  # Reduced epsilon for more detail
+def trace_mask(mask: np.ndarray, epsilon: float = 1.0) -> str:  # noqa: C901 — Ramer-Douglas-Peucker + contour tracing; algorithmic complexity is intrinsic
     """Turn a boolean bitmap into crisp, simplified SVG paths with even-odd holes."""
     height, width = mask.shape
     outgoing: dict[tuple[int, int], list[tuple[int, int]]] = defaultdict(list)

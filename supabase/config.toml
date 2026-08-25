@@ -104,19 +104,24 @@ message_service_sid = "env(SUPABASE_AUTH_SMS_TWILIO_VERIFY_SERVICE_SID)"
 auth_token = "env(SUPABASE_AUTH_SMS_TWILIO_AUTH_TOKEN)"
 
 # OAuth Providers - Google and Facebook
+# NOTE: config.toml only configures the LOCAL `supabase start` stack.
+# For the CLOUD project, set the client ID/secret + the callback below in the
+# Supabase dashboard (Authentication > Providers). The dashboard ignores this file.
+# Env-var names are kept in sync with .env.example / docker-compose.dev.yml
+# (SUPABASE_AUTH_* prefix), NOT the browser-only VITE_* vars.
 [auth.external.google]
-enabled = false # Disable until secrets are properly managed
-client_id = "env(GOOGLE_CLIENT_ID)"
-secret = "env(GOOGLE_CLIENT_SECRET)"
-redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
+enabled = true
+client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_GOOGLE_CLIENT_SECRET)"
+redirect_uri = "https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback"
 skip_nonce_check = true
 email_optional = true
 
 [auth.external.facebook]
-enabled = false # Disable until secrets are properly managed
-client_id = "env(FACEBOOK_CLIENT_ID)"
-secret = "env(FACEBOOK_CLIENT_SECRET)"
-redirect_uri = "http://127.0.0.1:54321/auth/v1/callback"
+enabled = true
+client_id = "env(SUPABASE_AUTH_FACEBOOK_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET)"
+redirect_uri = "https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback"
 skip_nonce_check = false
 email_optional = true
 

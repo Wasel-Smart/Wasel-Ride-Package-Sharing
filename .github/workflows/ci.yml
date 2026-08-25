@@ -34,6 +34,12 @@ jobs:
       - name: Verify repository quality
         run: yarn verify:ci
 
+      - name: Brand consistency check
+        run: yarn brand:check
+
+      - name: Brand asset sync
+        run: yarn brand:sync
+
       - name: Audit production dependencies
         # Yarn v1 doesn't have a direct equivalent to `npm audit --omit=dev`
         # Using `yarn audit` is the closest alternative.
@@ -41,6 +47,9 @@ jobs:
 
       - name: Verify service worker syntax
         run: node --check public/sw.js
+
+      - name: Check for .env secret exposure
+        run: node scripts/check-env-exposure.mjs
 
       - name: Build production bundle
         run: yarn build

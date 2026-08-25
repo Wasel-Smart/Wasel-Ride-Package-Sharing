@@ -24,47 +24,47 @@ describe('SmartPricingEngine.calculateSharedRidePricing()', () => {
   it('computes the documented 10% platform fee split across seats (totalTripCost=20, 4 seats)', () => {
     const result = SmartPricingEngine.calculateSharedRidePricing(20, 4);
     // pricePerPerson = (20 * 1.10) / seatIndex
-    expect(result[0].price).toBe(22); // 22 / 1
-    expect(result[1].price).toBe(11); // 22 / 2
-    expect(result[2].price).toBe(7.33); // 22 / 3, rounded to 2dp
-    expect(result[3].price).toBe(5.5); // 22 / 4
+    expect(result[0]!.price).toBe(22); // 22 / 1
+    expect(result[1]!.price).toBe(11); // 22 / 2
+    expect(result[2]!.price).toBe(7.33); // 22 / 3, rounded to 2dp
+    expect(result[3]!.price).toBe(5.5); // 22 / 4
   });
 
   it('a single seat costs the full trip cost plus platform fee', () => {
     const result = SmartPricingEngine.calculateSharedRidePricing(20, 1);
     expect(result).toHaveLength(1);
-    expect(result[0].price).toBe(22);
+    expect(result[0]!.price).toBe(22);
   });
 
   it('price strictly decreases as more seats are added', () => {
     const result = SmartPricingEngine.calculateSharedRidePricing(50, 5);
     for (let i = 1; i < result.length; i++) {
-      expect(result[i].price).toBeLessThan(result[i - 1].price);
+      expect(result[i]!.price).toBeLessThan(result[i - 1]!.price);
     }
   });
 
   it('savings percentage increases as more seats are filled', () => {
     const result = SmartPricingEngine.calculateSharedRidePricing(20, 4);
-    expect(result[0].savings).toBe(4);
-    expect(result[1].savings).toBe(52);
-    expect(result[2].savings).toBe(68);
-    expect(result[3].savings).toBe(76);
+    expect(result[0]!.savings).toBe(4);
+    expect(result[1]!.savings).toBe(52);
+    expect(result[2]!.savings).toBe(68);
+    expect(result[3]!.savings).toBe(76);
     for (let i = 1; i < result.length; i++) {
-      expect(result[i].savings).toBeGreaterThan(result[i - 1].savings);
+      expect(result[i]!.savings).toBeGreaterThan(result[i - 1]!.savings);
     }
   });
 
   it('pluralizes the label correctly (singular vs plural)', () => {
     const result = SmartPricingEngine.calculateSharedRidePricing(20, 2);
-    expect(result[0].label).toBe('1 Passenger');
-    expect(result[1].label).toBe('2 Passengers');
+    expect(result[0]!.label).toBe('1 Passenger');
+    expect(result[1]!.label).toBe('2 Passengers');
   });
 
   it('respects a custom baseMargin when computing savings', () => {
     const lowMargin = SmartPricingEngine.calculateSharedRidePricing(20, 1, 0.05);
     const highMargin = SmartPricingEngine.calculateSharedRidePricing(20, 1, 0.5);
     // Higher solo-ride benchmark (margin) means the same seat price looks like a bigger saving
-    expect(highMargin[0].savings).toBeGreaterThan(lowMargin[0].savings);
+    expect(highMargin[0]!.savings).toBeGreaterThan(lowMargin[0]!.savings);
   });
 });
 

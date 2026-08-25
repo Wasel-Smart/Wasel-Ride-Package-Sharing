@@ -19,7 +19,7 @@ interface SecretsCache {
 }
 
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-const secretsCache: SecretsCache = {};
+const secretsCache: SecretsCache = Object.create(null) as SecretsCache;
 
 /**
  * Secret keys that should never be exposed to the client

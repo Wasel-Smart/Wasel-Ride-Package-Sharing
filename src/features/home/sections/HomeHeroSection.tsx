@@ -1,3 +1,4 @@
+﻿import { lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -12,13 +13,16 @@ import {
   Shield,
 } from 'lucide-react';
 import type { User } from '@supabase/auth-js';
-import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
+import { WaselLogo } from '../../../components/wasel-ui';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { tx } from '../../../locales/tx';
 
 import { C, InlineCurrencySwitcher } from '../HomePageShared';
-import { MobilityOSLandingMap } from '../MobilityOSLandingMap';
+
+const MobilityOSLandingMap = lazy(() =>
+  import('../MobilityOSLandingMap').then(m => ({ default: m.MobilityOSLandingMap })),
+);
 import type { TripMode } from './types';
 
 interface HomeHeroSectionProps {
@@ -154,15 +158,17 @@ function ProductCommandPreview({ ar }: { ar: boolean }) {
       </div>
 
       <div className="wasel-home-map-frame">
-        <MobilityOSLandingMap
-          focusRouteId="amman-aqaba"
-          focusLabel={ar ? 'عمان إلى العقبة' : 'Amman to Aqaba'}
-          demandPressure={1.62}
-          utilization={0.78}
-          preferredHeight={330}
-          minimalText
-          showOverlay={false}
-        />
+        <Suspense fallback={<div className="wasel-home-map-frame" style={{ minHeight: 330 }} />}>
+          <MobilityOSLandingMap
+            focusRouteId="amman-aqaba"
+            focusLabel={ar ? 'عمان إلى العقبة' : 'Amman to Aqaba'}
+            demandPressure={1.62}
+            utilization={0.78}
+            preferredHeight={330}
+            minimalText
+            showOverlay={false}
+          />
+        </Suspense>
       </div>
 
       <div className="wasel-home-product-stage">

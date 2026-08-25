@@ -40,6 +40,7 @@ import type {
   WalletCapabilities,
   WalletData,
   WalletSubscription,
+  WalletTransaction,
 } from './walletTypes';
 
 // Re-export types so existing import sites keep working.
@@ -80,6 +81,34 @@ async function tryEdgeThenDirect<T>(edgeFn: () => Promise<T>, directFn: () => Pr
 
 function getWalletPath(userId: string, suffix = ''): string {
   return `/v1/wallet/${userId}${suffix}`;
+}
+
+function sanitizeString(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+function sanitizeTransactions(transactions: WalletTransaction[]): WalletTransaction[] {
+  return transactions.map(tx => ({
+    ...tx,
+    description: sanitizeString(tx.description),
+  }));
+}
+
+function sanitizeWalletData(data: WalletData): WalletData {
+  return {
+    ...data,
+    transactions: sanitizeTransactions(data.transactions),
+    activeRewards: data.activeRewards.map(reward => ({
+      ...reward,
+      description: sanitizeString(reward.description),
+    })),
+  };
 }
 
 async function requestWalletJson<T>(
@@ -134,14 +163,15 @@ export const walletApi = {
     if (canUseEdgeApi()) {
       try { wallet.subscription = await fetchSubscriptionViaBackend(userId); } catch { /* keep direct payload */ }
     }
-    return wallet;
+    return sanitizeWalletData(wallet);
   },
 
   async getTransactions(userId: string, page = 1, limit = 20, type?: string) {
-    const edgeFn = () => {
+    const edgeFn = async () => {
       const params = new URLSearchParams({ page: String(page), limit: String(limit) });
       if (type) params.set('type', type);
-      return requestWalletJson(userId, `/transactions?${params.toString()}`, 'Load wallet transactions');
+      const result = await requestWalletJson<{ transactions: WalletTransaction[]; page: number; limit: number; total: number }>(userId, `/transactions?${params.toString()}`, 'Load wallet transactions');
+      return { ...result, transactions: sanitizeTransactions(result.transactions) };
     };
     const directFn = async () => {
       const wallet = canUseLocalWalletStorage()

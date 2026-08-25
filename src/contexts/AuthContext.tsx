@@ -321,6 +321,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signIn = useCallback(
     async (email: string, password: string): Promise<{ error: AuthOperationError }> => {
+      if (!supabase) {
+        return { error: new Error('Backend not configured') };
+      }
+
       setBusy(true);
       try {
         const { authAPI } = await import('../services/auth');
@@ -360,7 +364,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               console.error(`[OAuth ${provider}]`, sanitizeLogMessage(oauthError));
             }
             const errorToReturn = oauthError
-              ? new Error(oauthError.message)
+              ? new Error(oauthError.userMessage)
               : result.error;
             return { error: errorToReturn as AuthOperationError };
           }

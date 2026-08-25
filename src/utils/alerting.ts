@@ -43,6 +43,7 @@ export interface MetricValue {
 
 class AlertingSystem {
   private alerts: Alert[] = [];
+  private readonly MAX_ALERTS = 1_000;
   private rules: Map<string, AlertRule> = new Map();
   private lastAlertTime: Map<string, number> = new Map();
   private listeners: Array<(alert: Alert) => void> = [];
@@ -201,9 +202,12 @@ class AlertingSystem {
    */
   private triggerAlert(alert: Alert): void {
     this.alerts.push(alert);
+    if (this.alerts.length > this.MAX_ALERTS) {
+      this.alerts.shift();
+    }
 
     // Log alert
-    const logLevel =
+    const logLevel: 'error' | 'warning' =
       alert.severity === AlertSeverity.CRITICAL || alert.severity === AlertSeverity.ERROR
         ? 'error'
         : 'warning';
@@ -326,12 +330,21 @@ class AlertingSystem {
 // Export singleton instance
 export const alerting = new AlertingSystem();
 
-// Auto-cleanup old alerts every hour
+// Auto-cleanup old alerts every hour. Stored so it can be cleared on unload.
+let alertingCleanupTimer: ReturnType<typeof setInterval> | null = null;
 if (typeof setInterval !== 'undefined') {
-  setInterval(
+  alertingCleanupTimer = setInterval(
     () => {
       alerting.clearOldAlerts();
     },
     60 * 60 * 1000,
   );
+}
+
+/** Stop the alerting cleanup interval. */
+export function stopAlertingCleanup(): void {
+  if (alertingCleanupTimer !== null) {
+    clearInterval(alertingCleanupTimer);
+    alertingCleanupTimer = null;
+  }
 }

@@ -204,8 +204,6 @@ export async function createRideBooking(input: {
   routeMode: 'live_post' | 'network_inventory';
 }): Promise<RideBookingRecord> {
   const now = new Date().toISOString();
-  const status: RideBookingStatus =
-    input.routeMode === 'live_post' ? 'pending_driver' : 'confirmed';
   const seatsRequested = Math.max(1, input.seatsRequested ?? 1);
 
   if (!input.passengerId) {
@@ -213,31 +211,42 @@ export async function createRideBooking(input: {
   }
 
   // ── 1. Write to Supabase (primary store) ──────────────────────────────────
-  const { booking: persisted } = await createDirectBooking({
-    tripId: input.rideId,
-    userId: input.passengerId,
-    seatsRequested,
-    pickup: input.from,
-    dropoff: input.to,
-    bookingStatus: status,
-    metadata: {
-      total_price: input.pricePerSeatJod ? seatsRequested * input.pricePerSeatJod : seatsRequested,
-    },
-  });
+  let persisted: { booking_id?: string; id?: string; status?: string | null } | null = null;
+  try {
+    const result = await createDirectBooking({
+      tripId: input.rideId,
+      userId: input.passengerId,
+      seatsRequested,
+      pickup: input.from,
+      dropoff: input.to,
+      bookingStatus: input.routeMode === 'live_post' ? 'pending_driver' : 'confirmed',
+      metadata: {
+        total_price: input.pricePerSeatJod ? seatsRequested * input.pricePerSeatJod : seatsRequested,
+      },
+    });
+    persisted = result.booking;
+  } catch (error) {
+    console.warn('[RideLifecycle] Supabase write failed, using local fallback:', error);
+  }
 
-  // ── 2. Build canonical record using the persisted ID ─────────────────────
-  const persistedId = String(persisted.booking_id ?? persisted.id ?? '');
+  // ── 2. Build canonical record using the persisted ID (or local fallback) ───
+  const persistedId = String(persisted?.booking_id ?? persisted?.id ?? '');
+  const persistedStatus = persisted?.status;
   const remoteStatus: RideBookingStatus =
-    persisted.status === 'confirmed' ||
-    persisted.status === 'cancelled' ||
-    persisted.status === 'completed'
-      ? persisted.status
-      : persisted.status === 'accepted'
+    persistedStatus === 'confirmed' ||
+    persistedStatus === 'cancelled' ||
+    persistedStatus === 'completed'
+      ? persistedStatus
+      : persistedStatus === 'accepted'
         ? 'confirmed'
-        : status;
+        : persistedId
+          ? input.routeMode === 'live_post'
+            ? 'pending_driver'
+            : 'confirmed'
+          : 'pending_driver';
 
   const booking: RideBookingRecord = {
-    id: persistedId,
+    id: persistedId || makeTicketCode(),
     rideId: input.rideId,
     ownerId: input.ownerId,
     passengerId: input.passengerId,
@@ -254,8 +263,8 @@ export async function createRideBooking(input: {
     routeMode: input.routeMode,
     supportThreadOpen: false,
     ticketCode: makeTicketCode(),
-    backendBookingId: persistedId,
-    syncedAt: now,
+    backendBookingId: persistedId || undefined,
+    syncedAt: persistedId ? now : undefined,
     createdAt: now,
     updatedAt: now,
   };

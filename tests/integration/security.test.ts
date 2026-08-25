@@ -21,7 +21,7 @@ describe('CSRF Protection Integration', () => {
   });
 
   it('should add CSRF header to requests', () => {
-    const headers = addCSRFHeader({ 'Content-Type': 'application/json' });
+    const headers = addCSRFHeader({ 'Content-Type': 'application/json' }) as Record<string, string>;
     expect(headers['X-CSRF-Token']).toBeTruthy();
   });
 
@@ -103,7 +103,7 @@ describe('SSRF Protection Integration', () => {
 
 describe('API Request Security Integration', () => {
   it('should include CSRF token in POST requests', () => {
-    const headers = addCSRFHeader({});
+    const headers = addCSRFHeader({}) as Record<string, string>;
     expect(headers['X-CSRF-Token']).toBeTruthy();
   });
 
@@ -117,7 +117,7 @@ describe('API Request Security Integration', () => {
 
   it('should combine CSRF and URL validation', () => {
     const url = 'https://api.supabase.co/rest/v1/users';
-    const headers = addCSRFHeader({ 'Content-Type': 'application/json' });
+    const headers = addCSRFHeader({ 'Content-Type': 'application/json' }) as Record<string, string>;
     
     expect(validateApiUrl(url, ['supabase.co'])).toBe(true);
     expect(headers['X-CSRF-Token']).toBeTruthy();

@@ -88,7 +88,7 @@ describe('payment.test.ts', () => {
     });
 
     const callArgs = mockSupabase.mockFunctionsInvoke.mock.calls[0];
-    expect(callArgs[1].body.amount).toBe(1500);
+    expect((callArgs as unknown as any[])[1].body.amount).toBe(1500);
   });
 
   it('normalizes non-JOD amount to minor units (multiplier 100)', async () => {
@@ -109,7 +109,7 @@ describe('payment.test.ts', () => {
     });
 
     const callArgs = mockSupabase.mockFunctionsInvoke.mock.calls[0];
-    expect(callArgs[1].body.amount).toBe(1000);
+    expect((callArgs as unknown as any[])[1].body.amount).toBe(1000);
   });
 
   it('rejects amounts below minimum', async () => {
@@ -277,7 +277,12 @@ describe('payment.test.ts', () => {
   });
 
   it('gets payment status', async () => {
+    mockSupabase.mockAuthGetUser.mockResolvedValue({
+      data: { user: { id: 'user-1' } },
+      error: null,
+    });
     mockSupabase.mockEq.mockReturnValue({
+      eq: mockSupabase.mockEq,
       single: mockSupabase.mockSingle,
     });
     mockSupabase.mockSingle.mockResolvedValue({

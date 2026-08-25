@@ -56,7 +56,6 @@ function NotificationsSkeleton() {
 export default function NotificationsScreen() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   const { data: fetchedNotifications, isLoading, error } = useQuery({
     queryKey: ['notifications', user?.id],
@@ -70,11 +69,7 @@ export default function NotificationsScreen() {
     staleTime: 30 * 1000,
   });
 
-  useEffect(() => {
-    if (fetchedNotifications) {
-      setNotifications(fetchedNotifications);
-    }
-  }, [fetchedNotifications]);
+  const notifications = fetchedNotifications ?? [];
 
   const markAllReadMutation = useMutation({
     mutationFn: async () => {
@@ -82,7 +77,9 @@ export default function NotificationsScreen() {
       await apiClient.post('notifications/mark-all-read', { userId: user.id });
     },
     onSuccess: () => {
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      queryClient.setQueryData<AppNotification[]>(['notifications', user?.id], prev =>
+        prev?.map(n => ({ ...n, read: true }))
+      );
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
@@ -92,7 +89,9 @@ export default function NotificationsScreen() {
       await apiClient.post(`notifications/${id}/mark-read`, {});
     },
     onSuccess: (_, id) => {
-      setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
+      queryClient.setQueryData<AppNotification[]>(['notifications', user?.id], prev =>
+        prev?.map(n => (n.id === id ? { ...n, read: true } : n))
+      );
     },
   });
 
@@ -106,8 +105,10 @@ export default function NotificationsScreen() {
     markReadMutation.mutate(id);
   }, [markReadMutation]);
 
+  const now = Date.now();
+
   const formatRelative = (iso: string) => {
-    const diff = Date.now() - new Date(iso).getTime();
+    const diff = now - new Date(iso).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 60) return `قبل ${mins} د`;
     const hours = Math.floor(mins / 60);

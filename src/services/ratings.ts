@@ -1,4 +1,4 @@
-import { supabase } from '@/utils/supabase/client.ts';
+import { supabase } from '@/utils/supabase/client';
 
 type DriverReviewRow = {
   rating: number | null;

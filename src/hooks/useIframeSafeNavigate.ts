@@ -81,7 +81,3 @@ export function useIframeSafeNavigate(): NavigateFunction {
 
 export { useIframeSafeNavigate as useNavigate };
 export default useIframeSafeNavigate;
-
-export function isInsideIframe(): boolean {
-  return false;
-}

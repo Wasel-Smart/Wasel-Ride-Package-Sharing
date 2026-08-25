@@ -53,7 +53,6 @@ describe('Circuit breaker OPEN recovery', () => {
       throw new TypeError('Failed to fetch');
     });
     const originalFetch = globalThis.fetch;
-    // @ts-expect-error - replace global fetch for the duration of the test
     globalThis.fetch = failingFetch;
 
     vi.spyOn(await import('@/services/core'), 'getAuthDetails').mockResolvedValue({

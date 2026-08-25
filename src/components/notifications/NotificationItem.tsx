@@ -9,6 +9,7 @@
  *   - Reused in other views (e.g. a drawer or push notification overlay)
  *   - Lazy-loaded without pulling in the full center
  */
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, Trash2 } from 'lucide-react';
 import type { Notification } from '../../hooks/useNotifications';
@@ -17,7 +18,7 @@ import {
   type NotificationCategory,
   type NotificationFilter,
 } from '../../features/notifications/notificationCenterModel';
-import { WaselBadge, WaselButton, WaselCard } from '../../design-system';
+import { WaselBadge, WaselButton, WaselCard } from '../wasel-ui';
 import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 import { CATEGORY_ICON, formatRelativeTimestamp } from './notificationHelpers';
 
@@ -84,7 +85,7 @@ const categoryTone: Record<
   },
 };
 
-export function NotificationItem({
+export const NotificationItem = React.memo(function NotificationItem({
   notification,
   index,
   isRTL,
@@ -258,4 +259,4 @@ export function NotificationItem({
       </WaselCard>
     </motion.div>
   );
-}
+});

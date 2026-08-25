@@ -49,6 +49,10 @@ function move(from, to) {
 
 function remove(path) {
   const full = join(ROOT, path);
+  const resolvedFull = resolve(full);
+  if (!resolvedFull.startsWith(resolve(ROOT))) {
+    throw new Error(`Path traversal detected: ${path} resolves outside project root`);
+  }
   if (!existsSync(full)) return;
   if (DRY) { log('DELETE (dry)', path); return; }
   unlinkSync(full);

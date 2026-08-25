@@ -417,8 +417,8 @@ export class OfflineService {
   async clearCache(): Promise<void> {
     try {
       mmkv.getAllKeys()
-        .filter(k => typeof k === 'string' && k.startsWith('@wasel:cache:'))
-        .forEach(k => mmkvDelete(k));
+      .filter((k: any) => typeof k === 'string' && k.startsWith('@wasel:cache:'))
+      .forEach((k: any) => mmkvDelete(k));
       void this.notifyStats();
     } catch (err) { console.error('[Offline] clearCache error:', sanitizeLogValue(err)); }
   }
@@ -434,7 +434,7 @@ export class OfflineService {
     let cacheSize = 0;
     try {
       cacheSize = mmkv.getAllKeys()
-        .filter(k => typeof k === 'string' && k.startsWith('@wasel:cache:')).length;
+        .filter((k: any) => typeof k === 'string' && k.startsWith('@wasel:cache:')).length;
     } catch { /* ignore */ }
     return { queueSize: queue.length, cacheSize, isOnline: this.isOnline };
   }
