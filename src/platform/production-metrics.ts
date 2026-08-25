@@ -389,9 +389,18 @@ class ProductionMetricsCollector {
 export const productionMetricsCollector = new ProductionMetricsCollector();
 
 // Auto-collect metrics every 5 minutes in production
+let productionMetricsTimer: ReturnType<typeof setInterval> | null = null;
 if (import.meta.env.MODE === 'production') {
-  setInterval(async () => {
+  productionMetricsTimer = setInterval(async () => {
     const metrics = await productionMetricsCollector.collectProductionMetrics('5min');
     await productionMetricsCollector.publishMetrics(metrics);
   }, 300000);
+}
+
+/** Stop the production metrics collection interval. */
+export function stopProductionMetricsCollection(): void {
+  if (productionMetricsTimer !== null) {
+    clearInterval(productionMetricsTimer);
+    productionMetricsTimer = null;
+  }
 }
