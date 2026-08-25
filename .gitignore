@@ -28,6 +28,8 @@ supabase/.temp/
 coverage/
 test-results/
 playwright-report/
+tests/e2e/screenshots/
+tests/e2e/visual-report/
 
 # Logs
 *.log

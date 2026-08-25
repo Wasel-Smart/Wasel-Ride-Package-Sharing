@@ -33,6 +33,11 @@ export const C = {
 
   cyan: '#00E5FF',
   cyanLight: '#66e0ff',
+  blue: '#00E5FF',
+  blueLight: '#66e0ff',
+  blueDim: 'rgba(0,229,255,0.12)',
+  brandBlue: '#00E5FF',
+  brandOrange: '#FF8A0B',
   cyanDark: '#00b8d4',
   cyanDim: 'rgba(0,229,255,0.1)',
   cyanGlow: 'rgba(0,229,255,0.2)',
@@ -42,10 +47,16 @@ export const C = {
   lime: '#72C70D',
   limeDark: '#5a6b08',
   limeDim: 'rgba(114,199,13,0.12)',
+  green: '#72C70D',
+  greenDim: 'rgba(114,199,13,0.12)',
 
   ember: '#FF8A0B',
   emberDark: '#e07500',
   emberDim: 'rgba(255,138,11,0.12)',
+  gold: '#FF8A0B',
+  goldDim: 'rgba(255,138,11,0.12)',
+  orange: '#FF8A0B',
+  orangeDim: 'rgba(255,138,11,0.12)',
 
   purple: '#8FA6FF',
   purpleDim: 'rgba(143,166,255,0.12)',
@@ -57,6 +68,7 @@ export const C = {
 
   border: 'rgba(0,229,255,0.16)',
   borderHover: 'rgba(0,229,255,0.28)',
+  borderHov: 'rgba(0,229,255,0.28)',
   borderFaint: 'rgba(0,229,255,0.08)',
 
   error: '#FF7C8B',
@@ -148,6 +160,7 @@ export const R = {
   lg: '16px',
   xl: '20px',
   '2xl': '24px',
+  xxl: '40px',
   '3xl': '32px',
   full: '9999px',
 } as const;
@@ -162,15 +175,19 @@ export const SH = {
   xl: '0 26px 58px rgba(8,29,57,0.46)',
   navy: '0 8px 26px rgba(8,29,57,0.28)',
   cyan: '0 4px 18px rgba(0,229,255,0.16)',
+  blue: '0 4px 18px rgba(0,229,255,0.16)',
   cyanL: '0 10px 28px rgba(0,229,255,0.2)',
+  blueL: '0 10px 28px rgba(0,229,255,0.2)',
   lime: '0 8px 20px rgba(114,199,13,0.18)',
+  green: '0 8px 20px rgba(114,199,13,0.18)',
   ember: '0 8px 22px rgba(255,138,11,0.2)',
+  orange: '0 8px 22px rgba(255,138,11,0.2)',
   inner: 'inset 0 1px 3px rgba(8,29,57,0.3)',
 } as const;
 
 export const GRAD = 'linear-gradient(135deg, #00E5FF 0%, #38BEFF 52%, #32D8A6 100%)';
-export const GRAD_EMBER = 'linear-gradient(135deg, #FF8A0B 0%, #FFB35C 48%, #FF936A 100%)';
-export const GRAD_LIME = 'linear-gradient(135deg, #72C70D 0%, #34D8A7 52%, #209B7D 100%)';
+export const GRAD_GOLD = 'linear-gradient(135deg, #FF8A0B 0%, #FFB35C 48%, #FF936A 100%)';
+export const GRAD_GREEN = 'linear-gradient(135deg, #72C70D 0%, #34D8A7 52%, #209B7D 100%)';
 export const GRAD_NAVY = 'linear-gradient(145deg, #081D39 0%, #0a1f3a 56%, #132b4d 100%)';
 export const GRAD_PURPLE = 'linear-gradient(135deg, #B7ABFF 0%, #7F91FF 100%)';
 export const GRAD_HERO = 'linear-gradient(145deg, #081D39 0%, #0a1f3a 56%, #132b4d 100%)';

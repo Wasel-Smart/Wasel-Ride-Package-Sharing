@@ -10,11 +10,11 @@ export default defineConfig({
   workers: 1,
   fullyParallel: false,
   expect: {
-    // Dev-server cold-compile of lazily-imported route chunks (find-ride,
-    // wallet, etc.) can exceed the default 10s on the first hit of a run.
-    // Production builds serve pre-compiled chunks instantly; this only
-    // accounts for local E2E dev-server startup, not masking real timeouts.
     timeout: 30_000,
+  },
+  screenshot: {
+    fullPage: true,
+    maxDiffPixelRatio: 0.02,
   },
   use: {
     baseURL,
