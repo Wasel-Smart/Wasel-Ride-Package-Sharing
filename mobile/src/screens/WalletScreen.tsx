@@ -125,6 +125,7 @@ const WalletScreen = React.memo(function WalletScreen() {
             label={t('wallet.balance')}
             value={balance === null ? '—' : `${balance.toFixed(2)}`}
             tone={colors.teal}
+            testID="wallet-balance"
           />
           <MetricTile label={t('wallet.mode')} value={paymentReady ? t('wallet.live') : t('wallet.setup')} tone={paymentReady ? colors.teal : colors.amber} />
         </View>
