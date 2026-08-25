@@ -29,7 +29,6 @@ export const returnMatching = {
       actions: 'Actions',
       open_package_tracking: 'Open package tracking',
       open_ride_network: 'Open ride network',
-    },
   },
   ar: {
       round_trip_return_lane: 'مسار الذهاب والإياب',
@@ -61,7 +60,6 @@ export const returnMatching = {
       actions: 'إجراءات',
       open_package_tracking: 'فتح تتبّع الطرد',
       open_ride_network: 'فتح شبكة الرحلات',
-    },
   }
 } as const;
 

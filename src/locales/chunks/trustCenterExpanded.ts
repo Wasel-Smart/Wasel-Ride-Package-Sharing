@@ -68,7 +68,6 @@ export const trustCenterExpanded = {
         'Each card below shows whether a step is Not Started, In Progress, Completed, or Failed, with a clear reason.',
       failedStepsDetail: 'Failed steps show a reason instead of staying stuck.',
       walletDetail: 'Healthy wallet standing keeps operations available.',
-    },
   },
   ar: {
       eyebrow: 'مركز الثقة',
@@ -136,7 +135,6 @@ export const trustCenterExpanded = {
       eachCardShowsState: 'كل بطاقة أدناه توضح حالة الخطوة: لم تبدأ، قيد التنفيذ، مكتملة، أو فشلت.',
       failedStepsDetail: 'الخطوات الفاشلة تعرض السبب بدل البقاء عالقة.',
       walletDetail: 'حالة المحفظة السليمة تُبقي العمليات متاحة.',
-    },
   }
 } as const;
 

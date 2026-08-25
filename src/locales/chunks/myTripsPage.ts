@@ -15,7 +15,6 @@ export const myTripsPage = {
       support_and_completion: 'Support and completion',
       journey_lanes: 'Journey Lanes',
       match_this_lifecycle_filter_yet: 'match this lifecycle filter yet',
-    },
   },
   ar: {
       to: 'إلى',
@@ -33,7 +32,6 @@ export const myTripsPage = {
       support_and_completion: 'الدعم والإكمال',
       journey_lanes: 'مسارات الرحلة',
       match_this_lifecycle_filter_yet: 'تطابق هذا مرشّح دورة الحياة بعد',
-    },
   }
 } as const;
 

@@ -6,7 +6,6 @@ export const pWAInstallPrompt = {
       dismiss_install_prompt: 'Dismiss install prompt',
       install_wasel_app: 'Install Wasel app',
       install: 'Install',
-    },
   },
   ar: {
       install_wasel: 'ثبّت واصل',
@@ -15,7 +14,6 @@ export const pWAInstallPrompt = {
       dismiss_install_prompt: 'إغلاق تنبيه التثبيت',
       install_wasel_app: 'ثبّت تطبيق واصل',
       install: 'تثبيت',
-    },
   }
 } as const;
 

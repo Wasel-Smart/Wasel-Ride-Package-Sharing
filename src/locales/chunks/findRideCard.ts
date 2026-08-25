@@ -10,7 +10,6 @@ export const findRideCard = {
       owns: 'Owns',
       demand_2: 'Demand',
       booked: 'Booked',
-    },
   },
   ar: {
       trips: 'رحلات',
@@ -23,7 +22,6 @@ export const findRideCard = {
       owns: 'يملك',
       demand_2: 'الطلب',
       booked: 'محجوز',
-    },
   }
 } as const;
 

@@ -13,7 +13,6 @@ export const liveGeoTracking = {
       speed: 'Speed',
       heading: 'Heading',
       location_history: 'Location History',
-    },
   },
   ar: {
       available_drivers: 'السائقون المتاحون',
@@ -41,7 +40,6 @@ export const liveGeoTracking = {
       safetyTips: 'نصائح السلامة',
       reportProblem: 'إبلاغ عن مشكلة',
       lostItem: 'عنصر مفقود',
-    },
   }
 } as const;
 

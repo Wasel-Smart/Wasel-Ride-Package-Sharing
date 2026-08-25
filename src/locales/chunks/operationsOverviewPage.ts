@@ -26,7 +26,6 @@ export const operationsOverviewPage = {
       ownership: 'Ownership',
       mode: 'Mode',
       service_mix: 'Service Mix',
-    },
   },
   ar: {
       public_workflow: 'مسار عام',
@@ -55,7 +54,6 @@ export const operationsOverviewPage = {
       ownership: 'الملكية',
       mode: 'النمط',
       service_mix: 'مزيج الخدمات',
-    },
   }
 } as const;
 

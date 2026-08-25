@@ -10,7 +10,6 @@ export const adminDashboardPage = {
       loading_metrics: 'Loading metrics…',
       packages: 'Packages',
       view_details: 'View details →',
-    },
   },
   ar: {
       access_denied: 'وصول مرفوض',
@@ -23,7 +22,6 @@ export const adminDashboardPage = {
       loading_metrics: 'جارٍ تحميل المؤشرات...',
       packages: 'الطرود',
       view_details: 'عرض التفاصيل ←',
-    },
   }
 } as const;
 

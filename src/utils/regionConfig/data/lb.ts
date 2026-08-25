@@ -1,4 +1,6 @@
-const LEBANON: RegionConfig = {
+import type { RegionConfig } from '../types';
+
+export const LEBANON: RegionConfig = {
   iso: 'LB',
   name: 'Lebanon',
   nameAr: 'لبنان',

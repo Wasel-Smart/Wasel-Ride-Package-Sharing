@@ -7,7 +7,6 @@ export const mobilityOSLandingMap = {
       fallback_focus: 'Fallback focus',
       live_corridor_focus: 'Live corridor focus',
       jordan_network: 'Jordan network',
-    },
   },
   ar: {
       pressure: 'الضغط',
@@ -17,7 +16,6 @@ export const mobilityOSLandingMap = {
       fallback_focus: 'تركيز احتياطي',
       live_corridor_focus: 'تركيز الممر الحي',
       jordan_network: 'شبكة الأردن',
-    },
   }
 } as const;
 

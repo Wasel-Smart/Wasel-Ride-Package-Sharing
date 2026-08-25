@@ -48,7 +48,6 @@ export const liveTripTracking = {
       share_live_location: 'شارك موقعك الحي',
       cancel_ride: 'إلغاء الرحلة',
       emergency_sos_2: 'طوارئ',
-    },
   },
   ar: {
       m: 'م',
@@ -99,7 +98,6 @@ export const liveTripTracking = {
       share_live_location: 'شارك موقعك الحي',
       cancel_ride: 'إلغاء الرحلة',
       emergency_sos_2: 'طوارئ',
-    },
   }
 } as const;
 

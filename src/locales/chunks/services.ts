@@ -28,7 +28,6 @@ export const services = {
         giftsDesc: 'Send gifts anywhere',
         publicBus: 'Public Bus',
         publicBusDesc: 'City bus routes and schedules',
-      },
   },
   ar: {
         title: 'خدماتنا',
@@ -59,7 +58,6 @@ export const services = {
         giftsDesc: 'ابعث هدايا لأي مكان',
         publicBus: 'باصات عامة',
         publicBusDesc: 'مسارات ومواعيد باصات المدينة',
-      },
   }
 } as const;
 

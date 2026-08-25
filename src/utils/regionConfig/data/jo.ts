@@ -1,4 +1,6 @@
-const JORDAN: RegionConfig = {
+import type { RegionConfig } from '../types';
+
+export const JORDAN: RegionConfig = {
   iso: 'JO',
   name: 'Jordan',
   nameAr: 'الأردن',

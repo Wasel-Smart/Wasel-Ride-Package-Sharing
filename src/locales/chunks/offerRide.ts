@@ -22,7 +22,6 @@ export const offerRide = {
       ridePostedDesc: 'Your ride from {from} to {to} is now available for booking',
       helpText:
         "Your ride will be visible to passengers immediately and you'll get notifications when booked",
-    },
   },
   ar: {
       title: 'اعرض رحلة',
@@ -46,7 +45,6 @@ export const offerRide = {
       ridePosted: 'تم نشر الرحلة!',
       ridePostedDesc: 'رحلتك من {from} إلى {to} متاحة الآن للحجز',
       helpText: 'ستظهر رحلتك للركاب فوراً وستتلقى إشعارات عند الحجز',
-    },
   }
 } as const;
 

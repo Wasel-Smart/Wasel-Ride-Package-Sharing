@@ -30,7 +30,6 @@ export const findRidePage = {
       save_a_route_to_see_reminders_here: 'Save a route to see reminders here.',
       best_ride_matches: 'Best ride matches',
       to_2: 'to',
-    },
   },
   ar: {
       book_a_ride: 'احجز رحلة',
@@ -63,7 +62,6 @@ export const findRidePage = {
       save_a_route_to_see_reminders_here: 'احفظ مساراً لرؤية التذكيرات هنا.',
       best_ride_matches: 'أفضل المطابقات للرحلة',
       to_2: 'إلى',
-    },
   }
 } as const;
 

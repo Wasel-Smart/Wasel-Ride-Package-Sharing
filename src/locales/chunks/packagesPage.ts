@@ -14,7 +14,6 @@ export const packagesPage = {
       why_this_works: 'Why this works',
       every_package_request_improves_route_matching_handoff_clarity_and_corridor_coverage_senders_get_simpler_delivery_and_the_network_gets_better_at_moving_parcels_on_real_daily_routes:
         'Every package request improves route matching, handoff clarity, and corridor coverage. Senders get simpler delivery, and the network gets better at moving parcels on real daily routes.',
-    },
   },
   ar: {
       send_a_package: 'أرسل طرداً',
@@ -31,7 +30,6 @@ export const packagesPage = {
       why_this_works: 'لماذا ينجح هذا',
       every_package_request_improves_route_matching_handoff_clarity_and_corridor_coverage_senders_get_simpler_delivery_and_the_network_gets_better_at_moving_parcels_on_real_daily_routes:
         'كل طلب طرد يحسّن مطابقة المسارات ووضوح التسليم وتغطية الممرّات. يستفيد المرسِل بتوصيل أبسط، وتتحسّن الشبكة في نقل الطرود على المسارات اليومية الفعلية.',
-    },
   }
 } as const;
 

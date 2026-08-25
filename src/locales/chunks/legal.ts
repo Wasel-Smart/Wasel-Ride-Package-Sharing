@@ -29,7 +29,6 @@ export const legal = {
         gdpr: 'GDPR Compliance',
         ccpa: 'CCPA Compliance',
       },
-    },
   },
   ar: {
       terms: {
@@ -61,7 +60,6 @@ export const legal = {
         gdpr: 'الامتثال للائحة حماية البيانات العامة',
         ccpa: 'الامتثال لقانون خصوصية المستهلك في كاليفورنيا',
       },
-    },
   }
 } as const;
 

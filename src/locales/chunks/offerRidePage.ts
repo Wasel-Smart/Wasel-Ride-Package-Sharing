@@ -14,7 +14,6 @@ export const offerRidePage = {
       quick_actions: 'Quick actions',
       open_driver_console: 'Open driver console',
       trust_center: 'Trust center',
-    },
   },
   ar: {
       finish_trust_setup: 'إنهاء إعداد الثقة',
@@ -31,7 +30,6 @@ export const offerRidePage = {
       quick_actions: 'إجراءات سريعة',
       open_driver_console: 'فتح وحدة السائق',
       trust_center: 'مركز الثقة',
-    },
   }
 } as const;
 

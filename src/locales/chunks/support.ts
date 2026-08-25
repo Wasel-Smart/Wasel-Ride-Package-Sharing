@@ -17,7 +17,6 @@ export const support = {
       accountHelp: 'Account help',
       technicalIssues: 'Technical issues',
       feedbackAndSuggestions: 'Feedback and suggestions',
-    },
   },
   ar: {
       title: 'المساعدة والدعم',
@@ -36,7 +35,6 @@ export const support = {
       accountHelp: 'مساعدة في الحساب',
       feedbackAndSuggestions: 'الملاحظات والاقتراحات',
       livechat: 'دردشة مباشرة',
-    },
   }
 } as const;
 

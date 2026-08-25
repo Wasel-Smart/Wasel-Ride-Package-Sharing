@@ -96,3 +96,66 @@ supabase secrets set CLIQ_MERCHANT_ID="<your-cliq-merchant-id>"
 7. [ ] Confirm `VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=false` in production
 8. [ ] Confirm `verify_jwt = true` in `supabase/config.toml`
 9. [ ] Run `bash src/platform/validate-10-out-of-10.sh`
+
+## Credential Rotation Guide
+
+### Google OAuth Client Secret (Supabase Auth)
+**Status**: A client secret was found in a local-only quarantine directory (`_SECRETS_NEEDS_ROTATION_THEN_DELETE/`). It was **never committed to git**.
+
+**Rotation steps**:
+1. Open [Google Cloud Console ? Credentials](https://console.cloud.google.com/apis/credentials)
+2. Find the OAuth 2.0 Client ID used for Wasel (project: `wasel-planning-with-ai`)
+3. Click **Create Credentials ? OAuth client ID** to generate a new pair
+4. Copy the new **Client ID** and **Client secret**
+5. Update Supabase Auth Google provider:
+   ```bash
+   supabase secrets set SUPABASE_AUTH_GOOGLE_CLIENT_ID="new-client-id"
+   supabase secrets set SUPABASE_AUTH_GOOGLE_CLIENT_SECRET="new-client-secret"
+   ```
+6. Update Vercel environment variables if the client ID is used there
+7. Update `.env` / `.env.local` with the new values
+8. Delete the old OAuth client in Google Cloud Console
+
+### Google Service Account Private Key (`docs/wasel-planning-with-ai.json`)
+**Status**: A service account private key is committed in `docs/wasel-planning-with-ai.json`. This is a **critical exposure**.
+
+**Rotation steps**:
+1. Open [Google Cloud Console ? IAM ? Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts)
+2. Find the service account `fb-service-account@wasel-planning-with-ai.iam.gserviceaccount.com`
+3. Go to the **Keys** tab ? **Add Key ? Create new key** (JSON)
+4. Download the new key and replace `docs/wasel-planning-with-ai.json` content
+5. **Delete the old key** from Google Cloud Console
+6. **Remove the old key from git history**:
+   ```bash
+   git filter-repo --path docs/wasel-planning-with-ai.json --invert-paths
+   ```
+   Or use BFG Repo-Cleaner:
+   ```bash
+   bfg --delete-files docs/wasel-planning-with-ai.json
+   git reflog expire --expire=now --all && git gc --prune=now --aggressive
+   git push --force
+   ```
+7. Update any code that reads this file with the new key path/content
+
+### Local Communication Worker Secrets (`.env`)
+**Status**: Real secrets were found in `.env` inside OneDrive sync tree.
+
+**Rotation steps**:
+1. Generate new secrets:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+2. Replace `COMMUNICATION_WORKER_SECRET` and `COMMUNICATION_WEBHOOK_TOKEN` in `.env`
+3. Update Supabase secrets if these are used by edge functions:
+   ```bash
+   supabase secrets set COMMUNICATION_WORKER_SECRET="new-secret"
+   supabase secrets set COMMUNICATION_WEBHOOK_TOKEN="new-token"
+   ```
+4. Move `.env` outside OneDrive sync or exclude the project folder from OneDrive
+
+### General Rotation Checklist
+- [ ] All secrets in `.env` are replaced with placeholders or moved to a secret store
+- [ ] `git ls-files | grep -E '\.(pem|key|p12|pfx|json)'` shows no private key files
+- [ ] `scripts/validate-no-secrets.mjs` passes locally
+- [ ] CI secret scanning (`secret-scan.yml`) passes on PR
+- [ ] No secrets appear in GitHub Actions logs

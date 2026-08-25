@@ -13,7 +13,6 @@ export const rateDriverModal = {
         good_communication: 'Good Communication',
         professional: 'Professional',
       },
-    },
   },
   ar: {
       rate_your_trip: 'قيّم رحلتك',
@@ -29,7 +28,6 @@ export const rateDriverModal = {
         good_communication: 'تواصل جيد',
         professional: 'محترف',
       },
-    },
   }
 } as const;
 

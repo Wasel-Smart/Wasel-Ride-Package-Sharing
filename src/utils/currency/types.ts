@@ -1,16 +1,3 @@
-/**
- * utils/currency.ts — Multi-currency support for Wasel | واصل
- *
- * Design principles:
- *  - JOD is the platform's primary / settlement currency
- *  - All amounts stored in the backend are in JOD
- *  - Display currency is user-configurable but converted client-side
- *  - Every monetary value must carry an explicit ISO-4217 currency code
- *  - No hardcoded currency symbols anywhere in business logic
- */
-
-// ─── Supported currencies ─────────────────────────────────────────────────────
-
 export const SUPPORTED_CURRENCY_CODES = [
   'JOD',
   'USD',
@@ -50,3 +37,7 @@ export interface CurrencyConfig {
   minFare: number;
 }
 
+export interface Money {
+  amount: number;
+  currency: SupportedCurrency;
+}

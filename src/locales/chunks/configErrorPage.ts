@@ -11,7 +11,6 @@ export const configErrorPage = {
       navigate_to_settings_environment_variables: 'Navigate to Settings → Environment Variables',
       add_the_missing_variables_listed_above: 'Add the missing variables listed above',
       redeploy_your_application: 'Redeploy your application',
-    },
   },
   ar: {
       configuration_error: 'خطأ في الإعداد',
@@ -25,7 +24,6 @@ export const configErrorPage = {
       navigate_to_settings_environment_variables: 'انتقل إلى الإعدادات ← متغيّرات البيئة',
       add_the_missing_variables_listed_above: 'أضف المتغيّرات الناقصة المذكورة أعلاه',
       redeploy_your_application: 'أعد نشر تطبيقك',
-    },
   }
 } as const;
 

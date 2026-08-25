@@ -19,7 +19,6 @@ export const supportPage = {
       send_message: 'Send message',
       wasel_support_expected_response_2_hours_safety_issues_immediate:
         'Wasel Support • Expected response 2 hours • Safety issues: immediate',
-    },
   },
   ar: {
       support_that_keeps_the_movement_context: 'دعم يحفظ سياق الحركة',
@@ -41,7 +40,6 @@ export const supportPage = {
       send_message: 'أرسل رسالة',
       wasel_support_expected_response_2_hours_safety_issues_immediate:
         'دعم واصل • الرد المتوقع خلال ساعتين • مشاكل السلامة: فورية',
-    },
   }
 } as const;
 

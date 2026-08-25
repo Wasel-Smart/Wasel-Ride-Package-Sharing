@@ -1,3 +1,6 @@
+import type { SupportedCurrency } from './types';
+import { CurrencyService } from './service';
+
 // ─── Standalone helper functions ──────────────────────────────────────────────
 
 /**

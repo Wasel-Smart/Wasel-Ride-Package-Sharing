@@ -101,7 +101,6 @@ export const settingsExpanded = {
       settingsSavedAutomatically: 'Settings saved automatically',
       allSettingsResetToDefaults: 'All settings reset to defaults',
       waselVersion: 'Wasel version',
-    },
   },
   ar: {
       accountControl: 'تشغيل الحساب',
@@ -203,7 +202,6 @@ export const settingsExpanded = {
       settingsSavedAutomatically: 'تم حفظ الإعدادات تلقائياً',
       allSettingsResetToDefaults: 'تم إعادة جميع الإعدادات إلى الافتراضي',
       waselVersion: 'إصدار واصل',
-    },
   }
 } as const;
 

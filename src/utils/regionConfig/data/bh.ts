@@ -1,4 +1,6 @@
-const BAHRAIN: RegionConfig = {
+import type { RegionConfig } from '../types';
+
+export const BAHRAIN: RegionConfig = {
   iso: 'BH',
   name: 'Bahrain',
   nameAr: 'البحرين',

@@ -10,7 +10,6 @@ export const packageTrackPanel = {
         'No connected package found for that tracking ID yet.',
       recent_tracking_shortcuts: 'Recent tracking shortcuts',
       to: 'to',
-    },
   },
   ar: {
       track: 'تتبّع',
@@ -23,7 +22,6 @@ export const packageTrackPanel = {
         'لا يوجد طرد مرتبط بهذا رقم التتبّع بعد.',
       recent_tracking_shortcuts: 'اختصارات التتبّع الأخيرة',
       to: 'إلى',
-    },
   }
 } as const;
 

@@ -15,7 +15,6 @@ export const success = {
       requestSent: 'Request sent',
       accountCreated: 'Account created successfully',
       welcomeToWasel: 'Welcome to Wasel!',
-    },
   },
   ar: {
       saved: 'تم الحفظ بنجاح',
@@ -33,7 +32,6 @@ export const success = {
       requestSent: 'تم إرسال الطلب',
       accountCreated: 'تم إنشاء الحساب بنجاح',
       welcomeToWasel: 'مرحباً بك في واصل!',
-    },
   }
 } as const;
 

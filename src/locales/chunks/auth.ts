@@ -26,7 +26,6 @@ export const auth = {
       resendCode: 'Resend code',
       phoneNumber: 'Phone Number',
       verifyPhone: 'Verify Phone',
-    },
   },
   ar: {
       login: 'سجّل دخول',
@@ -55,7 +54,6 @@ export const auth = {
       resendCode: 'ابعث الكود مرة ثانية',
       phoneNumber: 'رقم التلفون',
       verifyPhone: 'تأكيد رقم التلفون',
-    },
   }
 } as const;
 

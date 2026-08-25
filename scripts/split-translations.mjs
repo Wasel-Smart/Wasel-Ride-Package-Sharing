@@ -10,14 +10,12 @@ mkdirSync(chunksDir, { recursive: true });
 
 const lines = readFileSync(join(localesDir, 'translations.ts'), 'utf-8').split('\n');
 
-// Find boundaries: line 5 = "  en: {", line 2530 = "  ar: {"
-const enStart = 4; // 0-indexed
-const arStart = 2529; // 0-indexed
+const enStart = 4; // 0-indexed line 5: "  en: {"
+const arStart = 2529; // 0-indexed line 2530: "  ar: {"
 const fileEnd = lines.length - 1;
 
 console.log(`EN: lines ${enStart+1}-${arStart}, AR: lines ${arStart+1}-${fileEnd+1}`);
 
-// Collect top-level keys from EN section (line 6 onwards, before ar:)
 const enKeys = [];
 for (let i = enStart + 1; i < arStart; i++) {
   const match = lines[i].match(/^    (\w+): \{/);
@@ -53,12 +51,10 @@ function extractBlock(lines, startLine) {
   return result;
 }
 
-// For each EN key, find the matching AR key and extract both
 const chunkNames = [];
 let skipped = 0;
 
 for (const key of enKeys) {
-  // Find line index of this key in EN section
   let enLineIdx = -1;
   for (let i = enStart + 1; i < arStart; i++) {
     if (lines[i].trim() === `${key}: {`) {
@@ -67,7 +63,6 @@ for (const key of enKeys) {
     }
   }
   
-  // Find matching AR key
   let arLineIdx = -1;
   for (let i = arStart + 1; i < fileEnd; i++) {
     if (lines[i].trim() === `${key}: {`) {
@@ -85,25 +80,28 @@ for (const key of enKeys) {
   const enBlock = extractBlock(lines, enLineIdx);
   const arBlock = extractBlock(lines, arLineIdx);
   
-  // Remove the "key: {" header line from each block
-  const enContent = enBlock.slice(1);
-  const arContent = arBlock.slice(1);
+  // Remove the first line ("    key: {") and the last line ("      },")
+  const enContent = enBlock.slice(1, -1);
+  const arContent = arBlock.slice(1, -1);
   
-  // Fix trailing "}," on the last line
-  const fixTrailing = (arr) => {
-    const last = arr[arr.length - 1];
-    if (last && last.trim() === '},') {
-      arr[arr.length - 1] = last.replace(/},$/, '}');
+  // Remove trailing comma from the last property line if present
+  const trimTrailingComma = (arr) => {
+    if (arr.length > 0) {
+      const last = arr[arr.length - 1];
+      // If last line ends with just a comma (not "}," or "],")
+      if (last.trim().endsWith(',') && !last.trim().endsWith('},') && !last.trim().endsWith('],')) {
+        arr[arr.length - 1] = last.replace(/,$/, '');
+      }
     }
     return arr;
   };
   
   const chunkFile = `export const ${key} = {
   en: {
-${fixTrailing(enContent).join('\n')}
+${trimTrailingComma(enContent).join('\n')}
   },
   ar: {
-${fixTrailing(arContent).join('\n')}
+${trimTrailingComma(arContent).join('\n')}
   }
 } as const;
 
@@ -115,14 +113,12 @@ ${fixTrailing(arContent).join('\n')}
 
 console.log(`Created ${chunkNames.length} chunks, skipped ${skipped}`);
 
-// Barrel index.ts
 const barrel = `export type { Language, TranslationNode } from './translations';
 
 ${chunkNames.map(k => `export { ${k} } from './chunks/${k}';`).join('\n')}
 `;
 writeFileSync(join(localesDir, 'index.ts'), barrel);
 
-// Assembled translations.ts
 const imports = chunkNames.map(k => `import { ${k} } from './chunks/${k}';`).join('\n');
 const enSpread = chunkNames.map(k => `    ...${k}.en,`).join('\n');
 const arSpread = chunkNames.map(k => `    ...${k}.ar,`).join('\n');

@@ -21,7 +21,6 @@ export const messages = {
       sendLocation: 'Send Location',
       voiceCall: 'Voice Call',
       videoCall: 'Video Call',
-    },
   },
   ar: {
       title: 'الرسائل',
@@ -45,7 +44,6 @@ export const messages = {
       sendLocation: 'إرسال الموقع',
       voiceCall: 'مكالمة صوتية',
       videoCall: 'مكالمة فيديو',
-    },
   }
 } as const;
 
