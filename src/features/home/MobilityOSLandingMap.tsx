@@ -239,6 +239,7 @@ export function MobilityOSLandingMap({
   const sizeRef = useRef({ width: 720, height: preferredHeight ?? 560 });
   const [size, setSize] = useState(sizeRef.current);
   const visibleRef = useRef(true);
+  const renderRef = useRef<(time: number) => void>(() => {});
 
   const uiFocusStroke = runtimeMode === 'fallback' ? MAP_LAYER.focus : FLOW;
   const uiFocusStrength = Math.max(
@@ -267,7 +268,13 @@ export function MobilityOSLandingMap({
     window.addEventListener('resize', update, { passive: true });
 
     const io = new IntersectionObserver(
-      ([entry]) => { visibleRef.current = entry?.isIntersecting ?? true; },
+      ([entry]) => {
+        const wasVisible = visibleRef.current;
+        visibleRef.current = entry?.isIntersecting ?? true;
+        if (visibleRef.current && !wasVisible && frameRef.current === null) {
+          frameRef.current = requestAnimationFrame(renderRef.current);
+        }
+      },
       { threshold: 0 },
     );
     if (wrapRef.current) io.observe(wrapRef.current);
@@ -302,13 +309,13 @@ export function MobilityOSLandingMap({
   useEffect(() => {
     const render = (time: number) => {
       if (!visibleRef.current) {
-        frameRef.current = requestAnimationFrame(render);
+        frameRef.current = null;
         return;
       }
 
       const canvas = canvasRef.current;
       if (!canvas) {
-        frameRef.current = requestAnimationFrame(render);
+        frameRef.current = null;
         return;
       }
 
@@ -787,9 +794,11 @@ export function MobilityOSLandingMap({
       frameRef.current = requestAnimationFrame(render);
     };
 
+    renderRef.current = render;
     frameRef.current = requestAnimationFrame(render);
     return () => {
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
     };
   }, [
     demandPressure,
