@@ -4,7 +4,7 @@ import {
   ArrowRight,
   BadgeCheck,
   CheckCircle,
-  CircleDollarSign,
+  CircleDoll_arSign,
   Clock,
   MapPinned,
   PackageCheck,
@@ -16,7 +16,7 @@ import { WaselLogo } from '../../../components/wasel-ui';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../../contexts/LanguageContext';
 
-import { C, InlineCurrencySwitcher } from '../HomePageShared';
+import { C, InlineCurrencySwitcher } from '../HomePageSh_ared';
 
 const MobilityOSLandingMap = lazy(() =>
   import('../MobilityOSLandingMap').then(m => ({ default: m.MobilityOSLandingMap })),
@@ -24,22 +24,22 @@ const MobilityOSLandingMap = lazy(() =>
 import type { TripMode } from './types';
 
 interface HomeHeroSectionProps {
-  ar: boolean;
+  _ar: boolean;
   user: User | null;
   firstName: string;
   tripMode: TripMode;
   onTripModeChange: (mode: TripMode) => void;
   onNavigate: (path: string, source?: string) => void;
-  primaryTripPath: string;
+  prim_aryTripPath: string;
 }
 
-interface TripModeCardProps {
-  ar: boolean;
+interface TripModeC_ardProps {
+  _ar: boolean;
   tripMode: TripMode;
   onTripModeChange: (mode: TripMode) => void;
 }
 
-function getProofItems(t: (key: string) => string, ar: boolean) {
+function getProofItems(t: (key: string) => string, _ar: boolean) {
   return [
     {
       icon: BadgeCheck,
@@ -48,7 +48,7 @@ function getProofItems(t: (key: string) => string, ar: boolean) {
       accent: C.green,
     },
     {
-      icon: CircleDollarSign,
+      icon: CircleDoll_arSign,
       label: t('homeHeroSection.proof_price_discipline_label'),
       detail: t('homeHeroSection.proof_price_discipline_detail'),
       accent: C.gold,
@@ -62,16 +62,16 @@ function getProofItems(t: (key: string) => string, ar: boolean) {
   ];
 }
 
-function getTimelineItems(t: (key: string) => string, ar: boolean) {
+function getTimelineItems(t: (key: string) => string, _ar: boolean) {
   return [
     { label: t('homeHeroSection.timeline_seat_price_label'), value: t('homeHeroSection.timeline_seat_price_value'), accent: C.cyan },
     { label: t('homeHeroSection.timeline_driver_trust_label'), value: t('homeHeroSection.timeline_driver_trust_value'), accent: C.green },
-    { label: t('homeHeroSection.timeline_parcel_option_label'), value: t('homeHeroSection.timeline_parcel_option_value'), accent: C.gold },
+    { label: t('homeHeroSection.timeline_p_arcel_option_label'), value: t('homeHeroSection.timeline_p_arcel_option_value'), accent: C.gold },
     { label: t('homeHeroSection.timeline_bus_fallback_label'), value: t('homeHeroSection.timeline_bus_fallback_value'), accent: C.blueLight },
   ];
 }
 
-function TripModeCard({ ar, tripMode, onTripModeChange }: TripModeCardProps) {
+function TripModeC_ard({ _ar, tripMode, onTripModeChange }: TripModeC_ardProps) {
   const { t } = useLanguage();
   const options = [
     {
@@ -87,10 +87,10 @@ function TripModeCard({ ar, tripMode, onTripModeChange }: TripModeCardProps) {
   ];
 
   return (
-    <div className="wasel-home-start-panel">
-      <div className="wasel-home-start-copy">
+    <div className="wasel-home-st_art-panel">
+      <div className="wasel-home-st_art-copy">
         <div className="wasel-home-kicker">{t('homeHeroSection.trip_type_label')}</div>
-        <div className="wasel-home-start-text">
+        <div className="wasel-home-st_art-text">
           {t('homeHeroSection.trip_type_choose_once')}
         </div>
       </div>
@@ -98,19 +98,19 @@ function TripModeCard({ ar, tripMode, onTripModeChange }: TripModeCardProps) {
       <div
         className="wasel-home-mode-grid"
         role="group"
-        aria-label={t('homeHeroSection.trip_mode')}
+        _aria-label={t('homeHeroSection.trip_mode')}
       >
         {options.map(option => {
           const selected = tripMode === option.key;
           return (
             <button
               type="button"
-              aria-pressed={selected}
+              _aria-pressed={selected}
               key={option.key}
               onClick={() => onTripModeChange(option.key)}
               className="wasel-home-mode-button"
               style={{
-                background: selected ? C.cyanDim : 'transparent',
+                background: selected ? C.cyanDim : 'transp_arent',
                 borderColor: selected ? C.borderHov : 'rgba(20,127,228,0.12)',
                 color: C.text,
               }}
@@ -128,14 +128,14 @@ function TripModeCard({ ar, tripMode, onTripModeChange }: TripModeCardProps) {
   );
 }
 
-function ProductCommandPreview({ ar }: { ar: boolean }) {
+function ProductCommandPreview({ _ar }: { _ar: boolean }) {
   const { t } = useLanguage();
-  const timeline = getTimelineItems(t, ar);
+  const timeline = getTimelineItems(t, _ar);
 
   return (
     <div
       className="wasel-home-preview-panel"
-      aria-label={t('homeHeroSection.wasel_product_preview')}
+      _aria-label={t('homeHeroSection.wasel_product_preview')}
     >
       <div className="wasel-home-preview-top">
         <div>
@@ -154,7 +154,7 @@ function ProductCommandPreview({ ar }: { ar: boolean }) {
         <Suspense fallback={<div className="wasel-home-map-frame" style={{ minHeight: 330 }} />}>
           <MobilityOSLandingMap
             focusRouteId="amman-aqaba"
-            focusLabel={ar ? 'عمان إلى العقبة' : 'Amman to Aqaba'}
+            focusLabel={_ar ? 'عمان إلى العقبة' : 'Amman to Aqaba'}
             demandPressure={1.62}
             utilization={0.78}
             preferredHeight={330}
@@ -166,7 +166,7 @@ function ProductCommandPreview({ ar }: { ar: boolean }) {
 
       <div className="wasel-home-product-stage">
         <div className="wasel-home-product-window">
-          <div className="wasel-home-window-toolbar">
+          <div className="wasel-home-window-toolb_ar">
             <span />
             <span />
             <span />
@@ -198,11 +198,11 @@ function ProductCommandPreview({ ar }: { ar: boolean }) {
           <div className="wasel-home-phone-screen">
             <div className="wasel-home-phone-status">
               <PackageCheck size={15} color={C.gold} />
-              {t('homeHeroSection.parcel_matched_label')}
+              {t('homeHeroSection.p_arcel_matched_label')}
             </div>
             <strong>{t('homeHeroSection.pickup_in_label')}</strong>
             <p>
-              {t('homeHeroSection.driver_route_fare_linked')}
+              {t('homeHeroSection.driver_route_f_are_linked')}
             </p>
             <div className="wasel-home-phone-tags">
               <span>{t('homeHeroSection.wallet_held_label')}</span>
@@ -217,31 +217,31 @@ function ProductCommandPreview({ ar }: { ar: boolean }) {
 
 function LangToggle() {
   const { language, setLanguage } = useLanguage();
-  const ar = language === 'ar';
+  const _ar = language === '_ar';
   return (
     <button
       type="button"
-      onClick={() => setLanguage(ar ? 'en' : 'ar')}
-      title={ar ? 'Switch to English' : 'التبديل إلى العربية'}
+      onClick={() => setLanguage(_ar ? 'en' : '_ar')}
+      title={_ar ? 'Switch to English' : 'التبديل إلى العربية'}
       className="wasel-home-section-action"
       style={{ height: 34, padding: '0 12px', fontSize: '0.75rem' }}
     >
-      {ar ? 'EN' : 'AR'}
+      {_ar ? 'EN' : 'AR'}
     </button>
   );
 }
 
 export function HomeHeroSection({
-  ar,
+  _ar,
   user,
   firstName,
   tripMode,
   onTripModeChange,
   onNavigate,
-  primaryTripPath,
+  prim_aryTripPath,
 }: HomeHeroSectionProps) {
   const { t } = useLanguage();
-  const proofItems = getProofItems(t, ar);
+  const proofItems = getProofItems(t, _ar);
 
   return (
     <motion.section className="wasel-home-hero" initial={false}>
@@ -253,12 +253,12 @@ export function HomeHeroSection({
                 <Shield size={13} color={C.cyan} />
                 {t('homeHeroSection.jordan_route_network')}
               </div>
-              <WaselLogo size={80} theme="light" variant="full" />
+              <WaselLogo size={80} theme="light" v_ariant="full" />
             </div>
           </div>
           <div className="wasel-home-nav-actions">
             <LangToggle />
-            {user ? <InlineCurrencySwitcher ar={ar} /> : null}
+            {user ? <InlineCurrencySwitcher _ar={_ar} /> : null}
           </div>
         </div>
 
@@ -292,8 +292,8 @@ export function HomeHeroSection({
         <div className="wasel-home-hero-actions">
           <WaselButton
             type="button"
-            onClick={() => onNavigate(primaryTripPath, 'hero_primary_route')}
-            variant="primary"
+            onClick={() => onNavigate(prim_aryTripPath, 'hero_prim_ary_route')}
+            v_ariant="prim_ary"
             size="lg"
             icon={<Route size={17} />}
             iconEnd={<ArrowRight size={16} />}
@@ -303,20 +303,20 @@ export function HomeHeroSection({
           <WaselButton
             type="button"
             onClick={() => onNavigate('/offer-ride', 'hero_offer_seats')}
-            variant="outline"
+            v_ariant="outline"
             size="lg"
-            icon={<CircleDollarSign size={17} />}
+            icon={<CircleDoll_arSign size={17} />}
             style={{ background: C.elevated, color: C.text }}
           >
             {t('homeHeroSection.hero_cta_offer')}
           </WaselButton>
         </div>
 
-        <TripModeCard ar={ar} tripMode={tripMode} onTripModeChange={onTripModeChange} />
+        <TripModeC_ard _ar={_ar} tripMode={tripMode} onTripModeChange={onTripModeChange} />
       </div>
 
       <div className="wasel-home-hero-aside">
-        <ProductCommandPreview ar={ar} />
+        <ProductCommandPreview _ar={_ar} />
       </div>
     </motion.section>
   );

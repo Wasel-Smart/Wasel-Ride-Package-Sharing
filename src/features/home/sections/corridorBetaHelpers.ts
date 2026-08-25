@@ -1,4 +1,4 @@
-import { C, TYPE } from '../../../utils/wasel-ds';
+import { C, _TYPE } from '../../../utils/wasel-ds';
 import { tx } from '../../../locales/tx';
 import type { CorridorBetaPlan } from '../../../services/corridorBeta';
 

@@ -5,7 +5,7 @@ import { symbolPath } from '@/utils/brand-assets';
 interface WaselLogoProps {
   size?: number;
   showWordmark?: boolean;
-  theme?: 'dark' | 'light';
+  _theme?: 'dark' | 'light';
   style?: CSSProperties;
   variant?: 'full' | 'compact';
   framed?: boolean;
@@ -14,7 +14,7 @@ interface WaselLogoProps {
 
 const SYMBOL_RATIO = 1536 / 1024;
 
-function BrandSymbol({ size, theme = 'dark', framed = false }: { size: number; theme?: 'dark' | 'light'; framed?: boolean }) {
+function BrandSymbol({ size, _theme = 'dark', framed = false }: { size: number; _theme?: 'dark' | 'light'; framed?: boolean }) {
   const width = Math.round(size * SYMBOL_RATIO);
   const height = Math.round(size);
   const webpSrc = symbolPath('default', 'webp');
@@ -46,15 +46,15 @@ function BrandSymbol({ size, theme = 'dark', framed = false }: { size: number; t
 }
 
 function BrandName({
-  theme,
+  _theme,
   size,
   language,
 }: {
-  theme: 'dark' | 'light';
+  _theme: 'dark' | 'light';
   size: number;
   language: 'ar' | 'en';
 }) {
-  const foreground = theme === 'light' ? C.text : C.brandInk;
+  const foreground = _theme === 'light' ? C.text : C.brandInk;
   const fontSize = Math.max(15, Math.min(26, size * 0.5));
   return (
     <span
@@ -69,7 +69,7 @@ function BrandName({
         lineHeight: 1,
         letterSpacing: '-0.035em',
         whiteSpace: 'nowrap',
-        textShadow: theme === 'light' ? `0 1px 12px ${C.brandInk}40` : undefined,
+        textShadow: _theme === 'light' ? `0 1px 12px ${C.brandInk}40` : undefined,
       }}
     >
       {language === 'ar' ? (
@@ -90,7 +90,7 @@ function BrandName({
 export function WaselLogo({
   size = 38,
   showWordmark = true,
-  theme = 'dark',
+  _theme = 'dark',
   style,
   variant = 'full',
   framed,
@@ -114,8 +114,8 @@ export function WaselLogo({
         ...style,
       }}
     >
-      <BrandSymbol size={symbolSize} theme={theme} framed={framed} />
-      {!compact && <BrandName theme={theme} size={size} language={language} />}
+      <BrandSymbol size={symbolSize} _theme={_theme} framed={framed} />
+      {!compact && <BrandName _theme={_theme} size={size} language={language} />}
     </div>
   );
 }
@@ -125,7 +125,7 @@ export function WaselMark({ size = 38, style }: { size?: number; style?: CSSProp
 }
 
 export function WaselHeroMark({ size = 120 }: { size?: number }) {
-  return <WaselLogo size={Math.max(72, size * 0.66)} theme="light" framed />;
+  return <WaselLogo size={Math.max(72, size * 0.66)} _theme="light" framed />;
 }
 
 export function WaselIcon({ size = 20 }: { size?: number }) {

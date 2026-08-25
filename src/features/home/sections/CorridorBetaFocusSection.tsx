@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Target } from 'lucide-react';
 import type { CorridorBetaPlan } from '../../../services/corridorBeta';
-import { C, R, SH, TYPE } from '../../../utils/wasel-ds';
-import { useLanguage } from '../../../contexts/LanguageContext';
+import { C, R, _SH, TYPE } from '../../../utils/wasel-ds';
+import { _useLanguage } from '../../../contexts/LanguageContext';
 import { tx } from '../../../locales/tx';
 import { CorridorBetaCard } from './CorridorBetaCard';
 
