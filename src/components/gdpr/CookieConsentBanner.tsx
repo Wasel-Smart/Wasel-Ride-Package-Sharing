@@ -71,8 +71,8 @@ export function CookieConsentBanner() {
       const focusable = Array.from(banner.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
       if (focusable.length === 0) return;
 
-      const first = focusable[0]!;
-      const last = focusable[focusable.length - 1]!;
+      const first = focusable[0] as HTMLElement;
+      const last = focusable[focusable.length - 1] as HTMLElement;
 
       if (event.shiftKey) {
         if (document.activeElement === first) {
