@@ -305,7 +305,7 @@ export const templates = {
 export type TemplateName = keyof typeof templates;
 
 export function renderTemplate<K extends keyof typeof templates>(name: K, data: Parameters<(typeof templates)[K]>[0]): EmailTemplate {
-  const render = templates[name];
+  const render = templates[name] as (data: Parameters<(typeof templates)[K]>[0]) => string;
   const html = render(data);
 
   const textContent = html

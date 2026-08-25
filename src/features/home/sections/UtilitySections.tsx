@@ -1,54 +1,51 @@
-impor_t { mo_tion } from 'framer-mo_tion';
-impor_t { Walle_t } from 'lucide-reac_t';
-impor_t { WaselBu_t_ton } from '../../../componen_ts/wasel-ui/WaselBu_t_ton';
-impor_t { R, SH } from '../../../u_tils/wasel-ds';
-impor_t { C, Sec_tionHeader, Skele_ton, SOSBu_t_ton, Trus_tScoreC_ard } from '../HomePageSh_ared';
-impor_t { useLanguage } from '../../../con_tex_ts/LanguageCon_tex_t';
-impor_t { _tx } from '../../../locales/_tx';
+﻿import { motion } from 'framer-motion';
+import { Wallet } from 'lucide-react';
+import { WaselButton } from '../../../components/wasel-ui/WaselButton';
+import { R, SH } from '../../../utils/wasel-ds';
+import { C, SectionHeader, Skeleton, SOSButton, TrustScoreCard } from '../HomePageShared';
 
-in_terface SignedInU_tili_tySec_tionProps {
-  _ar: boolean;
+interface SignedInUtilitySectionProps {
+  ar: boolean;
   loading: boolean;
-  walle_tBalance: s_tring;
-  _trus_tScore: number;
+  walletBalance: string;
+  trustScore: number;
   user?: {
     emailVerified?: boolean;
     phoneVerified?: boolean;
     sanadVerified?: boolean;
     verified?: boolean;
-    _trips?: number;
-    ra_ting?: number;
+    trips?: number;
+    rating?: number;
   };
 }
 
-in_terface SignedOu_tC_taSec_tionProps {
-  _ar: boolean;
-  onNaviga_te: (pa_th: s_tring, source?: s_tring) => void;
+interface SignedOutCtaSectionProps {
+  ar: boolean;
+  onNavigate: (path: string, source?: string) => void;
 }
 
-expor_t func_tion SignedInU_tili_tySec_tion({
-  _ar,
+export function SignedInUtilitySection({
+  ar,
   loading,
-  walle_tBalance,
-  _trus_tScore,
+  walletBalance,
+  trustScore,
   user,
-}: SignedInU_tili_tySec_tionProps) {
-  cons_t { _t } = useLanguage();
-  re_turn (
-    <mo_tion.sec_tion ini_tial={false} className="wasel-home-sec_tion">
-      <Sec_tionHeader _ti_tle={_tx('homePage.u_tili_ty_readiness__ti_tle')} icon="T" />
+}: SignedInUtilitySectionProps) {
+  return (
+    <motion.section initial={false} className="wasel-home-section">
+      <SectionHeader title={ar ? 'الجاهزية قبل الانطلاق' : 'Readiness before you move'} icon="T" />
       <div
-        className="wasel-home-u_tili_ty-grid"
-        s_tyle={{
+        className="wasel-home-utility-grid"
+        style={{
           display: 'grid',
-          gridTempla_teColumns: '0.92fr 1.08fr',
+          gridTemplateColumns: '0.92fr 1.08fr',
           gap: 14,
-          alignI_tems: 's_t_ar_t',
+          alignItems: 'start',
         }}
       >
-        <div s_tyle={{ display: 'grid', gap: 14 }}>
+        <div style={{ display: 'grid', gap: 14 }}>
           <div
-            s_tyle={{
+            style={{
               borderRadius: R.xl,
               padding: '20px 20px 18px',
               background: C.cyanDim,
@@ -57,164 +54,169 @@ expor_t func_tion SignedInU_tili_tySec_tion({
             }}
           >
             <div
-              s_tyle={{
+              style={{
                 display: 'flex',
-                alignI_tems: 'cen_ter',
+                alignItems: 'center',
                 gap: 8,
-                fon_tSize: '0.7rem',
-                fon_tWeigh_t: 800,
-                _tex_tTransform: 'uppercase',
-                le_t_terSpacing: 0,
-                color: C._tex_tDim,
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: 0,
+                color: C.textDim,
               }}
             >
-              <Walle_t size={14} color={C.gold} />
-              {_tx('homePage.u_tili_ty_walle_t_ready')}
+              <Wallet size={14} color={C.gold} />
+              {ar ? 'المحفظة الجاهزة' : 'Wallet ready'}
             </div>
             <div
-              s_tyle={{
-                m_arginTop: 12,
-                fon_tSize: '1.6rem',
-                fon_tWeigh_t: 950,
-                color: C._tex_t,
-                le_t_terSpacing: 0,
+              style={{
+                marginTop: 12,
+                fontSize: '1.6rem',
+                fontWeight: 950,
+                color: C.text,
+                letterSpacing: 0,
               }}
             >
-              {loading ? <Skele_ton w={126} h={30} radius={8} /> : walle_tBalance}
+              {loading ? <Skeleton w={126} h={30} radius={8} /> : walletBalance}
             </div>
             <div
-              s_tyle={{
-                m_arginTop: 8,
-                fon_tSize: '0.8rem',
-                color: C._tex_tMu_ted,
-                lineHeigh_t: 1.65,
+              style={{
+                marginTop: 8,
+                fontSize: '0.8rem',
+                color: C.textMuted,
+                lineHeight: 1.65,
               }}
             >
-              {_tx('homePage.u_tili_ty_walle_t_de_tail')}
+              {ar
+                ? 'رصيدك حاضر للحجز وتأكيد الطلبات القادمة من نفس سطح الحركة.'
+                : 'Your balance is ready for bookings and upcoming confirmations from the same mobility surface.'}
             </div>
           </div>
 
           <div
-            s_tyle={{
+            style={{
               borderRadius: R.xl,
               padding: '20px 20px 18px',
-              background: C.eleva_ted,
+              background: C.elevated,
               border: `1px solid ${C.border}`,
             }}
           >
             <div
-              s_tyle={{
-                fon_tSize: '0.7rem',
-                fon_tWeigh_t: 800,
-                _tex_tTransform: 'uppercase',
-                le_t_terSpacing: 0,
-                color: C._tex_tDim,
-                m_arginBo_t_tom: 10,
+              style={{
+                fontSize: '0.7rem',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: 0,
+                color: C.textDim,
+                marginBottom: 10,
               }}
             >
-              {_tx('homePage.u_tili_ty_fas_t_escala_tion')}
+              {ar ? 'تصعيد سريع عند الحاجة' : 'Fast escalation when needed'}
             </div>
             <div
-              s_tyle={{ fon_tSize: '0.82rem', color: C._tex_tMu_ted, lineHeigh_t: 1.6, m_arginBo_t_tom: 14 }}
+              style={{ fontSize: '0.82rem', color: C.textMuted, lineHeight: 1.6, marginBottom: 14 }}
             >
-              {_tx('homePage.u_tili_ty_escala_tion_de_tail')}
+              {ar
+                ? 'اختصار واضح للطوارئ بدون تحويل هذه المساحة إلى عنصر بصري صاخب.'
+                : 'A clear emergency path without turning the whole surface into visual noise.'}
             </div>
-            <SOSBu_t_ton _ar={_ar} />
+            <SOSButton ar={ar} />
           </div>
         </div>
 
-        <Trus_tScoreC_ard score={_trus_tScore} _ar={_ar} user={user} />
+        <TrustScoreCard score={trustScore} ar={ar} user={user} />
       </div>
-    </mo_tion.sec_tion>
+    </motion.section>
   );
 }
 
-expor_t func_tion SignedOu_tC_taSec_tion({ _ar, onNaviga_te }: SignedOu_tC_taSec_tionProps) {
-  cons_t { _t } = useLanguage();
-  re_turn (
-    <mo_tion.sec_tion ini_tial={false} className="wasel-home-sec_tion" s_tyle={{ m_arginBo_t_tom: 24 }}>
+export function SignedOutCtaSection({ ar, onNavigate }: SignedOutCtaSectionProps) {
+  return (
+    <motion.section initial={false} className="wasel-home-section" style={{ marginBottom: 24 }}>
       <div
-        s_tyle={{
+        style={{
           borderRadius: R.xxl,
           padding: '30px 26px',
-          _tex_tAlign: 'cen_ter',
-          background: C.c_ard,
+          textAlign: 'center',
+          background: C.card,
           border: `1px solid ${C.borderHov}`,
           boxShadow: SH.lg,
         }}
       >
         <div
-          s_tyle={{
-            fon_tSize: '0.7rem',
-            fon_tWeigh_t: 800,
-            le_t_terSpacing: 0,
-            _tex_tTransform: 'uppercase',
+          style={{
+            fontSize: '0.7rem',
+            fontWeight: 800,
+            letterSpacing: 0,
+            textTransform: 'uppercase',
             color: C.cyan,
           }}
         >
-          {_tx('homePage.u_tili_ty_s_t_ar_t_fas_t')}
+          {ar ? 'ابدأ بسرعة' : 'Start fast'}
         </div>
         <h2
-          s_tyle={{
-            m_argin: '14px 0 10px',
-            fon_tSize: '2rem',
-            lineHeigh_t: 1.02,
-            le_t_terSpacing: 0,
+          style={{
+            margin: '14px 0 10px',
+            fontSize: '2rem',
+            lineHeight: 1.02,
+            letterSpacing: 0,
           }}
         >
-          {_tx('homePage.u_tili_ty_crea_te_accoun_t')}
+          {ar ? 'أنشئ حسابك وافتح نفس الشبكة' : 'Create an account and open the same network'}
         </h2>
         <p
-          s_tyle={{
-            m_argin: '0 au_to',
-            maxWid_th: 580,
-            color: C._tex_tMu_ted,
-            lineHeigh_t: 1.8,
-            fon_tSize: '0.94rem',
+          style={{
+            margin: '0 auto',
+            maxWidth: 580,
+            color: C.textMuted,
+            lineHeight: 1.8,
+            fontSize: '0.94rem',
           }}
         >
-          {_tx('homePage.u_tili_ty_signup_de_tail')}
+          {ar
+            ? 'عند التسجيل ستحتفظ بمساراتك المفضلة، وتبني سجل الثقة، وتدير الحجوزات والطرود من مكان واحد.'
+            : 'When you sign up, you keep favorite corridors, build trust history, and manage rides and parcels in one place.'}
         </p>
         <div
-          s_tyle={{
+          style={{
             display: 'flex',
             gap: 12,
-            jus_tifyCon_ten_t: 'cen_ter',
+            justifyContent: 'center',
             flexWrap: 'wrap',
-            m_arginTop: 24,
+            marginTop: 24,
           }}
         >
-          <WaselBu_t_ton
-            _type="bu_t_ton"
-            onClick={() => onNaviga_te('/au_th?_tab=regis_ter', 'signed_ou_t_regis_ter')}
-            v_arian_t="prim_ary"
+          <WaselButton
+            type="button"
+            onClick={() => onNavigate('/auth?tab=register', 'signed_out_register')}
+            variant="primary"
             size="lg"
-            s_tyle={{
-              heigh_t: 50,
+            style={{
+              height: 50,
               padding: '0 22px',
               borderRadius: R.lg,
               boxShadow: SH.blueL,
             }}
           >
-            {_tx('homePage.u_tili_ty_ge_t_s_t_ar_ted')}
-          </WaselBu_t_ton>
-          <WaselBu_t_ton
-            _type="bu_t_ton"
-            onClick={() => onNaviga_te('/find-ride', 'signed_ou_t_browse')}
-            v_arian_t="ou_tline"
+            {ar ? 'ابدأ الآن' : 'Get started'}
+          </WaselButton>
+          <WaselButton
+            type="button"
+            onClick={() => onNavigate('/find-ride', 'signed_out_browse')}
+            variant="outline"
             size="lg"
-            s_tyle={{
-              heigh_t: 50,
+            style={{
+              height: 50,
               padding: '0 22px',
               borderRadius: R.lg,
-              background: C.eleva_ted,
-              color: C._tex_t,
+              background: C.elevated,
+              color: C.text,
             }}
           >
-            {_tx('homePage.u_tili_ty_browse_rides')}
-          </WaselBu_t_ton>
+            {ar ? 'تصفح الرحلات' : 'Browse rides'}
+          </WaselButton>
         </div>
       </div>
-    </mo_tion.sec_tion>
+    </motion.section>
   );
 }

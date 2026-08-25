@@ -43,7 +43,19 @@ class PaymentService {
     const timeout = new Promise<never>((_, reject) =>
       setTimeout(() => reject(new Error('Payment request timed out')), PAYMENT_TIMEOUT_MS),
     );
-    const invocation = client.functions.invoke('stripe-payments-v2', { body });
+
+    const {
+      data: { session },
+      error: sessionError,
+    } = await client.auth.getSession();
+    if (sessionError || !session?.access_token) {
+      throw new Error('Not authenticated');
+    }
+
+    const invocation = client.functions.invoke('stripe-payments-v2', {
+      body,
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
     const { data, error } = await Promise.race([invocation, timeout]);
     if (error) throw error;
     return data as T;
@@ -53,14 +65,14 @@ class PaymentService {
     const client = requireSupabaseClient();
 
     const {
-      data: { user },
-      error: userError,
-    } = await client.auth.getUser();
-
-    if (userError || !user) {
+      data: { session },
+      error: sessionError,
+    } = await client.auth.getSession();
+    if (sessionError || !session?.user) {
       throw new Error('Not authenticated');
     }
 
+    const user = session.user;
     const amountMinor = toMinorUnits(request.amount, request.currency ?? 'jod');
     if (!Number.isSafeInteger(amountMinor) || amountMinor < 50) {
       throw new Error('Payment amount must be at least 0.50');

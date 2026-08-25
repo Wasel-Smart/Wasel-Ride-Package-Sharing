@@ -1,14 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ChevronRight, ChevronUp, Info, Phone } from 'lucide-react';
 import { CurrencyService, type SupportedCurrency } from '../../utils/currency';
 import { C as TOKENS, F as FONT_SANS, R, SH, TYPE } from '../../utils/wasel-ds';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { _tx } from '../../locales/_tx';
 
 export const C = {
   ...TOKENS,
-  s3: TOKENS.c_ard2,
+  s3: TOKENS.card2,
   red: TOKENS.error,
   redDim: TOKENS.errorDim,
 } as const;
@@ -70,7 +68,7 @@ export const POPULAR_ROUTES = [
   {
     from: 'Amman',
     fromAr: 'عمان',
-    to: 'Z_arqa',
+    to: 'Zarqa',
     toAr: 'الزرقاء',
     dist: 30,
     priceJod: 2,
@@ -94,19 +92,19 @@ export function Skeleton({
         width: w,
         height: h,
         borderRadius: radius,
-        background: `line_ar-gradient(90deg, ${C.elevated} 0%, ${C.panel} 50%, ${C.elevated} 100%)`,
+        background: `linear-gradient(90deg, ${C.elevated} 0%, ${C.panel} 50%, ${C.elevated} 100%)`,
         backgroundSize: '200% 100%',
-        animation: 'shimmer 1.6s infinite line_ar',
+        animation: 'shimmer 1.6s infinite linear',
       }}
     />
   );
 }
 
-export function C_ardSkeleton({ lines = 3 }: { lines?: number }) {
+export function CardSkeleton({ lines = 3 }: { lines?: number }) {
   return (
     <div
       style={{
-        background: C.c_ard,
+        background: C.card,
         border: `1px solid ${C.border}`,
         borderRadius: R.lg,
         padding: 18,
@@ -127,15 +125,15 @@ export function ListSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {Array.from({ length: count }).map((_, i) => (
-        <C_ardSkeleton key={i} lines={3} />
+        <CardSkeleton key={i} lines={3} />
       ))}
     </div>
   );
 }
 
-export function c_ardContainer(overrides: React.CSSProperties = {}): React.CSSProperties {
+export function cardContainer(overrides: React.CSSProperties = {}): React.CSSProperties {
   return {
-    background: C.c_ard,
+    background: C.card,
     border: `1px solid ${C.border}`,
     borderRadius: R.lg,
     padding: '18px 18px 16px',
@@ -158,7 +156,7 @@ export function SectionHeader({
     <div className="wasel-home-section-header">
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
         <span
-          _aria-hidden="true"
+          aria-hidden="true"
           className="wasel-home-section-icon"
         >
           {icon}
@@ -182,16 +180,16 @@ export function SectionHeader({
   );
 }
 
-export function InlineCurrencySwitcher({ _ar }: { _ar: boolean }) {
+export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
   const svc = CurrencyService.getInstance();
   const [cur, setCur] = useState<SupportedCurrency>(svc.current);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const popul_ar: SupportedCurrency[] = ['JOD', 'USD', 'EUR', 'SAR', 'EGP', 'GBP'];
+  const popular: SupportedCurrency[] = ['JOD', 'USD', 'EUR', 'SAR', 'EGP', 'GBP'];
 
   useEffect(() => {
     const handleMouseDown = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.t_arget as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
     };
     document.addEventListener('mousedown', handleMouseDown);
     return () => document.removeEventListener('mousedown', handleMouseDown);
@@ -224,7 +222,7 @@ export function InlineCurrencySwitcher({ _ar }: { _ar: boolean }) {
         }}
       >
         <span style={{ fontSize: TYPE.size.xs, color: C.textMuted }}>
-          {t('homePage.currency_switcher_label')}
+          {ar ? 'العملة' : 'Currency'}
         </span>
         <span>{cur}</span>
         <ChevronDown size={12} color={C.cyan} />
@@ -234,7 +232,7 @@ export function InlineCurrencySwitcher({ _ar }: { _ar: boolean }) {
           style={{
             position: 'absolute',
             top: 'calc(100% + 8px)',
-            insetInlineSt_art: 0,
+            insetInlineStart: 0,
             minWidth: 156,
             background: glass(0.96),
             border: `1px solid ${C.border}`,
@@ -244,7 +242,7 @@ export function InlineCurrencySwitcher({ _ar }: { _ar: boolean }) {
             overflow: 'hidden',
           }}
         >
-          {popul_ar.map(code => (
+          {popular.map(code => (
             <button
               key={code}
               onClick={() => select(code)}
@@ -255,7 +253,7 @@ export function InlineCurrencySwitcher({ _ar }: { _ar: boolean }) {
                 width: '100%',
                 padding: '9px 12px',
                 border: 'none',
-                background: cur === code ? C.elevated : 'transp_arent',
+                background: cur === code ? C.elevated : 'transparent',
                 cursor: 'pointer',
                 fontSize: TYPE.size.sm,
                 fontWeight: cur === code ? TYPE.weight.bold : TYPE.weight.medium,
@@ -275,7 +273,7 @@ export function InlineCurrencySwitcher({ _ar }: { _ar: boolean }) {
   );
 }
 
-export function SOSButton({ _ar }: { _ar: boolean }) {
+export function SOSButton({ ar }: { ar: boolean }) {
   const [pressed, setPressed] = useState(false);
   const [confirm, setConfirm] = useState(false);
 
@@ -316,9 +314,13 @@ export function SOSButton({ _ar }: { _ar: boolean }) {
       >
         <Phone size={14} />
         {pressed
-          ? t('homePage.connecting')
+          ? ar
+            ? 'جار الاتصال...'
+            : 'Calling...'
           : confirm
-            ? t('homePage.press_again_to_confirm')
+            ? ar
+              ? 'اضغط مرة أخرى للتأكيد'
+              : 'Tap again to confirm'
             : 'SOS'}
       </motion.button>
       {confirm && !pressed ? (
@@ -333,20 +335,20 @@ export function SOSButton({ _ar }: { _ar: boolean }) {
             fontFamily: F,
           }}
         >
-          {t('homePage.cancel')}
+          {ar ? 'إلغاء' : 'Cancel'}
         </button>
       ) : null}
     </div>
   );
 }
 
-export function TrustScoreC_ard({
+export function TrustScoreCard({
   score,
-  _ar,
+  ar,
   user,
 }: {
   score: number;
-  _ar: boolean;
+  ar: boolean;
   user?: {
     emailVerified?: boolean;
     phoneVerified?: boolean;
@@ -356,7 +358,6 @@ export function TrustScoreC_ard({
     rating?: number;
   };
 }) {
-  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const pct = score;
   const emailPoints = user?.emailVerified ? 10 : 0;
@@ -366,12 +367,12 @@ export function TrustScoreC_ard({
   const ratingPoints = Math.max(0, Math.min(5, user?.rating ?? 0)) * 2;
   const basePoints = 45;
   const factors = [
-    { label: t('homePage.trust_score_base_profile'), weight: basePoints, yours: basePoints, color: C.cyan },
-    { label: t('homePage.trust_score_email_confirmation'), weight: 10, yours: emailPoints, color: C.cyan },
-    { label: t('homePage.trust_score_phone_confirmation'), weight: 10, yours: phonePoints, color: C.green },
-    { label: t('homePage.trust_score_id_verification'), weight: 15, yours: identityPoints, color: C.gold },
-    { label: t('homePage.trust_score_completed_trips'), weight: 20, yours: Math.min(tripsPoints, 20), color: C.gold },
-    { label: t('homePage.trust_score_user_ratings'), weight: 10, yours: Math.min(ratingPoints, 10), color: C.green },
+    { label: ar ? 'المعلومات الأساسية' : 'Base profile', weight: basePoints, yours: basePoints, color: C.cyan },
+    { label: ar ? 'تأكيد البريد الإلكتروني' : 'Email confirmation', weight: 10, yours: emailPoints, color: C.cyan },
+    { label: ar ? 'تأكيد رقم الهاتف' : 'Phone confirmation', weight: 10, yours: phonePoints, color: C.green },
+    { label: ar ? 'التحقق من الهوية' : 'ID verification', weight: 15, yours: identityPoints, color: C.gold },
+    { label: ar ? 'الرحلات المكتملة' : 'Completed trips', weight: 20, yours: Math.min(tripsPoints, 20), color: C.gold },
+    { label: ar ? 'تقييمات المستخدمين' : 'User ratings', weight: 10, yours: Math.min(ratingPoints, 10), color: C.green },
   ];
   const color = pct >= 80 ? C.green : pct >= 60 ? C.gold : C.error;
 
@@ -422,14 +423,20 @@ export function TrustScoreC_ard({
                 fontFamily: F,
               }}
             >
-              {t('homePage.trust_score_label')}
+              {ar ? 'مؤشر الثقة' : 'Trust score'}
             </div>
             <div style={{ fontSize: TYPE.size.sm, color: C.textMuted, fontFamily: F }}>
               {pct >= 80
-                ? t('homePage.trust_score_strong')
+                ? ar
+                  ? 'مؤشر قوي قبل الحجز أو العرض'
+                  : 'Strong standing before booking or offering'
                 : pct >= 60
-                  ? t('homePage.trust_score_healthy')
-                  : t('homePage.trust_score_needs_strengthening')}
+                  ? ar
+                    ? 'مؤشر جيد ويستفيد من مزيد من النشاط'
+                    : 'Healthy standing with room to improve'
+                  : ar
+                    ? 'يحتاج إلى تقوية قبل الاعتماد الكامل'
+                    : 'Needs stronger standing before full trust'}
             </div>
           </div>
         </div>
@@ -452,7 +459,7 @@ export function TrustScoreC_ard({
           }}
         >
           <Info size={12} color={C.cyan} />
-          {t('homePage.trust_score_how_it_works')}
+          {ar ? 'طريقة الحساب' : 'How it works'}
           {expanded ? (
             <ChevronUp size={12} color={C.textMuted} />
           ) : (
@@ -462,7 +469,7 @@ export function TrustScoreC_ard({
       </div>
       <div
         style={{
-          m_arginTop: 16,
+          marginTop: 16,
           height: 7,
           borderRadius: 9999,
           background: C.elevated,
@@ -474,7 +481,7 @@ export function TrustScoreC_ard({
             height: '100%',
             width: `${pct}%`,
             borderRadius: 9999,
-            background: `line_ar-gradient(90deg, ${color}, ${C.cyan})`,
+            background: `linear-gradient(90deg, ${color}, ${C.cyan})`,
             transition: 'width 0.8s ease',
           }}
         />
@@ -488,25 +495,27 @@ export function TrustScoreC_ard({
             transition={{ duration: 0.22 }}
             style={{ overflow: 'hidden' }}
           >
-            <div style={{ m_arginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.borderFaint}` }}>
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.borderFaint}` }}>
               <p
                 style={{
                   fontSize: TYPE.size.sm,
                   color: C.textMuted,
                   fontFamily: F,
-                  m_argin: '0 0 14px',
+                  margin: '0 0 14px',
                 }}
               >
-                {t('homePage.trust_score_description')}
+                {ar
+                  ? 'يتكوّن المؤشر من عوامل واضحة تؤثر مباشرة على الثقة في الحجز والحركة.'
+                  : 'The score is built from clear factors that directly affect booking confidence.'}
               </p>
               {factors.map(factor => (
-                <div key={factor.label} style={{ m_arginBottom: 12 }}>
+                <div key={factor.label} style={{ marginBottom: 12 }}>
                   <div
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      m_arginBottom: 5,
+                      marginBottom: 5,
                       gap: 12,
                     }}
                   >

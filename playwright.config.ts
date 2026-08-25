@@ -12,13 +12,13 @@ export default defineConfig({
   expect: {
     timeout: 30_000,
   },
-  screenshot: {
-    fullPage: true,
-    maxDiffPixelRatio: 0.02,
-  },
   use: {
     baseURL,
     trace: 'retain-on-failure',
+    screenshot: {
+      fullPage: true,
+      maxDiffPixelRatio: 0.02,
+    },
   },
   webServer: {
     command: 'node scripts/start-playwright-dev.mjs',

@@ -1,67 +1,64 @@
-impor_t { mo_tion } from 'framer-mo_tion';
-impor_t { ArrowRigh_t, Rou_te } from 'lucide-reac_t';
-impor_t _type { QuickAc_tion } from './_types';
-impor_t { useLanguage } from '../../../con_tex_ts/LanguageCon_tex_t';
-impor_t { _tx } from '../../../locales/_tx';
+﻿import { motion } from 'framer-motion';
+import { ArrowRight, Route } from 'lucide-react';
+import type { QuickAction } from './types';
 
-in_terface QuickAc_tionsSec_tionProps {
-  _ar: boolean;
-  quickAc_tions: QuickAc_tion[];
-  onNaviga_te: (pa_th: s_tring, source?: s_tring) => void;
+interface QuickActionsSectionProps {
+  ar: boolean;
+  quickActions: QuickAction[];
+  onNavigate: (path: string, source?: string) => void;
 }
 
-expor_t func_tion QuickAc_tionsSec_tion({ _ar, quickAc_tions, onNaviga_te }: QuickAc_tionsSec_tionProps) {
-  cons_t { _t } = useLanguage();
-  re_turn (
-    <mo_tion.sec_tion ini_tial={false} className="wasel-home-sec_tion">
-      <div className="wasel-home-sec_tion-header">
-        <div s_tyle={{ display: 'flex', alignI_tems: 'cen_ter', gap: 10 }}>
-          <div className="wasel-home-sec_tion-icon">
-            <Rou_te size={16} />
+export function QuickActionsSection({ ar, quickActions, onNavigate }: QuickActionsSectionProps) {
+  return (
+    <motion.section initial={false} className="wasel-home-section">
+      <div className="wasel-home-section-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="wasel-home-section-icon">
+            <Route size={16} />
           </div>
-          <h2 className="wasel-home-sec_tion-_ti_tle">
-            {_tx('homePage.quick_ac_tions__ti_tle')}
+          <h2 className="wasel-home-section-title">
+            {ar ? 'ابدأ من الخدمة المناسبة' : 'Choose the right mode'}
           </h2>
         </div>
       </div>
-      <div className="wasel-home-ac_tions">
-        {quickAc_tions.map(ac_tion => {
-          cons_t Icon = ac_tion.icon;
-          re_turn (
-            <mo_tion.bu_t_ton
-              _type="bu_t_ton"
-              key={ac_tion.pa_th}
+      <div className="wasel-home-actions">
+        {quickActions.map(action => {
+          const Icon = action.icon;
+          return (
+            <motion.button
+              type="button"
+              key={action.path}
               onClick={() =>
-                onNaviga_te(
-                  ac_tion.pa_th,
-                  `quick_ac_tion_${ac_tion._ti_tle._toLowerCase().replace(/\s+/g, '_')}`,
+                onNavigate(
+                  action.path,
+                  `quick_action_${action.title.toLowerCase().replace(/\s+/g, '_')}`,
                 )
               }
               whileHover={{ y: -2 }}
-              className="wasel-home-ac_tion-c_ard"
+              className="wasel-home-action-card"
             >
-              <div className="wasel-home-ac_tion-c_ard-header">
-                <div className="wasel-home-ac_tion-icon" s_tyle={{ background: ac_tion.dim, border: `1px solid ${ac_tion.border}` }}>
-                  <Icon size={20} color={ac_tion.color} />
+              <div className="wasel-home-action-card-header">
+                <div className="wasel-home-action-icon" style={{ background: action.dim, border: `1px solid ${action.border}` }}>
+                  <Icon size={20} color={action.color} />
                 </div>
-                <div className="wasel-home-ac_tion-kicker">
-                  <span className="wasel-home-ac_tion-kicker-do_t" s_tyle={{ background: ac_tion.color, color: ac_tion.color }} />
-                  {ac_tion.kicker}
+                <div className="wasel-home-action-kicker">
+                  <span className="wasel-home-action-kicker-dot" style={{ background: action.color, color: action.color }} />
+                  {action.kicker}
                 </div>
               </div>
 
-              <div className="wasel-home-ac_tion-_ti_tle">{ac_tion._ti_tle}</div>
-              <div className="wasel-home-ac_tion-desc">{ac_tion.desc}</div>
-              <div className="wasel-home-ac_tion-ou_tcome">{ac_tion.ou_tcome}</div>
+              <div className="wasel-home-action-title">{action.title}</div>
+              <div className="wasel-home-action-desc">{action.desc}</div>
+              <div className="wasel-home-action-outcome">{action.outcome}</div>
 
-              <div className="wasel-home-ac_tion-c_ta" s_tyle={{ color: ac_tion.color }}>
-                {_tx('homePage.quick_ac_tions_c_ta')}
-                <ArrowRigh_t size={13} />
+              <div className="wasel-home-action-cta" style={{ color: action.color }}>
+                {ar ? 'افتح هذا المسار' : 'Open this flow'}
+                <ArrowRight size={13} />
               </div>
-            </mo_tion.bu_t_ton>
+            </motion.button>
           );
         })}
       </div>
-    </mo_tion.sec_tion>
+    </motion.section>
   );
 }
