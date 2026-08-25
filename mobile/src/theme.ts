@@ -1,14 +1,15 @@
 export const colors = {
   // Brand
   primary: '#00E5FF', // Wasel Cyan
-  secondary: '#00FFA3',
+  secondary: '#72C70D', // Motion Lime
+  ember: '#FF8A0B', // Journey Ember
 
   // Neutrals
-  bg: '#050B14',
-  surface: '#0D1B2A',
-  surfaceElevated: '#132A3A',
-  surfaceAlt: '#1E293B',
-  surfaceMuted: '#172032',
+  bg: '#050B12',
+  surface: '#081D39',
+  surfaceElevated: '#0e2240',
+  surfaceAlt: '#132b4d',
+  surfaceMuted: '#0a1f3a',
   line: '#334155',
   lineStrong: '#475569',
 
@@ -23,12 +24,12 @@ export const colors = {
   charcoal: '#E2E8F0',
 
   // Brand accents (dark mode palette)
-  cyan: '#22D3EE',
-  teal: '#2DD4BF',
-  green: '#4ADE80',
-  amber: '#FBBF24',
+  cyan: '#00E5FF',
+  teal: '#00E5FF',
+  green: '#72C70D',
+  amber: '#FF8A0B',
   blue: '#60A5FA',
-  gold: '#FCD34D',
+  gold: '#FF8A0B',
   lilac: '#C084FC',
   rose: '#FDA4AF',
   red: '#FCA5A5',

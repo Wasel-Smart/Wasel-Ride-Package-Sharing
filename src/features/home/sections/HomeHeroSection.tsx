@@ -10,6 +10,7 @@ import {
   PackageCheck,
   Route,
   Shield,
+  Sparkles,
 } from 'lucide-react';
 import type { User } from '@supabase/auth-js';
 import { WaselLogo } from '../../../components/wasel-ui';
@@ -43,19 +44,19 @@ const heroProof = [
   {
     icon: BadgeCheck,
     label: 'Verified handoff',
-    detail: 'Identity, wallet, route, and support context stay attached.',
+    detail: 'Identity checks, escrowed payments, route proof, and support context stay attached.',
     accent: C.green,
   },
   {
     icon: CircleDollarSign,
-    label: 'Price discipline',
-    detail: 'Seat, parcel, and bus fallback decisions share one corridor logic.',
+    label: 'Transparent value',
+    detail: 'Compare ride, parcel, and bus fallback choices with one clear corridor price story.',
     accent: C.gold,
   },
   {
     icon: Clock,
-    label: 'Less coordination',
-    detail: 'Booking, approval, tracking, and escalation happen in one flow.',
+    label: 'Calm journey control',
+    detail: 'Booking, approvals, live tracking, and escalation happen in one premium flow.',
     accent: C.cyan,
   },
 ] as const;
@@ -64,19 +65,19 @@ const heroProofAr = [
   {
     icon: BadgeCheck,
     label: 'تسليم موثق',
-    detail: 'تبقى الهوية والمحفظة والمسار وسياق الدعم مرتبطة.',
+    detail: 'تبقى الهوية والدفع المحجوز وإثبات المسار وسياق الدعم مرتبطة.',
     accent: C.green,
   },
   {
     icon: CircleDollarSign,
-    label: 'وضوح السعر',
-    detail: 'المقاعد والطرود وخيار الباص الاحتياطي تعمل بمنطق مسار واحد.',
+    label: 'قيمة شفافة',
+    detail: 'قارن الرحلات والطرود وبديل الباص بقصة سعر واضحة لكل مسار.',
     accent: C.gold,
   },
   {
     icon: Clock,
-    label: 'تنسيق أقل',
-    detail: 'الحجز والموافقة والتتبع والتصعيد تحدث في تدفق واحد.',
+    label: 'تحكم هادئ بالرحلة',
+    detail: 'الحجز والموافقات والتتبع المباشر والتصعيد تحدث في تجربة راقية واحدة.',
     accent: C.cyan,
   },
 ] as const;
@@ -278,7 +279,7 @@ export function HomeHeroSection({
             <div className="wasel-home-brand-stack">
               <div className="wasel-home-eyebrow">
                 <Shield size={13} color={C.cyan} />
-                {ar ? 'شبكة مسارات الأردن' : 'Jordan route network'}
+                {ar ? 'واصل — ثقة تتحرك معك' : 'Wasel — trust moves with you'}
               </div>
               <WaselLogo size={80} theme="light" variant="full" />
             </div>
@@ -290,18 +291,23 @@ export function HomeHeroSection({
         </div>
 
         <h1 className="wasel-home-title">
-          {ar ? 'تحرك في الأردن بتكلفة أقل' : 'Move across Jordan for less'}
+          {ar ? 'واصل يحوّل كل رحلة إلى تجربة موثوقة وواضحة' : 'Wasel turns every route into a trusted, transparent journey'}
         </h1>
 
         <p className="wasel-home-lead">
           {ar
             ? firstName
-              ? `أهلا بعودتك، ${firstName}. يحافظ Wasel على وضوح السعر والإثبات والثقة والدعم في كل مسار.`
-              : 'يجمع Wasel الركاب والسائقين والطرود وخيار الباص في تدفق مسار موثوق، لتبدأ كل حركة بوضوح السعر والإثبات وسياق الدعم.'
+              ? `أهلا بعودتك، ${firstName}. واصل يجمع السعر العادل، إثبات التسليم، الثقة، والدعم الفوري في كل مسار.`
+              : 'واصل منصة تنقل وتوصيل مصممة لتشعر بالسيطرة: سعر واضح، سائقون موثقون، طرود قابلة للتتبع، وخيار باص احتياطي قبل أن تؤكد.'
             : firstName
-              ? `Welcome back, ${firstName}. Compare seats, prices, parcel handoff, and bus fallback from one trusted route flow.`
-              : 'Compare lower-cost rides, trusted drivers, parcel handoff, and scheduled bus fallback before you commit.'}
+              ? `Welcome back, ${firstName}. Wasel brings fair pricing, proof of handoff, trust signals, and instant support into every route.`
+              : 'Wasel is the mobility and package-sharing brand built for confidence: clear pricing, verified drivers, trackable parcels, and bus fallback before you commit.'}
         </p>
+
+        <div className="wasel-home-brand-promise" aria-label={ar ? 'وعد علامة واصل' : 'Wasel brand promise'}>
+          <Sparkles size={17} color={C.gold} />
+          <span>{ar ? 'علامة واحدة للتنقل اليومي: موثوقة، إنسانية، سريعة، وجاهزة للتوسع.' : 'One daily mobility brand: trusted, human, fast, and ready to scale.'}</span>
+        </div>
 
         <div className="wasel-home-proof-row">
           {proofItems.map(item => {
@@ -329,7 +335,7 @@ export function HomeHeroSection({
             icon={<Route size={17} />}
             iconEnd={<ArrowRight size={16} />}
           >
-            {ar ? 'اعرض المسارات المتاحة' : 'Find a lower-cost route'}
+            {ar ? 'ابدأ رحلة موثوقة' : 'Start a trusted journey'}
           </WaselButton>
           <WaselButton
             type="button"
@@ -339,7 +345,7 @@ export function HomeHeroSection({
             icon={<CircleDollarSign size={17} />}
             style={{ background: C.elevated, color: C.text }}
           >
-            {ar ? 'اعرض مقاعد فارغة' : 'Offer empty seats'}
+            {ar ? 'شارك مقاعدك بثقة' : 'Share seats with confidence'}
           </WaselButton>
         </div>
 

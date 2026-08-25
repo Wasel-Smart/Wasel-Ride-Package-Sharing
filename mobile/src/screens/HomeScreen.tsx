@@ -81,9 +81,9 @@ const HomeHeader = React.memo(({
         style={styles.avatar}
         source={{ uri: avatarUrl || 'https://example.com/default-avatar.png' }}
       />
-      <View>
-        <Text style={styles.welcomeText}>أهلاً بعودتك،</Text>
-        <Text style={styles.displayName}>{displayName}</Text>
+      <View style={styles.headerCopy}>
+        <Text style={styles.brandMark}>WASEL</Text>
+        <Text style={styles.welcomeText}>ثقة تتحرك معك، {displayName}</Text>
       </View>
       <Pressable style={styles.notificationButton}>
         <Ionicons name="notifications-outline" size={24} color={colors.textSecondary} />
@@ -97,8 +97,8 @@ const SmartSearch = React.memo(() => {
   return (
     <View style={styles.searchContainer}>
       <SectionHeader
-        eyebrow="ابدأ رحلتك"
-        title="إلى أين تريد أن تذهب؟"
+        eyebrow="واصل اليوم"
+        title="رحلة واضحة قبل أن تتحرك"
         tone="dark"
       />
       <View style={styles.searchInputs}>
@@ -144,9 +144,9 @@ const quickActions: Array<{
   screen: keyof RootStackParamList;
   tone: string;
 }> = [
-  { label: 'ابحث عن رحلة', icon: 'search-outline', screen: 'AdvancedSearch', tone: colors.teal },
-  { label: 'أرسل طرد', icon: 'cube-outline', screen: 'Packages', tone: colors.blue },
-  { label: 'اعرض رحلة', icon: 'add-circle-outline', screen: 'Driver', tone: colors.green },
+  { label: 'رحلة موثوقة', icon: 'search-outline', screen: 'AdvancedSearch', tone: colors.teal },
+  { label: 'طرد متتبع', icon: 'cube-outline', screen: 'Packages', tone: colors.blue },
+  { label: 'شارك مقاعدك', icon: 'add-circle-outline', screen: 'Driver', tone: colors.green },
 ];
 
 // --- Main Screen ---
@@ -185,50 +185,50 @@ const HomeScreen = React.memo(() => {
         {/* AI Route Recommendation */}
         <View style={styles.recommendationSection}>
           <SectionHeader
-            eyebrow="اقتراح ذكي"
-            title="أفضل خيار لك الآن"
-            body={`الطلب منخفض على هذا المسار. احجز الآن بسعر أفضل.`}
+            eyebrow="ذكاء واصل"
+            title="أفضل خيار بثقة الآن"
+            body={`سعر واضح، سائق موثق، وتتبع كامل قبل التأكيد.`}
           />
           <RideCard {...recommendedRide} />
         </View>
 
         {/* Services Section */}
         <SectionHeader
-          eyebrow="خدمات واصل"
-          title="كل احتياجات التنقل والتوصيل"
-          body="خدمات واضحة وآمنة ومصممة للاستخدام اليومي."
+          eyebrow="وعد العلامة"
+          title="تنقل وتوصيل بمعايير ممتازة"
+          body="كل نقطة لمس في واصل مصممة لتبدو موثوقة، إنسانية، سريعة، وقابلة للتوسع."
         />
 
         <View style={styles.infoCardsContainer}>
           <InfoCard
             icon="car-sport"
             title="مشاوير موثوقة"
-            body="اعثر على مشوار مناسب، راجع تفاصيل السائق، وتابع الرحلة حتى الوصول."
+            body="اعثر على مسار مناسب مع سعر واضح، سائق موثق، وتتبع مباشر حتى الوصول."
             tone={colors.teal}
           />
           <InfoCard
             icon="cube"
-            title="توصيل طرود مع تتبع"
-            body="أنشئ طلب توصيل واحتفظ بحالة الطرد وملاحظاته وسجل الاستلام والتسليم."
+            title="طرود بإثبات"
+            body="أنشئ طلب توصيل مع حالة مباشرة، ملاحظات، وإثبات استلام وتسليم."
             tone={colors.blue}
           />
           <InfoCard
             icon="git-network"
-            title="شبكات وخطوط مشتركة"
-            body="استعرض الخطوط والمجموعات النشطة للوصول إلى خيارات تنقل أكثر."
+            title="شبكة حركة ذكية"
+            body="استعرض الخطوط والمجموعات النشطة للوصول إلى بدائل أكثر ووقت انتظار أقل."
             tone={colors.green}
           />
           <InfoCard
             icon="shield-checkmark"
             title="الأمان أولاً"
-            body="الوصول السريع لمركز الأمان، مشاركة الرحلة، ومعلومات الحساب الموثقة."
+            body="مركز أمان سريع، مشاركة الرحلة، ودعم يعرف سياق كل مسار."
             tone={colors.lilac}
             style={styles.lastCard}
           />
         </View>
 
         <PrimaryButton
-          label="افتح مركز الأمان"
+          label="افتح مركز أمان واصل"
           icon="shield-checkmark"
           tone={colors.navy}
           onPress={() => navigation.navigate('Safety')}
@@ -255,6 +255,15 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     borderWidth: 2,
     borderColor: colors.primary,
+  },
+  headerCopy: {
+    flex: 1,
+  },
+  brandMark: {
+    ...typography.micro,
+    color: colors.primary,
+    letterSpacing: 2,
+    marginBottom: 2,
   },
   welcomeText: {
     ...typography.caption,
@@ -284,6 +293,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.xl,
     padding: spacing.lg,
     ...shadows.lift,
+    borderWidth: 1,
+    borderColor: 'rgba(0,229,255,0.18)',
   },
   searchInputs: {
     marginTop: spacing.lg,

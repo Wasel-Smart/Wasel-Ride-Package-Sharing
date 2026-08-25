@@ -192,6 +192,26 @@ export function HomePageStyles() {
         margin-top: 24px;
       }
 
+
+      .wasel-home-brand-promise {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 680px;
+        margin-top: 22px;
+        padding: 12px 15px;
+        border-radius: 999px;
+        color: #f8fbff;
+        background: linear-gradient(135deg, rgba(0,229,255,0.12), rgba(255,138,11,0.10));
+        border: 1px solid rgba(0,229,255,0.22);
+        box-shadow: 0 14px 36px rgba(0,229,255,0.10);
+        font-size: 0.88rem;
+        font-weight: 800;
+        line-height: 1.45;
+      }
+
       .wasel-home-proof-row {
         position: relative;
         z-index: 1;
@@ -1365,6 +1385,11 @@ export function HomePageStyles() {
 
         .wasel-home-title {
           font-size: 3rem;
+        }
+
+        .wasel-home-brand-promise {
+          width: 100%;
+          border-radius: 20px;
         }
 
         .wasel-home-proof-row {
