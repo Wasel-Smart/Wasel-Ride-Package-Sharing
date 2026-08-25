@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, ChevronRight, Route } from 'lucide-react';
 import { C } from '../HomePageShared';
 import type { CorridorCard } from './types';
+import { tx } from '../../../locales/tx';
 
 interface CorridorsSectionProps {
   ar: boolean;
@@ -18,11 +19,11 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
             <Route size={16} />
           </div>
           <h2 className="wasel-home-section-title">
-            {ar ? 'مسارات جاهزة الآن' : 'Corridors ready now'}
+            {tx('homeSections.corridorsReadyNow')}
           </h2>
         </div>
         <button className="wasel-home-section-action" onClick={() => onNavigate('/find-ride')}>
-          {ar ? 'عرض الرحلات' : 'Browse rides'}
+          {tx('homeSections.browseRides')}
           <ChevronRight size={12} color={C.cyan} />
         </button>
       </div>
@@ -50,7 +51,7 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
             >
               <div className="wasel-home-corridor-badge" style={{ color: card.accent, borderColor: `${card.accent}24` }}>
                 <span className="wasel-home-corridor-badge-dot" style={{ background: card.accent, color: card.accent }} />
-                {card.featured ? (ar ? 'أفضل الآن' : 'Best now') : card.meta}
+                {card.featured ? tx('homeSections.bestNow') : card.meta}
               </div>
             </div>
             <div className="wasel-home-corridor-title">{card.title}</div>
@@ -59,7 +60,7 @@ export function CorridorsSection({ ar, corridorCards, onNavigate }: CorridorsSec
               <div className="wasel-home-corridor-insight">{card.insight}</div>
             ) : null}
             <div className="wasel-home-corridor-cta" style={{ color: card.accent }}>
-              {ar ? 'افتح هذا المسار' : 'Open this corridor'}
+              {tx('homeSections.openCorridor')}
               <ArrowRight size={13} />
             </div>
           </button>
