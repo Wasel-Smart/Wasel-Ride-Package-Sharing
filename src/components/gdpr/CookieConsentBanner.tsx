@@ -51,7 +51,8 @@ export function CookieConsentBanner() {
 
   useEffect(() => {
     if (!showBanner) return;
-    acceptRef.current?.focus();
+    const acceptBtn = document.getElementById('cookie-accept-btn');
+    acceptBtn?.focus();
   }, [showBanner]);
 
   useEffect(() => {
