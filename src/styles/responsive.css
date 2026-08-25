@@ -340,7 +340,7 @@ small,
 
 /* Focus visible (keyboard navigation) */
 :focus-visible {
-  outline: 2px solid #00c8e8;
+  outline: 2px solid #147FE4;
   outline-offset: 2px;
   border-radius: 4px;
 }

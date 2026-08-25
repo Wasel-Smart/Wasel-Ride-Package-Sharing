@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   subtitle: {
-    color: '#CBD5E1',
+    color: 'rgba(196,220,238,0.68)',
     fontSize: typography.body.fontSize,
     marginTop: spacing.sm,
   },

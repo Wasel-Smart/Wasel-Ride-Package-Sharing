@@ -40,7 +40,7 @@
         "ascAppId": ""
       },
       "android": {
-        "serviceAccountKeyPath": "./google-services.json",
+        "serviceAccountKeyPath": "./google-play-service-account.json",
         "track": "production"
       }
     }

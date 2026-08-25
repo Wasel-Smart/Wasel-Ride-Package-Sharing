@@ -1,10 +1,11 @@
 import type { DomainEventEnvelope } from '../domain/events';
+import type * as Sentry from '@sentry/react';
 import { createCorrelationId, createStructuredLogEntry } from '../platform/observability';
 import { sanitizeLogMessage } from './sanitization';
 
 let sentryInitialized = false;
 let sentryInitializationStarted = false;
-let sentryClient: typeof import('@sentry/react') | null = null;
+let sentryClient: typeof Sentry | null = null;
 
 function writeConsole(
   level: 'info' | 'warning' | 'error',

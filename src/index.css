@@ -10,11 +10,22 @@
     margin: 0;
   }
 
+  /* Performance: enable content-visibility for off-screen sections */
+  .content-visibility-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+  }
+
+  /* Performance: CSS containment for cards and panels */
+  .wasel-contain {
+    contain: layout style paint;
+  }
+
   /* Accessibility: a single, consistent, high-contrast focus ring for every
    * keyboard-focused control. Mouse users are unaffected (:focus-visible).
    * This satisfies WCAG 2.4.7 (Focus Visible) across light and dark themes. */
   :focus-visible {
-    outline: 2px solid #00c8e8;
+    outline: 2px solid #147FE4;
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -43,5 +54,31 @@
     margin: 0;
     display: flex;
     flex-direction: column;
+  }
+}
+
+@layer utilities {
+  /* Smooth, GPU-friendly scrolling */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Optimize font rendering */
+  .font-smooth {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Prevent layout shift on images */
+  .img-aspect-ratio {
+    aspect-ratio: attr(width) / attr(height);
+    object-fit: cover;
+  }
+
+  /* Tap highlight removal for mobile */
+  .tap-highlight-none {
+    -webkit-tap-highlight-color: transparent;
   }
 }
