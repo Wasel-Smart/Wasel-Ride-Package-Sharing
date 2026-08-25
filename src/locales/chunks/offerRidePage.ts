@@ -1,0 +1,37 @@
+export const offerRidePage = {
+  en: {
+      finish_trust_setup: 'Finish trust setup',
+      finish_checks: 'Finish checks',
+      driver_console: 'Driver console',
+      ride_offer_is_live: 'Ride offer is live',
+      to: 'to',
+      is_now_open_across_the_movement_network: 'is now open across the movement network.',
+      post_another_route: 'Post another route',
+      launch_route: 'Launch route',
+      to_2: 'to',
+      corridor_pulse: 'Corridor pulse',
+      add_on_demand: 'Add-on demand',
+      quick_actions: 'Quick actions',
+      open_driver_console: 'Open driver console',
+      trust_center: 'Trust center',
+    },
+  },
+  ar: {
+      finish_trust_setup: 'إنهاء إعداد الثقة',
+      finish_checks: 'إنهاء الفحوص',
+      driver_console: 'وحدة السائق',
+      ride_offer_is_live: 'عرض الرحلة حيّ',
+      to: 'إلى',
+      is_now_open_across_the_movement_network: 'متاح الآن عبر شبكة التنقّل.',
+      post_another_route: 'انشر مساراً آخر',
+      launch_route: 'إطلاق المسار',
+      to_2: 'إلى',
+      corridor_pulse: 'نبض الممرّ',
+      add_on_demand: 'طلب إضافي',
+      quick_actions: 'إجراءات سريعة',
+      open_driver_console: 'فتح وحدة السائق',
+      trust_center: 'مركز الثقة',
+    },
+  }
+} as const;
+
