@@ -48,6 +48,14 @@ export const homeSections = {
         'A clear emergency path without turning the whole surface into visual noise.',
       signupDesc:
         'When you sign up, you keep favorite corridors, build trust history, and manage rides and parcels in one place.',
+      roleBannerRider: 'Rider dashboard',
+      roleBannerDriver: 'Driver console',
+      roleBannerBoth: 'Rider & driver mode',
+      roleBannerAdmin: 'Admin overview',
+      roleBannerRiderDesc: 'Your usual rider shortcuts and live corridor picks are ready.',
+      roleBannerDriverDesc: 'Review request context, seat supply, and route economics from one place.',
+      roleBannerBothDesc: 'Switch between rider and driver workflows without leaving home.',
+      roleBannerAdminDesc: 'Quick links to operational and trust surfaces are available below.',
   },
   ar: {
       findRideKicker: 'للحجز السريع',
@@ -94,5 +102,13 @@ export const homeSections = {
         'اختصار واضح للطوارئ بدون تحويل هذه المساحة إلى عنصر بصري صاخب.',
       signupDesc:
         'عند التسجيل ستحتفظ بمساراتك المفضلة، وتبني سجل الثقة، وتدير الحجوزات والطرود من مكان واحد.',
+      roleBannerRider: 'لوحة الراكب',
+      roleBannerDriver: 'واجهة السائق',
+      roleBannerBoth: 'وضع الراكب والسائق',
+      roleBannerAdmin: 'نظرة عامة للمشرف',
+      roleBannerRiderDesc: 'اختصاراتك المعتادة واختيارات المسار الحي جاهزة.',
+      roleBannerDriverDesc: 'راجع سياق الطلب وعرض المقاعد واقتصاديات المسار من مكان واحد.',
+      roleBannerBothDesc: 'بدّل بين سير عمل الراكب والسائق بدون مغادرة الصفحة الرئيسية.',
+      roleBannerAdminDesc: 'الروابط السريعة لأسطح العمليات والثقة متاحة أدناه.',
   }
 } as const;
