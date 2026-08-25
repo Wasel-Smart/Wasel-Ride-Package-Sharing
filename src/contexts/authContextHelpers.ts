@@ -206,7 +206,7 @@ export function mapBackendProfile({
     sanadVerified,
     verificationLevel,
     walletStatus,
-    avatar: profile?.avatar_url ?? authUser?.user_metadata?.avatar_url ?? undefined,
+    avatar: profile?.avatar_url ?? authUser?.user_metadata?.avatar_url ?? authUser?.user_metadata?.picture ?? undefined,
     joinedAt: String(authUser?.created_at ?? new Date().toISOString()).slice(0, 10),
     emailVerified,
     phoneVerified,
