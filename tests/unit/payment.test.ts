@@ -7,11 +7,12 @@ const createMockSupabase = () => {
   const mockFrom = vi.fn(() => ({ select: mockSelect }));
   const mockFunctionsInvoke = vi.fn();
   const mockAuthGetUser = vi.fn();
+  const mockGetSession = vi.fn().mockResolvedValue({ data: { session: { access_token: 'token', user: { id: 'user-1' } } }, error: null });
 
   const mockSupabase = {
     auth: {
       getUser: mockAuthGetUser,
-      getSession: vi.fn().mockResolvedValue({ data: { session: { access_token: 'token', user: { id: 'user-1' } } }, error: null }),
+      getSession: mockGetSession,
       refreshSession: vi.fn(),
       signUp: vi.fn(),
       signInWithPassword: vi.fn(),
@@ -23,7 +24,7 @@ const createMockSupabase = () => {
     from: mockFrom,
   };
 
-  return { mockSupabase, mockFunctionsInvoke, mockAuthGetUser, mockFrom, mockSelect, mockEq, mockSingle };
+  return { mockSupabase, mockFunctionsInvoke, mockAuthGetUser, mockGetSession, mockFrom, mockSelect, mockEq, mockSingle };
 };
 
 vi.mock('@/utils/supabase/client.ts', () => ({
@@ -66,6 +67,13 @@ describe('payment.test.ts', () => {
         amount: 5000,
         currency: 'jod',
         idempotency_key: 'booking:booking-1',
+        metadata: expect.objectContaining({
+          booking_id: 'booking-1',
+          user_id: 'user-1',
+        }),
+      }),
+      headers: expect.objectContaining({
+        Authorization: expect.stringContaining('Bearer'),
       }),
     });
   });
@@ -145,9 +153,10 @@ describe('payment.test.ts', () => {
   });
 
   it('throws on unauthenticated user', async () => {
-    mockSupabase.mockAuthGetUser.mockResolvedValue({
-      data: { user: null },
-      error: { message: 'No user' },
+    // Mock getSession to return no session (unauthenticated)
+    mockSupabase.mockGetSession.mockResolvedValue({
+      data: { session: null },
+      error: { message: 'No session' },
     });
 
     const { paymentService: ps } = await import('@/services/payment');
