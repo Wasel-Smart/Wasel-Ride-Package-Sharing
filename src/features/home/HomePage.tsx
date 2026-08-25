@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useAuth } from '../../contexts/AuthContext';
-import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
-import type { Language } from '../../locales/translations';
+import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import { useLiveUserStats } from '../../services/liveDataService';
@@ -31,6 +29,7 @@ import {
   type QuickAction,
   type TripMode,
 } from './HomePageSections';
+import { tx } from '../../locales/tx';
 
 interface LiveCorridor {
   id: string;
@@ -476,11 +475,12 @@ export function HomePage() {
 }
 
 function StatsStrip({ ar }: { ar: boolean }) {
+  const { t } = useLanguage();
   const stats = [
-    { value: '4', label: ar ? 'تدفقات أساسية' : 'Core flows' },
-    { value: '5', label: ar ? 'فحوصات ثقة' : 'Trust checks' },
-    { value: '0', label: ar ? 'بيع بيانات' : 'Data resale' },
-    { value: ar ? 'مباشر' : 'Live', label: ar ? 'إشارات تجربة' : 'UX signals' },
+    { value: '4', label: t('homePage.stats_active_bookings') },
+    { value: '5', label: t('homePage.stats_verified_drivers') },
+    { value: '0', label: t('homePage.stats_parcels_delivered') },
+    { value: ar ? 'مباشر' : 'Live', label: t('homePage.stats_cities_covered') },
   ];
 
   return (
@@ -498,26 +498,27 @@ function StatsStrip({ ar }: { ar: boolean }) {
 }
 
 function HowItWorksSection({ ar }: { ar: boolean }) {
+  const { t } = useLanguage();
   const steps = [
     {
       icon: Route,
-      title: ar ? 'اختار المسار' : 'Choose the corridor',
-      detail: ar ? 'ابدأ من عمّان، العقبة، إربد، الزرقاء، البحر الميت، البتراء، أو مسارك المحفوظ.' : 'Start with Amman, Aqaba, Irbid, Zarqa, Dead Sea, Petra, or your saved route.',
+      title: t('homePage.how_step_1_title'),
+      detail: t('homePage.how_step_1_detail'),
     },
     {
       icon: BarChart3,
-      title: ar ? 'قارن الخيارات' : 'Compare real options',
-      detail: ar ? 'شاهد المقاعد المتاحة، البديل المجدول، سعر المسار، وسياق الثقة معاً.' : 'See seat supply, scheduled fallback, route price, and trust context together.',
+      title: t('homePage.how_step_2_title'),
+      detail: t('homePage.how_step_2_detail'),
     },
     {
       icon: BadgeCheck,
-      title: ar ? 'أكد بثقة' : 'Confirm with confidence',
-      detail: ar ? 'احجز، اعرض مقاعد، أو أرسل طرداً فقط بعد ظهور التفاصيل الصحيحة.' : 'Book, offer seats, or send a parcel only after the right details are visible.',
+      title: t('homePage.how_step_3_title'),
+      detail: t('homePage.how_step_3_detail'),
     },
     {
       icon: Headphones,
-      title: ar ? 'تتبع وحل' : 'Track and resolve',
-      detail: ar ? 'التتبع المباشر، إثبات التسليم، حالة المحفظة، والدعم تبقى مرتبطة.' : 'Live tracking, handoff proof, wallet status, and support stay attached.',
+      title: t('homePage.how_step_4_title'),
+      detail: t('homePage.how_step_4_detail'),
     },
   ];
 
@@ -529,7 +530,7 @@ function HowItWorksSection({ ar }: { ar: boolean }) {
             <Play size={16} />
           </div>
           <h2 className="wasel-home-section-title">
-            {ar ? 'كيف يعمل Wasel' : 'How Wasel works'}
+            {t('homePage.how_it_works_title')}
           </h2>
         </div>
       </div>
@@ -555,23 +556,24 @@ function HowItWorksSection({ ar }: { ar: boolean }) {
 }
 
 function TestimonialsSection({ ar }: { ar: boolean }) {
+  const { t } = useLanguage();
   const testimonials = [
     {
-      text: ar ? 'أفضل طريقة للسفر بين المدن. الأسعار واضحة والسائقون موثوقون.' : 'Best way to travel between cities. Clear prices and trusted drivers.',
-      name: ar ? 'أحمد' : 'Ahmad',
-      role: ar ? 'راكب منتظم' : 'Regular rider',
+      text: t('homePage.testimonial_1_text'),
+      name: t('homePage.testimonial_1_name'),
+      role: t('homePage.testimonial_1_role'),
       stars: 5,
     },
     {
-      text: ar ? 'أعرض مقاعدي بسهولة وأحصل على طلبات موثوقة. التطبيق يثق في المستخدمين.' : 'I offer my seats easily and get trusted requests. The app trusts its users.',
-      name: ar ? 'سارة' : 'Sara',
-      role: ar ? 'سائقة' : 'Driver',
+      text: t('homePage.testimonial_2_text'),
+      name: t('homePage.testimonial_2_name'),
+      role: t('homePage.testimonial_2_role'),
       stars: 5,
     },
     {
-      text: ar ? 'أرسل طرودي مع إثبات التسليم. لم أعد أقلق على شحناتي.' : 'I send parcels with delivery proof. I no longer worry about my shipments.',
-      name: ar ? 'خالد' : 'Khaled',
-      role: ar ? 'مرسل طرود' : 'Parcel sender',
+      text: t('homePage.testimonial_3_text'),
+      name: t('homePage.testimonial_3_name'),
+      role: t('homePage.testimonial_3_role'),
       stars: 5,
     },
   ];
@@ -584,7 +586,7 @@ function TestimonialsSection({ ar }: { ar: boolean }) {
             <MessageSquareQuote size={16} />
           </div>
           <h2 className="wasel-home-section-title">
-            {ar ? 'ماذا يقول مستخدموا Wasel' : 'What Wasel users say'}
+            {t('homePage.testimonials_title')}
           </h2>
         </div>
       </div>
@@ -614,16 +616,15 @@ function TestimonialsSection({ ar }: { ar: boolean }) {
 }
 
 function FinalCtaBanner({ ar, onNavigate }: { ar: boolean; onNavigate: (path: string, source?: string) => void }) {
+  const { t } = useLanguage();
   return (
     <motion.section initial={false} className="wasel-home-section">
       <div className="wasel-home-cta-banner">
         <h2 className="wasel-home-cta-title">
-          {ar ? 'ابدأ رحلتك مع Wasel اليوم' : 'Start your Wasel journey today'}
+          {t('homePage.final_cta_title')}
         </h2>
         <p className="wasel-home-cta-subtitle">
-          {ar
-            ? 'انضم إلى آلاف المستخدمين الذين يثقون بـ Wasel للتنقل الذكي في الأردن.'
-            : 'Join thousands of users who trust Wasel for smart mobility across Jordan.'}
+          {t('homePage.final_cta_subtitle')}
         </p>
         <div className="wasel-home-cta-actions">
           <WaselButton
@@ -634,7 +635,7 @@ function FinalCtaBanner({ ar, onNavigate }: { ar: boolean; onNavigate: (path: st
             iconEnd={<ArrowRight size={16} />}
             onClick={() => onNavigate('/find-ride', 'final_cta_find')}
           >
-            {ar ? 'اعرض المسارات المتاحة' : 'Find a lower-cost route'}
+            {t('homePage.final_cta_find')}
           </WaselButton>
           <WaselButton
             type="button"
@@ -644,7 +645,7 @@ function FinalCtaBanner({ ar, onNavigate }: { ar: boolean; onNavigate: (path: st
             onClick={() => onNavigate('/auth?tab=register', 'final_cta_register')}
             style={{ background: C.elevated, color: C.text, border: `1px solid ${C.border}` }}
           >
-            {ar ? 'أنشئ حسابا مجانيا' : 'Create free account'}
+            {t('homePage.final_cta_register')}
           </WaselButton>
         </div>
       </div>
