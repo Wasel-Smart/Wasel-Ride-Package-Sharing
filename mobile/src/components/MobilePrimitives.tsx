@@ -123,13 +123,15 @@ export const MetricTile = React.memo(function MetricTile({
   label,
   value,
   tone = colors.textPrimary,
+  testID,
 }: {
   label: string;
   value: string;
   tone?: string;
+  testID?: string;
 }) {
   return (
-    <View style={styles.metric}>
+    <View style={styles.metric} testID={testID}>
       <Text style={[styles.metricValue, { color: tone }]}>{value}</Text>
       <Text style={styles.metricLabel}>{label}</Text>
     </View>
