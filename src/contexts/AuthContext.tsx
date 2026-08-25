@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { AuthChangeEvent, Session, User } from '@supabase/auth-js';
 import { getAuthCallbackUrl } from '../utils/env';
 import { sanitizeLogMessage } from '../utils/sanitization';
@@ -113,6 +113,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [initializing, setInitializing] = useState(true);
   const [busy, setBusy] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
+  const [waselUser, setWaselUser] = useState<WaselUser | null>(null);
+  const optimisticRef = useRef<Partial<WaselUser> | null>(null);
 
   const fetchProfile = useCallback(async (forceCreate = false, authUser?: User | null) => {
     if (!authUser || !(await getSupabaseClient())) {
@@ -252,6 +254,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
       unsubscribe?.();
     };
   }, [fetchProfile]);
+
+  useEffect(() => {
+    if (!user) {
+      setWaselUser(null);
+      return;
+    }
+
+    const mapped = mapBackendProfile({
+      authUser: user,
+      profile,
+    });
+
+    const pending = optimisticRef.current;
+    optimisticRef.current = null;
+    const nextUser = pending ? applyUserUpdates(mapped, pending) : mapped;
+    setWaselUser(nextUser);
+  }, [user, profile]);
 
   const signUp = useCallback(
     async (
@@ -414,6 +433,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await fetchProfile(false, user);
   }, [fetchProfile, user]);
 
+  const updateUser = useCallback(
+    async (updates: Partial<WaselUser>) => {
+      if (!user) return;
+
+      const profileUpdates: Partial<Profile> = {};
+      if (updates.name !== undefined) profileUpdates.full_name = updates.name;
+      if (updates.phone !== undefined) profileUpdates.phone_number = updates.phone;
+      if (updates.balance !== undefined) profileUpdates.wallet_balance = updates.balance;
+      if (updates.rating !== undefined) profileUpdates.rating = updates.rating;
+      if (updates.trips !== undefined) profileUpdates.trip_count = updates.trips;
+      if (updates.verified !== undefined) profileUpdates.verified = updates.verified;
+      if (updates.sanadVerified !== undefined) profileUpdates.sanad_verified = updates.sanadVerified;
+      if (updates.verificationLevel !== undefined) profileUpdates.verification_level = updates.verificationLevel;
+      if (updates.walletStatus !== undefined) profileUpdates.wallet_status = updates.walletStatus;
+      if (updates.avatar !== undefined) profileUpdates.avatar_url = updates.avatar;
+      if (updates.emailVerified !== undefined) profileUpdates.email_verified = updates.emailVerified;
+      if (updates.phoneVerified !== undefined) profileUpdates.phone_verified = updates.phoneVerified;
+      if (updates.twoFactorEnabled !== undefined) profileUpdates.two_factor_enabled = updates.twoFactorEnabled;
+      if (updates.driverStatus !== undefined) profileUpdates.driver_status = updates.driverStatus;
+
+      optimisticRef.current = { ...(optimisticRef.current ?? {}), ...updates };
+      setWaselUser(prev => (prev ? applyUserUpdates(prev, updates) : prev));
+
+      const result = await updateProfile(profileUpdates);
+      if (result.error) {
+        optimisticRef.current = null;
+        setWaselUser(prev => (prev && user ? mapBackendProfile({ authUser: user, profile: profile }) : prev));
+      }
+    },
+    [user, profile, updateProfile],
+  );
+
   const resetPassword = useCallback(
     async (email: string, returnTo?: string): Promise<{ error: AuthOperationError }> => {
       const client = await getSupabaseClient();
@@ -459,12 +510,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       session,
       loading: initializing || busy,
       isBackendConnected,
+      waselUser,
       signUp,
       signIn,
       signInWithGoogle,
       signInWithFacebook,
       signOut,
       updateProfile,
+      updateUser,
       refreshProfile,
       resetPassword,
       changePassword,
@@ -484,7 +537,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signOut,
       signUp,
       updateProfile,
+      updateUser,
       user,
+      waselUser,
     ],
   );
 
