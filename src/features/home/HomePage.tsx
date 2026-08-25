@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, ArrowLeft, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { Language } from '../../locales/translations';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -45,8 +44,7 @@ interface LiveCorridor {
 
 export function HomePage() {
   const { language, dir, setLanguage, t } = useLanguage();
-  const { user } = useAuth();
-  const { user: waselUser } = useLocalAuth();
+  const { user, waselUser } = useAuth();
   const navigate = useIframeSafeNavigate();
   const { stats: liveStats, loading } = useLiveUserStats();
   const [tripMode, setTripMode] = useState<TripMode>('one-way');
@@ -277,8 +275,77 @@ export function HomePage() {
   const corridorBetaPlan = useMemo(() => buildCorridorBetaPlan(), []);
 
   const trustScore = waselUser?.trustScore ?? 87;
+  const role = waselUser?.role;
 
   const primaryTripPath = tripMode === 'round' ? '/find-ride?mode=round' : '/find-ride';
+
+  const roleQuickActions = useMemo<QuickAction[]>(() => {
+    const base: QuickAction[] = [
+      {
+        icon: Search,
+        kicker: t('homeSections.findRideKicker'),
+        title: t('homeSections.findRideTitle'),
+        desc: t('homeSections.findRideDesc'),
+        outcome: t('homeSections.findRideOutcome'),
+        color: C.cyan,
+        dim: C.cyanDim,
+        border: C.borderHov,
+        path: '/find-ride',
+      },
+      {
+        icon: Car,
+        kicker: t('homeSections.offerRideKicker'),
+        title: t('homeSections.offerRideTitle'),
+        desc: t('homeSections.offerRideDesc'),
+        outcome: t('homeSections.offerRideOutcome'),
+        color: C.gold,
+        dim: C.goldDim,
+        border: C.goldDim,
+        path: '/offer-ride',
+      },
+      {
+        icon: Package,
+        kicker: t('homeSections.sendPackageKicker'),
+        title: t('homeSections.sendPackageTitle'),
+        desc: t('homeSections.sendPackageDesc'),
+        outcome: t('homeSections.sendPackageOutcome'),
+        color: C.orange,
+        dim: C.orangeDim,
+        border: C.orangeDim,
+        path: '/packages',
+      },
+      {
+        icon: Bus,
+        kicker: t('homeSections.busFallbackKicker'),
+        title: t('homeSections.busFallbackTitle'),
+        desc: t('homeSections.busFallbackDesc'),
+        outcome: t('homeSections.busFallbackOutcome'),
+        color: C.green,
+        dim: C.greenDim,
+        border: C.greenDim,
+        path: '/bus',
+      },
+      {
+        icon: Calendar,
+        kicker: t('homeSections.scheduleKicker'),
+        title: t('homeSections.scheduleTitle'),
+        desc: t('homeSections.scheduleDesc'),
+        outcome: t('homeSections.scheduleOutcome'),
+        color: C.blue,
+        dim: C.blueDim,
+        border: C.blueDim,
+        path: '/schedule',
+      },
+    ];
+
+    if (role === 'driver' || role === 'both') {
+      return [base[1], base[0], base[2], base[3], base[4]];
+    }
+    if (role === 'admin') {
+      return [base[0], base[2], base[1], base[3], base[4]];
+    }
+    return base;
+  }, [role, t]);
 
   return (
     <WaselErrorBoundary>
