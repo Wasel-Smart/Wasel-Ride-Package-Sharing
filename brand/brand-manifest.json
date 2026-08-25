@@ -1,15 +1,20 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "updatedAt": "2026-08-25",
   "brand": {
     "name": "Wasel",
     "nameAr": "واصل",
     "tagline": "Ride. Share. Move.",
     "colors": {
-      "brandBlue": "#00E5FF",
+      "brandCyan": "#00E5FF",
       "brandInk": "#081D39",
-      "brandGreen": "#72C70D",
-      "brandOrange": "#FF8A0B"
+      "brandLime": "#72C70D",
+      "brandEmber": "#FF8A0B"
+    },
+    "fonts": {
+      "primary": "'Plus Jakarta Sans', 'Cairo', 'Tajawal', 'Inter', sans-serif",
+      "arabic": "'Cairo', 'Tajawal', 'Plus Jakarta Sans', sans-serif",
+      "mono": "'JetBrains Mono', 'Fira Mono', monospace"
     }
   },
   "logos": {
@@ -38,16 +43,14 @@
           "clearSpace": "1x symbol height"
         },
         "white": {
-          "formats": ["svg", "png", "webp", "avif"],
-          "sizes": [64, 96, 160, 280, 512],
-          "path": "brand/assets/logos/primary/logo-white-{size}.{format}",
+          "formats": ["svg"],
+          "path": "brand/assets/logos/primary/logo-white.svg",
           "minSize": 120,
           "clearSpace": "1x symbol height"
         },
         "black": {
-          "formats": ["svg", "png", "webp", "avif"],
-          "sizes": [64, 96, 160, 280, 512],
-          "path": "brand/assets/logos/primary/logo-black-{size}.{format}",
+          "formats": ["svg"],
+          "path": "brand/assets/logos/primary/logo-black.svg",
           "minSize": 120,
           "clearSpace": "1x symbol height"
         },
@@ -124,6 +127,33 @@
       "formats": ["svg", "png", "webp", "avif"]
     }
   },
+  "emails": {
+    "templates": [
+      "ride-confirmed",
+      "package-delivered",
+      "payment-receipt",
+      "welcome",
+      "verification-required"
+    ]
+  },
+  "sms": {
+    "templates": [
+      "auth-otp",
+      "auth-otp-ar",
+      "booking-confirmed",
+      "booking-confirmed-ar",
+      "driver-assigned",
+      "ride-started",
+      "ride-completed",
+      "package-picked-up",
+      "package-delivered",
+      "payment-receipt",
+      "wallet-topped-up",
+      "promo-code",
+      "system-maintenance",
+      "safety-check"
+    ]
+  },
   "usage": {
     "headers": "logo-default or logo-light depending on background",
     "darkBackgrounds": "logo-light or logo-white",
@@ -131,6 +161,8 @@
     "favicons": "symbol-default or favicon.svg",
     "appIcons": "appIcon.default",
     "socialSharing": "og.default",
-    "marketing": "logo-default at 512px"
+    "marketing": "logo-default at 512px",
+    "emailHeaders": "logo-light-160.png on dark background",
+    "emailFooters": "symbol-default.svg"
   }
 }

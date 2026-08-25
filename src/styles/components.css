@@ -7,7 +7,7 @@
 .btn-wasel-primary {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(135deg, #67e8ff 0%, #38beff 55%, #32d8a6 100%);
+  background: linear-gradient(135deg, #00E5FF 0%, #38beff 55%, #32d8a6 100%);
   color: #041018;
   font-weight: 800;
   border-radius: 14px;
@@ -211,7 +211,7 @@
 
 .pill-cyan {
   background: rgba(103, 232, 255, 0.12);
-  color: #67e8ff;
+  color: #00E5FF;
   border-color: rgba(103, 232, 255, 0.25);
 }
 
@@ -327,7 +327,7 @@
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #67e8ff, #32d8a6);
+  background: linear-gradient(90deg, #00E5FF, #32d8a6);
   border-radius: var(--radius-full);
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 0 8px rgba(103, 232, 255, 0.5);
