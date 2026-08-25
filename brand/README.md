@@ -19,7 +19,7 @@ place to start instead of guessing across three folders.
 | Role | Value |
 | --- | --- |
 | Brand ink | `#081D39` |
-| Connection blue | `#147FE4` |
+| Connection blue | `#00E5FF` |
 | Movement green | `#72C70D` |
 | Journey orange | `#FF8A0B` |
 
