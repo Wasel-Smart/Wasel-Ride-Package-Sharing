@@ -322,7 +322,7 @@ function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }
               fontWeight: active ? TYPE.weight.black : TYPE.weight.semibold,
               fontFamily: F,
               background: active
-                ? 'linear-gradient(135deg, #147fe4 0%, #0e5cb0 100%)'
+                ? 'linear-gradient(135deg, #00E5FF 0%, #0e5cb0 100%)'
                 : 'transparent',
               color: active ? C.bg : C.textMuted,
               boxShadow: active ? `0 2px 12px ${C.cyanGlow}` : 'none',

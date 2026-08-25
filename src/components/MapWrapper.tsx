@@ -52,7 +52,7 @@ function StaticMapPreview({ height, route }: { height?: string | number; route?:
       }}
     >
       <div className="flex flex-col items-center gap-2 text-[#95b2c9]">
-        <MapPin className="w-6 h-6 text-[#147fe4]" />
+        <MapPin className="w-6 h-6 text-[#00E5FF]" />
         <p className="text-xs font-medium">{tx('mapWrapper.static_preview')}</p>
         {hasRoute && route && route.length >= 2 && (
           <p className="text-[0.65rem] opacity-80">
@@ -70,7 +70,7 @@ function MapLoader({ height }: { height?: string | number }) {
       className="flex flex-col items-center justify-center bg-[#081d39] rounded-2xl gap-3 text-[#95b2c9]"
       style={{ height: typeof height === 'number' ? `${height}px` : (height ?? '400px') }}
     >
-      <MapPin className="w-8 h-8 animate-pulse text-[#147fe4]" />
+      <MapPin className="w-8 h-8 animate-pulse text-[#00E5FF]" />
       <p className="text-sm">{tx('mapWrapper.loading_map')}</p>
     </div>
   );
@@ -108,7 +108,7 @@ class MapErrorBoundary extends Component<
                 : (this.props.height ?? '400px'),
           }}
         >
-          <MapPin className="w-7 h-7 text-[#147fe4]" aria-hidden="true" />
+          <MapPin className="w-7 h-7 text-[#00E5FF]" aria-hidden="true" />
           <p className="text-sm">{tx('mapWrapper.map_unavailable')}</p>
         </div>
       );
