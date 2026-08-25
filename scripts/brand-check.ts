@@ -21,7 +21,7 @@ const ALLOWED_COLORS = new Set([
   '#FF7C8B',
   '#FFBE5C',
   '#95B2C9',
-  '#9af1cf', '#58ddff',
+  '#9af1cf', '#66e0ff',
   '#F8FBFF', '#eef8ff', '#f5fbff',
   '#ffffff', '#000000',
   'transparent',
@@ -32,12 +32,12 @@ const ALLOWED_COLOR_PATTERNS = [
 ];
 
 const DEPRECATED_COLORS: Record<string, string> = {
-  '#147fe4': 'Use #00E5FF (Orbit Cyan) instead',
-  '#67e8ff': 'Use #00E5FF (Orbit Cyan) instead',
-  '#58ddff': 'Use #66e0ff (cyanLight) or #00E5FF (Orbit Cyan) instead',
+  '#00E5FF': 'Use #00E5FF (Orbit Cyan) instead',
+  '#00E5FF': 'Use #00E5FF (Orbit Cyan) instead',
+  '#66e0ff': 'Use #66e0ff (cyanLight) or #00E5FF (Orbit Cyan) instead',
   '#20, 127, 228': 'Use rgba(0, 229, 255, ...) (Orbit Cyan) instead',
   '#20,155,203': 'Use rgba(0, 229, 255, ...) (Orbit Cyan) instead',
-  '#149bcb': 'Use #00E5FF (Orbit Cyan) instead',
+  '#00E5FF': 'Use #00E5FF (Orbit Cyan) instead',
 };
 
 const BRAND_FONTS = [

@@ -50,7 +50,7 @@
 
 | Name | CSS |
 |------|-----|
-| Primary | `linear-gradient(135deg, #147FE4 0%, #38BEFF 52%, #32D8A6 100%)` |
+| Primary | `linear-gradient(135deg, #00E5FF 0%, #38BEFF 52%, #32D8A6 100%)` |
 | Hero | `linear-gradient(145deg, #081D39 0%, #0a1f3a 56%, #132b4d 100%)` |
 | Green | `linear-gradient(135deg, #72C70D 0%, #34D8A7 52%, #209B7D 100%)` |
 | Orange | `linear-gradient(135deg, #FF8A0B 0%, #FFB35C 48%, #FF936A 100%)` |

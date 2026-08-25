@@ -229,9 +229,9 @@ import { C, F, TYPE, SPACE, R, SH, GRAD, ANIM, EASE, DUR, LS, Z } from '@/utils/
 | `C.brandBlue` | `C.brandCyan` | Renamed for clarity |
 | `C.brandOrange` | `C.brandEmber` | Renamed for clarity |
 | `C.brandGreen` | `C.brandLime` | Renamed for clarity |
-| `#147fe4` | `#00E5FF` | Unified brand cyan |
-| `#67e8ff` | `#00E5FF` | Unified brand cyan |
-| `#58ddff` | `#66e0ff` | Renamed to cyanLight |
+| `#00E5FF` | `#00E5FF` | Unified brand cyan |
+| `#00E5FF` | `#00E5FF` | Unified brand cyan |
+| `#66e0ff` | `#66e0ff` | Renamed to cyanLight |
 | `SH.blue` | `SH.cyan` | Renamed shadow |
 | `SH.blueL` | `SH.cyanL` | Renamed shadow |
 | `SH.green` | `SH.lime` | Renamed shadow |

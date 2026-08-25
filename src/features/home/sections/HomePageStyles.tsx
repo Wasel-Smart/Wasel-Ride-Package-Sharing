@@ -83,7 +83,7 @@ export function HomePageStyles() {
         place-items: center;
         background: rgba(20,127,228,0.1);
         border: 1px solid rgba(20,127,228,0.08);
-        color: #147fe4;
+        color: #00E5FF;
         font-size: 0.72rem;
         font-weight: 800;
         flex-shrink: 0;
@@ -570,7 +570,7 @@ export function HomePageStyles() {
         border: 1px solid rgba(20,127,228,0.16);
         display: grid;
         place-items: center;
-        color: #147fe4;
+        color: #00E5FF;
         font-size: 0.85rem;
         font-weight: 700;
         flex-shrink: 0;
@@ -800,7 +800,7 @@ export function HomePageStyles() {
         display: block;
         height: 100%;
         border-radius: inherit;
-        background: linear-gradient(90deg, #147fe4, #72c70d);
+        background: linear-gradient(90deg, #00E5FF, #72c70d);
       }
 
       .wasel-home-phone-frame {
@@ -892,7 +892,7 @@ export function HomePageStyles() {
       }
 
       .wasel-home-proof-metric-value {
-        color: #147fe4;
+        color: #00E5FF;
         font-size: 1.35rem;
         font-weight: 950;
         line-height: 1;
@@ -976,7 +976,7 @@ export function HomePageStyles() {
         border-radius: 12px;
         display: grid;
         place-items: center;
-        color: #147fe4;
+        color: #00E5FF;
         background: rgba(255,255,255,0.06);
         border: 1px solid rgba(20,127,228,0.08);
       }
@@ -1199,7 +1199,7 @@ export function HomePageStyles() {
         place-items: center;
         background: rgba(20,127,228,0.1);
         border: 1px solid rgba(20,127,228,0.08);
-        color: #147fe4;
+        color: #00E5FF;
         font-size: 0.72rem;
         font-weight: 800;
         flex-shrink: 0;

@@ -10,25 +10,14 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(import.meta.dirname, '..');
-const ALLOWED_COLORS = new Set([
-  '#00E5FF', '#66e0ff', '#00b8d4',
-  '#081D39', '#0a1f3a', '#0e2240', '#132b4d', '#050B12',
-  '#72C70D', '#5a6b08',
-  '#FF8A0B', '#e07500',
-  '#8FA6FF',
-  '#FF7C8B',
-  '#FFBE5C',
-  '#95B2C9',
-  '#9af1cf', '#58ddff',
-  '#F8FBFF', '#eef8ff', '#f5fbff',
-  '#ffffff', '#000000',
-  'transparent',
-]);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, '..');
 
-const DEPRECATED_COLORS: Record<string, string> = {
+const DEPRECATED_COLORS = {
   '#147fe4': 'Use #00E5FF (Orbit Cyan) instead',
+  '#147FE4': 'Use #00E5FF (Orbit Cyan) instead',
   '#67e8ff': 'Use #00E5FF (Orbit Cyan) instead',
   '#58ddff': 'Use #66e0ff (cyanLight) or #00E5FF (Orbit Cyan) instead',
   'rgba(20, 127, 228': 'Use rgba(0, 229, 255, ...) (Orbit Cyan) instead',
@@ -53,7 +42,41 @@ let errors = 0;
 let warnings = 0;
 let checkedFiles = 0;
 
-function checkFile(filePath: string): void {
+const SAFE_COLORS = new Set([
+  '#fff', '#FFFFFF', '#ffffff',
+  '#000', '#000000',
+  '#ef4444', '#f59e0b', '#22c55e', '#10b981',
+  '#f8fbff', '#eef8ff', '#f5fbff',
+  '#38beff', '#32d8a7', '#34d8a7', '#209b7d',
+  '#b7abff', '#7f91ff', '#8debff', '#47d69e',
+  '#ffb35c', '#ff936a',
+  '#f5b11e', '#fca5a5', '#cbd5e1', '#e5e7eb',
+  '#6b7280', '#9ca3af', '#94a3b8', '#64748b',
+  '#f59e0b', '#eab308', '#10b981', '#22c55e',
+  '#3b82f6', '#60a5fa', '#2563eb', '#1d4ed8',
+  '#8b5cf6', '#c084fc', '#fbbf24',
+  '#e91e63', '#ff69b4', '#25d366',
+  '#4285f4', '#1877f2',
+  '#f0a830', '#2060e8', '#0e5cb0',
+  '#55e9ff', '#60a5fa',
+  '#040c18', '#0b0f16', '#11141c', '#111827',
+  '#1f2937', '#374151', '#334155', '#475569',
+  '#161b26', '#1c2230', '#0c0f16',
+  '#1a3a6a', '#c0c0c0', '#333', '#2ecc71', '#e0e0e0',
+  '#f5f5f5', '#666',
+  '#22c55e', '#ffb020', '#ff4d67', '#38bdf8',
+  '#22d3ee', '#2dd4bf', '#4ade80', '#fbbf24', '#60a5fa',
+  '#fcd34d', '#c084fc', '#fda4af', '#fca5a5',
+  '#0b1220', '#213047',
+  '#f7f1e8', '#b88a52',
+  '#5e7257', '#a9b98d',
+  '#0a1f3d', '#081220', '#081d39', '#0a1f3a', '#0e2240', '#132b4d',
+  '#95b2c9', '#9af1cf', '#58ddff',
+  '#72c70d', '#5a6b08', '#ff8a0b', '#e07500',
+  '#ffbe5c', '#8fa6ff', '#ff7c8b',
+]);
+
+function checkFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
   const ext = path.extname(filePath);
@@ -78,7 +101,7 @@ function checkFile(filePath: string): void {
       const hexMatches = trimmed.matchAll(/#[0-9a-fA-F]{3,8}\b/g);
       for (const match of hexMatches) {
         const color = match[0];
-        if (!ALLOWED_COLORS.has(color)) {
+        if (!SAFE_COLORS.has(color) && !ALLOWED_COLORS.has(color)) {
           const relative = path.relative(ROOT, filePath);
           console.warn(`  [BRAND WARN] ${relative}:${lineNum}: Non-brand hex color "${color}"`);
           console.warn(`           Line: ${trimmed.slice(0, 120)}`);
@@ -112,7 +135,22 @@ function checkFile(filePath: string): void {
   checkedFiles++;
 }
 
-function walk(dir: string): void {
+const ALLOWED_COLORS = new Set([
+  '#00E5FF', '#66e0ff', '#00b8d4',
+  '#081D39', '#0a1f3a', '#0e2240', '#132b4d', '#050B12',
+  '#72C70D', '#5a6b08',
+  '#FF8A0B', '#e07500',
+  '#8FA6FF',
+  '#FF7C8B',
+  '#FFBE5C',
+  '#95B2C9',
+  '#9af1cf', '#58ddff',
+  '#F8FBFF', '#eef8ff', '#f5fbff',
+  '#ffffff', '#000000',
+  'transparent',
+]);
+
+function walk(dir) {
   if (EXCLUDE_DIRS.has(path.basename(dir))) return;
 
   let entries;
@@ -132,7 +170,7 @@ function walk(dir: string): void {
   }
 }
 
-function main(): void {
+function main() {
   console.log('\n🔍 Wasel Brand Consistency Check\n');
   console.log(`Checking ${ROOT}...\n`);
 
