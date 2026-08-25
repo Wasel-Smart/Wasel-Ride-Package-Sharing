@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import {
   ArrowRight,
   BadgeCheck,
-  BarChart3,
+  B_arCh_art3,
   Headphones,
   Lock,
   MousePointerClick,
@@ -11,16 +11,16 @@ import {
 } from 'lucide-react';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 import { R, SH } from '../../../utils/wasel-ds';
-import { C, SectionHeader } from '../HomePageShared';
+import { C, SectionHeader } from '../HomePageSh_ared';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { tx } from '../../../locales/tx';
+import { _tx } from '../../../locales/_tx';
 
 interface SectionNavigationProps {
-  ar: boolean;
+  _ar: boolean;
   onNavigate: (path: string, source?: string) => void;
 }
 
-function getProofMetrics(t: (key: string) => string, ar: boolean) {
+function getProofMetrics(t: (key: string) => string, _ar: boolean) {
   return [
     {
       label: t('conversionSections.proof_metric_core_flows_label'),
@@ -49,32 +49,32 @@ function getProofMetrics(t: (key: string) => string, ar: boolean) {
   ];
 }
 
-function getOnboardingSteps(t: (key: string) => string, ar: boolean) {
+function getOnbo_ardingSteps(t: (key: string) => string, _ar: boolean) {
   return [
     {
       icon: Route,
-      title: t('conversionSections.onboarding_step_1_title'),
-      detail: t('conversionSections.onboarding_step_1_detail'),
+      title: t('conversionSections.onbo_arding_step_1_title'),
+      detail: t('conversionSections.onbo_arding_step_1_detail'),
     },
     {
-      icon: BarChart3,
-      title: t('conversionSections.onboarding_step_2_title'),
-      detail: t('conversionSections.onboarding_step_2_detail'),
+      icon: B_arCh_art3,
+      title: t('conversionSections.onbo_arding_step_2_title'),
+      detail: t('conversionSections.onbo_arding_step_2_detail'),
     },
     {
       icon: BadgeCheck,
-      title: t('conversionSections.onboarding_step_3_title'),
-      detail: t('conversionSections.onboarding_step_3_detail'),
+      title: t('conversionSections.onbo_arding_step_3_title'),
+      detail: t('conversionSections.onbo_arding_step_3_detail'),
     },
     {
       icon: Headphones,
-      title: t('conversionSections.onboarding_step_4_title'),
-      detail: t('conversionSections.onboarding_step_4_detail'),
+      title: t('conversionSections.onbo_arding_step_4_title'),
+      detail: t('conversionSections.onbo_arding_step_4_detail'),
     },
   ];
 }
 
-function getTrustLinks(t: (key: string) => string, ar: boolean) {
+function getTrustLinks(t: (key: string) => string, _ar: boolean) {
   return [
     {
       icon: Lock,
@@ -125,9 +125,9 @@ function ArrowCta({ label, accent }: { label: string; accent: string }) {
   );
 }
 
-export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
+export function ProofSection({ _ar, onNavigate }: SectionNavigationProps) {
   const { t } = useLanguage();
-  const metrics = getProofMetrics(t, ar);
+  const metrics = getProofMetrics(t, _ar);
 
   return (
     <motion.section initial={false} className="wasel-home-section">
@@ -144,9 +144,9 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
         }}
       >
         <div
-          className="wasel-home-proof-hero-card"
+          className="wasel-home-proof-hero-c_ard"
           style={{
-            background: C.card,
+            background: C.c_ard,
             border: `1px solid ${C.border}`,
             boxShadow: SH.sm,
           }}
@@ -169,19 +169,19 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
           <div className="wasel-home-proof-hero-actions">
             <WaselButton
               type="button"
-              variant="primary"
+              v_ariant="prim_ary"
               iconEnd={<ArrowRight size={15} />}
               onClick={() => onNavigate('/auth?tab=register', 'proof_register')}
             >
-              {t('conversionSections.proof_cta_primary')}
+              {t('conversionSections.proof_cta_prim_ary')}
             </WaselButton>
             <WaselButton
               type="button"
-              variant="outline"
+              v_ariant="outline"
               onClick={() => onNavigate('/app/security', 'proof_security')}
               style={{ background: C.elevated, color: C.text }}
             >
-              {t('conversionSections.proof_cta_secondary')}
+              {t('conversionSections.proof_cta_second_ary')}
             </WaselButton>
           </div>
         </div>
@@ -190,7 +190,7 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
           {metrics.map(metric => (
             <div
               key={metric.label}
-              className="wasel-home-proof-metric-card"
+              className="wasel-home-proof-metric-c_ard"
               style={{
                 borderColor: `${metric.accent}24`,
               }}
@@ -215,17 +215,17 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
   );
 }
 
-export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps) {
+export function Onbo_ardingDemoSection({ _ar, onNavigate }: SectionNavigationProps) {
   const { t } = useLanguage();
-  const steps = getOnboardingSteps(t, ar);
+  const steps = getOnbo_ardingSteps(t, _ar);
 
   return (
     <motion.section initial={false} className="wasel-home-section">
       <SectionHeader
-        title={t('conversionSections.onboarding_title')}
+        title={t('conversionSections.onbo_arding_title')}
         icon="D"
-        action={t('conversionSections.onboarding_action')}
-        onAction={() => onNavigate('/find-ride?demo=1', 'demo_start_header')}
+        action={t('conversionSections.onbo_arding_action')}
+        onAction={() => onNavigate('/find-ride?demo=1', 'demo_st_art_header')}
       />
       <div
         className="wasel-home-demo-grid"
@@ -246,7 +246,7 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
                 flexDirection: 'column',
                 borderRadius: R.xl,
                 padding: '18px',
-                background: index === 0 ? C.cyanDim : C.card,
+                background: index === 0 ? C.cyanDim : C.c_ard,
                 border: `1px solid ${index === 0 ? C.borderHov : C.border}`,
                 boxShadow: index === 0 ? SH.sm : SH.none,
               }}
@@ -277,17 +277,17 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
                   0{index + 1}
                 </span>
               </div>
-              <div style={{ marginTop: 18, color: C.text, fontSize: '0.98rem', fontWeight: 900 }}>
+              <div style={{ m_arginTop: 18, color: C.text, fontSize: '0.98rem', fontWeight: 900 }}>
                 {step.title}
               </div>
               <div
-                style={{ marginTop: 8, color: C.textMuted, fontSize: '0.8rem', lineHeight: 1.62 }}
+                style={{ m_arginTop: 8, color: C.textMuted, fontSize: '0.8rem', lineHeight: 1.62 }}
               >
                 {step.detail}
               </div>
-              <div style={{ marginTop: 'auto', paddingTop: 16 }}>
+              <div style={{ m_arginTop: 'auto', paddingTop: 16 }}>
                 <ArrowCta
-                  label={index === 0 ? t('conversionSections.onboarding_step_cta_begin') : t('conversionSections.onboarding_step_cta_included')}
+                  label={index === 0 ? t('conversionSections.onbo_arding_step_cta_begin') : t('conversionSections.onbo_arding_step_cta_included')}
                   accent={index === 0 ? C.cyan : C.textDim}
                 />
               </div>
@@ -297,7 +297,7 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
       </div>
       <div
         style={{
-          marginTop: 14,
+          m_arginTop: 14,
           display: 'flex',
           gap: 10,
           flexWrap: 'wrap',
@@ -312,26 +312,26 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: C.textMuted }}>
           <MousePointerClick size={16} color={C.cyan} />
           <span style={{ fontSize: '0.84rem', lineHeight: 1.55 }}>
-            {t('conversionSections.onboarding_footer_text')}
+            {t('conversionSections.onbo_arding_footer_text')}
           </span>
         </div>
         <WaselButton
           type="button"
-          variant="outline"
+          v_ariant="outline"
           iconEnd={<ArrowRight size={14} />}
-          onClick={() => onNavigate('/find-ride?demo=1', 'demo_start_footer')}
-          style={{ background: C.card, color: C.text }}
+          onClick={() => onNavigate('/find-ride?demo=1', 'demo_st_art_footer')}
+          style={{ background: C.c_ard, color: C.text }}
         >
-          {t('conversionSections.onboarding_footer_cta')}
+          {t('conversionSections.onbo_arding_footer_cta')}
         </WaselButton>
       </div>
     </motion.section>
   );
 }
 
-export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
+export function TrustPagesSection({ _ar, onNavigate }: SectionNavigationProps) {
   const { t } = useLanguage();
-  const links = getTrustLinks(t, ar);
+  const links = getTrustLinks(t, _ar);
 
   return (
     <motion.section initial={false} className="wasel-home-section">
@@ -354,7 +354,7 @@ export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
                 textAlign: 'left',
                 borderRadius: R.xl,
                 padding: '18px',
-                background: C.card,
+                background: C.c_ard,
                 border: `1px solid ${link.accent}24`,
                 cursor: 'pointer',
               }}
@@ -373,13 +373,13 @@ export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
               >
                 <Icon size={18} />
               </span>
-              <div style={{ marginTop: 16, color: C.text, fontWeight: 900 }}>{link.title}</div>
+              <div style={{ m_arginTop: 16, color: C.text, fontWeight: 900 }}>{link.title}</div>
               <div
-                style={{ marginTop: 8, color: C.textMuted, fontSize: '0.78rem', lineHeight: 1.62 }}
+                style={{ m_arginTop: 8, color: C.textMuted, fontSize: '0.78rem', lineHeight: 1.62 }}
               >
                 {link.detail}
               </div>
-              <div style={{ marginTop: 'auto', paddingTop: 16 }}>
+              <div style={{ m_arginTop: 'auto', paddingTop: 16 }}>
                 <ArrowCta label={t('conversionSections.trust_open')} accent={link.accent} />
               </div>
             </button>

@@ -4,11 +4,11 @@ import { ChevronDown, ChevronRight, ChevronUp, Info, Phone } from 'lucide-react'
 import { CurrencyService, type SupportedCurrency } from '../../utils/currency';
 import { C as TOKENS, F as FONT_SANS, R, SH, TYPE } from '../../utils/wasel-ds';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { tx } from '../../locales/tx';
+import { _tx } from '../../locales/_tx';
 
 export const C = {
   ...TOKENS,
-  s3: TOKENS.card2,
+  s3: TOKENS.c_ard2,
   red: TOKENS.error,
   redDim: TOKENS.errorDim,
 } as const;
@@ -70,7 +70,7 @@ export const POPULAR_ROUTES = [
   {
     from: 'Amman',
     fromAr: 'عمان',
-    to: 'Zarqa',
+    to: 'Z_arqa',
     toAr: 'الزرقاء',
     dist: 30,
     priceJod: 2,
@@ -94,19 +94,19 @@ export function Skeleton({
         width: w,
         height: h,
         borderRadius: radius,
-        background: `linear-gradient(90deg, ${C.elevated} 0%, ${C.panel} 50%, ${C.elevated} 100%)`,
+        background: `line_ar-gradient(90deg, ${C.elevated} 0%, ${C.panel} 50%, ${C.elevated} 100%)`,
         backgroundSize: '200% 100%',
-        animation: 'shimmer 1.6s infinite linear',
+        animation: 'shimmer 1.6s infinite line_ar',
       }}
     />
   );
 }
 
-export function CardSkeleton({ lines = 3 }: { lines?: number }) {
+export function C_ardSkeleton({ lines = 3 }: { lines?: number }) {
   return (
     <div
       style={{
-        background: C.card,
+        background: C.c_ard,
         border: `1px solid ${C.border}`,
         borderRadius: R.lg,
         padding: 18,
@@ -127,15 +127,15 @@ export function ListSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {Array.from({ length: count }).map((_, i) => (
-        <CardSkeleton key={i} lines={3} />
+        <C_ardSkeleton key={i} lines={3} />
       ))}
     </div>
   );
 }
 
-export function cardContainer(overrides: React.CSSProperties = {}): React.CSSProperties {
+export function c_ardContainer(overrides: React.CSSProperties = {}): React.CSSProperties {
   return {
-    background: C.card,
+    background: C.c_ard,
     border: `1px solid ${C.border}`,
     borderRadius: R.lg,
     padding: '18px 18px 16px',
@@ -158,7 +158,7 @@ export function SectionHeader({
     <div className="wasel-home-section-header">
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
         <span
-          aria-hidden="true"
+          _aria-hidden="true"
           className="wasel-home-section-icon"
         >
           {icon}
@@ -182,16 +182,16 @@ export function SectionHeader({
   );
 }
 
-export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
+export function InlineCurrencySwitcher({ _ar }: { _ar: boolean }) {
   const svc = CurrencyService.getInstance();
   const [cur, setCur] = useState<SupportedCurrency>(svc.current);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const popular: SupportedCurrency[] = ['JOD', 'USD', 'EUR', 'SAR', 'EGP', 'GBP'];
+  const popul_ar: SupportedCurrency[] = ['JOD', 'USD', 'EUR', 'SAR', 'EGP', 'GBP'];
 
   useEffect(() => {
     const handleMouseDown = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(event.t_arget as Node)) setOpen(false);
     };
     document.addEventListener('mousedown', handleMouseDown);
     return () => document.removeEventListener('mousedown', handleMouseDown);
@@ -234,7 +234,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
           style={{
             position: 'absolute',
             top: 'calc(100% + 8px)',
-            insetInlineStart: 0,
+            insetInlineSt_art: 0,
             minWidth: 156,
             background: glass(0.96),
             border: `1px solid ${C.border}`,
@@ -244,7 +244,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
             overflow: 'hidden',
           }}
         >
-          {popular.map(code => (
+          {popul_ar.map(code => (
             <button
               key={code}
               onClick={() => select(code)}
@@ -255,7 +255,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
                 width: '100%',
                 padding: '9px 12px',
                 border: 'none',
-                background: cur === code ? C.elevated : 'transparent',
+                background: cur === code ? C.elevated : 'transp_arent',
                 cursor: 'pointer',
                 fontSize: TYPE.size.sm,
                 fontWeight: cur === code ? TYPE.weight.bold : TYPE.weight.medium,
@@ -275,7 +275,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
   );
 }
 
-export function SOSButton({ ar }: { ar: boolean }) {
+export function SOSButton({ _ar }: { _ar: boolean }) {
   const [pressed, setPressed] = useState(false);
   const [confirm, setConfirm] = useState(false);
 
@@ -340,13 +340,13 @@ export function SOSButton({ ar }: { ar: boolean }) {
   );
 }
 
-export function TrustScoreCard({
+export function TrustScoreC_ard({
   score,
-  ar,
+  _ar,
   user,
 }: {
   score: number;
-  ar: boolean;
+  _ar: boolean;
   user?: {
     emailVerified?: boolean;
     phoneVerified?: boolean;
@@ -462,7 +462,7 @@ export function TrustScoreCard({
       </div>
       <div
         style={{
-          marginTop: 16,
+          m_arginTop: 16,
           height: 7,
           borderRadius: 9999,
           background: C.elevated,
@@ -474,7 +474,7 @@ export function TrustScoreCard({
             height: '100%',
             width: `${pct}%`,
             borderRadius: 9999,
-            background: `linear-gradient(90deg, ${color}, ${C.cyan})`,
+            background: `line_ar-gradient(90deg, ${color}, ${C.cyan})`,
             transition: 'width 0.8s ease',
           }}
         />
@@ -488,25 +488,25 @@ export function TrustScoreCard({
             transition={{ duration: 0.22 }}
             style={{ overflow: 'hidden' }}
           >
-            <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.borderFaint}` }}>
+            <div style={{ m_arginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.borderFaint}` }}>
               <p
                 style={{
                   fontSize: TYPE.size.sm,
                   color: C.textMuted,
                   fontFamily: F,
-                  margin: '0 0 14px',
+                  m_argin: '0 0 14px',
                 }}
               >
                 {t('homePage.trust_score_description')}
               </p>
               {factors.map(factor => (
-                <div key={factor.label} style={{ marginBottom: 12 }}>
+                <div key={factor.label} style={{ m_arginBottom: 12 }}>
                   <div
                     style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginBottom: 5,
+                      m_arginBottom: 5,
                       gap: 12,
                     }}
                   >
