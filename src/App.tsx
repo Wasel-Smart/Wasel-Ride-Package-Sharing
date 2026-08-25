@@ -7,7 +7,6 @@ import { AppErrorBoundary } from './components/system/ErrorBoundary';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
-import { LocalAuthProvider } from './contexts/LocalAuth';
 
 import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
@@ -38,7 +37,7 @@ function AppProviders({ children }: { children: ReactNode }) {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <LocalAuthProvider>{children}</LocalAuthProvider>
+        {children}
       </AuthProvider>
     </LanguageProvider>
   );

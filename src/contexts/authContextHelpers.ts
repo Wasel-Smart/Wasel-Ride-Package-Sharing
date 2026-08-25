@@ -135,14 +135,6 @@ export function shouldRefreshProfile(event: AuthChangeEvent, session: Session | 
   return Boolean(session?.user) && event === 'SIGNED_IN';
 }
 
-function splitFullName(fullName: string) {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  return {
-    firstName: parts[0] ?? 'Wasel',
-    lastName: parts.slice(1).join(' ') || 'User',
-  };
-}
-
 function computeTrustScore(
   user: Pick<
     WaselUser,

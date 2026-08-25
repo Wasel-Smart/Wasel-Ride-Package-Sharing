@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router';
 import { ProtectedPagePreview } from '../components/system/ProtectedPagePreview';
-import { useLocalAuth } from '../contexts/LocalAuth';
+import { useAuth } from '../contexts/AuthContext';
 import { tx } from '../locales/tx';
 import { type AccessPermission, userHasPermission } from '../platform/rbac';
 
@@ -30,18 +30,18 @@ interface ProtectedOutletProps {
 }
 
 export default function ProtectedOutlet({ require: requiredPermission }: ProtectedOutletProps = {}) {
-  const { user, loading } = useLocalAuth();
+  const { waselUser, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
     return <LoadingState />;
   }
 
-  if (!user) {
+  if (!waselUser) {
     return <ProtectedPagePreview pathname={location.pathname} />;
   }
 
-  if (requiredPermission && !userHasPermission(user.role, requiredPermission)) {
+  if (requiredPermission && !userHasPermission(waselUser.role, requiredPermission)) {
     return <ProtectedPagePreview pathname={location.pathname} />;
   }
 
