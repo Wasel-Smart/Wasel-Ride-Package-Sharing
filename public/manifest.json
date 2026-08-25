@@ -15,14 +15,14 @@
   "categories": ["travel", "navigation", "transportation"],
   "screenshots": [
     {
-      "src": "/brand/wasellogo-512.png",
+      "src": "/brand/assets/logos/primary/logo-default-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Wasel home screen"
     },
     {
-      "src": "/brand/wasellogo-512.png",
+      "src": "/brand/assets/logos/primary/logo-default-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "wide",
