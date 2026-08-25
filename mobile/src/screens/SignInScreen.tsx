@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   InfoCard,
   PremiumPanel,
@@ -61,9 +63,19 @@ function getPasswordStrength(password: string): { score: number; label: string; 
   return map[Math.min(score, 5)] ?? { score: 0, label: '', color: colors.muted };
 }
 
+type AuthStackParamList = {
+  SignIn: undefined;
+  SignUp: undefined;
+  ForgotPassword: undefined;
+  PhoneAuth: undefined;
+};
+
+type AuthNavProp = NativeStackNavigationProp<AuthStackParamList>;
+
 const SignInScreen = React.memo(function SignInScreen() {
   const { signIn, signInWithGoogle, signInWithFacebook, signInWithPhone } = useAuth();
   const { t } = useLanguage();
+  const navigation = useNavigation<AuthNavProp>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
@@ -313,7 +325,7 @@ const SignInScreen = React.memo(function SignInScreen() {
             icon="person-add"
             tone={colors.cyan}
             loading={false}
-            onPress={() => {}}
+            onPress={() => navigation.navigate('SignUp')}
             testID="sign-up-link"
           />
           <PrimaryButton
@@ -321,7 +333,7 @@ const SignInScreen = React.memo(function SignInScreen() {
             icon="lock-closed"
             tone={colors.textMuted}
             loading={false}
-            onPress={() => {}}
+            onPress={() => navigation.navigate('ForgotPassword')}
             testID="forgot-password-link"
           />
         </View>
