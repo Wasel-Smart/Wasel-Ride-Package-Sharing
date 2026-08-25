@@ -1,11 +1,11 @@
 /**
  * Wasel Design System Tokens — Brand Single Source of Truth
  *
- * Palette sourced from docs/BRAND_GUIDELINES.md:
- *   Brand ink    #081D39
- *   Connection blue #147FE4
+ * Palette aligned with mobile app theme:
+ *   Brand cyan    #00E5FF
  *   Movement green #72C70D
  *   Journey orange #FF8A0B
+ *   Brand ink    #081D39
  *
  * Semantic aliases preserve backward compatibility with existing components.
  */
@@ -17,11 +17,11 @@ export const C = {
   card: 'rgba(8,29,57,0.78)',
   cardSolid: '#0e2240',
   card2: '#132b4d',
-  panel: 'rgba(20,127,228,0.06)',
+  panel: 'rgba(0,229,255,0.06)',
   elevated: 'rgba(255,255,255,0.06)',
 
   brandInk: '#081D39',
-  brandBlue: '#147FE4',
+  brandBlue: '#00E5FF',
   brandGreen: '#72C70D',
   brandOrange: '#FF8A0B',
 
@@ -29,13 +29,13 @@ export const C = {
   navyMid: '#0e2240',
   navyLight: '#132b4d',
 
-  blue: '#147FE4',
-  blueLight: '#5aa0f0',
-  blueDim: 'rgba(20,127,228,0.12)',
-  cyan: '#147FE4',
-  cyanDark: '#5aa0f0',
-  cyanDim: 'rgba(20,127,228,0.1)',
-  cyanGlow: 'rgba(20,127,228,0.2)',
+  blue: '#00E5FF',
+  blueLight: '#66e0ff',
+  blueDim: 'rgba(0,229,255,0.12)',
+  cyan: '#00E5FF',
+  cyanDark: '#00b8d4',
+  cyanDim: 'rgba(0,229,255,0.1)',
+  cyanGlow: 'rgba(0,229,255,0.2)',
 
   green: '#72C70D',
   greenDark: '#5a6b08',
@@ -55,15 +55,15 @@ export const C = {
   textMuted: 'rgba(196,220,238,0.68)',
   textDim: 'rgba(149,178,201,0.56)',
 
-  border: 'rgba(20,127,228,0.16)',
-  borderHov: 'rgba(20,127,228,0.28)',
-  borderFaint: 'rgba(20,127,228,0.08)',
+  border: 'rgba(0,229,255,0.16)',
+  borderHov: 'rgba(0,229,255,0.28)',
+  borderFaint: 'rgba(0,229,255,0.08)',
 
   error: '#FF7C8B',
   errorDim: 'rgba(255,124,139,0.14)',
   warning: '#FF8A0B',
   success: '#72C70D',
-  info: '#147FE4',
+  info: '#00E5FF',
 
   overlay: 'rgba(4,10,18,0.8)',
   glass: 'rgba(8,29,57,0.9)',
