@@ -5,16 +5,14 @@ import {
   BarChart3,
   Headphones,
   Lock,
-  MapPinned,
   MousePointerClick,
   Route,
   ShieldCheck,
-  TimerReset,
 } from 'lucide-react';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 import { R, SH } from '../../../utils/wasel-ds';
 import { C, SectionHeader } from '../HomePageShared';
-import type { CorridorCard } from './types';
+import { useLanguage } from '../../../contexts/LanguageContext';
 import { tx } from '../../../locales/tx';
 
 interface SectionNavigationProps {
@@ -22,86 +20,92 @@ interface SectionNavigationProps {
   onNavigate: (path: string, source?: string) => void;
 }
 
-interface OutcomesSectionProps extends SectionNavigationProps {
-  corridorCards: CorridorCard[];
+function getProofMetrics(t: (key: string) => string, ar: boolean) {
+  return [
+    {
+      label: t('conversionSections.proof_metric_core_flows_label'),
+      value: t('conversionSections.proof_metric_core_flows_value'),
+      detail: t('conversionSections.proof_metric_core_flows_detail'),
+      accent: C.cyan,
+    },
+    {
+      label: t('conversionSections.proof_metric_trust_checks_label'),
+      value: t('conversionSections.proof_metric_trust_checks_value'),
+      detail: t('conversionSections.proof_metric_trust_checks_detail'),
+      accent: C.green,
+    },
+    {
+      label: t('conversionSections.proof_metric_ad_resale_label'),
+      value: t('conversionSections.proof_metric_ad_resale_value'),
+      detail: t('conversionSections.proof_metric_ad_resale_detail'),
+      accent: C.gold,
+    },
+    {
+      label: t('conversionSections.proof_metric_ux_signals_label'),
+      value: t('conversionSections.proof_metric_ux_signals_value'),
+      detail: t('conversionSections.proof_metric_ux_signals_detail'),
+      accent: C.blueLight,
+    },
+  ];
 }
 
-const proofMetrics = [
-  {
-    label: 'Core flows',
-    value: '4',
-    detail: 'Rides, driver supply, parcels, and scheduled bus fallback.',
-    accent: C.cyan,
-  },
-  {
-    label: 'Trust checks',
-    value: '5',
-    detail: 'Identity, email, phone, driver documents, and wallet standing.',
-    accent: C.green,
-  },
-  {
-    label: 'Ad resale',
-    value: '0',
-    detail: 'The privacy model is explicit: no advertising resale of user data.',
-    accent: C.gold,
-  },
-  {
-    label: 'UX signals',
-    value: 'Live',
-    detail: 'Web Vitals and funnel events are ready for consent-based iteration.',
-    accent: C.blueLight,
-  },
-] as const;
+function getOnboardingSteps(t: (key: string) => string, ar: boolean) {
+  return [
+    {
+      icon: Route,
+      title: t('conversionSections.onboarding_step_1_title'),
+      detail: t('conversionSections.onboarding_step_1_detail'),
+    },
+    {
+      icon: BarChart3,
+      title: t('conversionSections.onboarding_step_2_title'),
+      detail: t('conversionSections.onboarding_step_2_detail'),
+    },
+    {
+      icon: BadgeCheck,
+      title: t('conversionSections.onboarding_step_3_title'),
+      detail: t('conversionSections.onboarding_step_3_detail'),
+    },
+    {
+      icon: Headphones,
+      title: t('conversionSections.onboarding_step_4_title'),
+      detail: t('conversionSections.onboarding_step_4_detail'),
+    },
+  ];
+}
 
-const proofMetricsAr = [
-  {
-    label: 'التدفقات الأساسية',
-    value: '٤',
-    detail: 'الرحلات، عرض السواقين، الطرود، وبديل الباص المجدول.',
-    accent: C.cyan,
-  },
-  {
-    label: 'فحوصات الثقة',
-    value: '٥',
-    detail: 'الهوية، البريد، الهاتف، وثائق السواق، ووضع المحفظة.',
-    accent: C.green,
-  },
-  {
-    label: 'بيع الإعلانات',
-    value: '٠',
-    detail: 'نموذج الخصوصية واضح: لا نعيد بيع بيانات المستخدمين للإعلانات.',
-    accent: C.gold,
-  },
-  {
-    label: 'إشارات التجربة',
-    value: 'مباشر',
-    detail: 'مؤشرات الويب ومسار التحويل جاهزة للتحسين بعد موافقة المستخدم.',
-    accent: C.blueLight,
-  },
-] as const;
-
-const onboardingSteps = [
-  {
-    icon: Route,
-    title: 'Choose the corridor',
-    detail: 'Start with Amman, Aqaba, Irbid, Zarqa, Dead Sea, Petra, or your saved route.',
-  },
-  {
-    icon: BarChart3,
-    title: 'Compare real options',
-    detail: 'See seat supply, scheduled fallback, route price, and trust context together.',
-  },
-  {
-    icon: BadgeCheck,
-    title: 'Confirm with confidence',
-    detail: 'Book, offer seats, or send a parcel only after the right details are visible.',
-  },
-  {
-    icon: Headphones,
-    title: 'Track and resolve',
-    detail: 'Live tracking, handoff proof, wallet status, and support stay attached.',
-  },
-] as const;
+function getTrustLinks(t: (key: string) => string, ar: boolean) {
+  return [
+    {
+      icon: Lock,
+      title: t('conversionSections.trust_privacy_title'),
+      detail: t('conversionSections.trust_privacy_detail'),
+      path: '/app/privacy',
+      accent: C.cyan,
+    },
+    {
+      icon: ShieldCheck,
+      title: t('conversionSections.trust_security_title'),
+      detail: t('conversionSections.trust_security_detail'),
+      path: '/app/security',
+      accent: C.green,
+    },
+    {
+      icon: BadgeCheck,
+      title: t('conversionSections.trust_terms_title'),
+      detail: t('conversionSections.trust_terms_detail'),
+      path: '/app/terms',
+      accent: C.gold,
+    },
+    {
+      icon: Headphones,
+      title: t('conversionSections.trust_support_title'),
+      detail: t('conversionSections.trust_support_detail'),
+      path: '/app/support',
+      accent: C.blueLight,
+    },
+  ];
+}
 
 const onboardingStepsAr = [
   {
@@ -123,60 +127,6 @@ const onboardingStepsAr = [
     icon: Headphones,
     title: 'تتبع وحل',
     detail: 'التتبع المباشر، إثبات التسليم، حالة المحفظة، والدعم تبقى مرتبطة.',
-  },
-] as const;
-
-const outcomeCards = [
-  {
-    label: 'For riders',
-    title: 'Pay less without guessing',
-    detail: 'Route-level price, seats, and bus fallback help riders choose before committing.',
-    cta: 'Find a route',
-    path: '/find-ride',
-    accent: C.cyan,
-  },
-  {
-    label: 'For drivers',
-    title: 'Turn empty seats into demand',
-    detail: 'Drivers see request context, trust readiness, and route economics in one flow.',
-    cta: 'Offer seats',
-    path: '/offer-ride',
-    accent: C.gold,
-  },
-  {
-    label: 'For parcels',
-    title: 'Move packages with proof',
-    detail: 'Pickup, delivery, tracking, and support are part of the same corridor record.',
-    cta: 'Send a parcel',
-    path: '/packages',
-    accent: C.orange,
-  },
-] as const;
-
-const outcomeCardsAr = [
-  {
-    label: 'للركاب',
-    title: 'ادفع أقل بدون تخمين',
-    detail: 'سعر المسار، المقاعد، وبديل الباص تساعد الراكب يختار قبل الالتزام.',
-    cta: 'ابحث عن مسار',
-    path: '/find-ride',
-    accent: C.cyan,
-  },
-  {
-    label: 'للسواقين',
-    title: 'حوّل المقاعد الفارغة إلى طلب',
-    detail: 'السواق يشوف سياق الطلب، جاهزية الثقة، واقتصاديات المسار في تدفق واحد.',
-    cta: 'اعرض مقاعد',
-    path: '/offer-ride',
-    accent: C.gold,
-  },
-  {
-    label: 'للطرود',
-    title: 'حرّك الطرود بإثبات',
-    detail: 'الاستلام، التسليم، التتبع، والدعم جزء من نفس سجل المسار.',
-    cta: 'أرسل طرد',
-    path: '/packages',
-    accent: C.orange,
   },
 ] as const;
 
@@ -463,169 +413,6 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
         >
           {ar ? 'جرب البداية الموجهة' : 'Try the guided start'}
         </WaselButton>
-      </div>
-    </motion.section>
-  );
-}
-
-export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSectionProps) {
-  const cards = ar ? outcomeCardsAr : outcomeCards;
-
-  return (
-    <motion.section initial={false} className="wasel-home-section">
-      <SectionHeader title={ar ? 'نتائج المنتج' : 'Product outcomes'} icon="O" />
-      <div
-        className="wasel-home-outcome-grid"
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 14 }}
-      >
-        {cards.map(card => (
-          <button
-            type="button"
-            key={card.title}
-            onClick={() =>
-              onNavigate(card.path, `outcome_${card.label.toLowerCase().replace(/\s+/g, '_')}`)
-            }
-            style={{
-              minHeight: 210,
-              display: 'flex',
-              flexDirection: 'column',
-              textAlign: 'left',
-              borderRadius: R.xl,
-              padding: '20px',
-              background: `linear-gradient(180deg, ${C.card}, ${C.elevated})`,
-              border: `1px solid ${card.accent}24`,
-              boxShadow: SH.sm,
-              cursor: 'pointer',
-            }}
-          >
-            <div
-              style={{
-                color: card.accent,
-                fontSize: '0.68rem',
-                fontWeight: 850,
-                letterSpacing: 0,
-                textTransform: 'uppercase',
-              }}
-            >
-              {card.label}
-            </div>
-            <div
-              style={{
-                marginTop: 14,
-                color: C.text,
-                fontSize: '1.08rem',
-                fontWeight: 950,
-                lineHeight: 1.16,
-              }}
-            >
-              {card.title}
-            </div>
-            <div
-              style={{ marginTop: 10, color: C.textMuted, fontSize: '0.83rem', lineHeight: 1.7 }}
-            >
-              {card.detail}
-            </div>
-            <div style={{ marginTop: 'auto', paddingTop: 20 }}>
-              <ArrowCta label={card.cta} accent={card.accent} />
-            </div>
-          </button>
-        ))}
-      </div>
-
-      <div
-        className="wasel-home-outcome-strip"
-        style={{
-          marginTop: 14,
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 0.92fr) minmax(0, 1.08fr)',
-          gap: 14,
-        }}
-      >
-        <div
-          style={{
-            borderRadius: R.xl,
-            padding: '18px 20px',
-            background: C.elevated,
-            border: `1px solid ${C.border}`,
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              color: C.cyan,
-              fontWeight: 850,
-            }}
-          >
-            <TimerReset size={16} />
-            {tx('conversionSections.less_time_coordinating')}
-          </div>
-          <p
-            style={{
-              margin: '10px 0 0',
-              color: C.textMuted,
-              lineHeight: 1.65,
-              fontSize: '0.84rem',
-            }}
-          >
-            {tx(
-              'conversionSections.the_same_route_context_follows_booking_approval_parcel_handoff_tracking_wallet_and_support_that_is_the_operational_outcome_users_actually_feel',
-            )}
-          </p>
-        </div>
-        <div
-          style={{
-            borderRadius: R.xl,
-            padding: '18px 20px',
-            background: C.elevated,
-            border: `1px solid ${C.border}`,
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              color: C.green,
-              fontWeight: 850,
-            }}
-          >
-            <MapPinned size={16} />
-            {tx('conversionSections.live_corridor_focus')}
-          </div>
-          <div
-            style={{
-              marginTop: 12,
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-              gap: 8,
-            }}
-          >
-            {corridorCards.slice(0, 3).map(card => (
-              <button
-                type="button"
-                key={card.key}
-                onClick={() => onNavigate(card.path, 'outcome_corridor')}
-                style={{
-                  minHeight: 72,
-                  textAlign: 'left',
-                  borderRadius: R.lg,
-                  padding: '10px 12px',
-                  background: C.card2,
-                  border: `1px solid ${C.borderFaint}`,
-                  color: C.text,
-                  cursor: 'pointer',
-                }}
-              >
-                <div style={{ fontSize: '0.78rem', fontWeight: 850 }}>{card.title}</div>
-                <div style={{ marginTop: 4, color: C.textMuted, fontSize: '0.68rem' }}>
-                  {card.meta}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </motion.section>
   );
