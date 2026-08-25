@@ -17,7 +17,6 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: {
       fullPage: true,
-      maxDiffPixelRatio: 0.02,
     },
   },
   webServer: {
