@@ -1,43 +1,38 @@
 export const colors = {
-  // Brand
-  primary: '#00E5FF', // Wasel Cyan
-  secondary: '#00FFA3',
+  primary: '#147FE4',
+  secondary: '#72C70D',
 
-  // Neutrals
-  bg: '#050B14',
-  surface: '#0D1B2A',
-  surfaceElevated: '#132A3A',
-  surfaceAlt: '#1E293B',
-  surfaceMuted: '#172032',
-  line: '#334155',
-  lineStrong: '#475569',
+  bg: '#081D39',
+  surface: '#0e2240',
+  surfaceElevated: '#132b4d',
+  surfaceAlt: '#132b4d',
+  surfaceMuted: '#0e2240',
+  line: 'rgba(20,127,228,0.16)',
+  lineStrong: 'rgba(20,127,228,0.28)',
 
-  // Text
-  textPrimary: '#FFFFFF',
-  textSecondary: '#94A3B8',
-  textMuted: '#697586',
-  ink: '#FFFFFF',
-  text: '#E2E8F0',
-  muted: '#94A3B8',
-  navy: '#F6F8FB',
+  textPrimary: '#F8FBFF',
+  textSecondary: 'rgba(248,251,255,0.86)',
+  textMuted: 'rgba(196,220,238,0.68)',
+  ink: '#F8FBFF',
+  text: '#F8FBFF',
+  muted: 'rgba(196,220,238,0.68)',
+  navy: '#081D39',
   charcoal: '#E2E8F0',
 
-  // Brand accents (dark mode palette)
-  cyan: '#22D3EE',
-  teal: '#2DD4BF',
-  green: '#4ADE80',
-  amber: '#FBBF24',
-  blue: '#60A5FA',
-  gold: '#FCD34D',
-  lilac: '#C084FC',
-  rose: '#FDA4AF',
-  red: '#FCA5A5',
+  cyan: '#147FE4',
+  teal: '#58DDFF',
+  green: '#72C70D',
+  amber: '#FF8A0B',
+  blue: '#147FE4',
+  gold: '#FFBE5C',
+  lilac: '#8FA6FF',
+  rose: '#FF7C8B',
+  red: '#FF7C8B',
 
-  // System
-  success: '#22C55E',
-  warning: '#FFB020',
-  error: '#FF4D67',
-  info: '#38BDF8',
+  success: '#72C70D',
+  warning: '#FF8A0B',
+  error: '#FF7C8B',
+  info: '#147FE4',
 };
 
 export const spacing = {

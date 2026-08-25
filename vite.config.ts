@@ -144,6 +144,7 @@ export default defineConfig(({ mode }) => ({
     },
     reportCompressedSize: true,
     chunkSizeWarningLimit: 1200,
+    cssChunk: true,
   },
 
   server: {

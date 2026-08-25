@@ -378,13 +378,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   profileEmail: {
-    color: '#94A3B8',
+    color: 'rgba(196,220,238,0.68)',
     fontSize: 13,
     fontWeight: '700',
     marginTop: 4,
   },
   profileMeta: {
-    color: '#CBD5E1',
+    color: 'rgba(196,220,238,0.86)',
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 20,

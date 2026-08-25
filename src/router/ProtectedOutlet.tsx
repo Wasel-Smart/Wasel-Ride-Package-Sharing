@@ -15,7 +15,7 @@ function LoadingState() {
         minHeight: '60vh',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#CBD5E1',
+        color: 'rgba(196,220,238,0.68)',
         fontFamily: "-apple-system,'Inter',sans-serif",
       }}
     >

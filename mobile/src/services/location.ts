@@ -28,7 +28,14 @@ function isValidApiUrl(url: string): boolean {
     if (parsed.hostname === 'localhost') return true;
     const privateRanges = [/^127\./, /^10\./, /^172\.(1[6-9]|2[0-9]|3[01])\./, /^192\.168\./, /^169\.254\./];
     if (privateRanges.some(p => p.test(parsed.hostname))) return false; // Good: block private IPs
-    return ALLOWED_API_DOMAINS.includes(parsed.hostname); // Better: exact match instead of endsWith
+    // Dot-anchored suffix match: allows real subdomains (xyz.supabase.co,
+    // api.wasel14.online) while still rejecting a hijack like
+    // "evil-supabase.co.attacker.com" (which does not end with ".supabase.co").
+    // A bare `.endsWith(domain)` without the leading dot would wrongly allow
+    // that hijack; a bare exact match wrongly rejects every real subdomain.
+    return ALLOWED_API_DOMAINS.some(
+      domain => parsed.hostname === domain || parsed.hostname.endsWith(`.${domain}`),
+    );
   } catch {
     return false;
   }

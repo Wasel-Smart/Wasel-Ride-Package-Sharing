@@ -41,7 +41,11 @@ function isValidApiUrl(url: string): boolean {
     if (parsed.hostname === 'localhost') return true;
     const privateRanges = [/^127\./, /^10\./, /^172\.(1[6-9]|2[0-9]|3[01])\./, /^192\.168\./, /^169\.254\./];
     if (privateRanges.some(p => p.test(parsed.hostname))) return false;
-    return ALLOWED_API_DOMAINS.some(d => parsed.hostname.endsWith(d));
+    // Dot-anchored suffix match — see the identical helper in location.ts for
+    // why neither a bare exact match nor a bare endsWith is correct here.
+    return ALLOWED_API_DOMAINS.some(
+      d => parsed.hostname === d || parsed.hostname.endsWith(`.${d}`),
+    );
   } catch {
     return false;
   }
@@ -515,6 +519,15 @@ export class OfflineService {
       time: scheduledAt.toISOString().slice(11, 16),
       seats: src.seats,
       notes: src.notes,
+      // Preserve coordinates through the offline→online conversion instead of
+      // dropping them (see the matching fix in ride.ts requestRide).
+      origin_lat: src.origin_lat ?? origin.latitude,
+      origin_lng: src.origin_lng ?? origin.longitude,
+      origin_address: src.origin_address ?? origin.address,
+      dest_lat: src.dest_lat ?? destination.latitude,
+      dest_lng: src.dest_lng ?? destination.longitude,
+      dest_address: src.dest_address ?? destination.address,
+      preferred_vehicle_type: src.preferred_vehicle_type,
     };
   }
 

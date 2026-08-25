@@ -146,8 +146,13 @@ export class MobileAuthService {
   }
 
   async signInWithPhone(phone: string): Promise<{ error?: AuthError }> {
+    const normalized = normalizePhone(phone);
+    if (!isValidE164Phone(normalized)) {
+      return { error: new Error('Please enter a valid phone number.') as AuthError };
+    }
+
     const { error } = await this.supabase.auth.signInWithOtp({
-      phone: normalizePhone(phone),
+      phone: normalized,
     });
 
     return error ? { error } : {};

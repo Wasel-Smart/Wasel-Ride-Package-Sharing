@@ -27,12 +27,8 @@ Every surface — web, mobile, PWA manifest, social previews — should trace ba
 values. If you find a hex code in the wild that isn't one of these (or a documented supporting
 accent from BRAND_GUIDELINES.md), it's drift, not a variant.
 
-## Known cleanup still needed (not done automatically — confirm before deleting)
+## Cleanup status
 
-- `_REMOVED/wasel-premium-logo-v2.png`, `_REMOVED/src-wasellogo.png` — superseded logo exports, no longer referenced anywhere in `src/` or `public/`.
-- `.logo-backup-20260716-132148/` — a dated backup folder from a past logo revision.
-- `public/manifest.json` — appears to be an orphaned duplicate of `public/manifest.webmanifest` (only `manifest.webmanifest` is linked from `index.html`). Its maskable-icon and screenshot entries were fixed for consistency, but the file itself is likely safe to delete once confirmed unused.
-- `_TO_DELETE_BRAND_CLEANUP/public-favicon-svg-1.26MB-orphaned.svg` — was `public/favicon.svg`, a 1.26MB unoptimized SVG never referenced by `index.html` or `manifest.webmanifest` (the real favicon chain is `favicon.ico` / `favicon-32x32.png` / `favicon-16x16.png`, and the correctly-sized 3.23KB favicon already lives at `public/brand/favicon.svg`). Moved here 2026-08-25; confirm and delete.
-
-Once removed, this folder plus `/docs/BRAND_GUIDELINES.md` and `/public/brand/` are the complete,
+Orphaned brand assets, backup folders, and duplicate manifests previously listed here have been
+removed. This folder, `/docs/BRAND_GUIDELINES.md`, and `/public/brand/` are now the complete,
 non-duplicated brand system.

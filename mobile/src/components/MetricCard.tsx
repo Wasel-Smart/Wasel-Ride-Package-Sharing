@@ -16,14 +16,14 @@ export function MetricCard({ label, value }: MetricCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#111827',
-    borderColor: '#334155',
+    backgroundColor: '#0e2240',
+    borderColor: 'rgba(20,127,228,0.16)',
     borderRadius: 16,
     borderWidth: 1,
     padding: 20,
   },
   label: {
-    color: '#94A3B8',
+    color: 'rgba(196,220,238,0.68)',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,

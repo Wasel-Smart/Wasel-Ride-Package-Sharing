@@ -65,7 +65,7 @@ const RateRideScreen = React.memo(function RateRideScreen() {
         <PremiumPanel tone="dark">
           <SectionHeader eyebrow="تقييم النجوم" title="اضغط للتقييم" tone="dark" />
           <View style={styles.stars}>{STARS.map(star => <Pressable accessibilityLabel={`${star} من 5 نجوم`} accessibilityRole="button" accessibilityState={{ selected: star === rating }} key={star} onPress={() => setRating(star)} style={styles.starButton} testID={`rating-star-${star}`}>
-            <Ionicons name={star <= rating ? 'star' : 'star-outline'} size={40} color={star <= rating ? colors.gold : '#94A3B8'} />
+            <Ionicons name={star <= rating ? 'star' : 'star-outline'} size={40} color={star <= rating ? colors.gold : 'rgba(196,220,238,0.35)'} />
           </Pressable>)}</View>
           {rating > 0 ? <StatusPill label={['', 'ضعيف', 'مقبول', 'جيد', 'ممتاز', 'رائع'][rating]} tone={[colors.red, colors.red, colors.amber, colors.blue, colors.teal, colors.green][rating]} icon="star" /> : null}
         </PremiumPanel>

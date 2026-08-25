@@ -62,7 +62,7 @@ class PaymentService {
         .from('payment_methods')
         .select('*')
         .eq('user_id', userId)
-        .eq('deleted_at', null)
+        .is('deleted_at', null)
         .order('is_default', { ascending: false });
 
       if (error) throw error;
