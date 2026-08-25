@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Target } from 'lucide-react';
 import type { CorridorBetaPlan } from '../../../services/corridorBeta';
 import { C, R, SH, TYPE } from '../../../utils/wasel-ds';
+import { useLanguage } from '../../../contexts/LanguageContext';
+import { tx } from '../../../locales/tx';
 
 interface CorridorBetaFocusSectionProps {
   ar: boolean;
@@ -10,22 +12,16 @@ interface CorridorBetaFocusSectionProps {
 }
 
 function stageLabel(stage: CorridorBetaPlan['focusCorridors'][number]['stage'], ar: boolean) {
-  if (stage === 'expand') return ar ? 'جاهز للتوسع' : 'Ready to expand';
-  if (stage === 'prove') return ar ? 'اثبت التكرار' : 'Prove repeat rides';
-  return ar ? 'ضيّق التركيز' : 'Narrow focus';
-}
-
-function stageColor(stage: CorridorBetaPlan['focusCorridors'][number]['stage']) {
-  if (stage === 'expand') return C.green;
-  if (stage === 'prove') return C.gold;
-  return C.cyan;
+  if (stage === 'expand') return ar ? tx('homePage.corridor_beta_ready_to_expand') : tx('homePage.corridor_beta_ready_to_expand');
+  if (stage === 'prove') return ar ? tx('homePage.corridor_beta_prove_repeat') : tx('homePage.corridor_beta_prove_repeat');
+  return ar ? tx('homePage.corridor_beta_narrow_focus') : tx('homePage.corridor_beta_narrow_focus');
 }
 
 function metricLabel(label: string, ar: boolean) {
-  if (label === 'weekly rides') return ar ? 'رحلات أسبوعية' : 'weekly rides';
-  if (label === 'repeat ride rate') return ar ? 'نسبة التكرار' : 'repeat ride rate';
-  if (label === 'supply reliability') return ar ? 'ثبات العرض' : 'supply reliability';
-  return ar ? 'ثبات ثلاث أسابيع' : 'three-week consistency';
+  if (label === 'weekly rides') return ar ? tx('homePage.corridor_beta_rides_week') : tx('homePage.corridor_beta_rides_week');
+  if (label === 'repeat ride rate') return ar ? tx('homePage.corridor_beta_repeat') : tx('homePage.corridor_beta_repeat');
+  if (label === 'supply reliability') return ar ? tx('homePage.corridor_beta_three_week') : tx('homePage.corridor_beta_three_week');
+  return ar ? tx('homePage.corridor_beta_three_week') : tx('homePage.corridor_beta_three_week');
 }
 
 const CITY_LABELS_AR: Record<string, string> = {
@@ -81,6 +77,7 @@ function corridorNextAction(label: string, ar: boolean) {
 }
 
 export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaFocusSectionProps) {
+  const { t } = useLanguage();
   const lead = plan.focusCorridors[0];
 
   return (
@@ -95,7 +92,7 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
           </span>
           <div>
             <h2 className="wasel-home-section-title">
-              {ar ? 'تجربة المسارات المركزة' : 'Corridor beta focus'}
+              {tx('homePage.corridor_beta_focus_title')}
             </h2>
             <p
               style={{
@@ -116,7 +113,7 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
           onClick={() => onNavigate(lead?.path ?? '/find-ride', 'corridor_beta_focus')}
           className="wasel-home-section-action"
         >
-          {ar ? 'ابدأ المسار' : 'Start focus'}
+          {tx('homePage.corridor_beta_focus_action')}
           <ArrowRight size={12} color={C.cyan} />
         </button>
       </div>
@@ -184,30 +181,29 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
               <div
                 style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}
               >
-                <div style={{ padding: 10, borderRadius: R.lg, background: C.elevated }}>
-                  <div
-                    style={{
-                      color: C.textMuted,
-                      fontSize: '0.66rem',
-                      fontWeight: TYPE.weight.semibold,
-                    }}
-                  >
-                    {ar ? 'رحلات/أسبوع' : 'Rides/week'}
-                  </div>
+                 <div
+                   style={{
+                     color: C.textMuted,
+                     fontSize: '0.66rem',
+                     fontWeight: TYPE.weight.semibold,
+                   }}
+                 >
+                   {tx('homePage.corridor_beta_rides_week')}
+                 </div>
                   <div style={{ marginTop: 4, fontWeight: TYPE.weight.black }}>
                     {corridor.weeklyRides}/{corridor.weeklyRideGoal}
                   </div>
                 </div>
-                <div style={{ padding: 10, borderRadius: R.lg, background: C.elevated }}>
-                  <div
-                    style={{
-                      color: C.textMuted,
-                      fontSize: '0.66rem',
-                      fontWeight: TYPE.weight.semibold,
-                    }}
-                  >
-                    {ar ? 'التكرار' : 'Repeat'}
-                  </div>
+                 <div style={{ padding: 10, borderRadius: R.lg, background: C.elevated }}>
+                   <div
+                     style={{
+                       color: C.textMuted,
+                       fontSize: '0.66rem',
+                       fontWeight: TYPE.weight.semibold,
+                     }}
+                   >
+                     {tx('homePage.corridor_beta_repeat')}
+                   </div>
                   <div style={{ marginTop: 4, fontWeight: TYPE.weight.black }}>
                     {Math.round(corridor.repeatRideRate * 100)}%
                   </div>
