@@ -11,8 +11,8 @@ interface WaselLogoProps {
   alt?: string;
 }
 
-const WASEL_SYMBOL_SRC = '/brand/wasel-symbol.png';
-const WASEL_SYMBOL_WEBP = '/brand/wasel-symbol.webp';
+const WASEL_SYMBOL_SRC = '/brand/assets/logos/symbols/symbol-default.png';
+const WASEL_SYMBOL_WEBP = '/brand/assets/logos/symbols/symbol-default.webp';
 const WASEL_SYMBOL_RATIO = 1536 / 1024;
 
 function BrandSymbol({ size, framed = false }: { size: number; framed?: boolean }) {

@@ -1,5 +1,5 @@
 export const colors = {
-  primary: '#147FE4',
+  primary: '#00E5FF',
   secondary: '#72C70D',
 
   bg: '#081D39',
@@ -19,11 +19,11 @@ export const colors = {
   navy: '#081D39',
   charcoal: '#E2E8F0',
 
-  cyan: '#147FE4',
+  cyan: '#00E5FF',
   teal: '#58DDFF',
   green: '#72C70D',
   amber: '#FF8A0B',
-  blue: '#147FE4',
+  blue: '#00E5FF',
   gold: '#FFBE5C',
   lilac: '#8FA6FF',
   rose: '#FF7C8B',
@@ -32,7 +32,7 @@ export const colors = {
   success: '#72C70D',
   warning: '#FF8A0B',
   error: '#FF7C8B',
-  info: '#147FE4',
+  info: '#00E5FF',
 };
 
 export const spacing = {

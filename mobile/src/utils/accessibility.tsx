@@ -14,7 +14,7 @@ export const accessibilityStyles = StyleSheet.create({
   },
   focusRing: {
     borderWidth: 2,
-    borderColor: '#147FE4',
+    borderColor: '#00E5FF',
     borderStyle: 'solid',
   },
   touchTargetMinimum: {
