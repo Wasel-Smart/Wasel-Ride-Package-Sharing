@@ -330,12 +330,21 @@ class AlertingSystem {
 // Export singleton instance
 export const alerting = new AlertingSystem();
 
-// Auto-cleanup old alerts every hour
+// Auto-cleanup old alerts every hour. Stored so it can be cleared on unload.
+let alertingCleanupTimer: ReturnType<typeof setInterval> | null = null;
 if (typeof setInterval !== 'undefined') {
-  setInterval(
+  alertingCleanupTimer = setInterval(
     () => {
       alerting.clearOldAlerts();
     },
     60 * 60 * 1000,
   );
+}
+
+/** Stop the alerting cleanup interval. */
+export function stopAlertingCleanup(): void {
+  if (alertingCleanupTimer !== null) {
+    clearInterval(alertingCleanupTimer);
+    alertingCleanupTimer = null;
+  }
 }

@@ -60,9 +60,18 @@ class MemoryRateLimitStore implements RateLimitStore {
 
 const defaultStore = new MemoryRateLimitStore();
 
-// Cleanup every 5 minutes
+// Cleanup every 5 minutes. Stored so it can be cleared on unload.
+let rateLimitCleanupTimer: ReturnType<typeof setInterval> | null = null;
 if (typeof window !== 'undefined') {
-  setInterval(() => defaultStore.cleanup(), 300000);
+  rateLimitCleanupTimer = setInterval(() => defaultStore.cleanup(), 300000);
+}
+
+/** Stop the rate-limit cleanup interval. */
+export function stopRateLimitCleanup(): void {
+  if (rateLimitCleanupTimer !== null) {
+    clearInterval(rateLimitCleanupTimer);
+    rateLimitCleanupTimer = null;
+  }
 }
 
 export const rateLimitConfigs = {

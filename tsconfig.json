@@ -33,9 +33,6 @@
     "alwaysStrict": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
-    "types": [
-      "node"
-    ],
     "paths": {
       "@/*": [
         "./src/*"
