@@ -26,24 +26,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: yarn
+          cache: npm
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Verify repository quality
-        run: yarn verify:ci
+        run: npm run verify:ci
 
       - name: Brand consistency check
-        run: yarn brand:check
+        run: npm run brand:check
 
       - name: Brand asset sync
-        run: yarn brand:sync
+        run: npm run brand:sync
 
       - name: Audit production dependencies
-        # Yarn v1 doesn't have a direct equivalent to `npm audit --omit=dev`
-        # Using `yarn audit` is the closest alternative.
-        run: yarn audit
+        run: npm audit --omit=dev
 
       - name: Verify service worker syntax
         run: node --check public/sw.js
@@ -52,10 +50,10 @@ jobs:
         run: node scripts/check-env-exposure.mjs
 
       - name: Build production bundle
-        run: yarn build
+        run: npm run build
 
       - name: Start preview server
-        run: yarn preview &
+        run: npm run preview &
       - name: Wait for preview server
         run: npx wait-on http://127.0.0.1:4173 -t 30000
 
@@ -63,7 +61,7 @@ jobs:
         run: npx lhci collect --url=http://127.0.0.1:4173/ --numberOfRuns=1 --assert
 
       - name: Run bundle-size analysis
-        run: yarn bundle:analyze
+        run: npm run bundle:analyze
 
       - name: Upload bundle analysis report
         if: always()
@@ -86,10 +84,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: yarn
+          cache: npm
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
@@ -97,7 +95,7 @@ jobs:
       - name: Run browser verification
         env:
           PLAYWRIGHT_USE_DEMO_DATA: 'true'
-        run: yarn test:e2e
+        run: npm run test:e2e
 
       - name: Upload Playwright report
         if: always()
@@ -119,20 +117,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: yarn
-          cache-dependency-path: mobile/yarn.lock
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
 
       - name: Install mobile dependencies
         working-directory: mobile
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Verify mobile quality
         working-directory: mobile
-        run: yarn type-check && yarn lint && yarn test --runInBand --coverage
+        run: npm run type-check && npm run lint && npm test -- --runInBand --coverage
 
       - name: Verify mobile release bundle
         working-directory: mobile
-        run: yarn build
+        run: npm run build
 
       - name: Upload mobile coverage
         if: always()
