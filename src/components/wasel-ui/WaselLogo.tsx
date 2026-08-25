@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { C } from '@/utils/wasel-ds';
+import { symbolPath } from '@/utils/brand-assets';
 
 interface WaselLogoProps {
   size?: number;
@@ -13,21 +14,11 @@ interface WaselLogoProps {
 
 const SYMBOL_RATIO = 1536 / 1024;
 
-function getSymbolSrc(theme: 'dark' | 'light', format: 'webp' | 'png'): string {
-  const variant = theme === 'light' ? 'symbol-default' : 'symbol-default';
-  return `/brand/assets/logos/symbols/${variant}.${format}`;
-}
-
-function getWordmarkSrc(theme: 'dark' | 'light'): string {
-  const variant = theme === 'light' ? 'logo-light' : 'logo-dark';
-  return `/brand/assets/logos/primary/${variant}.svg`;
-}
-
 function BrandSymbol({ size, theme = 'dark', framed = false }: { size: number; theme?: 'dark' | 'light'; framed?: boolean }) {
   const width = Math.round(size * SYMBOL_RATIO);
   const height = Math.round(size);
-  const webpSrc = getSymbolSrc(theme, 'webp');
-  const pngSrc = getSymbolSrc(theme, 'png');
+  const webpSrc = symbolPath('default', 'webp');
+  const pngSrc = symbolPath('default', 'png');
 
   return (
     <picture>
