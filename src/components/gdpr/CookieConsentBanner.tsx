@@ -2,15 +2,19 @@
  * GDPR Cookie Consent Banner
  */
 
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { WaselButton } from '@/components/wasel-ui/WaselButton';
 import { safeStorageGetItem, safeStorageSetItem } from '@/utils/browserStorage';
 import { tx } from '../../locales/tx';
 
 const CONSENT_KEY = 'wasel_cookie_consent';
 
+const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function CookieConsentBanner() {
   const [showBanner, setShowBanner] = useState(false);
+  const bannerRef = useRef<HTMLDivElement | null>(null);
+  const acceptRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     const consent = safeStorageGetItem('localStorage', CONSENT_KEY);
@@ -19,7 +23,7 @@ export function CookieConsentBanner() {
     }
   }, []);
 
-  const handleAccept = () => {
+  const handleAccept = useCallback(() => {
     safeStorageSetItem(
       'localStorage',
       CONSENT_KEY,
@@ -30,9 +34,9 @@ export function CookieConsentBanner() {
       }),
     );
     setShowBanner(false);
-  };
+  }, []);
 
-  const handleDecline = () => {
+  const handleDecline = useCallback(() => {
     safeStorageSetItem(
       'localStorage',
       CONSENT_KEY,
@@ -43,12 +47,55 @@ export function CookieConsentBanner() {
       }),
     );
     setShowBanner(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!showBanner) return;
+    acceptRef.current?.focus();
+  }, [showBanner]);
+
+  useEffect(() => {
+    if (!showBanner) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        handleDecline();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const banner = bannerRef.current;
+      if (!banner) return;
+
+      const focusable = Array.from(banner.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey) {
+        if (document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [showBanner, handleDecline]);
 
   if (!showBanner) return null;
 
   return (
     <div
+      ref={bannerRef}
       style={{
         position: 'fixed',
         bottom: 0,
@@ -88,7 +135,7 @@ export function CookieConsentBanner() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <Button
+          <WaselButton
             onClick={handleDecline}
             variant="outline"
             style={{
@@ -97,8 +144,9 @@ export function CookieConsentBanner() {
             }}
           >
             {tx('cookieConsentBanner.decline')}
-          </Button>
-          <Button
+          </WaselButton>
+          <WaselButton
+            ref={acceptRef}
             onClick={handleAccept}
             style={{
               background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 100%)',
@@ -106,7 +154,7 @@ export function CookieConsentBanner() {
             }}
           >
             {tx('cookieConsentBanner.accept')}
-          </Button>
+          </WaselButton>
         </div>
       </div>
     </div>
