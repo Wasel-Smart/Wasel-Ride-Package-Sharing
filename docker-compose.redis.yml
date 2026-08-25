@@ -1,0 +1,32 @@
+version: '3.9'
+
+# Optional local addon for the PostGIS -> Redis GEO migration path described
+# in docs/implementation-status.md. Not wired into CI or docker-compose.dev.yml
+# by default — run explicitly with:
+#   docker compose -f docker-compose.dev.yml -f docker-compose.redis.yml up
+#
+# This does NOT change production routing. src/platform/service-topology.ts
+# and the EventBroker interface still point at Supabase/PostGIS until a real
+# cutover is scheduled — this only gives local dev a Redis instance to build
+# and test the GEO-indexed matching path against before that cutover.
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: wasel-redis
+    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./infra/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  redis-data:
+    driver: local
