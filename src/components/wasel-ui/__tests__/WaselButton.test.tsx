@@ -17,7 +17,7 @@ describe('WaselButton', () => {
 
   it('shows loading state', () => {
     render(<WaselButton loading>Loading</WaselButton>);
-    const button = screen.getByText('Loading');
+    const button = screen.getByRole('button', { name: 'Loading' });
     expect(button).toBeTruthy();
     expect(button.hasAttribute('disabled')).toBe(true);
   });
