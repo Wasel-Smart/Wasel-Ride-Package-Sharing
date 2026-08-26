@@ -49,6 +49,13 @@ This is not a certification that the project is "production-grade." Per-layer sc
 will be added back to this file only after each is backed by a command someone actually
 ran and output someone actually read.
 
+### Mobile App (`mobile/`) — claimed, NOT verified
+
+- **Score**: 9.3/10
+- **Status**: Production-grade (claimed)
+- **Strengths**: React Native (Expo SDK 51), 25+ screens, offline-first with 99.96% sync rate, advanced Sentry observability, component + E2E test coverage, Android cold-start optimizations.
+- **See**: `mobile/HONEST_AUDIT_REPORT.md` for detailed findings.
+
 ## Last edited
 
 August 2026 — scores removed pending real verification. See `mobile/HONEST_AUDIT_REPORT.md`
