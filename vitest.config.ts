@@ -12,12 +12,10 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
 
-  resolve: {
-    alias: [
-      { find: '@', replacement: path.resolve(__dirname, './src') },
-      { find: '$deno', replacement: path.resolve(__dirname, './supabase/functions') },
-    ],
-  },
+  resolve: [
+    { find: '@', replacement: path.resolve(__dirname, './src') },
+    { find: '$deno', replacement: path.resolve(__dirname, './supabase/functions') },
+  ],
 
   test: {
     globals: true,
@@ -46,12 +44,31 @@ export default defineConfig({
       '**/mobile/**',
       '**/*.spec.ts',
       'tests/database/**',
-      'tests/integration/**',
       'tests/utils/pricing/**',
       'src/services/Button.test.tsx',
     ],
     env: {
       VITE_EVENT_BROKER: 'memory',
+    },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.d.ts',
+        'src/**/*.test.{ts,tsx}',
+        'src/**/__tests__/**',
+        'src/main.tsx',
+        'src/App.tsx',
+        'src/vite-env.d.ts',
+        'src/mobilityGraph.ts',
+      ],
+      thresholds: {
+        branches: 70,
+        functions: 75,
+        lines: 80,
+        statements: 80,
+      },
     },
   },
 });

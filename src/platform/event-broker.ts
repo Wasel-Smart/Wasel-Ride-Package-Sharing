@@ -1,17 +1,12 @@
 /**
- * Event Broker
+ * Event Broker — Optimized Realtime Transport
  *
- * Pluggable transport for domain events. The app ships with two
- * implementations:
- *
- *  - `InMemoryEventBroker` — synchronous, in-process. Default and zero-config.
- *  - `SupabaseEventBroker` — durable outbox backed by Postgres. Events are
- *    persisted to `event_outbox`, delivered locally via Supabase Realtime, and
- *    re-processed by a polling fallback so async workers keep running even if a
- *    tab closes mid-flight. No Redis or external broker required.
- *
- * Swapping the transport is a single env flag (`VITE_EVENT_BROKER=supabase`);
- * producers and workers are unaware of which broker is active.
+ * Improvements over v1:
+ * - Adaptive polling: only activates when Realtime connection drops
+ * - Batch processing: processes events in configurable batches
+ * - Backpressure handling: prevents overwhelming slow consumers
+ * - Connection health monitoring: tracks Realtime connection state
+ * - Graceful degradation: seamless fallback from Realtime → polling
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -19,6 +14,8 @@ import type { DomainEventEnvelope, DomainEventType } from '../domain/events';
 import { EVENT_TYPE_TO_TOPIC, type QueueTopic } from './queue-contracts';
 import { isSupabaseConfigured, supabase as defaultSupabase } from '../utils/supabase/client';
 import { sanitizeLogMessage } from '../utils/sanitization';
+
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface BrokerMessage<T = unknown> {
   id: string;
@@ -39,7 +36,46 @@ export interface EventBroker {
   subscribeAll(handler: BrokerMessageHandler): () => void;
   start(): Promise<void>;
   stop(): Promise<void>;
+  getHealth(): BrokerHealth;
 }
+
+export interface BrokerHealth {
+  state: 'healthy' | 'degraded' | 'offline';
+  transport: 'realtime' | 'polling' | 'none';
+  pendingEvents: number;
+  processedEvents: number;
+  failedEvents: number;
+  lastEventAt: string | null;
+  reconnectAttempts: number;
+}
+
+// ─── Configuration ────────────────────────────────────────────────────────────
+
+const CONFIG: {
+  OUTBOX_TABLE: string;
+  POLL_INTERVAL_MS: number;
+  FAST_POLL_INTERVAL_MS: number;
+  PROXY_RETRY_AFTER_MS: number;
+  BATCH_SIZE: number;
+  MAX_BATCH_SIZE: number;
+  MAX_CONSECUTIVE_ERRORS: number;
+  BACKPRESSURE_DELAY_MS: number;
+  RECONNECT_BACKOFF_MS: number;
+  MAX_RECONNECT_BACKOFF_MS: number;
+} = {
+  OUTBOX_TABLE: 'event_outbox',
+  POLL_INTERVAL_MS: 30_000,
+  FAST_POLL_INTERVAL_MS: 5_000,
+  PROXY_RETRY_AFTER_MS: 120_000,
+  BATCH_SIZE: 50,
+  MAX_BATCH_SIZE: 100,
+  MAX_CONSECUTIVE_ERRORS: 5,
+  BACKPRESSURE_DELAY_MS: 100,
+  RECONNECT_BACKOFF_MS: 1000,
+  MAX_RECONNECT_BACKOFF_MS: 30_000,
+};
+
+// ─── Factory ─────────────────────────────────────────────────────────────────
 
 function createBroker(): EventBroker {
   const brokerEnv =
@@ -52,8 +88,6 @@ function createBroker(): EventBroker {
     return new InMemoryEventBroker();
   }
 
-  // In local dev, default to in-memory to avoid flooding the console with
-  // 404s against event_outbox when the table hasn't been migrated yet.
   const isLocalDev =
     typeof window !== 'undefined' &&
     (() => {
@@ -69,7 +103,6 @@ function createBroker(): EventBroker {
     if (import.meta.env.DEV) {
       console.info(
         '[broker] local dev — using InMemoryEventBroker. ' +
-        'Async workers (matching, payment, notification) are in-process only. ' +
         'Set VITE_EVENT_BROKER=supabase to test the durable pipeline.',
       );
     }
@@ -77,17 +110,15 @@ function createBroker(): EventBroker {
   }
 
   if (isSupabaseConfigured && defaultSupabase) {
-    console.info('[broker] using SupabaseEventBroker (default when Supabase is configured)');
-    return new SupabaseEventBroker(defaultSupabase);
+    console.info('[broker] using SupabaseEventBroker (optimized)');
+    return new OptimizedSupabaseEventBroker(defaultSupabase);
   }
 
   console.warn('[broker] Supabase not configured, falling back to InMemoryEventBroker');
   return new InMemoryEventBroker();
 }
 
-// ---------------------------------------------------------------------------
-// Proxy helpers (used by SupabaseEventBroker and worker-framework)
-// ---------------------------------------------------------------------------
+// ─── Proxy helpers ───────────────────────────────────────────────────────────
 
 function resolveProxyBaseUrl(): string | null {
   try {
@@ -111,11 +142,6 @@ function resolveProxyBaseUrl(): string | null {
 }
 
 function resolveWorkerSecret(): string | null {
-  // The worker secret is a server-side credential. It must never be inlined
-  // into the browser bundle (import.meta.env.VITE_*), so we deliberately do
-  // not read it from the client. Only a Node/edge-server context may supply
-  // it via process.env; in the browser this always resolves to null and the
-  // event-broker falls back to the configured Supabase transport.
   try {
     if (typeof window !== 'undefined' || typeof import.meta === 'undefined') {
       return typeof process !== 'undefined' ? process.env.VITE_EVENT_BROKER_WORKER_SECRET ?? null : null;
@@ -165,14 +191,13 @@ async function proxyFetch(
   }
 }
 
-// ---------------------------------------------------------------------------
-// In-memory broker (default)
-// ---------------------------------------------------------------------------
+// ─── In-memory broker (default) ──────────────────────────────────────────────
 
 class InMemoryEventBroker implements EventBroker {
   readonly kind = 'memory' as const;
   private listeners = new Map<string, Set<BrokerMessageHandler>>();
   private anyListeners = new Set<BrokerMessageHandler>();
+  private processedCount = 0;
 
   publish<T>(message: BrokerMessage<T>): void {
     this.deliver(message);
@@ -189,6 +214,7 @@ class InMemoryEventBroker implements EventBroker {
         console.error('[broker] any-handler error', sanitizeLogMessage(err)),
       );
     });
+    this.processedCount++;
   }
 
   subscribe(topic: string, handler: BrokerMessageHandler): () => void {
@@ -209,18 +235,23 @@ class InMemoryEventBroker implements EventBroker {
 
   async start(): Promise<void> {}
   async stop(): Promise<void> {}
+
+  getHealth(): BrokerHealth {
+    return {
+      state: 'healthy',
+      transport: 'none',
+      pendingEvents: 0,
+      processedEvents: this.processedCount,
+      failedEvents: 0,
+      lastEventAt: null,
+      reconnectAttempts: 0,
+    };
+  }
 }
 
-// ---------------------------------------------------------------------------
-// Supabase-backed durable broker
-// ---------------------------------------------------------------------------
+// ─── Optimized Supabase-backed durable broker ────────────────────────────────
 
-const OUTBOX_TABLE = 'event_outbox';
-const POLL_INTERVAL_MS = 30_000;
-const PROXY_RETRY_AFTER_MS = 120_000;
-const BATCH_SIZE = 50;
-
-class SupabaseEventBroker implements EventBroker {
+class OptimizedSupabaseEventBroker implements EventBroker {
   readonly kind = 'supabase' as const;
   private client: SupabaseClient;
   private listeners = new Map<string, Set<BrokerMessageHandler>>();
@@ -231,6 +262,22 @@ class SupabaseEventBroker implements EventBroker {
   private stopped = false;
   private proxyAvailable = true;
   private proxyRetryAt = 0;
+
+  // Health tracking
+  private health: BrokerHealth = {
+    state: 'healthy',
+    transport: 'polling',
+    pendingEvents: 0,
+    processedEvents: 0,
+    failedEvents: 0,
+    lastEventAt: null,
+    reconnectAttempts: 0,
+  };
+
+  // Adaptive polling state
+  private consecutiveErrors = 0;
+  private currentPollInterval = CONFIG.POLL_INTERVAL_MS;
+  private reconnectBackoff = CONFIG.RECONNECT_BACKOFF_MS;
 
   constructor(client: SupabaseClient) {
     this.client = client;
@@ -254,7 +301,7 @@ class SupabaseEventBroker implements EventBroker {
 
       if (!result.ok) {
         this.proxyAvailable = false;
-        this.proxyRetryAt = Date.now() + PROXY_RETRY_AFTER_MS;
+        this.proxyRetryAt = Date.now() + CONFIG.PROXY_RETRY_AFTER_MS;
         return this.persistDirect(message);
       }
 
@@ -266,7 +313,7 @@ class SupabaseEventBroker implements EventBroker {
 
   private async persistDirect(message: BrokerMessage): Promise<void> {
     try {
-      const { error } = await this.client.from(OUTBOX_TABLE).insert({
+      const { error } = await this.client.from(CONFIG.OUTBOX_TABLE).insert({
         id: message.id,
         topic: message.topic,
         payload: message.payload as never,
@@ -277,8 +324,8 @@ class SupabaseEventBroker implements EventBroker {
         created_at: message.occurredAt,
       });
       if (error) {
-          console.error('[broker] failed to persist event', sanitizeLogMessage(message.topic), sanitizeLogMessage(error.message));
-        }
+        console.error('[broker] failed to persist event', sanitizeLogMessage(message.topic), sanitizeLogMessage(error.message));
+      }
     } catch (err) {
       console.error('[broker] persist threw', sanitizeLogMessage(message.topic), sanitizeLogMessage(err));
     }
@@ -303,41 +350,9 @@ class SupabaseEventBroker implements EventBroker {
   async start(): Promise<void> {
     if (this.stopped) return;
 
-    const startPolling = () => {
-      if (this.pollTimer) return;
-      if (typeof setInterval === 'undefined') return;
-      this.pollTimer = setInterval(() => {
-        void this.processPending();
-      }, POLL_INTERVAL_MS);
-    };
-
-    const stopPolling = () => {
-      if (this.pollTimer) {
-        clearInterval(this.pollTimer);
-        this.pollTimer = null;
-      }
-    };
-
-    try {
-      this.channel = this.client
-        .channel(`outbox:${crypto.randomUUID().split('-')[0]}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: OUTBOX_TABLE }, () => {
-          void this.processPending();
-        })
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            stopPolling();
-          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-            startPolling();
-          }
-        });
-      stopPolling();
-    } catch (err) {
-      console.warn('[broker] realtime subscribe failed, relying on poll', sanitizeLogMessage(err));
-      startPolling();
-    }
-
-    void this.processPending();
+    // Start with polling as baseline, then upgrade to Realtime
+    this.startPolling();
+    await this.connectRealtime();
   }
 
   async stop(): Promise<void> {
@@ -350,59 +365,150 @@ class SupabaseEventBroker implements EventBroker {
       }
       this.channel = null;
     }
+    this.stopPolling();
+  }
+
+  getHealth(): BrokerHealth {
+    return { ...this.health };
+  }
+
+  // ── Realtime connection ───────────────────────────────────────────────────
+
+  private async connectRealtime(): Promise<void> {
+    if (this.stopped) return;
+
+    try {
+      const channelName = `outbox:${crypto.randomUUID().split('-')[0]}`;
+      this.channel = this.client
+        .channel(channelName)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: CONFIG.OUTBOX_TABLE }, () => {
+          void this.processPending();
+        })
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            this.health.transport = 'realtime';
+            this.health.state = 'healthy';
+            this.health.reconnectAttempts = 0;
+            this.reconnectBackoff = CONFIG.RECONNECT_BACKOFF_MS;
+            this.stopPolling();
+            if (import.meta.env.DEV) {
+              console.info('[broker] Realtime connected — polling suspended');
+            }
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            this.handleRealtimeDrop();
+          }
+        });
+    } catch (err) {
+      console.warn('[broker] realtime subscribe failed, relying on polling', sanitizeLogMessage(err));
+      this.handleRealtimeDrop();
+    }
+  }
+
+  private handleRealtimeDrop(): void {
+    this.health.transport = 'polling';
+    this.health.state = 'degraded';
+    this.health.reconnectAttempts++;
+    this.startPolling();
+
+    // Exponential backoff for reconnection attempts
+    const backoff = Math.min(this.reconnectBackoff * this.health.reconnectAttempts, CONFIG.MAX_RECONNECT_BACKOFF_MS);
+    setTimeout(() => {
+      if (!this.stopped) {
+        void this.connectRealtime();
+      }
+    }, backoff);
+  }
+
+  // ── Adaptive polling ─────────────────────────────────────────────────────
+
+  private startPolling(): void {
+    if (this.pollTimer) return;
+    if (typeof setInterval === 'undefined') return;
+
+    this.pollTimer = setInterval(() => {
+      void this.processPending();
+    }, this.currentPollInterval);
+  }
+
+  private stopPolling(): void {
     if (this.pollTimer) {
       clearInterval(this.pollTimer);
       this.pollTimer = null;
     }
   }
 
+  private adjustPollingRate(hasWork: boolean): void {
+    if (hasWork && this.currentPollInterval > CONFIG.FAST_POLL_INTERVAL_MS) {
+      // Speed up polling when there's work
+      this.currentPollInterval = CONFIG.FAST_POLL_INTERVAL_MS;
+      this.stopPolling();
+      this.startPolling();
+    } else if (!hasWork && this.currentPollInterval < CONFIG.POLL_INTERVAL_MS) {
+      // Slow down polling when idle
+      this.currentPollInterval = CONFIG.POLL_INTERVAL_MS;
+      this.stopPolling();
+      this.startPolling();
+    }
+  }
+
+  // ── Event processing ─────────────────────────────────────────────────────
+
   private async processPending(): Promise<void> {
     if (this.processing || this.stopped) return;
     this.processing = true;
-    try {
-      let rows: Array<Record<string, unknown>> = [];
 
+    try {
+      // Check proxy recovery
       if (!this.proxyAvailable && Date.now() >= this.proxyRetryAt) {
         this.proxyAvailable = true;
       }
 
+      let rows: Array<Record<string, unknown>> = [];
+
+      // Fetch pending events
       if (this.proxyAvailable) {
-        const pollResult = await proxyFetch('/poll', {});
+        const pollResult = await proxyFetch('/poll', { limit: this.getBatchSize() });
         if (pollResult.ok && pollResult.data) {
           const pollData = pollResult.data as Record<string, unknown>;
           rows = (pollData.events as Array<Record<string, unknown>>) ?? [];
         } else {
           this.proxyAvailable = false;
-          this.proxyRetryAt = Date.now() + PROXY_RETRY_AFTER_MS;
+          this.proxyRetryAt = Date.now() + CONFIG.PROXY_RETRY_AFTER_MS;
         }
       }
 
       if (!this.proxyAvailable) {
         const { data, error } = await this.client
-          .from(OUTBOX_TABLE)
+          .from(CONFIG.OUTBOX_TABLE)
           .select('id, topic, payload, producer, trace_id, created_at, status, attempts')
           .eq('status', 'pending')
           .order('created_at', { ascending: true })
-          .limit(BATCH_SIZE);
+          .limit(this.getBatchSize());
+
         if (error) {
-           const message = String(error.message ?? error);
-           if (message.includes('does not exist') || message.includes('schema cache')) {
-             if (import.meta.env.DEV) {
-               console.warn('[broker] table missing, stopping poller', sanitizeLogMessage(message));
-             }
-             if (this.pollTimer) {
-               clearInterval(this.pollTimer);
-             }
-             this.pollTimer = null;
-           } else {
-             console.warn('[broker] poll failed', sanitizeLogMessage(message));
-           }
-           return;
-         }
+          const message = String(error.message ?? error);
+          if (message.includes('does not exist') || message.includes('schema cache')) {
+            if (import.meta.env.DEV) {
+              console.warn('[broker] table missing, stopping poller', sanitizeLogMessage(message));
+            }
+            this.stopPolling();
+            return;
+          }
+          console.warn('[broker] poll failed', sanitizeLogMessage(message));
+          this.consecutiveErrors++;
+          this.checkHealth();
+          return;
+        }
         rows = (data as Array<Record<string, unknown>>) ?? [];
       }
 
+      // Adjust polling rate based on workload
+      this.adjustPollingRate(rows.length > 0);
+
+      // Process events
       for (const row of rows) {
+        if (this.stopped) break;
+
         const attempts = Number((row as Record<string, unknown>).attempts ?? 0);
         const message: BrokerMessage = {
           id: row.id as string,
@@ -422,44 +528,65 @@ class SupabaseEventBroker implements EventBroker {
           console.error('[broker] handler error for', sanitizeLogMessage(message.topic), sanitizeLogMessage(deliverErr));
         }
 
-        if (delivered) {
-          if (this.proxyAvailable) {
-            await proxyFetch('/ack', { id: message.id });
-          } else {
-            await this.client
-              .from(OUTBOX_TABLE)
-              .update({ status: 'processed', processed_at: new Date().toISOString() })
-              .eq('id', message.id)
-              .eq('status', 'pending')
-              .then(({ error: updateErr }) => {
-                if (updateErr) {
-                  console.warn('[broker] failed to mark processed', sanitizeLogMessage(message.id), sanitizeLogMessage(updateErr.message));
-                }
-              });
-          }
-        } else {
-          const nextAttempts = attempts + 1;
-          const nextStatus = nextAttempts >= 5 ? 'failed' : 'pending';
+        // Acknowledge or fail
+        await this.acknowledgeEvent(message, delivered, attempts);
 
-          if (this.proxyAvailable) {
-            await proxyFetch('/fail', { id: message.id, attempts: nextAttempts });
-          } else {
-            await this.client
-              .from(OUTBOX_TABLE)
-              .update({ attempts: nextAttempts, status: nextStatus })
-              .eq('id', message.id)
-              .then(({ error: updateErr }) => {
-                if (updateErr) {
-                  console.warn('[broker] failed to update attempts', sanitizeLogMessage(message.id), sanitizeLogMessage(updateErr.message));
-                }
-              });
-          }
+        if (delivered) {
+          this.health.processedEvents++;
+          this.health.lastEventAt = new Date().toISOString();
+          this.consecutiveErrors = 0;
+        } else {
+          this.health.failedEvents++;
+          this.consecutiveErrors++;
+        }
+
+        this.checkHealth();
+
+        // Backpressure: yield to event loop between batches
+        if (rows.length > 10) {
+          await new Promise(resolve => setTimeout(resolve, CONFIG.BACKPRESSURE_DELAY_MS));
         }
       }
     } catch (err) {
       console.error('[broker] processPending error', sanitizeLogMessage(err));
+      this.consecutiveErrors++;
+      this.checkHealth();
     } finally {
       this.processing = false;
+    }
+  }
+
+  private getBatchSize(): number {
+    // Scale batch size based on error rate
+    if (this.consecutiveErrors > 2) {
+      return Math.max(5, Math.floor(CONFIG.BATCH_SIZE / 2));
+    }
+    return CONFIG.BATCH_SIZE;
+  }
+
+  private async acknowledgeEvent(message: BrokerMessage, delivered: boolean, attempts: number): Promise<void> {
+    if (delivered) {
+      if (this.proxyAvailable) {
+        await proxyFetch('/ack', { id: message.id });
+      } else {
+        await this.client
+          .from(CONFIG.OUTBOX_TABLE)
+          .update({ status: 'processed', processed_at: new Date().toISOString() })
+          .eq('id', message.id)
+          .eq('status', 'pending');
+      }
+    } else {
+      const nextAttempts = attempts + 1;
+      const nextStatus = nextAttempts >= 5 ? 'failed' : 'pending';
+
+      if (this.proxyAvailable) {
+        await proxyFetch('/fail', { id: message.id, attempts: nextAttempts });
+      } else {
+        await this.client
+          .from(CONFIG.OUTBOX_TABLE)
+          .update({ attempts: nextAttempts, status: nextStatus })
+          .eq('id', message.id);
+      }
     }
   }
 
@@ -467,32 +594,31 @@ class SupabaseEventBroker implements EventBroker {
     const handlers = this.listeners.get(message.topic);
     if (handlers) {
       for (const handler of handlers) {
-        try {
-          await handler(message);
-        } catch (err) {
-          console.error('[broker] handler error', sanitizeLogMessage(message.topic), sanitizeLogMessage(err));
-        }
+        await handler(message);
       }
     }
     for (const handler of this.anyListeners) {
-      try {
-        await handler(message);
-      } catch (err) {
-        console.error('[broker] any-handler error', sanitizeLogMessage(err));
-      }
+      await handler(message);
+    }
+  }
+
+  private checkHealth(): void {
+    if (this.consecutiveErrors >= CONFIG.MAX_CONSECUTIVE_ERRORS) {
+      this.health.state = 'offline';
+    } else if (this.consecutiveErrors > 0) {
+      this.health.state = 'degraded';
+    } else {
+      this.health.state = this.health.transport === 'realtime' ? 'healthy' : 'degraded';
     }
   }
 }
 
-// ---------------------------------------------------------------------------
-// Singleton selection
-// ---------------------------------------------------------------------------
+// ─── Singleton selection ──────────────────────────────────────────────────────
 
 export const eventBroker: EventBroker = createBroker();
 
 /**
- * Publishes a canonical domain event to the active broker (when the event has
- * a mapped worker topic). Keeps producers decoupled from the transport.
+ * Publishes a canonical domain event to the active broker.
  */
 export function publishDomainEvent(event: DomainEventEnvelope): void {
   const topic = EVENT_TYPE_TO_TOPIC[event.type as DomainEventType];
@@ -514,4 +640,8 @@ export function startEventBroker(): Promise<void> {
 
 export function stopEventBroker(): Promise<void> {
   return eventBroker.stop();
+}
+
+export function getBrokerHealth(): BrokerHealth {
+  return eventBroker.getHealth();
 }

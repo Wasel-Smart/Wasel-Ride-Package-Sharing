@@ -1,25 +1,67 @@
-# Testing Guide
+# Testing
 
-## Test layers
+Wasel uses a three-layer testing strategy:
 
-- `npm run test:unit`: unit and service tests with Vitest
-- `npm run test:e2e`: Playwright browser verification
-- `npm run verify:contracts`: OpenAPI and infrastructure contract validation
-- `npm run verify:ci`: type-check, lint, unit tests, and production build
-- `npm run verify`: full local gate including Playwright
-- `npm run test:load:smoke`: k6 smoke profile for high-level latency checks
+| Layer | Tool | Purpose | Command |
+|-------|------|---------|---------|
+| Unit | Vitest | Pure functions, utilities, domain logic | `npm run test:unit` |
+| Integration | Vitest | Service contracts, data flow | `npm run test:unit -- tests/integration` |
+| E2E | Playwright | User journeys, browser verification | `npm run test:e2e` |
+| Load | k6 | Performance under load | `npm run test:load:smoke` |
 
-## Expectations
+## Coverage Requirements
 
-1. New business logic should include a unit or service test.
-2. Route regressions should be covered by Playwright when feasible.
-3. Fixes for production defects should come with a regression test whenever practical.
-4. Infra and contract changes should keep `npm run verify:contracts` green.
-5. Environment examples, topology overlays, and worker manifests are treated as contract assets and validated in CI.
+```
+Branches:  70%
+Functions: 75%
+Lines:     80%
+Statements: 80%
+```
 
-## Common troubleshooting
+Run with coverage: `npm run test:coverage`
 
-- If auth-related tests fail, verify Supabase mocks cover the current callback flow.
-- If environment-sensitive tests fail, stub the relevant `VITE_*` values explicitly inside the test.
-- If Playwright tests fail locally, confirm the dev server can start cleanly before re-running the suite.
-- If contract validation fails, inspect `docs/openapi` and `infra/` for missing or renamed required assets.
+## Writing Tests
+
+```typescript
+import { describe, it, expect, vi } from 'vitest';
+
+describe('feature: featureName', () => {
+  it('handles normal case', () => {
+    expect(fn('input')).toBe('output');
+  });
+
+  it('handles edge case', () => {
+    expect(fn('')).toBe('');
+  });
+
+  it('throws on invalid input', () => {
+    expect(() => fn(null)).toThrow();
+  });
+});
+```
+
+## Test File Organization
+
+```
+tests/
+  unit/          # Unit tests for pure logic
+  integration/   # Service integration tests
+  e2e/           # Playwright browser tests
+  load/          # k6 performance tests
+  utils/         # Test utilities and helpers
+```
+
+## Mocking
+
+Global mocks are in `tests/setup.ts`:
+- Web Crypto API
+- localStorage/sessionStorage
+- requestIdleCallback
+
+Mock services using `vi.mock()`:
+
+```typescript
+vi.mock('@/services/supabase', () => ({
+  supabase: { from: vi.fn() },
+}));
+```

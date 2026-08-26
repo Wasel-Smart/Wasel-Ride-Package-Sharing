@@ -227,9 +227,11 @@ describe('RBAC (Deno) — resolveAccessRole', () => {
     expect(resolveAccessRole('')).toBe('guest');
   });
 
-  it('returns user for unknown role string', () => {
-    expect(resolveAccessRole('superuser')).toBe('user');
-    expect(resolveAccessRole('moderator')).toBe('user');
+  it('fails closed to guest for an unrecognised role string', () => {
+    // Fail-closed by design: an unmapped role string must never silently
+    // inherit 'user' write permissions. See rbac.ts resolveAccessRole().
+    expect(resolveAccessRole('superuser')).toBe('guest');
+    expect(resolveAccessRole('moderator')).toBe('guest');
   });
 
   it.each(ALL_ROLES)('passes through valid role %s unchanged', (role) => {
@@ -350,7 +352,7 @@ describe('RBAC (Deno) — backend enforcement patterns', () => {
 });
 
 describe('RBAC (Deno) — backward compatibility for unknown roles', () => {
-  it('unknown role defaults to user permissions', () => {
+  it('unknown role defaults to guest-level (read-only) permissions', () => {
     expect(hasPermission(resolveAccessRole('superadmin'), 'rides:read')).toBe(true);
     expect(hasPermission(resolveAccessRole('superadmin'), 'payments:write')).toBe(false);
   });
@@ -361,8 +363,11 @@ describe('RBAC (Deno) — backward compatibility for unknown roles', () => {
   });
 
   it('case-sensitive role matching', () => {
-    expect(resolveAccessRole('ADMIN')).toBe('user');
-    expect(resolveAccessRole('Admin')).toBe('user');
+    // Role matching is case-sensitive; 'ADMIN'/'Admin' are unrecognised
+    // strings and must fail closed to 'guest', not silently pass as admin
+    // or fall open to 'user'.
+    expect(resolveAccessRole('ADMIN')).toBe('guest');
+    expect(resolveAccessRole('Admin')).toBe('guest');
     expect(resolveAccessRole('admin')).toBe('admin');
   });
 });
