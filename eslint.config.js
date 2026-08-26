@@ -15,6 +15,9 @@ export default tseslint.config(
     'e2e',
     'service.ts',
     'docs',
+    'coverage',
+    '*.config.js',
+    '*.config.mjs',
   ] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
@@ -83,21 +86,44 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      'react-hooks/exhaustive-deps': 'off',
-      'react-refresh/only-export-components': 'off',
-      'react-hooks/set-state-in-effect': 'off',
-      'react-hooks/preserve-manual-memoization': 'off',
-      'react-hooks/purity': 'off',
-      'react-hooks/refs': 'off',
+      'react-hooks/exhaustive-deps': 'warn',
+      'react-refresh/only-export-components': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/refs': 'warn',
+
+      // TypeScript strictness
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/no-non-null-assertion': 'warn',
-      '@typescript-eslint/consistent-type-imports': 'warn',
-      'no-console': 'off',
+      '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/consistent-type-exports': 'error',
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/prefer-optional-chain': 'warn',
+      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
+      '@typescript-eslint/no-misused-promises': 'warn',
+
+      // Code quality
+      'no-console': ['warn', { allow: ['error', 'warn', 'info'] }],
       'prefer-const': 'error',
       'no-var': 'error',
       'eqeqeq': ['error', 'always'],
       'no-duplicate-imports': 'error',
+      'no-unused-expressions': 'warn',
+      'curly': ['error', 'all'],
+      'no-implicit-coercion': 'warn',
+      'no-eval': 'error',
+      'no-new-func': 'error',
+      'prefer-arrow-callback': 'warn',
+      'arrow-body-style': ['warn', 'as-needed'],
+
+      // Function complexity
+      'complexity': ['warn', 20],
+      'max-lines-per-function': ['warn', { max: 150, skipBlankLines: true, skipComments: true }],
+      'max-params': ['warn', 4],
+      'max-depth': ['warn', 4],
+      'max-nested-callbacks': ['warn', 3],
     },
   },
   {
@@ -105,6 +131,8 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
+      'max-lines-per-function': 'off',
+      'no-console': 'off',
     },
   },
 );
