@@ -59,7 +59,9 @@ backups/
 review-screenshots/
 .codex_tmp/
 .codex/
+.amazonq/
 .kilo/
+.expo/
 
 # Firebase/GCP service account keys (never commit)
 wasel-planning-with-ai-*.json

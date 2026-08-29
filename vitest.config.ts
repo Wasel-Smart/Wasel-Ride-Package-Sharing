@@ -12,10 +12,12 @@ import path from 'path';
 export default defineConfig({
   plugins: [react()],
 
-  resolve: [
-    { find: '@', replacement: path.resolve(__dirname, './src') },
-    { find: '$deno', replacement: path.resolve(__dirname, './supabase/functions') },
-  ],
+  resolve: {
+    alias: [
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+      { find: '$deno', replacement: path.resolve(__dirname, './supabase/functions') },
+    ],
+  },
 
   test: {
     globals: true,

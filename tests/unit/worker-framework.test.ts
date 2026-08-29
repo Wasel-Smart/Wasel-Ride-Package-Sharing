@@ -4,7 +4,7 @@ import {
   type QueueMessage,
   type WorkerConfig,
 } from '@/platform/worker-framework';
-import type { EventBroker, BrokerMessage, BrokerMessageHandler } from '@/platform/event-broker';
+import type { BrokerHealth, BrokerMessage, BrokerMessageHandler, EventBroker } from '@/platform/event-broker';
 
 class FakeBroker implements EventBroker {
   kind = 'memory' as const;
@@ -38,6 +38,18 @@ class FakeBroker implements EventBroker {
 
   async start(): Promise<void> {}
   async stop(): Promise<void> {}
+
+  getHealth(): BrokerHealth {
+    return {
+      state: 'healthy',
+      transport: 'none',
+      pendingEvents: 0,
+      processedEvents: 0,
+      failedEvents: 0,
+      lastEventAt: null,
+      reconnectAttempts: 0,
+    };
+  }
 }
 
 function msg(topic: string): BrokerMessage {
