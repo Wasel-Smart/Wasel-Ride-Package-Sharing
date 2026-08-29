@@ -1,5 +1,6 @@
 import { supabase } from '@/utils/supabase/client';
 import { paymentService } from './payment';
+import { createDomainEvent, domainEventBus } from '../platform/event-bus';
 
 export interface CancelBookingRequest {
   bookingId: string;
@@ -64,6 +65,18 @@ class CancellationService {
       throw updateError;
     }
 
+    domainEventBus.publish(
+      createDomainEvent(
+        'RideCancelled',
+        {
+          bookingId,
+          rideId: booking.trip_id,
+          reason,
+        },
+        'cancellation-service',
+      ),
+    );
+
     if (refundRequested && booking.payment_status === 'succeeded') {
       try {
         await paymentService.processRefund({
@@ -110,7 +123,7 @@ class CancellationService {
     const { data: trip, error: fetchError } = await supabase
       .from('trips')
       .select('*')
-      .eq('id', tripId)
+      .eq('trip_id', tripId)
       .single();
 
     if (fetchError || !trip) {
@@ -133,7 +146,7 @@ class CancellationService {
       .from('bookings')
       .select('*')
       .eq('trip_id', tripId)
-      .in('status', ['pending', 'confirmed']);
+      .in('status', ['pending', 'accepted']);
 
     const { error: tripUpdateError } = await supabase
       .from('trips')
@@ -174,6 +187,18 @@ class CancellationService {
           }
         }
 
+        domainEventBus.publish(
+          createDomainEvent(
+            'RideCancelled',
+            {
+              bookingId: booking.id,
+              rideId: tripId,
+              reason: `Trip cancelled by driver: ${reason}`,
+            },
+            'cancellation-service',
+          ),
+        );
+
         await supabase.from('notifications').insert({
           user_id: booking.passenger_id,
           type: 'trip_cancelled',
@@ -212,7 +237,7 @@ class CancellationService {
     const { data: trip, error: tripError } = await supabase
       .from('trips')
       .select('departure_time')
-      .eq('id', booking.trip_id)
+      .eq('trip_id', booking.trip_id)
       .single();
 
     if (tripError || !trip) {

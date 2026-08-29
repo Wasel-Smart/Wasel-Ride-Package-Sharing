@@ -334,6 +334,63 @@ export async function createDirectBooking(input: {
   const passenger = await buildUserContext(input.userId);
   ensureBookingEligibility(mapProfileFromContext(passenger));
 
+  const bookingStatus = input.bookingStatus ?? 'confirmed';
+  const totalPrice = toNumber(input.metadata?.total_price, 0);
+
+  try {
+    const { data: rpcBooking, error: rpcError } = await db.rpc('app_create_ride_booking', {
+      p_trip_id: input.tripId,
+      p_passenger_id: input.userId,
+      p_seats_requested: input.seatsRequested,
+      p_pickup: input.pickup ?? null,
+      p_dropoff: input.dropoff ?? null,
+      p_booking_status: bookingStatus,
+      p_total_price: totalPrice,
+    });
+
+    if (rpcError) throw rpcError;
+    const bookingRow = Array.isArray(rpcBooking) ? (rpcBooking as RawBooking[])[0] : (rpcBooking as RawBooking);
+    if (!bookingRow) throw new Error('Booking creation returned no data');
+
+    await recordDirectGrowthEvent({
+      userId: input.userId,
+      eventName: 'ride_booking_created',
+      funnelStage: bookingStatus === 'pending_driver' ? 'selected' : 'booked',
+      serviceType: 'ride',
+      from: input.pickup,
+      to: input.dropoff,
+      valueJod: totalPrice,
+      metadata: {
+        tripId: input.tripId,
+        bookingStatus,
+        seatsRequested: input.seatsRequested,
+      },
+    }).catch(() => {});
+
+    if (bookingStatus !== 'pending_driver') {
+      await processReferralConversionForPassenger(passenger.user.id).catch(() => {});
+    }
+
+    return {
+      booking: mapBookingRow({
+        ...bookingRow,
+        pickup_location: input.pickup ?? null,
+        dropoff_location: input.dropoff ?? null,
+        seats_requested: input.seatsRequested,
+        price_per_seat: totalPrice / Math.max(1, input.seatsRequested),
+        total_price: totalPrice,
+      }),
+    };
+  } catch (rpcError) {
+    if (rpcError instanceof Error && rpcError.message.includes('function') && rpcError.message.includes('does not exist')) {
+      console.warn('[createDirectBooking] RPC unavailable, falling back to direct insert');
+    } else if (rpcError instanceof Error && rpcError.message.includes('not open for booking')) {
+      throw rpcError;
+    } else {
+      throw rpcError;
+    }
+  }
+
   const { data: trip, error: tripError } = await db
     .from('trips')
     .select('trip_id, available_seats, price_per_seat, trip_status')
@@ -372,9 +429,9 @@ export async function createDirectBooking(input: {
       trip_id: input.tripId,
       passenger_id: passenger.user.id,
       seat_number: resolvedSeatNumber,
-      booking_status: input.bookingStatus ?? 'confirmed',
-      status: input.bookingStatus ?? 'confirmed',
-      confirmed_by_driver: input.bookingStatus === 'pending_driver' ? false : true,
+      booking_status: bookingStatus,
+      status: bookingStatus,
+      confirmed_by_driver: bookingStatus === 'pending_driver' ? false : true,
       amount: totalPrice,
     })
     .select('*')
@@ -384,19 +441,19 @@ export async function createDirectBooking(input: {
   await recordDirectGrowthEvent({
     userId: input.userId,
     eventName: 'ride_booking_created',
-    funnelStage: input.bookingStatus === 'pending_driver' ? 'selected' : 'booked',
+    funnelStage: bookingStatus === 'pending_driver' ? 'selected' : 'booked',
     serviceType: 'ride',
     from: input.pickup,
     to: input.dropoff,
     valueJod: totalPrice,
     metadata: {
       tripId: input.tripId,
-      bookingStatus: input.bookingStatus ?? 'confirmed',
+      bookingStatus,
       seatsRequested: input.seatsRequested,
     },
   }).catch(() => {});
 
-  if (input.bookingStatus !== 'pending_driver') {
+  if (bookingStatus !== 'pending_driver') {
     await processReferralConversionForPassenger(passenger.user.id).catch(() => {});
   }
 
@@ -404,11 +461,11 @@ export async function createDirectBooking(input: {
     .from('trips')
     .update({
       available_seats:
-        input.bookingStatus === 'pending_driver'
+        bookingStatus === 'pending_driver'
           ? availableSeats
           : Math.max(availableSeats - input.seatsRequested, 0),
       trip_status:
-        input.bookingStatus === 'pending_driver'
+        bookingStatus === 'pending_driver'
           ? (trip?.trip_status ?? 'open')
           : availableSeats - input.seatsRequested <= 0
             ? 'booked'

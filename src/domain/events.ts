@@ -10,6 +10,7 @@ export type DomainEventType =
   | 'PackagePickedUp'
   | 'PackageDelivered'
   | 'PackageLocationUpdated'
+  | 'PackageCancelled'
   | 'DriverAvailabilityChanged'
   | 'PaymentAuthorized'
   | 'PaymentCaptured';
@@ -69,6 +70,10 @@ export interface DomainEventPayloadMap {
     packageId: string;
     latitude: number;
     longitude: number;
+  };
+  PackageCancelled: {
+    packageId: string;
+    reason?: string;
   };
   DriverAvailabilityChanged: {
     driverId: string;

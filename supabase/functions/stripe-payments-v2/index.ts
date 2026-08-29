@@ -258,8 +258,6 @@ Deno.serve(async (req: Request) => {
         case "payment_intent.succeeded": {
           const pi = event.data.object;
           if (supabase) {
-            // Claim the transition once. Stripe can redeliver webhooks, so only
-            // the invocation that changes a non-succeeded row may credit a wallet.
             const { data: transitioned, error: transitionError } = await supabase
               .from("payments")
               .update({ status: "succeeded" })
@@ -284,12 +282,14 @@ Deno.serve(async (req: Request) => {
             }
           }
           const admin = getAdminClient();
+          const piMetadata = (event.data.object as Record<string, unknown>).metadata as Record<string, unknown> | undefined;
+          const entityType = typeof piMetadata?.entity_type === 'string' ? piMetadata.entity_type : 'ride';
           await publishEvent(admin, {
             id: makeId("evt"),
             topic: "payments.captured",
             payload: {
               entityId: pi.id,
-              entityType: "ride",
+              entityType,
               amount: pi.amount,
             },
             producer: "stripe-payments-v2",
@@ -320,12 +320,14 @@ Deno.serve(async (req: Request) => {
             );
           }
           const admin = getAdminClient();
+          const sessionMetadata = (session.metadata as Record<string, unknown> | undefined) ?? {};
+          const entityType = typeof sessionMetadata.entity_type === 'string' ? sessionMetadata.entity_type : 'ride';
           await publishEvent(admin, {
             id: makeId("evt"),
             topic: "payments.captured",
             payload: {
               entityId: session.payment_intent as string,
-              entityType: "ride",
+              entityType,
               amount: session.amount_total ?? 0,
             },
             producer: "stripe-payments-v2",

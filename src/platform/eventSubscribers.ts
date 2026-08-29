@@ -19,32 +19,8 @@ export function initializeEventSubscribers(): () => void {
   );
 
   unsubscribers.push(
-    domainEventBus.subscribe('RideAccepted', event => {
-      logger.info('Ride accepted', { eventId: event.id });
-      void notificationsAPI
-        .createNotification({
-          title: 'Ride Confirmed',
-          message: 'Your ride has been confirmed.',
-          type: 'booking',
-          priority: 'high',
-          action_url: '/app/my-trips?tab=rides',
-        })
-        .catch(() => {});
-    }),
-  );
-
-  unsubscribers.push(
     domainEventBus.subscribe('RideCompleted', event => {
       logger.info('Ride completed', { eventId: event.id });
-      void notificationsAPI
-        .createNotification({
-          title: 'Ride Completed',
-          message: 'Please rate your experience.',
-          type: 'booking',
-          priority: 'medium',
-          action_url: '/app/my-trips?tab=rides',
-        })
-        .catch(() => {});
     }),
   );
 
@@ -57,6 +33,24 @@ export function initializeEventSubscribers(): () => void {
         serviceType: 'package',
         metadata: event.payload,
       });
+    }),
+  );
+
+  unsubscribers.push(
+    domainEventBus.subscribe('RideCancelled', event => {
+      logger.info('Ride cancelled', { eventId: event.id });
+    }),
+  );
+
+  unsubscribers.push(
+    domainEventBus.subscribe('PackageCancelled', event => {
+      logger.info('Package cancelled', { eventId: event.id });
+    }),
+  );
+
+  unsubscribers.push(
+    domainEventBus.subscribe('PaymentCaptured', event => {
+      logger.info('Payment captured', { eventId: event.id });
     }),
   );
 

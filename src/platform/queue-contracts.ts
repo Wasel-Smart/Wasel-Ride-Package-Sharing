@@ -7,6 +7,7 @@ export type QueueTopic =
   | 'packages.created'
   | 'packages.location-updated'
   | 'packages.delivered'
+  | 'packages.cancelled'
   | 'payments.authorized'
   | 'payments.captured'
   | 'notifications.dispatch';
@@ -62,6 +63,12 @@ export const QUEUE_CONTRACTS: readonly QueueContractDefinition[] = [
     deadLetterTopic: 'packages.delivered.dlq',
   },
   {
+    topic: 'packages.cancelled',
+    owner: 'notification-worker',
+    retryPolicy: { maxAttempts: 5, backoffStrategy: 'exponential' },
+    deadLetterTopic: 'packages.cancelled.dlq',
+  },
+  {
     topic: 'payments.authorized',
     owner: 'payment-worker',
     retryPolicy: { maxAttempts: 5, backoffStrategy: 'exponential' },
@@ -102,6 +109,7 @@ export const EVENT_TYPE_TO_TOPIC: Partial<Record<DomainEventType, QueueTopic>> =
   PackagePickedUp: 'packages.created',
   PackageDelivered: 'packages.delivered',
   PackageLocationUpdated: 'packages.location-updated',
+  PackageCancelled: 'packages.cancelled',
   PaymentAuthorized: 'payments.authorized',
   PaymentCaptured: 'payments.captured',
 };

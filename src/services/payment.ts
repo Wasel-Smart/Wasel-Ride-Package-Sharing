@@ -1,5 +1,6 @@
 import { supabase } from '@/utils/supabase/client';
 import { toMinorUnits } from '../shared/currency/currency';
+import { createDomainEvent, domainEventBus } from '../platform/event-bus';
 
 export interface PaymentIntentRequest {
   amount: number;
@@ -81,11 +82,25 @@ class PaymentService {
       action: 'create-payment-intent',
       amount: amountMinor,
       currency: request.currency ?? 'jod',
-      metadata: { ...request.metadata, booking_id: request.bookingId, user_id: user.id },
+      metadata: { ...request.metadata, booking_id: request.bookingId, user_id: user.id, entity_type: 'ride' },
       idempotency_key: `booking:${request.bookingId}`,
     });
     if (!data.clientSecret || !data.paymentIntentId) throw new Error('Invalid payment response');
-    return { clientSecret: data.clientSecret, paymentIntentId: data.paymentIntentId };
+    const result = { clientSecret: data.clientSecret, paymentIntentId: data.paymentIntentId };
+
+    domainEventBus.publish(
+      createDomainEvent(
+        'PaymentAuthorized',
+        {
+          entityId: request.bookingId,
+          entityType: 'ride',
+          amount: request.amount,
+        },
+        'payment-service',
+      ),
+    );
+
+    return result;
   }
 
   async processRefund(request: RefundRequest): Promise<RefundResponse> {

@@ -79,6 +79,17 @@ async function tryEdgeThenDirect<T>(edgeFn: () => Promise<T>, directFn: () => Pr
   throw new Error('Secure API is not configured and direct database access is disabled for this environment.');
 }
 
+async function tryEdgeOnly<T>(edgeFn: () => Promise<T>, fallbackMessage: string): Promise<T> {
+  if (canUseEdgeApi()) {
+    try {
+      return await edgeFn();
+    } catch (edgeError) {
+      throw new Error(fallbackMessage || 'Secure wallet operation is unavailable because the backend is not configured.');
+    }
+  }
+  throw new Error(fallbackMessage || 'Secure wallet operation is unavailable because the backend is not configured.');
+}
+
 function getWalletPath(userId: string, suffix = ''): string {
   return `/v1/wallet/${userId}${suffix}`;
 }
@@ -185,28 +196,23 @@ export const walletApi = {
   },
 
   async topUp(userId: string, amount: number, paymentMethod: string) {
-    if (canUseEdgeApi()) {
-      try {
-        return await requestWalletJson(userId, '/top-up', 'Create wallet top-up', { method: 'POST', body: { amount, paymentMethod } });
-      } catch (error) {
-        if (isConnectivityError(error)) throw new Error('Secure wallet top-up is unavailable because the checkout backend is not configured. Deploy the wallet edge function and configure Stripe server secrets before adding funds.');
-        throw error;
-      }
-    }
-    throw new Error('Secure wallet top-up is unavailable because the checkout backend is not configured. Deploy the wallet edge function and configure Stripe server secrets before adding funds.');
+    return tryEdgeOnly(
+      () => requestWalletJson(userId, '/top-up', 'Create wallet top-up', { method: 'POST', body: { amount, paymentMethod } }),
+      'Secure wallet top-up is unavailable because the checkout backend is not configured. Deploy the wallet edge function and configure Stripe server secrets before adding funds.',
+    );
   },
 
   async withdraw(userId: string, amount: number, bankAccount: string, method = 'bank_transfer') {
-    return tryEdgeThenDirect(
+    return tryEdgeOnly(
       () => requestWalletJson(userId, '/withdraw', 'Withdraw wallet funds', { method: 'POST', body: { amount, bankAccount, method } }),
-      () => withdrawWalletFundsDirect(userId, amount, bankAccount, method),
+      'Secure wallet withdrawal is unavailable because the backend is not configured. Deploy the wallet edge function before withdrawing funds.',
     );
   },
 
   async sendMoney(userId: string, recipientId: string, amount: number, note?: string) {
-    return tryEdgeThenDirect(
-      () => requestWalletJson<{ success: boolean; note?: string; wallet: WalletData }>(userId, '/send', 'Send wallet funds', { method: 'POST', body: { recipientId, amount, note } }),
-      async () => ({ success: true, note, wallet: await transferWalletFundsDirect(userId, recipientId, amount) }),
+    return tryEdgeOnly(
+      () => requestWalletJson<{ success: boolean; note?: string; wallet: WalletData }>(userId, '/send', 'Wallet send money', { method: 'POST', body: { recipientId, amount, note } }),
+      'Secure wallet transfers are unavailable because the backend is not configured. Deploy the wallet edge function before sending money.',
     );
   },
 
@@ -230,15 +236,10 @@ export const walletApi = {
   },
 
   async subscribe(userId: string, planName: string, price: number) {
-    if (canUseEdgeApi()) {
-      try {
-        return await requestWalletJson(userId, '/subscribe', 'Create wallet subscription checkout', { method: 'POST', body: { planName, price } });
-      } catch (error) {
-        if (isConnectivityError(error)) throw new Error('Secure subscription checkout is unavailable because the billing backend is not configured. Deploy the wallet edge function and configure Stripe Billing before subscribing.');
-        throw error;
-      }
-    }
-    throw new Error('Secure subscription checkout is unavailable because the billing backend is not configured. Deploy the wallet edge function and configure Stripe Billing before subscribing.');
+    return tryEdgeOnly(
+      () => requestWalletJson(userId, '/subscribe', 'Create wallet subscription checkout', { method: 'POST', body: { planName, price } }),
+      'Secure subscription checkout is unavailable because the billing backend is not configured. Deploy the wallet edge function and configure Stripe Billing before subscribing.',
+    );
   },
 
   async getInsights(userId: string): Promise<InsightsData> {
@@ -260,13 +261,17 @@ export const walletApi = {
   },
 
   async setPin(userId: string, pin: string) {
-    if (!canUseEdgeApi()) throw new Error('Wallet PIN management requires the wallet backend.');
-    return requestWalletJson(userId, '/pin/set', 'Set wallet PIN', { method: 'POST', body: { pin } });
+    return tryEdgeOnly(
+      () => requestWalletJson(userId, '/pin/set', 'Set wallet PIN', { method: 'POST', body: { pin } }),
+      'Wallet PIN management requires the wallet backend.',
+    );
   },
 
   async verifyPin(userId: string, pin: string) {
-    if (!canUseEdgeApi()) throw new Error('Wallet PIN verification requires the wallet backend.');
-    return requestWalletJson(userId, '/pin/verify', 'Verify wallet PIN', { method: 'POST', body: { pin } });
+    return tryEdgeOnly(
+      () => requestWalletJson(userId, '/pin/verify', 'Verify wallet PIN', { method: 'POST', body: { pin } }),
+      'Wallet PIN verification requires the wallet backend.',
+    );
   },
 
   async setAutoTopUp(userId: string, enabled: boolean, amount: number, threshold: number) {
@@ -323,9 +328,9 @@ export const walletApi = {
   },
 
   async pay(userId: string, amount: number, referenceType: string, referenceId?: string, metadata?: Record<string, unknown>) {
-    return tryEdgeThenDirect(
+    return tryEdgeOnly(
       () => requestWalletJson(userId, '/pay', 'Wallet checkout payment', { method: 'POST', body: { amount, referenceType, referenceId, metadata } }),
-      () => payWithWalletDirect(userId, amount, referenceType, referenceId, metadata),
+      'Secure wallet payments require the backend.',
     );
   },
 

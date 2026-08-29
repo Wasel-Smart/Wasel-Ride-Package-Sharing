@@ -82,8 +82,8 @@ const matchingWorker = createWorker<RideMatchRequest>(
 
     const { data: trip } = await client
       .from('trips')
-      .select('id, trip_id, driver_id, trip_status')
-      .or(`trip_id.eq.${payload.rideId},id.eq.${payload.rideId}`)
+      .select('trip_id, driver_id, trip_status, from_lat, from_lng, to_lat, to_lng')
+      .eq('trip_id', payload.rideId)
       .maybeSingle();
 
     if (!trip) {
@@ -94,13 +94,11 @@ const matchingWorker = createWorker<RideMatchRequest>(
     const { data: driver } = await client
       .from('drivers')
       .select('driver_id, user_id')
-      .in('driver_status', ['online', 'approved', 'busy'])
+      .eq('driver_status', 'online')
       .limit(1)
       .maybeSingle();
 
     if (!driver) {
-      // No supply right now — leave the request unassigned; the poll/fallback
-      // will retry on the next publish.
       telemetry.recordMetric('matching.no_supply', 1, 'count');
       return;
     }
@@ -108,7 +106,7 @@ const matchingWorker = createWorker<RideMatchRequest>(
     await client
       .from('trips')
       .update({ driver_id: driver.driver_id, trip_status: 'booked' })
-      .eq('id', trip.id);
+      .eq('trip_id', trip.trip_id);
 
     domainEventBus.publish(
       createDomainEvent(
@@ -135,7 +133,7 @@ const matchingWorker = createWorker<RideMatchRequest>(
 const packageWorker = createWorker<AnyRecord>(
   {
     name: 'package-worker',
-    topics: ['packages.created', 'packages.location-updated'],
+    topics: ['packages.created', 'packages.location-updated', 'packages.delivered'],
     concurrency: 15,
     retryPolicy: { maxRetries: 5, backoffMs: 1000 },
     circuitBreaker: { failureThreshold: 5, resetTimeoutMs: 60000 },
@@ -172,6 +170,13 @@ const packageWorker = createWorker<AnyRecord>(
         })
         .eq('package_id', packageId);
 
+      await client.from('package_events').insert({
+        package_id: packageId,
+        event_type: 'assignment',
+        event_status: 'assigned',
+        notes: JSON.stringify({ trip_id: trip.trip_id, driver_id: trip.driver_id }),
+      });
+
       domainEventBus.publish(
         createDomainEvent(
           'PackageAssigned',
@@ -184,6 +189,42 @@ const packageWorker = createWorker<AnyRecord>(
           message.correlationId,
         ),
       );
+    } else if (topic === 'packages.location-updated') {
+      const packageId = payload.packageId as string;
+      if (!packageId) return;
+
+      await client.from('package_events').insert({
+        package_id: packageId,
+        event_type: 'location_update',
+        event_status: 'ok',
+        notes: JSON.stringify({
+          latitude: payload.latitude,
+          longitude: payload.longitude,
+        }),
+      });
+
+      telemetry.recordMetric('package.location_update', 1, 'count', { packageId });
+    } else if (topic === 'packages.delivered') {
+      const packageId = payload.packageId as string;
+      if (!packageId) return;
+
+      await client
+        .from('packages')
+        .update({
+          package_status: 'delivered',
+          delivered_at: new Date().toISOString(),
+        })
+        .eq('package_id', packageId);
+
+      await client.from('package_events').insert({
+        package_id: packageId,
+        event_type: 'delivery',
+        event_status: 'delivered',
+        notes: JSON.stringify({ deliveredAt: new Date().toISOString() }),
+      });
+    }
+  },
+);
     } else if (topic === 'packages.location-updated') {
       const packageId = payload.packageId as string;
       if (!packageId) return;
@@ -273,7 +314,7 @@ interface NotificationDispatch {
 const notificationWorker = createWorker<AnyRecord>(
   {
     name: 'notification-worker',
-    topics: ['rides.assigned', 'packages.delivered', 'notifications.dispatch'],
+    topics: ['rides.assigned', 'rides.completed', 'packages.delivered', 'packages.cancelled', 'notifications.dispatch'],
     concurrency: 50,
     retryPolicy: { maxRetries: 8, backoffMs: 500 },
     circuitBreaker: { failureThreshold: 10, resetTimeoutMs: 60000 },
@@ -311,6 +352,24 @@ const notificationWorker = createWorker<AnyRecord>(
           action_url: '/app/my-trips?tab=rides',
         } as never);
       }
+    } else if (topic === 'rides.completed') {
+      if (!ensureBackend() || !client) return;
+      const { data: booking } = await client
+        .from('bookings')
+        .select('passenger_id')
+        .eq('booking_id', payload.bookingId as string)
+        .maybeSingle();
+
+      const userId = (booking?.passenger_id as string) ?? (payload.driverId as string);
+      if (userId) {
+        await notificationsAPI.createNotification({
+          title: 'Ride Completed',
+          message: 'Please rate your experience.',
+          type: 'booking',
+          priority: 'medium',
+          action_url: '/app/my-trips?tab=rides',
+        } as never);
+      }
     } else if (topic === 'packages.delivered') {
       if (!ensureBackend() || !client) return;
       const { data: pkg } = await client
@@ -327,6 +386,26 @@ const notificationWorker = createWorker<AnyRecord>(
             message: 'Your package has been delivered successfully.',
             type: 'booking',
             priority: 'high',
+          } as never),
+        ),
+      );
+    } else if (topic === 'packages.cancelled') {
+      if (!ensureBackend() || !client) return;
+      const { data: pkg } = await client
+        .from('packages')
+        .select('sender_id, receiver_id')
+        .eq('package_id', payload.packageId as string)
+        .maybeSingle();
+
+      const recipients = [pkg?.sender_id, pkg?.receiver_id].filter(Boolean) as string[];
+      const reason = (payload as { reason?: string } | undefined)?.reason;
+      await Promise.all(
+        recipients.map(() =>
+          notificationsAPI.createNotification({
+            title: 'Package Cancelled',
+            message: `Your package has been cancelled.${reason ? ` Reason: ${reason}` : ''}`,
+            type: 'booking',
+            priority: 'medium',
           } as never),
         ),
       );
@@ -364,32 +443,17 @@ const opsWorker = createWorker<AnyRecord>(
         const client = supabase;
         if (!client) return;
         const metricDate = new Date().toISOString().slice(0, 10);
-        const { data: existing } = await client
-          .from('ops_aggregates')
-          .select('id, value, sample_count')
-          .eq('metric_date', metricDate)
-          .eq('metric_name', 'revenue_captured')
-          .maybeSingle();
-
-        if (existing) {
-          await client
-            .from('ops_aggregates')
-            .update({
-              value: (existing.value ?? 0) + ((payload.amount as number) ?? 0),
-              sample_count: (existing.sample_count ?? 0) + 1,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', existing.id);
-        } else {
-          await client.from('ops_aggregates').insert({
-            metric_date: metricDate,
-            metric_name: 'revenue_captured',
-            dimension: (payload.entityType as string) ?? 'unknown',
-            value: (payload.amount as number) ?? 0,
-            sample_count: 1,
-            updated_at: new Date().toISOString(),
-          });
-        }
+        const amount = Number((payload as AnyRecord).amount ?? 0);
+        const dimension = String((payload as AnyRecord).entityType ?? 'unknown');
+        await client.rpc('increment_ops_aggregate', {
+          p_metric_date: metricDate,
+          p_metric_name: 'revenue_captured',
+          p_dimension: dimension,
+          p_delta_value: amount,
+          p_delta_samples: 1,
+        }).catch(() => {
+          // Non-fatal: analytics aggregation failure should not block the worker.
+        });
       }
     }
 

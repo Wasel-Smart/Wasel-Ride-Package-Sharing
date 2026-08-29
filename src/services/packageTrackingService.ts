@@ -501,6 +501,70 @@ export class PackageTrackingService {
     return Array.from(this.packages.values()).filter(pkg => pkg.driverId === driverId);
   }
 
+  async hydrateFromDatabase(userId: string): Promise<void> {
+    try {
+      const { supabase } = await import('../../utils/supabase/client');
+      if (!supabase) return;
+      const { data: packages } = await supabase
+        .from('packages')
+        .select('*')
+        .eq('sender_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (!Array.isArray(packages)) return;
+
+      for (const row of packages) {
+        const existing = this.packages.get(String(row.package_id ?? row.id ?? ''));
+        if (existing) continue;
+
+        const trackingCode = String(row.tracking_number ?? row.package_code ?? '');
+        const pkg: PackageTracking = {
+          id: String(row.package_id ?? row.id ?? ''),
+          trackingCode,
+          qrCodeUrl: trackingCode ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(trackingCode)}` : '',
+          senderId: String(row.sender_id ?? userId),
+          receiverId: row.receiver_id ? String(row.receiver_id) : undefined,
+          from: String(row.origin_name ?? row.origin_location ?? ''),
+          to: String(row.destination_name ?? row.destination_location ?? ''),
+          size: (row.size as PackageTracking['size']) ?? 'medium',
+          weight: row.weight_kg ? Number(row.weight_kg) : undefined,
+          value: Number(row.declared_value ?? row.fee_amount ?? 0),
+          insurance: Boolean(row.insurance),
+          description: row.description ? String(row.description) : undefined,
+          rideId: row.trip_id ? String(row.trip_id) : undefined,
+          driverId: row.carrier_id ? String(row.carrier_id) : undefined,
+          driverName: undefined,
+          driverPhone: undefined,
+          driverPhoto: undefined,
+          vehicleInfo: undefined,
+          price: Number(row.delivery_fee ?? row.fee_amount ?? 0),
+          insuranceCost: 0,
+          totalCost: Number(row.delivery_fee ?? row.fee_amount ?? 0),
+          paymentStatus: (row.payment_status as PackageTracking['paymentStatus']) ?? 'pending',
+          paymentMethod: undefined,
+          status: (row.package_status as PackageStatus) ?? 'created',
+          lifecycleStatus: mapLegacyPackageStatusToLifecycle((row.package_status as PackageStatus) ?? 'created'),
+          createdAt: new Date(String(row.created_at ?? new Date().toISOString())),
+          pickedUpAt: row.picked_up_at ? new Date(String(row.picked_up_at)) : undefined,
+          inTransitAt: row.in_transit_at ? new Date(String(row.in_transit_at)) : undefined,
+          deliveredAt: row.delivered_at ? new Date(String(row.delivered_at)) : undefined,
+          pickupVerificationCode: '',
+          deliveryVerificationCode: '',
+          pickupVerified: false,
+          deliveryVerified: false,
+          pickupPhoto: undefined,
+          deliveryPhoto: undefined,
+          senderCanContactDriver: false,
+          lastUpdated: new Date(String(row.updated_at ?? new Date().toISOString())),
+        };
+
+        this.packages.set(pkg.id, pkg);
+      }
+    } catch {
+      // Non-fatal: tracking hydration failure should not block the app.
+    }
+  }
+
   getEscrowStatus(packageId: string): PackagePaymentEscrow | undefined {
     return this.escrows.get(packageId);
   }
