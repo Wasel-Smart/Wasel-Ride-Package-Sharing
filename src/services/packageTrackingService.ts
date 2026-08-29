@@ -503,7 +503,7 @@ export class PackageTrackingService {
 
   async hydrateFromDatabase(userId: string): Promise<void> {
     try {
-      const { supabase } = await import('../../utils/supabase/client');
+      const { supabase } = await import('../utils/supabase/client');
       if (!supabase) return;
       const { data: packages } = await supabase
         .from('packages')
@@ -517,37 +517,38 @@ export class PackageTrackingService {
         const existing = this.packages.get(String(row.package_id ?? row.id ?? ''));
         if (existing) continue;
 
-        const trackingCode = String(row.tracking_number ?? row.package_code ?? '');
+        const raw = row as Record<string, unknown>;
+        const trackingCode = String(raw.tracking_number ?? raw.package_code ?? '');
         const pkg: PackageTracking = {
-          id: String(row.package_id ?? row.id ?? ''),
+          id: String(raw.package_id ?? raw.id ?? ''),
           trackingCode,
           qrCodeUrl: trackingCode ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(trackingCode)}` : '',
-          senderId: String(row.sender_id ?? userId),
-          receiverId: row.receiver_id ? String(row.receiver_id) : undefined,
-          from: String(row.origin_name ?? row.origin_location ?? ''),
-          to: String(row.destination_name ?? row.destination_location ?? ''),
-          size: (row.size as PackageTracking['size']) ?? 'medium',
-          weight: row.weight_kg ? Number(row.weight_kg) : undefined,
-          value: Number(row.declared_value ?? row.fee_amount ?? 0),
-          insurance: Boolean(row.insurance),
-          description: row.description ? String(row.description) : undefined,
-          rideId: row.trip_id ? String(row.trip_id) : undefined,
-          driverId: row.carrier_id ? String(row.carrier_id) : undefined,
+          senderId: String(raw.sender_id ?? userId),
+          receiverId: raw.receiver_id ? String(raw.receiver_id) : undefined,
+          from: String(raw.origin_name ?? raw.origin_location ?? ''),
+          to: String(raw.destination_name ?? raw.destination_location ?? ''),
+          size: (raw.size as PackageTracking['size']) ?? 'medium',
+          weight: raw.weight_kg ? Number(raw.weight_kg) : undefined,
+          value: Number(raw.declared_value ?? raw.fee_amount ?? 0),
+          insurance: Boolean(raw.insurance),
+          description: raw.description ? String(raw.description) : undefined,
+          rideId: raw.trip_id ? String(raw.trip_id) : undefined,
+          driverId: raw.carrier_id ? String(raw.carrier_id) : undefined,
           driverName: undefined,
           driverPhone: undefined,
           driverPhoto: undefined,
           vehicleInfo: undefined,
-          price: Number(row.delivery_fee ?? row.fee_amount ?? 0),
+          price: Number(raw.delivery_fee ?? raw.fee_amount ?? 0),
           insuranceCost: 0,
-          totalCost: Number(row.delivery_fee ?? row.fee_amount ?? 0),
-          paymentStatus: (row.payment_status as PackageTracking['paymentStatus']) ?? 'pending',
+          totalCost: Number(raw.delivery_fee ?? raw.fee_amount ?? 0),
+          paymentStatus: (raw.payment_status as PackageTracking['paymentStatus']) ?? 'pending',
           paymentMethod: undefined,
-          status: (row.package_status as PackageStatus) ?? 'created',
-          lifecycleStatus: mapLegacyPackageStatusToLifecycle((row.package_status as PackageStatus) ?? 'created'),
-          createdAt: new Date(String(row.created_at ?? new Date().toISOString())),
-          pickedUpAt: row.picked_up_at ? new Date(String(row.picked_up_at)) : undefined,
-          inTransitAt: row.in_transit_at ? new Date(String(row.in_transit_at)) : undefined,
-          deliveredAt: row.delivered_at ? new Date(String(row.delivered_at)) : undefined,
+          status: (raw.package_status as PackageStatus) ?? 'created',
+          lifecycleStatus: mapLegacyPackageStatusToLifecycle((raw.package_status as PackageStatus) ?? 'created'),
+          createdAt: new Date(String(raw.created_at ?? new Date().toISOString())),
+          pickedUpAt: raw.picked_up_at ? new Date(String(raw.picked_up_at)) : undefined,
+          inTransitAt: raw.in_transit_at ? new Date(String(raw.in_transit_at)) : undefined,
+          deliveredAt: raw.delivered_at ? new Date(String(raw.delivered_at)) : undefined,
           pickupVerificationCode: '',
           deliveryVerificationCode: '',
           pickupVerified: false,

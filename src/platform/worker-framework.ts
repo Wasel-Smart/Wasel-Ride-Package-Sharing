@@ -25,8 +25,11 @@ function resolveWorkerSecret(): string | null {
   // into the browser bundle (import.meta.env.VITE_*). Only a Node/edge-server
   // context may supply it via process.env.
   try {
-    if (typeof window !== 'undefined' || typeof import.meta === 'undefined') {
-      return typeof process !== 'undefined' ? process.env.VITE_EVENT_BROKER_WORKER_SECRET ?? null : null;
+    if (typeof window !== 'undefined') {
+      return null;
+    }
+    if (typeof process !== 'undefined') {
+      return process.env.EVENT_BROKER_WORKER_SECRET ?? process.env.VITE_EVENT_BROKER_WORKER_SECRET ?? null;
     }
     return null;
   } catch {

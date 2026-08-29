@@ -278,6 +278,16 @@ class SessionManager {
   }
 
   /**
+   * Invalidate the current session immediately.
+   * Call this after security-sensitive mutations (password, email, role).
+   */
+  invalidateSession(): void {
+    logger.warning('Session invalidated', { sessionId: this.sessionId });
+    this.endSession();
+    this.config.onSuspiciousActivity('Session invalidated by security event');
+  }
+
+  /**
    * Initialize activity tracking
    */
   private initializeActivityTracking(): void {

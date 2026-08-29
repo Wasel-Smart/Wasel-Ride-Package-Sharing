@@ -337,106 +337,19 @@ export async function createDirectBooking(input: {
   const bookingStatus = input.bookingStatus ?? 'confirmed';
   const totalPrice = toNumber(input.metadata?.total_price, 0);
 
-  try {
-    const { data: rpcBooking, error: rpcError } = await db.rpc('app_create_ride_booking', {
-      p_trip_id: input.tripId,
-      p_passenger_id: input.userId,
-      p_seats_requested: input.seatsRequested,
-      p_pickup: input.pickup ?? null,
-      p_dropoff: input.dropoff ?? null,
-      p_booking_status: bookingStatus,
-      p_total_price: totalPrice,
-    });
+  const { data: rpcBooking, error: rpcError } = await (db as unknown as { rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: RawBooking | RawBooking[] | null; error: Error | null }> }).rpc('app_create_ride_booking', {
+    p_trip_id: input.tripId,
+    p_passenger_id: input.userId,
+    p_seats_requested: input.seatsRequested,
+    p_pickup: input.pickup ?? null,
+    p_dropoff: input.dropoff ?? null,
+    p_booking_status: bookingStatus,
+    p_total_price: totalPrice,
+  });
 
-    if (rpcError) throw rpcError;
-    const bookingRow = Array.isArray(rpcBooking) ? (rpcBooking as RawBooking[])[0] : (rpcBooking as RawBooking);
-    if (!bookingRow) throw new Error('Booking creation returned no data');
-
-    await recordDirectGrowthEvent({
-      userId: input.userId,
-      eventName: 'ride_booking_created',
-      funnelStage: bookingStatus === 'pending_driver' ? 'selected' : 'booked',
-      serviceType: 'ride',
-      from: input.pickup,
-      to: input.dropoff,
-      valueJod: totalPrice,
-      metadata: {
-        tripId: input.tripId,
-        bookingStatus,
-        seatsRequested: input.seatsRequested,
-      },
-    }).catch(() => {});
-
-    if (bookingStatus !== 'pending_driver') {
-      await processReferralConversionForPassenger(passenger.user.id).catch(() => {});
-    }
-
-    return {
-      booking: mapBookingRow({
-        ...bookingRow,
-        pickup_location: input.pickup ?? null,
-        dropoff_location: input.dropoff ?? null,
-        seats_requested: input.seatsRequested,
-        price_per_seat: totalPrice / Math.max(1, input.seatsRequested),
-        total_price: totalPrice,
-      }),
-    };
-  } catch (rpcError) {
-    if (rpcError instanceof Error && rpcError.message.includes('function') && rpcError.message.includes('does not exist')) {
-      console.warn('[createDirectBooking] RPC unavailable, falling back to direct insert');
-    } else if (rpcError instanceof Error && rpcError.message.includes('not open for booking')) {
-      throw rpcError;
-    } else {
-      throw rpcError;
-    }
-  }
-
-  const { data: trip, error: tripError } = await db
-    .from('trips')
-    .select('trip_id, available_seats, price_per_seat, trip_status')
-    .eq('trip_id', input.tripId)
-    .single();
-  if (tripError) throw tripError;
-
-  const availableSeats = toNumber(trip?.available_seats, 0);
-  if (availableSeats < input.seatsRequested) throw new Error('Not enough seats available');
-
-  const { data: existingSeats } = await db
-    .from('bookings')
-    .select('seat_number')
-    .eq('trip_id', input.tripId)
-    .neq('booking_status', 'cancelled');
-
-  const usedSeats = new Set(
-    (Array.isArray(existingSeats) ? existingSeats : []).map((item: RawBooking) =>
-      toNumber(item.seat_number, 0),
-    ),
-  );
-  const resolvedSeatNumber =
-    toNumber(input.metadata?.seat_number, 0) ||
-    Array.from(
-      { length: Math.max(availableSeats + usedSeats.size + 1, 100) },
-      (_, i) => i + 1,
-    ).find(s => !usedSeats.has(s)) ||
-    1;
-
-  const pricePerSeat = toNumber(trip?.price_per_seat, 0);
-  const totalPrice = toNumber(input.metadata?.total_price, pricePerSeat * input.seatsRequested);
-
-  const { data, error } = await db
-    .from('bookings')
-    .insert({
-      trip_id: input.tripId,
-      passenger_id: passenger.user.id,
-      seat_number: resolvedSeatNumber,
-      booking_status: bookingStatus,
-      status: bookingStatus,
-      confirmed_by_driver: bookingStatus === 'pending_driver' ? false : true,
-      amount: totalPrice,
-    })
-    .select('*')
-    .single();
-  if (error) throw error;
+  if (rpcError) throw rpcError;
+  const bookingRow = Array.isArray(rpcBooking) ? (rpcBooking as RawBooking[])[0] : (rpcBooking as RawBooking);
+  if (!bookingRow) throw new Error('Booking creation returned no data');
 
   await recordDirectGrowthEvent({
     userId: input.userId,
@@ -457,29 +370,13 @@ export async function createDirectBooking(input: {
     await processReferralConversionForPassenger(passenger.user.id).catch(() => {});
   }
 
-  await db
-    .from('trips')
-    .update({
-      available_seats:
-        bookingStatus === 'pending_driver'
-          ? availableSeats
-          : Math.max(availableSeats - input.seatsRequested, 0),
-      trip_status:
-        bookingStatus === 'pending_driver'
-          ? (trip?.trip_status ?? 'open')
-          : availableSeats - input.seatsRequested <= 0
-            ? 'booked'
-            : (trip?.trip_status ?? 'open'),
-    })
-    .eq('trip_id', input.tripId);
-
   return {
     booking: mapBookingRow({
-      ...(data as RawBooking),
+      ...bookingRow,
       pickup_location: input.pickup ?? null,
       dropoff_location: input.dropoff ?? null,
       seats_requested: input.seatsRequested,
-      price_per_seat: pricePerSeat,
+      price_per_seat: totalPrice / Math.max(1, input.seatsRequested),
       total_price: totalPrice,
     }),
   };

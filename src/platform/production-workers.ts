@@ -82,7 +82,7 @@ const matchingWorker = createWorker<RideMatchRequest>(
 
     const { data: trip } = await client
       .from('trips')
-      .select('trip_id, driver_id, trip_status, from_lat, from_lng, to_lat, to_lng')
+      .select('trip_id, driver_id, trip_status')
       .eq('trip_id', payload.rideId)
       .maybeSingle();
 
@@ -103,10 +103,17 @@ const matchingWorker = createWorker<RideMatchRequest>(
       return;
     }
 
+    if (!trip.trip_id) return;
+
     await client
       .from('trips')
       .update({ driver_id: driver.driver_id, trip_status: 'booked' })
       .eq('trip_id', trip.trip_id);
+
+    await client
+      .from('drivers')
+      .update({ driver_status: 'on_trip' })
+      .eq('driver_id', driver.driver_id);
 
     domainEventBus.publish(
       createDomainEvent(
@@ -222,24 +229,6 @@ const packageWorker = createWorker<AnyRecord>(
         event_status: 'delivered',
         notes: JSON.stringify({ deliveredAt: new Date().toISOString() }),
       });
-    }
-  },
-);
-    } else if (topic === 'packages.location-updated') {
-      const packageId = payload.packageId as string;
-      if (!packageId) return;
-
-      await client.from('package_events').insert({
-        package_id: packageId,
-        event_type: 'location_update',
-        event_status: 'ok',
-        notes: JSON.stringify({
-          latitude: payload.latitude,
-          longitude: payload.longitude,
-        }),
-      });
-
-      telemetry.recordMetric('package.location_update', 1, 'count', { packageId });
     }
   },
 );
@@ -487,15 +476,17 @@ const opsWorker = createWorker<AnyRecord>(
         const metricDate = new Date().toISOString().slice(0, 10);
         const amount = Number((payload as AnyRecord).amount ?? 0);
         const dimension = String((payload as AnyRecord).entityType ?? 'unknown');
-        await client.rpc('increment_ops_aggregate', {
-          p_metric_date: metricDate,
-          p_metric_name: 'revenue_captured',
-          p_dimension: dimension,
-          p_delta_value: amount,
-          p_delta_samples: 1,
-        }).catch(() => {
+        try {
+          await (client as unknown as { rpc: (name: string, args: Record<string, unknown>) => Promise<unknown> }).rpc('increment_ops_aggregate', {
+            p_metric_date: metricDate,
+            p_metric_name: 'revenue_captured',
+            p_dimension: dimension,
+            p_delta_value: amount,
+            p_delta_samples: 1,
+          });
+        } catch {
           // Non-fatal: analytics aggregation failure should not block the worker.
-        });
+        }
       }
     }
 

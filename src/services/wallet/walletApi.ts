@@ -8,7 +8,7 @@
  */
 
 import { API_URL } from '../core';
-import { BackendRequestError, requestEdgeJson } from '../backendWorkflow';
+import { requestEdgeJson } from '../backendWorkflow';
 import { getConfig } from '../../utils/env';
 import {
   canUseLocalWalletStorage,
@@ -24,14 +24,11 @@ import {
 import {
   fetchWalletDirect,
   getWalletTransactionRows,
-  transferWalletFundsDirect,
-  withdrawWalletFundsDirect,
   updateWalletPreferencesDirect,
   getPaymentMethodsDirect,
   addPaymentMethodDirect,
   deletePaymentMethodDirect,
   getTrustScoreDirect,
-  payWithWalletDirect,
 } from './walletDirect';
 import type {
   InsightsData,
@@ -138,12 +135,6 @@ async function requestWalletJson<T>(
     timeout: init?.timeout,
     retries: init?.retries,
   });
-}
-
-function isConnectivityError(error: unknown): boolean {
-  if (error instanceof BackendRequestError) return error.status === 404;
-  const message = error instanceof Error ? error.message : String(error);
-  return message.includes('Route not found') || message.includes('request failed: 404');
 }
 
 async function fetchSubscriptionViaBackend(userId: string): Promise<WalletSubscription | null> {

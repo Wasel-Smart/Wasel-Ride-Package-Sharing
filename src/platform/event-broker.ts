@@ -261,7 +261,6 @@ class OptimizedSupabaseEventBroker implements EventBroker {
   private processing = false;
   private stopped = false;
   private proxyAvailable = true;
-  private proxyRetryAt = 0;
 
   // Health tracking
   private health: BrokerHealth = {
@@ -301,7 +300,6 @@ class OptimizedSupabaseEventBroker implements EventBroker {
 
       if (!result.ok) {
         this.proxyAvailable = false;
-        this.proxyRetryAt = Date.now() + CONFIG.PROXY_RETRY_AFTER_MS;
         this.queueForRetry(message);
         return;
       }
@@ -490,15 +488,20 @@ class OptimizedSupabaseEventBroker implements EventBroker {
       }
 
       const pollResult = await proxyFetch('/poll', { limit: this.getBatchSize() });
-      if (!pollResult.ok || !pollResult.data) {
+      if (!pollResult.ok) {
         this.proxyAvailable = false;
-        this.proxyRetryAt = Date.now() + CONFIG.PROXY_RETRY_AFTER_MS;
         this.consecutiveErrors++;
         this.checkHealth();
         return;
       }
 
-      const pollData = pollResult.data as Record<string, unknown>;
+      const pollData = pollResult.data as Record<string, unknown> | undefined;
+      if (!pollData) {
+        this.consecutiveErrors++;
+        this.checkHealth();
+        return;
+      }
+
       const rows = (pollData.events as Array<Record<string, unknown>>) ?? [];
 
       this.adjustPollingRate(rows.length > 0);
@@ -568,7 +571,6 @@ class OptimizedSupabaseEventBroker implements EventBroker {
       await proxyFetch('/ack', { id: message.id });
     } else {
       const nextAttempts = attempts + 1;
-      const nextStatus = nextAttempts >= 5 ? 'failed' : 'pending';
       await proxyFetch('/fail', { id: message.id, attempts: nextAttempts });
     }
   }

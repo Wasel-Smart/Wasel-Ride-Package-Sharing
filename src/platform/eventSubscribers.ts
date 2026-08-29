@@ -1,7 +1,6 @@
 ﻿import { domainEventBus } from './event-bus';
-import { notificationsAPI } from '../services/notifications';
-import { trackGrowthEvent } from '../services/growthEngine';
 import { logger } from '../utils/monitoring';
+import { supabase } from '../utils/supabase/client';
 
 export function initializeEventSubscribers(): () => void {
   const unsubscribers: Array<() => void> = [];
@@ -9,36 +8,62 @@ export function initializeEventSubscribers(): () => void {
   unsubscribers.push(
     domainEventBus.subscribe('RideRequested', event => {
       logger.info('Ride requested', { eventId: event.id });
-      void trackGrowthEvent({
-        eventName: 'ride_requested',
-        funnelStage: 'searched',
-        serviceType: 'ride',
-        metadata: event.payload,
-      });
     }),
   );
 
   unsubscribers.push(
-    domainEventBus.subscribe('RideCompleted', event => {
+    domainEventBus.subscribe('RideCompleted', async event => {
       logger.info('Ride completed', { eventId: event.id });
+      const payload = event.payload as { rideId?: string; bookingId?: string } | undefined;
+      if (payload?.rideId && supabase) {
+        try {
+          const { data: trip } = await supabase
+            .from('trips')
+            .select('driver_id')
+            .eq('trip_id', payload.rideId)
+            .maybeSingle();
+
+          if (trip?.driver_id) {
+            await supabase
+              .from('drivers')
+              .update({ driver_status: 'cooldown' })
+              .eq('driver_id', trip.driver_id);
+          }
+        } catch {
+          // Non-fatal: driver status update failure should not block the subscriber.
+        }
+      }
+    }),
+  );
+
+  unsubscribers.push(
+    domainEventBus.subscribe('RideCancelled', async event => {
+      logger.info('Ride cancelled', { eventId: event.id });
+      const payload = event.payload as { rideId?: string; bookingId?: string } | undefined;
+      if (payload?.rideId && supabase) {
+        try {
+          const { data: trip } = await supabase
+            .from('trips')
+            .select('driver_id')
+            .eq('trip_id', payload.rideId)
+            .maybeSingle();
+
+          if (trip?.driver_id) {
+            await supabase
+              .from('drivers')
+              .update({ driver_status: 'available' })
+              .eq('driver_id', trip.driver_id);
+          }
+        } catch {
+          // Non-fatal: driver status update failure should not block the subscriber.
+        }
+      }
     }),
   );
 
   unsubscribers.push(
     domainEventBus.subscribe('PackageCreated', event => {
       logger.info('Package created', { eventId: event.id });
-      void trackGrowthEvent({
-        eventName: 'package_created',
-        funnelStage: 'searched',
-        serviceType: 'package',
-        metadata: event.payload,
-      });
-    }),
-  );
-
-  unsubscribers.push(
-    domainEventBus.subscribe('RideCancelled', event => {
-      logger.info('Ride cancelled', { eventId: event.id });
     }),
   );
 

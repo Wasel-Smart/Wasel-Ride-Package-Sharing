@@ -184,6 +184,17 @@ export async function trackGrowthEvent(input: {
   valueJod?: number;
   metadata?: Record<string, unknown>;
 }) {
+  if (input.userId) {
+    try {
+      const { gdpr } = await import('../utils/gdpr');
+      if (!(await gdpr.getConsent(input.userId, 'analytics'))) {
+        return;
+      }
+    } catch {
+      // If GDPR check fails, fall through to local-only recording
+    }
+  }
+
   writeLocalGrowthEvents([
     {
       eventName: input.eventName,

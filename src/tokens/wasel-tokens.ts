@@ -10,7 +10,7 @@ export const WaselColors = {
   cyan: C.cyan,
   cyanLight: C.cyanDark,
   gold: C.gold,
-  goldLight: C.blueLight,
+  goldLight: C.gold,
   green: C.green,
   greenDark: C.greenDark,
   lime: C.lime,

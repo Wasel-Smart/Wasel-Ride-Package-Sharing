@@ -406,10 +406,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const { authAPI } = await import('../services/auth');
         const result = await authAPI.updateProfile(updates);
         if (result.success) {
-          // Merge the update directly into local profile state so LocalAuth
-          // sees the change immediately without waiting for a full re-fetch.
+          if (updates.two_factor_enabled !== undefined) {
+            sessionManager.invalidateSession();
+          }
           setProfile(prev => (prev ? { ...prev, ...updates } : prev));
-          // Best-effort background refresh — failures are non-fatal.
           fetchProfile(false, user).catch(() => { });
           return { error: null };
         }
@@ -493,6 +493,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setBusy(true);
       try {
         const { error } = await client.auth.updateUser({ password: nextPassword });
+        if (!error) {
+          sessionManager.invalidateSession();
+        }
         return { error: error ?? null };
       } catch (error: unknown) {
         return { error: normalizeOperationError(error, 'Password update failed') };
