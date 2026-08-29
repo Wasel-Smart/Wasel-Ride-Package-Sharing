@@ -21,20 +21,22 @@ declare module 'react-router-dom' {
   export function MemoryRouter(props: { children: ReactNode; initialEntries?: string[] }): ReactNode;
   export function Routes(props: { children: ReactNode }): ReactNode;
   export function Route(props: { path?: string; index?: boolean; caseSensitive?: boolean; element?: ReactNode }): null;
-  export function RouteObject: unknown;
+  export const RouteObject: unknown;
 }
 
 declare module 'lucide-react' {
   import { FC, SVGProps } from 'react';
-  export interface LucideIcon extends FC<SVGProps<SVGSVGElement>> {}
+  export type LucideIcon = FC<SVGProps<SVGSVGElement>>;
   export const Icon: LucideIcon;
   export const LucideIcon: LucideIcon;
   export const Activity: LucideIcon;
   export const AlertCircle: LucideIcon;
   export const AlertTriangle: LucideIcon;
   export const ArrowDownLeft: LucideIcon;
+  export const ArrowDownLeftIcon: LucideIcon;
   export const ArrowRight: LucideIcon;
   export const ArrowUpRight: LucideIcon;
+  export const ArrowUpRightIcon: LucideIcon;
   export const BadgeDollarSign: LucideIcon;
   export const Bell: LucideIcon;
   export const Brain: LucideIcon;
@@ -97,6 +99,9 @@ declare module 'lucide-react' {
   export const TimerReset: LucideIcon;
   export const Trash2: LucideIcon;
   export const TrendingUp: LucideIcon;
+  export const TrendingUpIcon: LucideIcon;
+  export const TrendingDown: LucideIcon;
+  export const TrendingDownIcon: LucideIcon;
   export const UserCheck: LucideIcon;
   export const UserCircle2: LucideIcon;
   export const UserRound: LucideIcon;
@@ -108,11 +113,7 @@ declare module 'lucide-react' {
   export const Boxes: LucideIcon;
   export const ShieldAlert: LucideIcon;
   export const Ticket: LucideIcon;
-  export const ArrowUpRight as ArrowUpRightIcon: LucideIcon;
-  export const ArrowDownLeft as ArrowDownLeftIcon: LucideIcon;
-  export const TrendingUp as TrendingUpIcon: LucideIcon;
-  export const TrendingDown as TrendingDownIcon: LucideIcon;
-  export const LucideIcon as default: LucideIcon;
+  export const LucideIconDefault: LucideIcon;
 }
 
 declare module 'framer-motion' {
@@ -181,7 +182,7 @@ declare module '@supabase/auth-js' {
 declare module '@microsoft/applicationinsights-web' {
   export const applicationInsights: unknown;
   export const DistributedTracingModes: unknown;
-  export default applicationInsights;
+  export const ApplicationInsights: unknown;
 }
 
 declare module '@tanstack/react-query' {
@@ -198,8 +199,6 @@ declare module '@tanstack/react-query' {
   export const usePrefetchQuery: unknown;
   export const usePrefetchInfiniteQuery: unknown;
   export const QueryClientProvider: unknown;
-  export const MutationCache: unknown;
-  export const QueryCache: unknown;
   export const DehydratedState: unknown;
   export const Hydrate: unknown;
   export const focusManager: unknown;
@@ -230,52 +229,13 @@ declare module '@tanstack/react-query' {
   export const useBaseMutation: unknown;
   export const useQuerySubscriber: unknown;
   export const useMutationSubscriber: unknown;
-  export const useQueryClient: unknown;
-  export const useIsFetching: unknown;
-  export const useIsMutating: unknown;
-  export const usePrefetchQuery: unknown;
-  export const usePrefetchInfiniteQuery: unknown;
-  export const QueryClientProvider: unknown;
-  export const MutationCache: unknown;
-  export const QueryCache: unknown;
-  export const DehydratedState: unknown;
-  export const Hydrate: unknown;
-  export const focusManager: unknown;
-  export const onlineManager: unknown;
-  export const QueryObserver: unknown;
-  export const MutationObserver: unknown;
-  export const InfiniteQueryObserver: unknown;
-  export const QueriesObserver: unknown;
-  export const NotifyManager: unknown;
-  export const console: unknown;
-  export const hydrationErrorInfo: unknown;
-  export const noop: unknown;
-  export const fetchOptimistic: unknown;
-  export const defaultKey: unknown;
-  export const replaceEqualDeep: unknown;
-  export const stableHash: unknown;
-  export const hashKey: unknown;
-  export const isEqual: unknown;
-  export const isDev: unknown;
-  export const time: unknown;
-  export const functionalUpdate: unknown;
-  export const getVerboseLogs: unknown;
-  export const setVerboseLogs: unknown;
-  export const getLogger: unknown;
-  export const setLogger: unknown;
-  export const Context: unknown;
-  export const useBaseQuery: unknown;
-  export const useBaseMutation: unknown;
-  export const useQuerySubscriber: unknown;
-  export const useMutationSubscriber: unknown;
-  export default QueryClient;
 }
 
 declare module '@sentry/react' {
   export const init: unknown;
   export const browserTracingIntegration: unknown;
   export const replayIntegration: unknown;
-  export const default: unknown;
+  export const sentryDefault: unknown;
   export const reactErrorHandler: unknown;
   export const wrapUseRoutesV7: unknown;
 }

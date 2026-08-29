@@ -50,7 +50,7 @@ const CITY_LABELS_AR: Record<string, string> = {
   Petra: 'البتراء',
   Jerash: 'جرش',
   Mafraq: 'المفرق',
-  Salt: import.meta.env.VITE_PACKAGES_SALT_LABEL || 'السلط',
+  Salt: 'السلط',
 };
 
 function cityLabel(city: string, ar: boolean): string {

@@ -42,6 +42,7 @@
   "include": [
     "src/**/*",
     "src/**/*.d.ts",
+    "src/types/ambient.d.ts",
     "vite.config.ts"
   ],
   "exclude": [

@@ -50,7 +50,7 @@ const CITY_LABELS_AR: Record<string, string> = {
   Petra: 'البتراء',
   Jerash: 'جرش',
   Mafraq: 'المفرق',
-  Salt: import.meta.env.VITE_PACKAGE_SEND_SALT_LABEL || 'السلط',
+  Salt: 'السلط',
 };
 
 function cityLabel(city: string, ar: boolean): string {
@@ -81,6 +81,8 @@ export function PackageSendPanel({
 
   const errorDisplay = createError ? (
     <div
+      role="alert"
+      aria-live="assertive"
       style={{
         gridColumn: '1/-1',
         display: 'flex',

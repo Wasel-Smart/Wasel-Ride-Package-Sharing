@@ -1,0 +1,33 @@
+[1mdiff --git a/tests/integration/circuitBreakerRecovery.test.ts b/tests/integration/circuitBreakerRecovery.test.ts[m
+[1mindex cefd8f53..4d92441b 100644[m
+[1m--- a/tests/integration/circuitBreakerRecovery.test.ts[m
+[1m+++ b/tests/integration/circuitBreakerRecovery.test.ts[m
+[36m@@ -47,13 +47,17 @@[m [mdescribe('Circuit breaker OPEN recovery', () => {[m
+   });[m
+ [m
+   it('routes to the direct fallback when the edge keeps failing (CORS) and the breaker is OPEN', async () => {[m
+[31m-    // Simulate the edge transport permanently failing, the way local dev[m
+[31m-    // CORS errors do in this project.[m
+[32m+[m[32m    const originalGetConfig = (await import('@/utils/env')).getConfig;[m
+[32m+[m[32m    vi.spyOn(await import('@/utils/env'), 'getConfig').mockReturnValue({[m
+[32m+[m[32m      ...originalGetConfig(),[m
+[32m+[m[32m      allowDirectSupabaseFallback: true,[m
+[32m+[m[32m      isProd: false,[m
+[32m+[m[32m    } as never);[m
+[32m+[m
+     const failingFetch = vi.fn(async () => {[m
+       throw new TypeError('Failed to fetch');[m
+     });[m
+     const originalFetch = globalThis.fetch;[m
+[31m-    // @ts-expect-error - replace global fetch for the duration of the test[m
+     globalThis.fetch = failingFetch;[m
+ [m
+     vi.spyOn(await import('@/services/core'), 'getAuthDetails').mockResolvedValue({[m
+[36m@@ -79,6 +83,7 @@[m [mdescribe('Circuit breaker OPEN recovery', () => {[m
+       expect(fallback).toHaveBeenCalled();[m
+     } finally {[m
+       globalThis.fetch = originalFetch;[m
+[32m+[m[32m      vi.restoreAllMocks();[m
+     }[m
+   });[m
+ });[m
