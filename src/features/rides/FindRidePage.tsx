@@ -599,6 +599,8 @@ export function FindRidePage() {
 
               {searchError && (
                 <div
+                  role="alert"
+                  aria-live="assertive"
                   style={{
                     marginBottom: 14,
                     display: 'flex',
@@ -628,6 +630,8 @@ export function FindRidePage() {
               >
                 {loading || inventoryLoading ? (
                   <motion.div
+                    role="status"
+                    aria-label={t.searching}
                     animate={{ rotate: 360 }}
                     transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
                     style={{
@@ -720,6 +724,8 @@ export function FindRidePage() {
               )}
               {bookingSuccess && (
                 <div
+                  role="status"
+                  aria-live="polite"
                   style={{
                     marginTop: 14,
                     background: `linear-gradient(135deg, ${C.greenDim}, ${C.cyanDim})`,
@@ -1504,16 +1510,30 @@ export function FindRidePage() {
               </div>
 
               <div style={{ display: 'grid', gap: 14 }}>
-                {[
-                  { title: t.recentSearches, items: recentSearches, empty: t.searchHelp },
-                  {
-                    title: t.bookedTrips,
-                    items: bookedRides.map(
-                      ride => `${ride.from} to ${ride.to} | ${ride.time} | ${ride.driver.name}`,
-                    ),
-                    empty: t.noTripsYet,
-                  },
-                ].map(card => (
+                {(
+                  [
+                    {
+                      title: t.recentSearches,
+                      items: recentSearches,
+                      empty: t.searchHelp,
+                      onItemClick: (item: string) => {
+                        const parts = item.split(' to ');
+                        if (parts[0]) setFrom(parts[0]);
+                        const toPart = parts[1]?.split(' on ')[0];
+                        if (toPart) setTo(toPart);
+                        setSearched(true);
+                      },
+                    },
+                    {
+                      title: t.bookedTrips,
+                      items: bookedRides.map(
+                        ride => `${ride.from} to ${ride.to} | ${ride.time} | ${ride.driver.name}`,
+                      ),
+                      empty: t.noTripsYet,
+                      onItemClick: () => openMyTrips(),
+                    },
+                  ] as const
+                ).map(card => (
                   <div
                     key={card.title}
                     style={{
@@ -1526,18 +1546,12 @@ export function FindRidePage() {
                     <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>
                       {card.title}
                     </div>
-                    {recentSearches.length > 0 ? (
+                    {card.items.length > 0 ? (
                       <div style={{ display: 'grid', gap: 10 }}>
-                        {recentSearches.map(item => (
+                        {card.items.map(item => (
                           <button
                             key={item}
-                            onClick={() => {
-                              const parts = item.split(' to ');
-                              if (parts[0]) setFrom(parts[0]);
-                              const toPart = parts[1]?.split(' on ')[0];
-                              if (toPart) setTo(toPart);
-                              setSearched(true);
-                            }}
+                            onClick={() => card.onItemClick(item)}
                             style={{
                               borderRadius: r(12),
                               border: `1px solid ${DS.border}`,
@@ -1559,7 +1573,7 @@ export function FindRidePage() {
                         ))}
                       </div>
                     ) : (
-                      <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{t.searchHelp}</div>
+                      <div style={{ color: DS.muted, fontSize: '0.8rem' }}>{card.empty}</div>
                     )}
                   </div>
                 ))}
