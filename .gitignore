@@ -3,6 +3,8 @@ build/
 dist/
 .vite/
 .next/
+.vercel/
+
 
 # Dependencies
 node_modules/

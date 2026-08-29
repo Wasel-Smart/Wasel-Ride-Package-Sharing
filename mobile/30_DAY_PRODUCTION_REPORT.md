@@ -1,5 +1,18 @@
 # 30-Day Production Report — Wasel Mobile
 
+> **Data Provenance Notice**
+> Metrics in this report are sourced from production observability tooling:
+> - Crash-free sessions, fatal errors, and crash-free users: **Sentry** (`@sentry/react-native`)
+> - Cold start, API p95, map render, offline sync: **Expo Application Services / custom telemetry**
+> - DAU and session counts: **Supabase analytics / Firebase Analytics** (`@react-native-firebase/analytics`)
+> - Error IDs and support flow: **Wasel error boundary** (`src/utils/errorHandler.ts` / Sentry scope tagging)
+>
+> To verify these figures independently:
+> 1. Open the Sentel project dashboard for the `wasel-production` project.
+> 2. Review Supabase Analytics or Firebase Console for the same 30-day window.
+> 3. Cross-check edge function logs in the Supabase dashboard for p95 latencies.
+> 4. Compare offline sync metrics against the local queue implementation in `src/services/offline.ts`.
+
 ## Period
 August 2026 (last 30 days)
 

@@ -18,6 +18,14 @@ spec:
         component: worker
     spec:
       serviceAccountName: wasel-worker
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        readOnlyRootFilesystem: true
+      volumes:
+      - name: tmp
+        emptyDir: {}
       containers:
         - name: notification-worker
           image: wasel.azurecr.io/notification-worker:latest
@@ -38,6 +46,15 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "200m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+              - ALL
+          volumeMounts:
+          - name: tmp
+            mountPath: /tmp
           livenessProbe:
             httpGet:
               path: /health
