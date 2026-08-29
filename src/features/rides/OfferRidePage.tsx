@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Brain, CheckCircle2, Network } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -46,6 +46,9 @@ export function OfferRidePage() {
 
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(() => readStoredObject(OFFER_RIDE_DRAFT_KEY, defaultForm));
+  const hadStoredDraftOnMount = useRef(
+    typeof window !== 'undefined' && window.localStorage.getItem(OFFER_RIDE_DRAFT_KEY) !== null,
+  );
   const [submitted, setSubmitted] = useState(false);
   const [rideBookings, setRideBookings] = useState<RideBookingRecord[]>([]);
   const [networkStats, setNetworkStats] = useState(() => getConnectedStats());
@@ -92,9 +95,18 @@ export function OfferRidePage() {
   }, [user?.id]);
 
   useEffect(() => {
+    if (hadStoredDraftOnMount.current) {
+      setDraftMessage(
+        ar ? 'تمت استعادة المسودة من جلستك السابقة.' : 'Draft restored from your last session.',
+      );
+    }
+    // Intentionally run once on mount only — this announces a restored draft,
+    // it should not re-fire every time the form changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (typeof window === 'undefined') return;
-    const saved = window.localStorage.getItem(OFFER_RIDE_DRAFT_KEY);
-    if (saved) setDraftMessage(ar ? 'تمت استعادة المسودة من جلستك السابقة.' : 'Draft restored from your last session.');
     window.localStorage.setItem(OFFER_RIDE_DRAFT_KEY, JSON.stringify(form));
   }, [form]);
 

@@ -47,8 +47,13 @@ describe('Circuit breaker OPEN recovery', () => {
   });
 
   it('routes to the direct fallback when the edge keeps failing (CORS) and the breaker is OPEN', async () => {
-    // Simulate the edge transport permanently failing, the way local dev
-    // CORS errors do in this project.
+    const originalGetConfig = (await import('@/utils/env')).getConfig;
+    vi.spyOn(await import('@/utils/env'), 'getConfig').mockReturnValue({
+      ...originalGetConfig(),
+      allowDirectSupabaseFallback: true,
+      isProd: false,
+    } as never);
+
     const failingFetch = vi.fn(async () => {
       throw new TypeError('Failed to fetch');
     });
@@ -78,6 +83,7 @@ describe('Circuit breaker OPEN recovery', () => {
       expect(fallback).toHaveBeenCalled();
     } finally {
       globalThis.fetch = originalFetch;
+      vi.restoreAllMocks();
     }
   });
 });

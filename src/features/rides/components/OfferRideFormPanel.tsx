@@ -63,6 +63,8 @@ export function OfferRideFormPanel({
   const capacity = (value: string) => packageCapacityLabel(value, language);
   const errorDisplay = formError ? (
     <div
+      role="alert"
+      aria-live="assertive"
       style={{
         marginBottom: 16,
         display: 'flex',
