@@ -46,6 +46,18 @@ gcm-diagnose.log
 firepit-log.txt
 preview-log.txt
 
+# ── Local AI agent / IDE artifacts (NEVER commit) ──────────────
+.agents/
+.claude/
+.codex/
+.commandcode/
+.continue/
+.eval-dist/
+.firebaserc
+.playwright-mcp/
+.wasel-agent/
+*.zip
+
 # ── Editor artifacts ───────────────────────────────────────────
 .vscode/settings.json
 .idea/
