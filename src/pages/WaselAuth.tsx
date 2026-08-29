@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import {
   ArrowRight,
   Bus,
+  Check,
   CheckCircle2,
   Lock,
   Mail,
@@ -62,6 +63,9 @@ const BRAND_METRICS_AR = [
 const BRAND_PILLS = ['Verified', 'Fast', 'Clear'] as const;
 const BRAND_PILLS_AR = ['موثّق', 'سريع', 'واضح'] as const;
 
+const BRAND_EYEBROW = "Jordan's mobility OS";
+const BRAND_EYEBROW_AR = 'نظام التنقّل الأول في الأردن';
+
 // ─── Brand panel (left column) ────────────────────────────────────────────────
 function BrandPanel() {
   const { language } = useLanguage();
@@ -117,6 +121,42 @@ function BrandPanel() {
           style={{ margin: `0 0 ${SPACE[6]}`, display: 'flex', justifyContent: 'center' }}
         >
           <WaselHeroMark size={140} />
+        </div>
+
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: SPACE[2],
+            padding: '6px 14px',
+            borderRadius: R.full,
+            background: `${C.cyan}12`,
+            border: `1px solid ${C.cyan}30`,
+            marginBottom: SPACE[5],
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: '50%',
+              background: C.cyan,
+              boxShadow: `0 0 8px ${C.cyan}`,
+              animation: 'pulse-dot 2s ease-in-out infinite',
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              fontSize: TYPE.size.xs,
+              fontWeight: TYPE.weight.bold,
+              color: C.cyan,
+              textTransform: 'uppercase',
+              letterSpacing: TYPE.letterSpacing.widest,
+            }}
+          >
+            {ar ? BRAND_EYEBROW_AR : BRAND_EYEBROW}
+          </span>
         </div>
 
         <h2
@@ -234,14 +274,19 @@ function BrandPanel() {
             <span
               key={label}
               style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
                 fontSize: TYPE.size.xs,
-                color: `${C.text}66`,
+                fontWeight: TYPE.weight.semibold,
+                color: `${C.text}99`,
                 background: `${C.text}0a`,
                 border: `1px solid ${C.text}18`,
                 borderRadius: R.full,
-                padding: '4px 10px',
+                padding: '4px 12px 4px 8px',
               }}
             >
+              <Check size={11} color={C.green} strokeWidth={3} />
               {label}
             </span>
           ))}
@@ -556,6 +601,7 @@ export default function WaselAuth() {
           .auth-mobile-header{display:flex!important}
         }
         @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(0.85)}}
       `}</style>
 
       <BrandPanel />

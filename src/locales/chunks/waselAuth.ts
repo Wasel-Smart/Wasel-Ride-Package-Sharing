@@ -1,12 +1,12 @@
 export const waselAuth = {
   en: {
-      one_identity: 'One identity',
-      for_every_route: 'for every route',
+      one_identity: 'One account.',
+      for_every_route: 'Every way you move.',
       rides_parcels_buses_trust_and_support_stay_under_one_clear_account:
-        'Rides, parcels, buses, trust, and support stay under one clear account.',
-      one_identity_2: 'One identity',
+        'From your next ride to your next delivery, one verified account keeps every trip tracked, trusted, and moving with you.',
+      one_identity_2: 'One Wasel account.',
       sign_in_once_for_rides_parcels_buses_and_trust:
-        'Sign in once for rides, parcels, buses, and trust.',
+        'Every ride, parcel, and route — signed in once.',
       signed_in_successfully_redirecting_now: 'Signed in successfully. Redirecting now.',
       ahmad_al_rashid: 'Ahmad Al-Rashid',
       as_shown_on_your_profile: 'As shown on your profile',
@@ -43,13 +43,13 @@ export const waselAuth = {
       create_account: 'Create account',
   },
   ar: {
-      one_identity: 'هوية واحدة',
-      for_every_route: 'لكل مسار',
+      one_identity: 'حساب واحد.',
+      for_every_route: 'لكل طريقة تتنقّل فيها.',
       rides_parcels_buses_trust_and_support_stay_under_one_clear_account:
-        'الرحلات والطرود والحافلات والثقة والدعم تحت حساب واضح واحد.',
-      one_identity_2: 'هوية واحدة',
+        'من رحلتك القادمة إلى طردك القادم، حساب واحد موثّق يبقي كل رحلة متتبَّعة وموثوقة وماشية معك.',
+      one_identity_2: 'حساب واصل واحد.',
       sign_in_once_for_rides_parcels_buses_and_trust:
-        'سجّل الدخول مرة واحدة للرحلات والطرود والحافلات والثقة.',
+        'كل رحلة وطرد ومسار — بتسجيل دخول واحد.',
       signed_in_successfully_redirecting_now: 'تم تسجيل الدخول بنجاح. جارٍ التحويل الآن.',
       ahmad_al_rashid: 'أحمد الرشيد',
       as_shown_on_your_profile: 'مثل ما يظهر في ملفك',
