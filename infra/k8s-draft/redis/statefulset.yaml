@@ -20,6 +20,9 @@ spec:
         runAsNonRoot: true
         runAsUser: 999
         fsGroup: 999
+      volumes:
+      - name: tmp
+        emptyDir: {}
       containers:
       - name: redis
         image: redis:7.2-alpine
@@ -39,9 +42,17 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "500m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
         volumeMounts:
         - name: redis-data
           mountPath: /data
+        - name: tmp
+          mountPath: /tmp
         livenessProbe:
           exec:
             command:

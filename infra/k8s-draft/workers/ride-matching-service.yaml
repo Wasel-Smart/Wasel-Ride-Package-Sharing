@@ -18,6 +18,11 @@ spec:
         component: worker
     spec:
       serviceAccountName: wasel-worker
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        readOnlyRootFilesystem: true
       containers:
         - name: ride-matching-service
           image: wasel.azurecr.io/ride-matching-service:latest # Replace with your registry and version
@@ -52,6 +57,12 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "200m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+              - ALL
           livenessProbe:
             httpGet:
               path: /health # Assuming a health endpoint
