@@ -344,6 +344,16 @@ const notificationWorker = createWorker<AnyRecord>(
 
       const userId = (booking?.passenger_id as string) ?? (payload.driverId as string);
       if (userId) {
+        const { data: existing } = await client
+          .from('notifications')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('type', 'booking')
+          .eq('title', 'Driver assigned')
+          .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+          .maybeSingle();
+        if (existing) return;
+
         await notificationsAPI.createNotification({
           title: 'Driver assigned',
           message: `A driver has been assigned to your ride.`,
@@ -362,6 +372,16 @@ const notificationWorker = createWorker<AnyRecord>(
 
       const userId = (booking?.passenger_id as string) ?? (payload.driverId as string);
       if (userId) {
+        const { data: existing } = await client
+          .from('notifications')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('type', 'booking')
+          .eq('title', 'Ride Completed')
+          .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+          .maybeSingle();
+        if (existing) return;
+
         await notificationsAPI.createNotification({
           title: 'Ride Completed',
           message: 'Please rate your experience.',
@@ -379,14 +399,25 @@ const notificationWorker = createWorker<AnyRecord>(
         .maybeSingle();
 
       const recipients = [pkg?.sender_id, pkg?.receiver_id].filter(Boolean) as string[];
+      const { data: existing } = await client
+        .from('notifications')
+        .select('id, user_id')
+        .eq('type', 'booking')
+        .eq('title', 'Package Delivered')
+        .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+        .maybeSingle();
+      const existingUserIds = new Set([existing?.user_id].filter(Boolean) as string[]);
+
       await Promise.all(
-        recipients.map(() =>
-          notificationsAPI.createNotification({
-            title: 'Package Delivered',
-            message: 'Your package has been delivered successfully.',
-            type: 'booking',
-            priority: 'high',
-          } as never),
+        recipients.map(userId =>
+          existingUserIds.has(userId)
+            ? Promise.resolve()
+            : notificationsAPI.createNotification({
+                title: 'Package Delivered',
+                message: 'Your package has been delivered successfully.',
+                type: 'booking',
+                priority: 'high',
+              } as never),
         ),
       );
     } else if (topic === 'packages.cancelled') {
@@ -399,14 +430,25 @@ const notificationWorker = createWorker<AnyRecord>(
 
       const recipients = [pkg?.sender_id, pkg?.receiver_id].filter(Boolean) as string[];
       const reason = (payload as { reason?: string } | undefined)?.reason;
+      const { data: existing } = await client
+        .from('notifications')
+        .select('id, user_id')
+        .eq('type', 'booking')
+        .eq('title', 'Package Cancelled')
+        .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+        .maybeSingle();
+      const existingUserIds = new Set([existing?.user_id].filter(Boolean) as string[]);
+
       await Promise.all(
-        recipients.map(() =>
-          notificationsAPI.createNotification({
-            title: 'Package Cancelled',
-            message: `Your package has been cancelled.${reason ? ` Reason: ${reason}` : ''}`,
-            type: 'booking',
-            priority: 'medium',
-          } as never),
+        recipients.map(userId =>
+          existingUserIds.has(userId)
+            ? Promise.resolve()
+            : notificationsAPI.createNotification({
+                title: 'Package Cancelled',
+                message: `Your package has been cancelled.${reason ? ` Reason: ${reason}` : ''}`,
+                type: 'booking',
+                priority: 'medium',
+              } as never),
         ),
       );
     }
