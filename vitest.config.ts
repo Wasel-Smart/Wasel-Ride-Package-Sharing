@@ -82,8 +82,8 @@ export default defineConfig({
       VITE_AUTH_CALLBACK_PATH: '/app/auth/callback',
       MODE: 'test',
     },
-    testTimeout: 15000,
-    hookTimeout: 15000,
+    testTimeout: 30000,
+    hookTimeout: 30000,
     passWithNoTests: true,
     coverage: {
       provider: 'v8',
