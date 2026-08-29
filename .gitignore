@@ -166,6 +166,7 @@ artifacts/
 
 # Nested git repo (wasel/ has its own .git)
 wasel/
+Wasel14.online/
 
 # Expo build artifacts
 mobile/.expo/web/cache
