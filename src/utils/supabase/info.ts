@@ -20,6 +20,15 @@ const PLACEHOLDER_MARKERS = [
   'your-publishable-key-or-anon-key',
   'replace_with',
   'example.com',
+  // Matches the unfilled template values shipped in .env / .env.example,
+  // e.g. "PASTE_YOUR_SB_PUBLISHABLE_KEY_HERE". Without this, an unfilled
+  // template value passes the placeholder check, gets sent to Supabase as
+  // a real key, and produces an opaque "Invalid API key" failure at sign-in
+  // instead of a clear "not configured" state.
+  'paste_your',
+  '_here',
+  'your_sb_',
+  'your_supabase_',
 ];
 
 const BLOCKED_PUBLIC_SUPABASE_KEYS = new Set([

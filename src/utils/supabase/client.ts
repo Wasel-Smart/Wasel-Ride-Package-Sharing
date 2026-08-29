@@ -24,7 +24,12 @@ function isPlaceholderValue(value: string | undefined): boolean {
     normalized.includes('your-anon-key') ||
     normalized.includes('your-anon-key-here') ||
     normalized.includes('replace_with') ||
-    normalized.includes('example.com')
+    normalized.includes('example.com') ||
+    // Unfilled .env template markers, e.g. "PASTE_YOUR_SB_PUBLISHABLE_KEY_HERE".
+    normalized.includes('paste_your') ||
+    normalized.includes('_here') ||
+    normalized.includes('your_sb_') ||
+    normalized.includes('your_supabase_')
   );
 }
 
