@@ -1,5 +1,5 @@
 import type { DomainEventEnvelope, DomainEventPayloadMap, DomainEventType } from '../domain/events';
-import { publishDomainEvent } from './event-broker';
+import { eventBroker, EVENT_TYPE_TO_TOPIC, type QueueTopic } from './event-broker';
 
 type DomainEventListener<TType extends DomainEventType> = (
   event: DomainEventEnvelope<TType>,
@@ -50,10 +50,6 @@ class InMemoryDomainEventBus {
     this.anyListeners.forEach(listener => {
       listener(event);
     });
-
-    // Forward to the active broker so async workers (matching, package,
-    // payment, notification, ops) process the event out-of-band.
-    publishDomainEvent(event);
   }
 
   subscribe<TType extends DomainEventType>(
@@ -82,3 +78,19 @@ class InMemoryDomainEventBus {
 }
 
 export const domainEventBus = new InMemoryDomainEventBus();
+
+export function publishDomainEvent(event: DomainEventEnvelope): void {
+  void import('./event-broker').then(({ eventBroker: broker }) => {
+    void broker.publish({
+      id: event.id,
+      topic: event.type,
+      payload: event.payload,
+      producer: event.producer,
+      traceId: event.traceId,
+      occurredAt: event.occurredAt,
+      attempts: 0,
+    });
+  }).catch(() => {
+    // durable broker unavailable — event remains in local history for same-session use
+  });
+}

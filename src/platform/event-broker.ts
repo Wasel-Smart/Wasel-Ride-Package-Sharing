@@ -302,32 +302,57 @@ class OptimizedSupabaseEventBroker implements EventBroker {
       if (!result.ok) {
         this.proxyAvailable = false;
         this.proxyRetryAt = Date.now() + CONFIG.PROXY_RETRY_AFTER_MS;
-        return this.persistDirect(message);
+        this.queueForRetry(message);
+        return;
       }
 
       return;
     }
 
-    return this.persistDirect(message);
+    this.queueForRetry(message);
   }
 
-  private async persistDirect(message: BrokerMessage): Promise<void> {
-    try {
-      const { error } = await this.client.from(CONFIG.OUTBOX_TABLE).insert({
-        id: message.id,
-        topic: message.topic,
-        payload: message.payload as never,
-        producer: message.producer,
-        trace_id: message.traceId,
-        status: 'pending',
-        attempts: message.attempts,
-        created_at: message.occurredAt,
-      });
-      if (error) {
-        console.error('[broker] failed to persist event', sanitizeLogMessage(message.topic), sanitizeLogMessage(error.message));
+  private pendingRetries: BrokerMessage[] = [];
+
+  private queueForRetry(message: BrokerMessage): void {
+    this.pendingRetries.push(message);
+    if (this.pendingRetries.length === 1) {
+      this.scheduleRetryDrain();
+    }
+  }
+
+  private scheduleRetryDrain(): void {
+    setTimeout(() => {
+      if (this.stopped) return;
+      const batch = this.pendingRetries.splice(0, CONFIG.BATCH_SIZE);
+      if (batch.length > 0) {
+        void this.drainRetryQueue(batch).finally(() => {
+          if (this.pendingRetries.length > 0) {
+            this.scheduleRetryDrain();
+          }
+        });
       }
-    } catch (err) {
-      console.error('[broker] persist threw', sanitizeLogMessage(message.topic), sanitizeLogMessage(err));
+    }, CONFIG.PROXY_RETRY_AFTER_MS);
+  }
+
+  private async drainRetryQueue(messages: BrokerMessage[]): Promise<void> {
+    for (const message of messages) {
+      if (!this.proxyAvailable) {
+        const result = await proxyFetch('/publish', {
+          id: message.id,
+          topic: message.topic,
+          payload: message.payload,
+          producer: message.producer,
+          traceId: message.traceId,
+          occurredAt: message.occurredAt,
+          attempts: message.attempts,
+        });
+        if (result.ok) {
+          this.proxyAvailable = true;
+          continue;
+        }
+      }
+      this.pendingRetries.push(message);
     }
   }
 
@@ -458,51 +483,24 @@ class OptimizedSupabaseEventBroker implements EventBroker {
     this.processing = true;
 
     try {
-      // Check proxy recovery
-      if (!this.proxyAvailable && Date.now() >= this.proxyRetryAt) {
-        this.proxyAvailable = true;
-      }
-
-      let rows: Array<Record<string, unknown>> = [];
-
-      // Fetch pending events
-      if (this.proxyAvailable) {
-        const pollResult = await proxyFetch('/poll', { limit: this.getBatchSize() });
-        if (pollResult.ok && pollResult.data) {
-          const pollData = pollResult.data as Record<string, unknown>;
-          rows = (pollData.events as Array<Record<string, unknown>>) ?? [];
-        } else {
-          this.proxyAvailable = false;
-          this.proxyRetryAt = Date.now() + CONFIG.PROXY_RETRY_AFTER_MS;
-        }
-      }
-
       if (!this.proxyAvailable) {
-        const { data, error } = await this.client
-          .from(CONFIG.OUTBOX_TABLE)
-          .select('id, topic, payload, producer, trace_id, created_at, status, attempts')
-          .eq('status', 'pending')
-          .order('created_at', { ascending: true })
-          .limit(this.getBatchSize());
-
-        if (error) {
-          const message = String(error.message ?? error);
-          if (message.includes('does not exist') || message.includes('schema cache')) {
-            if (import.meta.env.DEV) {
-              console.warn('[broker] table missing, stopping poller', sanitizeLogMessage(message));
-            }
-            this.stopPolling();
-            return;
-          }
-          console.warn('[broker] poll failed', sanitizeLogMessage(message));
-          this.consecutiveErrors++;
-          this.checkHealth();
-          return;
-        }
-        rows = (data as Array<Record<string, unknown>>) ?? [];
+        this.consecutiveErrors++;
+        this.checkHealth();
+        return;
       }
 
-      // Adjust polling rate based on workload
+      const pollResult = await proxyFetch('/poll', { limit: this.getBatchSize() });
+      if (!pollResult.ok || !pollResult.data) {
+        this.proxyAvailable = false;
+        this.proxyRetryAt = Date.now() + CONFIG.PROXY_RETRY_AFTER_MS;
+        this.consecutiveErrors++;
+        this.checkHealth();
+        return;
+      }
+
+      const pollData = pollResult.data as Record<string, unknown>;
+      const rows = (pollData.events as Array<Record<string, unknown>>) ?? [];
+
       this.adjustPollingRate(rows.length > 0);
 
       // Process events
@@ -565,28 +563,13 @@ class OptimizedSupabaseEventBroker implements EventBroker {
   }
 
   private async acknowledgeEvent(message: BrokerMessage, delivered: boolean, attempts: number): Promise<void> {
+    if (!this.proxyAvailable) return;
     if (delivered) {
-      if (this.proxyAvailable) {
-        await proxyFetch('/ack', { id: message.id });
-      } else {
-        await this.client
-          .from(CONFIG.OUTBOX_TABLE)
-          .update({ status: 'processed', processed_at: new Date().toISOString() })
-          .eq('id', message.id)
-          .eq('status', 'pending');
-      }
+      await proxyFetch('/ack', { id: message.id });
     } else {
       const nextAttempts = attempts + 1;
       const nextStatus = nextAttempts >= 5 ? 'failed' : 'pending';
-
-      if (this.proxyAvailable) {
-        await proxyFetch('/fail', { id: message.id, attempts: nextAttempts });
-      } else {
-        await this.client
-          .from(CONFIG.OUTBOX_TABLE)
-          .update({ attempts: nextAttempts, status: nextStatus })
-          .eq('id', message.id);
-      }
+      await proxyFetch('/fail', { id: message.id, attempts: nextAttempts });
     }
   }
 
