@@ -29,7 +29,7 @@ function lookup(key: string, lang: Language): string | undefined {
 
   if (keys.length > 1) {
     const flatTable = translations[lang];
-    const tail = keys[keys.length - 1];
+    const tail = keys[keys.length - 1]!;
     const flatValue =
       typeof flatTable === 'object' && flatTable !== null ? flatTable[tail] : undefined;
     if (typeof flatValue === 'string') return flatValue;
