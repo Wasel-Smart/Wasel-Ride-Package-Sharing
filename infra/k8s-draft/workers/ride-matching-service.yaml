@@ -23,6 +23,9 @@ spec:
         runAsUser: 1000
         fsGroup: 1000
         readOnlyRootFilesystem: true
+      volumes:
+      - name: tmp
+        emptyDir: {}
       containers:
         - name: ride-matching-service
           image: wasel.azurecr.io/ride-matching-service:latest # Replace with your registry and version
@@ -63,6 +66,9 @@ spec:
             capabilities:
               drop:
               - ALL
+          volumeMounts:
+          - name: tmp
+            mountPath: /tmp
           livenessProbe:
             httpGet:
               path: /health # Assuming a health endpoint
