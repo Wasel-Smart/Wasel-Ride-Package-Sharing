@@ -1,0 +1,80 @@
+{
+    "__inputs": [],
+    "__requires": [],
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }
+        ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "id": 1,
+            "title": "API Latency (p95)",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(api_latency_seconds_bucket[5m])) by (le))",
+                    "legendFormat": "p95 Latency"
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "title": "API Error Rate (5xx)",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "expr": "sum(rate(api_requests_total{status=~\"5..\"}[5m])) / sum(rate(api_requests_total[5m])) * 100",
+                    "legendFormat": "Error Rate (%)"
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "title": "Worker Queue Depth",
+            "type": "stat",
+            "targets": [
+                {
+                    "expr": "sum(event_broker_queue_depth)",
+                    "legendFormat": "Queue Depth"
+                }
+            ]
+        }
+    ],
+    "schemaVersion": 37,
+    "style": "dark",
+    "tags": [
+        "wasel",
+        "production"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Wasel - Production Overview",
+    "uid": "wasel-prod-overview",
+    "version": 1,
+    "weekStart": ""
+}

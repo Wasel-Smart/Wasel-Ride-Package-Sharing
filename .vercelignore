@@ -1,0 +1,41 @@
+# Vercel ignore file
+# Ignore development files not needed in deployment
+
+# Tests and development
+tests/
+# scripts are needed for build (generate-pwa-manifest.mjs, version-sw.mjs)
+/supabase/
+
+# Development files
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+.vite/
+coverage/
+dist/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Git
+.git/
+.github/
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+docker/
+Dockerfile
+docker-compose*.yml
+
+# Kubernetes
+infra/

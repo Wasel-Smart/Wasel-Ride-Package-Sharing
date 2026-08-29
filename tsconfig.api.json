@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["api/**/*.ts"],
+  "exclude": ["node_modules", "build", "dist"]
+}

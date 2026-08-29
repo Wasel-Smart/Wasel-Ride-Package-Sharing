@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#040C18">
+  <meta name="color-scheme" content="dark">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Offline | Wasel</title>
+
+  <style>
+    :root {
+      --bg: #040c18;
+      --panel: rgba(10, 22, 40, 0.94);
+      --panel-border: rgba(85, 233, 255, 0.14);
+      --text: #eff6ff;
+      --muted: rgba(239, 246, 255, 0.72);
+      --soft: rgba(239, 246, 255, 0.52);
+      --cyan: #55e9ff;
+      --blue: #1ea1ff;
+      --green: #33e85f;
+      --gold: #f5b11e;
+      --danger: #ff6b6b;
+      --focus: rgba(85, 233, 255, 0.45);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding:
+        max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      overflow-x: hidden;
+      color: var(--text);
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Inter",
+        "Segoe UI",
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+
+      background:
+        radial-gradient(circle at 16% 18%,
+          rgba(85, 233, 255, 0.16),
+          transparent 24%),
+        radial-gradient(circle at 78% 14%,
+          rgba(245, 177, 30, 0.14),
+          transparent 22%),
+        radial-gradient(circle at 82% 70%,
+          rgba(51, 232, 95, 0.1),
+          transparent 20%),
+        linear-gradient(180deg,
+          rgba(255, 255, 255, 0.02),
+          rgba(255, 255, 255, 0)),
+        var(--bg);
+    }
+
+    .shell {
+      position: relative;
+      width: min(100%, 760px);
+      border-radius: 32px;
+      padding: 32px;
+
+      background:
+        linear-gradient(180deg,
+          rgba(255, 255, 255, 0.06),
+          rgba(255, 255, 255, 0.02)),
+        var(--panel);
+
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 32px 80px rgba(0, 0, 0, 0.42);
+
+      /*
+       * Use the prefixed version for older Safari/WebKit.
+       * If unsupported, the page still works without blur.
+       */
+      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(18px);
+
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+
+      background:
+        radial-gradient(circle at 60% 30%,
+          rgba(85, 233, 255, 0.08),
+          transparent 24%),
+        radial-gradient(circle at 74% 16%,
+          rgba(245, 177, 30, 0.1),
+          transparent 18%),
+        radial-gradient(circle at 82% 54%,
+          rgba(51, 232, 95, 0.08),
+          transparent 18%);
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand picture {
+      display: block;
+      max-width: 220px;
+    }
+
+    .brand img {
+      width: min(220px, 46vw);
+      height: auto;
+      max-height: 100px;
+      object-fit: contain;
+      object-position: left center;
+      display: block;
+
+      filter:
+        drop-shadow(0 0 18px rgba(85, 233, 255, 0.18));
+    }
+
+    .eyebrow {
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--cyan);
+    }
+
+    h1 {
+      margin: 18px 0 12px;
+      font-size: clamp(2.1rem, 6vw, 3.4rem);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .lead {
+      max-width: 560px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .button,
+    .button-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50px;
+      padding: 0 20px;
+      border-radius: 16px;
+
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 0.95rem;
+
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease,
+        opacity 0.2s ease;
+    }
+
+    .button {
+      border: 0;
+      cursor: pointer;
+
+      background:
+        linear-gradient(135deg,
+          var(--cyan) 0%,
+          var(--blue) 55%,
+          #18d7c8 100%);
+
+      color: #041018;
+      box-shadow: 0 18px 36px rgba(30, 161, 255, 0.24);
+    }
+
+    .button-secondary {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(85, 233, 255, 0.18);
+    }
+
+    .button:hover,
+    .button-secondary:hover {
+      transform: translateY(-1px);
+    }
+
+    .button:active,
+    .button-secondary:active {
+      transform: translateY(0);
+    }
+
+    .button:focus-visible,
+    .button-secondary:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 3px;
+    }
+
+    .button[aria-disabled="true"] {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 28px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .meta-card {
+      border-radius: 18px;
+      padding: 14px 16px;
+
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .meta-title {
+      color: var(--soft);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .meta-copy {
+      color: var(--text);
+      font-size: 0.92rem;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .status {
+      margin-top: 18px;
+      min-height: 1.4em;
+      color: var(--soft);
+      font-size: 0.86rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .status.online {
+      color: var(--green);
+    }
+
+    .status.offline {
+      color: var(--gold);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .noscript {
+      margin-top: 18px;
+      color: var(--soft);
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding:
+          max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+      }
+
+      .shell {
+        padding: 24px;
+        border-radius: 24px;
+      }
+
+      .meta {
+        grid-template-columns: 1fr;
+      }
+
+      .brand picture,
+      .brand img {
+        width: min(180px, 58vw);
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .button,
+      .button-secondary {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .button,
+      .button-secondary {
+        transition: none;
+      }
+
+      .button:hover,
+      .button-secondary:hover {
+        transform: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="shell" aria-labelledby="offline-title">
+
+    <div class="brand">
+      <picture>
+        <source srcset="/brand/assets/logos/symbols/symbol-default.webp" type="image/webp" />
+
+        <img src="/brand/assets/logos/symbols/symbol-default.png" alt="Wasel | واصل" width="220" height="auto"
+          decoding="async" fetchpriority="high" onerror="this.onerror=null; this.src='/favicon.ico';">
+      </picture>
+
+      <div class="eyebrow">
+        Jordan Mobility Network
+      </div>
+    </div>
+
+    <h1 id="offline-title">
+      You are offline, but your route is still here.
+    </h1>
+
+    <p class="lead">
+      Wasel can still open cached screens and brand assets while your
+      connection recovers. Reconnect to continue booking rides, managing
+      parcels, and syncing live trip activity.
+    </p>
+
+    <div class="actions">
+      <a href="/" class="button" id="reload-button" role="button" aria-label="Reload Wasel">
+        Reload Wasel
+      </a>
+
+      <a href="/app/find-ride" class="button-secondary" id="cached-app-button" aria-label="Open cached Wasel app">
+        Open cached app
+      </a>
+    </div>
+
+    <section class="meta" aria-label="Offline status information">
+
+      <div class="meta-card">
+        <div class="meta-title">Status</div>
+        <div class="meta-copy" id="connection-status" aria-live="polite">
+          Offline mode detected
+        </div>
+      </div>
+
+      <div class="meta-card">
+        <div class="meta-title">Available</div>
+        <div class="meta-copy">
+          Saved routes and install assets
+        </div>
+      </div>
+
+      <div class="meta-card">
+        <div class="meta-title">Next step</div>
+        <div class="meta-copy">
+          Reconnect to restore live bookings
+        </div>
+      </div>
+
+    </section>
+
+    <div class="status offline" id="status" role="status" aria-live="polite" aria-atomic="true">
+      Waiting for network to return.
+    </div>
+
+    <noscript>
+      <div class="noscript">
+        JavaScript is disabled. Use the links above to continue.
+      </div>
+    </noscript>
+
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const status = document.getElementById("status");
+      const connectionStatus =
+        document.getElementById("connection-status");
+      const reloadButton =
+        document.getElementById("reload-button");
+
+      let reloadTimer = null;
+      let reloadStarted = false;
+
+      const RECONNECT_DELAY = 1500;
+
+      function setStatus(message, state) {
+        if (status) {
+          status.textContent = message;
+          status.className = `status ${state || ""}`.trim();
+        }
+
+        if (connectionStatus) {
+          connectionStatus.textContent =
+            state === "online"
+              ? "Connection restored"
+              : "Offline mode detected";
+        }
+      }
+
+      function updateStatus() {
+        if (navigator.onLine) {
+          setStatus(
+            "Connection detected. Verifying connection...",
+            "online"
+          );
+        } else {
+          setStatus(
+            "Waiting for network to return.",
+            "offline"
+          );
+        }
+      }
+
+      function reloadWasel() {
+        if (reloadStarted) {
+          return;
+        }
+
+        reloadStarted = true;
+
+        if (reloadTimer) {
+          clearTimeout(reloadTimer);
+          reloadTimer = null;
+        }
+
+        if (reloadButton) {
+          reloadButton.setAttribute("aria-disabled", "true");
+          reloadButton.textContent = "Reconnecting...";
+        }
+
+        setStatus(
+          "Connection restored. Reloading Wasel...",
+          "online"
+        );
+
+        /*
+         * Replace the current offline document instead of
+         * adding another entry to browser history.
+         */
+        window.location.replace("/");
+      }
+
+      function handleOnline() {
+        if (reloadStarted) {
+          return;
+        }
+
+        setStatus(
+          "Connection detected. Reconnecting to Wasel...",
+          "online"
+        );
+
+        /*
+         * Small delay prevents an immediate reload caused by
+         * unstable Wi-Fi/mobile connectivity.
+         */
+        if (reloadTimer) {
+          clearTimeout(reloadTimer);
+        }
+
+        reloadTimer = window.setTimeout(() => {
+          if (navigator.onLine) {
+            reloadWasel();
+          } else {
+            reloadTimer = null;
+            updateStatus();
+          }
+        }, RECONNECT_DELAY);
+      }
+
+      function handleOffline() {
+        if (reloadTimer) {
+          clearTimeout(reloadTimer);
+          reloadTimer = null;
+        }
+
+        if (!reloadStarted) {
+          updateStatus();
+        }
+      }
+
+      /*
+       * Manual reload.
+       */
+      if (reloadButton) {
+        reloadButton.addEventListener("click", (event) => {
+          event.preventDefault();
+          reloadWasel();
+        });
+      }
+
+      /*
+       * Network state events.
+       */
+      window.addEventListener(
+        "online",
+        handleOnline,
+        { passive: true }
+      );
+
+      window.addEventListener(
+        "offline",
+        handleOffline,
+        { passive: true }
+      );
+
+      /*
+       * Initial state.
+       */
+      updateStatus();
+
+    })();
+  </script>
+</body>
+
+</html>

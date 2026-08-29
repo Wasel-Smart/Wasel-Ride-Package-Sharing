@@ -1,0 +1,42 @@
+# .github/workflows/publish.yml
+name: 2. Publish Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  publish:
+    name: Tag and Publish Release
+    runs-on: ubuntu-latest
+    # This job should only run for commits coming from merged release branches
+    if: startsWith(github.event.head_commit.message, 'chore(release): prepare for')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for changelog
+
+      - name: Get version from package.json
+        id: package
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
+
+      - name: Generate changelog for release
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+        with:
+          configuration: ".github/changelog-config.json"
+          toTag: "v${{ steps.package.outputs.current-version}}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v${{ steps.package.outputs.current-version}}"
+          release_name: "🚀 Release v${{ steps.package.outputs.current-version}}"
+          body: ${{ steps.changelog.outputs.changelog }}

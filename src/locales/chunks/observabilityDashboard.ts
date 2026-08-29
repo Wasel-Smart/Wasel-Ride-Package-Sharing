@@ -1,0 +1,37 @@
+export const observabilityDashboard = {
+  en: {
+      loading_metrics: 'Loading metrics...',
+      wasel_platform_observability: 'Wasel Platform Observability',
+      api_latency: 'API Latency',
+      error_rate: 'Error Rate',
+      '5xx_responses': '5xx responses',
+      last_15_minutes: 'Last 15 minutes',
+      average_across_all_services: 'Average across all services',
+      slo_compliance: 'SLO Compliance',
+      queue_health: 'Queue Health',
+      worker_health: 'Worker Health',
+      slo_compliance_by_service: 'SLO Compliance by Service',
+      service: 'Service',
+      compliance: 'Compliance',
+      ms: 'ms',
+      processing_lag: 'Processing lag',
+  },
+  ar: {
+      loading_metrics: 'جارٍ تحميل المؤشرات...',
+      wasel_platform_observability: 'قابلية مراقبة منصّة واصل',
+      api_latency: 'زمن استجابة الواجهة',
+      error_rate: 'معدّل الأخطاء',
+      '5xx_responses': 'استجابات 5xx',
+      last_15_minutes: 'آخر 15 دقيقة',
+      average_across_all_services: 'المتوسط عبر كل الخدمات',
+      slo_compliance: 'الامتثال لمستوى الخدمة',
+      queue_health: 'صحّة الطابور',
+      worker_health: 'صحّة العامل',
+      slo_compliance_by_service: 'الامتثال لمستوى الخدمة حسب الخدمة',
+      service: 'الخدمة',
+      compliance: 'الامتثال',
+      ms: 'مث',
+      processing_lag: 'تأخّر المعالجة',
+  }
+} as const;
+

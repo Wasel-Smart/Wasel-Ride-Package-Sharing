@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "lib": ["deno.window"],
+    "strict": true,
+    "noImplicitAny": true
+  },
+  "imports": {
+    "https://esm.sh/@supabase/supabase-js@2": "npm:@supabase/supabase-js@2",
+    "https://deno.land/x/postgres@v0.19.3/mod.ts": "npm:postgres"
+  }
+}

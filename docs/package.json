@@ -1,0 +1,16 @@
+{
+  "name": "@wasel/payment-reconciliation-service",
+  "version": "1.0.0",
+  "description": "Wasel Payment Reconciliation Service",
+  "main": "service.ts",
+  "scripts": {
+    "start": "ts-node service.ts",
+    "build": "tsc",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "stripe": "^14.0.0",
+    "pg": "^8.11.3",
+    "@types/pg": "^8.11.0"
+  }
+}

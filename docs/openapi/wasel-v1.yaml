@@ -1,0 +1,350 @@
+openapi: 3.1.0
+info:
+  title: Wasel Platform API
+  version: 1.0.0
+  description: >
+    Versioned API contract for the Wasel mobility platform.
+    All endpoints are prefixed with /v1 and served by the
+    Supabase Edge Function at /functions/v1/make-server-0b1f4071.
+servers:
+  - url: https://wasel14.online/functions/v1/make-server-0b1f4071
+paths:
+  /v1/trips:
+    get:
+      summary: Search available trips
+      operationId: searchTrips
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+        - name: to
+          in: query
+          schema:
+            type: string
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: seats
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Trip search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trip'
+    post:
+      summary: Create a new trip
+      operationId: createTrip
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTripRequest'
+      responses:
+        '201':
+          description: Trip created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+  /v1/trips/{tripId}:
+    get:
+      summary: Get trip details
+      operationId: getTrip
+      parameters:
+        - name: tripId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Trip details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trip'
+        '404':
+          description: Trip not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /v1/bookings:
+    post:
+      summary: Create a booking
+      operationId: createBooking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        '201':
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+  /v1/packages:
+    post:
+      summary: Create a package delivery request
+      operationId: createPackage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePackageRequest'
+      responses:
+        '201':
+          description: Package created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Package'
+  /v1/packages/{packageId}:
+    get:
+      summary: Get package details
+      operationId: getPackage
+      parameters:
+        - name: packageId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Package details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Package'
+        '404':
+          description: Package not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /v1/health:
+    get:
+      summary: Health check
+      operationId: getHealth
+      responses:
+        '200':
+          description: Health payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+components:
+  schemas:
+    Metadata:
+      type: object
+      properties:
+        requestId:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+    ErrorPayload:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+    EnvelopeBase:
+      type: object
+      properties:
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+    Trip:
+      type: object
+      required: [trip_id, origin_city, destination_city, departure_time]
+      properties:
+        trip_id:
+          type: string
+        origin_city:
+          type: string
+        destination_city:
+          type: string
+        departure_time:
+          type: string
+          format: date-time
+        available_seats:
+          type: integer
+        price_per_seat:
+          type: number
+        trip_status:
+          type: string
+        allow_packages:
+          type: boolean
+    Booking:
+      type: object
+      required: [booking_id, trip_id, passenger_id]
+      properties:
+        booking_id:
+          type: string
+        trip_id:
+          type: string
+        passenger_id:
+          type: string
+        seats_requested:
+          type: integer
+        booking_status:
+          type: string
+        amount:
+          type: number
+    Package:
+      type: object
+      required: [package_id, tracking_number, sender_id]
+      properties:
+        package_id:
+          type: string
+        tracking_number:
+          type: string
+        sender_id:
+          type: string
+        origin_name:
+          type: string
+        destination_name:
+          type: string
+        status:
+          type: string
+        delivery_fee:
+          type: number
+    HealthResponse:
+      type: object
+      required: [status, service]
+      properties:
+        status:
+          type: string
+        service:
+          type: string
+        runtime:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string
+        ready:
+          type: boolean
+        checks:
+          type: object
+        broker:
+          type: object
+          properties:
+            kind:
+              type: string
+            outboxPending:
+              type: integer
+            deadLetterCount:
+              type: integer
+    CreateTripRequest:
+      type: object
+      required: [from, to, date, time, seats, carModel]
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+        seats:
+          type: integer
+        carModel:
+          type: string
+        acceptsPackages:
+          type: boolean
+        packageCapacity:
+          type: string
+          enum: [none, small, medium, large]
+        note:
+          type: string
+    CreateBookingRequest:
+      type: object
+      required: [trip_id, seats_requested]
+      properties:
+        trip_id:
+          type: string
+        seats_requested:
+          type: integer
+        total_price:
+          type: number
+        pickup_stop:
+          type: string
+        dropoff_stop:
+          type: string
+        status:
+          type: string
+    CreatePackageRequest:
+      type: object
+      required: [receiver_name, receiver_phone, origin_name, destination_name, size]
+      properties:
+        receiver_name:
+          type: string
+        receiver_phone:
+          type: string
+        origin_name:
+          type: string
+        origin_coords:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+        destination_name:
+          type: string
+        destination_coords:
+          type: object
+          properties:
+            lat:
+              type: number
+            lng:
+              type: number
+        size:
+          type: string
+          enum: [small, medium, large]
+        weight:
+          type: number
+        description:
+          type: string
+        declared_value:
+          type: number
+        fragile:
+          type: boolean
+    ErrorEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/EnvelopeBase'
+        - type: object
+          required: [success, error]
+          properties:
+            success:
+              type: boolean
+              const: false
+            error:
+              $ref: '#/components/schemas/ErrorPayload'

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wasel-config
+  namespace: wasel
+data:
+  NODE_ENV: "production"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  REDIS_TLS: "false"
+  DATABASE_MAX_CONNECTIONS: "10"
+  DATABASE_IDLE_TIMEOUT: "20"
+  DATABASE_CONNECTION_TIMEOUT: "10"
+  RATE_LIMIT_WINDOW_MS: "60000"
+  RATE_LIMIT_MAX: "100"
+  HEALTH_CHECK_DB: "true"
+  HEALTH_CHECK_REDIS: "true"
+  HEALTH_CHECK_EXTERNAL: "false"

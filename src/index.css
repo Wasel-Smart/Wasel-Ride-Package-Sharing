@@ -1,0 +1,84 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./styles/globals.css";
+
+@layer base {
+  html,
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+  }
+
+  /* Performance: enable content-visibility for off-screen sections */
+  .content-visibility-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 500px;
+  }
+
+  /* Performance: CSS containment for cards and panels */
+  .wasel-contain {
+    contain: layout style paint;
+  }
+
+  /* Accessibility: a single, consistent, high-contrast focus ring for every
+   * keyboard-focused control. Mouse users are unaffected (:focus-visible).
+   * This satisfies WCAG 2.4.7 (Focus Visible) across light and dark themes. */
+  :focus-visible {
+    outline: 2px solid #00E5FF;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Respect users who request reduced motion (WCAG 2.3.3). Disable non-essential
+   * animation/transition everywhere and let components opt back in if needed. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  /* #root must grow to fill the viewport but must NOT be height:100%.
+   * On mobile Safari, height:100% resolves to the body's computed height
+   * (which excludes the dynamic toolbar), making #root shorter than the
+   * screen and clipping all content below the fold — the blank-screen bug.
+   * min-height:100dvh uses the dynamic viewport unit so it always fills
+   * the full visible area on iOS/Android regardless of browser chrome. */
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@layer utilities {
+  /* Smooth, GPU-friendly scrolling */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Optimize font rendering */
+  .font-smooth {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Prevent layout shift on images */
+  .img-aspect-ratio {
+    aspect-ratio: attr(width) / attr(height);
+    object-fit: cover;
+  }
+
+  /* Tap highlight removal for mobile */
+  .tap-highlight-none {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

@@ -1,0 +1,78 @@
+# Wasel Platform
+
+Wasel is a distributed mobility and logistics platform for shared rides, package handoff delivery, and corridor-based transport coordination.
+
+The system is designed around **event-driven microservices**, with strict domain separation, horizontally scalable workers, and contract-based communication between services.
+
+---
+
+## System Philosophy
+
+Wasel is built on the following principles:
+
+- **Event-driven architecture first**
+  - All core workflows are modeled as domain events
+  - Redis Streams acts as the system backbone
+
+- **Service isolation**
+  - Each domain owns its data and execution logic
+  - No cross-service direct database coupling
+
+- **Stateless compute layer**
+  - Services are horizontally scalable
+  - Workers handle async processing independently
+
+- **Contract-first integration**
+  - All service communication is schema-driven
+  - Breaking changes are explicitly versioned
+
+- **Operational visibility by default**
+  - Logging, metrics, and tracing are embedded at service level
+  - System behavior is observable, not inferred
+
+---
+
+## Architecture Overview
+
+```mermaid
+flowchart TB
+
+  ClientWeb["Web Client"]
+  ClientMobile["Mobile Apps"]
+
+  Edge["API Gateway / Edge Layer"]
+
+  Ride["Ride Matching Service"]
+  Package["Package Delivery Service"]
+  Payment["Payment Service"]
+  Trust["Trust & Operations Service"]
+
+  EventBus["Redis Streams (Event Backbone)"]
+
+  WorkerMatch["Matching Worker"]
+  WorkerPayment["Payment Worker"]
+  WorkerOps["Ops Analytics Worker"]
+
+  DB[(PostgreSQL + PostGIS)]
+  GeoCache[(Redis GEO Index)]
+
+  ClientWeb --> Edge
+  ClientMobile --> Edge
+
+  Edge --> Ride
+  Edge --> Package
+  Edge --> Payment
+  Edge --> Trust
+
+  Ride --> EventBus
+  Package --> EventBus
+  Payment --> EventBus
+
+  EventBus --> WorkerMatch
+  EventBus --> WorkerPayment
+  EventBus --> WorkerOps
+
+  WorkerMatch --> DB
+  WorkerMatch --> GeoCache
+  WorkerPayment --> DB
+  WorkerOps --> DB
