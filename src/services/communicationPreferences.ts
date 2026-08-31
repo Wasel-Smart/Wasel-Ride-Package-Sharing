@@ -81,7 +81,7 @@ function storageKeyFor(userId: string | null | undefined) {
 }
 
 function readStoredPreferences(userId?: string | null): CommunicationPreferences {
-  if (typeof window === 'undefined') return defaultCommunicationPreferences;
+  if (typeof window === 'undefined') {return defaultCommunicationPreferences;}
 
   try {
     const raw = window.localStorage.getItem(storageKeyFor(userId));
@@ -97,7 +97,7 @@ function writeStoredPreferences(
   userId: string | null | undefined,
   prefs: CommunicationPreferences,
 ): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(storageKeyFor(userId), JSON.stringify(prefs));
 }
 
@@ -108,7 +108,7 @@ type QueuedDeliveryRecord = DeliveryQueueRequest & {
 };
 
 function readOutbox(): QueuedDeliveryRecord[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(OUTBOX_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -119,7 +119,7 @@ function readOutbox(): QueuedDeliveryRecord[] {
 }
 
 function writeOutbox(records: QueuedDeliveryRecord[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(OUTBOX_KEY, JSON.stringify(records.slice(0, 200)));
 }
 
@@ -161,16 +161,16 @@ function toDirectPreferenceUpdate(prefs: Partial<CommunicationPreferences>) {
 
 export function resolveNotificationTopic(type: string): NotificationTopic {
   const normalized = type.toLowerCase();
-  if (normalized.includes('promo') || normalized.includes('offer')) return 'promotions';
-  if (normalized.includes('message') || normalized.includes('chat')) return 'messages';
-  if (normalized.includes('booking') || normalized.includes('request')) return 'booking_requests';
-  if (normalized.includes('prayer')) return 'prayer_reminders';
+  if (normalized.includes('promo') || normalized.includes('offer')) {return 'promotions';}
+  if (normalized.includes('message') || normalized.includes('chat')) {return 'messages';}
+  if (normalized.includes('booking') || normalized.includes('request')) {return 'booking_requests';}
+  if (normalized.includes('prayer')) {return 'prayer_reminders';}
   if (
     normalized.includes('support') ||
     normalized.includes('security') ||
     normalized.includes('wallet')
   )
-    return 'critical_alerts';
+    {return 'critical_alerts';}
   return 'trip_updates';
 }
 
@@ -216,7 +216,7 @@ export function buildDeliveryPlan(args: {
               ? args.preferences.prayerReminders
               : args.preferences.criticalAlerts;
 
-  if (!topicEnabled) return [];
+  if (!topicEnabled) {return [];}
 
   const requestedChannels =
     args.explicitChannels && args.explicitChannels.length > 0
@@ -224,11 +224,11 @@ export function buildDeliveryPlan(args: {
       : (['in_app', 'push', 'email', 'sms'] as CommunicationChannel[]);
 
   return requestedChannels.filter(channel => {
-    if (channel === 'in_app') return args.preferences.inApp && args.capabilities.inApp;
-    if (channel === 'push') return args.preferences.push && args.capabilities.push;
-    if (channel === 'email') return args.preferences.email && args.capabilities.email;
-    if (channel === 'sms') return args.preferences.sms && args.capabilities.sms;
-    if (channel === 'whatsapp') return args.preferences.whatsapp && args.capabilities.whatsapp;
+    if (channel === 'in_app') {return args.preferences.inApp && args.capabilities.inApp;}
+    if (channel === 'push') {return args.preferences.push && args.capabilities.push;}
+    if (channel === 'email') {return args.preferences.email && args.capabilities.email;}
+    if (channel === 'sms') {return args.preferences.sms && args.capabilities.sms;}
+    if (channel === 'whatsapp') {return args.preferences.whatsapp && args.capabilities.whatsapp;}
     return false;
   });
 }
@@ -237,7 +237,7 @@ export async function getCommunicationPreferences(
   userId?: string | null,
 ): Promise<CommunicationPreferences> {
   const localPrefs = readStoredPreferences(userId);
-  if (!userId) return localPrefs;
+  if (!userId) {return localPrefs;}
 
   try {
     const normalized = await runBackendWorkflow({
@@ -245,7 +245,7 @@ export async function getCommunicationPreferences(
       authMode: 'required',
       fallback: async () => {
         const direct = await getDirectCommunicationPreferences(userId);
-        if (!direct) return localPrefs;
+        if (!direct) {return localPrefs;}
         return normalizeDirectPreferences(direct as Record<string, unknown> | null);
       },
       edge: context =>
@@ -272,7 +272,7 @@ export async function updateCommunicationPreferences(
   const merged = normalizePreferences({ ...readStoredPreferences(userId), ...updates });
   writeStoredPreferences(userId, merged);
 
-  if (!userId) return merged;
+  if (!userId) {return merged;}
 
   try {
     await runBackendWorkflow({

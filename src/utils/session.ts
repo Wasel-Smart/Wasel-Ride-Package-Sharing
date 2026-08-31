@@ -26,7 +26,7 @@ function generateSessionId(): string {
  * Ensures a stable, opaque session ID exists for the current browser tab.
  */
 export function initializeSessionManagement(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   const existing = safeStorageGetItem('sessionStorage', SESSION_ID_KEY);
   if (!existing) {

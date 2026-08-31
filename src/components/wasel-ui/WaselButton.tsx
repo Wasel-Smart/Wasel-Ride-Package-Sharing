@@ -147,11 +147,11 @@ export function WaselButton({
         onMouseLeave?.(e);
       }}
       onMouseDown={e => {
-        if (!isDisabled) e.currentTarget.style.transform = 'scale(0.98)';
+        if (!isDisabled) {e.currentTarget.style.transform = 'scale(0.98)';}
         rest.onMouseDown?.(e);
       }}
       onMouseUp={e => {
-        if (!isDisabled) e.currentTarget.style.transform = '';
+        if (!isDisabled) {e.currentTarget.style.transform = '';}
         rest.onMouseUp?.(e);
       }}
     >

@@ -62,11 +62,11 @@ function getEnvCandidate(key: string): EnvCandidate {
 }
 
 function isConfiguredValue(value: string | undefined): value is string {
-  if (!value) return false;
+  if (!value) {return false;}
 
   const normalized = value.trim();
-  if (!normalized) return false;
-  if (BLOCKED_PUBLIC_SUPABASE_KEYS.has(normalized)) return false;
+  if (!normalized) {return false;}
+  if (BLOCKED_PUBLIC_SUPABASE_KEYS.has(normalized)) {return false;}
 
   const lower = normalized.toLowerCase();
   return !PLACEHOLDER_MARKERS.some(marker => lower.includes(marker));
@@ -95,13 +95,13 @@ function decodeBase64Url(value: string): string | null {
 }
 
 function getProjectRefFromJwt(value: string | undefined): string | null {
-  if (!isConfiguredValue(value)) return null;
+  if (!isConfiguredValue(value)) {return null;}
 
   const parts = value.split('.');
-  if (parts.length < 2) return null;
+  if (parts.length < 2) {return null;}
 
   const decoded = decodeBase64Url(parts[1] ?? '');
-  if (!decoded) return null;
+  if (!decoded) {return null;}
 
   try {
     const payload = JSON.parse(decoded) as { ref?: string };
@@ -128,9 +128,9 @@ function pickConfiguredUrl(
     candidate => isConfiguredValue(candidate.value) && isValidPublicSupabaseUrl(candidate.value),
   )?.value;
 
-  if (configuredUrl) return configuredUrl;
-  if (candidates.some(candidate => isConfiguredValue(candidate.value))) return '';
-  if (explicitCandidates.length > 0) return '';
+  if (configuredUrl) {return configuredUrl;}
+  if (candidates.some(candidate => isConfiguredValue(candidate.value))) {return '';}
+  if (explicitCandidates.length > 0) {return '';}
 
   return (
     fallbackCandidates.find(
@@ -155,18 +155,18 @@ function pickConfiguredKey(
       ? []
       : fallbackCandidates.filter((candidate): candidate is string => isConfiguredValue(candidate));
 
-  if (configured.length === 0) return configuredFallbacks[0] ?? '';
+  if (configured.length === 0) {return configuredFallbacks[0] ?? '';}
 
   const urlProjectRef = url ? getProjectRefFromUrl(url) : '';
-  if (!urlProjectRef) return configured[0] ?? '';
+  if (!urlProjectRef) {return configured[0] ?? '';}
 
   const matchingJwtCandidate = configured.find(
     candidate => getProjectRefFromJwt(candidate) === urlProjectRef,
   );
-  if (matchingJwtCandidate) return matchingJwtCandidate;
+  if (matchingJwtCandidate) {return matchingJwtCandidate;}
 
   const opaqueCandidate = configured.find(candidate => !getProjectRefFromJwt(candidate));
-  if (opaqueCandidate) return opaqueCandidate;
+  if (opaqueCandidate) {return opaqueCandidate;}
 
   return configured[0] ?? configuredFallbacks[0] ?? '';
 }

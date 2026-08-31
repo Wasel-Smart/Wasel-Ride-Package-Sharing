@@ -378,7 +378,7 @@ export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: Ac
         boxShadow: SH.sm,
       }}
       onMouseEnter={event => {
-        if (!clickable) return;
+        if (!clickable) {return;}
         event.currentTarget.style.transform = 'translateY(-2px)';
         event.currentTarget.style.borderColor = `${accent}36`;
         event.currentTarget.style.boxShadow = SH.lg;
@@ -462,7 +462,7 @@ export function DataRow({ label, value, sub, icon, badge, onClick, danger = fals
         transition: `background ${ANIM.dur.normal} ${ANIM.ease.default}`,
       }}
       onMouseEnter={event => {
-        if (onClick) event.currentTarget.style.background = C.elevated;
+        if (onClick) {event.currentTarget.style.background = C.elevated;}
       }}
       onMouseLeave={event => {
         event.currentTarget.style.background = 'transparent';

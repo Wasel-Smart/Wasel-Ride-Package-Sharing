@@ -30,7 +30,7 @@ export async function recordDirectGrowthEvent(input: {
     })
     .select('*')
     .maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return (data as RawGrowthEvent | null) ?? null;
 }
 
@@ -57,7 +57,7 @@ export async function createDirectDemandAlert(input: {
     })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
   return data as RawDemandAlert;
 }
 
@@ -70,10 +70,10 @@ export async function getDirectDemandAlerts(userId?: string) {
     .limit(100);
   if (userId) {
     const context = await buildUserContext(userId).catch(() => null);
-    if (context?.user.id) query = query.eq('user_id', context.user.id);
+    if (context?.user.id) {query = query.eq('user_id', context.user.id);}
   }
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) {throw error;}
   return Array.isArray(data) ? (data as RawDemandAlert[]) : [];
 }
 
@@ -86,7 +86,7 @@ export async function getDirectGrowthAnalytics(userId?: string) {
     .select('*')
     .order('created_at', { ascending: false })
     .limit(500);
-  if (context?.user.id) eventsQuery = eventsQuery.eq('user_id', context.user.id);
+  if (context?.user.id) {eventsQuery = eventsQuery.eq('user_id', context.user.id);}
   const { data: events } = await eventsQuery;
 
   let demandQuery = db
@@ -94,7 +94,7 @@ export async function getDirectGrowthAnalytics(userId?: string) {
     .select('*')
     .order('created_at', { ascending: false })
     .limit(200);
-  if (context?.user.id) demandQuery = demandQuery.eq('user_id', context.user.id);
+  if (context?.user.id) {demandQuery = demandQuery.eq('user_id', context.user.id);}
   const { data: alerts } = await demandQuery;
 
   const rows = Array.isArray(events) ? (events as RawGrowthEvent[]) : [];
@@ -117,7 +117,7 @@ export async function getDirectGrowthAnalytics(userId?: string) {
   const corridorMap = new Map<string, { corridor: string; demand: number; conversions: number }>();
   for (const row of rows) {
     const corridor = [row.route_from, row.route_to].filter(Boolean).join(' to ');
-    if (!corridor) continue;
+    if (!corridor) {continue;}
     const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
     current.conversions += row.funnel_stage === 'booked' ? 1 : 0;
     corridorMap.set(corridor, current);
@@ -125,7 +125,7 @@ export async function getDirectGrowthAnalytics(userId?: string) {
   for (const row of alertRows) {
     const corridor =
       `${String(row.origin_city ?? '')} to ${String(row.destination_city ?? '')}`.trim();
-    if (!corridor || corridor === 'to') continue;
+    if (!corridor || corridor === 'to') {continue;}
     const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
     current.demand += 1;
     corridorMap.set(corridor, current);

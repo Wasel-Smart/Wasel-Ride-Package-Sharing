@@ -396,13 +396,13 @@ export const CONTEXTUAL_HELP: ContextualHelp[] = [
  * Automatically upgrade users based on behavior
  */
 export const getUserExperienceLevel = (user: AppUser | null): UserExperienceLevel => {
-  if (!user) return 'new';
+  if (!user) {return 'new';}
 
   const ridesCompleted = user.stats?.ridesCompleted || 0;
 
-  if (ridesCompleted === 0) return 'new';
-  if (ridesCompleted < 5) return 'beginner';
-  if (ridesCompleted < 20) return 'intermediate';
+  if (ridesCompleted === 0) {return 'new';}
+  if (ridesCompleted < 5) {return 'beginner';}
+  if (ridesCompleted < 20) {return 'intermediate';}
   return 'expert';
 };
 

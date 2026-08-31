@@ -46,8 +46,8 @@ const RETURN_REASONS = [
 ];
 
 function inferWeight(size: 'small' | 'medium' | 'large') {
-  if (size === 'large') return '7 kg';
-  if (size === 'medium') return '3 kg';
+  if (size === 'large') {return '7 kg';}
+  if (size === 'medium') {return '3 kg';}
   return '<1 kg';
 }
 
@@ -517,7 +517,7 @@ export function ReturnMatching() {
                     </button>
                     <button
                       onClick={() => {
-                        if (item && reason) void searchMatches();
+                        if (item && reason) {void searchMatches();}
                       }}
                       disabled={!item || !reason || searching}
                       style={{

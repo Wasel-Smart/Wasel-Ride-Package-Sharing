@@ -99,7 +99,7 @@ const ShellCopyAr = {
   mainContent: 'المحتوى الرئيسي',
 } as const;
 
-const WaselRootInner = memo(function WaselRootInner() {
+const WaselRootInner = memo(() => {
   const { user, signOut } = useLocalAuth();
   const { language } = useLanguage();
   const nav = useIframeSafeNavigate();
@@ -120,7 +120,7 @@ const WaselRootInner = memo(function WaselRootInner() {
     const scrollEl = isPwa ? (document.getElementById('root') ?? window) : window;
 
     const onScroll = () => {
-      if (!navRef.current) return;
+      if (!navRef.current) {return;}
       const scrollTop =
         scrollEl instanceof Window ? window.scrollY : (scrollEl as HTMLElement).scrollTop;
       navRef.current.classList.toggle('scrolled', scrollTop > 8);
@@ -147,7 +147,7 @@ const WaselRootInner = memo(function WaselRootInner() {
 
     if (isPwa) {
       const root = document.getElementById('root');
-      if (root) root.scrollTop = 0;
+      if (root) {root.scrollTop = 0;}
     } else {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
@@ -333,6 +333,4 @@ const WaselRootInner = memo(function WaselRootInner() {
   );
 });
 
-export default memo(function WaselRoot() {
-  return <WaselRootInner />;
-});
+export default memo(() => <WaselRootInner />);

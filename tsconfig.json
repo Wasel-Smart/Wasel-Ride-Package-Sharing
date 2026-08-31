@@ -42,7 +42,8 @@
   "include": [
     "src/**/*",
     "src/**/*.d.ts",
-    "vite.config.ts"
+    "vite.config.ts",
+    "src/utils/supabase/info.tsx"
   ],
   "exclude": [
     "supabase/functions/**/*",

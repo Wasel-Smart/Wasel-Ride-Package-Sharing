@@ -13,7 +13,7 @@ export function getProfileInitials(name?: string | null) {
 
 export function normalizeProfilePhone(phone: string): string | null {
   const trimmed = phone.trim();
-  if (!trimmed) return null;
+  if (!trimmed) {return null;}
 
   const normalized = trimmed.replace(/[\s()-]/g, '');
   if (!/^\+?\d{8,15}$/.test(normalized)) {

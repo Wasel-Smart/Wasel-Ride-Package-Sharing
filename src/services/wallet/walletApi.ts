@@ -70,11 +70,11 @@ async function tryEdgeThenDirect<T>(edgeFn: () => Promise<T>, directFn: () => Pr
     try {
       return await edgeFn();
     } catch (edgeError) {
-      if (!allowDirectSupabaseFallback) throw edgeError;
+      if (!allowDirectSupabaseFallback) {throw edgeError;}
     }
   }
 
-  if (allowDirectSupabaseFallback) return directFn();
+  if (allowDirectSupabaseFallback) {return directFn();}
 
   throw new Error('Secure API is not configured and direct database access is disabled for this environment.');
 }
@@ -84,7 +84,7 @@ function getWalletPath(userId: string, suffix = ''): string {
 }
 
 function sanitizeString(value: unknown): string {
-  if (typeof value !== 'string') return '';
+  if (typeof value !== 'string') {return '';}
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -130,7 +130,7 @@ async function requestWalletJson<T>(
 }
 
 function isConnectivityError(error: unknown): boolean {
-  if (error instanceof BackendRequestError) return error.status === 404;
+  if (error instanceof BackendRequestError) {return error.status === 404;}
   const message = error instanceof Error ? error.message : String(error);
   return message.includes('Route not found') || message.includes('request failed: 404');
 }
@@ -156,7 +156,7 @@ export const walletApi = {
         () => fetchWalletDirect(userId),
       );
     } catch (error) {
-      if (!canUseLocalWalletStorage()) throw error;
+      if (!canUseLocalWalletStorage()) {throw error;}
       return fetchWalletLocal(userId);
     }
 
@@ -169,7 +169,7 @@ export const walletApi = {
   async getTransactions(userId: string, page = 1, limit = 20, type?: string) {
     const edgeFn = async () => {
       const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-      if (type) params.set('type', type);
+      if (type) {params.set('type', type);}
       const result = await requestWalletJson<{ transactions: WalletTransaction[]; page: number; limit: number; total: number }>(userId, `/transactions?${params.toString()}`, 'Load wallet transactions');
       return { ...result, transactions: sanitizeTransactions(result.transactions) };
     };
@@ -189,7 +189,7 @@ export const walletApi = {
       try {
         return await requestWalletJson(userId, '/top-up', 'Create wallet top-up', { method: 'POST', body: { amount, paymentMethod } });
       } catch (error) {
-        if (isConnectivityError(error)) throw new Error('Secure wallet top-up is unavailable because the checkout backend is not configured. Deploy the wallet edge function and configure Stripe server secrets before adding funds.');
+        if (isConnectivityError(error)) {throw new Error('Secure wallet top-up is unavailable because the checkout backend is not configured. Deploy the wallet edge function and configure Stripe server secrets before adding funds.');}
         throw error;
       }
     }
@@ -218,7 +218,7 @@ export const walletApi = {
   },
 
   async claimReward(userId: string, rewardId: string) {
-    if (canUseEdgeApi()) return requestWalletJson(userId, '/rewards/claim', 'Claim wallet reward', { method: 'POST', body: { rewardId } });
+    if (canUseEdgeApi()) {return requestWalletJson(userId, '/rewards/claim', 'Claim wallet reward', { method: 'POST', body: { rewardId } });}
     throw new Error('Reward claiming requires the wallet backend.');
   },
 
@@ -234,7 +234,7 @@ export const walletApi = {
       try {
         return await requestWalletJson(userId, '/subscribe', 'Create wallet subscription checkout', { method: 'POST', body: { planName, price } });
       } catch (error) {
-        if (isConnectivityError(error)) throw new Error('Secure subscription checkout is unavailable because the billing backend is not configured. Deploy the wallet edge function and configure Stripe Billing before subscribing.');
+        if (isConnectivityError(error)) {throw new Error('Secure subscription checkout is unavailable because the billing backend is not configured. Deploy the wallet edge function and configure Stripe Billing before subscribing.');}
         throw error;
       }
     }
@@ -247,7 +247,7 @@ export const walletApi = {
       try {
         rows = await getWalletTransactionRows(userId);
       } catch (error) {
-        if (!canUseLocalWalletStorage()) throw error;
+        if (!canUseLocalWalletStorage()) {throw error;}
         const localWallet = await fetchWalletLocal(userId);
         return buildInsightsFromTransactions(localWallet.transactions);
       }
@@ -260,12 +260,12 @@ export const walletApi = {
   },
 
   async setPin(userId: string, pin: string) {
-    if (!canUseEdgeApi()) throw new Error('Wallet PIN management requires the wallet backend.');
+    if (!canUseEdgeApi()) {throw new Error('Wallet PIN management requires the wallet backend.');}
     return requestWalletJson(userId, '/pin/set', 'Set wallet PIN', { method: 'POST', body: { pin } });
   },
 
   async verifyPin(userId: string, pin: string) {
-    if (!canUseEdgeApi()) throw new Error('Wallet PIN verification requires the wallet backend.');
+    if (!canUseEdgeApi()) {throw new Error('Wallet PIN verification requires the wallet backend.');}
     return requestWalletJson(userId, '/pin/verify', 'Verify wallet PIN', { method: 'POST', body: { pin } });
   },
 

@@ -35,7 +35,7 @@ class InstantFeedbackEngine {
    * Lazy initialization to avoid blocking main thread
    */
   private lazyInit(): void {
-    if (this.initialized) return;
+    if (this.initialized) {return;}
 
     // Check for haptic feedback support
     this.supportsHaptics = 'vibrate' in navigator;
@@ -46,7 +46,7 @@ class InstantFeedbackEngine {
         const AudioCtor =
           window.AudioContext ||
           (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-        if (AudioCtor) this.audioContext = new AudioCtor();
+        if (AudioCtor) {this.audioContext = new AudioCtor();}
       } catch {
         // Ignore - audio not critical
       }
@@ -61,7 +61,7 @@ class InstantFeedbackEngine {
    * OPTIMIZED: Non-blocking
    */
   haptic(type: FeedbackType = 'light'): void {
-    if (!this.supportsHaptics) return;
+    if (!this.supportsHaptics) {return;}
 
     const patterns: Record<FeedbackType, number | number[]> = {
       light: 10,
@@ -96,7 +96,7 @@ class InstantFeedbackEngine {
     options: { x: number; y: number; color?: string } = { x: 0, y: 0 },
   ): void {
     // Skip if element doesn't exist
-    if (!element) return;
+    if (!element) {return;}
 
     // Use requestAnimationFrame to avoid blocking
     requestAnimationFrame(() => {
@@ -158,7 +158,7 @@ class InstantFeedbackEngine {
    * OPTIMIZED: Non-blocking
    */
   playTone(frequency: number = 440, duration: number = 50, type: OscillatorType = 'sine'): void {
-    if (!this.audioContext) return;
+    if (!this.audioContext) {return;}
 
     try {
       const oscillator = this.audioContext.createOscillator();
@@ -225,7 +225,7 @@ class InstantFeedbackEngine {
     const handleTouchStart = (e: TouchEvent) => {
       // Provide immediate feedback
       const touch = e.touches[0];
-      if (!touch) return;
+      if (!touch) {return;}
       this.haptic(type);
       this.ripple(element, { x: touch.clientX, y: touch.clientY });
     };
@@ -289,7 +289,7 @@ export function useInstantFeedback(type: FeedbackType = 'light', options: Feedba
 
   useEffect(() => {
     const element = elementRef.current;
-    if (!element) return;
+    if (!element) {return;}
 
     // Attach both touch and click feedback
     const cleanupTouch = instantFeedback.attachTouchFeedback(element, type);

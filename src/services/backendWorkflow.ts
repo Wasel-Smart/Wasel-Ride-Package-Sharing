@@ -80,7 +80,7 @@ export function isRecoverableError(error: unknown): boolean {
   if (error instanceof BackendRequestError) {
     // Treat auth errors (401) as recoverable so the direct-Supabase fallback
     // can still run when the edge function rejects the token.
-    if (error.status === 401) return true;
+    if (error.status === 401) {return true;}
     return error.recoverable;
   }
 

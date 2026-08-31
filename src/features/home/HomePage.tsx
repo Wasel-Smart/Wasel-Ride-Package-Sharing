@@ -59,7 +59,7 @@ export function HomePage() {
   const role = waselUser?.role;
 
    const detectBrowserLanguage = (): Language | null => {
-     if (typeof navigator === 'undefined') return null;
+     if (typeof navigator === 'undefined') {return null;}
      const browserLang = navigator.language.split('-')[0];
      if (browserLang === 'ar' || browserLang === 'en') {
        return browserLang;
@@ -91,15 +91,15 @@ export function HomePage() {
             signal: controller.signal,
             headers: { Accept: 'application/json' },
           });
-          if (!res.ok) throw new Error(`snapshot_${res.status}`);
+          if (!res.ok) {throw new Error(`snapshot_${res.status}`);}
           const data = (await res.json()) as { corridors?: LiveCorridor[] };
           if (!cancelled && Array.isArray(data.corridors)) {
             setLiveCorridors(data.corridors);
           }
         } catch {
-          if (!cancelled) setLiveCorridors([]);
+          if (!cancelled) {setLiveCorridors([]);}
         } finally {
-          if (!cancelled) setCorridorsLoading(false);
+          if (!cancelled) {setCorridorsLoading(false);}
         }
       }
 

@@ -33,13 +33,13 @@ export async function submitDirectTrustIdentityVerification(
     document_reference: input.documentReference?.trim() || null,
     failure_reason: null,
   });
-  if (verificationError) throw verificationError;
+  if (verificationError) {throw verificationError;}
 
   const { error: userError } = await db
     .from('users')
     .update({ verification_level: 'level_1' })
     .eq('id', context.user.id);
-  if (userError) throw userError;
+  if (userError) {throw userError;}
 
   return {
     submitted: true,
@@ -60,7 +60,7 @@ export async function startDirectTrustPhoneVerification(userId: string, phoneNum
     .from('users')
     .update({ phone_number: normalized })
     .eq('id', context.user.id);
-  if (error) throw error;
+  if (error) {throw error;}
 
   return {
     started: true,
@@ -77,7 +77,7 @@ export async function confirmDirectTrustPhoneVerification(userId: string) {
     .from('users')
     .update({ phone_verified_at: new Date().toISOString() })
     .eq('id', context.user.id);
-  if (error) throw error;
+  if (error) {throw error;}
 
   return {
     verified: true,
@@ -90,7 +90,7 @@ export async function enableDirectTrustDriverMode(userId: string) {
   const db = getDb();
 
   const { error } = await db.from('users').update({ role: 'driver' }).eq('id', context.user.id);
-  if (error) throw error;
+  if (error) {throw error;}
 
   return {
     enabled: true,
@@ -130,7 +130,7 @@ export async function submitDirectTrustDriverDocuments(
       .from('drivers')
       .update(driverPatch)
       .eq('driver_id', driver.driver_id);
-    if (error) throw error;
+    if (error) {throw error;}
   } else {
     const { data, error } = await db
       .from('drivers')
@@ -140,7 +140,7 @@ export async function submitDirectTrustDriverDocuments(
       })
       .select('driver_id')
       .single();
-    if (error) throw error;
+    if (error) {throw error;}
     driver = data as DriverRow;
   }
 
@@ -153,7 +153,7 @@ export async function submitDirectTrustDriverDocuments(
     document_reference: input.documentReference?.trim() || null,
     failure_reason: null,
   });
-  if (verificationError) throw verificationError;
+  if (verificationError) {throw verificationError;}
 
   return {
     submitted: true,

@@ -21,9 +21,9 @@ function roundMoney(value: number) {
 }
 
 function getDensityDiscountPercent(forecastDemandScore: number) {
-  if (forecastDemandScore >= 92) return 4;
-  if (forecastDemandScore >= 84) return 3;
-  if (forecastDemandScore >= 74) return 1.5;
+  if (forecastDemandScore >= 92) {return 4;}
+  if (forecastDemandScore >= 84) {return 3;}
+  if (forecastDemandScore >= 74) {return 1.5;}
   return 0;
 }
 

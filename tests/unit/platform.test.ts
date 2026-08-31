@@ -153,7 +153,7 @@ describe('Retry Utility', () => {
 
     const result = await withRetry(async () => {
       attempts++;
-      if (attempts < 2) throw new TypeError('network error');
+      if (attempts < 2) {throw new TypeError('network error');}
       return 'success';
     }, { maxAttempts: 3, initialDelayMs: 1 });
 

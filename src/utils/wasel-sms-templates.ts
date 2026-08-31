@@ -157,7 +157,7 @@ export const smsTemplates: SmsTemplate[] = [
 
 export function renderSmsTemplate(id: string, variables: Record<string, string>): string {
   const template = smsTemplates.find(t => t.id === id);
-  if (!template) throw new Error(`SMS template not found: ${id}`);
+  if (!template) {throw new Error(`SMS template not found: ${id}`);}
 
   let text = template.template;
   for (const [key, value] of Object.entries(variables)) {

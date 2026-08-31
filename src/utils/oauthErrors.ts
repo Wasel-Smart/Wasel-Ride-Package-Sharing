@@ -189,8 +189,8 @@ export function isRetryableError(error: OAuthError): boolean {
  * Get appropriate error severity level
  */
 export function getErrorSeverity(error: OAuthError): 'info' | 'warning' | 'error' {
-  if (isUserCancellation(error)) return 'info';
-  if (isRetryableError(error)) return 'warning';
+  if (isUserCancellation(error)) {return 'info';}
+  if (isRetryableError(error)) {return 'warning';}
   return 'error';
 }
 

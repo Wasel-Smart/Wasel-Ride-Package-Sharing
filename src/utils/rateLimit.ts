@@ -26,7 +26,7 @@ class MemoryRateLimitStore implements RateLimitStore {
 
   async get(key: string): Promise<number | null> {
     const entry = this.store.get(key);
-    if (!entry) return null;
+    if (!entry) {return null;}
     if (Date.now() > entry.resetAt) {
       this.store.delete(key);
       return null;
@@ -112,7 +112,7 @@ export class RateLimiter {
   }
 
   private getClientKey(): string {
-    if (typeof window === 'undefined') return 'server';
+    if (typeof window === 'undefined') {return 'server';}
 
     // Use a session-scoped random key instead of browser fingerprinting
     // to avoid privacy concerns and spoofing via navigator.userAgent.
@@ -135,8 +135,8 @@ export class RateLimiter {
   }
 
   async recordRequest(success: boolean): Promise<void> {
-    if (this.config.skipSuccessfulRequests && success) return;
-    if (this.config.skipFailedRequests && !success) return;
+    if (this.config.skipSuccessfulRequests && success) {return;}
+    if (this.config.skipFailedRequests && !success) {return;}
     await this.checkLimit();
   }
 }

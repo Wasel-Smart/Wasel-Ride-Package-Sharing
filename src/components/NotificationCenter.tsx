@@ -169,8 +169,8 @@ export function NotificationCenter() {
   const isSafeExternalUrl = (url: string): boolean => {
     try {
       const parsed = new URL(url, window.location.origin);
-      if (!['http:', 'https:'].includes(parsed.protocol)) return false;
-      if (parsed.hostname === window.location.hostname) return true;
+      if (!['http:', 'https:'].includes(parsed.protocol)) {return false;}
+      if (parsed.hostname === window.location.hostname) {return true;}
       return true;
     } catch {
       return false;
@@ -181,7 +181,7 @@ export function NotificationCenter() {
     if (!notification.read) {
       await markAsRead(notification.id).catch(() => undefined);
     }
-    if (!notification.action_url) return;
+    if (!notification.action_url) {return;}
     if (notification.action_url.startsWith('/')) {
       await nav(notification.action_url);
       return;

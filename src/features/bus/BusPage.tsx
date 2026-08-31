@@ -53,7 +53,7 @@ const JOURNEY_PRESETS = [
 const DEFAULT_BUS_ROUTE = ((): BusRoute => {
   const route =
     getOfficialBusRoutes({ from: 'Amman', to: 'Aqaba' })[0] ?? getOfficialBusRoutes()[0];
-  if (!route) throw new Error('Default bus route is unavailable');
+  if (!route) {throw new Error('Default bus route is unavailable');}
   return route;
 })();
 
@@ -98,7 +98,7 @@ export function BusPage() {
   const [bookingTicketCode, setBookingTicketCode] = useState<string | null>(null);
 
   useEffect(() => {
-    if (tripDate < today) setTripDate(today);
+    if (tripDate < today) {setTripDate(today);}
   }, [today, tripDate]);
 
   useEffect(() => {
@@ -126,7 +126,7 @@ export function BusPage() {
           date: tripDate,
           seats: passengers,
         });
-        if (cancelled) return;
+        if (cancelled) {return;}
         const exactLiveRoutes = liveRoutes.filter(route =>
           isExactRoute(route, origin, destination),
         );
@@ -154,7 +154,7 @@ export function BusPage() {
           );
         }
       } catch {
-        if (cancelled) return;
+        if (cancelled) {return;}
         setBusRoutes(fallbackRoutes);
         setSelected(prev =>
           fallbackRoutes.some(route => route.id === prev) ? prev : fallbackPrimaryRoute.id,
@@ -163,7 +163,7 @@ export function BusPage() {
           `Live routes unavailable. Official schedule shown. Verified ${fallbackPrimaryRoute.lastVerifiedAt ?? today}.`,
         );
       } finally {
-        if (!cancelled) setRoutesLoading(false);
+        if (!cancelled) {setRoutesLoading(false);}
       }
     }
     loadBusRoutes();
@@ -204,7 +204,7 @@ export function BusPage() {
   }, [activeBus.dep, activeBus.id, departureKey]);
 
   async function handleBusBooking() {
-    if (bookingDisabled) return;
+    if (bookingDisabled) {return;}
     setBookingBusy(true);
     setBookingComplete(false);
     try {

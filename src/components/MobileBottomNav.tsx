@@ -37,9 +37,9 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
 
   const isActive = (path: string) => {
     if (path === '/')
-      return (
+      {return (
         location.pathname === '/' || location.pathname === '/app' || location.pathname === '/app/'
-      );
+      );}
     return location.pathname.startsWith(path) || location.pathname.startsWith('/app' + path);
   };
 

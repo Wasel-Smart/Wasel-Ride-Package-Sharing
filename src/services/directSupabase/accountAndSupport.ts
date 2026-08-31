@@ -42,7 +42,7 @@ const SUPPORT_EVENTS_KEY = 'wasel.direct.supportTicketEvents';
 const USER_SETTINGS_KEY = 'wasel.direct.userSettings';
 
 function readStore<T>(key: string): T[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(key);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -53,7 +53,7 @@ function readStore<T>(key: string): T[] {
 }
 
 function writeStore<T>(key: string, value: T[]) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(key, JSON.stringify(value));
 }
 
@@ -78,19 +78,19 @@ async function trySelectTickets(userId: string) {
     .select('*')
     .eq('user_id', userId)
     .order('updated_at', { ascending: false });
-  if (error) throw error;
+  if (error) {throw error;}
   return (data ?? []) as DirectSupportTicketRow[];
 }
 
 async function trySelectTicketEvents(ticketIds: string[]) {
-  if (ticketIds.length === 0) return [] as DirectSupportTicketEventRow[];
+  if (ticketIds.length === 0) {return [] as DirectSupportTicketEventRow[];}
   const db = getDb();
   const { data, error } = await db
     .from('support_ticket_events')
     .select('*')
     .in('ticket_id', ticketIds)
     .order('created_at', { ascending: true });
-  if (error) throw error;
+  if (error) {throw error;}
   return (data ?? []) as DirectSupportTicketEventRow[];
 }
 
@@ -136,14 +136,14 @@ export async function createDirectSupportTicket(
   try {
     const db = getDb();
     const { data, error } = await db.from('support_tickets').insert(ticket).select('*').single();
-    if (error) throw error;
+    if (error) {throw error;}
     const persistedTicket = (data as DirectSupportTicketRow | null) ?? ticket;
     const { data: eventData, error: eventError } = await db
       .from('support_ticket_events')
       .insert({ ...event, ticket_id: persistedTicket.id })
       .select('*')
       .single();
-    if (eventError) throw eventError;
+    if (eventError) {throw eventError;}
     return {
       ticket: persistedTicket,
       event: (eventData as DirectSupportTicketEventRow | null) ?? event,
@@ -206,13 +206,13 @@ export async function updateDirectSupportTicketStatus(
       .eq('user_id', userId)
       .select('*')
       .single();
-    if (error) throw error;
+    if (error) {throw error;}
     const { data: eventData, error: eventError } = await db
       .from('support_ticket_events')
       .insert(event)
       .select('*')
       .single();
-    if (eventError) throw eventError;
+    if (eventError) {throw eventError;}
     return {
       ticket: data as DirectSupportTicketRow,
       event: (eventData as DirectSupportTicketEventRow | null) ?? event,
@@ -249,7 +249,7 @@ export async function getDirectUserSettings(userId: string) {
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
-    if (error) throw error;
+    if (error) {throw error;}
     return (data as DirectUserSettingsRow | null) ?? null;
   } catch {
     return (
@@ -278,7 +278,7 @@ export async function upsertDirectUserSettings(
       .upsert(nextRow, { onConflict: 'user_id' })
       .select('*')
       .single();
-    if (error) throw error;
+    if (error) {throw error;}
     return (data as DirectUserSettingsRow | null) ?? nextRow;
   } catch {
     const rows = readStore<DirectUserSettingsRow>(USER_SETTINGS_KEY);

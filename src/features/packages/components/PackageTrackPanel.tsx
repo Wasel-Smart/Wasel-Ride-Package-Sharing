@@ -44,7 +44,7 @@ function routeLabel(from: string, to: string, ar: boolean): string {
 }
 
 function statusLabel(status: string, ar: boolean): string {
-  if (!ar) return status.replace('_', ' ');
+  if (!ar) {return status.replace('_', ' ');}
   const labels: Record<string, string> = {
     searching: 'قيد البحث',
     matched: 'مطابق',
@@ -56,7 +56,7 @@ function statusLabel(status: string, ar: boolean): string {
 }
 
 function timelineLabel(label: string, ar: boolean): string {
-  if (!ar) return label;
+  if (!ar) {return label;}
   return label
     .replace('Matched to a rider trip', 'تمت المطابقة مع رحلة راكب')
     .replace('Searching for a rider trip', 'جاري البحث عن رحلة راكب')

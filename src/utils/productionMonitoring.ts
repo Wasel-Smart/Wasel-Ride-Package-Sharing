@@ -227,7 +227,7 @@ export class ProductionMonitor {
     p99: number;
   } | null {
     const values = this.metrics.get(name);
-    if (!values || values.length === 0) return null;
+    if (!values || values.length === 0) {return null;}
 
     const sorted = [...values].sort((a, b) => a - b);
     const sum = sorted.reduce((acc, val) => acc + val, 0);

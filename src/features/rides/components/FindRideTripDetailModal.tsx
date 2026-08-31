@@ -57,7 +57,7 @@ function cityLabel(city: string) {
 }
 
 function localizeSignalText(value: string) {
-  if (getCurrentLang() !== 'ar') return value;
+  if (getCurrentLang() !== 'ar') {return value;}
   return value
     .replace(/\band\b/g, 'و')
     .replace(/live searches/g, 'عمليات بحث مباشرة')
@@ -128,17 +128,17 @@ export function FindRideTripDetailModal({
 
   useEffect(() => {
     const dialog = dialogRef.current;
-    if (!dialog) return;
+    if (!dialog) {return;}
     const focusable = dialog.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
-    if (first) first.focus();
+    if (first) {first.focus();}
 
     const handleTab = (event: KeyboardEvent) => {
-      if (event.key !== 'Tab') return;
-      if (focusable.length === 0) return;
+      if (event.key !== 'Tab') {return;}
+      if (focusable.length === 0) {return;}
       if (event.shiftKey) {
         if (document.activeElement === first) {
           event.preventDefault();

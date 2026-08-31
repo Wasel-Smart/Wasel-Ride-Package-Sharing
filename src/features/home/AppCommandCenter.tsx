@@ -36,7 +36,7 @@ type ActionCard = {
 };
 
 function corridorPath(from?: string, to?: string) {
-  if (!from || !to) return '/app/find-ride';
+  if (!from || !to) {return '/app/find-ride';}
   return `/app/find-ride?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&search=1`;
 }
 
@@ -80,7 +80,7 @@ export function AppCommandCenter() {
   const ar = language === 'ar';
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
 
     const handleRefresh = () => setRefreshKey(value => value + 1);
     window.addEventListener('focus', handleRefresh);
@@ -96,7 +96,7 @@ export function AppCommandCenter() {
 
     async function loadSupport() {
       const tickets = await getSupportTickets(user?.id);
-      if (!cancelled) setSupportTickets(tickets);
+      if (!cancelled) {setSupportTickets(tickets);}
     }
 
     void loadSupport();
@@ -111,7 +111,7 @@ export function AppCommandCenter() {
   const buses = useMemo(() => getStoredBusBookings(), [refreshKey]);
   const trustStatus = useMemo(() => (user ? buildFallbackTrustCenterStatus(user) : null), [user]);
 
-  if (!user) return null;
+  if (!user) {return null;}
 
   const supportOpen = supportTickets.filter(
     ticket => ticket.status !== 'resolved' && ticket.status !== 'closed',

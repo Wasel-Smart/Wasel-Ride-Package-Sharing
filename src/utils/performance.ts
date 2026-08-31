@@ -132,7 +132,7 @@ export function debounce<TArgs extends unknown[]>(
     const now = Date.now();
     const isInvoking = leading && !timeoutId;
 
-    if (timeoutId) clearTimeout(timeoutId);
+    if (timeoutId) {clearTimeout(timeoutId);}
     timeoutId = setTimeout(() => {
       timeoutId = null;
       if (trailing && lastArgs) {
@@ -266,7 +266,7 @@ export function calculateVariableVirtualWindow(
     const height = itemHeights[i] ?? 0;
     visibleHeight += height;
     endIndex = i + 1;
-    if (visibleHeight > viewportHeight + overscan * height) break;
+    if (visibleHeight > viewportHeight + overscan * height) {break;}
   }
 
   return {
@@ -283,9 +283,9 @@ export function calculateVariableVirtualWindow(
  * Shallow equality check for arrays.
  */
 function shallowEqual<T>(a: T[], b: T[]): boolean {
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) {return false;}
   for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
+    if (a[i] !== b[i]) {return false;}
   }
   return true;
 }
@@ -344,7 +344,7 @@ export function coalesce<TArgs extends unknown[]>(
 
 // ─── Web Vitals Monitoring ───────────────────────────────────────────────────
 export function initPerformanceMonitoring() {
-  if (typeof window === 'undefined' || performanceMonitoringInitialized) return;
+  if (typeof window === 'undefined' || performanceMonitoringInitialized) {return;}
 
   performanceMonitoringInitialized = true;
 
@@ -427,7 +427,7 @@ function reportWebVital(metric: MetricType) {
 }
 
 function sendToAnalytics(vital: WebVital) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   // Check analytics consent before sending
   try {
@@ -469,12 +469,12 @@ function sendToAnalytics(vital: WebVital) {
 
 // Track custom performance marks
 export function markPerformance(name: string) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   performance.mark(name);
 }
 
 export function measurePerformance(name: string, startMark: string, endMark?: string) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   try {
     const measure = performance.measure(name, startMark, endMark);
@@ -509,30 +509,30 @@ export function getPerformanceScore(): number {
 
   // LCP score
   if (metrics.lcp) {
-    if (metrics.lcp <= 2500) scores.push(100);
-    else if (metrics.lcp <= 4000) scores.push(50);
-    else scores.push(0);
+    if (metrics.lcp <= 2500) {scores.push(100);}
+    else if (metrics.lcp <= 4000) {scores.push(50);}
+    else {scores.push(0);}
   }
 
   // FID score
   if (metrics.fid) {
-    if (metrics.fid <= 100) scores.push(100);
-    else if (metrics.fid <= 300) scores.push(50);
-    else scores.push(0);
+    if (metrics.fid <= 100) {scores.push(100);}
+    else if (metrics.fid <= 300) {scores.push(50);}
+    else {scores.push(0);}
   }
 
   // CLS score
   if (metrics.cls !== undefined) {
-    if (metrics.cls <= 0.1) scores.push(100);
-    else if (metrics.cls <= 0.25) scores.push(50);
-    else scores.push(0);
+    if (metrics.cls <= 0.1) {scores.push(100);}
+    else if (metrics.cls <= 0.25) {scores.push(50);}
+    else {scores.push(0);}
   }
 
   // FCP score
   if (metrics.fcp) {
-    if (metrics.fcp <= 1800) scores.push(100);
-    else if (metrics.fcp <= 3000) scores.push(50);
-    else scores.push(0);
+    if (metrics.fcp <= 1800) {scores.push(100);}
+    else if (metrics.fcp <= 3000) {scores.push(50);}
+    else {scores.push(0);}
   }
 
   return scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
@@ -540,7 +540,7 @@ export function getPerformanceScore(): number {
 
 // Resource timing
 export function getResourceTimings() {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
 
   const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
 
@@ -554,7 +554,7 @@ export function getResourceTimings() {
 
 // Long tasks detection
 export function detectLongTasks() {
-  if (typeof window === 'undefined' || longTaskObserverStarted) return;
+  if (typeof window === 'undefined' || longTaskObserverStarted) {return;}
 
   longTaskObserverStarted = true;
 
@@ -579,7 +579,7 @@ export function detectLongTasks() {
 
 // Memory usage (Chrome only)
 export function getMemoryUsage() {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === 'undefined') {return null;}
 
   type ChromeMemoryInfo = {
     usedJSHeapSize: number;
@@ -588,7 +588,7 @@ export function getMemoryUsage() {
   };
 
   const memory = (performance as Performance & { memory?: ChromeMemoryInfo }).memory;
-  if (!memory) return null;
+  if (!memory) {return null;}
 
   return {
     usedJSHeapSize: memory.usedJSHeapSize,
@@ -600,10 +600,10 @@ export function getMemoryUsage() {
 
 // Navigation timing
 export function getNavigationTiming() {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === 'undefined') {return null;}
 
   const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-  if (!navigation) return null;
+  if (!navigation) {return null;}
 
   return {
     dns: navigation.domainLookupEnd - navigation.domainLookupStart,
@@ -631,7 +631,7 @@ export function exportPerformanceReport() {
 
 // React hook for performance monitoring
 export function usePerformanceMonitor(componentName: string) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   const startMark = `${componentName}-start`;
   const endMark = `${componentName}-end`;

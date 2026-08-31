@@ -63,7 +63,7 @@ const Button = React.forwardRef<
     // OPTIMIZED: Attach instant feedback on mount - DEFERRED to avoid blocking FID
     React.useEffect(() => {
       const element = buttonRef.current;
-      if (!element || !enableFeedback) return;
+      if (!element || !enableFeedback) {return;}
 
       // Defer feedback attachment to avoid blocking initial interactions
       const timeoutId = setTimeout(() => {

@@ -134,7 +134,7 @@ export default function SettingsPage() {
 
     const loadSettings = async () => {
       const settings = await getAccountSettings(user?.id ?? null, defaultAccountSettings);
-      if (cancelled) return;
+      if (cancelled) {return;}
 
       setPrivacy(settings.privacy);
       setDisplay({
@@ -153,7 +153,7 @@ export default function SettingsPage() {
   }, [ar, defaultAccountSettings, language, user?.id]);
 
   useEffect(() => {
-    if (!settingsHydratedRef.current) return;
+    if (!settingsHydratedRef.current) {return;}
 
     const handle = window.setTimeout(() => {
       void updateAccountSettings(user?.id ?? null, {
@@ -187,7 +187,7 @@ export default function SettingsPage() {
 
     const loadPreferences = async () => {
       const prefs = await getCommunicationPreferences(user?.id ?? null);
-      if (cancelled) return;
+      if (cancelled) {return;}
       setNotifs(prefs);
     };
 
@@ -200,7 +200,7 @@ export default function SettingsPage() {
 
     useEffect(() => {
       const loadSessionsEffect = async () => {
-        if (!supabase) return;
+        if (!supabase) {return;}
         const currentSession = await supabase.auth.getSession();
         const currentSessionId = currentSession.data.session?.user?.id ?? null;
         setActiveSessionId(currentSessionId);
@@ -343,7 +343,7 @@ export default function SettingsPage() {
   };
 
   const revokeSession = async (sessionId: string) => {
-    if (!supabase) return;
+    if (!supabase) {return;}
     toast.success(ar ? 'تم إنهاء الجلسة.' : 'Session revoked.');
     setSessions(previous => previous.filter(s => s.id !== sessionId));
   };

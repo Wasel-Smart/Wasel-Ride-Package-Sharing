@@ -34,7 +34,7 @@ export interface DriverRating {
 
 class RatingsService {
   async submitRating(submission: RatingSubmission): Promise<void> {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) {throw new Error('Supabase not configured');}
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -104,7 +104,7 @@ class RatingsService {
   }
 
   async getDriverRating(driverId: string): Promise<DriverRating> {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) {throw new Error('Supabase not configured');}
     const profileResult = await supabase
       .from('profiles')
       .select('average_rating, total_ratings')
@@ -148,7 +148,7 @@ class RatingsService {
     canRate: boolean;
     reason?: string;
   }> {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) {throw new Error('Supabase not configured');}
     const {
       data: { user },
     } = await supabase.auth.getUser();

@@ -57,7 +57,7 @@ export async function fetchMobilityLiveRows(): Promise<MobilityLiveRows | null> 
     timeout: 10_000,
   });
 
-  if (!response.ok) return null;
+  if (!response.ok) {return null;}
   return response.json() as Promise<MobilityLiveRows>;
 }
 

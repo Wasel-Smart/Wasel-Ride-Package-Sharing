@@ -7,7 +7,7 @@
  * to prevent log injection and other injection attacks
  */
 export function sanitizeString(input: string): string {
-  if (typeof input !== 'string') return '';
+  if (typeof input !== 'string') {return '';}
 
   return Array.from(input)
     .filter(char => {
@@ -86,7 +86,7 @@ export function validateApiUrl(url: string, allowedDomains: string[]): boolean {
  * Encodes special characters
  */
 export function sanitizeHtml(input: string): string {
-  if (typeof input !== 'string') return '';
+  if (typeof input !== 'string') {return '';}
 
   return input
     .replace(/&/g, '&amp;')
@@ -101,7 +101,7 @@ export function sanitizeHtml(input: string): string {
  * Sanitize log message to prevent log injection (CWE-117)
  */
 export function sanitizeLogMessage(message: unknown): string {
-  if (message === null || message === undefined) return String(message);
+  if (message === null || message === undefined) {return String(message);}
   const str = String(message);
   return str.replace(/[^\x20-\x7e]/g, '').replace(/\r?\n|\r/g, ' ').trim();
 }
@@ -119,7 +119,7 @@ export const sanitizeText = sanitizeHtml;
 
 // DOM-based HTML sanitizer (strips tags entirely via browser parser)
 export function sanitizeHTMLStrict(html: string): string {
-  if (!html) return '';
+  if (!html) {return '';}
   // Use regex-based stripping to avoid XSS via innerHTML assignment
   return stripHTML(html);
 }
@@ -128,7 +128,7 @@ export function sanitizeHTMLStrict(html: string): string {
  * Sanitize URL to prevent javascript: and data: URIs
  */
 export function sanitizeURL(url: string): string {
-  if (!url) return '';
+  if (!url) {return '';}
 
   const trimmed = url.trim().toLowerCase();
 
@@ -148,7 +148,7 @@ export function sanitizeURL(url: string): string {
  * Sanitize phone number
  */
 export function sanitizePhone(phone: string): string {
-  if (!phone) return '';
+  if (!phone) {return '';}
 
   // Remove all non-numeric characters except + at start
   return phone.replace(/[^\d+]/g, '').replace(/(?!^)\+/g, '');
@@ -158,7 +158,7 @@ export function sanitizePhone(phone: string): string {
  * Sanitize email
  */
 export function sanitizeEmail(email: string): string {
-  if (!email) return '';
+  if (!email) {return '';}
 
   // Basic email sanitization
   return email.trim().toLowerCase();
@@ -168,7 +168,7 @@ export function sanitizeEmail(email: string): string {
  * Sanitize search query
  */
 export function sanitizeSearchQuery(query: string): string {
-  if (!query) return '';
+  if (!query) {return '';}
 
   return query
     .trim()
@@ -181,7 +181,7 @@ export function sanitizeSearchQuery(query: string): string {
  * Sanitize filename
  */
 export function sanitizeFilename(filename: string): string {
-  if (!filename) return '';
+  if (!filename) {return '';}
 
   const hadInvalid = /[<>:"|?*]/.test(filename);
 
@@ -193,7 +193,7 @@ export function sanitizeFilename(filename: string): string {
     .substring(0, 255);
 
   // If the name starts with a dot, make it non-hidden and non-relative by prefixing.
-  if (safe.startsWith('.')) safe = `_${safe}`;
+  if (safe.startsWith('.')) {safe = `_${safe}`;}
 
   const dot = safe.lastIndexOf('.');
   const base = dot > 0 ? safe.slice(0, dot) : safe;
@@ -213,7 +213,7 @@ export function sanitizeFilename(filename: string): string {
  * Validate and sanitize price/number input
  */
 export function sanitizeNumber(input: string): string {
-  if (!input) return '';
+  if (!input) {return '';}
 
   return input.replace(/[^\d.]/g, '');
 }
@@ -270,7 +270,7 @@ export function safeJSONParse<T = unknown>(json: string, fallback: T): T {
  * Strip all HTML tags
  */
 export function stripHTML(html: string): string {
-  if (!html) return '';
+  if (!html) {return '';}
 
   // Do NOT assign user input to innerHTML — that parses the string in the
   // document context and can execute script (e.g. <img src=x onerror=...>).
@@ -290,7 +290,7 @@ export function stripHTML(html: string): string {
  * Validate and sanitize markdown (basic)
  */
 export function sanitizeMarkdown(markdown: string): string {
-  if (!markdown) return '';
+  if (!markdown) {return '';}
 
   // Remove potentially dangerous markdown
   return markdown
@@ -347,12 +347,12 @@ export function sanitizeTrackingId(trackingId: string): string {
  * spaces, and common punctuation used in Iraqi/Jordanian names and addresses.
  */
 export function sanitizeArabicText(input: unknown): string {
-  if (input === null || input === undefined) return '';
+  if (input === null || input === undefined) {return '';}
   const str = String(input);
   let filtered = '';
   for (let i = 0; i < str.length; i++) {
     const code = str.charCodeAt(i);
-    if ((code >= 0x00 && code <= 0x1f) || (code >= 0x7f && code <= 0x9f)) continue;
+    if ((code >= 0x00 && code <= 0x1f) || (code >= 0x7f && code <= 0x9f)) {continue;}
     filtered += str[i];
   }
   return filtered

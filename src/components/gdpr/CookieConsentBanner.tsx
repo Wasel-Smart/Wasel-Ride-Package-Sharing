@@ -49,13 +49,13 @@ export function CookieConsentBanner() {
   }, []);
 
   useEffect(() => {
-    if (!showBanner) return;
+    if (!showBanner) {return;}
     const acceptBtn = document.getElementById('cookie-accept-btn');
     acceptBtn?.focus();
   }, [showBanner]);
 
   useEffect(() => {
-    if (!showBanner) return;
+    if (!showBanner) {return;}
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -63,13 +63,13 @@ export function CookieConsentBanner() {
         return;
       }
 
-      if (event.key !== 'Tab') return;
+      if (event.key !== 'Tab') {return;}
 
       const banner = bannerRef.current;
-      if (!banner) return;
+      if (!banner) {return;}
 
       const focusable = Array.from(banner.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
-      if (focusable.length === 0) return;
+      if (focusable.length === 0) {return;}
 
       const first = focusable[0] as HTMLElement;
       const last = focusable[focusable.length - 1] as HTMLElement;
@@ -91,7 +91,7 @@ export function CookieConsentBanner() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [showBanner, handleDecline]);
 
-  if (!showBanner) return null;
+  if (!showBanner) {return null;}
 
   return (
     <div

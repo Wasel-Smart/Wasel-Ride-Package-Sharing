@@ -169,17 +169,17 @@ function calculateProofScore(args: {
 }
 
 function calculateWeeksAtTarget(weeklyRides: number, repeatRideRate: number, proofScore: number) {
-  if (weeklyRides < WEEKLY_RIDE_GOAL || repeatRideRate < REPEAT_RIDE_GOAL) return 0;
+  if (weeklyRides < WEEKLY_RIDE_GOAL || repeatRideRate < REPEAT_RIDE_GOAL) {return 0;}
   return Math.min(WEEKS_AT_TARGET_GOAL, Math.floor(proofScore / 34));
 }
 
 export function evaluateCorridorExpansion(input: ExpansionGateInput): ExpansionGateResult {
   const blockers: string[] = [];
 
-  if (input.weeklyRides < input.weeklyRideGoal) blockers.push('weekly rides');
-  if (input.repeatRideRate < input.repeatRideGoal) blockers.push('repeat ride rate');
-  if (input.supplyReliability < input.supplyReliabilityGoal) blockers.push('supply reliability');
-  if (input.weeksAtTarget < WEEKS_AT_TARGET_GOAL) blockers.push('three-week consistency');
+  if (input.weeklyRides < input.weeklyRideGoal) {blockers.push('weekly rides');}
+  if (input.repeatRideRate < input.repeatRideGoal) {blockers.push('repeat ride rate');}
+  if (input.supplyReliability < input.supplyReliabilityGoal) {blockers.push('supply reliability');}
+  if (input.weeksAtTarget < WEEKS_AT_TARGET_GOAL) {blockers.push('three-week consistency');}
 
   if (blockers.length === 0) {
     return { stage: 'expand', decision: 'expand', blockers };
@@ -276,8 +276,8 @@ export function buildCorridorBetaPlan(args?: {
     .sort((left, right) => {
       const leftHabit = isHabitRoute(left) ? 1 : 0;
       const rightHabit = isHabitRoute(right) ? 1 : 0;
-      if (leftHabit !== rightHabit) return rightHabit - leftHabit;
-      if (left.popular !== right.popular) return Number(right.popular) - Number(left.popular);
+      if (leftHabit !== rightHabit) {return rightHabit - leftHabit;}
+      if (left.popular !== right.popular) {return Number(right.popular) - Number(left.popular);}
       return left.distanceKm - right.distanceKm;
     });
   const marketSnapshot = buildCorridorMarketSnapshot(10);

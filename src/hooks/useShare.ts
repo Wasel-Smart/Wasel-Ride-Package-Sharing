@@ -41,7 +41,7 @@ export async function shareContent(options: ShareOptions): Promise<boolean> {
       return true;
     } catch (err: unknown) {
       // User cancelled the share dialog — not an error
-      if (err instanceof DOMException && err.name === 'AbortError') return false;
+      if (err instanceof DOMException && err.name === 'AbortError') {return false;}
       // Fall through to clipboard
     }
   }

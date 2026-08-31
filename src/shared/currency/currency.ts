@@ -11,8 +11,8 @@ export function fromMinorUnits(minorAmount: number, currency: string): number {
 }
 
 export function normalizeAmount(value: unknown): number | null {
-  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  if (typeof value !== 'number' || !Number.isFinite(value)) {return null;}
   const amount = Math.round(value);
-  if (amount < 50 || amount > 500_000) return null;
+  if (amount < 50 || amount > 500_000) {return null;}
   return amount;
 }

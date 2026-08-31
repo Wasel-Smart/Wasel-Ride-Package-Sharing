@@ -67,7 +67,7 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
     return items;
   }, [rideBookings, packages]);
 
-  if (activeItems.length === 0) return null;
+  if (activeItems.length === 0) {return null;}
 
   return (
     <div

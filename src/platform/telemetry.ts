@@ -146,7 +146,7 @@ class TelemetryCollector {
 
   // Flush metrics to backend
   private async flush(): Promise<void> {
-    if (this.metrics.length === 0 && this.traces.size === 0) return;
+    if (this.metrics.length === 0 && this.traces.size === 0) {return;}
 
     const payload = {
       metrics: [...this.metrics],
@@ -155,7 +155,7 @@ class TelemetryCollector {
 
     this.metrics = [];
     for (const [id, span] of this.traces.entries()) {
-      if (span.endTime) this.traces.delete(id);
+      if (span.endTime) {this.traces.delete(id);}
     }
 
     try {
@@ -171,7 +171,7 @@ class TelemetryCollector {
   }
 
   private startAutoFlush(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
 
     this.flushTimer = setInterval(() => this.flush(), this.flushInterval);
 

@@ -158,8 +158,8 @@ function matchesFocusedRoute(
   focusOrigin?: string,
   focusDestination?: string,
 ) {
-  if (focusRouteId && route.id === focusRouteId) return true;
-  if (!focusOrigin || !focusDestination) return false;
+  if (focusRouteId && route.id === focusRouteId) {return true;}
+  if (!focusOrigin || !focusDestination) {return false;}
   const fromName = CITIES[route.from]?.name;
   const toName = CITIES[route.to]?.name;
   return (
@@ -254,7 +254,7 @@ export function MobilityOSLandingMap({
   useEffect(() => {
     const update = () => {
       const el = wrapRef.current;
-      if (!el) return;
+      if (!el) {return;}
       const rect = el.getBoundingClientRect();
       const next = {
         width: Math.max(320, rect.width),
@@ -277,7 +277,7 @@ export function MobilityOSLandingMap({
       },
       { threshold: 0 },
     );
-    if (wrapRef.current) io.observe(wrapRef.current);
+    if (wrapRef.current) {io.observe(wrapRef.current);}
 
     return () => {
       window.removeEventListener('resize', update);
@@ -459,8 +459,8 @@ export function MobilityOSLandingMap({
           const x = width * (0.44 + (step / 40) * 0.46);
           const wave = Math.sin(step * 0.34 + line * 9 + time * 0.00024 + index * 0.4) * 4.5;
           const y = height * line + wave + index * 18;
-          if (step === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+          if (step === 0) {ctx.moveTo(x, y);}
+          else {ctx.lineTo(x, y);}
         }
         ctx.strokeStyle = withAlpha(MAP_LAYER.topoBase, 0.04 + index * 0.008);
         ctx.lineWidth = 0.7;
@@ -511,8 +511,8 @@ export function MobilityOSLandingMap({
       ctx.beginPath();
       BORDER.forEach((point, index) => {
         const p = project(point.lat, point.lon, width, height);
-        if (index === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
+        if (index === 0) {ctx.moveTo(p.x, p.y);}
+        else {ctx.lineTo(p.x, p.y);}
       });
       ctx.closePath();
       ctx.fillStyle = MAP_LAYER.routeHalo;
@@ -525,7 +525,7 @@ export function MobilityOSLandingMap({
       routes.forEach((route, index) => {
         const fromCity = CITIES[route.from];
         const toCity = CITIES[route.to];
-        if (!fromCity || !toCity) return;
+        if (!fromCity || !toCity) {return;}
         const from = project(fromCity.lat, fromCity.lon, width, height);
         const to = project(toCity.lat, toCity.lon, width, height);
         const control = getCurve(from, to, index, route.weight);
@@ -797,7 +797,7 @@ export function MobilityOSLandingMap({
     renderRef.current = render;
     frameRef.current = requestAnimationFrame(render);
     return () => {
-      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+      if (frameRef.current !== null) {cancelAnimationFrame(frameRef.current);}
       frameRef.current = null;
     };
   }, [

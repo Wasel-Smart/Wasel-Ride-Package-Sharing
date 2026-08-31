@@ -10,21 +10,21 @@ interface CorridorBetaFocusSectionProps {
 }
 
 function stageLabel(stage: CorridorBetaPlan['focusCorridors'][number]['stage'], ar: boolean) {
-  if (stage === 'expand') return ar ? 'جاهز للتوسع' : 'Ready to expand';
-  if (stage === 'prove') return ar ? 'اثبت التكرار' : 'Prove repeat rides';
+  if (stage === 'expand') {return ar ? 'جاهز للتوسع' : 'Ready to expand';}
+  if (stage === 'prove') {return ar ? 'اثبت التكرار' : 'Prove repeat rides';}
   return ar ? 'ضيّق التركيز' : 'Narrow focus';
 }
 
 function stageColor(stage: CorridorBetaPlan['focusCorridors'][number]['stage']) {
-  if (stage === 'expand') return C.green;
-  if (stage === 'prove') return C.gold;
+  if (stage === 'expand') {return C.green;}
+  if (stage === 'prove') {return C.gold;}
   return C.cyan;
 }
 
 function metricLabel(label: string, ar: boolean) {
-  if (label === 'weekly rides') return ar ? 'رحلات أسبوعية' : 'weekly rides';
-  if (label === 'repeat ride rate') return ar ? 'نسبة التكرار' : 'repeat ride rate';
-  if (label === 'supply reliability') return ar ? 'ثبات العرض' : 'supply reliability';
+  if (label === 'weekly rides') {return ar ? 'رحلات أسبوعية' : 'weekly rides';}
+  if (label === 'repeat ride rate') {return ar ? 'نسبة التكرار' : 'repeat ride rate';}
+  if (label === 'supply reliability') {return ar ? 'ثبات العرض' : 'supply reliability';}
   return ar ? 'ثبات ثلاث أسابيع' : 'three-week consistency';
 }
 
@@ -43,14 +43,14 @@ const CITY_LABELS_AR: Record<string, string> = {
 };
 
 function corridorLabel(label: string, ar: boolean) {
-  if (!ar) return label;
+  if (!ar) {return label;}
   const [from, to] = label.split(' to ');
-  if (!from || !to) return label;
+  if (!from || !to) {return label;}
   return `${CITY_LABELS_AR[from] ?? from} إلى ${CITY_LABELS_AR[to] ?? to}`;
 }
 
 function corridorReason(label: string, ar: boolean) {
-  if (!ar) return label;
+  if (!ar) {return label;}
   if (label === 'Observed ride data clears the corridor expansion gate.') {
     return 'بيانات الرحلات المرصودة تجاوزت بوابة توسيع المسار.';
   }
@@ -67,7 +67,7 @@ function corridorReason(label: string, ar: boolean) {
 }
 
 function corridorNextAction(label: string, ar: boolean) {
-  if (!ar) return label;
+  if (!ar) {return label;}
   if (label === 'Open the next corridor only after the same three-week gate passes.') {
     return 'افتح المسار التالي فقط بعد اجتياز نفس بوابة الثلاثة أسابيع.';
   }

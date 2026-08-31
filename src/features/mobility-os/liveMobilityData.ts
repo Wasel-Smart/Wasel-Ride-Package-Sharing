@@ -237,7 +237,7 @@ function normalizeCity(value: string | null | undefined): string | null {
   const raw = String(value ?? '')
     .trim()
     .toLowerCase();
-  if (!raw) return null;
+  if (!raw) {return null;}
   const normalized = raw.replace(/['']/g, '').replace(/\s+/g, ' ').replace(/-/g, ' ').trim();
   return CITY_ALIASES[normalized] ?? null;
 }
@@ -248,10 +248,10 @@ function matchRouteId(
 ): string | null {
   const from = normalizeCity(origin);
   const to = normalizeCity(destination);
-  if (!from || !to || from === to) return null;
+  if (!from || !to || from === to) {return null;}
 
   const exact = ROUTE_CITY_PAIRS.find(route => route.from === from && route.to === to);
-  if (exact) return exact.routeId;
+  if (exact) {return exact.routeId;}
 
   const reverse = ROUTE_CITY_PAIRS.find(route => route.from === to && route.to === from);
   return reverse?.routeId ?? null;
@@ -259,7 +259,7 @@ function matchRouteId(
 
 function routeLabel(routeId: string, ar: boolean): string {
   const route = ROUTE_CITY_PAIRS.find(item => item.routeId === routeId);
-  if (!route) return routeId;
+  if (!route) {return routeId;}
   return ar ? route.labelAr : route.label;
 }
 
@@ -272,16 +272,16 @@ function getPresencePackages(presence: PresenceRow | undefined, packagesOnTrip: 
 }
 
 function hasRenderableLocation(value: PresenceRow['last_location']): boolean {
-  if (!value || typeof value !== 'object') return false;
+  if (!value || typeof value !== 'object') {return false;}
   const lat = Number(value.lat);
   const lng = Number(value.lng ?? value.lon);
   return Number.isFinite(lat) && Number.isFinite(lng);
 }
 
 function isFreshHeartbeat(timestamp: string | null | undefined): boolean {
-  if (!timestamp) return false;
+  if (!timestamp) {return false;}
   const heartbeatAt = new Date(timestamp).getTime();
-  if (Number.isNaN(heartbeatAt)) return false;
+  if (Number.isNaN(heartbeatAt)) {return false;}
   return Date.now() - heartbeatAt <= 5 * 60 * 1000;
 }
 
@@ -305,17 +305,17 @@ function estimateSpeed(congestion: number): number {
 
 function buildDispatch(topRoute: string, ar: boolean): string {
   const route = ROUTE_CITY_PAIRS.find(item => item.routeId === topRoute);
-  if (!route) return ar ? 'مراجعة التوزيع التشغيلي' : 'Review operational distribution';
+  if (!route) {return ar ? 'مراجعة التوزيع التشغيلي' : 'Review operational distribution';}
   const target = ar ? route.labelAr.split(' ← ')[0] : route.label.split(' -> ')[1];
   return ar ? `اعادة توجيه العرض باتجاه ${target}` : `Reposition supply toward ${target}`;
 }
 
 async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot | null> {
   const rows = await fetchMobilityLiveRows();
-  if (!rows) return null;
+  if (!rows) {return null;}
 
   const tripRows = rows.trips;
-  if (tripRows.length === 0) return null;
+  if (tripRows.length === 0) {return null;}
 
   const bookingRows = rows.bookings;
   const packageRows = rows.packages;
@@ -330,7 +330,7 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
 
   const packagesByTrip = new Map<string, PackageRow[]>();
   packageRows.forEach(row => {
-    if (!row.trip_id) return;
+    if (!row.trip_id) {return;}
     const current = packagesByTrip.get(row.trip_id) ?? [];
     current.push(row);
     packagesByTrip.set(row.trip_id, current);
@@ -338,13 +338,13 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
 
   const presenceByTrip = new Map<string, PresenceRow>();
   presenceRows.forEach(row => {
-    if (!row.trip_id) return;
+    if (!row.trip_id) {return;}
     presenceByTrip.set(row.trip_id, row);
   });
 
   const tripsByTripId = new Map<string, TripRow>();
   tripRows.forEach(trip => {
-    if (!trip.trip_id) return;
+    if (!trip.trip_id) {return;}
     tripsByTripId.set(trip.trip_id, trip);
   });
 
@@ -352,10 +352,10 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
 
   tripRows.forEach(trip => {
     const routeId = matchRouteId(trip.origin_city, trip.destination_city);
-    if (!routeId || !trip.trip_id) return;
+    if (!routeId || !trip.trip_id) {return;}
 
     const routeConfig = ROUTE_CITY_PAIRS.find(item => item.routeId === routeId);
-    if (!routeConfig) return;
+    if (!routeConfig) {return;}
 
     const tripBookings = bookingsByTrip.get(trip.trip_id) ?? [];
     const bookedSeats = tripBookings.reduce(
@@ -406,7 +406,7 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
     corridorMap.set(routeId, current);
   });
 
-  if (corridorMap.size === 0) return null;
+  if (corridorMap.size === 0) {return null;}
 
   const trafficEntries = await Promise.all(
     Array.from(corridorMap.values()).map(async corridor => {
@@ -477,10 +477,10 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
   );
   const vehicles = telemetryRows.flatMap(presence => {
     const trip = tripsByTripId.get(presence.trip_id);
-    if (!trip) return [];
+    if (!trip) {return [];}
 
     const routeId = matchRouteId(trip.origin_city, trip.destination_city);
-    if (!routeId || !hasRenderableLocation(presence.last_location)) return [];
+    if (!routeId || !hasRenderableLocation(presence.last_location)) {return [];}
 
     const lat = Number(presence.last_location?.lat);
     const lng = Number(presence.last_location?.lng ?? presence.last_location?.lon);
@@ -586,7 +586,7 @@ export function useMobilityOSLiveData(ar: boolean) {
           setSnapshot(next);
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {setLoading(false);}
       }
     };
 

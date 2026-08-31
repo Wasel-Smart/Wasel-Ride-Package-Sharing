@@ -43,23 +43,23 @@ export function WaselDialog({
   const descriptionId = description ? `${generatedId}-description` : undefined;
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open) {return undefined;}
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {onClose();}
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose, open]);
 
-  if (!open) return null;
+  if (!open) {return null;}
 
   return (
     <div
       role="presentation"
       onMouseDown={event => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) {onClose();}
       }}
       style={{
         position: 'fixed',

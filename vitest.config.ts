@@ -51,6 +51,7 @@ export default defineConfig({
     ],
     env: {
       VITE_EVENT_BROKER: 'memory',
+      VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true',
     },
     coverage: {
       provider: 'v8',

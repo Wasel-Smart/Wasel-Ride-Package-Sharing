@@ -30,7 +30,7 @@ describe('routeMeta', () => {
   it('has analytics keys for all routes', () => {
     ROUTE_META.forEach(meta => {
       expect(meta.analyticsKey).toBeDefined();
-      expect(meta.analyticsKey && meta.analyticsKey.length).toBeGreaterThan(0);
+      expect(meta.analyticsKey?.length).toBeGreaterThan(0);
     });
   });
 });

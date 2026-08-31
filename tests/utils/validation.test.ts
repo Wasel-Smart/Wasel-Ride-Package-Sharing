@@ -31,7 +31,7 @@ function errorMessages(
   value: unknown,
 ): string[] {
   const result = schema.safeParse(value);
-  if (result.success) return [];
+  if (result.success) {return [];}
   return result.error?.errors.map(e => e.message) ?? [];
 }
 

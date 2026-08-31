@@ -23,9 +23,9 @@ import { C } from '../../utils/wasel-ds';
 import { tx } from '../../locales/tx';
 
 function tierLabel(tier: MovementMembershipSnapshot['loyaltyTier']) {
-  if (tier === 'infrastructure') return 'Infrastructure';
-  if (tier === 'network') return 'Network';
-  if (tier === 'dense') return 'Dense';
+  if (tier === 'infrastructure') {return 'Infrastructure';}
+  if (tier === 'network') {return 'Network';}
+  if (tier === 'dense') {return 'Dense';}
   return 'Starter';
 }
 
@@ -56,13 +56,13 @@ export default function WaselPlusPage() {
   useEffect(() => {
     setSavedReminders(getRouteReminders());
     void syncRouteReminders(user ?? undefined).then(delivered => {
-      if (delivered.length > 0) setSavedReminders(getRouteReminders());
+      if (delivered.length > 0) {setSavedReminders(getRouteReminders());}
     });
   }, [routeIntelligence.updatedAt, user?.email, user?.phone]);
 
   // Personalized savings headline
   const monthlySavingsJOD = useMemo(() => {
-    if (!dailySignal?.priceQuote.discountJod) return null;
+    if (!dailySignal?.priceQuote.discountJod) {return null;}
     return (dailySignal.priceQuote.discountJod * 22).toFixed(0);
   }, [dailySignal]);
 
@@ -78,7 +78,7 @@ export default function WaselPlusPage() {
 
   const handleSaveReminder = (corridorId: string) => {
     const suggestion = recurringSuggestions.find(item => item.corridorId === corridorId);
-    if (!suggestion) return;
+    if (!suggestion) {return;}
     const reminder = createReminderFromSuggestion(suggestion);
     setSavedReminders(getRouteReminders());
     setRetentionMessage(`Reminder saved. ${formatRouteReminderSchedule(reminder)}.`);

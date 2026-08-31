@@ -45,7 +45,7 @@ function archiveStorageKey(userId?: string) {
 }
 
 function readArchivedNotificationIds(userId?: string): string[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
 
   try {
     const raw = window.localStorage.getItem(archiveStorageKey(userId));
@@ -59,7 +59,7 @@ function readArchivedNotificationIds(userId?: string): string[] {
 }
 
 function writeArchivedNotificationIds(userId: string | undefined, ids: string[]) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(archiveStorageKey(userId), JSON.stringify(ids.slice(0, 200)));
 }
 
@@ -102,7 +102,7 @@ export function useNotifications() {
   });
 
   useEffect(() => {
-    if (typeof window === 'undefined') return undefined;
+    if (typeof window === 'undefined') {return undefined;}
 
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -151,7 +151,7 @@ export function useNotifications() {
     const unread = notifications.filter(
       notification => !notification.read && !archivedIds.includes(notification.id),
     );
-    if (unread.length === 0) return;
+    if (unread.length === 0) {return;}
 
     const queryKey = notificationsQueryKey(effectiveUserId);
     const previous = queryClient.getQueryData<Notification[]>(queryKey) ?? [];
@@ -173,7 +173,7 @@ export function useNotifications() {
 
   const archiveNotification = (notificationId: string) => {
     setArchivedIds(current => {
-      if (current.includes(notificationId)) return current;
+      if (current.includes(notificationId)) {return current;}
       const next = [...current, notificationId];
       writeArchivedNotificationIds(effectiveUserId, next);
       return next;
@@ -190,7 +190,7 @@ export function useNotifications() {
   const createNotification = async (
     data: Parameters<typeof notificationsAPI.createNotification>[0],
   ) => {
-    if (!effectiveUserId) return;
+    if (!effectiveUserId) {return;}
 
     try {
       await notificationsAPI.createNotification(data);

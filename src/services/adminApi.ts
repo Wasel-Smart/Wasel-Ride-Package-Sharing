@@ -15,7 +15,7 @@ export async function getAdminMetrics() {
 
 export async function getActiveRides(status?: string, page = 1, limit = 20) {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
-  if (status) params.set('status', status);
+  if (status) {params.set('status', status);}
   const response = await api.get(`/v1/admin/rides/active?${params.toString()}`);
   return response as { data: unknown[]; meta: { total: number; page: number; limit: number } };
 }

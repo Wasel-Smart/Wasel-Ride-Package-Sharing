@@ -63,7 +63,7 @@ function AppRuntimeCoordinator() {
         }
 
         cancelScheduledWork = scheduleWhenIdle(async () => {
-          if (cancelled) return;
+          if (cancelled) {return;}
 
           try {
             const [

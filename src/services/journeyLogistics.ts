@@ -60,7 +60,7 @@ const PACKAGE_LIMIT = 50;
 const RIDE_LIMIT = 50;
 
 function readList<T>(key: string): T[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(key);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -71,7 +71,7 @@ function readList<T>(key: string): T[] {
 }
 
 function writeList<T>(key: string, list: T[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(key, JSON.stringify(list));
 }
 
@@ -84,15 +84,15 @@ function generateHandoffCode(): string {
 }
 
 function pickDriverName(carModel: string): string {
-  if (!carModel.trim()) return 'Wasel Captain';
+  if (!carModel.trim()) {return 'Wasel Captain';}
   return `${carModel.split(' ')[0]} Captain`;
 }
 
 function parseWeight(weight: string): number {
   const matches = weight.match(/\d+(?:\.\d+)?/g);
-  if (!matches) return 0.5;
+  if (!matches) {return 0.5;}
   const values = matches.map(Number).filter(value => Number.isFinite(value));
-  if (!values.length) return 0.5;
+  if (!values.length) {return 0.5;}
   return Math.max(...values);
 }
 
@@ -115,8 +115,8 @@ function sortByCreatedAtDesc<T extends { createdAt: string }>(items: T[]): T[] {
 
 function normalizeStatus(value: unknown, matchedRideId?: string): PackageStatus {
   const status = String(value ?? '').toLowerCase();
-  if (status === 'delivered') return 'delivered';
-  if (status === 'in_transit' || status === 'picked_up') return 'in_transit';
+  if (status === 'delivered') {return 'delivered';}
+  if (status === 'in_transit' || status === 'picked_up') {return 'in_transit';}
   if (
     status === 'searching' ||
     status === 'pending' ||
@@ -125,7 +125,7 @@ function normalizeStatus(value: unknown, matchedRideId?: string): PackageStatus 
   ) {
     return matchedRideId ? 'matched' : 'searching';
   }
-  if (status === 'matched' || status === 'assigned' || status === 'accepted') return 'matched';
+  if (status === 'matched' || status === 'assigned' || status === 'accepted') {return 'matched';}
   return matchedRideId ? 'matched' : 'searching';
 }
 
@@ -180,7 +180,7 @@ function normalizeLocalRide(raw: Partial<PostedRide>): PostedRide | null {
   const id = String(raw.id ?? '').trim();
   const from = String(raw.from ?? '').trim();
   const to = String(raw.to ?? '').trim();
-  if (!id || !from || !to) return null;
+  if (!id || !from || !to) {return null;}
 
   return {
     id,
@@ -299,7 +299,7 @@ function normalizeLocalPackage(raw: Partial<PackageRequest>): PackageRequest | n
     .toUpperCase();
   const from = String(raw.from ?? '').trim();
   const to = String(raw.to ?? '').trim();
-  if (!trackingId || !from || !to) return null;
+  if (!trackingId || !from || !to) {return null;}
 
   const matchedRideId = String(raw.matchedRideId ?? '').trim() || undefined;
   const status = normalizeStatus(raw.status, matchedRideId);
@@ -353,7 +353,7 @@ function mergePackages(...lists: PackageRequest[][]): PackageRequest[] {
   for (const list of lists) {
     for (const item of list) {
       const normalized = normalizeLocalPackage(item);
-      if (!normalized) continue;
+      if (!normalized) {continue;}
       merged.set(normalized.trackingId, normalized);
     }
   }
@@ -367,7 +367,7 @@ function mergeRides(...lists: PostedRide[][]): PostedRide[] {
   for (const list of lists) {
     for (const item of list) {
       const normalized = normalizeLocalRide(item);
-      if (!normalized) continue;
+      if (!normalized) {continue;}
       merged.set(normalized.id, normalized);
     }
   }
@@ -467,7 +467,7 @@ export function updateConnectedRide(
 ): PostedRide | null {
   const rides = getConnectedRides();
   const target = rides.find(ride => ride.id === rideId);
-  if (!target) return null;
+  if (!target) {return null;}
 
   const updated: PostedRide = {
     ...target,
@@ -640,11 +640,11 @@ export async function createConnectedPackage(input: {
 
 export async function getPackageByTrackingId(trackingId: string): Promise<PackageRequest | null> {
   const normalizedTrackingId = trackingId.trim().toUpperCase();
-  if (!normalizedTrackingId) return null;
+  if (!normalizedTrackingId) {return null;}
 
   const local =
     getConnectedPackages().find(item => item.trackingId === normalizedTrackingId) ?? null;
-  if (local) return local;
+  if (local) {return local;}
 
   try {
     let server: Record<string, unknown> | null = null;
@@ -658,11 +658,11 @@ export async function getPackageByTrackingId(trackingId: string): Promise<Packag
           },
         },
       );
-      if (!response.ok) return null;
+      if (!response.ok) {return null;}
       server = await response.json();
     } else {
       const direct = await getDirectPackageByTrackingId(normalizedTrackingId);
-      if (!direct) return null;
+      if (!direct) {return null;}
       server = {
         ...direct,
         id: direct.id,
@@ -676,7 +676,7 @@ export async function getPackageByTrackingId(trackingId: string): Promise<Packag
       };
     }
 
-    if (!server) return null;
+    if (!server) {return null;}
 
     const fallback: PackageRequest = {
       id: String(server.id ?? makeId('pkg')),
@@ -717,7 +717,7 @@ export function getConnectedStats() {
     ridesPosted: rides.length,
     packagesCreated: packages.length,
     packageEnabledRides,
-    matchedPackages: packages.filter(pkg => !!pkg.matchedRideId).length,
+    matchedPackages: packages.filter(pkg => Boolean(pkg.matchedRideId)).length,
   };
 }
 
@@ -728,11 +728,11 @@ export function updatePackageVerification(
   action: PackageVerificationAction,
 ): PackageRequest | null {
   const normalizedTrackingId = trackingId.trim().toUpperCase();
-  if (!normalizedTrackingId) return null;
+  if (!normalizedTrackingId) {return null;}
 
   const packages = getConnectedPackages();
   const target = packages.find(item => item.trackingId === normalizedTrackingId);
-  if (!target) return null;
+  if (!target) {return null;}
 
   const now = new Date().toISOString();
   const verification: PackageVerification = { ...target.verification };
@@ -740,7 +740,7 @@ export function updatePackageVerification(
 
   if (action === 'share_code') {
     verification.senderCodeSharedAt = verification.senderCodeSharedAt ?? now;
-    if (status === 'searching' && target.matchedRideId) status = 'matched';
+    if (status === 'searching' && target.matchedRideId) {status = 'matched';}
   }
 
   if (action === 'confirm_pickup') {

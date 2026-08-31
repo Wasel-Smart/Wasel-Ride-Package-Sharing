@@ -144,7 +144,7 @@ function parseCoordValue(value: unknown): number | null {
 
 function parseLocation(value: string | null | undefined): LatLng | null {
   const text = String(value ?? '').trim();
-  if (!text) return null;
+  if (!text) {return null;}
 
   const jsonMatch = text.startsWith('{') ? text : '';
   if (jsonMatch) {
@@ -161,17 +161,17 @@ function parseLocation(value: string | null | undefined): LatLng | null {
   }
 
   const pair = text.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
-  if (!pair) return null;
+  if (!pair) {return null;}
 
   const lat = Number(pair[1]);
   const lng = Number(pair[2]);
-  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) {return null;}
   return { lat, lng };
 }
 
 function buildInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean).slice(0, 2);
-  if (parts.length === 0) return 'WD';
+  if (parts.length === 0) {return 'WD';}
   return parts.map(part => part[0]?.toUpperCase() ?? '').join('');
 }
 
@@ -205,22 +205,22 @@ function formatClockEta(minutesFromNow: number): string {
 }
 
 function isFreshHeartbeat(value: string | null | undefined): boolean {
-  if (!value) return false;
+  if (!value) {return false;}
   const heartbeatAt = new Date(value).getTime();
-  if (Number.isNaN(heartbeatAt)) return false;
+  if (Number.isNaN(heartbeatAt)) {return false;}
   return Date.now() - heartbeatAt <= 5 * 60 * 1000;
 }
 
 function mapTripStatus(tripStatus: string | null | undefined, progress: number): LiveTripStatus {
-  if (tripStatus === 'completed' || progress >= 99.5) return 'completed';
-  if (tripStatus === 'in_progress' && progress >= 85) return 'arriving';
-  if (tripStatus === 'in_progress') return 'en_route';
-  if (progress >= 12) return 'driver_arrived';
+  if (tripStatus === 'completed' || progress >= 99.5) {return 'completed';}
+  if (tripStatus === 'in_progress' && progress >= 85) {return 'arriving';}
+  if (tripStatus === 'in_progress') {return 'en_route';}
+  if (progress >= 12) {return 'driver_arrived';}
   return 'en_route_to_pickup';
 }
 
 async function resolveCanonicalUserId(authUserId: string): Promise<string | null> {
-  if (!supabase) return null;
+  if (!supabase) {return null;}
 
   const { data, error } = await supabase
     .from('users')
@@ -228,12 +228,12 @@ async function resolveCanonicalUserId(authUserId: string): Promise<string | null
     .eq('auth_user_id', authUserId)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) {throw error;}
   return (data as CanonicalUserRow | null)?.id ?? null;
 }
 
 async function fetchLatestActiveBooking(canonicalUserId: string): Promise<BookingRow | null> {
-  if (!supabase) return null;
+  if (!supabase) {return null;}
 
   const { data, error } = await supabase
     .from('bookings')
@@ -247,26 +247,26 @@ async function fetchLatestActiveBooking(canonicalUserId: string): Promise<Bookin
     .limit(1)
     .maybeSingle();
 
-  if (error) throw error;
+  if (error) {throw error;}
   return (data as BookingRow | null) ?? null;
 }
 
 function derivePrice(booking: BookingRow, trip: TripRow): number {
   const bookingAmount = Number(booking.total_price ?? booking.amount ?? 0);
-  if (Number.isFinite(bookingAmount) && bookingAmount > 0) return bookingAmount;
+  if (Number.isFinite(bookingAmount) && bookingAmount > 0) {return bookingAmount;}
   const seats = Number(booking.seats_requested ?? 1) || 1;
   const perSeat = Number(trip.price_per_seat ?? 0);
   return Number.isFinite(perSeat) ? Number((perSeat * seats).toFixed(2)) : 0;
 }
 
 async function fetchLiveTripSnapshot(authUserId: string): Promise<LiveTripSnapshot | null> {
-  if (!supabase || !authUserId) return null;
+  if (!supabase || !authUserId) {return null;}
 
   const canonicalUserId = await resolveCanonicalUserId(authUserId);
-  if (!canonicalUserId) return null;
+  if (!canonicalUserId) {return null;}
 
   const booking = await fetchLatestActiveBooking(canonicalUserId);
-  if (!booking?.trip_id) return null;
+  if (!booking?.trip_id) {return null;}
 
   const [{ data: tripData, error: tripError }, { data: presenceData }] = await Promise.all([
     supabase
@@ -285,9 +285,9 @@ async function fetchLiveTripSnapshot(authUserId: string): Promise<LiveTripSnapsh
       .maybeSingle(),
   ]);
 
-  if (tripError) throw tripError;
+  if (tripError) {throw tripError;}
   const trip = (tripData as TripRow | null) ?? null;
-  if (!trip?.trip_id || !trip.driver_id) return null;
+  if (!trip?.trip_id || !trip.driver_id) {return null;}
 
   const [{ data: driverData }, { data: vehicleData }] = await Promise.all([
     supabase
@@ -305,7 +305,7 @@ async function fetchLiveTripSnapshot(authUserId: string): Promise<LiveTripSnapsh
 
   const driver = (driverData as DriverRow | null) ?? null;
   const vehicle = (vehicleData as VehicleRow | null) ?? null;
-  if (!driver?.user_id) return null;
+  if (!driver?.user_id) {return null;}
 
   const [{ data: driverUserData }, { count: tripCount }] = await Promise.all([
     supabase
@@ -415,7 +415,7 @@ export function subscribeToLiveTripPresence(
   let queued = false;
 
   const refresh = () => {
-    if (!active) return;
+    if (!active) {return;}
     if (refreshing) {
       queued = true;
       return;
@@ -452,7 +452,7 @@ export function subscribeToLiveTripPresence(
 
   return () => {
     active = false;
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) {throw new Error('Supabase not configured');}
     void supabase.removeChannel(channel);
   };
 }

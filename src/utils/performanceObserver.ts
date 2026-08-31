@@ -44,8 +44,8 @@ export function subscribeToLongTasks(callback: (task: LongTaskEntry) => void): (
 }
 
 function ratingForThreshold(value: number, thresholds: { good: number; poor: number }): 'good' | 'needs-improvement' | 'poor' {
-  if (value <= thresholds.good) return 'good';
-  if (value <= thresholds.poor) return 'needs-improvement';
+  if (value <= thresholds.good) {return 'good';}
+  if (value <= thresholds.poor) {return 'needs-improvement';}
   return 'poor';
 }
 
@@ -60,8 +60,8 @@ function emitWebVital(metric: WebVitalMetric) {
 }
 
 function initLongTaskObserver() {
-  if (typeof PerformanceObserver === 'undefined') return;
-  if (!('longtask' in PerformanceObserver.prototype)) return;
+  if (typeof PerformanceObserver === 'undefined') {return;}
+  if (!('longtask' in PerformanceObserver.prototype)) {return;}
 
   try {
     const observer = new PerformanceObserver((list) => {
@@ -92,8 +92,8 @@ function initLongTaskObserver() {
 }
 
 function initLayoutShiftObserver() {
-  if (typeof PerformanceObserver === 'undefined') return;
-  if (!('layout-shift' in PerformanceObserver.prototype)) return;
+  if (typeof PerformanceObserver === 'undefined') {return;}
+  if (!('layout-shift' in PerformanceObserver.prototype)) {return;}
 
   try {
     const observer = new PerformanceObserver((list) => {
@@ -114,7 +114,7 @@ function initLayoutShiftObserver() {
 }
 
 function initMemoryObserver() {
-  if (typeof performance === 'undefined' || !('memory' in performance)) return;
+  if (typeof performance === 'undefined' || !('memory' in performance)) {return;}
 
   const memory = (performance as Performance & { memory: { usedJSHeapSize: number; jsHeapSizeLimit: number } }).memory;
   const usedMB = memory.usedJSHeapSize / 1024 / 1024;
@@ -131,7 +131,7 @@ function initMemoryObserver() {
 }
 
 export function initPerformanceMonitoring() {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   initLongTaskObserver();
   initLayoutShiftObserver();
@@ -202,7 +202,7 @@ export function initPerformanceMonitoring() {
 }
 
 export function measureRouteChange(routeName: string) {
-  if (typeof performance === 'undefined' || !('mark' in performance)) return;
+  if (typeof performance === 'undefined' || !('mark' in performance)) {return;}
 
   const startMark = `route-${routeName}-start`;
   const endMark = `route-${routeName}-end`;

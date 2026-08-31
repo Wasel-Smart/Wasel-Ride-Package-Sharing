@@ -3,8 +3,7 @@ import * as React from 'react';
 import { cn } from './utils';
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
-  ({ className, type, ...props }, ref) => {
-    return (
+  ({ className, type, ...props }, ref) => (
       <input
         type={type}
         ref={ref}
@@ -17,8 +16,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
         )}
         {...props}
       />
-    );
-  },
+    ),
 );
 Input.displayName = 'Input';
 

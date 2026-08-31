@@ -7,12 +7,6 @@
   "env": {
     "NPM_CONFIG_PRODUCTION": "false"
   },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",

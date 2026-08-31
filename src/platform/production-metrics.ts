@@ -131,7 +131,7 @@ class ProductionMetricsCollector {
   }
 
   calculatePercentile(values: number[], percentile: number): number {
-    if (values.length === 0) return 0;
+    if (values.length === 0) {return 0;}
 
     const sorted = [...values].sort((a, b) => a - b);
     const index = Math.ceil((percentile / 100) * sorted.length) - 1;
@@ -139,7 +139,7 @@ class ProductionMetricsCollector {
   }
 
   calculateAvailability(successCount: number, totalCount: number): number {
-    if (totalCount === 0) return 100;
+    if (totalCount === 0) {return 100;}
     return (successCount / totalCount) * 100;
   }
 
@@ -149,7 +149,7 @@ class ProductionMetricsCollector {
     actual: number,
   ): boolean {
     const target = this.SLO_TARGETS[service];
-    if (!target) return true;
+    if (!target) {return true;}
 
     let isCompliant = true;
     let targetValue = 0;

@@ -16,6 +16,7 @@ export default tseslint.config(
     'service.ts',
     'docs',
     'coverage',
+    'public',
     '*.config.js',
     '*.config.mjs',
     '*.config.ts',

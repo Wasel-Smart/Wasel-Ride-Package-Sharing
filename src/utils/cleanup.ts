@@ -38,7 +38,7 @@ class CleanupRegistry {
 
   run(name: string): void {
     const entry = this.cleanups.get(name);
-    if (!entry) return;
+    if (!entry) {return;}
 
     entry.cleanup();
     this.cleanups.delete(name);

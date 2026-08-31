@@ -74,9 +74,9 @@ const matchingWorker = createWorker<RideMatchRequest>(
     circuitBreaker: { failureThreshold: 5, resetTimeoutMs: 60000 },
   },
   async (message: QueueMessage<RideMatchRequest>) => {
-    if (!ensureBackend()) return;
+    if (!ensureBackend()) {return;}
     const client = supabase;
-    if (!client) return;
+    if (!client) {return;}
     const { payload } = message;
     const startTime = Date.now();
 
@@ -141,14 +141,14 @@ const packageWorker = createWorker<AnyRecord>(
     circuitBreaker: { failureThreshold: 5, resetTimeoutMs: 60000 },
   },
   async (message: QueueMessage<AnyRecord>) => {
-    if (!ensureBackend()) return;
+    if (!ensureBackend()) {return;}
     const client = supabase;
-    if (!client) return;
+    if (!client) {return;}
     const { topic, payload } = message;
 
     if (topic === 'packages.created') {
       const packageId = (payload.packageId as string) ?? (payload.id as string);
-      if (!packageId) return;
+      if (!packageId) {return;}
 
       const { data: trip } = await client
         .from('trips')
@@ -186,7 +186,7 @@ const packageWorker = createWorker<AnyRecord>(
       );
     } else if (topic === 'packages.location-updated') {
       const packageId = payload.packageId as string;
-      if (!packageId) return;
+      if (!packageId) {return;}
 
       await client.from('package_events').insert({
         package_id: packageId,
@@ -222,9 +222,9 @@ const paymentWorker = createWorker<PaymentAuthorization>(
     circuitBreaker: { failureThreshold: 3, resetTimeoutMs: 120000 },
   },
   async (message: QueueMessage<PaymentAuthorization>) => {
-    if (!ensureBackend()) return;
+    if (!ensureBackend()) {return;}
     const client = supabase;
-    if (!client) return;
+    if (!client) {return;}
     const { payload } = message;
     const startTime = Date.now();
 
@@ -285,7 +285,7 @@ const notificationWorker = createWorker<AnyRecord>(
 
     if (topic === 'notifications.dispatch') {
       const dispatch = payload as unknown as NotificationDispatch;
-      if (!dispatch.userId) return;
+      if (!dispatch.userId) {return;}
       await notificationsAPI.createNotification({
         title: dispatch.title,
         message: dispatch.message,
@@ -294,7 +294,7 @@ const notificationWorker = createWorker<AnyRecord>(
         action_url: dispatch.actionUrl,
       } as never);
     } else if (topic === 'rides.assigned') {
-      if (!ensureBackend() || !client) return;
+      if (!ensureBackend() || !client) {return;}
       const { data: booking } = await client
         .from('bookings')
         .select('passenger_id')
@@ -312,7 +312,7 @@ const notificationWorker = createWorker<AnyRecord>(
         } as never);
       }
     } else if (topic === 'packages.delivered') {
-      if (!ensureBackend() || !client) return;
+      if (!ensureBackend() || !client) {return;}
       const { data: pkg } = await client
         .from('packages')
         .select('sender_id, receiver_id')
@@ -362,7 +362,7 @@ const opsWorker = createWorker<AnyRecord>(
     } else if (topic === 'payments.captured') {
       if (ensureBackend()) {
         const client = supabase;
-        if (!client) return;
+        if (!client) {return;}
         const metricDate = new Date().toISOString().slice(0, 10);
         const { data: existing } = await client
           .from('ops_aggregates')
@@ -422,5 +422,5 @@ export async function stopProductionWorkers(): Promise<void> {
 // Keep the default registry in sync for callers that import `workerRegistry`.
 for (const name of productionWorkerRegistry.list()) {
   const worker = productionWorkerRegistry.getWorker(name);
-  if (worker) workerRegistry.register(worker);
+  if (worker) {workerRegistry.register(worker);}
 }

@@ -77,7 +77,7 @@ function buildFallbackCode(userId?: string, name?: string) {
 }
 
 function readLocalSnapshots(): Record<string, ReferralSnapshot> {
-  if (typeof window === 'undefined') return {};
+  if (typeof window === 'undefined') {return {};}
   try {
     const raw = window.localStorage.getItem(LOCAL_REFERRAL_KEY);
     const parsed = raw ? JSON.parse(raw) : {};
@@ -88,12 +88,12 @@ function readLocalSnapshots(): Record<string, ReferralSnapshot> {
 }
 
 function writeLocalSnapshots(snapshots: Record<string, ReferralSnapshot>) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(LOCAL_REFERRAL_KEY, JSON.stringify(snapshots));
 }
 
 function readLocalGrowthEvents(): GrowthEventRecord[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(LOCAL_GROWTH_EVENTS_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -104,7 +104,7 @@ function readLocalGrowthEvents(): GrowthEventRecord[] {
 }
 
 function writeLocalGrowthEvents(events: GrowthEventRecord[]) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(LOCAL_GROWTH_EVENTS_KEY, JSON.stringify(events.slice(0, 300)));
 }
 
@@ -123,7 +123,7 @@ function buildGrowthDashboardFromLocal(): GrowthDashboard {
 
   for (const event of events) {
     const corridor = [event.from, event.to].filter(Boolean).join(' to ');
-    if (!corridor) continue;
+    if (!corridor) {continue;}
 
     const current = corridorMap.get(corridor) ?? { corridor, demand: 0, conversions: 0 };
     current.conversions += event.funnelStage === 'booked' ? 1 : 0;
@@ -164,7 +164,7 @@ function readLocalDemandAlerts(): Array<{
   status: string;
   service: 'ride' | 'bus' | 'package';
 }> {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(LOCAL_DEMAND_KEY);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -207,10 +207,10 @@ export async function trackGrowthEvent(input: {
 export async function getReferralSnapshot(
   user?: { id?: string; name?: string } | null,
 ): Promise<ReferralSnapshot | null> {
-  if (!user?.id) return null;
+  if (!user?.id) {return null;}
 
   const shareUrlBase =
-    typeof window !== 'undefined' ? window.location.origin : 'https://wasel14.online';
+    typeof window !== 'undefined' ? window.location.origin : (import.meta.env.VITE_APP_URL || 'https://wasel14.online').replace(/\/$/, '');
 
   try {
     const remote = await getDirectReferralSnapshot(user.id);
@@ -225,7 +225,7 @@ export async function getReferralSnapshot(
   } catch {
     const snapshots = readLocalSnapshots();
     const existing = snapshots[user.id];
-    if (existing) return existing;
+    if (existing) {return existing;}
 
     const fallbackCode = buildFallbackCode(user.id, user.name);
     const fallback: ReferralSnapshot = {

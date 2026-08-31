@@ -45,15 +45,15 @@ function cityLabel(city: string) {
 }
 
 function packageCapacityLabel(capacity: Ride['pkgCapacity']) {
-  if (getCurrentLang() !== 'ar') return capacity;
-  if (capacity === 'small') return 'طرد صغير';
-  if (capacity === 'medium') return 'طرد متوسط';
-  if (capacity === 'large') return 'طرد كبير';
+  if (getCurrentLang() !== 'ar') {return capacity;}
+  if (capacity === 'small') {return 'طرد صغير';}
+  if (capacity === 'medium') {return 'طرد متوسط';}
+  if (capacity === 'large') {return 'طرد كبير';}
   return capacity;
 }
 
 function localizeSignalText(value: string) {
-  if (getCurrentLang() !== 'ar') return value;
+  if (getCurrentLang() !== 'ar') {return value;}
   return value
     .replace(/\band\b/g, 'و')
     .replace(/live searches/g, 'عمليات بحث مباشرة')
@@ -68,14 +68,14 @@ function pickupLabel(value: string) {
 }
 
 function durationLabel(value: string) {
-  if (getCurrentLang() !== 'ar') return value;
+  if (getCurrentLang() !== 'ar') {return value;}
   return value.replace(/h\b/g, 'س').replace(/min\b/g, 'د');
 }
 
 function genderLabel(pref: Ride['genderPref'], fallback: string) {
-  if (getCurrentLang() !== 'ar') return fallback;
-  if (pref === 'family_only') return 'للعائلات فقط';
-  if (pref === 'women_only') return 'للنساء فقط';
+  if (getCurrentLang() !== 'ar') {return fallback;}
+  if (pref === 'family_only') {return 'للعائلات فقط';}
+  if (pref === 'women_only') {return 'للنساء فقط';}
   return 'مختلط';
 }
 
@@ -88,14 +88,14 @@ type FindRideCardProps = {
   onOpenBooking: () => void;
 };
 
-export const FindRideCard = React.memo(function FindRideCard({
+export const FindRideCard = React.memo(({
   ride,
   idx,
   bookingStatus = null,
   signal = null,
   onOpen,
   onOpenBooking,
-}: FindRideCardProps) {
+}: FindRideCardProps) => {
   const genderMeta = GENDER_META[ride.genderPref];
   const soldOut = ride.seatsAvailable <= 0;
   const hasBooking = bookingStatus === 'pending_driver' || bookingStatus === 'confirmed';

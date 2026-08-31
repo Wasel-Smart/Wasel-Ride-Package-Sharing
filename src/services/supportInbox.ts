@@ -78,7 +78,7 @@ function generateId(prefix: string) {
 }
 
 function readTicketArray(key: string): SupportTicket[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
 
   try {
     const raw = window.localStorage.getItem(key);
@@ -99,7 +99,7 @@ function readTickets(userId?: string | null): SupportTicket[] {
 }
 
 function writeTickets(userId: string | null | undefined, tickets: SupportTicket[]) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   const trimmed = sortTickets(tickets).slice(0, 100);
   window.localStorage.setItem(storageKeyFor(userId), JSON.stringify(trimmed));
@@ -251,7 +251,7 @@ function buildDirectTicketList(
 
   for (const event of payload.events as DirectSupportTicketEventRow[]) {
     const ticketId = String(event.ticket_id ?? '');
-    if (!ticketId) continue;
+    if (!ticketId) {continue;}
     const history = eventsByTicketId.get(ticketId) ?? [];
     history.push(mapDirectEvent(event));
     eventsByTicketId.set(ticketId, history);
@@ -299,7 +299,7 @@ export async function getSupportTicketsForRelatedId(
   userId?: string | null,
   relatedId?: string,
 ): Promise<SupportTicket[]> {
-  if (!relatedId) return [];
+  if (!relatedId) {return [];}
   const tickets = await getSupportTickets(userId);
   return tickets.filter(ticket => ticket.relatedId === relatedId);
 }
@@ -396,7 +396,7 @@ export async function updateSupportTicketStatus(
     : null;
 
   if (!userId) {
-    if (!fallbackUpdated) return null;
+    if (!fallbackUpdated) {return null;}
     return upsertLocalTicket(userId, fallbackUpdated);
   }
 
@@ -410,7 +410,7 @@ export async function updateSupportTicketStatus(
       mapDirectTicket(direct.ticket as DirectSupportTicketRow, history),
     );
   } catch {
-    if (!fallbackUpdated) return null;
+    if (!fallbackUpdated) {return null;}
     return upsertLocalTicket(userId, fallbackUpdated);
   }
 }

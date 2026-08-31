@@ -122,7 +122,7 @@ async function fetchWithTimeout(
 }
 
 async function resolveSessionToken(): Promise<string | undefined> {
-  if (!supabase) return undefined;
+  if (!supabase) {return undefined;}
   const { data } = await supabase.auth.getSession();
   return data.session?.access_token ?? undefined;
 }
@@ -344,7 +344,7 @@ export const API_ENDPOINTS = {
 };
 
 export async function getSessionUserId(): Promise<string | null> {
-  if (!supabase) return null;
+  if (!supabase) {return null;}
   const { data } = await supabase.auth.getSession();
   return data.session?.user?.id ?? null;
 }

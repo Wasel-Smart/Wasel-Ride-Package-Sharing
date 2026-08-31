@@ -53,17 +53,17 @@ export function getMotionStyle(config: MotionConfig): React.CSSProperties {
 }
 
 export function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 export function getSafeDuration(duration: MotionDuration): string {
-  if (prefersReducedMotion()) return '0ms';
+  if (prefersReducedMotion()) {return '0ms';}
   return duration === 'instant' ? '0ms' : ANIM.dur[duration as keyof typeof ANIM.dur];
 }
 
 export function getSafeEasing(easing: MotionEasing): string {
-  if (prefersReducedMotion()) return 'linear';
+  if (prefersReducedMotion()) {return 'linear';}
   return ANIM.ease[easing as keyof typeof ANIM.ease];
 }
 

@@ -47,7 +47,7 @@ class GDPRCompliance {
         created_at: new Date(consent.timestamp).toISOString(),
       });
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       logger.info('Consent recorded', {
         userId: sanitizeLogMessage(consent.userId),
@@ -78,7 +78,7 @@ class GDPRCompliance {
         .limit(1)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {throw error;}
 
       return data?.granted ?? false;
     } catch (error) {
@@ -108,7 +108,7 @@ class GDPRCompliance {
         status: 'pending',
       });
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       logger.info('Data export requested', { userId: sanitizeLogMessage(userId) });
 
@@ -144,7 +144,7 @@ class GDPRCompliance {
       const firstError = [profile, bookings, packages, transactions, consents].find(
         result => result.error,
       )?.error;
-      if (firstError) throw firstError;
+      if (firstError) {throw firstError;}
 
       const downloadUrl = `exports/${userId}/${Date.now()}.json`;
 
@@ -219,7 +219,7 @@ class GDPRCompliance {
         status: 'pending',
       });
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       logger.info('Account deletion requested', {
         userId: sanitizeLogMessage(userId),
@@ -248,7 +248,7 @@ class GDPRCompliance {
         .eq('user_id', userId)
         .eq('status', 'pending');
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       logger.info('Account deletion cancelled', { userId: sanitizeLogMessage(userId) });
     } catch (error) {
@@ -273,7 +273,7 @@ class GDPRCompliance {
         .eq('status', 'pending')
         .lte('scheduled_for', new Date().toISOString());
 
-      if (error) throw error;
+      if (error) {throw error;}
 
       if (!requests || requests.length === 0) {
         return;

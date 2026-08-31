@@ -7,13 +7,13 @@ export function useRoutePrefetch() {
     const handleMouseOver = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       const link = target.closest('a[href]') as HTMLAnchorElement | null;
-      if (!link?.href) return;
+      if (!link?.href) {return;}
 
       try {
         const url = new URL(link.href);
         const pathname = url.pathname;
 
-        if (PREFETCHED_ROUTES.has(pathname)) return;
+        if (PREFETCHED_ROUTES.has(pathname)) {return;}
         PREFETCHED_ROUTES.add(pathname);
 
         const prefetchMap: Record<string, () => void> = {

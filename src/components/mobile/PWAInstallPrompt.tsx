@@ -17,7 +17,7 @@ export function PWAInstallPrompt() {
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
 
     const isStandaloneMode =
       window.matchMedia('(display-mode: standalone)').matches ||
@@ -30,7 +30,7 @@ export function PWAInstallPrompt() {
   }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
 
     const handler = (event: Event) => {
       const promptEvent = event as BeforeInstallPromptEvent;
@@ -52,7 +52,7 @@ export function PWAInstallPrompt() {
   }, []);
 
   const handleInstall = useCallback(async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {return;}
 
     try {
       await deferredPrompt.prompt();
@@ -88,7 +88,7 @@ export function PWAInstallPrompt() {
   const wasRecentlyDismissed = (() => {
     try {
       const dismissed = sessionStorage.getItem('wasel-pwa-install-dismissed');
-      if (!dismissed) return false;
+      if (!dismissed) {return false;}
       const dismissedTime = parseInt(dismissed, 10);
       const sevenDays = 7 * 24 * 60 * 60 * 1000;
       return Date.now() - dismissedTime < sevenDays;

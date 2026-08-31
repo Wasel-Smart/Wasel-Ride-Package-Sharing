@@ -6,13 +6,11 @@ const mockApi = vi.hoisted(() => ({
   post: vi.fn(),
 }));
 
-vi.mock('@/utils/api', () => {
-  return {
+vi.mock('@/utils/api', () => ({
     default: mockApi,
     api: mockApi,
     getSessionUserId: vi.fn(),
-  };
-});
+  }));
 
 describe('packageApi.test.ts', () => {
   beforeEach(() => {

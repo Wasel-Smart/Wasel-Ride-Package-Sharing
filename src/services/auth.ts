@@ -82,8 +82,8 @@ function normalizeAuthError(
     return 'This phone number is already registered.';
   }
 
-  if (context === 'signin') return 'Sign in failed. Please try again.';
-  if (context === 'signup') return 'Sign up failed. Please try again.';
+  if (context === 'signin') {return 'Sign in failed. Please try again.';}
+  if (context === 'signup') {return 'Sign up failed. Please try again.';}
   return message || 'Request failed.';
 }
 
@@ -291,13 +291,13 @@ export const authAPI = {
   async signOut() {
     const client = requireSupabase();
     const { error } = await client.auth.signOut();
-    if (error) throw error;
+    if (error) {throw error;}
   },
 
   async getSession() {
     const client = requireSupabase();
     const { data, error } = await client.auth.getSession();
-    if (error) throw error;
+    if (error) {throw error;}
     return data;
   },
 

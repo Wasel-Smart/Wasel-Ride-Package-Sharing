@@ -215,7 +215,7 @@ function makeDivIcon(
 function safeAddTo(marker: LeafletLayer, map: LeafletMap): LeafletLayer {
   const panes = (map as { _panes?: Record<string, unknown> })._panes;
   // Pre-check: Leaflet deletes map._panes on map.remove() — guard before calling addTo
-  if (!panes || !panes['markerPane']) return marker;
+  if (!panes?.['markerPane']) {return marker;}
   try {
     return marker.addTo(map);
   } catch {
@@ -227,7 +227,7 @@ function safeAddTo(marker: LeafletLayer, map: LeafletMap): LeafletLayer {
 /** Returns true if the Leaflet map instance is alive and has its panes intact */
 function isMapAlive(map: LeafletMap | null): boolean {
   const panes = (map as { _panes?: Record<string, unknown> } | null)?._panes;
-  return !!(map && panes && panes['markerPane']);
+  return Boolean(map && panes?.['markerPane']);
 }
 
 /* ─── Types ──────────────────────────────────────────────────────────── */
@@ -322,8 +322,8 @@ function WaselMapCompact({
 
   const invalidate = useCallback(() => {
     const m = mapRef.current;
-    if (!m) return;
-    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    if (!m) {return;}
+    if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
     rafRef.current = requestAnimationFrame(() => {
       mapRef.current?.invalidateSize({ pan: false });
     });
@@ -331,11 +331,11 @@ function WaselMapCompact({
 
   // Initialize a lightweight Leaflet map for compact previews (no OSRM, no Overpass, no controls).
   useEffect(() => {
-    if (!mapDivRef.current || mapRef.current) return;
+    if (!mapDivRef.current || mapRef.current) {return;}
 
     loadLeaflet()
       .then(L => {
-        if (!mapDivRef.current || mapRef.current) return;
+        if (!mapDivRef.current || mapRef.current) {return;}
         LRef.current = L;
 
         const c = center ?? { lat: 31.9539, lng: 35.9106 };
@@ -380,7 +380,7 @@ function WaselMapCompact({
     return () => {
       roRef.current?.disconnect();
       roRef.current = null;
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (rafRef.current) {cancelAnimationFrame(rafRef.current);}
       rafRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
@@ -392,7 +392,7 @@ function WaselMapCompact({
   useEffect(() => {
     const map = mapRef.current;
     const L = LRef.current;
-    if (!map || !L) return;
+    if (!map || !L) {return;}
 
     drawnLayersRef.current.forEach(l => {
       try {
@@ -661,12 +661,12 @@ function WaselMapFull(props: WaselMapProps) {
   // Leaflet often renders blank space if its container size changes after mount
   // (tabs, responsive layout, fullscreen). Keep it always correct.
   useEffect(() => {
-    if (!isLoaded || !containerRef.current || !mapRef.current) return;
+    if (!isLoaded || !containerRef.current || !mapRef.current) {return;}
 
     const el = containerRef.current;
     let raf: number | null = null;
     const invalidate = () => {
-      if (raf) cancelAnimationFrame(raf);
+      if (raf) {cancelAnimationFrame(raf);}
       raf = requestAnimationFrame(() => {
         mapRef.current?.invalidateSize({ pan: false });
       });
@@ -678,12 +678,12 @@ function WaselMapFull(props: WaselMapProps) {
     ro.observe(el);
 
     const onVis = () => {
-      if (!document.hidden) invalidate();
+      if (!document.hidden) {invalidate();}
     };
     document.addEventListener('visibilitychange', onVis);
 
     return () => {
-      if (raf) cancelAnimationFrame(raf);
+      if (raf) {cancelAnimationFrame(raf);}
       ro.disconnect();
       document.removeEventListener('visibilitychange', onVis);
     };
@@ -691,7 +691,7 @@ function WaselMapFull(props: WaselMapProps) {
 
   /* ── Mosque markers via Overpass API ── */
   const loadMosques = useCallback(async (mapInstance: LeafletMap) => {
-    if (!LRef.current) return;
+    if (!LRef.current) {return;}
     const L = LRef.current;
 
     // Clear existing
@@ -725,7 +725,7 @@ function WaselMapFull(props: WaselMapProps) {
 
     // After the async await, the map may have been destroyed by StrictMode cleanup —
     // check _panes before touching any Leaflet layer.
-    if (!isMapAlive(mapInstance)) return;
+    if (!isMapAlive(mapInstance)) {return;}
 
     const icon = makeDivIcon(L, SVG.mosque, 40, 40, 20, 20);
     mosquesToShow.forEach(m => {
@@ -743,7 +743,7 @@ function WaselMapFull(props: WaselMapProps) {
   /* ── Radar markers ── */
   const loadRadars = useCallback(
     (mapInstance: LeafletMap) => {
-      if (!LRef.current) return;
+      if (!LRef.current) {return;}
       const L = LRef.current;
 
       radarLayerRef.current.forEach(m => m.remove());
@@ -789,7 +789,7 @@ function WaselMapFull(props: WaselMapProps) {
   /* ── Draw route ── */
   const drawRoute = useCallback(
     async (mapInstance: LeafletMap) => {
-      if (!LRef.current || route.length < 2) return;
+      if (!LRef.current || route.length < 2) {return;}
       const L = LRef.current;
 
       // Clear old
@@ -806,7 +806,7 @@ function WaselMapFull(props: WaselMapProps) {
         const icon = makeDivIcon(L, svg, 30, 42, 15, 42);
         try {
           const m = safeAddTo(L.marker([pt.lat, pt.lng], { icon }), mapInstance);
-          if (pt.label) m.bindTooltip(sanitizeHtml(pt.label), { permanent: false, direction: 'top' });
+          if (pt.label) {m.bindTooltip(sanitizeHtml(pt.label), { permanent: false, direction: 'top' });}
           routeMarkersRef.current.push(m);
         } catch {
           /* skip */
@@ -833,7 +833,7 @@ function WaselMapFull(props: WaselMapProps) {
       }
 
       // After the async OSRM await, the map may have been destroyed — guard before drawing
-      if (!isMapAlive(mapInstance)) return;
+      if (!isMapAlive(mapInstance)) {return;}
 
       routeLineRef.current = L.polyline(latlngs, {
         color: '#00E5FF',
@@ -853,7 +853,7 @@ function WaselMapFull(props: WaselMapProps) {
   /* ── Custom prop markers ── */
   const drawCustomMarkers = useCallback(
     (mapInstance: LeafletMap) => {
-      if (!LRef.current) return;
+      if (!LRef.current) {return;}
       const L = LRef.current;
 
       customMarkersRef.current.forEach(m => m.remove());
@@ -865,7 +865,7 @@ function WaselMapFull(props: WaselMapProps) {
         const icon = makeDivIcon(L, svg, 30, 42, 15, 42);
         try {
           const m = safeAddTo(L.marker([mk.lat, mk.lng], { icon }), mapInstance);
-          if (mk.label) m.bindTooltip(sanitizeHtml(mk.label), { permanent: false, direction: 'top' });
+          if (mk.label) {m.bindTooltip(sanitizeHtml(mk.label), { permanent: false, direction: 'top' });}
           customMarkersRef.current.push(m);
         } catch {
           /* skip */
@@ -950,12 +950,12 @@ function WaselMapFull(props: WaselMapProps) {
 
   /* ── Map initialization ── */
   useEffect(() => {
-    if (initDone.current || !mapDivRef.current) return;
+    if (initDone.current || !mapDivRef.current) {return;}
     initDone.current = true;
 
     loadLeaflet()
       .then(L => {
-        if (!mapDivRef.current || mapRef.current) return;
+        if (!mapDivRef.current || mapRef.current) {return;}
         LRef.current = L;
 
         const map = L.map(mapDivRef.current, {
@@ -988,12 +988,12 @@ function WaselMapFull(props: WaselMapProps) {
           }
           moveEndDebounceRef.current = setTimeout(() => {
             moveEndDebounceRef.current = null;
-            if (mosquesOn) loadMosques(map);
+            if (mosquesOn) {loadMosques(map);}
           }, 1000);
         });
 
         setIsLoaded(true);
-        if (autoTrack) startTracking();
+        if (autoTrack) {startTracking();}
 
         // Use map.whenReady() + rAF so Leaflet panes are fully in the DOM
         // and sized before any marker .addTo() fires.
@@ -1003,13 +1003,13 @@ function WaselMapFull(props: WaselMapProps) {
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               const m = mapRef.current;
-              if (!m) return;
+              if (!m) {return;}
               // Guard: ensure markerPane DOM node exists
-              if (!m.getPane('markerPane')) return;
-              if (radarsOn) loadRadars(m);
-              if (mosquesOn) loadMosques(m);
-              if (route.length >= 2) drawRoute(m);
-              if (markers.length > 0) drawCustomMarkers(m);
+              if (!m.getPane('markerPane')) {return;}
+              if (radarsOn) {loadRadars(m);}
+              if (mosquesOn) {loadMosques(m);}
+              if (route.length >= 2) {drawRoute(m);}
+              if (markers.length > 0) {drawCustomMarkers(m);}
             });
           });
         });
@@ -1020,7 +1020,7 @@ function WaselMapFull(props: WaselMapProps) {
       });
 
     return () => {
-      if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+      if (watchIdRef.current !== null) {navigator.geolocation.clearWatch(watchIdRef.current);}
       mapRef.current?.remove();
       mapRef.current = null;
       initDone.current = false;
@@ -1034,7 +1034,7 @@ function WaselMapFull(props: WaselMapProps) {
   /* ── Map type switcher ── */
 /* ── Layer toggles ── */
   const changeMapType = useCallback((type: MapType) => {
-    if (!mapRef.current || !LRef.current) return;
+    if (!mapRef.current || !LRef.current) {return;}
 
     const L = LRef.current;
     tileLayerRef.current?.remove();
@@ -1082,7 +1082,7 @@ function WaselMapFull(props: WaselMapProps) {
 
   /* ── Fullscreen ── */
   const toggleFullscreen = () => {
-    if (!containerRef.current) return;
+    if (!containerRef.current) {return;}
     if (!document.fullscreenElement) {
       containerRef.current
         .requestFullscreen()

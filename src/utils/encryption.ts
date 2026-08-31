@@ -129,7 +129,7 @@ export const secureStorage = {
 
   async getItem(key: string): Promise<string | null> {
     const encrypted = localStorage.getItem(`secure_${key}`);
-    if (!encrypted) return null;
+    if (!encrypted) {return null;}
 
     try {
       return await decryptData(encrypted);
@@ -146,7 +146,7 @@ export const secureStorage = {
 
   clear(): void {
     // Robust clearing that works across browsers, jsdom shims, and mocked storages.
-    if (typeof localStorage === 'undefined') return;
+    if (typeof localStorage === 'undefined') {return;}
 
     for (const key of Object.keys(localStorage)) {
       if (key.startsWith('secure_')) {

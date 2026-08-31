@@ -119,7 +119,7 @@ export function useWalletDashboardController() {
   }, [fetchWallet]);
 
   useEffect(() => {
-    if (tab === 'insights') fetchInsights();
+    if (tab === 'insights') {fetchInsights();}
   }, [tab, fetchInsights]);
 
   useEffect(() => {
@@ -151,7 +151,7 @@ export function useWalletDashboardController() {
     setRefreshing(true);
     setLoading(true);
     await fetchWallet();
-    if (tab === 'insights') await fetchInsights();
+    if (tab === 'insights') {await fetchInsights();}
     setRefreshing(false);
     if (!walletUnavailable) {
       toast.success(t.refreshed);
@@ -165,7 +165,7 @@ export function useWalletDashboardController() {
     }
 
     const amt = parseFloat(topUpAmount);
-    if (!amt || amt <= 0) return toast.error(t.invalidAmount);
+    if (!amt || amt <= 0) {return toast.error(t.invalidAmount);}
 
     setActionLoading(true);
     try {
@@ -197,8 +197,8 @@ export function useWalletDashboardController() {
 
   const handleWithdraw = async () => {
     const amt = parseFloat(withdrawAmount);
-    if (!amt || amt <= 0) return toast.error(t.invalidAmount);
-    if (!withdrawBank.trim()) return toast.error(t.enterBankAccount);
+    if (!amt || amt <= 0) {return toast.error(t.invalidAmount);}
+    if (!withdrawBank.trim()) {return toast.error(t.enterBankAccount);}
 
     setActionLoading(true);
     try {
@@ -217,8 +217,8 @@ export function useWalletDashboardController() {
 
   const handleSend = async () => {
     const amt = parseFloat(sendAmount);
-    if (!amt || amt <= 0) return toast.error(t.invalidAmount);
-    if (!sendRecipient.trim()) return toast.error(t.enterRecipientId);
+    if (!amt || amt <= 0) {return toast.error(t.invalidAmount);}
+    if (!sendRecipient.trim()) {return toast.error(t.enterRecipientId);}
 
     setActionLoading(true);
     try {

@@ -89,7 +89,7 @@ export default defineConfig(({ mode }) => ({
     minify: 'esbuild',
     cssCodeSplit: true,
     reportCompressedSize: true,
-    chunkSizeWarningLimit: 300,
+    chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
         manualChunks(id) {

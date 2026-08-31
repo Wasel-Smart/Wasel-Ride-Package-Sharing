@@ -3,10 +3,10 @@ const ALLOWED_GOOGLE_DOMAINS = ['googleapis.com', 'google.com', 'localhost'];
 function isValidGoogleUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
-    if (parsed.hostname === 'localhost') return true;
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {return false;}
+    if (parsed.hostname === 'localhost') {return true;}
     const privateRanges = [/^127\./, /^10\./, /^172\.(1[6-9]|2[0-9]|3[01])\./, /^192\.168\./, /^169\.254\./];
-    if (privateRanges.some(p => p.test(parsed.hostname))) return false;
+    if (privateRanges.some(p => p.test(parsed.hostname))) {return false;}
     return ALLOWED_GOOGLE_DOMAINS.some(d => parsed.hostname === d || parsed.hostname.endsWith(`.${d}`));
   } catch {
     return false;
@@ -42,14 +42,14 @@ const trafficCache = new Map<string, { expiresAt: number; snapshot: GoogleTraffi
 
 function getGoogleMapsApiKey(): string | null {
   const key = String(import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? '').trim();
-  if (!key || key.length < 10) return null;
+  if (!key || key.length < 10) {return null;}
   return key;
 }
 
 function parseGoogleDurationSeconds(value: string | null | undefined): number | null {
-  if (!value) return null;
+  if (!value) {return null;}
   const match = /^([0-9]+(?:\.[0-9]+)?)s$/.exec(value.trim());
-  if (!match) return null;
+  if (!match) {return null;}
   const seconds = Number(match[1]);
   return Number.isFinite(seconds) ? seconds : null;
 }
@@ -60,18 +60,18 @@ export async function fetchGoogleTrafficSnapshot(
   to: string,
 ): Promise<GoogleTrafficSnapshot | null> {
   const apiKey = getGoogleMapsApiKey();
-  if (!apiKey) return null;
+  if (!apiKey) {return null;}
 
   const safeRouteId = ROUTE_ID_PATTERN.test(routeId) ? routeId : '';
-  if (!safeRouteId) return null;
+  if (!safeRouteId) {return null;}
 
   const originKey = ALLOWED_CITY_KEYS.has(from) ? from : null;
   const destinationKey = ALLOWED_CITY_KEYS.has(to) ? to : null;
-  if (!originKey || !destinationKey) return null;
+  if (!originKey || !destinationKey) {return null;}
 
   const origin = CITY_COORDS[originKey];
   const destination = CITY_COORDS[destinationKey];
-  if (!origin || !destination) return null;
+  if (!origin || !destination) {return null;}
 
   const GOOGLE_ROUTES_URL = 'https://routes.googleapis.com/directions/v2:computeRoutes';
 
@@ -103,14 +103,14 @@ export async function fetchGoogleTrafficSnapshot(
       }),
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {return null;}
     const json = await response.json();
     const route = Array.isArray(json?.routes) ? json.routes[0] : null;
     const durationSeconds = parseGoogleDurationSeconds(route?.duration);
     const staticDurationSeconds = parseGoogleDurationSeconds(route?.staticDuration);
     const distanceMeters = Number(route?.distanceMeters ?? 0);
 
-    if (!durationSeconds || distanceMeters <= 0) return null;
+    if (!durationSeconds || distanceMeters <= 0) {return null;}
 
     const speedKph = Math.max(18, Math.round((distanceMeters / durationSeconds) * 3.6));
     const trafficRatio =

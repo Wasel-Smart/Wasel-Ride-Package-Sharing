@@ -47,10 +47,10 @@ const EDGE_FUNCTION_PLACEHOLDER_MARKERS = [
 ];
 
 function isPlaceholderEdgeFunctionName(value: unknown): boolean {
-  if (typeof value !== 'string') return true;
+  if (typeof value !== 'string') {return true;}
   const normalized = value.trim().toLowerCase();
-  if (!normalized) return true;
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(normalized)) return true;
+  if (!normalized) {return true;}
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(normalized)) {return true;}
   return EDGE_FUNCTION_PLACEHOLDER_MARKERS.some(marker => normalized.includes(marker));
 }
 

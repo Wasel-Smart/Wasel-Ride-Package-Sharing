@@ -38,11 +38,11 @@ export interface RuntimeTrustProfile {
 }
 
 export function deriveVerificationLevel(input: TrustProfileInput): VerificationLevel {
-  if (input.verificationLevel) return input.verificationLevel;
-  if (input.role === 'driver') return 'level_3';
-  if (input.sanadVerified) return 'level_2';
-  if (input.verified) return 'level_2';
-  if (input.phoneVerified || input.emailVerified) return 'level_1';
+  if (input.verificationLevel) {return input.verificationLevel;}
+  if (input.role === 'driver') {return 'level_3';}
+  if (input.sanadVerified) {return 'level_2';}
+  if (input.verified) {return 'level_2';}
+  if (input.phoneVerified || input.emailVerified) {return 'level_1';}
   return 'level_0';
 }
 

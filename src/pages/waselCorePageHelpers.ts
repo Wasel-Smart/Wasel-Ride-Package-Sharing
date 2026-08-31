@@ -191,14 +191,14 @@ export function createOfferRideDefaultForm(): OfferRideForm {
 
 export function validateOfferRideStep(form: OfferRideForm, targetStep: number) {
   if (targetStep >= 1) {
-    if (form.from === form.to) return 'Origin and destination need to be different.';
-    if (!form.date) return 'Choose a departure date.';
-    if (!form.time) return 'Choose a departure time.';
+    if (form.from === form.to) {return 'Origin and destination need to be different.';}
+    if (!form.date) {return 'Choose a departure date.';}
+    if (!form.time) {return 'Choose a departure time.';}
   }
   if (targetStep >= 2) {
-    if (form.seats < 1 || form.seats > 7) return 'Seats should be between 1 and 7.';
-    if (form.price < 1 || form.price > 50) return 'Price should be between 1 and 50 JOD.';
-    if (!form.carModel.trim()) return 'Add the car model so riders know what to expect.';
+    if (form.seats < 1 || form.seats > 7) {return 'Seats should be between 1 and 7.';}
+    if (form.price < 1 || form.price > 50) {return 'Price should be between 1 and 50 JOD.';}
+    if (!form.carModel.trim()) {return 'Add the car model so riders know what to expect.';}
   }
   if (targetStep >= 3 && form.acceptsPackages && !form.packageNote.trim()) {
     return 'Add a short package note when package delivery is enabled.';
@@ -220,11 +220,11 @@ export function createPackageComposer(): PackageComposer {
 }
 
 export function validatePackageComposer(pkg: PackageComposer) {
-  if (pkg.from === pkg.to) return 'Pickup and destination need to be different cities.';
+  if (pkg.from === pkg.to) {return 'Pickup and destination need to be different cities.';}
   if (!pkg.recipientName.trim())
-    return 'Add the recipient name so the captain knows who will receive it.';
+    {return 'Add the recipient name so the captain knows who will receive it.';}
   if (pkg.recipientPhone.replace(/[^\d]/g, '').length < 9)
-    return 'Add a valid recipient phone number.';
+    {return 'Add a valid recipient phone number.';}
   return null;
 }
 

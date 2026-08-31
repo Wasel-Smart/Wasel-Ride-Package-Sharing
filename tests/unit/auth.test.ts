@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const createMockSupabase = () => {
-  return {
+const createMockSupabase = () => ({
     auth: {
       getUser: vi.fn(),
       getSession: vi.fn(),
@@ -10,8 +9,7 @@ const createMockSupabase = () => {
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
     },
-  };
-};
+  });
 
 vi.mock('../src/utils/supabase/client.ts', () => ({
   supabase: null,

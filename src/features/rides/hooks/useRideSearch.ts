@@ -32,8 +32,8 @@ export function useRideSearch() {
     const params = new URLSearchParams(location.search);
     const nextFrom = params.get('from') ?? '';
     const nextTo = params.get('to') ?? '';
-    if (nextFrom) setFrom(nextFrom);
-    if (nextTo) setTo(nextTo);
+    if (nextFrom) {setFrom(nextFrom);}
+    if (nextTo) {setTo(nextTo);}
     const nextDate = params.get('date') ?? '';
     const nextSearched = params.get('search') === '1';
     setDate(nextDate);

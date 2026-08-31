@@ -72,10 +72,10 @@ export const tripsAPI = {
     seats?: number,
   ): Promise<TripSearchResult[]> {
     const params = new URLSearchParams();
-    if (from) params.append('from', from);
-    if (to) params.append('to', to);
-    if (date) params.append('date', date);
-    if (seats) params.append('seats', seats.toString());
+    if (from) {params.append('from', from);}
+    if (to) {params.append('to', to);}
+    if (date) {params.append('date', date);}
+    if (seats) {params.append('seats', seats.toString());}
 
     return runBackendWorkflow({
       operation: 'Trip search',
@@ -98,7 +98,7 @@ export const tripsAPI = {
       edgeAvailable: hasConfiguredEdgeTransport('public'),
       fallback: async () => {
         const trip = await getDirectTripById(tripId);
-        if (!trip) throw new Error('Failed to fetch trip');
+        if (!trip) {throw new Error('Failed to fetch trip');}
         return trip;
       },
       edge: () =>

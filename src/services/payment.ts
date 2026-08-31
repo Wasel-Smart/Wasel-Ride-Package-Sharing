@@ -57,7 +57,7 @@ class PaymentService {
       headers: { Authorization: `Bearer ${session.access_token}` },
     });
     const { data, error } = await Promise.race([invocation, timeout]);
-    if (error) throw error;
+    if (error) {throw error;}
     return data as T;
   }
 
@@ -84,7 +84,7 @@ class PaymentService {
       metadata: { ...request.metadata, booking_id: request.bookingId, user_id: user.id },
       idempotency_key: `booking:${request.bookingId}`,
     });
-    if (!data.clientSecret || !data.paymentIntentId) throw new Error('Invalid payment response');
+    if (!data.clientSecret || !data.paymentIntentId) {throw new Error('Invalid payment response');}
     return { clientSecret: data.clientSecret, paymentIntentId: data.paymentIntentId };
   }
 
@@ -97,7 +97,7 @@ class PaymentService {
         : undefined,
       reason: request.reason,
     });
-    if (!data.refundId) throw new Error('Invalid refund response');
+    if (!data.refundId) {throw new Error('Invalid refund response');}
     return {
       success: true,
       refundId: data.refundId,
@@ -130,7 +130,7 @@ class PaymentService {
       .eq('passenger_id', user.id)
       .single();
 
-    if (error) throw error;
+    if (error) {throw error;}
     return data.payment_status as string;
   }
 }

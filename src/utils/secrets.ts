@@ -61,7 +61,7 @@ function validateSecretAccess(key: string): void {
  */
 function getCachedSecret(key: string): string | null {
   const cached = secretsCache[key];
-  if (!cached) return null;
+  if (!cached) {return null;}
 
   if (Date.now() > cached.expiresAt) {
     delete secretsCache[key];
@@ -88,7 +88,7 @@ function getSecretFromEnv(key: string): string | null {
   // Try process.env first (Node.js / server-side only)
   if (typeof process !== 'undefined' && process.env) {
     const value = process.env[key];
-    if (value) return value;
+    if (value) {return value;}
   }
 
   // Only read import.meta.env for non-server-only secrets
@@ -96,7 +96,7 @@ function getSecretFromEnv(key: string): string | null {
   if (!SERVER_ONLY_SECRETS.includes(key as ServerSecretKey)) {
     if (typeof import.meta !== 'undefined' && import.meta.env) {
       const value = import.meta.env[key];
-      if (value) return String(value);
+      if (value) {return String(value);}
     }
   }
 
@@ -133,7 +133,7 @@ export async function getSecret(
 
   // Check cache first
   const cached = getCachedSecret(key);
-  if (cached) return cached;
+  if (cached) {return cached;}
 
   // Try AWS Secrets Manager (server-side only)
   if (isServerSide()) {

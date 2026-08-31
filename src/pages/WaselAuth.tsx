@@ -299,7 +299,7 @@ function BrandPanel() {
 // ─── Password strength bar ────────────────────────────────────────────────────
 function StrengthBar({ password }: { password: string }) {
   const strength = pwStrength(password);
-  if (!password) return null;
+  if (!password) {return null;}
   return (
     <div>
       <div style={{ display: 'flex', gap: SPACE[1], marginBottom: SPACE[1] }}>
@@ -428,13 +428,13 @@ export default function WaselAuth() {
   }, []);
 
   useEffect(() => {
-    if (user && mountedRef.current) nav(safeReturnTo);
+    if (user && mountedRef.current) {nav(safeReturnTo);}
   }, [user, nav, safeReturnTo]);
 
   const pushSuccessRedirect = () => {
     setSuccess(true);
     setTimeout(() => {
-      if (mountedRef.current) nav(safeReturnTo);
+      if (mountedRef.current) {nav(safeReturnTo);}
     }, 700);
   };
 

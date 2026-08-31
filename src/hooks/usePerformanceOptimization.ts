@@ -42,7 +42,7 @@ export function usePerformanceOptimization() {
   }, []);
 
   const optimizeScroll = useCallback((element: HTMLElement) => {
-    if (!element) return;
+    if (!element) {return;}
 
     element.style.willChange = 'scroll-position';
     element.style.transform = 'translateZ(0)';
@@ -114,16 +114,14 @@ export function usePerformanceOptimization() {
     }
   }, []);
 
-  useEffect(() => {
-    return () => {
+  useEffect(() => () => {
       if (rafId.current) {
         cancelAnimationFrame(rafId.current);
       }
       if (scrollTimeout.current) {
         clearTimeout(scrollTimeout.current);
       }
-    };
-  }, []);
+    }, []);
 
   return {
     optimizeScroll,

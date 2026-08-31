@@ -65,7 +65,7 @@ type PartialProfileSource = Partial<{
 }>;
 
 function toRole(value: unknown): WaselUserRole {
-  if (value === 'driver' || value === 'admin' || value === 'both') return value;
+  if (value === 'driver' || value === 'admin' || value === 'both') {return value;}
   return 'passenger';
 }
 
@@ -74,9 +74,9 @@ export function deriveVerificationLevel(input: {
   role?: WaselUserRole;
   verified?: boolean;
 }): WaselVerificationLevel {
-  if (input.role === 'driver' || input.role === 'both') return 'level_3';
-  if (input.verified) return 'level_2';
-  if (input.phoneVerified) return 'level_1';
+  if (input.role === 'driver' || input.role === 'both') {return 'level_3';}
+  if (input.verified) {return 'level_2';}
+  if (input.phoneVerified) {return 'level_1';}
   return 'level_0';
 }
 
@@ -154,7 +154,7 @@ export function mapBackendProfile(args: {
   const verificationLevel = ((): WaselVerificationLevel => {
     const raw = profile?.verification_level;
     if (raw === 'level_0' || raw === 'level_1' || raw === 'level_2' || raw === 'level_3')
-      return raw;
+      {return raw;}
     return deriveVerificationLevel({ phoneVerified, role, verified });
   })();
 

@@ -218,7 +218,7 @@ export function FindRidePage() {
   }, [bookingByRideId]);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {return;}
     const unsubscribe = subscribeToRideBookingRealtime({
       userId: user.id,
       rides: getConnectedRides(),
@@ -231,7 +231,7 @@ export function FindRidePage() {
   useEffect(() => {
     setSavedReminders(getRouteReminders());
     void syncRouteReminders(user ?? undefined).then(delivered => {
-      if (delivered.length > 0) setSavedReminders(getRouteReminders());
+      if (delivered.length > 0) {setSavedReminders(getRouteReminders());}
     });
   }, [routeIntelligence.updatedAt, user?.email, user?.phone]);
 
@@ -307,7 +307,7 @@ export function FindRidePage() {
   }, [routeIntelligence.membership, user?.id]);
 
   const handleBook = useCallback(async (ride: Ride) => {
-    if (bookingInFlightId) return;
+    if (bookingInFlightId) {return;}
     const existingBooking = bookingByRideId.get(ride.id);
     if (existingBooking) {
       setBookingMessage(
@@ -456,7 +456,7 @@ export function FindRidePage() {
 
   const handleSaveReminder = (corridorId: string) => {
     const suggestion = recurringSuggestions.find(item => item.corridorId === corridorId);
-    if (!suggestion) return;
+    if (!suggestion) {return;}
 
     const reminder = createReminderFromSuggestion(suggestion);
     setSavedReminders(getRouteReminders());
@@ -1533,9 +1533,9 @@ export function FindRidePage() {
                             key={item}
                             onClick={() => {
                               const parts = item.split(' to ');
-                              if (parts[0]) setFrom(parts[0]);
+                              if (parts[0]) {setFrom(parts[0]);}
                               const toPart = parts[1]?.split(' on ')[0];
-                              if (toPart) setTo(toPart);
+                              if (toPart) {setTo(toPart);}
                               setSearched(true);
                             }}
                             style={{

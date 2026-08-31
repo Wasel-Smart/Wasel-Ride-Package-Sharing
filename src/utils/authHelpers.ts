@@ -22,45 +22,45 @@ export function friendlyAuthError(error: unknown, fallback: string, code?: strin
     lower.includes('wrong password') ||
     normalizedCode === 'invalid_credentials'
   )
-    return 'Incorrect email or password.';
+    {return 'Incorrect email or password.';}
 
   if (lower.includes('email not confirmed') || normalizedCode === 'email_not_confirmed')
-    return 'Please confirm your email before signing in.';
+    {return 'Please confirm your email before signing in.';}
 
   if (
     lower.includes('already registered') ||
     lower.includes('already been registered') ||
     normalizedCode === 'email_exists'
   )
-    return 'This email is already registered.';
+    {return 'This email is already registered.';}
 
   if (normalizedCode === 'user_not_found' || lower.includes('user not found'))
-    return 'Account not found. Please check your email or sign up.';
+    {return 'Account not found. Please check your email or sign up.';}
 
   if (normalizedCode === 'over_request_rate_limit' || lower.includes('too many requests'))
-    return 'Too many attempts. Please wait a moment and try again.';
+    {return 'Too many attempts. Please wait a moment and try again.';}
 
   if (
     normalizedCode === 'email_address_not_authorized' ||
     lower.includes('signups not allowed') ||
     lower.includes('not allowed for this email domain')
   )
-    return 'Sign-up is not allowed for this email domain.';
+    {return 'Sign-up is not allowed for this email domain.';}
 
   if (normalizedCode === 'email_address_invalid' || lower.includes('invalid email'))
-    return 'Please enter a valid email address.';
+    {return 'Please enter a valid email address.';}
 
   if (normalizedCode === 'user_banned' || lower.includes('user banned'))
-    return 'Your account has been suspended. Please contact support.';
+    {return 'Your account has been suspended. Please contact support.';}
 
   if (normalizedCode === 'weak_password')
-    return 'Password is too weak. Please choose a stronger password.';
+    {return 'Password is too weak. Please choose a stronger password.';}
 
   if (normalizedCode === 'signup_disabled' || lower.includes('signup disabled'))
-    return 'Sign-up is currently disabled. Please contact support.';
+    {return 'Sign-up is currently disabled. Please contact support.';}
 
   if (normalizedCode === 'phone_exists' || lower.includes('phone already exists'))
-    return 'This phone number is already registered.';
+    {return 'This phone number is already registered.';}
 
   return message || fallback;
 }
@@ -72,14 +72,14 @@ export function friendlyAuthError(error: unknown, fallback: string, code?: strin
 import { C } from '../utils/wasel-ds';
 
 export function pwStrength(password: string): { score: number; label: string; color: string } {
-  if (!password) return { score: 0, label: '', color: C.textMuted };
+  if (!password) {return { score: 0, label: '', color: C.textMuted };}
 
   let score = 0;
-  if (password.length >= 8) score += 1;
-  if (password.length >= 12) score += 1;
-  if (/[A-Z]/.test(password)) score += 1;
-  if (/\d/.test(password)) score += 1;
-  if (/[^A-Za-z0-9]/.test(password)) score += 1;
+  if (password.length >= 8) {score += 1;}
+  if (password.length >= 12) {score += 1;}
+  if (/[A-Z]/.test(password)) {score += 1;}
+  if (/\d/.test(password)) {score += 1;}
+  if (/[^A-Za-z0-9]/.test(password)) {score += 1;}
 
   const map = [
     { score: 0, label: '', color: C.textMuted },

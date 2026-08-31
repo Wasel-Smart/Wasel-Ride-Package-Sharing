@@ -63,7 +63,7 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
    }, [messages]);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || sending) return;
+    if (!newMessage.trim() || sending) {return;}
 
     setSending(true);
     try {

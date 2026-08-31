@@ -63,7 +63,7 @@ class DriverLocationManager {
     const nearby: DriverLocation[] = [];
 
     for (const location of this.activeDrivers.values()) {
-      if (status && location.status !== status) continue;
+      if (status && location.status !== status) {continue;}
 
       const distance = this.calculateDistance(lat, lng, location.lat, location.lng);
       if (distance <= radiusKm) {
@@ -170,7 +170,7 @@ export function useDriverTracking(driverId: string): {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    if (!driverId) return;
+    if (!driverId) {return;}
 
     setIsConnected(true);
 
@@ -299,7 +299,7 @@ function MapPlaceholder({
             className="mt-3 rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white"
             onClick={() => {
               const nearest = drivers[0];
-              if (nearest) onDriverClick(nearest);
+              if (nearest) {onDriverClick(nearest);}
             }}
           >
             {tx('liveGeoTracking.select_nearest_driver')}

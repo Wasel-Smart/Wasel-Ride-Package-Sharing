@@ -33,7 +33,7 @@ class ChatService {
   private channels: Map<string, RealtimeChannel> = new Map();
 
   async sendMessage(request: SendMessageRequest): Promise<Message> {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) {throw new Error('Supabase not configured');}
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -82,7 +82,7 @@ class ChatService {
   }
 
   async getMessages(tripId: string, limit = 50): Promise<Message[]> {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) {throw new Error('Supabase not configured');}
     const { data, error } = await supabase
       .from('messages')
       .select(
@@ -100,7 +100,7 @@ class ChatService {
   }
 
   async markAsRead(messageIds: string[]): Promise<void> {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) {throw new Error('Supabase not configured');}
     const sb = supabase;
     const {
       data: { user },
@@ -110,21 +110,21 @@ class ChatService {
       throw new Error('Not authenticated');
     }
 
-    if (messageIds.length === 0) return;
+    if (messageIds.length === 0) {return;}
 
     const { data: messages, error } = await supabase
       .from('messages')
       .select('id, read_by')
       .in('id', messageIds);
 
-    if (error || !messages) return;
+    if (error || !messages) {return;}
 
     const messageRows = (messages ?? []) as MessageReadRow[];
     const messagesToUpdate = messageRows.filter(
       message => !(message.read_by ?? []).includes(user.id),
     );
 
-    if (messagesToUpdate.length === 0) return;
+    if (messagesToUpdate.length === 0) {return;}
 
     const BATCH_SIZE = 10;
     for (let i = 0; i < messagesToUpdate.length; i += BATCH_SIZE) {
@@ -147,7 +147,7 @@ class ChatService {
     onMessage: (message: Message) => void,
     onError?: (error: Error) => void,
   ): () => void {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) {throw new Error('Supabase not configured');}
     const sb = supabase;
     const channelName = `trip:${tripId}`;
 
@@ -204,7 +204,7 @@ class ChatService {
   }
 
   async getUnreadCount(tripId: string): Promise<number> {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) {throw new Error('Supabase not configured');}
     const {
       data: { user },
     } = await supabase.auth.getUser();

@@ -18,7 +18,7 @@ class CancellationService {
     reason,
     refundRequested = true,
   }: CancelBookingRequest): Promise<void> {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) {throw new Error('Supabase not configured');}
 
     const {
       data: { user },
@@ -97,7 +97,7 @@ class CancellationService {
   }
 
   async cancelTrip({ tripId, reason }: CancelTripRequest): Promise<void> {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) {throw new Error('Supabase not configured');}
 
     const {
       data: { user },
@@ -189,7 +189,7 @@ class CancellationService {
     canCancel: boolean;
     reason?: string;
   }> {
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) {throw new Error('Supabase not configured');}
 
     const { data: booking, error } = await supabase
       .from('bookings')

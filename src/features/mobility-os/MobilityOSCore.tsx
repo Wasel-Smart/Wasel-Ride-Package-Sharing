@@ -67,9 +67,9 @@ function cityLabel(city: string): string {
 
 function localizedCorridorLabel(value: string): string {
   const separator = value.includes('->') ? '->' : value.includes('←') ? '←' : null;
-  if (!separator) return cityLabel(value);
+  if (!separator) {return cityLabel(value);}
   const [origin, destination] = value.split(separator).map(part => part.trim());
-  if (!origin || !destination) return cityLabel(value);
+  if (!origin || !destination) {return cityLabel(value);}
   return `${cityLabel(origin)} ${getCurrentLang() === 'ar' ? '←' : '->'} ${cityLabel(destination)}`;
 }
 
@@ -132,10 +132,10 @@ export default function MobilityOSCore() {
   );
 
   useEffect(() => {
-    if (!snapshot.corridors.length) return;
-    if (snapshot.corridors.some(corridor => corridor.corridor.id === selectedCorridorId)) return;
+    if (!snapshot.corridors.length) {return;}
+    if (snapshot.corridors.some(corridor => corridor.corridor.id === selectedCorridorId)) {return;}
     const firstCorridor = snapshot.corridors[0];
-    if (!firstCorridor) return;
+    if (!firstCorridor) {return;}
     setSelectedCorridorId(firstCorridor.corridor.id);
   }, [selectedCorridorId, snapshot.corridors]);
 
@@ -249,7 +249,7 @@ export default function MobilityOSCore() {
   ];
 
   const submitBooking = async () => {
-    if (!selectedCorridor) return;
+    if (!selectedCorridor) {return;}
 
     try {
       const response = await createBooking({

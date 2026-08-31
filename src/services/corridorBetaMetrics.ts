@@ -55,7 +55,7 @@ function normalizeCity(value: string) {
 
 function normalizeRider(value: string | undefined) {
   const normalized = value?.trim().toLowerCase();
-  if (!normalized || normalized === 'passenger') return undefined;
+  if (!normalized || normalized === 'passenger') {return undefined;}
   return normalized;
 }
 
@@ -73,7 +73,7 @@ function corridorKey(from: string, to: string) {
 }
 
 function readMetrics(): CorridorBetaMetricRecord[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
 
   try {
     const raw = window.localStorage.getItem(CORRIDOR_BETA_METRICS_KEY);
@@ -85,7 +85,7 @@ function readMetrics(): CorridorBetaMetricRecord[] {
 }
 
 function writeMetrics(records: CorridorBetaMetricRecord[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   window.localStorage.setItem(CORRIDOR_BETA_METRICS_KEY, JSON.stringify(records));
 }
@@ -166,7 +166,7 @@ function buildRecord(
   const riderCounts = new Map<string, number>();
   for (const booking of completedBookings) {
     const rider = normalizeRider(booking.passengerName ?? booking.ownerId ?? booking.id);
-    if (!rider) continue;
+    if (!rider) {continue;}
     riderCounts.set(rider, (riderCounts.get(rider) ?? 0) + 1);
   }
 
@@ -238,8 +238,8 @@ export function recordCorridorBetaMetricsFromBookings(
     const key = `${corridorKey(booking.from, booking.to)}:${startOfWeek(new Date(booking.updatedAt).getTime())}`;
     const existing = grouped.get(key);
     if (existing) {
-      if (booking.status === 'completed') existing.completed.push(booking);
-      if (booking.status === 'cancelled') existing.cancelled.push(booking);
+      if (booking.status === 'completed') {existing.completed.push(booking);}
+      if (booking.status === 'cancelled') {existing.cancelled.push(booking);}
       continue;
     }
 

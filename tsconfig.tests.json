@@ -10,13 +10,17 @@
     "tests/**/*.tsx",
     "e2e/**/*.ts",
     "vitest.config.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/__tests__/**/*.ts",
+    "src/**/__tests__/**/*.tsx",
+    "src/utils/supabase/info.tsx"
   ],
   "exclude": [
     "node_modules",
     "build",
     "dist",
-    "src/supabase/functions",
-    "tests/unit/rbac-denomd.test.ts"
+    "src/supabase/functions"
   ]
 }

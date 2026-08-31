@@ -36,7 +36,7 @@ export default function WaselAuthCallback() {
   const returnTo = useMemo(() => normalizeReturnToPath(readCallbackParam('returnTo')), []);
   const callbackError = useMemo(() => {
     const raw = readCallbackParam('error_description') || readCallbackParam('error') || '';
-    if (!raw) return '';
+    if (!raw) {return '';}
     try {
       // Sanitize: only allow printable ASCII, strip control chars and HTML
       return decodeURIComponent(raw)
@@ -55,14 +55,14 @@ export default function WaselAuthCallback() {
 
     const finishAuth = async () => {
       if (!supabase) {
-        if (!active) return;
+        if (!active) {return;}
         setState('error');
         setMessage('Backend is not configured for social sign-in.');
         return;
       }
 
       if (callbackError) {
-        if (!active) return;
+        if (!active) {return;}
         setState('error');
         setMessage(callbackError);
         return;
@@ -71,7 +71,7 @@ export default function WaselAuthCallback() {
       const {
         data: { subscription },
       } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
-        if (!active) return;
+        if (!active) {return;}
 
         if (event === 'PASSWORD_RECOVERY') {
           isRecoveryFlow = true;
@@ -85,7 +85,7 @@ export default function WaselAuthCallback() {
         await new Promise(resolve => setTimeout(resolve, 50));
 
         if (isRecoveryFlow) {
-          if (!active) return;
+          if (!active) {return;}
           setState('recovery');
           setMessage('Set a new password to finish recovering your account.');
           return;
@@ -115,7 +115,7 @@ export default function WaselAuthCallback() {
         setMessage('Sign-in complete. Redirecting...');
         navigate(returnTo, { replace: true });
       } catch (error) {
-        if (!active) return;
+        if (!active) {return;}
         setState('error');
         setMessage(error instanceof Error ? error.message : 'Unable to complete sign-in.');
       } finally {

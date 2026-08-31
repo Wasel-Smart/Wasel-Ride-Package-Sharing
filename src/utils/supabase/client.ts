@@ -15,7 +15,7 @@ import type { Database } from './database.types';
 import { hasSupabasePublicConfig, publicAnonKey, publicSupabaseUrl } from './info';
 
 function isPlaceholderValue(value: string | undefined): boolean {
-  if (!value) return true;
+  if (!value) {return true;}
 
   const normalized = value.trim().toLowerCase();
   return (
@@ -54,7 +54,7 @@ const RETRY_CONFIG = {
 const HEALTH_CHECK_INTERVAL = 60_000;
 
 function getBrowserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | undefined {
-  if (typeof window === 'undefined') return undefined;
+  if (typeof window === 'undefined') {return undefined;}
 
   try {
     return window[kind];
@@ -71,14 +71,14 @@ const requestQueue: Array<{
 }> = [];
 
 function getIsOnline(): boolean {
-  if (typeof navigator === 'undefined') return true;
+  if (typeof navigator === 'undefined') {return true;}
   return navigator.onLine;
 }
 
 async function processRequestQueue(): Promise<void> {
   while (requestQueue.length > 0 && getIsOnline()) {
     const item = requestQueue.shift();
-    if (!item) break;
+    if (!item) {break;}
     const { fn, resolve, reject } = item;
     try {
       resolve(await fn());
@@ -108,7 +108,7 @@ async function retryWithBackoff<T>(
         (error as { status: number }).status < 500 &&
         (error as { status: number }).status !== 429
       )
-        throw error;
+        {throw error;}
       const delay = Math.min(
         RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffMultiplier, i),
         RETRY_CONFIG.maxDelay,
@@ -144,7 +144,7 @@ const getSupabaseClient = () => {
   type GlobalWithClient = typeof globalAny &
     Record<symbol, ReturnType<typeof createClient<Database>> | undefined>;
   const globalStore = globalAny as GlobalWithClient;
-  if (globalStore[CLIENT_KEY]) return globalStore[CLIENT_KEY];
+  if (globalStore[CLIENT_KEY]) {return globalStore[CLIENT_KEY];}
 
   try {
     const client = createClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -180,7 +180,7 @@ let listenersInitialised = false;
 let healthCheckTimer: ReturnType<typeof setInterval> | null = null;
 
 export function initSupabaseListeners(): () => void {
-  if (listenersInitialised || typeof window === 'undefined') return () => {};
+  if (listenersInitialised || typeof window === 'undefined') {return () => {};}
   listenersInitialised = true;
 
   const onOnline = () => {
@@ -190,7 +190,7 @@ export function initSupabaseListeners(): () => void {
   window.addEventListener('online', onOnline, { passive: true });
 
   healthCheckTimer = setInterval(() => {
-    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {return;}
     checkSupabaseConnection(false).catch(() => {});
   }, HEALTH_CHECK_INTERVAL);
 
@@ -217,7 +217,7 @@ export async function optimizedQuery<T>(
       const cached = storage?.getItem(`qc-${cacheKey}`);
       if (cached) {
         const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < cacheDuration) return data;
+        if (Date.now() - timestamp < cacheDuration) {return data;}
       }
     } catch {
       /* ignore cache errors */
@@ -242,7 +242,7 @@ let connectionHealthy = true;
 let lastHealthCheck = 0;
 
 export async function checkSupabaseConnection(force = false): Promise<boolean> {
-  if (!supabase) return false;
+  if (!supabase) {return false;}
 
   const CACHE_TTL = HEALTH_CHECK_INTERVAL;
   if (!force && Date.now() - lastHealthCheck < CACHE_TTL && connectionHealthy) {

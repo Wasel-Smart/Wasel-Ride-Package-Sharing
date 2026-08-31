@@ -85,7 +85,7 @@ const categoryTone: Record<
   },
 };
 
-export const NotificationItem = React.memo(function NotificationItem({
+export const NotificationItem = React.memo(({
   notification,
   index,
   isRTL,
@@ -95,7 +95,7 @@ export const NotificationItem = React.memo(function NotificationItem({
   onOpen,
   onMarkRead,
   onArchive,
-}: NotificationItemProps) {
+}: NotificationItemProps) => {
   const category = getNotificationCategory(notification);
   const Icon = CATEGORY_ICON[category];
   const tone = categoryTone[category];

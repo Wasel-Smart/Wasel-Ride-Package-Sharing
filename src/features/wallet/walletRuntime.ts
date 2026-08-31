@@ -9,7 +9,7 @@ export function resolveWalletRuntimeMode({
   backendReady: boolean;
   localFallbackReady?: boolean;
 }): WalletRuntimeMode {
-  if (!hasUser) return 'redirect';
-  if (!backendReady && !localFallbackReady) return 'unavailable';
+  if (!hasUser) {return 'redirect';}
+  if (!backendReady && !localFallbackReady) {return 'unavailable';}
   return 'live';
 }

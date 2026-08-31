@@ -160,13 +160,13 @@ function getSupabaseProjectRefFromUrl(value: string): string | null {
 }
 
 function getSupabaseProjectRefFromJwt(value: string | undefined): string | null {
-  if (!value) return null;
+  if (!value) {return null;}
 
   const parts = value.split('.');
-  if (parts.length < 2) return null;
+  if (parts.length < 2) {return null;}
 
   const decoded = decodeBase64Url(parts[1] ?? '');
-  if (!decoded) return null;
+  if (!decoded) {return null;}
 
   try {
     const payload = JSON.parse(decoded) as { ref?: string };
@@ -386,7 +386,7 @@ export function getConfig() {
   const enableEmailNotifications = getBooleanEnv('VITE_ENABLE_EMAIL_NOTIFICATIONS', true);
   const enableSmsNotifications = getBooleanEnv('VITE_ENABLE_SMS_NOTIFICATIONS', true);
   const enableWhatsAppNotifications = getBooleanEnv('VITE_ENABLE_WHATSAPP_NOTIFICATIONS', true);
-  const allowDirectSupabaseFallback = false;
+  const allowDirectSupabaseFallback = getBooleanEnv('VITE_ALLOW_DIRECT_SUPABASE_FALLBACK', false);
 
   return {
     appName: getEnv('VITE_APP_NAME', 'Wasel'),
@@ -496,8 +496,8 @@ export function getSupportEmailUrl(subject = 'Wasel Support', body = ''): string
   }
 
   const search = new URLSearchParams();
-  if (subject) search.set('subject', subject);
-  if (body) search.set('body', body);
+  if (subject) {search.set('subject', subject);}
+  if (body) {search.set('body', body);}
   const suffix = search.toString();
   return `mailto:${supportEmail}${suffix ? `?${suffix}` : ''}`;
 }

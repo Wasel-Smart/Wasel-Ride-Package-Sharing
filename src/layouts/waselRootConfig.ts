@@ -124,7 +124,7 @@ export function isVisibleNavGroup(group: NavGroup, isAuthenticated: boolean) {
 }
 
 export function getVisibleNavItems(group: NavGroup, isAuthenticated: boolean) {
-  if ('direct' in group && group.direct) return [];
+  if ('direct' in group && group.direct) {return [];}
   const items = ('items' in group ? group.items : []) as unknown as readonly NavItem[];
   return items.filter(
     item =>

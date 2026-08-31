@@ -17,17 +17,17 @@ import type {
 
 const LOCAL_WALLET_KEY = 'wasel-wallet-local-v1';
 const LOCAL_AUTH_USER_KEY =
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_LOCAL_AUTH_STORAGE_KEY) ||
+  (import.meta?.env?.VITE_LOCAL_AUTH_STORAGE_KEY) ||
   'wasel_user_session';
 
 export function toNumber(value: unknown, fallback = 0): number {
-  if (value === null || value === undefined) return fallback;
+  if (value === null || value === undefined) {return fallback;}
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 export function canUseLocalWalletStorage(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   try {
     return Boolean(window.localStorage);
   } catch {
@@ -40,12 +40,12 @@ function getLocalWalletStorageKey(userId: string): string {
 }
 
 function readLocalAuthBalance(userId: string): number {
-  if (!canUseLocalWalletStorage()) return 0;
+  if (!canUseLocalWalletStorage()) {return 0;}
   try {
     const raw = window.localStorage.getItem(LOCAL_AUTH_USER_KEY);
-    if (!raw) return 0;
+    if (!raw) {return 0;}
     const parsed = JSON.parse(raw) as { id?: string; balance?: number | string };
-    if (parsed?.id !== userId) return 0;
+    if (parsed?.id !== userId) {return 0;}
     return toNumber(parsed.balance, 0);
   } catch {
     return 0;
@@ -53,12 +53,12 @@ function readLocalAuthBalance(userId: string): number {
 }
 
 export function syncLocalAuthBalance(userId: string, balance: number): void {
-  if (!canUseLocalWalletStorage()) return;
+  if (!canUseLocalWalletStorage()) {return;}
   try {
     const raw = window.localStorage.getItem(LOCAL_AUTH_USER_KEY);
-    if (!raw) return;
+    if (!raw) {return;}
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    if (parsed?.id !== userId) return;
+    if (parsed?.id !== userId) {return;}
     parsed.balance = Number(balance.toFixed(2));
     window.localStorage.setItem(LOCAL_AUTH_USER_KEY, JSON.stringify(parsed));
   } catch {
@@ -99,7 +99,7 @@ export function buildDefaultLocalWalletRecord(userId: string): LocalWalletRecord
 
 export function normalizeLocalWalletRecord(userId: string, value: unknown): LocalWalletRecord {
   const fallback = buildDefaultLocalWalletRecord(userId);
-  if (!value || typeof value !== 'object') return fallback;
+  if (!value || typeof value !== 'object') {return fallback;}
   const record = value as Partial<LocalWalletRecord>;
   return {
     userId,
@@ -127,10 +127,10 @@ export function normalizeLocalWalletRecord(userId: string, value: unknown): Loca
 }
 
 export function readLocalWalletRecord(userId: string): LocalWalletRecord {
-  if (!canUseLocalWalletStorage()) return buildDefaultLocalWalletRecord(userId);
+  if (!canUseLocalWalletStorage()) {return buildDefaultLocalWalletRecord(userId);}
   try {
     const raw = window.localStorage.getItem(getLocalWalletStorageKey(userId));
-    if (!raw) return buildDefaultLocalWalletRecord(userId);
+    if (!raw) {return buildDefaultLocalWalletRecord(userId);}
     return normalizeLocalWalletRecord(userId, JSON.parse(raw));
   } catch {
     return buildDefaultLocalWalletRecord(userId);
@@ -260,7 +260,7 @@ export function describeTransaction(row: TransactionRow): string {
       : typeof row.metadata?.note === 'string'
         ? row.metadata.note
         : '';
-  if (rawLabel) return sanitizeHtml(rawLabel);
+  if (rawLabel) {return sanitizeHtml(rawLabel);}
   switch (row.transaction_type) {
     case 'add_funds': return 'Wallet top-up';
     case 'transfer_funds': return row.direction === 'credit' ? 'Wallet transfer received' : 'Wallet transfer sent';
@@ -312,11 +312,11 @@ export function buildInsightsFromTransactions(transactions: WalletTransaction[])
   const monthlyBuckets = new Map<string, { spent: number; earned: number }>();
   for (const tx of transactions) {
     const date = new Date(tx.createdAt);
-    if (Number.isNaN(date.getTime())) continue;
+    if (Number.isNaN(date.getTime())) {continue;}
     const label = date.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
     const existing = monthlyBuckets.get(label) ?? { spent: 0, earned: 0 };
-    if (tx.amount < 0) existing.spent += Math.abs(tx.amount);
-    if (tx.amount > 0) existing.earned += tx.amount;
+    if (tx.amount < 0) {existing.spent += Math.abs(tx.amount);}
+    if (tx.amount > 0) {existing.earned += tx.amount;}
     monthlyBuckets.set(label, existing);
   }
 

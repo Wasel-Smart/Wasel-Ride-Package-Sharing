@@ -29,7 +29,7 @@ function validateVerificationCode(input: string): string {
 }
 
 function sanitizeStringField(value: unknown): string {
-  if (typeof value !== 'string') return '';
+  if (typeof value !== 'string') {return '';}
   return value.replace(/[<>"'`\\]/g, '').slice(0, 500);
 }
 
@@ -434,7 +434,7 @@ export class PackageTrackingService {
     pkg.lastUpdated = new Date();
 
     const escrow = this.escrows.get(packageId);
-    if (escrow && escrow.heldInEscrow) {
+    if (escrow?.heldInEscrow) {
       escrow.releaseConditions.deliveryVerified = true;
       escrow.releaseConditions.photoProvided = Boolean(photo);
       escrow.releaseConditions.noDisputes = true;

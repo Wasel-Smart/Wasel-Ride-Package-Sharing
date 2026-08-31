@@ -53,7 +53,7 @@ function getRequestHeader(request: VercelRequest, name: string): string | undefi
 function hasInternalHealthAccess(request: VercelRequest): boolean {
   const expected = getEnv('WASEL_INTERNAL_HEALTH_TOKEN');
   const provided = getRequestHeader(request, 'x-wasel-health-token');
-  if (!expected || !provided) return false;
+  if (!expected || !provided) {return false;}
 
   const expectedBuffer = Buffer.from(expected);
   const providedBuffer = Buffer.from(provided);

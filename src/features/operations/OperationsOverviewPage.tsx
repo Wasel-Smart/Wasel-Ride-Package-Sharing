@@ -185,7 +185,7 @@ export default function OperationsOverviewPage() {
     [pathname],
   );
   const displayConfig = useMemo(() => {
-    if (!ar) return config;
+    if (!ar) {return config;}
     const copy: Record<string, Pick<SurfaceConfig, 'title' | 'detail'>> = {
       '/app/services/corporate': {
         title: 'النقل العام',
@@ -241,19 +241,19 @@ export default function OperationsOverviewPage() {
 
     void getGrowthDashboard()
       .then(value => {
-        if (!cancelled) setDashboard(value);
+        if (!cancelled) {setDashboard(value);}
       })
       .catch(() => {
-        if (!cancelled) setDashboard(null);
+        if (!cancelled) {setDashboard(null);}
       });
 
     if (pathname === '/app/services/corporate') {
       void buildBusinessAccountSnapshot()
         .then(value => {
-          if (!cancelled) setBusinessSnapshot(value);
+          if (!cancelled) {setBusinessSnapshot(value);}
         })
         .catch(() => {
-          if (!cancelled) setBusinessSnapshot(null);
+          if (!cancelled) {setBusinessSnapshot(null);}
         });
 
       setServiceSnapshot(buildServiceProviderWorkflowSnapshot());
@@ -267,10 +267,10 @@ export default function OperationsOverviewPage() {
     if (pathname === '/app/services/school') {
       void buildSchoolTransportSnapshot()
         .then(value => {
-          if (!cancelled) setSchoolSnapshot(value);
+          if (!cancelled) {setSchoolSnapshot(value);}
         })
         .catch(() => {
-          if (!cancelled) setSchoolSnapshot(null);
+          if (!cancelled) {setSchoolSnapshot(null);}
         });
 
       setBusinessSnapshot(null);

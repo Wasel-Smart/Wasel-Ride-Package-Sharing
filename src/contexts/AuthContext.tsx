@@ -151,7 +151,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initializeAuth = async () => {
       try {
         const client = await getSupabaseClient();
-        if (!mounted) return;
+        if (!mounted) {return;}
 
         if (!client) {
           setUser(null);
@@ -163,7 +163,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         const syncFromSession = (event: string, nextSession: Session | null) => {
-          if (!mounted) return;
+          if (!mounted) {return;}
 
           setSession(nextSession);
           setUser(nextSession?.user ?? null);
@@ -200,7 +200,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               }
             })
             .finally(() => {
-              if (mounted) setInitializing(false);
+              if (mounted) {setInitializing(false);}
             });
         };
 
@@ -212,14 +212,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         unsubscribe = () => subscription.unsubscribe();
 
         const handleAuthMessage = async (event: MessageEvent) => {
-          if (event.origin !== window.location.origin) return;
-          if (!event.data || typeof event.data !== 'object') return;
-          if (event.data.type !== 'wasel-auth-complete') return;
+          if (event.origin !== window.location.origin) {return;}
+          if (!event.data || typeof event.data !== 'object') {return;}
+          if (event.data.type !== 'wasel-auth-complete') {return;}
 
           try {
             const { data, error } = await client.auth.getSession();
-            if (error) throw error;
-            if (!mounted || !data.session) return;
+            if (error) {throw error;}
+            if (!mounted || !data.session) {return;}
 
             setSession(data.session);
             setUser(data.session.user);
@@ -229,7 +229,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               console.warn('Auth callback sync warning:', sanitizeLogMessage(String(error)));
             }
           } finally {
-            if (mounted) setInitializing(false);
+            if (mounted) {setInitializing(false);}
           }
         };
 
@@ -429,29 +429,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const refreshProfile = useCallback(async () => {
-    if (!user) return;
+    if (!user) {return;}
     await fetchProfile(false, user);
   }, [fetchProfile, user]);
 
   const updateUser = useCallback(
     async (updates: Partial<WaselUser>) => {
-      if (!user) return;
+      if (!user) {return;}
 
       const profileUpdates: Partial<Profile> = {};
-      if (updates.name !== undefined) profileUpdates.full_name = updates.name;
-      if (updates.phone !== undefined) profileUpdates.phone_number = updates.phone;
-      if (updates.balance !== undefined) profileUpdates.wallet_balance = updates.balance;
-      if (updates.rating !== undefined) profileUpdates.rating = updates.rating;
-      if (updates.trips !== undefined) profileUpdates.trip_count = updates.trips;
-      if (updates.verified !== undefined) profileUpdates.verified = updates.verified;
-      if (updates.sanadVerified !== undefined) profileUpdates.sanad_verified = updates.sanadVerified;
-      if (updates.verificationLevel !== undefined) profileUpdates.verification_level = updates.verificationLevel;
-      if (updates.walletStatus !== undefined) profileUpdates.wallet_status = updates.walletStatus;
-      if (updates.avatar !== undefined) profileUpdates.avatar_url = updates.avatar;
-      if (updates.emailVerified !== undefined) profileUpdates.email_verified = updates.emailVerified;
-      if (updates.phoneVerified !== undefined) profileUpdates.phone_verified = updates.phoneVerified;
-      if (updates.twoFactorEnabled !== undefined) profileUpdates.two_factor_enabled = updates.twoFactorEnabled;
-      if (updates.driverStatus !== undefined) profileUpdates.driver_status = updates.driverStatus;
+      if (updates.name !== undefined) {profileUpdates.full_name = updates.name;}
+      if (updates.phone !== undefined) {profileUpdates.phone_number = updates.phone;}
+      if (updates.balance !== undefined) {profileUpdates.wallet_balance = updates.balance;}
+      if (updates.rating !== undefined) {profileUpdates.rating = updates.rating;}
+      if (updates.trips !== undefined) {profileUpdates.trip_count = updates.trips;}
+      if (updates.verified !== undefined) {profileUpdates.verified = updates.verified;}
+      if (updates.sanadVerified !== undefined) {profileUpdates.sanad_verified = updates.sanadVerified;}
+      if (updates.verificationLevel !== undefined) {profileUpdates.verification_level = updates.verificationLevel;}
+      if (updates.walletStatus !== undefined) {profileUpdates.wallet_status = updates.walletStatus;}
+      if (updates.avatar !== undefined) {profileUpdates.avatar_url = updates.avatar;}
+      if (updates.emailVerified !== undefined) {profileUpdates.email_verified = updates.emailVerified;}
+      if (updates.phoneVerified !== undefined) {profileUpdates.phone_verified = updates.phoneVerified;}
+      if (updates.twoFactorEnabled !== undefined) {profileUpdates.two_factor_enabled = updates.twoFactorEnabled;}
+      if (updates.driverStatus !== undefined) {profileUpdates.driver_status = updates.driverStatus;}
 
       optimisticRef.current = { ...(optimisticRef.current ?? {}), ...updates };
       setWaselUser(prev => (prev ? applyUserUpdates(prev, updates) : prev));
@@ -468,7 +468,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const resetPassword = useCallback(
     async (email: string, returnTo?: string): Promise<{ error: AuthOperationError }> => {
       const client = await getSupabaseClient();
-      if (!client) return { error: new Error('Backend not configured') };
+      if (!client) {return { error: new Error('Backend not configured') };}
 
       try {
         const { error } = await client.auth.resetPasswordForEmail(email, {
@@ -488,7 +488,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const changePassword = useCallback(
     async (nextPassword: string): Promise<{ error: AuthOperationError }> => {
       const client = await getSupabaseClient();
-      if (!client) return { error: new Error('Backend not configured') };
+      if (!client) {return { error: new Error('Backend not configured') };}
 
       setBusy(true);
       try {

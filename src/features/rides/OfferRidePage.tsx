@@ -83,7 +83,7 @@ export function OfferRidePage() {
   }, [submitted]);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {return;}
     return subscribeToRideBookingRealtime({
       userId: user.id,
       rides: getConnectedRides(),
@@ -92,9 +92,9 @@ export function OfferRidePage() {
   }, [user?.id]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
     const saved = window.localStorage.getItem(OFFER_RIDE_DRAFT_KEY);
-    if (saved) setDraftMessage(ar ? 'تمت استعادة المسودة من جلستك السابقة.' : 'Draft restored from your last session.');
+    if (saved) {setDraftMessage(ar ? 'تمت استعادة المسودة من جلستك السابقة.' : 'Draft restored from your last session.');}
     window.localStorage.setItem(OFFER_RIDE_DRAFT_KEY, JSON.stringify(form));
   }, [form]);
 

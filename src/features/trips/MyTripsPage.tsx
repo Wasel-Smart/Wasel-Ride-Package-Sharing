@@ -166,7 +166,7 @@ const lifecycleRank: Record<TripLifecycle, number> = {
 
 function formatDateLabel(input: string, locale: string, language: CopyLanguage): string {
   const date = new Date(input);
-  if (Number.isNaN(date.getTime())) return input || (language === 'ar' ? 'مرن' : 'Flexible');
+  if (Number.isNaN(date.getTime())) {return input || (language === 'ar' ? 'مرن' : 'Flexible');}
   return date.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
@@ -195,8 +195,8 @@ function getSupportForItem(
 }
 
 function deriveRideLifecycle(booking: RideBookingRecord, support: SupportTicket[]): TripLifecycle {
-  if (booking.status === 'cancelled' || booking.status === 'rejected') return 'cancelled';
-  if (booking.status === 'completed') return 'completed';
+  if (booking.status === 'cancelled' || booking.status === 'rejected') {return 'cancelled';}
+  if (booking.status === 'completed') {return 'completed';}
   if (
     support.length > 0 ||
     booking.supportThreadOpen ||
@@ -210,15 +210,15 @@ function deriveRideLifecycle(booking: RideBookingRecord, support: SupportTicket[
 }
 
 function derivePackageLifecycle(pkg: PackageRequest, support: SupportTicket[]): TripLifecycle {
-  if (pkg.status === 'delivered') return 'completed';
-  if (support.length > 0 || pkg.status === 'searching') return 'attention';
+  if (pkg.status === 'delivered') {return 'completed';}
+  if (support.length > 0 || pkg.status === 'searching') {return 'attention';}
   return 'active';
 }
 
 function deriveBusLifecycle(booking: StoredBusBooking, support: SupportTicket[]): TripLifecycle {
-  if (booking.status === 'cancelled') return 'cancelled';
-  if (booking.status === 'completed') return 'completed';
-  if (support.length > 0) return 'attention';
+  if (booking.status === 'cancelled') {return 'cancelled';}
+  if (booking.status === 'completed') {return 'completed';}
+  if (support.length > 0) {return 'attention';}
   return 'active';
 }
 
@@ -606,7 +606,7 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
 
 function SupportQueue({ tickets }: { tickets: SupportTicket[] }) {
   const { language, t } = useLanguage();
-  if (tickets.length === 0) return null;
+  if (tickets.length === 0) {return null;}
   return (
     <div
       style={{
@@ -706,7 +706,7 @@ export default function MyTripsPage() {
 
     const loadSupportTickets = async () => {
       const tickets = await getSupportTickets(user?.id);
-      if (cancelled) return;
+      if (cancelled) {return;}
       setSupportTickets(tickets.slice(0, 5));
       setSupportLoading(false);
     };
@@ -734,8 +734,7 @@ export default function MyTripsPage() {
     );
   }, [location.search]);
 
-  const rideItems = useMemo(() => {
-    return syncRideBookingCompletion().map(booking => {
+  const rideItems = useMemo(() => syncRideBookingCompletion().map(booking => {
       const relatedSupport = getSupportForItem(supportTickets, [
         booking.id,
         booking.backendBookingId,
@@ -743,30 +742,25 @@ export default function MyTripsPage() {
         booking.rideId,
       ]);
       return toRideItem(booking, relatedSupport, locale.locale, language);
-    });
-  }, [language, supportTickets, locale.locale]);
+    }), [language, supportTickets, locale.locale]);
 
-  const packageItems = useMemo(() => {
-    return getConnectedPackages().map(pkg => {
+  const packageItems = useMemo(() => getConnectedPackages().map(pkg => {
       const relatedSupport = getSupportForItem(supportTickets, [
         pkg.id,
         pkg.matchedRideId,
         pkg.handoffCode,
       ]);
       return toPackageItem(pkg, relatedSupport, locale.locale, language);
-    });
-  }, [language, supportTickets, locale.locale]);
+    }), [language, supportTickets, locale.locale]);
 
-  const busItems = useMemo(() => {
-    return getStoredBusBookings().map(booking => {
+  const busItems = useMemo(() => getStoredBusBookings().map(booking => {
       const relatedSupport = getSupportForItem(supportTickets, [
         booking.id,
         booking.ticket_code,
         booking.tripId,
       ]);
       return toBusItem(booking, relatedSupport, locale.locale, language);
-    });
-  }, [language, supportTickets, locale.locale]);
+    }), [language, supportTickets, locale.locale]);
 
   const collections: Record<TripKind, TripItem[]> = {
     rides: rideItems,
@@ -780,8 +774,8 @@ export default function MyTripsPage() {
 
     return [...visible].sort((left, right) => {
       const lifecycleDiff = lifecycleRank[left.lifecycle] - lifecycleRank[right.lifecycle];
-      if (lifecycleDiff !== 0) return lifecycleDiff;
-      if (left.supportCount !== right.supportCount) return right.supportCount - left.supportCount;
+      if (lifecycleDiff !== 0) {return lifecycleDiff;}
+      if (left.supportCount !== right.supportCount) {return right.supportCount - left.supportCount;}
       return left.time.localeCompare(right.time);
     });
   }, [filter, items]);

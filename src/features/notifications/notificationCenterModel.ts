@@ -48,17 +48,17 @@ export function matchesNotificationFilter(args: {
     return false;
   }
 
-  if (filter === 'all') return true;
-  if (filter === 'unread') return !notification.read;
+  if (filter === 'all') {return true;}
+  if (filter === 'unread') {return !notification.read;}
   if (filter === 'urgent')
-    return notification.priority === 'urgent' || notification.priority === 'high';
+    {return notification.priority === 'urgent' || notification.priority === 'high';}
 
   return getNotificationCategory(notification) === filter;
 }
 
 export function matchesNotificationSearch(notification: Notification, searchTerm: string): boolean {
   const normalized = searchTerm.trim().toLowerCase();
-  if (!normalized) return true;
+  if (!normalized) {return true;}
 
   return [
     notification.title,

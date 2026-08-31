@@ -203,7 +203,7 @@ function getOrCreateToastContainer(position: ToastPosition = 'bottom'): HTMLDivE
 
 export function dismissToast(toastId: string): void {
   const toast = activeToasts.get(toastId);
-  if (!toast) return;
+  if (!toast) {return;}
 
   if (toast.timer) {
     clearTimeout(toast.timer);

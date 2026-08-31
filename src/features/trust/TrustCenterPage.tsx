@@ -46,7 +46,7 @@ import {
 } from './components';
 
 function toErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
+  if (error instanceof Error) {return error.message;}
   return 'Trust Center request failed.';
 }
 
@@ -77,9 +77,9 @@ function getPanelAccent(state: TrustStepState) {
 }
 
 function formatTimestamp(value?: string | null): string | null {
-  if (!value) return null;
+  if (!value) {return null;}
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
+  if (Number.isNaN(date.getTime())) {return null;}
   return date.toLocaleString();
 }
 
@@ -259,22 +259,22 @@ export default function TrustCenterPage() {
   }, [user?.phone]);
 
   useEffect(() => {
-    if (!effectiveStatus) return;
+    if (!effectiveStatus) {return;}
 
     const providerReference = effectiveStatus.steps.identity.meta.providerReference;
     const documentReference = effectiveStatus.steps.identity.meta.documentReference;
     const existingLicense = effectiveStatus.steps.driverDocuments.meta.licenseNumber;
 
-    if (providerReference && !identityReference) setIdentityReference(providerReference);
+    if (providerReference && !identityReference) {setIdentityReference(providerReference);}
     if (documentReference && !identityDocumentReference) {
       setIdentityDocumentReference(documentReference);
     }
-    if (existingLicense && !licenseNumber) setLicenseNumber(existingLicense);
+    if (existingLicense && !licenseNumber) {setLicenseNumber(existingLicense);}
   }, [effectiveStatus, identityDocumentReference, identityReference, licenseNumber]);
 
   const reloadTrustStatus = useCallback(async (silent = false) => {
-    if (!user) return;
-    if (!silent) setStatusLoading(true);
+    if (!user) {return;}
+    if (!silent) {setStatusLoading(true);}
 
     try {
       const nextStatus = await getTrustCenterStatus(user);
@@ -286,7 +286,7 @@ export default function TrustCenterPage() {
         console.warn('[Trust Center] Using fallback status:', error);
       }
     } finally {
-      if (!silent) setStatusLoading(false);
+      if (!silent) {setStatusLoading(false);}
     }
   }, [user]);
 

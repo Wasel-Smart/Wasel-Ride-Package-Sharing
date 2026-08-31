@@ -76,7 +76,7 @@ const COMPLETED_STATUS_META = {
 };
 
 // Shared transaction row used across wallet tabs
-export const TransactionRow = React.memo(function TransactionRow({
+export const TransactionRow = React.memo(({
   tx: transaction,
   isRTL,
   jodLabel,
@@ -84,7 +84,7 @@ export const TransactionRow = React.memo(function TransactionRow({
   tx: WalletTransaction;
   isRTL: boolean;
   jodLabel: string;
-}) {
+}) => {
   const txType = transaction.type || 'payment';
   const iconCfg = TX_ICONS[txType] ?? PAYMENT_TX_ICON;
   const Icon = iconCfg.icon;

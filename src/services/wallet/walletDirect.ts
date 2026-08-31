@@ -18,7 +18,7 @@ import {
 } from './walletLocalStorage';
 
 function getDb() {
-  if (!supabase) throw new Error('Supabase client is not initialised');
+  if (!supabase) {throw new Error('Supabase client is not initialised');}
   return supabase;
 }
 
@@ -87,17 +87,17 @@ function buildWalletPayload(
 export async function resolveCanonicalUserId(userKey: string): Promise<string> {
   const db = getDb();
   const { data: byAuth } = await db.from('users').select('id').eq('auth_user_id', userKey).maybeSingle();
-  if (byAuth?.id) return String(byAuth.id);
+  if (byAuth?.id) {return String(byAuth.id);}
   const { data: byId, error } = await db.from('users').select('id').eq('id', userKey).maybeSingle();
-  if (error) throw error;
-  if (byId?.id) return String(byId.id);
+  if (error) {throw error;}
+  if (byId?.id) {return String(byId.id);}
   return userKey;
 }
 
 async function findWalletByUserId(userId: string): Promise<WalletRow | null> {
   const db = getDb();
   const { data, error } = await db.from('wallets').select('*').eq('user_id', userId).maybeSingle();
-  if (error) throw error;
+  if (error) {throw error;}
   return (data as WalletRow | null) ?? null;
 }
 
@@ -114,14 +114,14 @@ export async function fetchWalletDirect(userId: string): Promise<WalletData> {
     }
   }
 
-  if (!wallet?.wallet_id) throw new Error('Wallet not found');
+  if (!wallet?.wallet_id) {throw new Error('Wallet not found');}
 
   const { data: transactions, error: txError } = await db
     .from('transactions')
     .select('*')
     .eq('wallet_id', wallet.wallet_id)
     .order('created_at', { ascending: false });
-  if (txError) throw txError;
+  if (txError) {throw txError;}
 
   const { data: paymentMethods } = await db
     .from('payment_methods')
@@ -177,7 +177,7 @@ export async function transferWalletFundsDirect(
     }
   }
 
-  if (error) throw error;
+  if (error) {throw error;}
   return fetchWalletDirect(userId);
 }
 
@@ -195,7 +195,7 @@ export async function withdrawWalletFundsDirect(
     p_bank_account: bankAccount,
     p_method: method,
   });
-  if (error) throw error;
+  if (error) {throw error;}
   return fetchWalletDirect(canonicalUserId);
 }
 
@@ -212,7 +212,7 @@ export async function updateWalletPreferencesDirect(
       error = retry.error;
     }
   }
-  if (error) throw error;
+  if (error) {throw error;}
   return fetchWalletDirect(userId);
 }
 
@@ -235,7 +235,7 @@ export async function addPaymentMethodDirect(userId: string, method: PaymentMeth
     })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
   return data;
 }
 
@@ -258,7 +258,7 @@ export async function deletePaymentMethodDirect(userId: string, methodId: string
       error = retry.error;
     }
   }
-  if (error) throw error;
+  if (error) {throw error;}
   return { success: true };
 }
 
@@ -270,7 +270,7 @@ export async function getTrustScoreDirect(userId: string) {
     db.from('wallets').select('balance').eq('user_id', canonicalUserId).maybeSingle(),
     db.from('drivers').select('driver_id').eq('user_id', canonicalUserId).maybeSingle(),
   ]);
-  if (userError) throw userError;
+  if (userError) {throw userError;}
 
   let tripCount = 0;
   if (driver?.driver_id) {
@@ -307,7 +307,7 @@ export async function payWithWalletDirect(
     p_reference_id: referenceId ?? null,
     p_metadata: metadata ?? {},
   });
-  if (error) throw error;
+  if (error) {throw error;}
   return fetchWalletDirect(userId);
 }
 

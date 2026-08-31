@@ -44,7 +44,7 @@ function isBrowser() {
 }
 
 function readSnapshot(): MovementMembershipSnapshot {
-  if (!isBrowser()) return DEFAULT_SNAPSHOT;
+  if (!isBrowser()) {return DEFAULT_SNAPSHOT;}
 
   try {
     const raw = window.localStorage.getItem(MEMBERSHIP_KEY);
@@ -80,22 +80,22 @@ function readSnapshot(): MovementMembershipSnapshot {
 }
 
 function writeSnapshot(snapshot: MovementMembershipSnapshot) {
-  if (!isBrowser()) return snapshot;
+  if (!isBrowser()) {return snapshot;}
   window.localStorage.setItem(MEMBERSHIP_KEY, JSON.stringify(snapshot));
   return snapshot;
 }
 
 function resolveTier(credits: number): LoyaltyTier {
-  if (credits >= 900) return 'infrastructure';
-  if (credits >= 600) return 'network';
-  if (credits >= 300) return 'dense';
+  if (credits >= 900) {return 'infrastructure';}
+  if (credits >= 600) {return 'network';}
+  if (credits >= 300) {return 'dense';}
   return 'starter';
 }
 
 function updateStreak(previousDate: string | null) {
   const today = new Date().toISOString().slice(0, 10);
-  if (!previousDate) return { streakDays: 1, lastActivityDate: today };
-  if (previousDate === today) return { streakDays: null, lastActivityDate: today };
+  if (!previousDate) {return { streakDays: 1, lastActivityDate: today };}
+  if (previousDate === today) {return { streakDays: null, lastActivityDate: today };}
 
   const diffDays = Math.round(
     (new Date(today).getTime() - new Date(previousDate).getTime()) / 86_400_000,
@@ -187,6 +187,6 @@ export function recordMovementActivity(
 }
 
 export function getMembershipCorridor(routeId?: string | null): CorridorOpportunity | null {
-  if (!routeId) return getCorridorOpportunityById(DEFAULT_CORRIDOR_ID);
+  if (!routeId) {return getCorridorOpportunityById(DEFAULT_CORRIDOR_ID);}
   return getCorridorOpportunityById(routeId);
 }

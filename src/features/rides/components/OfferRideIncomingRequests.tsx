@@ -14,7 +14,7 @@ export function OfferRideIncomingRequests({
   incomingRequests,
   onStatusMessage,
 }: OfferRideIncomingRequestsProps) {
-  if (incomingRequests.length === 0) return null;
+  if (incomingRequests.length === 0) {return null;}
 
   return (
     <div

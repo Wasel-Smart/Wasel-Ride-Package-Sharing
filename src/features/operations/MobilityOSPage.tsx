@@ -325,14 +325,14 @@ export default function MobilityOSPage() {
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (paused) return undefined;
+    if (paused) {return undefined;}
     const loop = () => {
       setTick(prev => (prev + 0.0035) % 1);
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
     return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      if (rafRef.current !== null) {cancelAnimationFrame(rafRef.current);}
     };
   }, [paused]);
 
@@ -803,7 +803,7 @@ export default function MobilityOSPage() {
                     tab === 'math',
                 ).map((unit, index) => {
                   const route = routeStats.find(entry => entry.id === unit.routeId);
-                  if (!route) return null;
+                  if (!route) {return null;}
                   const from = route.fromNode;
                   const to = route.toNode;
                   const dx = to.x - from.x;

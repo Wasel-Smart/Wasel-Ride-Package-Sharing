@@ -36,7 +36,7 @@ export async function getPackage(id: string) {
 
 export async function getMyPackages() {
   const userId = await getSessionUserId();
-  if (!userId) throw new Error('Not authenticated');
+  if (!userId) {throw new Error('Not authenticated');}
   const response = await api.get(`/v1/packages/sender/${userId}`);
   return response as { data: Package[] };
 }

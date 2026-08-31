@@ -1,6 +1,7 @@
 import { getEnv } from './env';
 import { logger } from './monitoring';
-import { supabase, isSupabaseConfigured } from '@/utils/supabase/client';
+import { supabase, isSupabaseConfigured, supabaseAnonKey } from '@/utils/supabase/client';
+import { getEdgeFunctionName } from './edgeFunctionConfig';
 
 export interface HealthCheckResult {
   healthy: boolean;
@@ -19,7 +20,7 @@ let consecutiveFailures = 0;
 
 /** Verify Supabase auth service is reachable. */
 async function checkSupabaseHealth(): Promise<boolean> {
-  if (!isSupabaseConfigured || !supabase) return false;
+  if (!isSupabaseConfigured || !supabase) {return false;}
 
   try {
     const { error } = await supabase.auth.getSession();
@@ -46,14 +47,19 @@ async function checkEdgeFunctionHealth(): Promise<boolean> {
     }
   }
 
-  const edgeFunctionName = getEnv('VITE_EDGE_FUNCTION_NAME', 'make-server-0b1f4071');
+  const edgeFunctionName = getEdgeFunctionName();
   const supabaseUrl = getEnv('VITE_SUPABASE_URL');
 
-  if (!supabaseUrl || !edgeFunctionName) return false;
+  if (!supabaseUrl || !edgeFunctionName) {return false;}
 
   try {
+    const headers: Record<string, string> = {};
+    if (supabaseAnonKey && !supabaseAnonKey.toLowerCase().includes('your-anon-key')) {
+      headers['apikey'] = supabaseAnonKey;
+    }
     const response = await fetch(`${supabaseUrl}/functions/v1/${edgeFunctionName}/health`, {
       method: 'GET',
+      headers,
       signal: AbortSignal.timeout(5_000),
     });
     return response.ok || response.status === 404;
@@ -67,7 +73,7 @@ async function checkEdgeFunctionHealth(): Promise<boolean> {
  * This exercises the PostgREST layer without relying on a specific RPC.
  */
 async function checkDatabaseHealth(): Promise<boolean> {
-  if (!isSupabaseConfigured || !supabase) return false;
+  if (!isSupabaseConfigured || !supabase) {return false;}
 
   try {
     const { error } = await supabase.auth.getSession();
@@ -81,7 +87,7 @@ async function checkDatabaseHealth(): Promise<boolean> {
 export async function performHealthCheck(force = false): Promise<HealthCheckResult> {
   if (!force && lastHealthCheck) {
     const age = Date.now() - new Date(lastHealthCheck.timestamp).getTime();
-    if (age < 30_000) return lastHealthCheck;
+    if (age < 30_000) {return lastHealthCheck;}
   }
 
   if (healthCheckInProgress) {
@@ -175,7 +181,7 @@ export function startHealthCheckMonitoring(intervalMs = 60_000): () => void {
   const BACKOFF_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
   const scheduleNextCheck = (interval: number) => {
-    if (timerId) clearTimeout(timerId);
+    if (timerId) {clearTimeout(timerId);}
     timerId = setTimeout(check, interval);
   };
 
@@ -193,6 +199,6 @@ export function startHealthCheckMonitoring(intervalMs = 60_000): () => void {
   void performHealthCheck(true).then(() => scheduleNextCheck(intervalMs));
 
   return () => {
-    if (timerId) clearTimeout(timerId);
+    if (timerId) {clearTimeout(timerId);}
   };
 }

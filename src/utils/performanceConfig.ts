@@ -126,7 +126,7 @@ export function applyGlobalOptimizations() {
   const origins = [publicSupabaseUrl, 'https://maps.googleapis.com', 'https://js.stripe.com'];
 
   origins.forEach(origin => {
-    if (!origin) return;
+    if (!origin) {return;}
     const link = document.createElement('link');
     link.rel = 'preconnect';
     link.href = origin;

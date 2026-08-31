@@ -141,17 +141,17 @@ export function MapWrapper({
 
   if (mode === 'static') {
     const route: WaselMapRoute[] = [];
-    if (pickupLocation) route.push({ ...pickupLocation, label: 'Pickup' });
-    if (driverLocation) route.push({ ...driverLocation, label: 'Driver' });
-    if (dropoffLocation) route.push({ ...dropoffLocation, label: 'Dropoff' });
+    if (pickupLocation) {route.push({ ...pickupLocation, label: 'Pickup' });}
+    if (driverLocation) {route.push({ ...driverLocation, label: 'Driver' });}
+    if (dropoffLocation) {route.push({ ...dropoffLocation, label: 'Dropoff' });}
     return <StaticMapPreview height={height} route={route.length >= 2 ? route : undefined} />;
   }
 
   // Build route from location props (live mode)
   const route: WaselMapRoute[] = [];
-  if (pickupLocation) route.push({ ...pickupLocation, label: 'Pickup' });
-  if (driverLocation) route.push({ ...driverLocation, label: 'Driver' });
-  if (dropoffLocation) route.push({ ...dropoffLocation, label: 'Dropoff' });
+  if (pickupLocation) {route.push({ ...pickupLocation, label: 'Pickup' });}
+  if (driverLocation) {route.push({ ...driverLocation, label: 'Driver' });}
+  if (dropoffLocation) {route.push({ ...dropoffLocation, label: 'Dropoff' });}
 
   // Convert generic markers to WaselMap markers
   const waselMarkers = markers.map(m => ({ lat: m.lat, lng: m.lng }));

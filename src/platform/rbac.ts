@@ -232,8 +232,8 @@ export function resolveAccessRole(role: string | undefined): AccessRole {
     'admin', 'finance', 'trust', 'support', 'operator', 'driver', 'user',
     'corporate', 'school', 'medical', 'package_agent', 'bus_operator', 'guest', 'service',
   ];
-  if (!role) return 'guest';
-  if ((VALID as string[]).includes(role)) return role as AccessRole;
+  if (!role) {return 'guest';}
+  if ((VALID as string[]).includes(role)) {return role as AccessRole;}
   return 'user';
 }
 

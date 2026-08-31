@@ -126,7 +126,7 @@ function resolveProxyBaseUrl(): string | null {
       (typeof import.meta !== 'undefined' &&
         (import.meta.env.VITE_EVENT_BROKER_PROXY_URL as string | undefined)) ||
       (typeof process !== 'undefined' && process.env.VITE_EVENT_BROKER_PROXY_URL);
-    if (direct && direct.trim()) return direct.trim().replace(/\/$/, '');
+    if (direct && direct.trim()) {return direct.trim().replace(/\/$/, '');}
 
     const supabaseUrl =
       (typeof import.meta !== 'undefined' &&
@@ -348,7 +348,7 @@ class OptimizedSupabaseEventBroker implements EventBroker {
   }
 
   async start(): Promise<void> {
-    if (this.stopped) return;
+    if (this.stopped) {return;}
 
     // Start with polling as baseline, then upgrade to Realtime
     this.startPolling();
@@ -375,7 +375,7 @@ class OptimizedSupabaseEventBroker implements EventBroker {
   // ── Realtime connection ───────────────────────────────────────────────────
 
   private async connectRealtime(): Promise<void> {
-    if (this.stopped) return;
+    if (this.stopped) {return;}
 
     try {
       const channelName = `outbox:${crypto.randomUUID().split('-')[0]}`;
@@ -422,8 +422,8 @@ class OptimizedSupabaseEventBroker implements EventBroker {
   // ── Adaptive polling ─────────────────────────────────────────────────────
 
   private startPolling(): void {
-    if (this.pollTimer) return;
-    if (typeof setInterval === 'undefined') return;
+    if (this.pollTimer) {return;}
+    if (typeof setInterval === 'undefined') {return;}
 
     this.pollTimer = setInterval(() => {
       void this.processPending();
@@ -454,7 +454,7 @@ class OptimizedSupabaseEventBroker implements EventBroker {
   // ── Event processing ─────────────────────────────────────────────────────
 
   private async processPending(): Promise<void> {
-    if (this.processing || this.stopped) return;
+    if (this.processing || this.stopped) {return;}
     this.processing = true;
 
     try {
@@ -507,7 +507,7 @@ class OptimizedSupabaseEventBroker implements EventBroker {
 
       // Process events
       for (const row of rows) {
-        if (this.stopped) break;
+        if (this.stopped) {break;}
 
         const attempts = Number((row as Record<string, unknown>).attempts ?? 0);
         const message: BrokerMessage = {
@@ -622,7 +622,7 @@ export const eventBroker: EventBroker = createBroker();
  */
 export function publishDomainEvent(event: DomainEventEnvelope): void {
   const topic = EVENT_TYPE_TO_TOPIC[event.type as DomainEventType];
-  if (!topic) return;
+  if (!topic) {return;}
   void eventBroker.publish({
     id: event.id,
     topic: topic as QueueTopic,

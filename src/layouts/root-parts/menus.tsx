@@ -27,9 +27,9 @@ export function NavDropdown({
   ar: boolean;
   isAuthenticated: boolean;
 }) {
-  if ('direct' in group && group.direct) return null;
+  if ('direct' in group && group.direct) {return null;}
   const items = getVisibleNavItems(group, isAuthenticated);
-  if (!items.length) return null;
+  if (!items.length) {return null;}
   const posStyle: React.CSSProperties =
     align === 'right'
       ? { right: 0 }
@@ -126,7 +126,7 @@ export function UserMenu({
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {setOpen(false);}
     };
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
@@ -358,11 +358,11 @@ export function MobileDrawer({
   const isAuthenticated = Boolean(user);
 
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open) {return undefined;}
     return lockBodyScroll();
   }, [open]);
 
-  if (!open) return null;
+  if (!open) {return null;}
 
   return (
     <div

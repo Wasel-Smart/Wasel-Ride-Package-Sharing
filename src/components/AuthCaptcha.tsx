@@ -24,7 +24,7 @@ const provider = (import.meta.env.VITE_AUTH_CAPTCHA_PROVIDER as string | undefin
 const rawSiteKey = (import.meta.env.VITE_AUTH_CAPTCHA_SITE_KEY as string | undefined)?.trim();
 
 function isPlaceholderSiteKey(value: string | undefined): boolean {
-  if (!value) return true;
+  if (!value) {return true;}
 
   const normalized = value.toLowerCase();
   return (
@@ -42,14 +42,14 @@ export const authCaptchaProvider: CaptchaProvider | null =
 export const isAuthCaptchaConfigured = Boolean(authCaptchaProvider && siteKey);
 
 function loadCaptchaScript(providerName: CaptchaProvider): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve();
+  if (typeof window === 'undefined') {return Promise.resolve();}
 
   const globalName = providerName === 'hcaptcha' ? 'hcaptcha' : 'turnstile';
-  if (window[globalName]) return Promise.resolve();
+  if (window[globalName]) {return Promise.resolve();}
 
   const scriptId = `wasel-${providerName}-captcha`;
   const existingScript = document.getElementById(scriptId) as HTMLScriptElement | null;
-  if (existingScript?.dataset.loaded === 'true') return Promise.resolve();
+  if (existingScript?.dataset.loaded === 'true') {return Promise.resolve();}
 
   return new Promise((resolve, reject) => {
     const script =
@@ -70,7 +70,7 @@ function loadCaptchaScript(providerName: CaptchaProvider): Promise<void> {
     });
     script.addEventListener('error', () => reject(new Error('CAPTCHA failed to load.')));
 
-    if (!existingScript) document.head.appendChild(script);
+    if (!existingScript) {document.head.appendChild(script);}
   });
 }
 
@@ -85,14 +85,14 @@ export function AuthCaptcha({ onTokenChange, resetSignal }: AuthCaptchaProps) {
   const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
-    if (!authCaptchaProvider || !siteKey || !containerRef.current) return;
+    if (!authCaptchaProvider || !siteKey || !containerRef.current) {return;}
 
     let cancelled = false;
     const container = containerRef.current;
 
     loadCaptchaScript(authCaptchaProvider)
       .then(() => {
-        if (cancelled || !containerRef.current) return;
+        if (cancelled || !containerRef.current) {return;}
 
         const callbacks = {
           sitekey: siteKey,
@@ -111,7 +111,7 @@ export function AuthCaptcha({ onTokenChange, resetSignal }: AuthCaptchaProps) {
         }
       })
       .catch(error => {
-        if (!cancelled) setLoadError(error instanceof Error ? error.message : 'CAPTCHA failed.');
+        if (!cancelled) {setLoadError(error instanceof Error ? error.message : 'CAPTCHA failed.');}
       });
 
     return () => {
@@ -130,12 +130,12 @@ export function AuthCaptcha({ onTokenChange, resetSignal }: AuthCaptchaProps) {
 
   useEffect(() => {
     const widgetId = widgetIdRef.current ?? undefined;
-    if (authCaptchaProvider === 'hcaptcha') window.hcaptcha?.reset(widgetId);
-    if (authCaptchaProvider === 'turnstile') window.turnstile?.reset(widgetId);
+    if (authCaptchaProvider === 'hcaptcha') {window.hcaptcha?.reset(widgetId);}
+    if (authCaptchaProvider === 'turnstile') {window.turnstile?.reset(widgetId);}
     onTokenChange(null);
   }, [onTokenChange, resetSignal]);
 
-  if (!isAuthCaptchaConfigured) return null;
+  if (!isAuthCaptchaConfigured) {return null;}
 
   return (
     <div

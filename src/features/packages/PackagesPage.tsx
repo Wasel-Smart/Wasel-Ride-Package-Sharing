@@ -62,7 +62,7 @@ function routeLabel(from: string, to: string, ar: boolean): string {
 }
 
 function corridorLabel(label: string, ar: boolean): string {
-  if (!ar) return label;
+  if (!ar) {return label;}
   return label
     .replace(/Amman/g, 'عمّان')
     .replace(/Aqaba/g, 'العقبة')
@@ -137,7 +137,7 @@ export function PackagesPage() {
   };
 
   const focusTrackingItem = (item: PackageRequest, activateTrack = false) => {
-    if (activateTrack) setActiveTab('track');
+    if (activateTrack) {setActiveTab('track');}
     setTrackId(item.trackingId);
     setTrackedPackage(item);
     setTrackingMessage(ar ? `التتبع جاهز: ${item.trackingId}.` : `Tracking ready: ${item.trackingId}.`);
@@ -275,13 +275,13 @@ export function PackagesPage() {
   const handleVerificationAction = async (
     action: 'share_code' | 'confirm_pickup' | 'confirm_delivery',
   ) => {
-    if (!trackedPackage) return;
+    if (!trackedPackage) {return;}
 
     setBusyState('tracking');
 
     try {
       const updated = await updatePackageVerification(trackedPackage.trackingId, action);
-      if (!updated) return;
+      if (!updated) {return;}
 
       setTrackedPackage(updated);
       setTrackId(updated.trackingId);
@@ -301,7 +301,7 @@ export function PackagesPage() {
   };
 
   const handleOpenSupport = () => {
-    if (!trackedPackage) return;
+    if (!trackedPackage) {return;}
 
     void (async () => {
       const ticket = await createSupportTicket(user?.id, {

@@ -12,14 +12,14 @@ function percent(value: number): string {
 }
 
 function directionIcon(direction: PriceDirection) {
-  if (direction === 'up') return <ArrowUpRight size={14} />;
-  if (direction === 'down') return <ArrowDownRight size={14} />;
+  if (direction === 'up') {return <ArrowUpRight size={14} />;}
+  if (direction === 'down') {return <ArrowDownRight size={14} />;}
   return <MoveRight size={14} />;
 }
 
 function directionColor(direction: PriceDirection): string {
-  if (direction === 'up') return C.gold;
-  if (direction === 'down') return C.green;
+  if (direction === 'up') {return C.gold;}
+  if (direction === 'down') {return C.green;}
   return C.textMuted;
 }
 

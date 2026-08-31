@@ -27,7 +27,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {setOpen(false);}
     };
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
@@ -191,7 +191,7 @@ export function LangToggle() {
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {setOpen(false);}
     };
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);

@@ -25,14 +25,14 @@ function lookup(key: string, lang: Language): string | undefined {
   for (const k of keys) {
     nested = typeof nested === 'object' && nested !== null ? nested[k] : undefined;
   }
-  if (typeof nested === 'string') return nested;
+  if (typeof nested === 'string') {return nested;}
 
   if (keys.length > 1) {
     const flatTable = translations[lang];
     const tail = keys[keys.length - 1]!;
     const flatValue =
       typeof flatTable === 'object' && flatTable !== null ? flatTable[tail] : undefined;
-    if (typeof flatValue === 'string') return flatValue;
+    if (typeof flatValue === 'string') {return flatValue;}
   }
 
   return undefined;
@@ -40,7 +40,7 @@ function lookup(key: string, lang: Language): string | undefined {
 
 export function tx(key: string, params?: Record<string, string | number>): string {
   const direct = lookup(key, currentLang);
-  if (direct !== undefined) return interpolate(direct, params);
+  if (direct !== undefined) {return interpolate(direct, params);}
 
   const fallbackLang: Language = currentLang === 'en' ? 'ar' : 'en';
   const fallback = lookup(key, fallbackLang);
@@ -48,7 +48,7 @@ export function tx(key: string, params?: Record<string, string | number>): strin
 }
 
 function interpolate(template: string, params?: Record<string, string | number>): string {
-  if (typeof template !== 'string' || !params) return template;
+  if (typeof template !== 'string' || !params) {return template;}
   return template.replace(/\{\{(\w+)\}\}/g, (_match, name: string) =>
     params[name] !== undefined ? String(params[name]) : `{{${name}}}`,
   );

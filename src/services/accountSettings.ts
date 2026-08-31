@@ -47,11 +47,11 @@ function readStoredAccountSettings(
   userId: string | null | undefined,
   fallback: AccountSettings,
 ): AccountSettings {
-  if (typeof window === 'undefined') return fallback;
+  if (typeof window === 'undefined') {return fallback;}
 
   try {
     const raw = window.localStorage.getItem(storageKeyFor(userId));
-    if (!raw) return fallback;
+    if (!raw) {return fallback;}
     return normalizeAccountSettings(JSON.parse(raw) as Partial<AccountSettings>, fallback);
   } catch {
     return fallback;
@@ -59,7 +59,7 @@ function readStoredAccountSettings(
 }
 
 function writeStoredAccountSettings(userId: string | null | undefined, settings: AccountSettings) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   window.localStorage.setItem(storageKeyFor(userId), JSON.stringify(settings));
 }
 

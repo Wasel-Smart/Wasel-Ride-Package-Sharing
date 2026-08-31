@@ -5,6 +5,13 @@
  * All templates use the Wasel design system tokens.
  */
 
+function getBaseUrl(): string {
+  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_APP_URL) {
+    return import.meta.env.VITE_APP_URL.replace(/\/$/, '');
+  }
+  return 'https://wasel14.online';
+}
+
 export const EMAIL_TOKENS = {
   colors: {
     ink: '#081D39',
@@ -139,7 +146,7 @@ export function wrapEmailTemplate(content: string, options: { title?: string; ct
           <!-- Header -->
           <tr>
             <td style="padding: 24px; text-align: center; background-color: #0D1B2A; border-radius: 16px 16px 0 0; border-bottom: 1px solid rgba(0,229,255,0.1);">
-              <img src="https://wasel14.online/brand/assets/logos/primary/logo-light-160.png" alt="Wasel" width="120" height="38" style="display: block; margin: 0 auto;">
+              <img src="${getBaseUrl()}/brand/assets/logos/primary/logo-light-160.png" alt="Wasel" width="120" height="38" style="display: block; margin: 0 auto;">
             </td>
           </tr>
           <!-- Content -->
@@ -162,11 +169,11 @@ export function wrapEmailTemplate(content: string, options: { title?: string; ct
             <td style="padding: 24px; text-align: center; color: #95B2C9; font-size: 12px;">
               <p style="margin: 0 0 8px 0;">© 2026 Wasel (واصل). All rights reserved.</p>
               <p style="margin: 0;">
-                <a href="https://wasel14.online/privacy" style="color: #00E5FF; text-decoration: none;">Privacy</a>
+                 <a href="${getBaseUrl()}/privacy" style="color: #00E5FF; text-decoration: none;">Privacy</a>
                 &nbsp;·&nbsp;
-                <a href="https://wasel14.online/terms" style="color: #00E5FF; text-decoration: none;">Terms</a>
+                 <a href="${getBaseUrl()}/terms" style="color: #00E5FF; text-decoration: none;">Terms</a>
                 &nbsp;·&nbsp;
-                <a href="https://wasel14.online/support" style="color: #00E5FF; text-decoration: none;">Support</a>
+                 <a href="${getBaseUrl()}/support" style="color: #00E5FF; text-decoration: none;">Support</a>
               </p>
             </td>
           </tr>
@@ -198,7 +205,7 @@ export const templates = {
     return wrapEmailTemplate(content, {
       title: 'Ride Confirmed',
       ctaText: 'Track Ride',
-      ctaUrl: `https://wasel14.online/app/track/${data.rideId}`,
+      ctaUrl: `${getBaseUrl()}/app/track/${data.rideId}`,
     });
   },
 
@@ -219,7 +226,7 @@ export const templates = {
     return wrapEmailTemplate(content, {
       title: 'Package Delivered',
       ctaText: 'View Details',
-      ctaUrl: `https://wasel14.online/app/packages/${data.packageId}`,
+      ctaUrl: `${getBaseUrl()}/app/packages/${data.packageId}`,
     });
   },
 
@@ -242,7 +249,7 @@ export const templates = {
     return wrapEmailTemplate(content, {
       title: 'Payment Receipt',
       ctaText: 'View Wallet',
-      ctaUrl: 'https://wasel14.online/app/wallet',
+      ctaUrl: `${getBaseUrl()}/app/wallet`,
     });
   },
 
@@ -283,7 +290,7 @@ export const templates = {
     return wrapEmailTemplate(content, {
       title: 'Welcome to Wasel',
       ctaText: 'Get Started',
-      ctaUrl: 'https://wasel14.online/app',
+      ctaUrl: `${getBaseUrl()}/app`,
     });
   },
 
@@ -297,7 +304,7 @@ export const templates = {
     return wrapEmailTemplate(content, {
       title: 'Verification Required',
       ctaText: 'Verify Now',
-      ctaUrl: 'https://wasel14.online/app/trust',
+      ctaUrl: `${getBaseUrl()}/app/trust`,
     });
   },
 };

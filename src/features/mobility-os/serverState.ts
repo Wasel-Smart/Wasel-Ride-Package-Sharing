@@ -54,15 +54,15 @@ export function useMobilityOSServerState() {
     try {
       const next = await fetchMobilityServerSnapshot();
 
-      if (!activeRef.current) return;
+      if (!activeRef.current) {return;}
       setSnapshot(next);
       setSource('server');
     } catch {
-      if (!activeRef.current) return;
+      if (!activeRef.current) {return;}
       setSnapshot(mobilityOSRuntime.getSnapshot());
       setSource('fallback');
     } finally {
-      if (activeRef.current) setLoading(false);
+      if (activeRef.current) {setLoading(false);}
     }
   }, []);
 
@@ -76,7 +76,7 @@ export function useMobilityOSServerState() {
       void loadSnapshot();
     });
     const unsubscribeFallback = mobilityOSRuntime.subscribe(() => {
-      if (!activeRef.current) return;
+      if (!activeRef.current) {return;}
       setSnapshot(mobilityOSRuntime.getSnapshot());
     });
 

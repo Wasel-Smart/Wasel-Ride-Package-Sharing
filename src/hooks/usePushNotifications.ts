@@ -55,20 +55,18 @@ export function usePushNotifications() {
 
   // Keep permission state in sync with actual browser value
   useEffect(() => {
-    if (!isSupported) return;
+    if (!isSupported) {return;}
     setPermission(NotificationApi.permission as NotifPermission);
   }, [isSupported, NotificationApi]);
 
   // Cleanup on unmount
-  useEffect(() => {
-    return () => {
+  useEffect(() => () => {
       activeNotif.current?.close();
-    };
-  }, []);
+    }, []);
 
   /** Ask the user for notification permission. */
   const requestPermission = useCallback(async (): Promise<NotifPermission> => {
-    if (!isSupported) return 'denied';
+    if (!isSupported) {return 'denied';}
 
     const result = await NotificationApi.requestPermission();
     const perm = result as NotifPermission;
@@ -95,7 +93,7 @@ export function usePushNotifications() {
   /** Low-level — fire a native browser notification. */
   const notify = useCallback(
     (options: NotifyOptions): Notification | null => {
-      if (!isSupported || permission !== 'granted') return null;
+      if (!isSupported || permission !== 'granted') {return null;}
 
       // Close any existing notification with the same tag to prevent stacking
       if (options.tag && activeNotif.current?.tag === options.tag) {

@@ -150,8 +150,8 @@ export function getPriceDirection(
   current: number,
   previous: number | null | undefined,
 ): PriceDirection {
-  if (previous === null || previous === undefined || Number.isNaN(previous)) return 'flat';
-  if (current > previous) return 'up';
-  if (current < previous) return 'down';
+  if (previous === null || previous === undefined || Number.isNaN(previous)) {return 'flat';}
+  if (current > previous) {return 'up';}
+  if (current < previous) {return 'down';}
   return 'flat';
 }

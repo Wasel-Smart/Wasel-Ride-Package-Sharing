@@ -20,7 +20,7 @@ export default function DriverPage() {
   const membership = useMemo(() => getMovementMembershipSnapshot(), []);
   const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(1, 4), []);
 
-  if (!user) return <ProtectedPagePreview pathname="/app/driver" />;
+  if (!user) {return <ProtectedPagePreview pathname="/app/driver" />;}
 
   const readiness = getDriverReadinessSummary(user);
   const completedSteps = readiness.steps.filter(step => step.complete).length;

@@ -280,7 +280,7 @@ export function SupportPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formEmail || !formTopic || !formMessage) return;
+    if (!formEmail || !formTopic || !formMessage) {return;}
     setSubmitted(true);
   };
 

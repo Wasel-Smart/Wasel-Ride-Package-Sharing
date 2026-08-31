@@ -7,12 +7,12 @@ let activeLocks = 0;
 let snapshot: BodyLockSnapshot | null = null;
 
 function getScrollbarWidth() {
-  if (typeof window === 'undefined') return 0;
+  if (typeof window === 'undefined') {return 0;}
   return Math.max(0, window.innerWidth - document.documentElement.clientWidth);
 }
 
 function isPwaStandalone(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true
@@ -50,7 +50,7 @@ export function lockBodyScroll() {
 
   let released = false;
   return () => {
-    if (released) return;
+    if (released) {return;}
     released = true;
     releaseOneLock();
   };
@@ -58,7 +58,7 @@ export function lockBodyScroll() {
 
 function releaseOneLock() {
   activeLocks = Math.max(0, activeLocks - 1);
-  if (activeLocks > 0 || !snapshot) return;
+  if (activeLocks > 0 || !snapshot) {return;}
   const target = getScrollTarget();
   target.style.overflow = snapshot.overflow;
   target.style.paddingRight = snapshot.paddingRight;
@@ -70,7 +70,7 @@ function releaseOneLock() {
  * when a modal/sheet unmounts without calling its release function.
  */
 export function resetBodyScrollLock() {
-  if (activeLocks === 0) return;
+  if (activeLocks === 0) {return;}
   activeLocks = 1;
   releaseOneLock();
 }

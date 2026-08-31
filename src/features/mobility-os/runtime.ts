@@ -167,7 +167,7 @@ export class CorridorService {
 
   private handleBookingCreated = (event: MobilityEventEnvelope<'BookingCreated'>): void => {
     const corridor = this.corridors.get(event.payload.corridor_id);
-    if (!corridor) return;
+    if (!corridor) {return;}
 
     if (event.payload.type === 'seat') {
       corridor.seats_booked = Math.min(
@@ -213,7 +213,7 @@ export class CorridorService {
     traceId: string,
   ): void {
     const corridor = this.corridors.get(corridorId);
-    if (!corridor) return;
+    if (!corridor) {return;}
 
     const previousDemandIndex = corridor.demand_index;
     corridor.demand_index = roundTo(nextDemandIndex, 4);
@@ -240,7 +240,7 @@ export class CorridorService {
 
   appendPricePoint(corridorId: string, seatPrice: number): Corridor | null {
     const corridor = this.corridors.get(corridorId);
-    if (!corridor) return null;
+    if (!corridor) {return null;}
 
     corridor.price_history = trimHistory([...corridor.price_history, roundTo(seatPrice, 2)]);
     corridor.updated_at = nowIso();
@@ -266,7 +266,7 @@ export class DemandEngine {
 
   private handleCapacityUpdated = (event: MobilityEventEnvelope<'CapacityUpdated'>): void => {
     const corridor = this.corridorService.getById(event.payload.corridor_id);
-    if (!corridor) return;
+    if (!corridor) {return;}
 
     const capacityBase =
       event.payload.type === 'seat'
@@ -307,7 +307,7 @@ export class PriceCoordinator {
         event.payload.corridor,
       ),
     );
-    if (!updatedCorridor) return;
+    if (!updatedCorridor) {return;}
 
     const projection = this.pricingEngine.project(updatedCorridor);
 
@@ -477,19 +477,19 @@ export class MobilityOSRuntime {
   }
 
   start(): void {
-    if (typeof window === 'undefined' || this.generator) return;
+    if (typeof window === 'undefined' || this.generator) {return;}
 
     this.generator = window.setInterval(() => {
       const corridors = this.corridorService
         .buildProjections()
         .filter(corridor => corridor.seats_available > 0 || corridor.cargo_available_kg > 0);
-      if (corridors.length === 0) return;
+      if (corridors.length === 0) {return;}
 
       const randomValues = new Uint8Array(4);
       crypto.getRandomValues(randomValues);
       const targetIndex = Math.floor(((randomValues[0] ?? 0) / 255) * corridors.length);
       const target = corridors[targetIndex];
-      if (!target) return;
+      if (!target) {return;}
       const cargoFlow = (randomValues[1] ?? 0) > 153;
       const type: BookingType = cargoFlow ? 'cargo' : 'seat';
       const quantity =
@@ -497,7 +497,7 @@ export class MobilityOSRuntime {
           ? Math.min(target.seats_available, (randomValues[2] ?? 0) > 191 ? 2 : 1)
           : Math.min(target.cargo_available_kg, (randomValues[3] ?? 0) > 191 ? 20 : 10);
 
-      if (quantity <= 0) return;
+      if (quantity <= 0) {return;}
 
       try {
         this.createBooking({
@@ -513,7 +513,7 @@ export class MobilityOSRuntime {
   }
 
   stop(): void {
-    if (!this.generator) return;
+    if (!this.generator) {return;}
     clearInterval(this.generator);
     this.generator = null;
   }

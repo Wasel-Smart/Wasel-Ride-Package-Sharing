@@ -388,13 +388,13 @@ export function optimizeMultiStopRoute(
  * High utilization = good for driver and platform.
  */
 export function scoreSeatUtilization(bookedSeats: number, totalSeats: number): number {
-  if (totalSeats === 0) return 0;
+  if (totalSeats === 0) {return 0;}
   const rate = bookedSeats / totalSeats;
   // Reward high utilization non-linearly
-  if (rate >= 1.0) return 100;
-  if (rate >= 0.75) return 90;
-  if (rate >= 0.5) return 70;
-  if (rate >= 0.25) return 45;
+  if (rate >= 1.0) {return 100;}
+  if (rate >= 0.75) {return 90;}
+  if (rate >= 0.5) {return 70;}
+  if (rate >= 0.25) {return 45;}
   return Math.round(rate * 100);
 }
 
@@ -565,7 +565,7 @@ export function scoreTripMatch(trip: TripSummary, request: PassengerRequest): nu
 }
 
 export function calculateDetourTolerance(routeDistanceKm: number): number {
-  if (routeDistanceKm <= 0) return 0;
+  if (routeDistanceKm <= 0) {return 0;}
   return Math.round(Math.max(10, routeDistanceKm * 0.12));
 }
 
@@ -579,18 +579,18 @@ function scoreRouteMatch(trip: TripSummary, req: PassengerRequest): number {
   const originMatch = trip.originCity.toLowerCase() === req.originCity.toLowerCase();
   const destMatch = trip.destinationCity.toLowerCase() === req.destinationCity.toLowerCase();
 
-  if (originMatch && destMatch) return 100;
+  if (originMatch && destMatch) {return 100;}
   // Check waypoints
   if (trip.waypoints?.some(w => w.toLowerCase() === req.destinationCity.toLowerCase())) {
     return 75; // Destination is a waypoint
   }
-  if (originMatch || destMatch) return 40;
+  if (originMatch || destMatch) {return 40;}
   return 0;
 }
 
 function scorePriceMatch(tripPriceJOD: number, maxPriceJOD?: number): number {
-  if (!maxPriceJOD) return 80; // No budget constraint = mostly ok
-  if (tripPriceJOD <= maxPriceJOD) return 100;
+  if (!maxPriceJOD) {return 80;} // No budget constraint = mostly ok
+  if (tripPriceJOD <= maxPriceJOD) {return 100;}
   const overshoot = (tripPriceJOD - maxPriceJOD) / maxPriceJOD;
   return Math.max(0, Math.round(100 - overshoot * 200));
 }
@@ -599,27 +599,27 @@ function scoreGenderCompatibility(
   tripPref: TripSummary['genderPreference'],
   reqPref: PassengerRequest['genderPreference'],
 ): number {
-  if (tripPref === 'mixed') return 100; // Driver accepts all
-  if (tripPref === reqPref) return 100; // Exact match
-  if (tripPref === 'women_only' && reqPref !== 'women_only') return 0;
-  if (tripPref === 'men_only' && reqPref !== 'men_only') return 0;
-  if (tripPref === 'family_only' && reqPref !== 'family_only') return 0;
+  if (tripPref === 'mixed') {return 100;} // Driver accepts all
+  if (tripPref === reqPref) {return 100;} // Exact match
+  if (tripPref === 'women_only' && reqPref !== 'women_only') {return 0;}
+  if (tripPref === 'men_only' && reqPref !== 'men_only') {return 0;}
+  if (tripPref === 'family_only' && reqPref !== 'family_only') {return 0;}
   return 50;
 }
 
 function scorePackageCarriage(trip: TripSummary, req: PassengerRequest): number {
-  if (!req.requiresPackageCarriage) return 100;
-  if (!trip.allowsPackages) return 0;
-  if (req.packageWeightKg && req.packageWeightKg > trip.maxPackageWeightKg) return 20;
+  if (!req.requiresPackageCarriage) {return 100;}
+  if (!trip.allowsPackages) {return 0;}
+  if (req.packageWeightKg && req.packageWeightKg > trip.maxPackageWeightKg) {return 20;}
   return 100;
 }
 
 function scoreTimeMatch(tripDepartureISO: string, reqDate: string): number {
   const tripDate = tripDepartureISO.substring(0, 10);
-  if (tripDate === reqDate) return 100;
+  if (tripDate === reqDate) {return 100;}
   // Allow 1 day flexibility
   const diff = Math.abs(new Date(tripDate).getTime() - new Date(reqDate).getTime()) / 86_400_000;
-  if (diff <= 1) return 60;
+  if (diff <= 1) {return 60;}
   return 0;
 }
 
@@ -629,7 +629,7 @@ function estimateDetourKm(trip: TripSummary, req: PassengerRequest): number {
     trip.originCity.toLowerCase() === req.originCity.toLowerCase() &&
     trip.destinationCity.toLowerCase() === req.destinationCity.toLowerCase()
   )
-    return 0;
+    {return 0;}
   // Rough estimate for partial matches
   return 25;
 }
@@ -642,7 +642,7 @@ function calcOrderedDistance(
   for (let i = 0; i < stops.length - 1; i++) {
     const currentStop = stops[i];
     const nextStop = stops[i + 1];
-    if (!currentStop || !nextStop) continue;
+    if (!currentStop || !nextStop) {continue;}
     total += matrix[currentStop]?.[nextStop] ?? 0;
   }
   return total;

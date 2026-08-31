@@ -62,7 +62,7 @@ export function useRideInventory({
 
     searchDirectTrips(from || undefined, to || undefined, date || undefined)
       .then(results => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {return;}
         const dbRides = results.map(buildRideFromTripSearchResult);
         // Merge: db rides take precedence over static seed data.
         // Local (user-posted) rides are always included.
@@ -70,13 +70,13 @@ export function useRideInventory({
         setRides(merged);
       })
       .catch(err => {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {return;}
         console.warn('[useRideInventory] DB fetch failed, using local+static:', sanitizeLogMessage(err));
         setError(null); // Non-fatal — fall back silently.
         setRides([...localRides, ...ALL_RIDES]);
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) {setLoading(false);}
       });
 
     return () => {
@@ -91,7 +91,7 @@ export function useRideInventory({
 function deduplicateRides(rides: Ride[]): Ride[] {
   const seen = new Set<string>();
   return rides.filter(ride => {
-    if (!ride.id || seen.has(ride.id)) return false;
+    if (!ride.id || seen.has(ride.id)) {return false;}
     seen.add(ride.id);
     return true;
   });

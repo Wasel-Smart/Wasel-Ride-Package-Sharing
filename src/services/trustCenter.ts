@@ -12,7 +12,7 @@ import {
 import { buildFallbackTrustCenterStatus, type TrustCenterStatus } from './trustCenterModel';
 
 function toErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
+  if (error instanceof Error) {return error.message;}
   return 'Trust Center request failed.';
 }
 
@@ -49,7 +49,7 @@ export interface DriverDocumentsPayload {
 
 export async function getTrustCenterStatus(user?: WaselUser | null): Promise<TrustCenterStatus> {
   if (!supabase) {
-    if (user) return buildFallbackTrustCenterStatus(user);
+    if (user) {return buildFallbackTrustCenterStatus(user);}
     throw new Error('Supabase client is not initialised');
   }
 
@@ -57,7 +57,7 @@ export async function getTrustCenterStatus(user?: WaselUser | null): Promise<Tru
     data: { session },
   } = await supabase.auth.getSession();
   if (!session) {
-    if (user) return buildFallbackTrustCenterStatus(user);
+    if (user) {return buildFallbackTrustCenterStatus(user);}
     throw new Error('Not authenticated');
   }
 

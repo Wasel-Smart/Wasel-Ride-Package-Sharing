@@ -22,10 +22,10 @@ const PLACEHOLDER_EDGE_FUNCTION_MARKERS = [
 ];
 
 function isPlaceholderEdgeFunctionName(value: string | undefined): boolean {
-  if (!value) return true;
+  if (!value) {return true;}
   const normalized = value.trim().toLowerCase();
-  if (!normalized) return true;
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(normalized)) return true;
+  if (!normalized) {return true;}
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(normalized)) {return true;}
   return PLACEHOLDER_EDGE_FUNCTION_MARKERS.some(marker => normalized.includes(marker));
 }
 

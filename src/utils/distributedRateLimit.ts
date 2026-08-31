@@ -30,9 +30,9 @@ export async function checkDbRateLimit(
 ): Promise<RateLimitResult> {
   if (!supabase) {
     if (import.meta.env.DEV)
-      console.warn(
+      {console.warn(
         `[rateLimit] Supabase is unavailable for ${sanitizeLogMessage(operation)}; denying request`,
-      );
+      );}
     return denied(windowMinutes);
   }
 
@@ -45,10 +45,10 @@ export async function checkDbRateLimit(
     });
     if (error) {
       if (import.meta.env.DEV)
-        console.error(
+        {console.error(
           `[rateLimit] DB check failed for ${sanitizeLogMessage(operation)}; denying request:`,
           sanitizeLogMessage(error.message),
-        );
+        );}
       return denied(windowMinutes);
     }
     return {
@@ -58,10 +58,10 @@ export async function checkDbRateLimit(
     };
   } catch (error) {
     if (import.meta.env.DEV)
-      console.error(
+      {console.error(
         `[rateLimit] Unexpected failure for ${sanitizeLogMessage(operation)}; denying request:`,
         error,
-      );
+      );}
     return denied(windowMinutes);
   }
 }

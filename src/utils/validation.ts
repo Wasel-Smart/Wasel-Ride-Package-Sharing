@@ -31,7 +31,7 @@ const phoneField = z
   .string()
   .refine(
     (value) => {
-      if (!value) return true;
+      if (!value) {return true;}
       try {
         const normalized = normalizePhone(value);
         return isValidE164Phone(normalized);

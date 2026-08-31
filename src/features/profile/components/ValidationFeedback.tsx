@@ -8,7 +8,7 @@ interface ValidationFeedbackProps {
 }
 
 export function ValidationFeedback({ error, success, warning, ar }: ValidationFeedbackProps) {
-  if (!error && !success && !warning) return null;
+  if (!error && !success && !warning) {return null;}
 
   const type = error ? 'error' : success ? 'success' : 'warning';
   const message = error || success || warning;

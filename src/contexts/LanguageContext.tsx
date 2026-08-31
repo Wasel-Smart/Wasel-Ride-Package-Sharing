@@ -76,7 +76,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
       for (const k of keys) {
         value = typeof value === 'object' ? value[k] : undefined;
       }
-      if (typeof value === 'string') return interpolate(value, params);
+      if (typeof value === 'string') {return interpolate(value, params);}
 
       const fallbackLang = language === 'en' ? 'ar' : 'en';
       let fallback: TranslationNode | undefined = translations[fallbackLang];
@@ -106,7 +106,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
 }
 
 function interpolate(template: string, params?: Record<string, string | number>): string {
-  if (typeof template !== 'string' || !params) return template;
+  if (typeof template !== 'string' || !params) {return template;}
   return template.replace(/\{(\w+)\}/g, (_match, name: string) =>
     params[name] !== undefined ? String(params[name]) : `{${name}}`,
   );

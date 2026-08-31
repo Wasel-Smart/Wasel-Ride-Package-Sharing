@@ -25,22 +25,22 @@ interface PopularRoutesProps {
 }
 
 function formatDuration(minutes: number, isRTL = false) {
-  if (minutes < 60) return isRTL ? `${minutes} د` : `${minutes}m`;
+  if (minutes < 60) {return isRTL ? `${minutes} د` : `${minutes}m`;}
   const hours = Math.floor(minutes / 60);
   const remainder = minutes % 60;
-  if (isRTL) return remainder ? `${hours} س ${remainder} د` : `${hours} س`;
+  if (isRTL) {return remainder ? `${hours} س ${remainder} د` : `${hours} س`;}
   return remainder ? `${hours}h ${remainder}m` : `${hours}h`;
 }
 
 function demandLabel(route: JordanRoute, isRTL: boolean) {
-  if (route.popularity === 'high') return isRTL ? 'طلب مرتفع' : 'High demand';
-  if (route.popularity === 'medium') return isRTL ? 'طلب متوازن' : 'Balanced demand';
+  if (route.popularity === 'high') {return isRTL ? 'طلب مرتفع' : 'High demand';}
+  if (route.popularity === 'medium') {return isRTL ? 'طلب متوازن' : 'Balanced demand';}
   return isRTL ? 'طلب ناشئ' : 'Emerging demand';
 }
 
 function categoryLabel(route: JordanRoute, isRTL: boolean) {
-  if (route.category === 'intercity') return isRTL ? 'بين المدن' : 'Intercity';
-  if (route.category === 'regional') return isRTL ? 'إقليمي' : 'Regional';
+  if (route.category === 'intercity') {return isRTL ? 'بين المدن' : 'Intercity';}
+  if (route.category === 'regional') {return isRTL ? 'إقليمي' : 'Regional';}
   return isRTL ? 'محلي' : 'Local';
 }
 

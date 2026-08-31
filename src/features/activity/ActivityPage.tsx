@@ -69,9 +69,9 @@ function groupByDate(items: TimelineItem[]): { label: string; items: TimelineIte
     earlier: [],
   };
   for (const item of items) {
-    if (item.date === todayStr) groups.today.push(item);
-    else if (item.date >= weekAgoStr) groups.week.push(item);
-    else groups.earlier.push(item);
+    if (item.date === todayStr) {groups.today.push(item);}
+    else if (item.date >= weekAgoStr) {groups.week.push(item);}
+    else {groups.earlier.push(item);}
   }
 
   return [
@@ -96,13 +96,13 @@ export function ActivityPage() {
   useEffect(() => {
     let cancelled = false;
     async function loadScheduled() {
-      if (!supabase || !user?.id) return;
+      if (!supabase || !user?.id) {return;}
       const { data } = await supabase
         .from('scheduled_pickups')
         .select('id,item_type,status,pickup_location,dropoff_location,scheduled_at,estimated_price')
         .eq('user_id', user.id)
         .order('scheduled_at', { ascending: false });
-      if (!cancelled && data) setScheduledItems(data as ScheduledPickupRow[]);
+      if (!cancelled && data) {setScheduledItems(data as ScheduledPickupRow[]);}
     }
     void loadScheduled();
     return () => {
@@ -204,7 +204,7 @@ export function ActivityPage() {
 
   const countByKind = useMemo(() => {
     const counts: Record<string, number> = { ride: 0, package: 0, bus: 0, scheduled: 0 };
-    for (const item of items) counts[item.kind] = (counts[item.kind] ?? 0) + 1;
+    for (const item of items) {counts[item.kind] = (counts[item.kind] ?? 0) + 1;}
     return counts;
   }, [items]);
 

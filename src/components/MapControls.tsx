@@ -128,8 +128,8 @@ export function MapControls({
 }) {
   const mapTypeLabel = (type: MapType) => {
     const ar = getCurrentLang() === 'ar';
-    if (type === 'roadmap') return ar ? 'خريطة الطرق' : 'Road map';
-    if (type === 'satellite') return ar ? 'قمر صناعي' : 'Satellite';
+    if (type === 'roadmap') {return ar ? 'خريطة الطرق' : 'Road map';}
+    if (type === 'satellite') {return ar ? 'قمر صناعي' : 'Satellite';}
     return ar ? 'تضاريس' : 'Terrain';
   };
 

@@ -146,19 +146,19 @@ export function normalizeBusRoute(raw: Record<string, unknown>, index: number): 
 }
 
 function matchOfficialRoute(route: BusRoute, query: BusRouteQuery): boolean {
-  if (query.from && route.from !== query.from) return false;
-  if (query.to && route.to !== query.to) return false;
-  if (query.seats && route.seats < query.seats) return false;
+  if (query.from && route.from !== query.from) {return false;}
+  if (query.to && route.to !== query.to) {return false;}
+  if (query.seats && route.seats < query.seats) {return false;}
   return true;
 }
 
 export function getOfficialBusRoutes(query: BusRouteQuery = {}): BusRoute[] {
   const exact = OFFICIAL_JORDAN_BUS_ROUTES.filter(route => matchOfficialRoute(route, query));
-  if (exact.length > 0) return exact;
+  if (exact.length > 0) {return exact;}
 
   if (query.from || query.to) {
     const close = OFFICIAL_JORDAN_BUS_ROUTES.filter(route => {
-      if (query.seats && route.seats < query.seats) return false;
+      if (query.seats && route.seats < query.seats) {return false;}
       return (
         route.from === query.from ||
         route.to === query.to ||
@@ -166,7 +166,7 @@ export function getOfficialBusRoutes(query: BusRouteQuery = {}): BusRoute[] {
         route.from === query.to
       );
     });
-    if (close.length > 0) return close;
+    if (close.length > 0) {return close;}
   }
 
   return OFFICIAL_JORDAN_BUS_ROUTES.filter(route => !query.seats || route.seats >= query.seats);
@@ -268,7 +268,7 @@ function createLocalBusBooking(payload: BusBookingPayload): BusBookingResult {
 }
 
 export function getStoredBusBookings(): StoredBusBooking[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem('wasel-bus-bookings');
     const parsed = raw ? JSON.parse(raw) : [];

@@ -19,7 +19,7 @@ import { useLanguage } from './contexts/LanguageContext';
 import WaselRoot from './layouts/WaselRoot';
 import ProtectedOutlet from './router/ProtectedOutlet';
 
-const PageLoader = memo(function PageLoader() {
+const PageLoader = memo(() => {
   const { language } = useLanguage();
   const ar = language === 'ar';
 
@@ -59,11 +59,9 @@ function lazy(
 }
 
 // ── Utility redirects ─────────────────────────────────────────────────────────
-const RedirectTo = memo(function RedirectTo({ to }: { to: string }) {
-  return <Navigate to={to} replace />;
-});
+const RedirectTo = memo(({ to }: { to: string }) => <Navigate to={to} replace />);
 
-const NotFound = memo(function NotFound() {
+const NotFound = memo(() => {
   const { language } = useLanguage();
   const ar = language === 'ar';
 
@@ -87,7 +85,7 @@ const NotFound = memo(function NotFound() {
   );
 });
 
-const RouteErrorFallback = memo(function RouteErrorFallback() {
+const RouteErrorFallback = memo(() => {
   const { language } = useLanguage();
   const ar = language === 'ar';
   const error = useRouteError();

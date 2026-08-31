@@ -189,7 +189,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
 
   useEffect(() => {
     const handleMouseDown = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(event.target as Node)) {setOpen(false);}
     };
     document.addEventListener('mousedown', handleMouseDown);
     return () => document.removeEventListener('mousedown', handleMouseDown);

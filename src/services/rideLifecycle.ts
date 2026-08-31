@@ -63,7 +63,7 @@ const BOOKING_CACHE_KEY = 'wasel-ride-booking-cache-v2';
 const CACHE_MAX = 100;
 
 function readCache(): RideBookingRecord[] {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     const raw = window.localStorage.getItem(BOOKING_CACHE_KEY);
     const parsed = raw ? (JSON.parse(raw) as RideBookingRecord[]) : [];
@@ -74,7 +74,7 @@ function readCache(): RideBookingRecord[] {
 }
 
 function writeCache(bookings: RideBookingRecord[]): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   try {
     const sorted = [...bookings].sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
@@ -318,7 +318,7 @@ export async function updateRideBooking(
 ): Promise<RideBookingRecord | null> {
   const cached = readCache();
   const target = cached.find(b => b.id === bookingId);
-  if (!target) return null;
+  if (!target) {return null;}
 
   const lifecycleStatus = updates.status
     ? resolveLifecycleStatus(target.lifecycleStatus, updates.status)
@@ -500,9 +500,9 @@ export function syncRideBookingCompletion(referenceDate = Date.now()): RideBooki
   const GRACE_MS = 2 * 60 * 60 * 1000;
 
   const next = bookings.map(booking => {
-    if (booking.status !== 'confirmed') return booking;
+    if (booking.status !== 'confirmed') {return booking;}
     const tripTime = new Date(`${booking.date}T${booking.time || '00:00'}`).getTime();
-    if (!Number.isFinite(tripTime) || tripTime + GRACE_MS > referenceDate) return booking;
+    if (!Number.isFinite(tripTime) || tripTime + GRACE_MS > referenceDate) {return booking;}
 
     const updated: RideBookingRecord = {
       ...booking,

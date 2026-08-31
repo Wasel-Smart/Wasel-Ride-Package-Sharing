@@ -36,7 +36,7 @@ export function AdminDashboardPage() {
     setLoading(true);
     try {
       const token = session?.access_token;
-      if (!token) throw new Error('Missing admin session token');
+      if (!token) {throw new Error('Missing admin session token');}
 
       const response = await apiRequest<AdminApiResponse<AdminMetrics>>(
         `/v1/admin/dashboard/metrics?range=${r}`,
@@ -63,8 +63,8 @@ export function AdminDashboardPage() {
   }
 
   useEffect(() => {
-    if (user?.role === 'admin') void fetchMetrics(range);
-    else setLoading(false);
+    if (user?.role === 'admin') {void fetchMetrics(range);}
+    else {setLoading(false);}
   }, [range, session?.access_token, user?.role]);
 
   if (!user || user.role !== 'admin') {

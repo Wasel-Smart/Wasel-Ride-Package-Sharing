@@ -170,8 +170,8 @@ function ProfilePageContent({
     : t('profileExpanded.waselMember');
 
   useEffect(() => {
-    if (editingField !== 'name') setNameInput(user.name ?? '');
-    if (editingField !== 'phone') setPhoneInput(user.phone ?? '');
+    if (editingField !== 'name') {setNameInput(user.name ?? '');}
+    if (editingField !== 'phone') {setPhoneInput(user.phone ?? '');}
   }, [editingField, setNameInput, setPhoneInput, user.name, user.phone]);
 
   return (
@@ -316,8 +316,8 @@ function ProfilePageContent({
                   outline: 'none',
                 }}
                 onKeyDown={event => {
-                  if (event.key === 'Enter') void handleSaveName();
-                  if (event.key === 'Escape') setEditingField(null);
+                  if (event.key === 'Enter') {void handleSaveName();}
+                  if (event.key === 'Escape') {setEditingField(null);}
                 }}
                 maxLength={60}
               />
@@ -501,8 +501,8 @@ function ProfilePageContent({
                   value={phoneInput}
                   onChange={event => setPhoneInput(event.target.value)}
                   onKeyDown={event => {
-                    if (event.key === 'Enter') void handleSavePhone();
-                    if (event.key === 'Escape') setEditingField(null);
+                    if (event.key === 'Enter') {void handleSavePhone();}
+                    if (event.key === 'Escape') {setEditingField(null);}
                   }}
                   onFocus={() => setEditingField('phone')}
                   placeholder="+962791234567"

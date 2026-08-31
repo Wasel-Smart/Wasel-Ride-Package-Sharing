@@ -19,13 +19,13 @@ const MAX_RATE_LIMIT_ENTRIES = 5_000;
 function evictExpiredRateLimitEntries(): void {
   const now = Date.now();
   for (const [key, state] of rateLimitStore.entries()) {
-    if (now > state.resetAt) rateLimitStore.delete(key);
+    if (now > state.resetAt) {rateLimitStore.delete(key);}
   }
   if (rateLimitStore.size > MAX_RATE_LIMIT_ENTRIES) {
     const toDelete = rateLimitStore.size - MAX_RATE_LIMIT_ENTRIES;
     let deleted = 0;
     for (const key of rateLimitStore.keys()) {
-      if (deleted >= toDelete) break;
+      if (deleted >= toDelete) {break;}
       rateLimitStore.delete(key);
       deleted++;
     }

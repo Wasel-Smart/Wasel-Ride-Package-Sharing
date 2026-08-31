@@ -28,26 +28,26 @@ import type {
 import type { TripCreatePayload, TripSearchResult, TripUpdatePayload } from '../trips';
 
 async function getTripCountForDriver(driverId?: string | null): Promise<number> {
-  if (!driverId) return 0;
+  if (!driverId) {return 0;}
   const db = getDb();
   const { count, error } = await db
     .from('trips')
     .select('trip_id', { count: 'exact', head: true })
     .eq('driver_id', driverId);
-  if (error) return 0;
+  if (error) {return 0;}
   return toNumber(count, 0);
 }
 
 async function fetchProfilesByDriverIds(driverIds: string[]): Promise<Record<string, RawProfile>> {
   const uniqueIds = Array.from(new Set(driverIds.filter(Boolean)));
-  if (uniqueIds.length === 0) return {};
+  if (uniqueIds.length === 0) {return {};}
 
   const db = getDb();
   const { data: driverRows, error } = await db
     .from('drivers')
     .select('*')
     .in('driver_id', uniqueIds);
-  if (error || !Array.isArray(driverRows) || driverRows.length === 0) return {};
+  if (error || !Array.isArray(driverRows) || driverRows.length === 0) {return {};}
 
   const userIds = driverRows.map((d: DriverRow) => d.user_id).filter(Boolean);
   const { data: users } = await db.from('users').select('*').in('id', userIds);
@@ -63,7 +63,7 @@ async function fetchProfilesByDriverIds(driverIds: string[]): Promise<Record<str
   const resultEntries = await Promise.all(
     (driverRows as DriverRow[]).map(async driver => {
       const user = userMap.get(driver.user_id);
-      if (!user) return null;
+      if (!user) {return null;}
       const verification = await getLatestVerificationRecord(driver.user_id).catch(() => null);
       const tripCount = await getTripCountForDriver(driver.driver_id).catch(() => 0);
       const context: UserContext = {
@@ -78,7 +78,7 @@ async function fetchProfilesByDriverIds(driverIds: string[]): Promise<Record<str
   );
 
   return resultEntries.reduce((acc: Record<string, RawProfile>, entry) => {
-    if (entry) acc[entry[0]] = entry[1];
+    if (entry) {acc[entry[0]] = entry[1];}
     return acc;
   }, {});
 }
@@ -130,29 +130,29 @@ export async function updateDirectProfile(userId: string, updates: Record<string
   const userPatch: Record<string, unknown> = {};
   const walletPatch: Record<string, unknown> = {};
 
-  if (typeof updates.email === 'string') userPatch.email = updates.email.trim();
-  if (typeof updates.full_name === 'string') userPatch.full_name = updates.full_name.trim();
+  if (typeof updates.email === 'string') {userPatch.email = updates.email.trim();}
+  if (typeof updates.full_name === 'string') {userPatch.full_name = updates.full_name.trim();}
   if (typeof updates.phone_number === 'string') {
     userPatch.phone_number = updates.phone_number.trim();
   }
-  if (typeof updates.phone === 'string') userPatch.phone_number = updates.phone.trim();
+  if (typeof updates.phone === 'string') {userPatch.phone_number = updates.phone.trim();}
   if (
     typeof userPatch.phone_number === 'string' &&
     userPatch.phone_number !== String(context.user.phone_number ?? '').trim()
   ) {
     userPatch.phone_verified_at = null;
   }
-  if (typeof updates.role === 'string') userPatch.role = updates.role;
+  if (typeof updates.role === 'string') {userPatch.role = updates.role;}
   if (typeof updates.verification_level === 'string')
-    userPatch.verification_level = updates.verification_level;
-  if (typeof updates.avatar_url === 'string') userPatch.avatar_url = updates.avatar_url;
+    {userPatch.verification_level = updates.verification_level;}
+  if (typeof updates.avatar_url === 'string') {userPatch.avatar_url = updates.avatar_url;}
   if (updates.wallet_balance !== undefined)
-    walletPatch.balance = toNumber(updates.wallet_balance, 0);
-  if (typeof updates.wallet_status === 'string') walletPatch.wallet_status = updates.wallet_status;
+    {walletPatch.balance = toNumber(updates.wallet_balance, 0);}
+  if (typeof updates.wallet_status === 'string') {walletPatch.wallet_status = updates.wallet_status;}
 
   if (Object.keys(userPatch).length > 0) {
     const { error } = await db.from('users').update(userPatch).eq('id', context.user.id);
-    if (error) throw error;
+    if (error) {throw error;}
   }
   if (Object.keys(walletPatch).length > 0) {
     const wallet = context.wallet ?? (await getWalletByCanonicalUserId(context.user.id));
@@ -161,7 +161,7 @@ export async function updateDirectProfile(userId: string, updates: Record<string
         .from('wallets')
         .update(walletPatch)
         .eq('wallet_id', wallet.wallet_id);
-      if (error) throw error;
+      if (error) {throw error;}
     }
   }
   return getDirectProfile(userId);
@@ -181,17 +181,17 @@ export async function searchDirectTrips(
     )
     .is('deleted_at', null);
 
-  if (from) query = query.ilike('origin_city', `%${from}%`);
-  if (to) query = query.ilike('destination_city', `%${to}%`);
+  if (from) {query = query.ilike('origin_city', `%${from}%`);}
+  if (to) {query = query.ilike('destination_city', `%${to}%`);}
   if (date)
-    query = query
+    {query = query
       .gte('departure_time', `${date}T00:00:00`)
-      .lt('departure_time', `${date}T23:59:59.999`);
-  if (seats) query = query.gte('available_seats', seats);
+      .lt('departure_time', `${date}T23:59:59.999`);}
+  if (seats) {query = query.gte('available_seats', seats);}
   query = query.in('trip_status', ['open', 'booked', 'in_progress']).order('departure_time');
 
   const { data, error } = await query;
-  if (error) throw error;
+  if (error) {throw error;}
 
   const rows = (Array.isArray(data) ? data : []) as TripRow[];
   const profiles = await fetchProfilesByDriverIds(rows.map(r => String(r.driver_id ?? '')));
@@ -207,8 +207,8 @@ export async function getDirectTripById(tripId: string): Promise<TripSearchResul
     )
     .eq('trip_id', tripId)
     .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
+  if (error) {throw error;}
+  if (!data) {return null;}
   const profiles = await fetchProfilesByDriverIds([String((data as TripRow).driver_id ?? '')]);
   return mapTripRow(data as TripRow, profiles[String((data as TripRow).driver_id ?? '')] ?? null);
 }
@@ -224,7 +224,7 @@ export async function getDirectDriverTrips(userId: string): Promise<TripSearchRe
     )
     .eq('driver_id', driver.driver_id)
     .order('departure_time', { ascending: false });
-  if (error) throw error;
+  if (error) {throw error;}
   const rows = (Array.isArray(data) ? data : []) as TripRow[];
   const profile = mapProfileFromContext(context, { tripCount: rows.length });
   return rows.map(row => mapTripRow(row, profile));
@@ -262,7 +262,7 @@ export async function createDirectTrip(
       'trip_id, driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity, vehicle_make, vehicle_model, notes, created_at',
     )
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
   return mapTripRow(data as TripRow, mapProfileFromContext(context));
 }
 
@@ -273,16 +273,16 @@ export async function updateDirectTrip(
   const db = getDb();
   const payload: Record<string, unknown> = {};
 
-  if (updates.from) payload.origin_city = updates.from;
-  if (updates.to) payload.destination_city = updates.to;
+  if (updates.from) {payload.origin_city = updates.from;}
+  if (updates.to) {payload.destination_city = updates.to;}
   if (updates.date || updates.time) {
     const current = await getDirectTripById(tripId);
     const date = updates.date ?? current?.date ?? new Date().toISOString().slice(0, 10);
     const time = updates.time ?? current?.time ?? '08:00';
     payload.departure_time = new Date(`${date}T${time}:00`).toISOString();
   }
-  if (typeof updates.seats === 'number') payload.available_seats = updates.seats;
-  if (typeof updates.price === 'number') payload.price_per_seat = updates.price;
+  if (typeof updates.seats === 'number') {payload.available_seats = updates.seats;}
+  if (typeof updates.price === 'number') {payload.price_per_seat = updates.price;}
   if (updates.carModel !== undefined) {
     const parts = String(updates.carModel ?? '')
       .trim()
@@ -292,8 +292,8 @@ export async function updateDirectTrip(
     payload.vehicle_make = make;
     payload.vehicle_model = rest.length > 0 ? rest.join(' ') : (updates.carModel ?? null);
   }
-  if (updates.note !== undefined) payload.notes = updates.note;
-  if (updates.status) payload.trip_status = normalizeTripStatus(updates.status);
+  if (updates.note !== undefined) {payload.notes = updates.note;}
+  if (updates.status) {payload.trip_status = normalizeTripStatus(updates.status);}
 
   const { data, error } = await db
     .from('trips')
@@ -303,7 +303,7 @@ export async function updateDirectTrip(
       'trip_id, driver_id, origin_city, destination_city, departure_time, available_seats, price_per_seat, trip_status, allow_packages, package_capacity, vehicle_make, vehicle_model, notes, created_at',
     )
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
 
   const profiles = await fetchProfilesByDriverIds([String((data as TripRow).driver_id ?? '')]);
   return mapTripRow(data as TripRow, profiles[String((data as TripRow).driver_id ?? '')] ?? null);
@@ -315,7 +315,7 @@ export async function deleteDirectTrip(tripId: string): Promise<{ success: boole
     .from('trips')
     .update({ trip_status: 'cancelled', deleted_at: new Date().toISOString() })
     .eq('trip_id', tripId);
-  if (error) throw error;
+  if (error) {throw error;}
   return { success: true };
 }
 
@@ -339,10 +339,10 @@ export async function createDirectBooking(input: {
     .select('trip_id, available_seats, price_per_seat, trip_status')
     .eq('trip_id', input.tripId)
     .single();
-  if (tripError) throw tripError;
+  if (tripError) {throw tripError;}
 
   const availableSeats = toNumber(trip?.available_seats, 0);
-  if (availableSeats < input.seatsRequested) throw new Error('Not enough seats available');
+  if (availableSeats < input.seatsRequested) {throw new Error('Not enough seats available');}
 
   const { data: existingSeats } = await db
     .from('bookings')
@@ -379,7 +379,7 @@ export async function createDirectBooking(input: {
     })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
 
   await recordDirectGrowthEvent({
     userId: input.userId,
@@ -436,7 +436,7 @@ export async function getDirectUserBookings(userId: string) {
     .select('*')
     .eq('passenger_id', context.user.id)
     .order('created_at', { ascending: false });
-  if (error) throw error;
+  if (error) {throw error;}
   return Array.isArray(data) ? (data as RawBooking[]).map(mapBookingRow) : [];
 }
 
@@ -447,7 +447,7 @@ export async function getDirectTripBookings(tripId: string) {
     .select('*')
     .eq('trip_id', tripId)
     .order('created_at', { ascending: false });
-  if (error) throw error;
+  if (error) {throw error;}
   return Array.isArray(data) ? (data as RawBooking[]).map(mapBookingRow) : [];
 }
 
@@ -463,7 +463,7 @@ export async function updateDirectBookingStatus(
     .select('*')
     .eq('booking_id', bookingId)
     .single();
-  if (existingError) throw existingError;
+  if (existingError) {throw existingError;}
 
   const bookingRow = existing as RawBooking;
   const { data, error } = await db
@@ -476,10 +476,10 @@ export async function updateDirectBookingStatus(
     .eq('booking_id', bookingId)
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) {throw error;}
 
   const tripId = bookingRow.trip_id;
-  if (!tripId) throw new Error('Booking is missing a trip id.');
+  if (!tripId) {throw new Error('Booking is missing a trip id.');}
 
   const { data: trip } = await db
     .from('trips')
@@ -543,19 +543,19 @@ export async function getDirectDriverBookings(userId: string) {
     .from('trips')
     .select('trip_id, origin_city, destination_city, departure_time')
     .eq('driver_id', driver.driver_id);
-  if (tripsError) throw tripsError;
+  if (tripsError) {throw tripsError;}
 
   const tripRows = Array.isArray(trips) ? (trips as TripRow[]) : [];
   const tripMap = new Map(tripRows.map(t => [String(t.trip_id ?? ''), t]));
   const tripIds = tripRows.map(t => String(t.trip_id ?? '')).filter(Boolean);
-  if (tripIds.length === 0) return [];
+  if (tripIds.length === 0) {return [];}
 
   const { data: bookings, error } = await db
     .from('bookings')
     .select('*')
     .in('trip_id', tripIds)
     .order('created_at', { ascending: false });
-  if (error) throw error;
+  if (error) {throw error;}
 
   return Array.isArray(bookings)
     ? (bookings as RawBooking[]).map(booking => {

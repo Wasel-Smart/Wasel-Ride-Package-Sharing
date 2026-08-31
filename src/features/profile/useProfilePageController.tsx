@@ -55,7 +55,7 @@ async function readAvatarFile(file: File): Promise<string> {
     const reader = new FileReader();
     reader.onload = () => {
       const avatarUrl = typeof reader.result === 'string' ? reader.result : '';
-      if (!avatarUrl || !avatarUrl.startsWith('data:image/')) {
+      if (!avatarUrl?.startsWith('data:image/')) {
         reject(new Error('invalid-image'));
         return;
       }
@@ -67,22 +67,22 @@ async function readAvatarFile(file: File): Promise<string> {
 }
 
 function getWalletStatus(user: WaselUser, ar: boolean): ProfileStatusChip {
-  if (user.walletStatus === 'closed') return { label: ar ? 'مغلقة' : 'Closed', color: C.error };
-  if (user.walletStatus === 'frozen') return { label: ar ? 'مجمّد' : 'Frozen', color: C.error };
-  if (user.walletStatus === 'limited') return { label: ar ? 'محدود' : 'Limited', color: C.gold };
+  if (user.walletStatus === 'closed') {return { label: ar ? 'مغلقة' : 'Closed', color: C.error };}
+  if (user.walletStatus === 'frozen') {return { label: ar ? 'مجمّد' : 'Frozen', color: C.error };}
+  if (user.walletStatus === 'limited') {return { label: ar ? 'محدود' : 'Limited', color: C.gold };}
   return { label: ar ? 'نشط' : 'Active', color: C.green };
 }
 
 function getPermissionStatus(support: NotificationSupport, ar: boolean): ProfileStatusChip {
-  if (!support.isSupported) return { label: ar ? 'غير مدعوم' : 'Unsupported', color: C.textDim };
-  if (support.permission === 'granted') return { label: ar ? 'مفعل' : 'Enabled', color: C.green };
-  if (support.permission === 'denied') return { label: ar ? 'محظور' : 'Blocked', color: C.error };
+  if (!support.isSupported) {return { label: ar ? 'غير مدعوم' : 'Unsupported', color: C.textDim };}
+  if (support.permission === 'granted') {return { label: ar ? 'مفعل' : 'Enabled', color: C.green };}
+  if (support.permission === 'denied') {return { label: ar ? 'محظور' : 'Blocked', color: C.error };}
   return { label: ar ? 'غير مفعل' : 'Not enabled', color: C.gold };
 }
 
 function getTrustTier(trustScore: number, ar: boolean) {
-  if (trustScore >= 90) return ar ? 'ثقة عالية' : 'High trust';
-  if (trustScore >= 75) return ar ? 'ثقة قوية' : 'Strong trust';
+  if (trustScore >= 90) {return ar ? 'ثقة عالية' : 'High trust';}
+  if (trustScore >= 75) {return ar ? 'ثقة قوية' : 'Strong trust';}
   return ar ? 'بحاجة تعزيز' : 'Needs strengthening';
 }
 
@@ -95,8 +95,8 @@ function getJoinedText(joinedAt: string | undefined, ar: boolean) {
 }
 
 function getRoleLabel(role: WaselUser['role'], ar: boolean) {
-  if (role === 'driver') return ar ? 'سائق' : 'Driver';
-  if (role === 'both') return ar ? 'سائق + راكب' : 'Driver + Rider';
+  if (role === 'driver') {return ar ? 'سائق' : 'Driver';}
+  if (role === 'both') {return ar ? 'سائق + راكب' : 'Driver + Rider';}
   return ar ? 'راكب' : 'Rider';
 }
 
@@ -237,7 +237,7 @@ export function useProfilePageController({
 
   const handlePhotoSelection = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {return;}
 
     if (!file.type.startsWith('image/')) {
       showToast(ar ? 'يرجى اختيار صورة صالحة' : 'Please choose a valid image');

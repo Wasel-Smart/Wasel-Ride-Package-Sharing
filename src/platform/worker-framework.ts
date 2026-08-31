@@ -40,7 +40,7 @@ function resolveProxyBaseUrl(): string | null {
       (typeof import.meta !== 'undefined' &&
         (import.meta.env.VITE_EVENT_BROKER_PROXY_URL as string | undefined)) ||
       (typeof process !== 'undefined' && process.env.VITE_EVENT_BROKER_PROXY_URL);
-    if (direct && direct.trim()) return direct.trim().replace(/\/$/, '');
+    if (direct && direct.trim()) {return direct.trim().replace(/\/$/, '');}
 
     const supabaseUrl =
       (typeof import.meta !== 'undefined' &&
@@ -59,7 +59,7 @@ async function proxyWriteDeadLetter(dlqPayload: Record<string, unknown>): Promis
   const baseUrl = resolveProxyBaseUrl();
   const secret = resolveWorkerSecret();
 
-  if (!baseUrl || !secret) return false;
+  if (!baseUrl || !secret) {return false;}
 
   try {
     const response = await fetch(`${baseUrl}/dead-letter`, {
@@ -124,7 +124,7 @@ export abstract class BaseWorker<T = unknown> {
   abstract process(message: QueueMessage<T>): Promise<void>;
 
   async start(): Promise<void> {
-    if (this.isRunning) return;
+    if (this.isRunning) {return;}
     this.isRunning = true;
 
       console.log(
@@ -135,7 +135,7 @@ export abstract class BaseWorker<T = unknown> {
       );
 
     const handler: BrokerMessageHandler = message => {
-      if (!this.isRunning) return;
+      if (!this.isRunning) {return;}
       void this.handleMessage(this.toQueueMessage(message));
     };
 
@@ -280,7 +280,7 @@ export abstract class BaseWorker<T = unknown> {
     });
 
     const proxyOk = await proxyWriteDeadLetter(dlqPayload);
-    if (proxyOk) return;
+    if (proxyOk) {return;}
 
     if (isSupabaseConfigured && defaultSupabase) {
       void Promise.resolve(defaultSupabase.from('dead_letter_messages').insert(dlqPayload))

@@ -81,9 +81,9 @@ class RootErrorBoundary extends React.Component<React.PropsWithChildren, { hasEr
         diagnostics.downlink = connection.downlink;
       }
       const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
-      if (memory) diagnostics.deviceMemory = memory;
+      if (memory) {diagnostics.deviceMemory = memory;}
       const cores = (navigator as Navigator & { hardwareConcurrency?: number }).hardwareConcurrency;
-      if (cores) diagnostics.hardwareConcurrency = cores;
+      if (cores) {diagnostics.hardwareConcurrency = cores;}
     }
 
     const message = error instanceof Error ? error.message : String(error);
@@ -129,7 +129,7 @@ const rootElement = document.getElementById('root');
 const environmentIsValid = (() => {
   try {
     const configError = getStartupConfigurationError(import.meta.env);
-    if (configError) throw new Error(configError);
+    if (configError) {throw new Error(configError);}
     return true;
   } catch (envError) {
     console.error('[Wasel] Environment not configured:', envError);
@@ -296,10 +296,10 @@ if (environmentIsValid) {
   }
 
   function isStandalonePWA(): boolean {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined') {return false;}
     const mediaQuery = window.matchMedia('(display-mode: standalone)');
-    if (mediaQuery.matches) return true;
-    if ((navigator as Navigator & { standalone?: boolean }).standalone === true) return true;
+    if (mediaQuery.matches) {return true;}
+    if ((navigator as Navigator & { standalone?: boolean }).standalone === true) {return true;}
     return false;
   }
 
@@ -312,7 +312,7 @@ if (environmentIsValid) {
   function handleServiceWorkerMessage(event: MessageEvent<ServiceWorkerMessage>) {
     const message = event.data;
 
-    if (!message) return;
+    if (!message) {return;}
 
     if (message.type === 'NAVIGATE') {
       window.location.href = message.url;

@@ -39,7 +39,7 @@ interface WaselStateCardProps {
   minHeight?: string | number;
 }
 
-export const WaselStateCard = memo(function WaselStateCard({
+export const WaselStateCard = memo(({
   title,
   description,
   eyebrow,
@@ -49,7 +49,7 @@ export const WaselStateCard = memo(function WaselStateCard({
   actions,
   footer,
   minHeight = 360,
-}: WaselStateCardProps) {
+}: WaselStateCardProps) => {
   const theme = TONE_STYLES[tone];
   const AccentIcon = loading ? LoaderCircle : Icon;
 

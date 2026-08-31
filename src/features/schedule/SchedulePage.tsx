@@ -128,7 +128,7 @@ export function SchedulePage() {
           .eq('user_id', user.id)
           .order('scheduled_at', { ascending: true });
 
-        if (supabaseError) throw supabaseError;
+        if (supabaseError) {throw supabaseError;}
         if (data && data.length > 0) {
           const mapped: ScheduleItem[] = data.map((row: Record<string, unknown>) => ({
             id: row.id as string,
@@ -224,7 +224,7 @@ export function SchedulePage() {
   };
 
   const handleCreate = async () => {
-    if (!form.pickup_location || !form.scheduled_at) return;
+    if (!form.pickup_location || !form.scheduled_at) {return;}
     const newItem: ScheduleItem = {
       ...form,
       id: crypto.randomUUID(),
@@ -265,14 +265,14 @@ export function SchedulePage() {
   );
 
   const typeLabel = (type: ScheduleItem['item_type']) => {
-    if (type === 'ride') return t('scheduleExpanded.ride');
-    if (type === 'package_delivery') return t('scheduleExpanded.typeDelivery');
+    if (type === 'ride') {return t('scheduleExpanded.ride');}
+    if (type === 'package_delivery') {return t('scheduleExpanded.typeDelivery');}
     return t('scheduleExpanded.typeReturn');
   };
 
   const typeColor = (t: ScheduleItem['item_type']) => {
-    if (t === 'ride') return C.cyan;
-    if (t === 'package_delivery') return C.gold;
+    if (t === 'ride') {return C.cyan;}
+    if (t === 'package_delivery') {return C.gold;}
     return C.green;
   };
 

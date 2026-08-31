@@ -30,7 +30,7 @@ function getAllowedOrigins(): Set<string> {
     .map(origin => origin.trim())
     .filter(Boolean);
 
-  if (process.env.VERCEL_URL) origins.push(`https://${process.env.VERCEL_URL}`);
+  if (process.env.VERCEL_URL) {origins.push(`https://${process.env.VERCEL_URL}`);}
   return new Set(origins);
 }
 

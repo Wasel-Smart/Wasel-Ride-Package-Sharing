@@ -112,7 +112,7 @@ if (typeof setInterval !== 'undefined' && !_rateLimitCleanupInterval) {
         const toDelete = rateLimitStore.size - MAX_RATE_LIMIT_ENTRIES;
         let deleted = 0;
         for (const key of rateLimitStore.keys()) {
-          if (deleted >= toDelete) break;
+          if (deleted >= toDelete) {break;}
           rateLimitStore.delete(key);
           deleted++;
         }
