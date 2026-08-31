@@ -13,7 +13,7 @@ const createMockSupabase = () => {
   };
 };
 
-vi.mock('@/utils/supabase/client.ts', () => ({
+vi.mock('../src/utils/supabase/client.ts', () => ({
   supabase: null,
   supabaseUrl: '',
 }));
@@ -24,7 +24,7 @@ describe('auth.test.ts', () => {
   beforeEach(() => {
     vi.resetModules();
     mockSupabase = createMockSupabase();
-    vi.doMock('@/utils/supabase/client.ts', () => ({
+    vi.doMock('../../src/utils/supabase/client.ts', () => ({
       supabase: mockSupabase,
       supabaseUrl: '',
     }));
@@ -36,7 +36,7 @@ describe('auth.test.ts', () => {
       error: null,
     });
 
-    const { authAPI: api } = await import('@/services/auth');
+    const { authAPI: api } = await import('../../src/services/auth');
     const result = await api.signIn('test@example.com', 'password123');
 
     expect(mockSupabase.auth.signInWithPassword).toHaveBeenCalledWith({
@@ -52,7 +52,7 @@ describe('auth.test.ts', () => {
       error: { message: 'Invalid login credentials' },
     });
 
-    const { authAPI: api } = await import('@/services/auth');
+    const { authAPI: api } = await import('../../src/services/auth');
     await expect(api.signIn('test@example.com', 'wrong')).rejects.toThrow('Incorrect email or password.');
   });
 
@@ -62,8 +62,58 @@ describe('auth.test.ts', () => {
       error: { message: 'Email not confirmed' },
     });
 
-    const { authAPI: api } = await import('@/services/auth');
+    const { authAPI: api } = await import('../../src/services/auth');
     await expect(api.signIn('test@example.com', 'password')).rejects.toThrow('Please confirm your email before signing in.');
+  });
+
+  it('signIn normalizes too many requests error', async () => {
+    mockSupabase.auth.signInWithPassword.mockResolvedValue({
+      data: null,
+      error: { message: 'Too many requests', code: 'over_request_rate_limit' },
+    });
+
+    const { authAPI: api } = await import('../../src/services/auth');
+    await expect(api.signIn('test@example.com', 'password')).rejects.toThrow('Too many attempts. Please wait a moment and try again.');
+  });
+
+  it('signIn normalizes user not found error', async () => {
+    mockSupabase.auth.signInWithPassword.mockResolvedValue({
+      data: null,
+      error: { message: 'User not found', code: 'user_not_found' },
+    });
+
+    const { authAPI: api } = await import('../../src/services/auth');
+    await expect(api.signIn('test@example.com', 'password')).rejects.toThrow('Account not found. Please check your email or sign up.');
+  });
+
+  it('signIn normalizes invalid email error', async () => {
+    mockSupabase.auth.signInWithPassword.mockResolvedValue({
+      data: null,
+      error: { message: 'Invalid email', code: 'email_address_invalid' },
+    });
+
+    const { authAPI: api } = await import('../../src/services/auth');
+    await expect(api.signIn('test@example.com', 'password')).rejects.toThrow('Please enter a valid email address.');
+  });
+
+  it('signUp normalizes weak password error', async () => {
+    mockSupabase.auth.signUp.mockResolvedValue({
+      data: null,
+      error: { message: 'Password is too weak', code: 'weak_password' },
+    });
+
+    const { authAPI: api } = await import('../../src/services/auth');
+    await expect(api.signUp('test@example.com', 'pass', 'J', 'D', '')).rejects.toThrow('Password is too weak. Please choose a stronger password.');
+  });
+
+  it('signUp normalizes signup disabled error', async () => {
+    mockSupabase.auth.signUp.mockResolvedValue({
+      data: null,
+      error: { message: 'Signup disabled', code: 'signup_disabled' },
+    });
+
+    const { authAPI: api } = await import('../../src/services/auth');
+    await expect(api.signUp('test@example.com', 'pass', 'J', 'D', '')).rejects.toThrow('Sign-up is currently disabled. Please contact support.');
   });
 
   it('signUp with valid data', async () => {
@@ -72,7 +122,7 @@ describe('auth.test.ts', () => {
       error: null,
     });
 
-    const { authAPI: api } = await import('@/services/auth');
+    const { authAPI: api } = await import('../../src/services/auth');
     const result = await api.signUp('test@example.com', 'password123', 'John', 'Doe', '+962770000000');
 
     expect(mockSupabase.auth.signUp).toHaveBeenCalledWith({
@@ -91,14 +141,14 @@ describe('auth.test.ts', () => {
       error: { message: 'User already registered' },
     });
 
-    const { authAPI: api } = await import('@/services/auth');
+    const { authAPI: api } = await import('../../src/services/auth');
     await expect(api.signUp('test@example.com', 'pass', 'J', 'D', '')).rejects.toThrow('This email is already registered.');
   });
 
   it('signOut', async () => {
     mockSupabase.auth.signOut.mockResolvedValue({ error: null });
 
-    const { authAPI: api } = await import('@/services/auth');
+    const { authAPI: api } = await import('../../src/services/auth');
     await expect(api.signOut()).resolves.toBeUndefined();
     expect(mockSupabase.auth.signOut).toHaveBeenCalled();
   });
@@ -109,18 +159,18 @@ describe('auth.test.ts', () => {
       error: null,
     });
 
-    const { authAPI: api } = await import('@/services/auth');
+    const { authAPI: api } = await import('../../src/services/auth');
     const result = await api.getSession();
     expect(result.session?.access_token).toBe('token');
   });
 
   it('signIn throws on supabase not configured', async () => {
-    vi.doMock('@/utils/supabase/client.ts', () => ({
+    vi.doMock('../../src/utils/supabase/client.ts', () => ({
       supabase: null,
       supabaseUrl: '',
     }));
 
-    const { authAPI: api } = await import('@/services/auth');
+    const { authAPI: api } = await import('../../src/services/auth');
     await expect(api.signIn('a@b.com', 'pass')).rejects.toThrow('Supabase auth is not configured');
   });
 
@@ -130,7 +180,7 @@ describe('auth.test.ts', () => {
       error: null,
     });
 
-    const { authAPI: api } = await import('@/services/auth');
+    const { authAPI: api } = await import('../../src/services/auth');
     await api.signUp('test@example.com', 'password', 'John', 'Doe', '');
 
     const callArgs = mockSupabase.auth.signUp.mock.calls[0];

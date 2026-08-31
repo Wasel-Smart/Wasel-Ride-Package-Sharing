@@ -16,7 +16,11 @@ function getDirectFallbackError(operation: string): Error {
   return getSecureBackendFallbackError(operation);
 }
 
-function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'generic'): string {
+function normalizeAuthError(
+  message: string,
+  code: string | undefined,
+  context: 'signin' | 'signup' | 'generic',
+): string {
   const lower = message.toLowerCase();
 
   if (
@@ -29,16 +33,53 @@ function normalizeAuthError(message: string, context: 'signin' | 'signup' | 'gen
     return 'Incorrect email or password.';
   }
 
-  if (lower.includes('email not confirmed')) {
+  if (lower.includes('email not confirmed') || code === 'email_not_confirmed') {
     return 'Please confirm your email before signing in.';
   }
 
   if (
     lower.includes('already been registered') ||
     lower.includes('already registered') ||
-    lower.includes('user already exists')
+    lower.includes('user already exists') ||
+    code === 'email_exists'
   ) {
     return 'This email is already registered.';
+  }
+
+  if (code === 'user_not_found' || lower.includes('user not found')) {
+    return 'Account not found. Please check your email or sign up.';
+  }
+
+  if (code === 'over_request_rate_limit' || lower.includes('too many requests')) {
+    return 'Too many attempts. Please wait a moment and try again.';
+  }
+
+  if (
+    code === 'email_address_not_authorized' ||
+    lower.includes('signups not allowed') ||
+    lower.includes('not allowed for this email domain')
+  ) {
+    return 'Sign-up is not allowed for this email domain.';
+  }
+
+  if (code === 'email_address_invalid' || lower.includes('invalid email')) {
+    return 'Please enter a valid email address.';
+  }
+
+  if (code === 'user_banned' || lower.includes('user banned')) {
+    return 'Your account has been suspended. Please contact support.';
+  }
+
+  if (code === 'weak_password') {
+    return 'Password is too weak. Please choose a stronger password.';
+  }
+
+  if (code === 'signup_disabled' || lower.includes('signup disabled')) {
+    return 'Sign-up is currently disabled. Please contact support.';
+  }
+
+  if (code === 'phone_exists' || lower.includes('phone already exists')) {
+    return 'This phone number is already registered.';
   }
 
   if (context === 'signin') return 'Sign in failed. Please try again.';
@@ -192,7 +233,7 @@ export const authAPI = {
     });
 
     if (error) {
-      throw new Error(normalizeAuthError(error.message, 'signup'));
+      throw new Error(normalizeAuthError(error.message, error.code, 'signup'));
     }
 
     return data;
@@ -242,7 +283,7 @@ export const authAPI = {
       if (import.meta.env?.DEV) {
         console.error('[auth.signIn]', error.status, error.code, error.message);
       }
-      throw new Error(normalizeAuthError(error.message, 'signin'));
+      throw new Error(normalizeAuthError(error.message, error.code, 'signin'));
     }
     return data;
   },
