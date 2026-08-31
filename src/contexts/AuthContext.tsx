@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { AuthChangeEvent, Session, User } from '@supabase/auth-js';
-import { getAuthCallbackUrl } from '../utils/env';
+import { getAuthCallbackUrl, resolveAuthRedirectOrigin } from '../utils/env';
 import { sanitizeLogMessage } from '../utils/sanitization';
 import { parseOAuthError } from '../utils/oauthErrors';
 import { sessionManager } from '../utils/sessionManager';
@@ -473,7 +473,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         const { error } = await client.auth.resetPasswordForEmail(email, {
           redirectTo: getAuthCallbackUrl(
-            window.location.origin,
+            resolveAuthRedirectOrigin(),
             returnTo ? { returnTo } : undefined,
           ),
         });

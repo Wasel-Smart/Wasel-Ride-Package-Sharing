@@ -6,7 +6,7 @@ import type {
 } from '@supabase/auth-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { authAPI } from '../services/auth';
-import { getAuthCallbackUrl } from '../utils/env';
+import { getAuthCallbackUrl, resolveAuthRedirectOrigin } from '../utils/env';
 import { deriveAccountTrustScore } from '../domain/trust/score';
 
 export type Profile = {
@@ -114,7 +114,7 @@ export async function signInWithOAuthProvider(
       provider,
       options: {
         redirectTo: getAuthCallbackUrl(
-          typeof window !== 'undefined' ? window.location.origin : undefined,
+          resolveAuthRedirectOrigin(),
           returnTo ? { returnTo } : undefined,
         ),
       },

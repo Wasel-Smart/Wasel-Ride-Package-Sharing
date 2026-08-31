@@ -1,5 +1,5 @@
 import type { WaselUser } from '../contexts/LocalAuth';
-import { getAuthCallbackUrl } from '../utils/env';
+import { getAuthCallbackUrl, resolveAuthRedirectOrigin } from '../utils/env';
 import { supabase } from '../utils/supabase/client';
 import { requestEdgeJson, runBackendWorkflow } from './backendWorkflow';
 import {
@@ -209,9 +209,7 @@ export async function resendTrustEmailConfirmation(email: string) {
     type: 'signup',
     email,
     options: {
-      emailRedirectTo: getAuthCallbackUrl(
-        typeof window !== 'undefined' ? window.location.origin : undefined,
-      ),
+      emailRedirectTo: getAuthCallbackUrl(resolveAuthRedirectOrigin()),
     },
   });
 
