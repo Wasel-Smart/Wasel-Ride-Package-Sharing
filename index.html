@@ -33,9 +33,16 @@
     <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" />
     <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
 
-    <!-- Fonts: load with display=swap so text is visible immediately. -->
+    <!-- Preconnect to critical third-party origins -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://zexlxabdcsjefptmjhuq.supabase.co" />
+    <link rel="preconnect" href="https://api.stripe.com" />
+    <link rel="preconnect" href="https://maps.googleapis.com" />
+    <link rel="dns-prefetch" href="https://sentry.io" />
+    <link rel="dns-prefetch" href="https://js.stripe.com" />
+
+    <!-- Fonts: load with display=swap so text is visible immediately. -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" media="print" onload="this.media='all'" />
 
     <title>Wasel | Shared Routes That Reduce Travel Cost</title>
@@ -65,7 +72,9 @@
     <meta name="twitter:image:alt" content="Wasel | واصل — Jordan's bilingual mobility network" />
 
     <link rel="dns-prefetch" href="https://supabase.co" />
-    <link rel="preload" as="image" href="/brand/assets/logos/symbols/symbol-default.webp" imagesizes="280px" />
+    <link rel="dns-prefetch" href="https://sentry.io" />
+    <link rel="dns-prefetch" href="https://js.stripe.com" />
+    <link rel="preload" as="image" href="/brand/assets/logos/symbols/symbol-default.webp" imagesizes="280px" fetchpriority="high" />
     <style>
       html, body, #root { min-height: 100%; }
       body { margin: 0; background: #071521; }

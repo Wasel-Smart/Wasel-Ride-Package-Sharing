@@ -22,8 +22,12 @@ if (CACHE_VERSION === '__CACHE_VERSION__') {
 }
 const PRECACHE = `${CACHE_VERSION}-precache`;
 const RUNTIME = `${CACHE_VERSION}-runtime`;
-const MAX_RUNTIME_CACHE_ENTRIES = 80;
-const NETWORK_TIMEOUT_MS = 8000;
+const MAX_RUNTIME_CACHE_ENTRIES = 120;
+const NETWORK_TIMEOUT_MS = 6000;
+const IMAGE_CACHE = `${CACHE_VERSION}-images`;
+const FONT_CACHE = `${CACHE_VERSION}-fonts`;
+const MAX_IMAGE_CACHE_ENTRIES = 60;
+const MAX_FONT_CACHE_ENTRIES = 20;
 
 // Deliberately NOT precaching '/' or '/index.html' here. The navigation
 // document must always come from the network when possible (handleNavigation
@@ -123,7 +127,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   if (isApiRequest(request)) {
-    event.respondWith(networkOnly(request));
+    event.respondWith(networkFirst(request));
     return;
   }
 
@@ -132,17 +136,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Hashed JS/CSS bundles: always network-first so mobile never serves a
-  // stale chunk hash that no longer exists on the server (app_mount_timeout).
-  // The content-hash in the filename is the cache-busting mechanism; we do
-  // not need stale-while-revalidate here.
   if (url.pathname.startsWith('/assets/') && (url.pathname.endsWith('.js') || url.pathname.endsWith('.css'))) {
-    event.respondWith(networkFirst(request));
+    event.respondWith(staleWhileRevalidate(request));
     return;
   }
 
-  if (request.destination === 'image' || request.destination === 'font') {
-    event.respondWith(cacheFirst(request));
+  if (request.destination === 'image') {
+    event.respondWith(cacheFirstWithLimit(request, IMAGE_CACHE, MAX_IMAGE_CACHE_ENTRIES));
+    return;
+  }
+
+  if (request.destination === 'font') {
+    event.respondWith(cacheFirstWithLimit(request, FONT_CACHE, MAX_FONT_CACHE_ENTRIES));
     return;
   }
 
@@ -203,20 +208,49 @@ async function networkFirst(request) {
   }
 }
 
-async function cacheFirst(request) {
-  const cached = await caches.match(request);
+async function cacheFirst(request, cacheName = RUNTIME) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
   if (cached) return cached;
 
   if (!isSafeUrl(request.url)) return cached || new Response('Offline', { status: 503, statusText: 'Offline' });
 
-  const response = await fetchWithTimeout(request);
-  if (response && response.ok) {
-    const cache = await caches.open(RUNTIME);
-    await cache.put(request, response.clone());
-    await trimRuntimeCache(cache);
+  try {
+    const response = await fetchWithTimeout(request);
+    if (response && response.ok) {
+      await cache.put(request, response.clone());
+      await trimRuntimeCache(cache);
+    }
+    return response;
+  } catch {
+    return cached || new Response('Offline', { status: 503, statusText: 'Offline' });
   }
+}
 
-  return response;
+async function cacheFirstWithLimit(request, cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+
+  if (!isSafeUrl(request.url)) return cached || new Response('Offline', { status: 503, statusText: 'Offline' });
+
+  try {
+    const response = await fetchWithTimeout(request);
+    if (response && response.ok) {
+      await cache.put(request, response.clone());
+      await trimRuntimeCache(cache, maxEntries);
+    }
+    return response;
+  } catch {
+    return cached || new Response('Offline', { status: 503, statusText: 'Offline' });
+  }
+}
+
+async function trimRuntimeCache(cache, maxEntries = MAX_RUNTIME_CACHE_ENTRIES) {
+  const keys = await cache.keys();
+  const overflow = keys.length - maxEntries;
+  if (overflow <= 0) return;
+  await Promise.all(keys.slice(0, overflow).map((key) => cache.delete(key)));
 }
 
 async function staleWhileRevalidate(request) {

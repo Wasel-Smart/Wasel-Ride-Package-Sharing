@@ -87,6 +87,9 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     sourcemap: 'hidden',
     minify: 'esbuild',
+    cssCodeSplit: true,
+    reportCompressedSize: true,
+    chunkSizeWarningLimit: 300,
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -99,8 +102,6 @@ export default defineConfig(({ mode }) => ({
             id.includes('/node_modules/scheduler/')
           ) return 'react-core';
 
-          if (id.includes('/node_modules/framer-motion/')) return 'vendor';
-
           if (
             id.includes('/node_modules/@radix-ui/') ||
             id.includes('/node_modules/lucide-react/') ||
@@ -110,14 +111,14 @@ export default defineConfig(({ mode }) => ({
             id.includes('/node_modules/embla-carousel')
           ) return 'ui-primitives';
 
-           if (
-              id.includes('/node_modules/@supabase/') ||
-              id.includes('/node_modules/@tanstack/')
-            ) return 'data-layer';
+          if (id.includes('/node_modules/@supabase/')) return 'supabase';
+          if (
+            id.includes('/node_modules/@tanstack/') ||
+            id.includes('/node_modules/zod/')
+          ) return 'data-layer';
 
             if (id.includes('/node_modules/leaflet/')) return 'maps';
             if (id.includes('/node_modules/recharts/')) return 'charts';
-            if (id.includes('/node_modules/motion/')) return 'motion';
 
             if (
               id.includes('/node_modules/react-hook-form/') ||
@@ -128,13 +129,17 @@ export default defineConfig(({ mode }) => ({
 
             return 'vendor';
         },
+        compact: true,
+        experimentalMinChunkSize: 10000,
         assetFileNames: (assetInfo) => {
           if (assetInfo.name?.endsWith('.css')) return 'assets/css/[name]-[hash][extname]';
           if (
             assetInfo.name?.endsWith('.png') ||
             assetInfo.name?.endsWith('.jpg') ||
             assetInfo.name?.endsWith('.svg') ||
-            assetInfo.name?.endsWith('.ico')
+            assetInfo.name?.endsWith('.ico') ||
+            assetInfo.name?.endsWith('.webp') ||
+            assetInfo.name?.endsWith('.avif')
           ) return 'assets/images/[name]-[hash][extname]';
           return 'assets/[name]-[hash][extname]';
         },
@@ -142,9 +147,6 @@ export default defineConfig(({ mode }) => ({
         entryFileNames: 'assets/js/[name]-[hash].js',
       },
     },
-    reportCompressedSize: true,
-    chunkSizeWarningLimit: 1200,
-    cssChunk: true,
   },
 
   server: {
