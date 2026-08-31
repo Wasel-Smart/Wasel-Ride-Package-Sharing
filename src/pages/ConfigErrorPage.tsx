@@ -20,7 +20,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
         minHeight: '100vh',
         fontFamily: "-apple-system, 'Inter', sans-serif",
         background: `
-          radial-gradient(circle at 16% 18%, rgba(85,233,255,0.12), transparent 24%),
+          radial-gradient(circle at 16% 18%, rgba(20,127,228,0.12), transparent 24%),
           radial-gradient(circle at 82% 12%, rgba(245,177,30,0.12), transparent 20%),
           radial-gradient(circle at 78% 72%, rgba(51,232,95,0.08), transparent 20%),
           #040C18
@@ -135,8 +135,8 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
 
         <div
           style={{
-            background: 'rgba(85,233,255,0.06)',
-            border: '1px solid rgba(85,233,255,0.18)',
+            background: 'rgba(20,127,228,0.06)',
+            border: '1px solid rgba(20,127,228,0.18)',
             borderRadius: 12,
             padding: 16,
             textAlign: 'left',
@@ -145,7 +145,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
             lineHeight: 1.6,
           }}
         >
-          <div style={{ fontWeight: 700, marginBottom: 8, color: '#55E9FF' }}>
+          <div style={{ fontWeight: 700, marginBottom: 8, color: '#147FE4' }}>
             {tx('configErrorPage.for_vercel_deployments')}
           </div>
           <ol style={{ margin: 0, paddingLeft: 20 }}>

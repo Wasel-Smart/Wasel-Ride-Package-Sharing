@@ -473,9 +473,9 @@ const styles = StyleSheet.create({
   mapFrame: {
     borderRadius: radii.xl,
     overflow: 'hidden',
-    backgroundColor: '#0B1220',
+    backgroundColor: colors.surfaceMuted,
     borderWidth: 1,
-    borderColor: '#213047',
+    borderColor: colors.line,
   },
   mapInner: {
     height: MAP_HEIGHT,

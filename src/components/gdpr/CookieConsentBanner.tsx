@@ -81,7 +81,7 @@ export function CookieConsentBanner() {
             {tx(
               'cookieConsentBanner.we_use_cookies_to_enhance_your_experience_analyze_site_usage_and_provide_personalized_content_by_clicking_accept_you_consent_to_our_use_of_cookies_see_our',
             )}{' '}
-            <a href="/privacy" style={{ color: '#55E9FF', textDecoration: 'underline' }}>
+            <a href="/privacy" style={{ color: '#147FE4', textDecoration: 'underline' }}>
               {tx('sidebar.privacy')}
             </a>{' '}
             {tx('cookieConsentBanner.for_details')}
@@ -92,7 +92,7 @@ export function CookieConsentBanner() {
             onClick={handleDecline}
             variant="outline"
             style={{
-              borderColor: 'rgba(85, 233, 255, 0.3)',
+              borderColor: 'rgba(20, 127, 228, 0.3)',
               color: '#EFF6FF',
             }}
           >
@@ -101,7 +101,7 @@ export function CookieConsentBanner() {
           <Button
             onClick={handleAccept}
             style={{
-              background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 100%)',
+              background: 'linear-gradient(135deg, #147FE4 0%, #72C70D 100%)',
               color: '#041018',
             }}
           >
