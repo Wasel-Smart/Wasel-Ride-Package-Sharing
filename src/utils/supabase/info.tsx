@@ -183,12 +183,12 @@ export const publicSupabaseUrl = pickConfiguredUrl(
 export const publicAnonKey = pickConfiguredKey(
   publicSupabaseUrl,
   [
-    getEnvCandidate('VITE_SUPABASE_PUBLISHABLE_KEY'),
     getEnvCandidate('VITE_SUPABASE_ANON_KEY'),
+    getEnvCandidate('VITE_SUPABASE_PUBLISHABLE_KEY'),
     getEnvCandidate('VITE_PUBLIC_SUPABASE_ANON_KEY'),
   ],
   ALLOW_CHECKED_IN_PUBLIC_FALLBACK
-    ? [CHECKED_IN_PUBLIC_SUPABASE_PUBLISHABLE_KEY, CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY]
+    ? [CHECKED_IN_PUBLIC_SUPABASE_ANON_KEY, CHECKED_IN_PUBLIC_SUPABASE_PUBLISHABLE_KEY]
     : [],
 );
 
