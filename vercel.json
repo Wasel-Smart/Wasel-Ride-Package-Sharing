@@ -2,8 +2,12 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "npm install --legacy-peer-deps",
+  "installCommand": "npm install --include=dev --legacy-peer-deps",
   "devCommand": "npm run dev",
+  "env": {
+    "NPM_CONFIG_PRODUCTION": "false",
+    "NODE_ENV": "development"
+  },
   "rewrites": [
     {
       "source": "/(.*)",
