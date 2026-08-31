@@ -10,7 +10,7 @@ import {
   getDirectVerificationRecord,
   updateDirectProfile,
 } from './directSupabase';
-import { getAuthCallbackUrl, getConfig } from '../utils/env';
+import { getAuthCallbackUrl, getConfig, resolveAuthRedirectOrigin } from '../utils/env';
 
 function getDirectFallbackError(operation: string): Error {
   return getSecureBackendFallbackError(operation);
@@ -174,7 +174,7 @@ export const authAPI = {
   ) {
     const client = requireSupabase();
     const redirectTo = getAuthCallbackUrl(
-      typeof window !== 'undefined' ? window.location.origin : undefined,
+      resolveAuthRedirectOrigin(),
       returnTo ? { returnTo } : undefined,
     );
 

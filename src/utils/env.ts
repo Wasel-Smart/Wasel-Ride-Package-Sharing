@@ -435,6 +435,51 @@ export function getAuthCallbackUrl(origin?: string, params?: AuthCallbackParams)
   return url.toString();
 }
 
+/**
+ * Resolve the origin that must be used for Supabase `redirectTo` / `emailRedirectTo`
+ * URLs.
+ *
+ * The Supabase redirect-URL allow-list (Authentication > URL Configuration, and
+ * locally `supabase/config.toml`) only contains a small set of fixed origins. If we
+ * send the raw serving origin (for example a Vercel preview subdomain such as
+ * `wasel14-git-<branch>-<team>.vercel.app`) the request is rejected with
+ * "URI not allowed" / `redirect_uri has not been registered`.
+ *
+ * To keep OAuth and email confirmations working on any deployment surface we keep
+ * the real serving origin only when it is already allow-listed (localhost dev or the
+ * configured production host) and otherwise bounce the post-auth redirect back to the
+ * configured, allow-listed application URL. The original in-app destination is always
+ * preserved via the `returnTo` query param consumed by the auth callback.
+ */
+export function resolveAuthRedirectOrigin(): string {
+  const { appUrl } = getConfig();
+  const fallback = appUrl || 'http://localhost:3000';
+
+  if (typeof window === 'undefined' || !window.location?.origin) {
+    return fallback;
+  }
+
+  const origin = window.location.origin;
+
+  try {
+    const current = new URL(origin);
+    if (current.protocol === 'http:') {
+      // Local/dev transports are allow-listed by port in supabase/config.toml.
+      return origin;
+    }
+    const configured = new URL(fallback);
+    if (current.host === configured.host) {
+      // Same host as the configured app URL (www or non-www) -> allow-listed.
+      return origin;
+    }
+    // Unknown https host (preview deployment / not-yet-allow-listed custom domain):
+    // route the post-auth redirect to the configured, allow-listed application URL.
+    return configured.origin;
+  } catch {
+    return fallback;
+  }
+}
+
 export function getWhatsAppSupportUrl(message = 'Hi Wasel'): string {
   const { supportWhatsAppNumber, enableWhatsAppNotifications } = getConfig();
   if (!supportWhatsAppNumber || !enableWhatsAppNotifications) {
