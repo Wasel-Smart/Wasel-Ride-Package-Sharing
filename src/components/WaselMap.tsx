@@ -514,7 +514,7 @@ function WaselMapCompact({
           borderRadius: radii['2xl'],
           height: cssHeight,
           background:
-            'radial-gradient(120% 160% at 30% 15%, rgba(0,200,232,0.14), rgba(4,12,24,0.92) 55%, rgba(4,12,24,0.98) 100%)',
+            'radial-gradient(120% 160% at 30% 15%, rgba(20,127,228,0.14), rgba(4,12,24,0.92) 55%, rgba(4,12,24,0.98) 100%)',
           border: `1px solid ${colors.border.primary}`,
         }}
       >

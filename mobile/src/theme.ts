@@ -1,43 +1,43 @@
 export const colors = {
   // Brand
-  primary: '#00E5FF', // Wasel Cyan
-  secondary: '#00FFA3',
+  primary: '#147FE4', // Wasel Connection Blue
+  secondary: '#72C70D', // Wasel Movement Green
 
   // Neutrals
-  bg: '#050B14',
-  surface: '#0D1B2A',
-  surfaceElevated: '#132A3A',
-  surfaceAlt: '#1E293B',
-  surfaceMuted: '#172032',
-  line: '#334155',
-  lineStrong: '#475569',
+  bg: '#081D39',
+  surface: '#0E2240',
+  surfaceElevated: '#132B4D',
+  surfaceAlt: '#1A3560',
+  surfaceMuted: '#0A1F3A',
+  line: 'rgba(20, 127, 228, 0.16)',
+  lineStrong: 'rgba(20, 127, 228, 0.28)',
 
   // Text
-  textPrimary: '#FFFFFF',
-  textSecondary: '#94A3B8',
-  textMuted: '#697586',
-  ink: '#FFFFFF',
-  text: '#E2E8F0',
-  muted: '#94A3B8',
-  navy: '#F6F8FB',
-  charcoal: '#E2E8F0',
+  textPrimary: '#F8FBFF',
+  textSecondary: '#C4DCEE',
+  textMuted: '#95B2C9',
+  ink: '#F8FBFF',
+  text: '#F8FBFF',
+  muted: '#95B2C9',
+  navy: '#081D39',
+  charcoal: '#C4DCEE',
 
   // Brand accents (dark mode palette)
-  cyan: '#22D3EE',
-  teal: '#2DD4BF',
-  green: '#4ADE80',
-  amber: '#FBBF24',
-  blue: '#60A5FA',
-  gold: '#FCD34D',
+  cyan: '#147FE4',
+  teal: '#58DDFF',
+  green: '#72C70D',
+  amber: '#FF8A0B',
+  blue: '#147FE4',
+  gold: '#FFBE5C',
   lilac: '#C084FC',
   rose: '#FDA4AF',
   red: '#FCA5A5',
 
   // System
-  success: '#22C55E',
-  warning: '#FFB020',
-  error: '#FF4D67',
-  info: '#38BDF8',
+  success: '#72C70D',
+  warning: '#FF8A0B',
+  error: '#FF7C8B',
+  info: '#147FE4',
 };
 
 export const spacing = {
@@ -72,14 +72,14 @@ export const typography = {
 
 export const shadows = {
   card: {
-    shadowColor: '#0B1220',
+    shadowColor: '#081D39',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.08,
     shadowRadius: 20,
     elevation: 3,
   },
   lift: {
-    shadowColor: '#0B1220',
+    shadowColor: '#081D39',
     shadowOffset: { width: 0, height: 14 },
     shadowOpacity: 0.12,
     shadowRadius: 28,

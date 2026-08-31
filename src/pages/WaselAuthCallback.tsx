@@ -186,7 +186,7 @@ export default function WaselAuthCallback() {
             borderRadius: 20,
             padding: 28,
             background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(0,200,232,0.14)',
+            border: '1px solid rgba(20,127,228,0.14)',
             display: 'grid',
             gap: 14,
           }}
@@ -211,7 +211,7 @@ export default function WaselAuthCallback() {
                 width: '100%',
                 minHeight: 46,
                 borderRadius: 12,
-                border: '1px solid rgba(0,200,232,0.18)',
+                border: '1px solid rgba(20,127,228,0.18)',
                 background: 'rgba(255,255,255,0.03)',
                 color: '#EFF6FF',
                 padding: '0 14px',
@@ -233,7 +233,7 @@ export default function WaselAuthCallback() {
                 width: '100%',
                 minHeight: 46,
                 borderRadius: 12,
-                border: '1px solid rgba(0,200,232,0.18)',
+                border: '1px solid rgba(20,127,228,0.18)',
                 background: 'rgba(255,255,255,0.03)',
                 color: '#EFF6FF',
                 padding: '0 14px',
@@ -289,7 +289,7 @@ export default function WaselAuthCallback() {
             style={{
               minHeight: 42,
               borderRadius: 12,
-              border: '1px solid rgba(0,200,232,0.18)',
+              border: '1px solid rgba(20,127,228,0.18)',
               background: 'transparent',
               color: '#EFF6FF',
               fontSize: '0.9rem',
@@ -324,7 +324,7 @@ export default function WaselAuthCallback() {
           borderRadius: 20,
           padding: 28,
           background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(0,200,232,0.14)',
+          border: '1px solid rgba(20,127,228,0.14)',
           textAlign: 'center',
         }}
       >
@@ -337,7 +337,7 @@ export default function WaselAuthCallback() {
             border:
               state === 'error'
                 ? '3px solid rgba(255,68,85,0.3)'
-                : '3px solid rgba(0,200,232,0.15)',
+                : '3px solid rgba(20,127,228,0.15)',
             borderTop: state === 'error' ? '3px solid #FF7C8B' : '3px solid #147FE4',
             animation:
               state === 'redirecting' || state === 'loading' || state === 'closing'

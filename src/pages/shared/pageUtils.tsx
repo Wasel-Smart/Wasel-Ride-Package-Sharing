@@ -115,7 +115,7 @@ export function PageShell({ children }: { children: ReactNode }) {
     >
       <style>{`
         :root { color-scheme: dark; }
-        .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(0,200,232,0.28); }
+        .w-focus:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(20,127,228,0.28); }
         .w-focus-gold:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(240,168,48,0.28); }
         @media(max-width:899px){
           .sp-inner { padding: 16px !important; }

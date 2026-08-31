@@ -137,9 +137,9 @@ export default function App() {
           position="bottom-center"
           toastOptions={{
             style: {
-              background: '#0A1628',
-              border: '1px solid rgba(0,200,232,0.25)',
-              color: '#EFF6FF',
+              background: '#0E2240',
+              border: '1px solid rgba(20, 127, 228, 0.24)',
+              color: '#F8FBFF',
               fontFamily: "-apple-system, 'Inter', sans-serif",
             },
           }}

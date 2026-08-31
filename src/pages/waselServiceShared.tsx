@@ -122,7 +122,7 @@ export function PageShell({ children }: { children: ReactNode }) {
     >
       <style>{`
         :root { color-scheme: dark; }
-        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(0,200,232,0.28); }
+        .w-focus:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(20,127,228,0.28); }
         .w-focus-gold:focus-visible{ outline:none; box-shadow:0 0 0 3px rgba(240,168,48,0.28); }
         @media(max-width:899px){
           .sp-inner{ padding:16px !important; }
@@ -173,8 +173,8 @@ export function PageShell({ children }: { children: ReactNode }) {
               gap: 8,
               padding: '8px 12px',
               borderRadius: '999px',
-              background: 'rgba(0,200,232,0.08)',
-              border: '1px solid rgba(0,200,232,0.16)',
+              background: 'rgba(20,127,228,0.08)',
+              border: '1px solid rgba(20,127,228,0.16)',
               color: 'rgba(239,246,255,0.78)',
               fontSize: '0.72rem',
               fontWeight: 700,

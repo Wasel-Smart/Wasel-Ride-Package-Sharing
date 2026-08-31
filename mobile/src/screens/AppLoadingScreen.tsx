@@ -14,11 +14,11 @@ const AppLoadingScreen = React.memo(function AppLoadingScreen() {
     >
       <StatusBar style="light" />
       <View style={styles.mark} accessibilityElementsHidden>
-        <Text style={styles.markText}>W</Text>
+        <Text style={styles.markText}>واصل</Text>
       </View>
-      <Text style={styles.title}>واصل</Text>
+      <Text style={styles.title}>واصل | Wasel</Text>
       <Text style={styles.subtitle}>نجهّز رحلتك بأمان</Text>
-      <ActivityIndicator color={colors.cyan} size="large" style={styles.loader} />
+      <ActivityIndicator color={colors.primary} size="large" style={styles.loader} />
     </View>
   );
 });
@@ -26,32 +26,34 @@ const AppLoadingScreen = React.memo(function AppLoadingScreen() {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: colors.navy,
+    backgroundColor: colors.bg,
     flex: 1,
     justifyContent: 'center',
     padding: spacing.xl,
   },
   mark: {
     alignItems: 'center',
-    backgroundColor: colors.teal,
+    backgroundColor: colors.primary,
+    borderColor: 'rgba(248, 251, 255, 0.16)',
     borderRadius: 28,
+    borderWidth: 1,
     height: 88,
     justifyContent: 'center',
     marginBottom: spacing.lg,
     width: 88,
   },
   markText: {
-    color: '#FFFFFF',
-    fontSize: 48,
+    color: colors.textPrimary,
+    fontSize: 28,
     fontWeight: '900',
   },
   title: {
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontSize: typography.display.fontSize,
     fontWeight: '900',
   },
   subtitle: {
-    color: '#CBD5E1',
+    color: colors.textSecondary,
     fontSize: typography.body.fontSize,
     marginTop: spacing.sm,
   },
