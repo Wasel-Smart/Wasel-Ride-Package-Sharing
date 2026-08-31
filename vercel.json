@@ -8,7 +8,10 @@
     "NPM_CONFIG_PRODUCTION": "false"
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/:path((?!assets/|sw\\.js$|manifest\\.webmanifest$|initial-locale\\.js$|favicon|apple-touch-icon|icon-|robots\\.txt$|sitemap\\.xml$|precache-manifest\\.json$|offline\\.html$|brand/|\\.well-known/).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {

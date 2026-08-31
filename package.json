@@ -37,6 +37,7 @@
         "brand:sync": "node scripts/sync-brand-assets.mjs"
     },
     "dependencies": {
+        "@google/genai": "^2.19.0",
         "@microsoft/applicationinsights-web": "^3.4.3",
         "@radix-ui/react-accordion": "^1.2.3",
         "@radix-ui/react-alert-dialog": "^1.1.6",
