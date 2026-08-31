@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
 import {
+  AlertCircle,
   ArrowRight,
   Bus,
   Check,
@@ -26,6 +27,7 @@ import { checkRateLimit, resetRateLimit, validateEmail } from '../utils/security
 import { useAuth } from '../contexts/AuthContext';
 import { getConfig, getWhatsAppSupportUrl, normalizeReturnToPath } from '../utils/env';
 import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
+import { getProviderSetupInstructions } from '../utils/oauthValidator';
 
 import { C, R, TYPE, F, SPACE } from '../utils/wasel-ds';
 import { tx } from '../locales/tx';
@@ -417,6 +419,7 @@ export default function WaselAuth() {
   const nav = useIframeSafeNavigate();
   const mountedRef = useRef(true);
   const { supportWhatsAppNumber } = getConfig();
+  const [oauthConfigWarning, setOauthConfigWarning] = useState('');
 
   const safeReturnTo = normalizeReturnToPath(params.get('returnTo'));
 
@@ -430,6 +433,39 @@ export default function WaselAuth() {
   useEffect(() => {
     if (user && mountedRef.current) {nav(safeReturnTo);}
   }, [user, nav, safeReturnTo]);
+
+  // Check for OAuth configuration issues on mount (dev mode only)
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    const checkOAuthConfig = async () => {
+      try {
+        const { supabase } = await import('../utils/supabase/client');
+        if (!supabase) return;
+
+        // Try to get Facebook auth URL without redirecting
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'facebook',
+          options: {
+            skipBrowserRedirect: true,
+          },
+        });
+
+        if (error) {
+          const message = error.message?.toLowerCase() || '';
+          if (message.includes('not enabled')) {
+            setOauthConfigWarning(ar ? 'فيسبوك غير مفعّل في Supabase' : 'Facebook is not enabled in Supabase');
+          } else if (message.includes('redirect_uri') || message.includes('uri not allowed')) {
+            setOauthConfigWarning(ar ? 'مشكلة في إعدادات فيسبوك' : 'Facebook redirect URI is not configured correctly');
+          }
+        }
+      } catch {
+        // Silently ignore errors in config check
+      }
+    };
+
+    void checkOAuthConfig();
+  }, [ar]);
 
   const pushSuccessRedirect = () => {
     setSuccess(true);
@@ -556,7 +592,8 @@ export default function WaselAuth() {
     const { error: oauthError } = await signInWithGoogle(safeReturnTo);
 
     if (oauthError) {
-      setError(friendlyAuthError(oauthError, tx('waselAuth.error_google_failed')));
+      const enhancedMessage = enhanceOAuthError(String(oauthError), 'google');
+      setError(friendlyAuthError(enhancedMessage, tx('waselAuth.error_google_failed')));
     }
   };
 
@@ -565,7 +602,8 @@ export default function WaselAuth() {
     const { error: oauthError } = await signInWithFacebook(safeReturnTo);
 
     if (oauthError) {
-      setError(friendlyAuthError(oauthError, tx('waselAuth.error_facebook_failed')));
+      const enhancedMessage = enhanceOAuthError(String(oauthError), 'facebook');
+      setError(friendlyAuthError(enhancedMessage, tx('waselAuth.error_facebook_failed')));
     }
   };
 
@@ -575,6 +613,27 @@ export default function WaselAuth() {
       return;
     }
     window.open(getWhatsAppSupportUrl(ar ? 'مرحبا واصل' : 'Hi Wasel'), '_blank', 'noopener,noreferrer');
+  };
+
+  /**
+   * Enhance OAuth error messages with actionable recovery steps
+   */
+  const enhanceOAuthError = (error: string, provider: 'google' | 'facebook'): string => {
+    const lower = error.toLowerCase();
+    const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+
+    // Check for common redirect URI errors
+    if (lower.includes('redirect_uri') || lower.includes('uri not allowed') || lower.includes('invalid redirect')) {
+      const instructions = getProviderSetupInstructions(provider);
+      return `${providerName} sign-in is not configured correctly. To fix this:\n\n${instructions.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
+    }
+
+    // Check for client configuration errors
+    if (lower.includes('client') && (lower.includes('invalid') || lower.includes('not found'))) {
+      return `${providerName} authentication credentials are missing or invalid. Check Supabase Dashboard > Authentication > Providers > ${providerName}.`;
+    }
+
+    return error;
   };
 
   const socialButtons = [
@@ -691,6 +750,31 @@ export default function WaselAuth() {
 
           {/* Error banner */}
           <AnimatePresence>
+            {oauthConfigWarning && !error && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                style={{ overflow: 'hidden', marginBottom: SPACE[5] }}
+              >
+                <WaselCard
+                  variant="solid"
+                  padding={`${SPACE[3]} ${SPACE[4]}`}
+                  radius={R.lg}
+                  style={{ background: '#FEF3C7', border: '1px solid #F59E0B40' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: SPACE[2] }}>
+                    <AlertCircle size={16} color="#D97706" style={{ flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ fontSize: TYPE.size.sm, color: '#92400E', fontFamily: F }}>
+                      {oauthConfigWarning}
+                    </span>
+                  </div>
+                </WaselCard>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
             {notice && !error && !success && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -726,9 +810,22 @@ export default function WaselAuth() {
                   radius={R.lg}
                   style={{ background: C.errorDim, border: `1px solid ${C.error}40` }}
                 >
-                  <span style={{ fontSize: TYPE.size.sm, color: C.error, fontFamily: F }}>
-                    {error}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: SPACE[2] }}>
+                    {error.includes('\n') && (
+                      <AlertCircle size={16} color={C.error} style={{ flexShrink: 0, marginTop: 2 }} />
+                    )}
+                    <span
+                      style={{
+                        fontSize: TYPE.size.sm,
+                        color: C.error,
+                        fontFamily: F,
+                        whiteSpace: 'pre-line',
+                        lineHeight: TYPE.lineHeight.relaxed,
+                      }}
+                    >
+                      {error}
+                    </span>
+                  </div>
                 </WaselCard>
               </motion.div>
             )}

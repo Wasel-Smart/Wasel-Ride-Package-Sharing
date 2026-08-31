@@ -4,6 +4,7 @@
  */
 
 import { sanitizeLogMessage } from './sanitization';
+import { getExpectedRedirectUri } from './oauthValidator';
 
 export type OAuthProvider = 'google' | 'facebook';
 
@@ -101,8 +102,8 @@ function createOAuthError(
       break;
 
     case 'redirect_uri_mismatch':
-      userMessage = `${providerName} authentication configuration error. Please contact support.`;
-      recoveryAction = 'Contact support';
+      userMessage = `${providerName} sign-in is not configured correctly. The redirect URI needs to be added to the ${providerName} developer console.`;
+      recoveryAction = `Add "${getExpectedRedirectUri()}" to ${providerName} Valid OAuth Redirect URIs`;
       break;
 
     case 'invalid_scope':
