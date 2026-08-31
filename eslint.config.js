@@ -18,12 +18,17 @@ export default tseslint.config(
     'coverage',
     '*.config.js',
     '*.config.mjs',
+    '*.config.ts',
   ] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
+      parserOptions: {
+        project: ['./tsconfig.json', './tsconfig.api.json', './tsconfig.tests.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
       globals: {
         window: 'readonly',
         document: 'readonly',
