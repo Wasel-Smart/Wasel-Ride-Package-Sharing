@@ -307,7 +307,7 @@ if (environmentIsValid) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         await Promise.all(registrations.map(r => r.unregister()));
       }
-    } catch (e) {
+    } catch {
       // Ignore cleanup errors — we're recovering anyway
     }
     window.location.reload();
