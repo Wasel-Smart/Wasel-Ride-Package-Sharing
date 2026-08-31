@@ -295,6 +295,24 @@ if (environmentIsValid) {
     });
   }
 
+  // Hard recover from chunk-loading failures caused by stale caches after deployment.
+  // Clears all caches, unregisters service workers, and forces a full reload.
+  (window as unknown as { waselHardRecover?: () => void }).waselHardRecover = async () => {
+    try {
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(key => caches.delete(key)));
+      }
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(r => r.unregister()));
+      }
+    } catch (e) {
+      // Ignore cleanup errors — we're recovering anyway
+    }
+    window.location.reload();
+  };
+
   function isStandalonePWA(): boolean {
     if (typeof window === 'undefined') {return false;}
     const mediaQuery = window.matchMedia('(display-mode: standalone)');

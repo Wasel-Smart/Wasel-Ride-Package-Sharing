@@ -137,7 +137,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (url.pathname.startsWith('/assets/') && (url.pathname.endsWith('.js') || url.pathname.endsWith('.css'))) {
-    event.respondWith(staleWhileRevalidate(request));
+    event.respondWith(networkFirst(request));
     return;
   }
 
@@ -152,7 +152,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.destination === 'script' || request.destination === 'style' || request.destination === 'worker') {
-    event.respondWith(staleWhileRevalidate(request));
+    event.respondWith(networkFirst(request));
     return;
   }
 
