@@ -507,6 +507,10 @@ export default function WaselAuth() {
       setError(tx('waselAuth.error_password_min_length'));
       return;
     }
+    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[^a-zA-Z0-9]/.test(password)) {
+      setError(tx('waselAuth.error_password_requirements'));
+      return;
+    }
     if (!checkRateLimit(`signup:${email}`, { maxRequests: 3, windowMs: 60_000 })) {
       setError(tx('waselAuth.error_too_many_attempts'));
       return;

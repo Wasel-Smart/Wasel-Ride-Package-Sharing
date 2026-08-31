@@ -42,7 +42,7 @@ enabled = true
 
 [auth]
 enabled = true
-site_url = "https://wasel14.online"
+site_url = "https://www.wasel14.online"
 additional_redirect_urls = [
   "https://wasel14.online",
   "https://www.wasel14.online",
