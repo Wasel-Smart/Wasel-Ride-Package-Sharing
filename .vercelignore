@@ -1,6 +1,23 @@
 # Vercel ignore file
 # Ignore development files not needed in deployment
 
+# OneDrive sync artifacts and conflicts
+OneDrive/
+*.oneDrive
+*.onedrive
+*.conflict*
+*.tmp.OneDrive*
+
+# Backups
+backups/
+
+# Archives
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
 # Tests and development
 tests/
 # scripts are needed for build (generate-pwa-manifest.mjs, version-sw.mjs)
@@ -10,6 +27,7 @@ tests/
 .env
 .env.*
 !.env.example
+!.env.production
 
 # Dependencies
 node_modules/

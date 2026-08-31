@@ -48,8 +48,6 @@ additional_redirect_urls = [
   "https://www.wasel14.online",
   "https://wasel14.online/app/auth/callback",
   "https://www.wasel14.online/app/auth/callback",
-  "https://wasel-ride-package-sharing-ten.vercel.app",
-  "https://wasel-ride-package-sharing-ten.vercel.app/app/auth/callback",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
   "http://localhost:3000/app/auth/callback",
