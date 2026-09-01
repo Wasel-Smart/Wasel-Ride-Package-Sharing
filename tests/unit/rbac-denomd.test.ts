@@ -29,8 +29,12 @@ const getRolePermissions = ( role: AccessRole ): AccessPermission[] =>
   mockRolePermissions[ role ] ?? [];
 
 const resolveAccessRole = ( role: unknown ): AccessRole => {
-  if ( !role || typeof role !== 'string' || role === '' ) return 'guest';
-  if ( Object.keys( mockRolePermissions ).includes( role ) ) return role as AccessRole;
+  if ( !role || typeof role !== 'string' || role === '' ) {
+    return 'guest';
+  }
+  if ( Object.keys( mockRolePermissions ).includes( role ) ) {
+    return role as AccessRole;
+  }
   return 'guest'; // Fail closed for unknown roles
 };
 
