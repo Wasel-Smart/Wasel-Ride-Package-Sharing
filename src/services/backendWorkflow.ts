@@ -269,8 +269,8 @@ export async function runBackendWorkflow<T>({
       return fallback(context);
     }
 
-    if (fallback && !fallbackAllowed && isRecoverableError(error)) {
-      throw getFallbackDeniedError(operation);
+    if (isCircuitBreakerOpenError(error)) {
+      throw getSecureBackendFallbackError(operation);
     }
 
     throw error;
