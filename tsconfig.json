@@ -5,7 +5,11 @@
     "lib": [
       "ES2022",
       "DOM",
-      "DOM.Iterable"
+      "DOM.Iterable",
+      "ESNext"
+    ],
+    "types": [
+      "node"
     ],
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -37,7 +41,8 @@
       "@/*": [
         "./src/*"
       ]
-    }
+    },
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*",
