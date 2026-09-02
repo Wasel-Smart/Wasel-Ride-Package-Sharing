@@ -9,8 +9,8 @@ export interface TrustGateResult {
   recommendation: string | null;
 }
 
-function verificationRank(level?: string): number {
-  switch (level) {
+function verificationRank ( level?: string ): number {
+  switch ( level ) {
     case 'level_3':
       return 3;
     case 'level_2':
@@ -22,22 +22,23 @@ function verificationRank(level?: string): number {
   }
 }
 
-export function evaluateTrustCapability(
+export function evaluateTrustCapability (
   user:
     | Pick<
-        WaselUser,
-        | 'role'
-        | 'verificationLevel'
-        | 'walletStatus'
-        | 'trustScore'
-        | 'phoneVerified'
-        | 'emailVerified'
-      >
+      WaselUser,
+      | 'role'
+      | 'verificationLevel'
+      | 'walletStatus'
+      | 'trustScore'
+      | 'phoneVerified'
+      | 'emailVerified'
+      | 'driverStatus'
+    >
     | null
     | undefined,
   capability: TrustCapability,
 ): TrustGateResult {
-  if (!user) {
+  if ( !user ) {
     return {
       allowed: false,
       reason: 'Sign in to continue.',
@@ -45,10 +46,10 @@ export function evaluateTrustCapability(
     };
   }
 
-  const level = verificationRank(user.verificationLevel);
+  const level = verificationRank( user.verificationLevel );
   const walletBlocked = user.walletStatus === 'frozen' || user.walletStatus === 'closed';
 
-  if (walletBlocked && capability !== 'priority_support') {
+  if ( walletBlocked && capability !== 'priority_support' ) {
     return {
       allowed: false,
       reason: 'Wallet needs review.',
@@ -56,33 +57,40 @@ export function evaluateTrustCapability(
     };
   }
 
-  if (capability === 'offer_ride') {
-    if (user.role !== 'driver' && user.role !== 'both') {
+  if ( capability === 'offer_ride' ) {
+    if ( user.role !== 'driver' && user.role !== 'both' ) {
       return {
         allowed: false,
         reason: 'Turn on Driver mode first.',
         recommendation: 'Open Driver to start.',
       };
     }
-    if (!user.phoneVerified || !user.emailVerified) {
+    if ( !user.phoneVerified || !user.emailVerified ) {
       return {
         allowed: false,
         reason: 'Verify phone and email.',
         recommendation: 'Finish checks in Trust Center.',
       };
     }
+    if ( level < 3 || user.driverStatus !== 'approved' ) {
+      return {
+        allowed: false,
+        reason: 'Driver approval is required before publishing rides.',
+        recommendation: 'Submit your driver documents and wait for final approval.',
+      };
+    }
     return { allowed: true, reason: null, recommendation: null };
   }
 
-  if (capability === 'carry_packages') {
-    if (user.role !== 'driver' && user.role !== 'both') {
+  if ( capability === 'carry_packages' ) {
+    if ( user.role !== 'driver' && user.role !== 'both' ) {
       return {
         allowed: false,
         reason: 'Turn on Driver mode first.',
         recommendation: 'Complete driver setup.',
       };
     }
-    if (level < 3 || user.trustScore < 70) {
+    if ( level < 3 || user.trustScore < 70 ) {
       return {
         allowed: false,
         reason: 'Packages need full trust approval.',
@@ -92,8 +100,8 @@ export function evaluateTrustCapability(
     return { allowed: true, reason: null, recommendation: null };
   }
 
-  if (capability === 'receive_payouts') {
-    if (!user.emailVerified) {
+  if ( capability === 'receive_payouts' ) {
+    if ( !user.emailVerified ) {
       return {
         allowed: false,
         reason: 'Payouts need a verified email.',
@@ -103,7 +111,7 @@ export function evaluateTrustCapability(
     return { allowed: true, reason: null, recommendation: null };
   }
 
-  if (user.trustScore < 70) {
+  if ( user.trustScore < 70 ) {
     return {
       allowed: false,
       reason: 'Priority support needs stronger trust.',
@@ -114,24 +122,24 @@ export function evaluateTrustCapability(
   return { allowed: true, reason: null, recommendation: null };
 }
 
-export function getTrustReadinessSummary(
+export function getTrustReadinessSummary (
   user:
     | Pick<
-        WaselUser,
-        | 'role'
-        | 'verificationLevel'
-        | 'walletStatus'
-        | 'trustScore'
-        | 'phoneVerified'
-        | 'emailVerified'
-      >
+      WaselUser,
+      | 'role'
+      | 'verificationLevel'
+      | 'walletStatus'
+      | 'trustScore'
+      | 'phoneVerified'
+      | 'emailVerified'
+    >
     | null
     | undefined,
 ) {
   return {
-    canOfferRide: evaluateTrustCapability(user, 'offer_ride').allowed,
-    canCarryPackages: evaluateTrustCapability(user, 'carry_packages').allowed,
-    canReceivePayouts: evaluateTrustCapability(user, 'receive_payouts').allowed,
-    canUsePrioritySupport: evaluateTrustCapability(user, 'priority_support').allowed,
+    canOfferRide: evaluateTrustCapability( user, 'offer_ride' ).allowed,
+    canCarryPackages: evaluateTrustCapability( user, 'carry_packages' ).allowed,
+    canReceivePayouts: evaluateTrustCapability( user, 'receive_payouts' ).allowed,
+    canUsePrioritySupport: evaluateTrustCapability( user, 'priority_support' ).allowed,
   };
 }

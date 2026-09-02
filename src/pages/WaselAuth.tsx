@@ -37,17 +37,17 @@ type Tab = 'signin' | 'signup';
 
 // ─── Feature list for the brand panel ────────────────────────────────────────
 const BRAND_FEATURES = [
-  { icon: <Zap size={14} />, text: 'Live route graph', color: C.cyan },
-  { icon: <Package size={14} />, text: 'Parcels on route', color: C.gold },
-  { icon: <Bus size={14} />, text: 'Scheduled lanes', color: C.green },
-  { icon: <Shield size={14} />, text: 'Trust by default', color: C.purple },
+  { icon: <Zap size={ 14 } />, text: 'Live route graph', color: C.cyan },
+  { icon: <Package size={ 14 } />, text: 'Parcels on route', color: C.gold },
+  { icon: <Bus size={ 14 } />, text: 'Scheduled lanes', color: C.green },
+  { icon: <Shield size={ 14 } />, text: 'Trust by default', color: C.purple },
 ] as const;
 
 const BRAND_FEATURES_AR = [
-  { icon: <Zap size={14} />, text: 'رسم المسارات المباشر', color: C.cyan },
-  { icon: <Package size={14} />, text: 'طرود على نفس المسار', color: C.gold },
-  { icon: <Bus size={14} />, text: 'خطوط مجدولة', color: C.green },
-  { icon: <Shield size={14} />, text: 'الثقة من البداية', color: C.purple },
+  { icon: <Zap size={ 14 } />, text: 'رسم المسارات المباشر', color: C.cyan },
+  { icon: <Package size={ 14 } />, text: 'طرود على نفس المسار', color: C.gold },
+  { icon: <Bus size={ 14 } />, text: 'خطوط مجدولة', color: C.green },
+  { icon: <Shield size={ 14 } />, text: 'الثقة من البداية', color: C.purple },
 ] as const;
 
 const BRAND_METRICS = [
@@ -62,14 +62,14 @@ const BRAND_METRICS_AR = [
   { value: 'مباشر', label: 'ذكاء المسار', accent: C.green },
 ] as const;
 
-const BRAND_PILLS = ['Verified', 'Fast', 'Clear'] as const;
-const BRAND_PILLS_AR = ['موثّق', 'سريع', 'واضح'] as const;
+const BRAND_PILLS = [ 'Verified', 'Fast', 'Clear' ] as const;
+const BRAND_PILLS_AR = [ 'موثّق', 'سريع', 'واضح' ] as const;
 
 const BRAND_EYEBROW = "Jordan's mobility OS";
 const BRAND_EYEBROW_AR = 'نظام التنقّل الأول في الأردن';
 
 // ─── Brand panel (left column) ────────────────────────────────────────────────
-function BrandPanel() {
+function BrandPanel () {
   const { language } = useLanguage();
   const ar = language === 'ar';
   const metrics = ar ? BRAND_METRICS_AR : BRAND_METRICS;
@@ -79,219 +79,219 @@ function BrandPanel() {
   return (
     <div
       className="auth-brand-panel"
-      style={{
-        background: `linear-gradient(145deg, ${C.navy} 0%, ${C.navyMid} 48%, ${C.cardSolid} 100%)`,
+      style={ {
+        background: `linear-gradient(145deg, ${ C.navy } 0%, ${ C.navyMid } 48%, ${ C.cardSolid } 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: `${SPACE[16]} ${SPACE[12]}`,
+        padding: `${ SPACE[ 16 ] } ${ SPACE[ 12 ] }`,
         position: 'relative',
         overflow: 'hidden',
-      }}
+      } }
     >
-      {/* Ambient glows */}
+      {/* Ambient glows */ }
       <div
-        style={{
+        style={ {
           position: 'absolute',
           top: -110,
           right: -80,
           width: 460,
           height: 460,
           borderRadius: '50%',
-          background: `radial-gradient(circle, ${C.cyanGlow}, transparent 66%)`,
+          background: `radial-gradient(circle, ${ C.cyanGlow }, transparent 66%)`,
           filter: 'blur(80px)',
           pointerEvents: 'none',
-        }}
+        } }
       />
       <div
-        style={{
+        style={ {
           position: 'absolute',
           bottom: -100,
           left: -80,
           width: 420,
           height: 420,
           borderRadius: '50%',
-          background: `radial-gradient(circle, ${C.blueDim}cc, transparent 66%)`,
+          background: `radial-gradient(circle, ${ C.blueDim }cc, transparent 66%)`,
           filter: 'blur(80px)',
           pointerEvents: 'none',
-        }}
+        } }
       />
 
-      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 380 }}>
+      <div style={ { position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 380 } }>
         <div
-          style={{ margin: `0 0 ${SPACE[6]}`, display: 'flex', justifyContent: 'center' }}
+          style={ { margin: `0 0 ${ SPACE[ 6 ] }`, display: 'flex', justifyContent: 'center' } }
         >
-          <WaselHeroMark size={140} />
+          <WaselHeroMark size={ 140 } />
         </div>
 
         <div
-          style={{
+          style={ {
             display: 'inline-flex',
             alignItems: 'center',
-            gap: SPACE[2],
+            gap: SPACE[ 2 ],
             padding: '6px 14px',
             borderRadius: R.full,
-            background: `${C.cyan}12`,
-            border: `1px solid ${C.cyan}30`,
-            marginBottom: SPACE[5],
-          }}
+            background: `${ C.cyan }12`,
+            border: `1px solid ${ C.cyan }30`,
+            marginBottom: SPACE[ 5 ],
+          } }
         >
           <span
-            style={{
+            style={ {
               width: 6,
               height: 6,
               borderRadius: '50%',
               background: C.cyan,
-              boxShadow: `0 0 8px ${C.cyan}`,
+              boxShadow: `0 0 8px ${ C.cyan }`,
               animation: 'pulse-dot 2s ease-in-out infinite',
               flexShrink: 0,
-            }}
+            } }
           />
           <span
-            style={{
+            style={ {
               fontSize: TYPE.size.xs,
               fontWeight: TYPE.weight.bold,
               color: C.cyan,
               textTransform: 'uppercase',
               letterSpacing: TYPE.letterSpacing.widest,
-            }}
+            } }
           >
-            {ar ? BRAND_EYEBROW_AR : BRAND_EYEBROW}
+            { ar ? BRAND_EYEBROW_AR : BRAND_EYEBROW }
           </span>
         </div>
 
         <h2
-          style={{
-            fontSize: TYPE.size['3xl'],
+          style={ {
+            fontSize: TYPE.size[ '3xl' ],
             fontWeight: TYPE.weight.ultra,
             color: C.text,
             letterSpacing: '-0.04em',
-            margin: `0 0 ${SPACE[3]}`,
+            margin: `0 0 ${ SPACE[ 3 ] }`,
             lineHeight: 1.12,
-          }}
+          } }
         >
-          <span style={{ display: 'block' }}>{tx('waselAuth.one_identity')}</span>
+          <span style={ { display: 'block' } }>{ tx( 'waselAuth.one_identity' ) }</span>
           <span
-            style={{
+            style={ {
               display: 'block',
               background: 'linear-gradient(90deg, #00E5FF, #58DDFF)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-            }}
+            } }
           >
-            {tx('waselAuth.for_every_route')}
+            { tx( 'waselAuth.for_every_route' ) }
           </span>
         </h2>
 
         <p
-          style={{
+          style={ {
             fontSize: TYPE.size.base,
             color: C.textMuted,
             lineHeight: TYPE.lineHeight.loose,
-            marginBottom: SPACE[6],
-          }}
+            marginBottom: SPACE[ 6 ],
+          } }
         >
-          {tx('waselAuth.rides_parcels_buses_trust_and_support_stay_under_one_clear_account')}
+          { tx( 'waselAuth.rides_parcels_buses_trust_and_support_stay_under_one_clear_account' ) }
         </p>
 
         <div
-          style={{
+          style={ {
             display: 'grid',
             gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-            gap: SPACE[3],
-            marginBottom: SPACE[6],
-          }}
+            gap: SPACE[ 3 ],
+            marginBottom: SPACE[ 6 ],
+          } }
         >
-          {metrics.map(item => (
+          { metrics.map( item => (
             <div
-              key={item.label}
-              style={{
+              key={ item.label }
+              style={ {
                 borderRadius: R.xl,
-                border: `1px solid ${item.accent}24`,
-                background: `${item.accent}12`,
-                padding: `${SPACE[3]} ${SPACE[4]}`,
+                border: `1px solid ${ item.accent }24`,
+                background: `${ item.accent }12`,
+                padding: `${ SPACE[ 3 ] } ${ SPACE[ 4 ] }`,
                 textAlign: 'left',
-              }}
+              } }
             >
               <div
-                style={{
+                style={ {
                   color: C.text,
                   fontSize: TYPE.size.lg,
                   fontWeight: TYPE.weight.ultra,
                   lineHeight: TYPE.lineHeight.tight,
-                }}
+                } }
               >
-                {item.value}
+                { item.value }
               </div>
               <div
-                style={{
+                style={ {
                   marginTop: 4,
                   color: C.textMuted,
                   fontSize: TYPE.size.xs,
                   textTransform: 'uppercase',
                   letterSpacing: TYPE.letterSpacing.wide,
-                }}
+                } }
               >
-                {item.label}
+                { item.label }
               </div>
             </div>
-          ))}
+          ) ) }
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: SPACE[3], textAlign: 'left' }}>
-          {features.map(item => (
-            <div key={item.text} style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
+        <div style={ { display: 'flex', flexDirection: 'column', gap: SPACE[ 3 ], textAlign: 'left' } }>
+          { features.map( item => (
+            <div key={ item.text } style={ { display: 'flex', alignItems: 'center', gap: SPACE[ 3 ] } }>
               <div
-                style={{
+                style={ {
                   width: 30,
                   height: 30,
                   borderRadius: R.sm,
-                  background: `${item.color}15`,
-                  border: `1px solid ${item.color}28`,
+                  background: `${ item.color }15`,
+                  border: `1px solid ${ item.color }28`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: item.color,
                   flexShrink: 0,
-                }}
+                } }
               >
-                {item.icon}
+                { item.icon }
               </div>
-              <span style={{ fontSize: TYPE.size.sm, color: `${C.text}99` }}>{item.text}</span>
+              <span style={ { fontSize: TYPE.size.sm, color: `${ C.text }99` } }>{ item.text }</span>
             </div>
-          ))}
+          ) ) }
         </div>
 
         <div
-          style={{
+          style={ {
             display: 'flex',
-            gap: SPACE[3],
+            gap: SPACE[ 3 ],
             justifyContent: 'center',
-            marginTop: SPACE[8],
+            marginTop: SPACE[ 8 ],
             flexWrap: 'wrap',
-          }}
+          } }
         >
-          {pills.map(label => (
+          { pills.map( label => (
             <span
-              key={label}
-              style={{
+              key={ label }
+              style={ {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 5,
                 fontSize: TYPE.size.xs,
                 fontWeight: TYPE.weight.semibold,
-                color: `${C.text}99`,
-                background: `${C.text}0a`,
-                border: `1px solid ${C.text}18`,
+                color: `${ C.text }99`,
+                background: `${ C.text }0a`,
+                border: `1px solid ${ C.text }18`,
                 borderRadius: R.full,
                 padding: '4px 12px 4px 8px',
-              }}
+              } }
             >
-              <Check size={11} color={C.green} strokeWidth={3} />
-              {label}
+              <Check size={ 11 } color={ C.green } strokeWidth={ 3 } />
+              { label }
             </span>
-          ))}
+          ) ) }
         </div>
       </div>
     </div>
@@ -299,56 +299,56 @@ function BrandPanel() {
 }
 
 // ─── Password strength bar ────────────────────────────────────────────────────
-function StrengthBar({ password }: { password: string }) {
-  const strength = pwStrength(password);
-  if (!password) {return null;}
+function StrengthBar ( { password }: { password: string } ) {
+  const strength = pwStrength( password );
+  if ( !password ) { return null; }
   return (
     <div>
-      <div style={{ display: 'flex', gap: SPACE[1], marginBottom: SPACE[1] }}>
-        {[1, 2, 3, 4, 5].map(n => (
+      <div style={ { display: 'flex', gap: SPACE[ 1 ], marginBottom: SPACE[ 1 ] } }>
+        { [ 1, 2, 3, 4, 5 ].map( n => (
           <div
-            key={n}
-            style={{
+            key={ n }
+            style={ {
               flex: 1,
               height: 3,
               borderRadius: R.full,
-              background: n <= strength.score ? strength.color : `${C.text}14`,
+              background: n <= strength.score ? strength.color : `${ C.text }14`,
               transition: 'background 200ms ease',
-            }}
+            } }
           />
-        ))}
+        ) ) }
       </div>
-      {strength.label && (
-        <span style={{ fontSize: TYPE.size.xs, color: strength.color, fontFamily: F }}>
-          {strength.label}
+      { strength.label && (
+        <span style={ { fontSize: TYPE.size.xs, color: strength.color, fontFamily: F } }>
+          { strength.label }
         </span>
-      )}
+      ) }
     </div>
   );
 }
 
 // ─── Tab switcher ─────────────────────────────────────────────────────────────
-function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
+function TabSwitcher ( { tab, onChange }: { tab: Tab; onChange: ( t: Tab ) => void } ) {
   const { language } = useLanguage();
   const ar = language === 'ar';
 
   return (
     <div
-      style={{
+      style={ {
         display: 'flex',
         background: C.cardSolid,
         borderRadius: R.xl,
         padding: 4,
-        marginBottom: SPACE[7],
-        border: `1px solid ${C.border}`,
-      }}
+        marginBottom: SPACE[ 7 ],
+        border: `1px solid ${ C.border }`,
+      } }
     >
-      {(['signin', 'signup'] as Tab[]).map(value => {
+      { ( [ 'signin', 'signup' ] as Tab[] ).map( value => {
         const active = tab === value;
         return (
           <motion.button
-            key={value}
-            onClick={() => onChange(value)}
+            key={ value }
+            onClick={ () => onChange( value ) }
             aria-label={
               value === 'signin'
                 ? ar
@@ -358,8 +358,8 @@ function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }
                   ? 'التبديل إلى إنشاء حساب'
                   : 'Switch to create account'
             }
-            whileTap={{ scale: 0.97 }}
-            style={{
+            whileTap={ { scale: 0.97 } }
+            style={ {
               flex: 1,
               height: 42,
               borderRadius: R.lg,
@@ -372,41 +372,41 @@ function TabSwitcher({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }
                 ? 'linear-gradient(135deg, #00E5FF 0%, #0e5cb0 100%)'
                 : 'transparent',
               color: active ? C.bg : C.textMuted,
-              boxShadow: active ? `0 2px 12px ${C.cyanGlow}` : 'none',
+              boxShadow: active ? `0 2px 12px ${ C.cyanGlow }` : 'none',
               transition: 'all 150ms ease',
-            }}
+            } }
           >
-            {value === 'signin'
+            { value === 'signin'
               ? ar
                 ? 'تسجيل الدخول'
                 : 'Sign in'
               : ar
                 ? 'إنشاء حساب'
-                : 'Create account'}
+                : 'Create account' }
           </motion.button>
         );
-      })}
+      } ) }
     </div>
   );
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function WaselAuth() {
-  const [params] = useSearchParams();
-  const rawTab = params.get('tab')?.toLowerCase();
+export default function WaselAuth () {
+  const [ params ] = useSearchParams();
+  const rawTab = params.get( 'tab' )?.toLowerCase();
   const initialTab: Tab = rawTab === 'signup' || rawTab === 'register' ? 'signup' : 'signin';
-  const passwordResetCompleted = params.get('reset') === 'success';
+  const passwordResetCompleted = params.get( 'reset' ) === 'success';
   const { language } = useLanguage();
   const ar = language === 'ar';
 
-  const [tab, setTab] = useState<Tab>(initialTab);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [notice, setNotice] = useState(
+  const [ tab, setTab ] = useState<Tab>( initialTab );
+  const [ email, setEmail ] = useState( '' );
+  const [ password, setPassword ] = useState( '' );
+  const [ name, setName ] = useState( '' );
+  const [ phone, setPhone ] = useState( '' );
+  const [ error, setError ] = useState( '' );
+  const [ success, setSuccess ] = useState( false );
+  const [ notice, setNotice ] = useState(
     passwordResetCompleted
       ? ar
         ? 'تم تحديث كلمة المرور. سجّل الدخول بكلمة المرور الجديدة.'
@@ -417,46 +417,50 @@ export default function WaselAuth() {
   const { signIn, register, loading, user } = useLocalAuth();
   const { resetPassword, signInWithGoogle, signInWithFacebook } = useAuth();
   const nav = useIframeSafeNavigate();
-  const mountedRef = useRef(true);
+  const mountedRef = useRef( true );
   const { supportWhatsAppNumber } = getConfig();
-  const [oauthConfigWarning, setOauthConfigWarning] = useState('');
+  const [ oauthConfigWarning, setOauthConfigWarning ] = useState( '' );
 
-  const safeReturnTo = normalizeReturnToPath(params.get('returnTo'));
+  const safeReturnTo = normalizeReturnToPath( params.get( 'returnTo' ) );
 
-  useEffect(() => {
+  useEffect( () => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
     };
-  }, []);
+  }, [] );
 
-  useEffect(() => {
-    if (user && mountedRef.current) {nav(safeReturnTo);}
-  }, [user, nav, safeReturnTo]);
+  useEffect( () => {
+    if ( user && mountedRef.current ) { nav( safeReturnTo ); }
+  }, [ user, nav, safeReturnTo ] );
 
   // Check for OAuth configuration issues on mount (dev mode only)
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
+  useEffect( () => {
+    if ( !import.meta.env.DEV ) {
+      return;
+    }
 
     const checkOAuthConfig = async () => {
       try {
-        const { supabase } = await import('../utils/supabase/client');
-        if (!supabase) return;
+        const { supabase } = await import( '../utils/supabase/client' );
+        if ( !supabase ) {
+          return;
+        }
 
         // Try to get Facebook auth URL without redirecting
-        const { error } = await supabase.auth.signInWithOAuth({
+        const { error } = await supabase.auth.signInWithOAuth( {
           provider: 'facebook',
           options: {
             skipBrowserRedirect: true,
           },
-        });
+        } );
 
-        if (error) {
+        if ( error ) {
           const message = error.message?.toLowerCase() || '';
-          if (message.includes('not enabled')) {
-            setOauthConfigWarning(ar ? 'فيسبوك غير مفعّل في Supabase' : 'Facebook is not enabled in Supabase');
-          } else if (message.includes('redirect_uri') || message.includes('uri not allowed')) {
-            setOauthConfigWarning(ar ? 'مشكلة في إعدادات فيسبوك' : 'Facebook redirect URI is not configured correctly');
+          if ( message.includes( 'not enabled' ) ) {
+            setOauthConfigWarning( ar ? 'فيسبوك غير مفعّل في Supabase' : 'Facebook is not enabled in Supabase' );
+          } else if ( message.includes( 'redirect_uri' ) || message.includes( 'uri not allowed' ) ) {
+            setOauthConfigWarning( ar ? 'مشكلة في إعدادات فيسبوك' : 'Facebook redirect URI is not configured correctly' );
           }
         }
       } catch {
@@ -465,172 +469,172 @@ export default function WaselAuth() {
     };
 
     void checkOAuthConfig();
-  }, [ar]);
+  }, [ ar ] );
 
   const pushSuccessRedirect = () => {
-    setSuccess(true);
-    setTimeout(() => {
-      if (mountedRef.current) {nav(safeReturnTo);}
-    }, 700);
+    setSuccess( true );
+    setTimeout( () => {
+      if ( mountedRef.current ) { nav( safeReturnTo ); }
+    }, 700 );
   };
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async ( e: React.FormEvent ) => {
     e.preventDefault();
-    if (tab === 'signin') {
+    if ( tab === 'signin' ) {
       await handleSignIn();
     } else {
       await handleSignUp();
     }
   };
 
-  const handleTabChange = (next: Tab) => {
-    setTab(next);
-    setError('');
-    setSuccess(false);
-    if (!passwordResetCompleted) {
-      setNotice('');
+  const handleTabChange = ( next: Tab ) => {
+    setTab( next );
+    setError( '' );
+    setSuccess( false );
+    if ( !passwordResetCompleted ) {
+      setNotice( '' );
     }
   };
 
   const handleSignIn = async () => {
-    setError('');
-    if (!passwordResetCompleted) {
-      setNotice('');
+    setError( '' );
+    if ( !passwordResetCompleted ) {
+      setNotice( '' );
     }
-    if (!email.trim()) {
-      setError(tx('waselAuth.error_enter_email'));
+    if ( !email.trim() ) {
+      setError( tx( 'waselAuth.error_enter_email' ) );
       return;
     }
-    if (!validateEmail(email)) {
-      setError(tx('waselAuth.error_enter_valid_email'));
+    if ( !validateEmail( email ) ) {
+      setError( tx( 'waselAuth.error_enter_valid_email' ) );
       return;
     }
-    if (!password) {
-      setError(tx('waselAuth.error_enter_password'));
+    if ( !password ) {
+      setError( tx( 'waselAuth.error_enter_password' ) );
       return;
     }
-    if (!checkRateLimit(`signin:${email}`, { maxRequests: 5, windowMs: 60_000 })) {
-      setError(tx('waselAuth.error_too_many_attempts'));
+    if ( !checkRateLimit( `signin:${ email }`, { maxRequests: 5, windowMs: 60_000 } ) ) {
+      setError( tx( 'waselAuth.error_too_many_attempts' ) );
       return;
     }
-    const { error: signInError } = await signIn(email, password);
-    if (signInError) {
-      setError(friendlyAuthError(signInError, tx('waselAuth.error_signin_failed')));
+    const { error: signInError } = await signIn( email, password );
+    if ( signInError ) {
+      setError( friendlyAuthError( signInError, tx( 'waselAuth.error_signin_failed' ) ) );
       return;
     }
-    resetRateLimit(`signin:${email}`);
+    resetRateLimit( `signin:${ email }` );
     pushSuccessRedirect();
   };
 
   const handleSignUp = async () => {
-    setError('');
-    if (!passwordResetCompleted) {
-      setNotice('');
+    setError( '' );
+    if ( !passwordResetCompleted ) {
+      setNotice( '' );
     }
-    if (!name.trim()) {
-      setError(tx('waselAuth.error_enter_full_name'));
+    if ( !name.trim() ) {
+      setError( tx( 'waselAuth.error_enter_full_name' ) );
       return;
     }
-    if (!email.trim()) {
-      setError(tx('waselAuth.error_enter_email'));
+    if ( !email.trim() ) {
+      setError( tx( 'waselAuth.error_enter_email' ) );
       return;
     }
-    if (!validateEmail(email)) {
-      setError(tx('waselAuth.error_enter_valid_email'));
+    if ( !validateEmail( email ) ) {
+      setError( tx( 'waselAuth.error_enter_valid_email' ) );
       return;
     }
-    if (password.length < 8) {
-      setError(tx('waselAuth.error_password_min_length'));
+    if ( password.length < 8 ) {
+      setError( tx( 'waselAuth.error_password_min_length' ) );
       return;
     }
-    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password) || !/[^a-zA-Z0-9]/.test(password)) {
-      setError(tx('waselAuth.error_password_requirements'));
+    if ( !/[a-z]/.test( password ) || !/[A-Z]/.test( password ) || !/\d/.test( password ) || !/[^a-zA-Z0-9]/.test( password ) ) {
+      setError( tx( 'waselAuth.error_password_requirements' ) );
       return;
     }
-    if (!checkRateLimit(`signup:${email}`, { maxRequests: 3, windowMs: 60_000 })) {
-      setError(tx('waselAuth.error_too_many_attempts'));
+    if ( !checkRateLimit( `signup:${ email }`, { maxRequests: 3, windowMs: 60_000 } ) ) {
+      setError( tx( 'waselAuth.error_too_many_attempts' ) );
       return;
     }
-    const registration = await register(name, email, password, phone, safeReturnTo);
-    if (registration.error) {
-      setError(friendlyAuthError(registration.error, tx('waselAuth.error_signup_failed')));
+    const registration = await register( name, email, password, phone, safeReturnTo );
+    if ( registration.error ) {
+      setError( friendlyAuthError( registration.error, tx( 'waselAuth.error_signup_failed' ) ) );
       return;
     }
-    if (registration.requiresEmailConfirmation) {
-      setPassword('');
+    if ( registration.requiresEmailConfirmation ) {
+      setPassword( '' );
       setNotice(
-        tx('waselAuth.confirm_email_notice', { email: registration.email ?? email }),
+        tx( 'waselAuth.confirm_email_notice', { email: registration.email ?? email } ),
       );
-      setTab('signin');
-      resetRateLimit(`signup:${email}`);
+      setTab( 'signin' );
+      resetRateLimit( `signup:${ email }` );
       return;
     }
-    resetRateLimit(`signup:${email}`);
+    resetRateLimit( `signup:${ email }` );
     pushSuccessRedirect();
   };
 
   const handleForgotPassword = async () => {
-    if (!email.trim()) {
-      setError(tx('waselAuth.error_enter_email_first'));
+    if ( !email.trim() ) {
+      setError( tx( 'waselAuth.error_enter_email_first' ) );
       return;
     }
-    if (!validateEmail(email)) {
-      setError(tx('waselAuth.error_enter_valid_email'));
+    if ( !validateEmail( email ) ) {
+      setError( tx( 'waselAuth.error_enter_valid_email' ) );
       return;
     }
-    const { error: resetError } = await resetPassword(email, safeReturnTo);
-    if (resetError) {
-      setError(friendlyAuthError(resetError, tx('waselAuth.error_reset_failed')));
+    const { error: resetError } = await resetPassword( email, safeReturnTo );
+    if ( resetError ) {
+      setError( friendlyAuthError( resetError, tx( 'waselAuth.error_reset_failed' ) ) );
       return;
     }
-    setError('');
-    toast.success(tx('waselAuth.reset_link_sent', { email }));
+    setError( '' );
+    toast.success( tx( 'waselAuth.reset_link_sent', { email } ) );
   };
 
   const handleGoogleSignIn = async () => {
-    setError('');
-    const { error: oauthError } = await signInWithGoogle(safeReturnTo);
+    setError( '' );
+    const { error: oauthError } = await signInWithGoogle( safeReturnTo );
 
-    if (oauthError) {
-      const enhancedMessage = enhanceOAuthError(String(oauthError), 'google');
-      setError(friendlyAuthError(enhancedMessage, tx('waselAuth.error_google_failed')));
+    if ( oauthError ) {
+      const enhancedMessage = enhanceOAuthError( String( oauthError ), 'google' );
+      setError( friendlyAuthError( enhancedMessage, tx( 'waselAuth.error_google_failed' ) ) );
     }
   };
 
   const handleFacebookSignIn = async () => {
-    setError('');
-    const { error: oauthError } = await signInWithFacebook(safeReturnTo);
+    setError( '' );
+    const { error: oauthError } = await signInWithFacebook( safeReturnTo );
 
-    if (oauthError) {
-      const enhancedMessage = enhanceOAuthError(String(oauthError), 'facebook');
-      setError(friendlyAuthError(enhancedMessage, tx('waselAuth.error_facebook_failed')));
+    if ( oauthError ) {
+      const enhancedMessage = enhanceOAuthError( String( oauthError ), 'facebook' );
+      setError( friendlyAuthError( enhancedMessage, tx( 'waselAuth.error_facebook_failed' ) ) );
     }
   };
 
   const handleWhatsAppHelp = () => {
-    if (!supportWhatsAppNumber) {
-      setError(tx('waselAuth.error_whatsapp_not_configured'));
+    if ( !supportWhatsAppNumber ) {
+      setError( tx( 'waselAuth.error_whatsapp_not_configured' ) );
       return;
     }
-    window.open(getWhatsAppSupportUrl(ar ? 'مرحبا واصل' : 'Hi Wasel'), '_blank', 'noopener,noreferrer');
+    window.open( getWhatsAppSupportUrl( ar ? 'مرحبا واصل' : 'Hi Wasel' ), '_blank', 'noopener,noreferrer' );
   };
 
   /**
    * Enhance OAuth error messages with actionable recovery steps
    */
-  const enhanceOAuthError = (error: string, provider: 'google' | 'facebook'): string => {
+  const enhanceOAuthError = ( error: string, provider: 'google' | 'facebook' ): string => {
     const lower = error.toLowerCase();
-    const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+    const providerName = provider.charAt( 0 ).toUpperCase() + provider.slice( 1 );
 
     // Check for common redirect URI errors
-    if (lower.includes('redirect_uri') || lower.includes('uri not allowed') || lower.includes('invalid redirect')) {
-      const instructions = getProviderSetupInstructions(provider);
-      return `${providerName} sign-in is not configured correctly. To fix this:\n\n${instructions.steps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
+    if ( lower.includes( 'redirect_uri' ) || lower.includes( 'uri not allowed' ) || lower.includes( 'invalid redirect' ) ) {
+      const instructions = getProviderSetupInstructions( provider );
+      return `${ providerName } sign-in is not configured correctly. To fix this:\n\n${ instructions.steps.map( ( s, i ) => `${ i + 1 }. ${ s }` ).join( '\n' ) }`;
     }
 
     // Check for client configuration errors
-    if (lower.includes('client') && (lower.includes('invalid') || lower.includes('not found'))) {
-      return `${providerName} authentication credentials are missing or invalid. Check Supabase Dashboard > Authentication > Providers > ${providerName}.`;
+    if ( lower.includes( 'client' ) && ( lower.includes( 'invalid' ) || lower.includes( 'not found' ) ) ) {
+      return `${ providerName } authentication credentials are missing or invalid. Check Supabase Dashboard > Authentication > Providers > ${ providerName }.`;
     }
 
     return error;
@@ -639,28 +643,28 @@ export default function WaselAuth() {
   const socialButtons = [
     { label: 'Google', color: '#4285F4', onClick: handleGoogleSignIn },
     { label: 'Facebook', color: '#1877F2', onClick: handleFacebookSignIn },
-    ...(supportWhatsAppNumber
-      ? [{ label: 'WhatsApp', color: '#25D366', onClick: handleWhatsAppHelp }]
-      : []),
+    ...( supportWhatsAppNumber
+      ? [ { label: 'WhatsApp', color: '#25D366', onClick: handleWhatsAppHelp } ]
+      : [] ),
   ] as const;
 
   return (
     <div
       className="auth-grid"
-      style={{
+      style={ {
         minHeight: '100vh',
         background: C.bg,
         color: C.text,
         fontFamily: F,
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-      }}
+      } }
     >
-      <style>{`
+      <style>{ `
         @media(max-width:768px){
           .auth-grid{grid-template-columns:1fr!important}
           .auth-brand-panel{display:none!important}
-          .auth-form-panel{padding:${SPACE[7]} ${SPACE[5]}!important;align-items:flex-start!important}
+          .auth-form-panel{padding:${ SPACE[ 7 ] } ${ SPACE[ 5 ] }!important;align-items:flex-start!important}
           .auth-mobile-header{display:flex!important}
         }
         @keyframes spin{to{transform:rotate(360deg)}}
@@ -669,272 +673,272 @@ export default function WaselAuth() {
 
       <BrandPanel />
 
-      {/* ── Form panel ─────────────────────────────────────────────────── */}
+      {/* ── Form panel ─────────────────────────────────────────────────── */ }
       <div
         className="auth-form-panel"
-        style={{
-          background: `linear-gradient(180deg, ${C.bg} 0%, ${C.bgAlt} 100%)`,
+        style={ {
+          background: `linear-gradient(180deg, ${ C.bg } 0%, ${ C.bgAlt } 100%)`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: `${SPACE[16]} ${SPACE[12]}`,
+          padding: `${ SPACE[ 16 ] } ${ SPACE[ 12 ] }`,
           overflowY: 'auto',
-        }}
+        } }
       >
-        <div style={{ width: '100%', maxWidth: 440 }}>
-          {/* Mobile header (hidden on desktop) */}
+        <div style={ { width: '100%', maxWidth: 440 } }>
+          {/* Mobile header (hidden on desktop) */ }
           <div
             className="auth-mobile-header"
-            style={{
+            style={ {
               display: 'none',
               flexDirection: 'column',
               alignItems: 'center',
               textAlign: 'center',
-              marginBottom: SPACE[7],
-              paddingBottom: SPACE[6],
-              borderBottom: `1px solid ${C.border}`,
-            }}
+              marginBottom: SPACE[ 7 ],
+              paddingBottom: SPACE[ 6 ],
+              borderBottom: `1px solid ${ C.border }`,
+            } }
           >
-            <WaselLogo size={64} theme="light" variant="full" />
+            <WaselLogo size={ 64 } theme="light" variant="full" />
             <h2
-              style={{
+              style={ {
                 fontSize: TYPE.size.xl,
                 fontWeight: TYPE.weight.ultra,
                 color: C.text,
-                marginTop: SPACE[4],
-                marginBottom: SPACE[2],
+                marginTop: SPACE[ 4 ],
+                marginBottom: SPACE[ 2 ],
                 letterSpacing: '-0.03em',
-              }}
+              } }
             >
-              <span style={{ color: C.cyan }}>{tx('waselAuth.one_identity_2')}</span>
+              <span style={ { color: C.cyan } }>{ tx( 'waselAuth.one_identity_2' ) }</span>
             </h2>
-            <p style={{ fontSize: TYPE.size.sm, color: C.textMuted, marginBottom: SPACE[3] }}>
-              {tx('waselAuth.sign_in_once_for_rides_parcels_buses_and_trust')}
+            <p style={ { fontSize: TYPE.size.sm, color: C.textMuted, marginBottom: SPACE[ 3 ] } }>
+              { tx( 'waselAuth.sign_in_once_for_rides_parcels_buses_and_trust' ) }
             </p>
           </div>
 
-          <TabSwitcher tab={tab} onChange={handleTabChange} />
+          <TabSwitcher tab={ tab } onChange={ handleTabChange } />
 
-          {/* Heading */}
-          <div style={{ marginBottom: SPACE[6] }}>
+          {/* Heading */ }
+          <div style={ { marginBottom: SPACE[ 6 ] } }>
             <h3
-              style={{
-                fontSize: TYPE.size['2xl'],
+              style={ {
+                fontSize: TYPE.size[ '2xl' ],
                 fontWeight: TYPE.weight.ultra,
                 color: C.text,
-                margin: `0 0 ${SPACE[2]}`,
+                margin: `0 0 ${ SPACE[ 2 ] }`,
                 letterSpacing: '-0.02em',
-              }}
+              } }
             >
-              {ar
+              { ar
                 ? tab === 'signin'
                   ? 'مرحباً بعودتك إلى واصل'
                   : 'أنشئ حسابك في واصل'
                 : tab === 'signin'
                   ? 'Welcome back to Wasel'
-                  : 'Create your Wasel account'}
+                  : 'Create your Wasel account' }
             </h3>
             <p
-              style={{
+              style={ {
                 fontSize: TYPE.size.sm,
                 color: C.textMuted,
                 margin: 0,
                 lineHeight: TYPE.lineHeight.relaxed,
-              }}
+              } }
             >
-              {tab === 'signin'
-                ? tx('waselAuth.subtitle_signin')
-                : tx('waselAuth.subtitle_signup')}
+              { tab === 'signin'
+                ? tx( 'waselAuth.subtitle_signin' )
+                : tx( 'waselAuth.subtitle_signup' ) }
             </p>
           </div>
 
-          {/* Error banner */}
+          {/* Error banner */ }
           <AnimatePresence>
-            {oauthConfigWarning && !error && (
+            { oauthConfigWarning && !error && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                style={{ overflow: 'hidden', marginBottom: SPACE[5] }}
+                initial={ { opacity: 0, height: 0 } }
+                animate={ { opacity: 1, height: 'auto' } }
+                exit={ { opacity: 0, height: 0 } }
+                style={ { overflow: 'hidden', marginBottom: SPACE[ 5 ] } }
               >
                 <WaselCard
                   variant="solid"
-                  padding={`${SPACE[3]} ${SPACE[4]}`}
-                  radius={R.lg}
-                  style={{ background: '#FEF3C7', border: '1px solid #F59E0B40' }}
+                  padding={ `${ SPACE[ 3 ] } ${ SPACE[ 4 ] }` }
+                  radius={ R.lg }
+                  style={ { background: '#FEF3C7', border: '1px solid #F59E0B40' } }
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: SPACE[2] }}>
-                    <AlertCircle size={16} color="#D97706" style={{ flexShrink: 0, marginTop: 2 }} />
-                    <span style={{ fontSize: TYPE.size.sm, color: '#92400E', fontFamily: F }}>
-                      {oauthConfigWarning}
+                  <div style={ { display: 'flex', alignItems: 'flex-start', gap: SPACE[ 2 ] } }>
+                    <AlertCircle size={ 16 } color="#D97706" style={ { flexShrink: 0, marginTop: 2 } } />
+                    <span style={ { fontSize: TYPE.size.sm, color: '#92400E', fontFamily: F } }>
+                      { oauthConfigWarning }
                     </span>
                   </div>
                 </WaselCard>
               </motion.div>
-            )}
+            ) }
           </AnimatePresence>
 
           <AnimatePresence>
-            {notice && !error && !success && (
+            { notice && !error && !success && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                style={{ overflow: 'hidden', marginBottom: SPACE[5] }}
+                initial={ { opacity: 0, height: 0 } }
+                animate={ { opacity: 1, height: 'auto' } }
+                exit={ { opacity: 0, height: 0 } }
+                style={ { overflow: 'hidden', marginBottom: SPACE[ 5 ] } }
               >
                 <WaselCard
                   variant="solid"
-                  padding={`${SPACE[3]} ${SPACE[4]}`}
-                  radius={R.lg}
-                  style={{ background: C.greenDim, border: `1px solid ${C.green}40` }}
+                  padding={ `${ SPACE[ 3 ] } ${ SPACE[ 4 ] }` }
+                  radius={ R.lg }
+                  style={ { background: C.greenDim, border: `1px solid ${ C.green }40` } }
                 >
-                  <span style={{ fontSize: TYPE.size.sm, color: C.green, fontFamily: F }}>
-                    {notice}
+                  <span style={ { fontSize: TYPE.size.sm, color: C.green, fontFamily: F } }>
+                    { notice }
                   </span>
                 </WaselCard>
               </motion.div>
-            )}
+            ) }
           </AnimatePresence>
 
           <AnimatePresence>
-            {error && (
+            { error && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                style={{ overflow: 'hidden', marginBottom: SPACE[5] }}
+                initial={ { opacity: 0, height: 0 } }
+                animate={ { opacity: 1, height: 'auto' } }
+                exit={ { opacity: 0, height: 0 } }
+                style={ { overflow: 'hidden', marginBottom: SPACE[ 5 ] } }
               >
                 <WaselCard
                   variant="solid"
-                  padding={`${SPACE[3]} ${SPACE[4]}`}
-                  radius={R.lg}
-                  style={{ background: C.errorDim, border: `1px solid ${C.error}40` }}
+                  padding={ `${ SPACE[ 3 ] } ${ SPACE[ 4 ] }` }
+                  radius={ R.lg }
+                  style={ { background: C.errorDim, border: `1px solid ${ C.error }40` } }
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: SPACE[2] }}>
-                    {error.includes('\n') && (
-                      <AlertCircle size={16} color={C.error} style={{ flexShrink: 0, marginTop: 2 }} />
-                    )}
+                  <div style={ { display: 'flex', alignItems: 'flex-start', gap: SPACE[ 2 ] } }>
+                    { error.includes( '\n' ) && (
+                      <AlertCircle size={ 16 } color={ C.error } style={ { flexShrink: 0, marginTop: 2 } } />
+                    ) }
                     <span
-                      style={{
+                      style={ {
                         fontSize: TYPE.size.sm,
                         color: C.error,
                         fontFamily: F,
                         whiteSpace: 'pre-line',
                         lineHeight: TYPE.lineHeight.relaxed,
-                      }}
+                      } }
                     >
-                      {error}
+                      { error }
                     </span>
                   </div>
                 </WaselCard>
               </motion.div>
-            )}
+            ) }
           </AnimatePresence>
 
-          {/* Success banner */}
+          {/* Success banner */ }
           <AnimatePresence>
-            {success && (
+            { success && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                style={{ marginBottom: SPACE[5] }}
+                initial={ { opacity: 0, scale: 0.96 } }
+                animate={ { opacity: 1, scale: 1 } }
+                style={ { marginBottom: SPACE[ 5 ] } }
               >
                 <WaselCard
                   variant="solid"
-                  padding={`${SPACE[3]} ${SPACE[4]}`}
-                  radius={R.lg}
-                  style={{ background: C.greenDim, border: `1px solid ${C.green}40` }}
+                  padding={ `${ SPACE[ 3 ] } ${ SPACE[ 4 ] }` }
+                  radius={ R.lg }
+                  style={ { background: C.greenDim, border: `1px solid ${ C.green }40` } }
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[2] }}>
-                    <CheckCircle2 size={16} color={C.green} />
-                    <span style={{ fontSize: TYPE.size.sm, color: C.green, fontFamily: F }}>
-                      {tx('waselAuth.signed_in_successfully_redirecting_now')}
+                  <div style={ { display: 'flex', alignItems: 'center', gap: SPACE[ 2 ] } }>
+                    <CheckCircle2 size={ 16 } color={ C.green } />
+                    <span style={ { fontSize: TYPE.size.sm, color: C.green, fontFamily: F } }>
+                      { tx( 'waselAuth.signed_in_successfully_redirecting_now' ) }
                     </span>
                   </div>
                 </WaselCard>
               </motion.div>
-            )}
+            ) }
           </AnimatePresence>
 
-          {/* Fields */}
+          {/* Fields */ }
           <AnimatePresence mode="wait">
             <motion.div
-              key={tab}
-              initial={{ opacity: 0, x: 12 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -12 }}
-              transition={{ duration: 0.15 }}
+              key={ tab }
+              initial={ { opacity: 0, x: 12 } }
+              animate={ { opacity: 1, x: 0 } }
+              exit={ { opacity: 0, x: -12 } }
+              transition={ { duration: 0.15 } }
             >
               <form
-                onSubmit={handleFormSubmit}
-                style={{ display: 'flex', flexDirection: 'column', gap: SPACE[4] }}
+                onSubmit={ handleFormSubmit }
+                style={ { display: 'flex', flexDirection: 'column', gap: SPACE[ 4 ] } }
               >
-                {tab === 'signup' && (
+                { tab === 'signup' && (
                   <WaselInput
                     id="full-name"
-                    label={tx('auth.fullName')}
-                    description={tx('waselAuth.as_shown_on_your_profile')}
-                    value={name}
-                    onChange={setName}
-                    placeholder={tx('waselAuth.ahmad_al_rashid')}
-                    icon={<UserRound size={16} />}
+                    label={ tx( 'auth.fullName' ) }
+                    description={ tx( 'waselAuth.as_shown_on_your_profile' ) }
+                    value={ name }
+                    onChange={ setName }
+                    placeholder={ tx( 'waselAuth.ahmad_al_rashid' ) }
+                    icon={ <UserRound size={ 16 } /> }
                   />
-                )}
+                ) }
 
                 <WaselInput
                   id="auth-email"
-                  label={tx('common.email')}
-                  description={tx('waselAuth.used_for_sign_in')}
+                  label={ tx( 'common.email' ) }
+                  description={ tx( 'waselAuth.used_for_sign_in' ) }
                   type="email"
-                  value={email}
-                  onChange={setEmail}
-                  placeholder={tx('waselAuth.you_example_com')}
-                  icon={<Mail size={16} />}
+                  value={ email }
+                  onChange={ setEmail }
+                  placeholder={ tx( 'waselAuth.you_example_com' ) }
+                  icon={ <Mail size={ 16 } /> }
                 />
 
                 <WaselInput
                   id="auth-password"
-                  label={tx('auth.password')}
+                  label={ tx( 'auth.password' ) }
                   description={
                     tab === 'signin'
-                      ? tx('waselAuth.your_account_password')
-                      : tx('waselAuth.minimum_8_characters')
+                      ? tx( 'waselAuth.your_account_password' )
+                      : tx( 'waselAuth.minimum_8_characters' )
                   }
                   type="password"
-                  value={password}
-                  onChange={setPassword}
+                  value={ password }
+                  onChange={ setPassword }
                   placeholder={
                     tab === 'signin'
-                      ? tx('waselAuth.enter_your_password')
-                      : tx('waselAuth.create_a_secure_password')
+                      ? tx( 'waselAuth.enter_your_password' )
+                      : tx( 'waselAuth.create_a_secure_password' )
                   }
-                  icon={<Lock size={16} />}
+                  icon={ <Lock size={ 16 } /> }
                   hint={
                     tab === 'signup' && password.length > 0 ? (
-                      <StrengthBar password={password} />
+                      <StrengthBar password={ password } />
                     ) : undefined
                   }
                 />
 
-                {tab === 'signup' && (
+                { tab === 'signup' && (
                   <WaselInput
                     id="auth-phone"
-                    label={tx('auth.phoneNumber')}
-                    description={tx('common.optional')}
+                    label={ tx( 'auth.phoneNumber' ) }
+                    description={ tx( 'common.optional' ) }
                     type="tel"
-                    value={phone}
-                    onChange={setPhone}
+                    value={ phone }
+                    onChange={ setPhone }
                     placeholder="+962 79 123 4567"
-                    icon={<Phone size={16} />}
+                    icon={ <Phone size={ 16 } /> }
                   />
-                )}
+                ) }
 
-                {tab === 'signin' && (
-                  <div style={{ textAlign: 'right' }}>
+                { tab === 'signin' && (
+                  <div style={ { textAlign: 'right' } }>
                     <button
                       type="button"
-                      onClick={handleForgotPassword}
-                      style={{
+                      onClick={ handleForgotPassword }
+                      style={ {
                         background: 'none',
                         border: 'none',
                         color: C.cyan,
@@ -942,53 +946,53 @@ export default function WaselAuth() {
                         cursor: 'pointer',
                         fontFamily: F,
                         padding: 0,
-                      }}
+                      } }
                     >
-                      {tx('waselAuth.forgot_password')}
+                      { tx( 'waselAuth.forgot_password' ) }
                     </button>
                   </div>
-                )}
+                ) }
 
                 <WaselButton
                   variant="primary"
                   size="lg"
                   fullWidth
-                  loading={loading}
-                  disabled={success}
+                  loading={ loading }
+                  disabled={ success }
                   type="submit"
-                  aria-label={tab === 'signin' ? tx('waselAuth.submit_signin') : tx('waselAuth.submit_signup')}
-                  iconEnd={<ArrowRight size={16} />}
+                  aria-label={ tab === 'signin' ? tx( 'waselAuth.submit_signin' ) : tx( 'waselAuth.submit_signup' ) }
+                  iconEnd={ <ArrowRight size={ 16 } /> }
                 >
-                  {tab === 'signin' ? tx('waselAuth.sign_in') : tx('waselAuth.create_account')}
+                  { tab === 'signin' ? tx( 'waselAuth.sign_in' ) : tx( 'waselAuth.create_account' ) }
                 </WaselButton>
 
-                {/* Divider */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-                  <div style={{ flex: 1, height: 1, background: C.border }} />
-                  <span style={{ fontSize: TYPE.size.xs, color: C.textMuted }}>
-                    {tx('waselAuth.or_continue_with')}
+                {/* Divider */ }
+                <div style={ { display: 'flex', alignItems: 'center', gap: SPACE[ 3 ] } }>
+                  <div style={ { flex: 1, height: 1, background: C.border } } />
+                  <span style={ { fontSize: TYPE.size.xs, color: C.textMuted } }>
+                    { tx( 'waselAuth.or_continue_with' ) }
                   </span>
-                  <div style={{ flex: 1, height: 1, background: C.border }} />
+                  <div style={ { flex: 1, height: 1, background: C.border } } />
                 </div>
 
-                {/* Social buttons */}
-                <div style={{ display: 'flex', gap: SPACE[2], flexWrap: 'wrap' }}>
-                  {socialButtons.map(social => (
+                {/* Social buttons */ }
+                <div style={ { display: 'flex', gap: SPACE[ 2 ], flexWrap: 'wrap' } }>
+                  { socialButtons.map( social => (
                     <motion.button
-                      key={social.label}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
+                      key={ social.label }
+                      whileHover={ { scale: 1.02 } }
+                      whileTap={ { scale: 0.97 } }
                       type="button"
-                      disabled={loading || success}
-                      onClick={() => {
+                      disabled={ loading || success }
+                      onClick={ () => {
                         void social.onClick();
-                      }}
-                      style={{
+                      } }
+                      style={ {
                         flex: '1 1 120px',
                         height: 44,
                         borderRadius: R.lg,
-                        border: `1px solid ${social.color}30`,
-                        background: `${social.color}0C`,
+                        border: `1px solid ${ social.color }30`,
+                        background: `${ social.color }0C`,
                         color: social.color,
                         fontWeight: TYPE.weight.black,
                         fontSize: TYPE.size.sm,
@@ -996,55 +1000,55 @@ export default function WaselAuth() {
                         cursor: loading || success ? 'not-allowed' : 'pointer',
                         opacity: loading || success ? 0.55 : 1,
                         transition: 'all 150ms ease',
-                      }}
+                      } }
                     >
-                      {social.label}
+                      { social.label }
                     </motion.button>
-                  ))}
+                  ) ) }
                 </div>
               </form>
             </motion.div>
           </AnimatePresence>
 
-          {/* Legal */}
+          {/* Legal */ }
           <p
-            style={{
+            style={ {
               fontSize: TYPE.size.xs,
               color: C.textMuted,
               textAlign: 'center',
-              marginTop: SPACE[6],
+              marginTop: SPACE[ 6 ],
               lineHeight: TYPE.lineHeight.relaxed,
-            }}
+            } }
           >
-            {tx('waselAuth.by_continuing_you_agree_to_our')}{' '}
+            { tx( 'waselAuth.by_continuing_you_agree_to_our' ) }{ ' ' }
             <button
               type="button"
-              onClick={() => nav('/terms')}
-              style={{
+              onClick={ () => nav( '/terms' ) }
+              style={ {
                 color: C.cyan,
                 cursor: 'pointer',
                 background: 'none',
                 border: 'none',
                 padding: 0,
                 font: 'inherit',
-              }}
+              } }
             >
-              {tx('sidebar.terms')}
-            </button>{' '}
-            {tx('waselAuth.and')}{' '}
+              { tx( 'sidebar.terms' ) }
+            </button>{ ' ' }
+            { tx( 'waselAuth.and' ) }{ ' ' }
             <button
               type="button"
-              onClick={() => nav('/privacy')}
-              style={{
+              onClick={ () => nav( '/privacy' ) }
+              style={ {
                 color: C.cyan,
                 cursor: 'pointer',
                 background: 'none',
                 border: 'none',
                 padding: 0,
                 font: 'inherit',
-              }}
+              } }
             >
-              {tx('sidebar.privacy')}
+              { tx( 'sidebar.privacy' ) }
             </button>
             .
           </p>

@@ -47,156 +47,156 @@ export interface PriceCalculationResult {
 }
 
 export const tripsAPI = {
-  async createTrip(tripData: TripCreatePayload): Promise<TripSearchResult> {
-    return runBackendWorkflow({
+  async createTrip ( tripData: TripCreatePayload ): Promise<TripSearchResult> {
+    return runBackendWorkflow( {
       operation: 'Trip creation',
       authMode: 'required',
-      fallbackPolicy: 'writes-if-enabled',
-      fallback: ({ userId }) => createDirectTrip(userId ?? '', tripData),
+      fallbackPolicy: 'never',
+      fallback: ( { userId } ) => createDirectTrip( userId ?? '', tripData ),
       edge: context =>
-        requestEdgeJson<TripSearchResult>({
+        requestEdgeJson<TripSearchResult>( {
           path: '/trips',
           method: 'POST',
           authMode: 'required',
           context,
           body: tripData,
           operation: 'Failed to create trip',
-        }),
-    });
+        } ),
+    } );
   },
 
-  async searchTrips(
+  async searchTrips (
     from?: string,
     to?: string,
     date?: string,
     seats?: number,
   ): Promise<TripSearchResult[]> {
     const params = new URLSearchParams();
-    if (from) {params.append('from', from);}
-    if (to) {params.append('to', to);}
-    if (date) {params.append('date', date);}
-    if (seats) {params.append('seats', seats.toString());}
+    if ( from ) { params.append( 'from', from ); }
+    if ( to ) { params.append( 'to', to ); }
+    if ( date ) { params.append( 'date', date ); }
+    if ( seats ) { params.append( 'seats', seats.toString() ); }
 
-    return runBackendWorkflow({
+    return runBackendWorkflow( {
       operation: 'Trip search',
       authMode: 'public',
-      edgeAvailable: hasConfiguredEdgeTransport('public'),
-      fallback: () => searchDirectTrips(from, to, date, seats),
+      edgeAvailable: hasConfiguredEdgeTransport( 'public' ),
+      fallback: () => searchDirectTrips( from, to, date, seats ),
       edge: () =>
-        requestEdgeJson<TripSearchResult[]>({
-          path: `/trips/search?${params.toString()}`,
+        requestEdgeJson<TripSearchResult[]>( {
+          path: `/trips/search?${ params.toString() }`,
           authMode: 'public',
           operation: 'Failed to search trips',
-        }),
-    });
+        } ),
+    } );
   },
 
-  async getTripById(tripId: string): Promise<TripSearchResult> {
-    return runBackendWorkflow({
+  async getTripById ( tripId: string ): Promise<TripSearchResult> {
+    return runBackendWorkflow( {
       operation: 'Trip lookup',
       authMode: 'public',
-      edgeAvailable: hasConfiguredEdgeTransport('public'),
+      edgeAvailable: hasConfiguredEdgeTransport( 'public' ),
       fallback: async () => {
-        const trip = await getDirectTripById(tripId);
-        if (!trip) {throw new Error('Failed to fetch trip');}
+        const trip = await getDirectTripById( tripId );
+        if ( !trip ) { throw new Error( 'Failed to fetch trip' ); }
         return trip;
       },
       edge: () =>
-        requestEdgeJson<TripSearchResult>({
-          path: `/trips/${tripId}`,
+        requestEdgeJson<TripSearchResult>( {
+          path: `/trips/${ tripId }`,
           authMode: 'public',
           operation: 'Failed to fetch trip',
-        }),
-    });
+        } ),
+    } );
   },
 
-  async getDriverTrips(): Promise<TripSearchResult[]> {
-    return runBackendWorkflow({
+  async getDriverTrips (): Promise<TripSearchResult[]> {
+    return runBackendWorkflow( {
       operation: 'Driver trip loading',
       authMode: 'required',
-      fallback: ({ userId }) => getDirectDriverTrips(userId ?? ''),
+      fallback: ( { userId } ) => getDirectDriverTrips( userId ?? '' ),
       edge: context =>
-        requestEdgeJson<TripSearchResult[]>({
-          path: `/trips/user/${context.userId}`,
+        requestEdgeJson<TripSearchResult[]>( {
+          path: `/trips/user/${ context.userId }`,
           authMode: 'required',
           context,
           operation: 'Failed to fetch driver trips',
-        }),
-    });
+        } ),
+    } );
   },
 
-  async updateTrip(tripId: string, updates: TripUpdatePayload): Promise<TripSearchResult> {
-    return runBackendWorkflow({
+  async updateTrip ( tripId: string, updates: TripUpdatePayload ): Promise<TripSearchResult> {
+    return runBackendWorkflow( {
       operation: 'Trip update',
       authMode: 'required',
-      fallbackPolicy: 'writes-if-enabled',
-      fallback: () => updateDirectTrip(tripId, updates),
+      fallbackPolicy: 'never',
+      fallback: () => updateDirectTrip( tripId, updates ),
       edge: context =>
-        requestEdgeJson<TripSearchResult>({
-          path: `/trips/${tripId}`,
+        requestEdgeJson<TripSearchResult>( {
+          path: `/trips/${ tripId }`,
           method: 'PUT',
           authMode: 'required',
           context,
           body: updates,
           operation: 'Failed to update trip',
-        }),
-    });
+        } ),
+    } );
   },
 
-  async deleteTrip(tripId: string): Promise<{ success: boolean }> {
-    return runBackendWorkflow({
+  async deleteTrip ( tripId: string ): Promise<{ success: boolean }> {
+    return runBackendWorkflow( {
       operation: 'Trip deletion',
       authMode: 'required',
-      fallbackPolicy: 'writes-if-enabled',
-      fallback: () => deleteDirectTrip(tripId),
+      fallbackPolicy: 'never',
+      fallback: () => deleteDirectTrip( tripId ),
       edge: context =>
-        requestEdgeJson<{ success: boolean }>({
-          path: `/trips/${tripId}`,
+        requestEdgeJson<{ success: boolean }>( {
+          path: `/trips/${ tripId }`,
           method: 'DELETE',
           authMode: 'required',
           context,
           operation: 'Failed to delete trip',
-        }),
-    });
+        } ),
+    } );
   },
 
-  async publishTrip(tripId: string): Promise<{ success: boolean }> {
-    return runBackendWorkflow({
+  async publishTrip ( tripId: string ): Promise<{ success: boolean }> {
+    return runBackendWorkflow( {
       operation: 'Trip publishing',
       authMode: 'required',
-      fallbackPolicy: 'writes-if-enabled',
+      fallbackPolicy: 'never',
       fallback: async () => {
-        await updateDirectTrip(tripId, { status: 'active' });
+        await updateDirectTrip( tripId, { status: 'active' } );
         return { success: true };
       },
       edge: context =>
-        requestEdgeJson<{ success: boolean }>({
-          path: `/trips/${tripId}/publish`,
+        requestEdgeJson<{ success: boolean }>( {
+          path: `/trips/${ tripId }/publish`,
           method: 'POST',
           authMode: 'required',
           context,
           operation: 'Failed to publish trip',
-        }),
-    });
+        } ),
+    } );
   },
 
-  async calculatePrice(
+  async calculatePrice (
     type: 'passenger' | 'package',
     weight?: number,
     distance_km?: number,
     base_price?: number,
   ): Promise<PriceCalculationResult> {
-    return runBackendWorkflow({
+    return runBackendWorkflow( {
       operation: 'Price calculation',
       authMode: 'none',
-      fallback: async () => calculateDirectPrice(type, weight, distance_km, base_price),
+      fallback: async () => calculateDirectPrice( type, weight, distance_km, base_price ),
       edge: () =>
-        requestEdgeJson<PriceCalculationResult>({
+        requestEdgeJson<PriceCalculationResult>( {
           path: '/trips/calculate-price',
           method: 'POST',
           body: { type, weight, distance_km, base_price },
           operation: 'Failed to calculate price',
-        }),
-    });
+        } ),
+    } );
   },
 };

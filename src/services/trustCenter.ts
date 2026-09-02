@@ -11,20 +11,20 @@ import {
 } from './directSupabase';
 import { buildFallbackTrustCenterStatus, type TrustCenterStatus } from './trustCenterModel';
 
-function toErrorMessage(error: unknown): string {
-  if (error instanceof Error) {return error.message;}
+function toErrorMessage ( error: unknown ): string {
+  if ( error instanceof Error ) { return error.message; }
   return 'Trust Center request failed.';
 }
 
-async function getTrustUserId(): Promise<string> {
-  if (!supabase) {
-    throw new Error('Supabase client is not initialised');
+async function getTrustUserId (): Promise<string> {
+  if ( !supabase ) {
+    throw new Error( 'Supabase client is not initialised' );
   }
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (!session?.user?.id) {
-    throw new Error('Not authenticated');
+  if ( !session?.user?.id ) {
+    throw new Error( 'Not authenticated' );
   }
   return session.user.id;
 }
@@ -47,173 +47,173 @@ export interface DriverDocumentsPayload {
   documentReference?: string;
 }
 
-export async function getTrustCenterStatus(user?: WaselUser | null): Promise<TrustCenterStatus> {
-  if (!supabase) {
-    if (user) {return buildFallbackTrustCenterStatus(user);}
-    throw new Error('Supabase client is not initialised');
+export async function getTrustCenterStatus ( user?: WaselUser | null ): Promise<TrustCenterStatus> {
+  if ( !supabase ) {
+    if ( user ) { return buildFallbackTrustCenterStatus( user ); }
+    throw new Error( 'Supabase client is not initialised' );
   }
 
   const {
     data: { session },
   } = await supabase.auth.getSession();
-  if (!session) {
-    if (user) {return buildFallbackTrustCenterStatus(user);}
-    throw new Error('Not authenticated');
+  if ( !session ) {
+    if ( user ) { return buildFallbackTrustCenterStatus( user ); }
+    throw new Error( 'Not authenticated' );
   }
 
   try {
-    const payload = await requestEdgeJson<{ status: TrustCenterStatus }>({
+    const payload = await requestEdgeJson<{ status: TrustCenterStatus }>( {
       path: '/v1/trust/status',
       authMode: 'required',
       operation: 'Trust Center status',
-    });
+    } );
     return payload.status;
-  } catch (error) {
-    if (user) {
-      return buildFallbackTrustCenterStatus(user);
+  } catch ( error ) {
+    if ( user ) {
+      return buildFallbackTrustCenterStatus( user );
     }
-    throw new Error(toErrorMessage(error), { cause: error });
+    throw new Error( toErrorMessage( error ), { cause: error } );
   }
 }
 
-export async function startTrustPhoneVerification(payload: StartPhoneVerificationPayload) {
+export async function startTrustPhoneVerification ( payload: StartPhoneVerificationPayload ) {
   const response = await runBackendWorkflow<{
     started: boolean;
     phoneNumber: string;
     expiresAt: string;
-  }>({
+  }>( {
     operation: 'Phone verification start',
     authMode: 'required',
-    fallbackPolicy: 'writes-if-enabled',
+    fallbackPolicy: 'never',
     edge: context =>
-      requestEdgeJson({
+      requestEdgeJson( {
         path: '/v1/trust/phone/start',
         method: 'POST',
         body: payload,
         authMode: 'required',
         context,
         operation: 'Phone verification start',
-      }),
+      } ),
     fallback: async () => {
       const userId = await getTrustUserId();
-      return startDirectTrustPhoneVerification(userId, payload.phoneNumber);
+      return startDirectTrustPhoneVerification( userId, payload.phoneNumber );
     },
-  });
+  } );
 
   return response;
 }
 
-export async function confirmTrustPhoneVerification(payload: ConfirmPhoneVerificationPayload) {
+export async function confirmTrustPhoneVerification ( payload: ConfirmPhoneVerificationPayload ) {
   const response = await runBackendWorkflow<{
     verified: boolean;
     phoneNumber: string;
-  }>({
+  }>( {
     operation: 'Phone verification confirmation',
     authMode: 'required',
-    fallbackPolicy: 'writes-if-enabled',
+    fallbackPolicy: 'never',
     edge: context =>
-      requestEdgeJson({
+      requestEdgeJson( {
         path: '/v1/trust/phone/confirm',
         method: 'POST',
         body: payload,
         authMode: 'required',
         context,
         operation: 'Phone verification confirmation',
-      }),
+      } ),
     fallback: async () => {
       const userId = await getTrustUserId();
-      return confirmDirectTrustPhoneVerification(userId);
+      return confirmDirectTrustPhoneVerification( userId );
     },
-  });
+  } );
 
   return response;
 }
 
-export async function submitTrustIdentityVerification(payload: IdentityVerificationPayload) {
+export async function submitTrustIdentityVerification ( payload: IdentityVerificationPayload ) {
   const response = await runBackendWorkflow<{
     submitted: boolean;
     verificationId: string;
-  }>({
+  }>( {
     operation: 'Identity verification submission',
     authMode: 'required',
-    fallbackPolicy: 'writes-if-enabled',
+    fallbackPolicy: 'never',
     edge: context =>
-      requestEdgeJson({
+      requestEdgeJson( {
         path: '/v1/trust/identity/submit',
         method: 'POST',
         body: payload,
         authMode: 'required',
         context,
         operation: 'Identity verification submission',
-      }),
+      } ),
     fallback: async () => {
       const userId = await getTrustUserId();
-      return submitDirectTrustIdentityVerification(userId, payload);
+      return submitDirectTrustIdentityVerification( userId, payload );
     },
-  });
+  } );
 
   return response;
 }
 
-export async function enableTrustDriverMode() {
+export async function enableTrustDriverMode () {
   const response = await runBackendWorkflow<{
     enabled: boolean;
     role: 'driver';
-  }>({
+  }>( {
     operation: 'Driver mode enablement',
     authMode: 'required',
-    fallbackPolicy: 'writes-if-enabled',
+    fallbackPolicy: 'never',
     edge: context =>
-      requestEdgeJson({
+      requestEdgeJson( {
         path: '/v1/trust/driver-mode/enable',
         method: 'POST',
         authMode: 'required',
         context,
         operation: 'Driver mode enablement',
-      }),
-    fallback: context => enableDirectTrustDriverMode(context.userId ?? ''),
-  });
+      } ),
+    fallback: context => enableDirectTrustDriverMode( context.userId ?? '' ),
+  } );
 
   return response;
 }
 
-export async function submitTrustDriverDocuments(payload: DriverDocumentsPayload) {
+export async function submitTrustDriverDocuments ( payload: DriverDocumentsPayload ) {
   const response = await runBackendWorkflow<{
     submitted: boolean;
     driverId: string;
-  }>({
+  }>( {
     operation: 'Driver documents submission',
     authMode: 'required',
-    fallbackPolicy: 'writes-if-enabled',
+    fallbackPolicy: 'never',
     edge: context =>
-      requestEdgeJson({
+      requestEdgeJson( {
         path: '/v1/trust/driver-documents/submit',
         method: 'POST',
         body: payload,
         authMode: 'required',
         context,
         operation: 'Driver documents submission',
-      }),
-    fallback: context => submitDirectTrustDriverDocuments(context.userId ?? '', payload),
-  });
+      } ),
+    fallback: context => submitDirectTrustDriverDocuments( context.userId ?? '', payload ),
+  } );
 
   return response;
 }
 
-export async function resendTrustEmailConfirmation(email: string) {
-  if (!supabase) {
-    throw new Error('Supabase auth is not configured for email confirmation.');
+export async function resendTrustEmailConfirmation ( email: string ) {
+  if ( !supabase ) {
+    throw new Error( 'Supabase auth is not configured for email confirmation.' );
   }
 
-  const { error } = await supabase.auth.resend({
+  const { error } = await supabase.auth.resend( {
     type: 'signup',
     email,
     options: {
-      emailRedirectTo: getAuthCallbackUrl(resolveAuthRedirectOrigin()),
+      emailRedirectTo: getAuthCallbackUrl( resolveAuthRedirectOrigin() ),
     },
-  });
+  } );
 
-  if (error) {
+  if ( error ) {
     throw error;
   }
 }
