@@ -1917,8 +1917,9 @@ async function buildTrustStatus (
             : verification?.document_status === 'rejected'
               ? verification?.failure_reason ?? 'Driver documents were rejected.'
               : null;
+  const isDriverRole = canonicalRole === 'driver' || canonicalRole === 'both';
   const driverDocuments =
-    canonicalRole !== 'driver'
+    !isDriverRole
       ? buildTrustStep(
         'driver_documents',
         'not_started',
@@ -3876,16 +3877,6 @@ async function handleSubmitDriverDocuments ( request: Request ) {
   } );
   if ( verificationError ) {
     return json( { error: verificationError.message }, 500 );
-  }
-
-  const { error: userUpdateError } = await auth.admin
-    .from( 'users' )
-    .update( {
-      verification_level: 'level_2',
-    } )
-    .eq( 'id', auth.canonicalUser.id );
-  if ( userUpdateError ) {
-    return json( { error: userUpdateError.message }, 500 );
   }
 
   return json(

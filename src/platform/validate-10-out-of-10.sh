@@ -38,7 +38,7 @@ echo "--- Infrastructure ---"
 check "vercel.json exists" "[ -f vercel.json ]"
 check "docker-compose.yml exists" "[ -f docker-compose.yml ]"
 check "Dockerfile exists" "[ -f Dockerfile ]"
-check "k8s manifests exist" "[ -d k8s ] && [ \"\$(find k8s -name '*.yaml' 2>/dev/null | wc -l)\" -ge 3 ]"
+check "k8s manifests exist" "[ -d infra/k8s-draft ] && [ \"$(find infra/k8s-draft -name '*.yaml' -o -name '*.yml' | wc -l)\" -ge 3 ]"
 check "CI workflow exists" "[ -f .github/workflows/ci.yml ]"
 
 echo ""
