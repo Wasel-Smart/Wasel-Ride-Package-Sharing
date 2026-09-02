@@ -450,7 +450,7 @@ if (typeof window !== 'undefined' && import.meta.env.MODE === 'production' && ge
   geoStream
     .connect()
     .then(() => {
-      console.log('✅ Live geo-streaming connected');
+      console.info('✅ Live geo-streaming connected');
 
       // Track connection metrics
       telemetry.recordMetric('geo_stream.connected', 1, 'count');
