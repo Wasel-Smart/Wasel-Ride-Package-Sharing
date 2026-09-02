@@ -1,0 +1,61 @@
+version: '3.9'
+
+# Production-oriented Docker Compose for Wasel web platform.
+# Uses the production Dockerfile (multi-stage Node build + nginx runtime).
+# For local development with a full Supabase stack, use docker-compose.dev.yml instead.
+
+services:
+  wasel-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wasel-web
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    environment:
+      - NODE_ENV=production
+      - VITE_APP_NAME=Wasel
+      - VITE_APP_URL=${VITE_APP_URL:-https://www.wasel14.online}
+      - VITE_APP_ORIGIN=${VITE_APP_ORIGIN:-https://www.wasel14.online}
+      - VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=false
+      - ENABLE_RUNTIME_ADMIN_ENDPOINTS=false
+      - ALLOW_LOCAL_ORIGINS=false
+    volumes:
+      - ./dist:/usr/share/nginx/html:ro
+    depends_on:
+      wasel-redis:
+        condition: service_healthy
+    networks:
+      - wasel-network
+    labels:
+      - 'com.wasel.service=web'
+      - 'com.wasel.environment=production'
+
+  wasel-redis:
+    image: redis:7-alpine
+    container_name: wasel-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wasel-network
+    labels:
+      - 'com.wasel.service=cache'
+      - 'com.wasel.environment=production'
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  wasel-network:
+    driver: bridge

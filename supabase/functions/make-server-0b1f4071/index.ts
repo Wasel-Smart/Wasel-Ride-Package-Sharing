@@ -693,13 +693,17 @@ async function ensureDriverForUser ( admin: ReturnType<typeof getAdminClient>, u
   return data;
 }
 
-function isApprovedDriver ( user: Record<string, unknown>, driver: Record<string, unknown> ): boolean {
+function isApprovedDriver (
+  user: Record<string, unknown>,
+  driver: Record<string, unknown>,
+  emailConfirmed: boolean,
+): boolean {
   const role = String( user.role ?? 'passenger' );
   const verificationLevel = String( driver.verification_level ?? user.verification_level ?? 'level_0' );
   return (
     ( role === 'driver' || role === 'both' ) &&
     Boolean( user.phone_verified_at ) &&
-    Boolean( user.email_verified_at ) &&
+    emailConfirmed &&
     verificationLevel === 'level_3' &&
     String( driver.driver_status ?? '' ) === 'approved' &&
     [ 'approved', 'verified' ].includes( String( driver.background_check_status ?? '' ) )
@@ -982,7 +986,7 @@ async function handleTripRequest ( request: Request, path: string ) {
     if ( 'error' in auth ) return auth.error;
     const body = await request.json().catch( () => ( {} ) );
     const driver = await ensureDriverForUser( auth.admin, auth.canonicalUser );
-    if ( !isApprovedDriver( auth.canonicalUser, driver ) ) {
+    if ( !isApprovedDriver( auth.canonicalUser, driver, Boolean( auth.authUser.email_confirmed_at ) ) ) {
       return json( { error: 'Driver approval is required before publishing rides' }, 403 );
     }
     const departureTime = new Date( `${ body.date }T${ body.time }:00` ).toISOString();
@@ -1029,7 +1033,7 @@ async function handleTripRequest ( request: Request, path: string ) {
     if ( !isOwner && !canManageTrips ) {
       return json( { error: 'Not authorized to modify this trip.' }, 403 );
     }
-    if ( isOwner && ( !driver || !isApprovedDriver( auth.canonicalUser, driver ) ) ) {
+    if ( isOwner && ( !driver || !isApprovedDriver( auth.canonicalUser, driver, Boolean( auth.authUser.email_confirmed_at ) ) ) ) {
       return json( { error: 'Driver approval is required before publishing rides' }, 403 );
     }
     if ( request.method === 'DELETE' ) {
