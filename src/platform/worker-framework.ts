@@ -127,7 +127,7 @@ export abstract class BaseWorker<T = unknown> {
     if (this.isRunning) {return;}
     this.isRunning = true;
 
-      console.log(
+      console.info(
         createStructuredLogEntry('info', `Worker ${sanitizeLogMessage(this.config.name)} started`, sanitizeLogMessage(this.config.name), {
           topics: this.config.topics,
           broker: this.broker.kind,
@@ -148,7 +148,7 @@ export abstract class BaseWorker<T = unknown> {
     this.isRunning = false;
     this.unsubscribers.forEach(unsub => unsub());
     this.unsubscribers = [];
-    console.log(
+    console.info(
       createStructuredLogEntry('info', `Worker ${sanitizeLogMessage(this.config.name)} stopped`, sanitizeLogMessage(this.config.name)),
     );
   }

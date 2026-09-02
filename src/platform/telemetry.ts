@@ -81,7 +81,7 @@ class TelemetryCollector {
       status: 'ok',
     });
 
-    console.log(
+    console.info(
       createStructuredLogEntry('info', `Span started: ${sanitizeLogMessage(name)}`, 'telemetry', {
         traceId,
         spanId,
