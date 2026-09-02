@@ -51,7 +51,7 @@ class GeoStreamService {
         this.ws = new WebSocket(this.endpoint);
 
         this.ws.onopen = () => {
-          console.log(
+          console.info(
             createStructuredLogEntry('info', 'GeoStream connected', 'geo-stream', {
               endpoint: this.endpoint,
             }),
@@ -82,7 +82,7 @@ class GeoStreamService {
         };
 
         this.ws.onclose = () => {
-          console.log(
+          console.info(
             createStructuredLogEntry('info', 'GeoStream disconnected', 'geo-stream', {
               reconnectAttempts: this.reconnectAttempts,
             }),
@@ -95,7 +95,7 @@ class GeoStreamService {
             this.reconnectAttempts++;
 
             setTimeout(() => {
-              console.log(
+              console.info(
                 createStructuredLogEntry('info', 'Attempting to reconnect', 'geo-stream', {
                   attempt: this.reconnectAttempts,
                 }),
