@@ -319,6 +319,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return { error: new Error('Backend not configured') };
         }
 
+        setBusy(true);
         try {
           const result = await signInWithOAuthProvider(client, provider, returnTo);
 
@@ -333,10 +334,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
             return { error: errorToReturn as AuthOperationError };
           }
 
+          // Supabase JS will navigate away via window.location on success, but
+          // if for any reason the navigation doesn't fire we still want the
+          // button to look interactive again. Reset busy on next tick.
+          queueMicrotask(() => setBusy(false));
           return result;
         } catch (error: unknown) {
           const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
           return { error: normalizeOperationError(error, `${providerName} sign-in failed`) };
+        } finally {
+          // If the redirect happened, this is a no-op; if it didn't, this
+          // re-enables the UI.
+          setBusy(false);
         }
       },
     [],

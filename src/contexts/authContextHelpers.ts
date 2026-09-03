@@ -110,13 +110,31 @@ export async function signInWithOAuthProvider(
   }
 
   try {
+    const redirectTo = getAuthCallbackUrl(
+      resolveAuthRedirectOrigin(),
+      returnTo ? { returnTo } : undefined,
+    );
+
+    const scopes =
+      provider === 'facebook'
+        ? 'email,public_profile'
+        : provider === 'microsoft'
+          ? 'openid profile email'
+          : provider === 'apple'
+            ? 'name email'
+            : 'openid profile email';
+
     const { error } = await client.auth.signInWithOAuth({
       provider: provider as any,
       options: {
-        redirectTo: getAuthCallbackUrl(
-          resolveAuthRedirectOrigin(),
-          returnTo ? { returnTo } : undefined,
-        ),
+        redirectTo,
+        scopes,
+        // Supabase recommends PKCE for OAuth when supported; it's a no-op for
+        // providers that don't support it (Apple, older Facebook clients).
+        queryParams:
+          provider === 'facebook'
+            ? { display: 'popup' }
+            : undefined,
       },
     });
 

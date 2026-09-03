@@ -25,6 +25,7 @@ import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { checkRateLimit, resetRateLimit, validateEmail, validatePhone } from '../utils/security';
 import { useAuth } from '../contexts/AuthContext';
+import type { AuthOperationError } from '../contexts/authContextHelpers';
 import { getConfig, getWhatsAppSupportUrl, normalizeReturnToPath } from '../utils/env';
 import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
 import { getProviderSetupInstructions } from '../utils/oauthValidator';
@@ -424,6 +425,7 @@ export default function WaselAuth () {
   const mountedRef = useRef( true );
   const { supportWhatsAppNumber } = getConfig();
   const [ oauthConfigWarning, setOauthConfigWarning ] = useState( '' );
+  const [ activeProvider, setActiveProvider ] = useState<null | 'google' | 'facebook' | 'microsoft' | 'apple'>( null );
 
   const safeReturnTo = normalizeReturnToPath( params.get( 'returnTo' ) );
 
@@ -635,44 +637,39 @@ export default function WaselAuth () {
     toast.success( tx( 'waselAuth.reset_link_sent', { email } ) );
   };
 
-  const handleGoogleSignIn = async () => {
+  const runOAuth = async (
+    provider: 'google' | 'facebook' | 'microsoft' | 'apple',
+    signIn: ( returnTo?: string ) => Promise<{ error: AuthOperationError }>,
+  ) => {
     setError( '' );
-    const { error: oauthError } = await signInWithGoogle( safeReturnTo );
-
-    if ( oauthError ) {
-      const enhancedMessage = enhanceOAuthError( String( oauthError ), 'google' );
-      setError( friendlyAuthError( enhancedMessage, tx( 'waselAuth.error_google_failed' ) ) );
+    setActiveProvider( provider );
+    try {
+      const { error: oauthError } = await signIn( safeReturnTo );
+      if ( oauthError && mountedRef.current ) {
+        const enhancedMessage = enhanceOAuthError( String( oauthError ), provider );
+        setError( friendlyAuthError( enhancedMessage, tx( `waselAuth.error_${ provider }_failed` ) ) );
+      }
+    } finally {
+      if ( mountedRef.current ) {
+        setActiveProvider( null );
+      }
     }
   };
 
-  const handleFacebookSignIn = async () => {
-    setError( '' );
-    const { error: oauthError } = await signInWithFacebook( safeReturnTo );
-
-    if ( oauthError ) {
-      const enhancedMessage = enhanceOAuthError( String( oauthError ), 'facebook' );
-      setError( friendlyAuthError( enhancedMessage, tx( 'waselAuth.error_facebook_failed' ) ) );
-    }
+  const handleGoogleSignIn = () => {
+    void runOAuth( 'google', signInWithGoogle );
   };
 
-  const handleMicrosoftSignIn = async () => {
-    setError( '' );
-    const { error: oauthError } = await signInWithMicrosoft( safeReturnTo );
-
-    if ( oauthError ) {
-      const enhancedMessage = enhanceOAuthError( String( oauthError ), 'microsoft' );
-      setError( friendlyAuthError( enhancedMessage, tx( 'waselAuth.error_microsoft_failed' ) ) );
-    }
+  const handleFacebookSignIn = () => {
+    void runOAuth( 'facebook', signInWithFacebook );
   };
 
-  const handleAppleSignIn = async () => {
-    setError( '' );
-    const { error: oauthError } = await signInWithApple( safeReturnTo );
+  const handleMicrosoftSignIn = () => {
+    void runOAuth( 'microsoft', signInWithMicrosoft );
+  };
 
-    if ( oauthError ) {
-      const enhancedMessage = enhanceOAuthError( String( oauthError ), 'apple' );
-      setError( friendlyAuthError( enhancedMessage, tx( 'waselAuth.error_apple_failed' ) ) );
-    }
+  const handleAppleSignIn = () => {
+    void runOAuth( 'apple', signInWithApple );
   };
 
   const handleWhatsAppHelp = () => {
@@ -702,15 +699,20 @@ export default function WaselAuth () {
     return error;
   };
 
-  const socialButtons = [
-    { label: 'Google', color: '#4285F4', onClick: handleGoogleSignIn },
-    { label: 'Facebook', color: '#1877F2', onClick: handleFacebookSignIn },
-    { label: 'Microsoft', color: '#00A4EF', onClick: handleMicrosoftSignIn },
-    { label: 'Apple', color: '#000000', onClick: handleAppleSignIn },
+  const socialButtons: Array<{
+    key: 'google' | 'facebook' | 'microsoft' | 'apple' | 'whatsapp';
+    label: string;
+    color: string;
+    onClick: () => void;
+  }> = [
+    { key: 'google', label: 'Google', color: '#4285F4', onClick: handleGoogleSignIn },
+    { key: 'facebook', label: 'Facebook', color: '#1877F2', onClick: handleFacebookSignIn },
+    { key: 'microsoft', label: 'Microsoft', color: '#00A4EF', onClick: handleMicrosoftSignIn },
+    { key: 'apple', label: 'Apple', color: '#000000', onClick: handleAppleSignIn },
     ...( supportWhatsAppNumber
-      ? [ { label: 'WhatsApp', color: '#25D366', onClick: handleWhatsAppHelp } ]
+      ? [ { key: 'whatsapp' as const, label: 'WhatsApp', color: '#25D366', onClick: handleWhatsAppHelp } ]
       : [] ),
-  ] as const;
+  ];
 
   return (
     <div
@@ -1069,34 +1071,60 @@ export default function WaselAuth () {
 
                 {/* Social buttons */ }
                 <div style={ { display: 'flex', gap: SPACE[ 2 ], flexWrap: 'wrap' } }>
-                  { socialButtons.map( social => (
-                    <motion.button
-                      key={ social.label }
-                      whileHover={ { scale: 1.02 } }
-                      whileTap={ { scale: 0.97 } }
-                      type="button"
-                      disabled={ loading || success }
-                      onClick={ () => {
-                        void social.onClick();
-                      } }
-                      style={ {
-                        flex: '1 1 120px',
-                        height: 44,
-                        borderRadius: R.lg,
-                        border: `1px solid ${ social.color }30`,
-                        background: `${ social.color }0C`,
-                        color: social.color,
-                        fontWeight: TYPE.weight.black,
-                        fontSize: TYPE.size.sm,
-                        fontFamily: F,
-                        cursor: loading || success ? 'not-allowed' : 'pointer',
-                        opacity: loading || success ? 0.55 : 1,
-                        transition: 'all 150ms ease',
-                      } }
-                    >
-                      { social.label }
-                    </motion.button>
-                  ) ) }
+                  { socialButtons.map( social => {
+                    const isActive = activeProvider === social.key;
+                    const disabled = loading || success || ( activeProvider !== null && !isActive );
+                    return (
+                      <motion.button
+                        key={ social.key }
+                        whileHover={ disabled ? undefined : { scale: 1.02 } }
+                        whileTap={ disabled ? undefined : { scale: 0.97 } }
+                        type="button"
+                        disabled={ disabled }
+                        aria-label={ ar ? `تسجيل الدخول عبر ${ social.label }` : `Continue with ${ social.label }` }
+                        aria-busy={ isActive }
+                        data-provider={ social.key }
+                        onClick={ () => {
+                          social.onClick();
+                        } }
+                        style={ {
+                          flex: '1 1 120px',
+                          minWidth: 120,
+                          height: 44,
+                          borderRadius: R.lg,
+                          border: `1px solid ${ social.color }30`,
+                          background: `${ social.color }0C`,
+                          color: social.color,
+                          fontWeight: TYPE.weight.black,
+                          fontSize: TYPE.size.sm,
+                          fontFamily: F,
+                          cursor: disabled ? 'not-allowed' : 'pointer',
+                          opacity: disabled ? 0.55 : 1,
+                          transition: 'all 150ms ease',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: SPACE[ 2 ],
+                        } }
+                      >
+                        { isActive && (
+                          <span
+                            aria-hidden="true"
+                            style={ {
+                              width: 12,
+                              height: 12,
+                              borderRadius: '50%',
+                              border: `2px solid ${ social.color }40`,
+                              borderTopColor: social.color,
+                              animation: 'spin 0.8s linear infinite',
+                              display: 'inline-block',
+                            } }
+                          />
+                        ) }
+                        <span>{ social.label }</span>
+                      </motion.button>
+                    );
+                  } ) }
                 </div>
               </form>
             </motion.div>
