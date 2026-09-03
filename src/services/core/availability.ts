@@ -2,8 +2,8 @@ import { API_URL, publicAnonKey } from './api-resolver';
 import {
   checkSupabaseConnection,
   supabase as supabaseClient,
-} from '../utils/supabase/client';
-import { circuitBreakers, CircuitState } from '../utils/circuitBreaker';
+} from '../../utils/supabase/client';
+import { circuitBreakers, CircuitState } from '../../utils/circuitBreaker';
 import { createEdgeHeaders } from './edge-headers';
 
 export type BackendStatus = 'unknown' | 'healthy' | 'degraded' | 'offline';

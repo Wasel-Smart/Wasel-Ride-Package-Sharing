@@ -1,9 +1,9 @@
 import { API_URL } from './api-resolver';
-import { getConfig } from '../utils/env';
-import { validateApiUrl } from '../utils/sanitization';
-import { circuitBreakers, CircuitState } from '../utils/circuitBreaker';
-import { addCSRFHeader } from '../utils/csrf';
-import { supabase as supabaseClient } from '../utils/supabase/client';
+import { getConfig } from '../../utils/env';
+import { validateApiUrl } from '../../utils/sanitization';
+import { circuitBreakers, CircuitState } from '../../utils/circuitBreaker';
+import { addCSRFHeader } from '../../utils/csrf';
+import { supabase as supabaseClient } from '../../utils/supabase/client';
 import {
   isEdgeFunctionAvailable,
   setEdgeFunctionAvailability,

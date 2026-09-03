@@ -1,5 +1,5 @@
 import { publicAnonKey } from './api-resolver';
-import { addCSRFHeader } from '../utils/csrf';
+import { addCSRFHeader } from '../../utils/csrf';
 
 export function createEdgeHeaders(
   headers?: HeadersInit,
