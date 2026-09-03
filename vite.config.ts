@@ -63,6 +63,7 @@ const stampServiceWorkerPlugin = {
 };
 
 export default defineConfig(({ mode }) => ({
+  envDir: path.resolve(__dirname, process.env.WASEL_ENV_DIR || '.'),
   plugins: [
     react(),
     tailwindcss(),

@@ -34,7 +34,9 @@
         "sweep:i18n": "node scripts/sweep-i18n.mjs",
         "cleanup:root": "node scripts/cleanup-root.mjs",
         "brand:check": "node scripts/brand-check.mjs",
-        "brand:sync": "node scripts/sync-brand-assets.mjs"
+        "brand:sync": "node scripts/sync-brand-assets.mjs",
+        "secrets:check": "node scripts/validate-no-secrets.mjs",
+        "secrets:migrate": "node scripts/migrate-secrets-offsite.mjs"
     },
     "dependencies": {
         "@google/genai": "^2.19.0",
