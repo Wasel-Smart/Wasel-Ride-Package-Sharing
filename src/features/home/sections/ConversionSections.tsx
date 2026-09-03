@@ -9,6 +9,7 @@ import {
   MapPinned,
   MousePointerClick,
   Route,
+  Shield,
   ShieldCheck,
   TimerReset,
 } from 'lucide-react';
@@ -69,10 +70,11 @@ const outcomeCards = [
 ] as const;
 
 const trustLinks = [
-  { icon: Lock, titleKey: 'homeContent.trust_privacy_title', detailKey: 'homeContent.trust_privacy_detail', path: '/app/privacy', accent: C.cyan },
-  { icon: ShieldCheck, titleKey: 'homeContent.trust_security_title', detailKey: 'homeContent.trust_security_detail', path: '/app/security', accent: C.green },
-  { icon: BadgeCheck, titleKey: 'homeContent.trust_terms_title', detailKey: 'homeContent.trust_terms_detail', path: '/app/terms', accent: C.gold },
-  { icon: Headphones, titleKey: 'homeContent.trust_support_title', detailKey: 'homeContent.trust_support_detail', path: '/app/support', accent: C.blueLight },
+  { icon: Lock, titleKey: 'homeContent.trust_privacy_title', detailKey: 'homeContent.trust_privacy_detail', path: '/privacy', accent: C.cyan },
+  { icon: ShieldCheck, titleKey: 'homeContent.trust_security_title', detailKey: 'homeContent.trust_security_detail', path: '/security', accent: C.green },
+  { icon: Shield, titleKey: 'homeContent.trust_trust_title', detailKey: 'homeContent.trust_trust_detail', path: '/trust', accent: C.gold },
+  { icon: BadgeCheck, titleKey: 'homeContent.trust_terms_title', detailKey: 'homeContent.trust_terms_detail', path: '/terms', accent: C.blueLight },
+  { icon: Headphones, titleKey: 'homeContent.trust_support_title', detailKey: 'homeContent.trust_support_detail', path: '/support', accent: C.purple },
 ] as const;
 
 function ArrowCta({ label, accent, ar }: { label: string; accent: string; ar?: boolean }) {
@@ -473,7 +475,7 @@ export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
       <SectionHeader title={ar ? 'صفحات الثقة' : 'Trust pages'} icon="S" />
       <div
         className="wasel-home-trust-grid"
-        style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12 }}
+        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(0, 1fr))', gap: 12 }}
       >
         {links.map(link => {
           const Icon = link.icon;

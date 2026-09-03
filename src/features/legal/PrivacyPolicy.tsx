@@ -1,4 +1,5 @@
-import { Eye, FileText, Lock, Mail, Phone, Shield } from 'lucide-react';
+import { type ComponentType } from 'react';
+import { Eye, FileText, Lock, Mail, Phone, Shield, ShieldCheck, KeyRound } from 'lucide-react';
 import {
   MetricCard,
   PageHero,
@@ -106,10 +107,11 @@ export function PrivacyPolicy() {
       compliance: {
         title: 'الامتثال القانوني',
         items: [
-          'متوافق مع اللائحة العامة لحماية البيانات (GDPR)',
-          'يتبع قوانين حماية البيانات الأردنية',
-          'معتمد من هيئة تنظيم قطاع الاتصالات (TRC)',
-          'تحديثات منتظمة للسياسة',
+          { icon: ShieldCheck, title: 'GDPR', detail: 'متوافق مع اللائحة العامة لحماية البيانات' },
+          { icon: ShieldCheck, title: 'قوانين أردنية', detail: 'يتبع قوانين حماية البيانات الأردنية' },
+          { icon: ShieldCheck, title: 'TRC', detail: 'معتمد من هيئة تنظيم قطاع الاتصالات' },
+          { icon: Lock, title: 'تشفير', detail: 'TLS في النقل و AES-256 في التخزين' },
+          { icon: KeyRound, title: 'تحقق ثنائي', detail: 'حماية إضافية للحساب' },
         ],
       },
     },
@@ -201,10 +203,11 @@ export function PrivacyPolicy() {
       compliance: {
         title: 'Legal Compliance',
         items: [
-          'GDPR Compliant',
-          'Follows Jordanian Data Protection Laws',
-          'TRC (Telecommunications Regulatory Commission) Certified',
-          'Regular policy updates',
+          { icon: ShieldCheck, title: 'GDPR', detail: 'Compliant with General Data Protection Regulation' },
+          { icon: ShieldCheck, title: 'Jordanian Law', detail: 'Follows Jordanian Data Protection Laws' },
+          { icon: ShieldCheck, title: 'TRC', detail: 'Telecommunications Regulatory Commission Certified' },
+          { icon: Lock, title: 'Encryption', detail: 'TLS in transit and AES-256 at rest' },
+          { icon: KeyRound, title: 'Two-factor', detail: 'Extra account protection' },
         ],
       },
     },
@@ -225,6 +228,14 @@ export function PrivacyPolicy() {
             <>
               <WaselButton type="button" variant="primary" onClick={() => nav('/app/security')}>
                 {ar ? 'راجع الأمان' : 'Review security'}
+              </WaselButton>
+              <WaselButton
+                type="button"
+                variant="outline"
+                onClick={() => nav('/trust')}
+                style={{ background: C.elevated, color: C.text }}
+              >
+                {ar ? 'مركز الثقة' : 'Trust Center'}
               </WaselButton>
               <WaselButton
                 type="button"
@@ -493,19 +504,41 @@ export function PrivacyPolicy() {
             icon={<Shield size={18} color={C.green} />}
           >
             <div style={{ display: 'grid', gap: 10 }}>
-              {copy.compliance.items.map(item => (
-                <div key={item} style={policyCardStyle(C.green)}>
-                  <div
-                    style={{
-                      color: C.text,
-                      fontSize: TYPE.size.sm,
-                      lineHeight: TYPE.lineHeight.relaxed,
-                    }}
-                  >
-                    {item}
+              {copy.compliance.items.map((item: { icon: ComponentType<{ size?: number; color?: string }>; title: string; detail: string }) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.title} style={policyCardStyle(C.green)}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                      <span
+                        style={{
+                          width: 32,
+                          height: 32,
+                          display: 'grid',
+                          placeItems: 'center',
+                          borderRadius: R.md,
+                          background: `${C.green}18`,
+                          border: `1px solid ${C.green}28`,
+                          color: C.green,
+                        }}
+                      >
+                        <Icon size={16} />
+                      </span>
+                      <div style={{ color: C.text, fontWeight: TYPE.weight.black, fontSize: TYPE.size.sm }}>
+                        {item.title}
+                      </div>
+                    </div>
+                    <div
+                      style={{
+                        color: C.textMuted,
+                        fontSize: TYPE.size.sm,
+                        lineHeight: TYPE.lineHeight.relaxed,
+                      }}
+                    >
+                      {item.detail}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </SectionCard>
         </div>

@@ -158,6 +158,14 @@ export const ROUTE_META: WaselRouteMeta[] = [
     analyticsKey: 'support',
   },
   {
+    path: '/trust',
+    title: 'Trust Center',
+    titleAr: 'مركز الثقة',
+    description: 'Wasel security posture, compliance, data handling, and incident response transparency.',
+    descriptionAr: 'وضع أمان واصل، الامتثال، معالجة البيانات، وشفافية استجابة الحوادث.',
+    analyticsKey: 'trust_center',
+  },
+  {
     path: '/app/admin',
     requiresAuth: true,
     title: 'Admin',

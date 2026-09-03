@@ -160,7 +160,6 @@ const LEGACY_APP_ALIASES = [
   '/profile',
   '/settings',
   '/notifications',
-  '/trust',
   '/driver',
   '/privacy',
   '/terms',
@@ -350,6 +349,15 @@ export const waselRouter = createBrowserRouter([
     Component: () => <RedirectTo to="/app" />,
     hydrateFallbackElement: <PageLoader />,
     errorElement: <RouteErrorFallback />,
+  },
+  {
+    path: '/trust',
+    Component: WaselRoot,
+    hydrateFallbackElement: <PageLoader />,
+    errorElement: <RouteErrorFallback />,
+    children: [
+      { index: true, lazy: lazy(() => import('./features/legal/TrustCenterPage'), 'TrustCenterPage') },
+    ],
   },
   ...buildLegacyAliases(),
   {

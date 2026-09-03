@@ -1,0 +1,5 @@
+Contact: mailto:security@wasel.jo
+Contact: mailto:privacy@wasel.jo
+Expires: 2027-12-31
+Preferred-Languages: en, ar
+Policy: https://wasel14.online/trust
