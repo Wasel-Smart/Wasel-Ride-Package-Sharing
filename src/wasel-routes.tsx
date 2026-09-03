@@ -85,6 +85,9 @@ const NotFound = memo(() => {
   );
 });
 
+const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'));
+const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage'));
+
 const RouteErrorFallback = memo(() => {
   const { language } = useLanguage();
   const ar = language === 'ar';
@@ -322,8 +325,13 @@ const buildMainChildren = () => [
   { path: 'privacy', lazy: lazy(() => import('./features/legal/PrivacyPolicy'), 'PrivacyPolicy') },
   { path: 'terms', lazy: lazy(() => import('./features/legal/TermsOfService'), 'TermsOfService') },
   { path: 'security', lazy: lazy(() => import('./features/legal/SecurityPage'), 'SecurityPage') },
+  { path: 'support', lazy: lazy(() => import('./features/support/SupportPage'), 'SupportPage') },
   { path: 'legal/privacy', Component: () => <RedirectTo to="/app/privacy" /> },
   { path: 'legal/terms', Component: () => <RedirectTo to="/app/terms" /> },
+
+  // ── Error pages ────────────────────────────────────────────────────────────
+  { path: '403', Component: ForbiddenPage },
+  { path: '500', Component: ServerErrorPage },
 
   // ── 404 catch-all ─────────────────────────────────────────────────────────
   { path: '*', Component: NotFound },
@@ -349,7 +357,7 @@ export const waselRouter = createBrowserRouter([
     Component: WaselRoot,
     hydrateFallbackElement: <PageLoader />,
     errorElement: <RouteErrorFallback />,
-    children: buildMainChildren(),
+    children: buildMainChildren() as any,
   },
   {
     path: '*',
@@ -357,4 +365,4 @@ export const waselRouter = createBrowserRouter([
     hydrateFallbackElement: <PageLoader />,
     errorElement: <RouteErrorFallback />,
   },
-]);
+] as any);

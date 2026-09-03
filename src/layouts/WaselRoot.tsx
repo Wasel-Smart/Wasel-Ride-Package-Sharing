@@ -10,6 +10,7 @@ import { C, F, FA, GLOBAL_STYLES, GRAD, R, Z } from '../utils/wasel-ds';
 import { trackPageView } from '../platform/telemetry';
 import { getRouteMeta } from '../router/routeMeta';
 import { resetBodyScrollLock } from '../utils/bodyScrollLock';
+import { useSeo, OrganizationJsonLd, WebSiteJsonLd } from '../utils/seo';
 import {
   CurrencySwitcher,
   LangToggle,
@@ -156,6 +157,16 @@ const WaselRootInner = memo(() => {
     if (meta?.analyticsKey) {
       trackPageView(meta.analyticsKey);
     }
+
+    if (meta) {
+      useSeo({
+        title: meta.title,
+        titleAr: meta.titleAr,
+        description: meta.description,
+        descriptionAr: meta.descriptionAr,
+        canonical: `https://wasel14.online${meta.path}`,
+      });
+    }
   }, [location.pathname]);
 
   useRoutePrefetch();
@@ -163,6 +174,8 @@ const WaselRootInner = memo(() => {
   return (
     <>
       <style>{GLOBAL_STYLES}</style>
+      <OrganizationJsonLd />
+      <WebSiteJsonLd />
 
       <div
         style={{

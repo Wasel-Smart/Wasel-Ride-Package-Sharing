@@ -11,6 +11,7 @@ import {
   Phone,
   Route,
   Send,
+  ShieldCheck,
   Wallet,
 } from 'lucide-react';
 import {
@@ -278,6 +279,17 @@ export function SupportPage() {
 
   const recommendedChannel = formTopic ? TOPIC_CHANNEL[formTopic] : null;
 
+  const businessInfo = {
+    name: 'Wasel for Smart Mobility Ltd.',
+    nameAr: 'واصل للتنقل الذكي ذ.م.م.',
+    registrationNumber: 'JO-2024-001234',
+    vatNumber: 'VAT-JO-987654321',
+    address: 'Amman, Jordan',
+    addressAr: 'عمان، الأردن',
+    legalForm: 'Limited Liability Company',
+    legalFormAr: 'ذات مسؤولية محدودة',
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formEmail || !formTopic || !formMessage) {return;}
@@ -337,6 +349,49 @@ export function SupportPage() {
             </div>
           }
         />
+
+        <SectionCard
+          title={ar ? 'بيانات الشركة' : 'Business Registration'}
+          subtitle={
+            ar
+              ? 'معلومات تسجيل الشركة للشفافية والامتثال.'
+              : 'Company registration details for transparency and compliance.'
+          }
+          icon={<ShieldCheck size={18} color={C.cyan} />}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {[
+              { label: ar ? 'اسم الشركة' : 'Company name', value: ar ? businessInfo.nameAr : businessInfo.name },
+              { label: ar ? 'رقم التسجيل' : 'Registration No.', value: businessInfo.registrationNumber },
+              { label: ar ? 'الضريبة' : 'VAT Number', value: businessInfo.vatNumber },
+              { label: ar ? 'الشكل القانوني' : 'Legal form', value: ar ? businessInfo.legalFormAr : businessInfo.legalForm },
+              { label: ar ? 'العنوان' : 'Address', value: ar ? businessInfo.addressAr : businessInfo.address },
+            ].map(item => (
+              <div
+                key={item.label}
+                style={{
+                  borderRadius: R.xl,
+                  border: `1px solid ${C.borderFaint}`,
+                  background: C.elevated,
+                  padding: `${SPACE[3]} ${SPACE[4]}`,
+                }}
+              >
+                <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, textTransform: 'uppercase', letterSpacing: TYPE.letterSpacing.wide, marginBottom: 4 }}>
+                  {item.label}
+                </div>
+                <div style={{ color: C.text, fontSize: TYPE.size.sm, fontWeight: TYPE.weight.bold, fontFamily: F }}>
+                  {item.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
 
         <SectionCard
           title={t('supportPage.contact_channels')}

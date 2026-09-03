@@ -48,6 +48,7 @@ Allow: /carpooling/calculator
 Allow: /awasel/browse
 Allow: /mobility-hubs
 Allow: /safety/trust
+Allow: /app/support
 Allow: /cultural/*
 
 # ═══════════════════════════════════════════════════════════════════

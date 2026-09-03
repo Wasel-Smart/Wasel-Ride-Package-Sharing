@@ -222,6 +222,25 @@ export function isTwoFactorAvailable(): boolean {
   return getConfig().enableTwoFactorAuth && Boolean(API_URL);
 }
 
+export function isMFAEnforced(): boolean {
+  return getConfig().enforceTwoFactorAuth === true;
+}
+
+export async function requireMFAForOperation(
+  _operation: 'payment' | 'profile_update' | 'password_change' | 'sensitive',
+  twoFactorEnabled?: boolean,
+): Promise<{ enforced: boolean; passed: boolean }> {
+  if (!isMFAEnforced()) {
+    return { enforced: false, passed: true };
+  }
+
+  if (!twoFactorEnabled) {
+    return { enforced: true, passed: false };
+  }
+
+  return { enforced: true, passed: true };
+}
+
 export async function enable2FA(_userId: string): Promise<TwoFactorSetup> {
   const payload = await callTwoFactorEndpoint<{ setup: TwoFactorSetup }>('/v1/auth/2fa/setup');
   logger.info('2FA setup started', { important: true });
@@ -310,6 +329,8 @@ export const Security = {
   getPasswordStrengthColor,
   enable2FA,
   isTwoFactorAvailable,
+  isMFAEnforced,
+  requireMFAForOperation,
   verify2FACode,
   disable2FA,
   sanitizeInput,

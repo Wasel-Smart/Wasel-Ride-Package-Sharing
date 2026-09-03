@@ -6,7 +6,7 @@
 import { sanitizeLogMessage } from './sanitization';
 import { getExpectedRedirectUri } from './oauthValidator';
 
-export type OAuthProvider = 'google' | 'facebook';
+export type OAuthProvider = 'google' | 'facebook' | 'microsoft' | 'apple';
 
 export interface OAuthError {
   code: string;

@@ -383,6 +383,7 @@ export function getConfig() {
   const isProd = mode === 'production';
   const enableDemoAccount = getBooleanEnv('VITE_ENABLE_DEMO_DATA', false);
   const enableTwoFactorAuth = getBooleanEnv('VITE_ENABLE_TWO_FACTOR_AUTH', false);
+  const enforceTwoFactorAuth = getBooleanEnv('VITE_ENFORCE_TWO_FACTOR_AUTH', false);
   const enableEmailNotifications = getBooleanEnv('VITE_ENABLE_EMAIL_NOTIFICATIONS', true);
   const enableSmsNotifications = getBooleanEnv('VITE_ENABLE_SMS_NOTIFICATIONS', true);
   const enableWhatsAppNotifications = getBooleanEnv('VITE_ENABLE_WHATSAPP_NOTIFICATIONS', true);
@@ -399,6 +400,7 @@ export function getConfig() {
     authCallbackPath: authCallbackPath.startsWith('/') ? authCallbackPath : `/${authCallbackPath}`,
     enableDemoAccount,
     enableTwoFactorAuth,
+    enforceTwoFactorAuth,
     enableEmailNotifications,
     enableSmsNotifications,
     enableWhatsAppNotifications,

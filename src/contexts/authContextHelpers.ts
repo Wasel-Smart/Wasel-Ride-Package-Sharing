@@ -102,7 +102,7 @@ export function normalizeOperationError(error: unknown, fallback: string): Error
 
 export async function signInWithOAuthProvider(
   client: SupabaseClient | null,
-  provider: 'google' | 'facebook',
+  provider: 'google' | 'facebook' | 'microsoft' | 'apple',
   returnTo?: string,
 ): Promise<{ error: AuthOperationError }> {
   if (!client) {
@@ -111,7 +111,7 @@ export async function signInWithOAuthProvider(
 
   try {
     const { error } = await client.auth.signInWithOAuth({
-      provider,
+      provider: provider as any,
       options: {
         redirectTo: getAuthCallbackUrl(
           resolveAuthRedirectOrigin(),
@@ -122,10 +122,11 @@ export async function signInWithOAuthProvider(
 
     return { error: error ?? null };
   } catch (error: unknown) {
+    const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
     return {
       error: normalizeOperationError(
         error,
-        `${provider.charAt(0).toUpperCase()}${provider.slice(1)} login failed`,
+        `${providerName} login failed`,
       ),
     };
   }

@@ -5,7 +5,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-export type OAuthProvider = 'google' | 'facebook';
+export type OAuthProvider = 'google' | 'facebook' | 'microsoft' | 'apple';
 
 export interface OAuthProviderStatus {
   provider: OAuthProvider;
@@ -41,7 +41,7 @@ export async function validateOAuthProvider(
     // signInWithOAuth with shouldCreateSession=false lets us check config
     // without initiating the full flow
     const { data, error } = await client.auth.signInWithOAuth({
-      provider,
+      provider: provider as any,
       options: {
         redirectTo: window.location.origin + '/app/auth/callback',
         skipBrowserRedirect: true,
@@ -127,6 +127,32 @@ export function getProviderSetupInstructions(provider: OAuthProvider): {
         'Ensure your Facebook app is in "Live" mode for public access',
       ],
       docsUrl: 'https://developers.facebook.com/docs/facebook-login',
+    };
+  }
+
+  if (provider === 'microsoft') {
+    return {
+      steps: [
+        'Go to Azure Portal → Microsoft Entra ID → App registrations',
+        `Add "${redirectUri}" to Redirect URIs (web)`,
+        'Go to Supabase Dashboard → Authentication → Providers → Microsoft',
+        'Enable Microsoft and enter your Client ID + Client Secret',
+        'Ensure the app is published and consent is granted for the required scopes',
+      ],
+      docsUrl: 'https://learn.microsoft.com/en-us/azure/active-directory/develop/quickstart-register-app',
+    };
+  }
+
+  if (provider === 'apple') {
+    return {
+      steps: [
+        'Go to Apple Developer → Certificates, Identifiers & Profiles → Identifiers',
+        `Add "${redirectUri}" to Return URLs in your Apple Services ID`,
+        'Go to Supabase Dashboard → Authentication → Providers → Apple',
+        'Enable Apple and enter your Services ID, Team ID, Key ID, and Private Key',
+        'Ensure your Apple app is configured for Sign in with Apple',
+      ],
+      docsUrl: 'https://developer.apple.com/documentation/sign_in_with_apple',
     };
   }
 

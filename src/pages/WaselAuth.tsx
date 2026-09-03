@@ -23,7 +23,7 @@ import { WaselCard } from '../components/wasel-ui/WaselCard';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { checkRateLimit, resetRateLimit, validateEmail } from '../utils/security';
+import { checkRateLimit, resetRateLimit, validateEmail, validatePhone } from '../utils/security';
 import { useAuth } from '../contexts/AuthContext';
 import { getConfig, getWhatsAppSupportUrl, normalizeReturnToPath } from '../utils/env';
 import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
@@ -413,15 +413,59 @@ export default function WaselAuth () {
         : 'Password updated. Sign in with your new password.'
       : '',
   );
+  const [ emailError, setEmailError ] = useState( '' );
+  const [ passwordError, setPasswordError ] = useState( '' );
+  const [ nameError, setNameError ] = useState( '' );
+  const [ phoneError, setPhoneError ] = useState( '' );
 
   const { signIn, register, loading, user } = useLocalAuth();
-  const { resetPassword, signInWithGoogle, signInWithFacebook } = useAuth();
+  const { resetPassword, signInWithGoogle, signInWithFacebook, signInWithMicrosoft, signInWithApple } = useAuth();
   const nav = useIframeSafeNavigate();
   const mountedRef = useRef( true );
   const { supportWhatsAppNumber } = getConfig();
   const [ oauthConfigWarning, setOauthConfigWarning ] = useState( '' );
 
   const safeReturnTo = normalizeReturnToPath( params.get( 'returnTo' ) );
+
+  const validateEmailRealtime = ( value: string ) => {
+    if ( !value.trim() ) {
+      setEmailError( ar ? 'البريد الإلكتروني مطلوب' : 'Email is required' );
+      return false;
+    }
+    if ( !validateEmail( value ) ) {
+      setEmailError( ar ? 'صيغة البريد الإلكتروني غير صحيحة' : 'Invalid email format' );
+      return false;
+    }
+    setEmailError( '' );
+    return true;
+  };
+
+  const validatePasswordRealtime = ( value: string ) => {
+    if ( tab === 'signup' && value.length > 0 && value.length < 8 ) {
+      setPasswordError( ar ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters' );
+      return false;
+    }
+    setPasswordError( '' );
+    return true;
+  };
+
+  const validateNameRealtime = ( value: string ) => {
+    if ( tab === 'signup' && !value.trim() ) {
+      setNameError( ar ? 'الاسم الكامل مطلوب' : 'Full name is required' );
+      return false;
+    }
+    setNameError( '' );
+    return true;
+  };
+
+  const validatePhoneRealtime = ( value: string ) => {
+    if ( tab === 'signup' && value.trim() && !validatePhone( value ) ) {
+      setPhoneError( ar ? 'صيغة رقم الهاتف غير صحيحة (مثال: +962791234567)' : 'Invalid phone format (e.g. +962791234567)' );
+      return false;
+    }
+    setPhoneError( '' );
+    return true;
+  };
 
   useEffect( () => {
     mountedRef.current = true;
@@ -611,6 +655,26 @@ export default function WaselAuth () {
     }
   };
 
+  const handleMicrosoftSignIn = async () => {
+    setError( '' );
+    const { error: oauthError } = await signInWithMicrosoft( safeReturnTo );
+
+    if ( oauthError ) {
+      const enhancedMessage = enhanceOAuthError( String( oauthError ), 'microsoft' );
+      setError( friendlyAuthError( enhancedMessage, tx( 'waselAuth.error_microsoft_failed' ) ) );
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setError( '' );
+    const { error: oauthError } = await signInWithApple( safeReturnTo );
+
+    if ( oauthError ) {
+      const enhancedMessage = enhanceOAuthError( String( oauthError ), 'apple' );
+      setError( friendlyAuthError( enhancedMessage, tx( 'waselAuth.error_apple_failed' ) ) );
+    }
+  };
+
   const handleWhatsAppHelp = () => {
     if ( !supportWhatsAppNumber ) {
       setError( tx( 'waselAuth.error_whatsapp_not_configured' ) );
@@ -622,17 +686,15 @@ export default function WaselAuth () {
   /**
    * Enhance OAuth error messages with actionable recovery steps
    */
-  const enhanceOAuthError = ( error: string, provider: 'google' | 'facebook' ): string => {
+  const enhanceOAuthError = ( error: string, provider: 'google' | 'facebook' | 'microsoft' | 'apple' ): string => {
     const lower = error.toLowerCase();
     const providerName = provider.charAt( 0 ).toUpperCase() + provider.slice( 1 );
 
-    // Check for common redirect URI errors
     if ( lower.includes( 'redirect_uri' ) || lower.includes( 'uri not allowed' ) || lower.includes( 'invalid redirect' ) ) {
       const instructions = getProviderSetupInstructions( provider );
       return `${ providerName } sign-in is not configured correctly. To fix this:\n\n${ instructions.steps.map( ( s, i ) => `${ i + 1 }. ${ s }` ).join( '\n' ) }`;
     }
 
-    // Check for client configuration errors
     if ( lower.includes( 'client' ) && ( lower.includes( 'invalid' ) || lower.includes( 'not found' ) ) ) {
       return `${ providerName } authentication credentials are missing or invalid. Check Supabase Dashboard > Authentication > Providers > ${ providerName }.`;
     }
@@ -643,6 +705,8 @@ export default function WaselAuth () {
   const socialButtons = [
     { label: 'Google', color: '#4285F4', onClick: handleGoogleSignIn },
     { label: 'Facebook', color: '#1877F2', onClick: handleFacebookSignIn },
+    { label: 'Microsoft', color: '#00A4EF', onClick: handleMicrosoftSignIn },
+    { label: 'Apple', color: '#000000', onClick: handleAppleSignIn },
     ...( supportWhatsAppNumber
       ? [ { label: 'WhatsApp', color: '#25D366', onClick: handleWhatsAppHelp } ]
       : [] ),
@@ -874,63 +938,91 @@ export default function WaselAuth () {
                 style={ { display: 'flex', flexDirection: 'column', gap: SPACE[ 4 ] } }
               >
                 { tab === 'signup' && (
-                  <WaselInput
-                    id="full-name"
-                    label={ tx( 'auth.fullName' ) }
-                    description={ tx( 'waselAuth.as_shown_on_your_profile' ) }
-                    value={ name }
-                    onChange={ setName }
-                    placeholder={ tx( 'waselAuth.ahmad_al_rashid' ) }
-                    icon={ <UserRound size={ 16 } /> }
-                  />
+                  <div>
+                    <WaselInput
+                      id="full-name"
+                      label={ tx( 'auth.fullName' ) }
+                      description={ tx( 'waselAuth.as_shown_on_your_profile' ) }
+                      value={ name }
+                      onChange={ value => { setName( value ); validateNameRealtime( value ); } }
+                      placeholder={ tx( 'waselAuth.ahmad_al_rashid' ) }
+                      icon={ <UserRound size={ 16 } /> }
+                    />
+                    { nameError && (
+                      <span style={ { color: C.error, fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
+                        { nameError }
+                      </span>
+                    ) }
+                  </div>
                 ) }
 
-                <WaselInput
-                  id="auth-email"
-                  label={ tx( 'common.email' ) }
-                  description={ tx( 'waselAuth.used_for_sign_in' ) }
-                  type="email"
-                  value={ email }
-                  onChange={ setEmail }
-                  placeholder={ tx( 'waselAuth.you_example_com' ) }
-                  icon={ <Mail size={ 16 } /> }
-                />
+                <div>
+                  <WaselInput
+                    id="auth-email"
+                    label={ tx( 'common.email' ) }
+                    description={ tx( 'waselAuth.used_for_sign_in' ) }
+                    type="email"
+                    value={ email }
+                    onChange={ value => { setEmail( value ); validateEmailRealtime( value ); } }
+                    placeholder={ tx( 'waselAuth.you_example_com' ) }
+                    icon={ <Mail size={ 16 } /> }
+                  />
+                  { emailError && (
+                    <span style={ { color: C.error, fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
+                      { emailError }
+                    </span>
+                  ) }
+                </div>
 
-                <WaselInput
-                  id="auth-password"
-                  label={ tx( 'auth.password' ) }
-                  description={
-                    tab === 'signin'
-                      ? tx( 'waselAuth.your_account_password' )
-                      : tx( 'waselAuth.minimum_8_characters' )
-                  }
-                  type="password"
-                  value={ password }
-                  onChange={ setPassword }
-                  placeholder={
-                    tab === 'signin'
-                      ? tx( 'waselAuth.enter_your_password' )
-                      : tx( 'waselAuth.create_a_secure_password' )
-                  }
-                  icon={ <Lock size={ 16 } /> }
-                  hint={
-                    tab === 'signup' && password.length > 0 ? (
-                      <StrengthBar password={ password } />
-                    ) : undefined
-                  }
-                />
+                <div>
+                  <WaselInput
+                    id="auth-password"
+                    label={ tx( 'auth.password' ) }
+                    description={
+                      tab === 'signin'
+                        ? tx( 'waselAuth.your_account_password' )
+                        : tx( 'waselAuth.minimum_8_characters' )
+                    }
+                    type="password"
+                    value={ password }
+                    onChange={ value => { setPassword( value ); validatePasswordRealtime( value ); } }
+                    placeholder={
+                      tab === 'signin'
+                        ? tx( 'waselAuth.enter_your_password' )
+                        : tx( 'waselAuth.create_a_secure_password' )
+                    }
+                    icon={ <Lock size={ 16 } /> }
+                    hint={
+                      tab === 'signup' && password.length > 0 ? (
+                        <StrengthBar password={ password } />
+                      ) : undefined
+                    }
+                  />
+                  { passwordError && (
+                    <span style={ { color: C.error, fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
+                      { passwordError }
+                    </span>
+                  ) }
+                </div>
 
                 { tab === 'signup' && (
-                  <WaselInput
-                    id="auth-phone"
-                    label={ tx( 'auth.phoneNumber' ) }
-                    description={ tx( 'common.optional' ) }
-                    type="tel"
-                    value={ phone }
-                    onChange={ setPhone }
-                    placeholder="+962 79 123 4567"
-                    icon={ <Phone size={ 16 } /> }
-                  />
+                  <div>
+                    <WaselInput
+                      id="auth-phone"
+                      label={ tx( 'auth.phoneNumber' ) }
+                      description={ tx( 'common.optional' ) }
+                      type="tel"
+                      value={ phone }
+                      onChange={ value => { setPhone( value ); validatePhoneRealtime( value ); } }
+                      placeholder="+962 79 123 4567"
+                      icon={ <Phone size={ 16 } /> }
+                    />
+                    { phoneError && (
+                      <span style={ { color: C.error, fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
+                        { phoneError }
+                      </span>
+                    ) }
+                  </div>
                 ) }
 
                 { tab === 'signin' && (

@@ -46,6 +46,11 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://www.wasel14.online/app/support</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://www.wasel14.online/app/privacy</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>

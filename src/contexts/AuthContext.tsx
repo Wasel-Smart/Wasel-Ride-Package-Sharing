@@ -37,6 +37,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: AuthOperationError }>;
   signInWithGoogle: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
   signInWithFacebook: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
+  signInWithMicrosoft: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
+  signInWithApple: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: AuthOperationError }>;
   updateUser: (updates: Partial<WaselUser>) => Promise<void>;
@@ -56,6 +58,8 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => ({ error: null }),
   signInWithGoogle: async () => ({ error: null }),
   signInWithFacebook: async () => ({ error: null }),
+  signInWithMicrosoft: async () => ({ error: null }),
+  signInWithApple: async () => ({ error: null }),
   signOut: async () => { },
   updateProfile: async () => ({ error: null }),
   updateUser: async () => { },
@@ -344,7 +348,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const createOAuthSignIn = useCallback(
-    (provider: 'google' | 'facebook') =>
+    (provider: 'google' | 'facebook' | 'microsoft' | 'apple') =>
       async (returnTo?: string): Promise<{ error: AuthOperationError }> => {
         const client = await getSupabaseClient();
         if (!client) {
@@ -355,7 +359,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const result = await signInWithOAuthProvider(client, provider, returnTo);
 
           if (result.error) {
-            const oauthError = parseOAuthError(result.error, provider);
+            const oauthError = parseOAuthError(result.error, provider as any);
             if (oauthError && import.meta.env?.DEV) {
               console.error(`[OAuth ${provider}]`, sanitizeLogMessage(oauthError));
             }
@@ -376,6 +380,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signInWithGoogle = useMemo(() => createOAuthSignIn('google'), [createOAuthSignIn]);
   const signInWithFacebook = useMemo(() => createOAuthSignIn('facebook'), [createOAuthSignIn]);
+  const signInWithMicrosoft = useMemo(() => createOAuthSignIn('microsoft'), [createOAuthSignIn]);
+  const signInWithApple = useMemo(() => createOAuthSignIn('apple'), [createOAuthSignIn]);
 
   const signOut = useCallback(async () => {
     setBusy(true);
@@ -515,6 +521,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       signIn,
       signInWithGoogle,
       signInWithFacebook,
+      signInWithMicrosoft,
+      signInWithApple,
       signOut,
       updateProfile,
       updateUser,
@@ -532,8 +540,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       resetPassword,
       session,
       signIn,
+      signInWithApple,
       signInWithFacebook,
       signInWithGoogle,
+      signInWithMicrosoft,
       signOut,
       signUp,
       updateProfile,
