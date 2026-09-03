@@ -1,4 +1,4 @@
-import { AlertTriangle, Eye, FileCheck, Fingerprint, KeyRound, Lock, ShieldCheck, Smartphone, Shield, Wallet, Mail } from 'lucide-react';
+import { AlertTriangle, Eye, FileCheck, Fingerprint, Globe2, KeyRound, Lock, MapPinned, Server, ShieldCheck, Smartphone, Shield, Wallet, Mail } from 'lucide-react';
 import {
   MetricCard,
   PageHero,
