@@ -359,6 +359,7 @@ export const waselRouter = createBrowserRouter([
       { index: true, lazy: lazy(() => import('./features/legal/TrustCenterPage'), 'TrustCenterPage') },
     ],
   },
+  { path: '/security', Component: () => <RedirectTo to="/app/security" /> },
   ...buildLegacyAliases(),
   {
     path: '/app',

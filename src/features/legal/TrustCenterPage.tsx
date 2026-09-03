@@ -1,4 +1,4 @@
-import { AlertTriangle, Eye, FileCheck, Fingerprint, Globe2, KeyRound, Lock, MapPinned, Server, ShieldCheck, Smartphone, Shield, Wallet, Mail } from 'lucide-react';
+import { AlertTriangle, Eye, FileCheck, Fingerprint, Globe2, KeyRound, Lock, MapPinned, Server, ShieldCheck, Smartphone, Shield, TimerReset, Wallet, Mail } from 'lucide-react';
 import {
   MetricCard,
   PageHero,
@@ -128,6 +128,126 @@ const incidentStepsAr = [
   'نستخدم تصعيد الدعم لمشاكل الدفع أو الرحلات أو الطرود أو دخول الحساب.',
   'نحفظ سياق الرحلة والمحفظة والدعم اللازم للمراجعة.',
   'نرجّع الوصول فقط بعد ما يكمل المستخدم خطوة التحقق المطلوبة.',
+] as const;
+
+const dataResidencyItems = [
+  {
+    icon: Globe2,
+    title: 'Primary region',
+    titleAr: 'المنطقة الأساسية',
+    detail: 'User data is hosted in AWS me-south-1 (Bahrain) with Vercel Edge Network CDN and Supabase Middle East database.',
+    detailAr: 'بيانات المستخدم مستضافة في AWS me-south-1 (البحرين) مع شبكة Vercel Edge وقاعدة بيانات Supabase في الشرق الأوسط.',
+    accent: C.cyan,
+  },
+  {
+    icon: MapPinned,
+    title: 'Future expansion',
+    titleAr: 'التوسع القادم',
+    detail: 'UAE (AWS me-south-1) and Saudi Arabia (AWS me-central-1) are planned with local regulatory alignment.',
+    detailAr: 'الإمارات (AWS me-south-1) والمملكة العربية السعودية (AWS me-central-1) مخطط لهما مع امتثال محلي.',
+    accent: C.gold,
+  },
+  {
+    icon: Lock,
+    title: 'Data handling',
+    titleAr: 'معالجة البيانات',
+    detail: 'User data stays in the home region. Payment data is tokenized. Analytics are aggregated and anonymized.',
+    detailAr: 'بيانات المستخدم تبقى في المنطقة الأساسية. بيانات الدفع مُرمزّة. التحليلات مجمّعة ومجهولة.',
+    accent: C.green,
+  },
+] as const;
+
+const subProcessorItems = [
+  {
+    icon: Server,
+    title: 'Supabase',
+    titleAr: 'Supabase',
+    detail: 'Authentication, database, and edge functions. Data processed under Supabase privacy policy and DPA.',
+    detailAr: 'مصادقة وقاعدة بيانات ووظائف حافة. تتم المعالجة بموجب سياسة خصوصية Supabase واتفاقية معالجة البيانات.',
+    accent: C.cyan,
+  },
+  {
+    icon: Server,
+    title: 'Vercel',
+    titleAr: 'Vercel',
+    detail: 'Frontend hosting and edge delivery. No persistent user data stored on Vercel infrastructure.',
+    detailAr: 'استضافة الواجهة وتوصيل الحافة. لا يتم تخزين بيانات مستخدم ثابتة على بنية Vercel.',
+    accent: C.green,
+  },
+  {
+    icon: Server,
+    title: 'Stripe',
+    titleAr: 'Stripe',
+    detail: 'Payment processing and payout orchestration. PCI-DSS compliant. Card data never touches Wasel servers.',
+    detailAr: 'معالجة المدفوعات وتنسيق السحب. متوافق مع PCI-DSS. بيانات البطاقة لا تصل أبداً لخوادم واصل.',
+    accent: C.gold,
+  },
+  {
+    icon: Mail,
+    title: 'Twilio / SendGrid',
+    titleAr: 'Twilio / SendGrid',
+    detail: 'SMS and email delivery for verification, notifications, and support. Used only for transactional messages.',
+    detailAr: 'توصيل الرسائل النصية والبريد الإلكتروني للتحقق والإشعارات والدعم. يُستخدم فقط للرسائل المعاملاتية.',
+    accent: C.blueLight,
+  },
+] as const;
+
+const auditItems = [
+  {
+    icon: ShieldCheck,
+    title: 'Production hardening',
+    titleAr: 'تصليب الإنتاج',
+    detail: 'CSRF protection, password hashing, RBAC enforcement, and Kubernetes network policies were audited and implemented in 2026.',
+    detailAr: 'حماية CSRF، تجزئة كلمات المرور، تطبيق RBAC، وسياسات شبكة Kubernetes تم تدقيقها وتطبيقها في 2026.',
+    accent: C.green,
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Dependency review',
+    titleAr: 'مراجعة التبعيات',
+    detail: 'GitHub CodeQL and dependency review run on every PR. Secret scanning is enforced in CI.',
+    detailAr: 'CodeQL ومراجعة التبعيات يعملان على كل طلب سحب. فحص الأسرار مفروض في التكامل المستمر.',
+    accent: C.cyan,
+  },
+  {
+    icon: Lock,
+    title: 'Secrets management',
+    titleAr: 'إدارة الأسرار',
+    detail: 'Production secrets are stored in CI secrets, vaults, or deployment environment stores. No secrets in client bundles.',
+    detailAr: 'أسرار الإنتاج مخزنة في أسرار CI أو خزائن أو متاجر بيئة النشر. لا توجد أسرار في حزم العميل.',
+    accent: C.gold,
+  },
+] as const;
+
+const statusItems = [
+  {
+    title: 'API gateway',
+    titleAr: 'بوابة API',
+    value: '99.9%',
+    detail: 'p95 < 250ms',
+    accent: C.green,
+  },
+  {
+    title: 'Identity service',
+    titleAr: 'خدمة الهوية',
+    value: '99.95%',
+    detail: 'p95 < 200ms',
+    accent: C.cyan,
+  },
+  {
+    title: 'Ride matching',
+    titleAr: 'مطابقة الرحلات',
+    value: '99.9%',
+    detail: 'p95 < 700ms',
+    accent: C.gold,
+  },
+  {
+    title: 'Payment service',
+    titleAr: 'خدمة الدفع',
+    value: '99.95%',
+    detail: 'p95 < 350ms',
+    accent: C.green,
+  },
 ] as const;
 
 export function TrustCenterPage() {
@@ -519,6 +639,241 @@ export function TrustCenterPage() {
                   : 'Do not run denial-of-service attacks or modify other user data. Focus on proving the issue with minimal impact.'}
               </div>
             </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          title={ar ? 'موقع البيانات' : 'Data residency'}
+          subtitle={
+            ar
+              ? 'واصل يحترم سيادة البيانات ويخزنها في المنطقة الأقرب للمستخدم.'
+              : 'Wasel respects data sovereignty and stores data in the region closest to the user.'
+          }
+          icon={<Globe2 size={18} color={C.cyan} />}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {dataResidencyItems.map(item => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  style={{
+                    borderRadius: R.xxl,
+                    border: `1px solid ${item.accent}24`,
+                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+                    boxShadow: SH.md,
+                    padding: SPACE[5],
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: SPACE[3],
+                      marginBottom: SPACE[3],
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 42,
+                        height: 42,
+                        display: 'grid',
+                        placeItems: 'center',
+                        borderRadius: R.lg,
+                        color: item.accent,
+                        background: `${item.accent}16`,
+                        border: `1px solid ${item.accent}28`,
+                      }}
+                    >
+                      <Icon size={18} />
+                    </span>
+                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                      {ar ? item.titleAr : item.title}
+                    </div>
+                  </div>
+                  <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+                    {ar ? item.detailAr : item.detail}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          title={ar ? 'معالجات الطرف الثالث' : 'Sub-processors'}
+          subtitle={
+            ar
+              ? 'هذه هي الخدمات التي تعالج بيانات Wasel نيابة عنا.'
+              : 'These are the services that process Wasel data on our behalf.'
+          }
+          icon={<Server size={18} color={C.blueLight} />}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {subProcessorItems.map(item => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  style={{
+                    borderRadius: R.xxl,
+                    border: `1px solid ${item.accent}24`,
+                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+                    boxShadow: SH.md,
+                    padding: SPACE[5],
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: SPACE[3],
+                      marginBottom: SPACE[3],
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 42,
+                        height: 42,
+                        display: 'grid',
+                        placeItems: 'center',
+                        borderRadius: R.lg,
+                        color: item.accent,
+                        background: `${item.accent}16`,
+                        border: `1px solid ${item.accent}28`,
+                      }}
+                    >
+                      <Icon size={18} />
+                    </span>
+                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                      {ar ? item.titleAr : item.title}
+                    </div>
+                  </div>
+                  <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+                    {ar ? item.detailAr : item.detail}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          title={ar ? 'التقييمات الأمنية' : 'Security assessments'}
+          subtitle={
+            ar
+              ? 'المنصّة تخضع لتدقيقات أمنية منتظمة ومراجعة تبعيات آلية.'
+              : 'The platform undergoes regular security audits and automated dependency review.'
+          }
+          icon={<ShieldCheck size={18} color={C.green} />}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {auditItems.map(item => {
+              const Icon = item.icon;
+              return (
+                <div
+                  key={item.title}
+                  style={{
+                    borderRadius: R.xxl,
+                    border: `1px solid ${item.accent}24`,
+                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+                    boxShadow: SH.md,
+                    padding: SPACE[5],
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: SPACE[3],
+                      marginBottom: SPACE[3],
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 42,
+                        height: 42,
+                        display: 'grid',
+                        placeItems: 'center',
+                        borderRadius: R.lg,
+                        color: item.accent,
+                        background: `${item.accent}16`,
+                        border: `1px solid ${item.accent}28`,
+                      }}
+                    >
+                      <Icon size={18} />
+                    </span>
+                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                      {ar ? item.titleAr : item.title}
+                    </div>
+                  </div>
+                  <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+                    {ar ? item.detailAr : item.detail}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          title={ar ? 'الموثوقية والتوفر' : 'Reliability and uptime'}
+          subtitle={
+            ar
+              ? 'نهدف لخدمة متاحة على مدار السنة مع أهداف زمن استجابة واضحة.'
+              : 'We target year-round availability with clear response-time objectives.'
+          }
+          icon={<TimerReset size={18} color={C.gold} />}
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: 12,
+            }}
+          >
+            {statusItems.map(item => (
+              <div
+                key={item.title}
+                style={{
+                  borderRadius: R.xxl,
+                  border: `1px solid ${item.accent}24`,
+                  background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+                  boxShadow: SH.md,
+                  padding: SPACE[5],
+                  display: 'grid',
+                  gap: 6,
+                }}
+              >
+                <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, textTransform: 'uppercase', letterSpacing: TYPE.letterSpacing.wide }}>
+                  {ar ? item.titleAr : item.title}
+                </div>
+                <div style={{ color: item.accent, fontSize: TYPE.size.xl, fontWeight: TYPE.weight.ultra }}>
+                  {item.value}
+                </div>
+                <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>
+                  {item.detail}
+                </div>
+              </div>
+            ))}
           </div>
         </SectionCard>
       </div>
