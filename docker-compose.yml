@@ -15,12 +15,13 @@ services:
       - '8080:8080'
     environment:
       - NODE_ENV=production
-      - VITE_APP_NAME=Wasel
-      - VITE_APP_URL=${VITE_APP_URL:-https://www.wasel14.online}
-      - VITE_APP_ORIGIN=${VITE_APP_ORIGIN:-https://www.wasel14.online}
-      - VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=false
-      - ENABLE_RUNTIME_ADMIN_ENDPOINTS=false
-      - ALLOW_LOCAL_ORIGINS=false
+      - VITE_APP_NAME=${WASEL_APP_NAME:-Wasel}
+      - VITE_APP_URL=${WASEL_APP_URL:-https://www.wasel14.online}
+      - VITE_APP_ORIGIN=${WASEL_APP_ORIGIN:-https://www.wasel14.online}
+      - VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=${VITE_ALLOW_DIRECT_SUPABASE_FALLBACK:-false}
+      - ENABLE_RUNTIME_ADMIN_ENDPOINTS=${ENABLE_RUNTIME_ADMIN_ENDPOINTS:-false}
+      - ALLOW_LOCAL_ORIGINS=${ALLOW_LOCAL_ORIGINS:-false}
+      - WASEL_ENV=${WASEL_ENV:-production}
     volumes:
       - ./dist:/usr/share/nginx/html:ro
     depends_on:
@@ -30,7 +31,7 @@ services:
       - wasel-network
     labels:
       - 'com.wasel.service=web'
-      - 'com.wasel.environment=production'
+      - 'com.wasel.environment=${WASEL_ENV:-production}'
 
   wasel-redis:
     image: redis:7-alpine
@@ -50,7 +51,7 @@ services:
       - wasel-network
     labels:
       - 'com.wasel.service=cache'
-      - 'com.wasel.environment=production'
+      - 'com.wasel.environment=${WASEL_ENV:-production}'
 
 volumes:
   redis-data:
