@@ -29,6 +29,7 @@ import type { AuthOperationError } from '../contexts/authContextHelpers';
 import { getConfig, getWhatsAppSupportUrl, normalizeReturnToPath } from '../utils/env';
 import { friendlyAuthError, pwStrength } from '../utils/authHelpers';
 import { getProviderSetupInstructions } from '../utils/oauthValidator';
+import { supabase } from '../utils/supabase/client';
 
 import { C, R, TYPE, F, SPACE } from '../utils/wasel-ds';
 import { tx } from '../locales/tx';
@@ -488,7 +489,6 @@ export default function WaselAuth () {
 
     const checkOAuthConfig = async () => {
       try {
-        const { supabase } = await import( '../utils/supabase/client' );
         if ( !supabase ) {
           return;
         }
