@@ -4,6 +4,12 @@ import App from './App';
 import './index.css';
 import { getStartupConfigurationError } from './utils/runtimeConfigGuard';
 import { sanitizeLogMessage } from './utils/sanitization';
+import { safeStorageGetItem, safeStorageRemoveItem, safeStorageSetItem } from './utils/browserStorage';
+import { initializeAppInsights } from './utils/appInsights';
+import { initializeCsrfProtection } from './utils/csrf';
+import { initializeSessionManagement } from './utils/session';
+import { verifyBackendConnection, startHealthCheckMonitoring } from './utils/healthCheck';
+import { clearMasterKey } from './utils/encryption';
 
 const LOCAL_DEV_RESET_KEY = 'wasel-local-dev-cache-reset';
 
@@ -24,8 +30,6 @@ async function resetLocalDevelopmentArtifacts(): Promise<void> {
   if (!isLocalDevelopmentOrigin() || !('serviceWorker' in navigator)) {
     return;
   }
-
-  const { safeStorageGetItem, safeStorageRemoveItem, safeStorageSetItem } = await import('./utils/browserStorage');
 
   try {
     const registrations = await navigator.serviceWorker.getRegistrations();
@@ -178,20 +182,6 @@ if (environmentIsValid) {
   // Defer non-critical initializations to reduce initial bundle impact.
   void scheduleIdle(async () => {
     try {
-      const [
-        { initializeAppInsights },
-        { initializeCsrfProtection },
-        { initializeSessionManagement },
-        { verifyBackendConnection, startHealthCheckMonitoring },
-        { clearMasterKey },
-      ] = await Promise.all([
-        import('./utils/appInsights'),
-        import('./utils/csrf'),
-        import('./utils/session'),
-        import('./utils/healthCheck'),
-        import('./utils/encryption'),
-      ]);
-
       initializeAppInsights();
       initializeCsrfProtection();
       initializeSessionManagement();

@@ -11,6 +11,10 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
+import { initSentry, logger as monitoringLogger, trackDomainEvent } from './utils/monitoring';
+import { initPerformanceMonitoring } from './utils/performance';
+import { warmUpServer, startAvailabilityPolling } from './services/core';
+import { domainEventBus } from './platform/event-bus';
 
 function scheduleWhenIdle(callback: () => void): () => void {
   if (typeof window === 'undefined') {
@@ -66,18 +70,6 @@ function AppRuntimeCoordinator() {
           if (cancelled) {return;}
 
           try {
-            const [
-              { initSentry, logger: monitoringLogger, trackDomainEvent },
-              { initPerformanceMonitoring },
-              { warmUpServer, startAvailabilityPolling },
-              { domainEventBus },
-            ] = await Promise.all([
-              import('./utils/monitoring'),
-              import('./utils/performance'),
-              import('./services/core'),
-              import('./platform/event-bus'),
-            ]);
-
             void initSentry();
             initPerformanceMonitoring();
 
