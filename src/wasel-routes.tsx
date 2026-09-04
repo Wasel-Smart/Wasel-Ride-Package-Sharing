@@ -331,6 +331,7 @@ const buildMainChildren = () => [
   // ── Error pages ────────────────────────────────────────────────────────────
   { path: '403', Component: ForbiddenPage },
   { path: '500', Component: ServerErrorPage },
+  { path: 'auth404', Component: () => <RedirectTo to="/app/auth" /> },
 
   // ── 404 catch-all ─────────────────────────────────────────────────────────
   { path: '*', Component: NotFound },

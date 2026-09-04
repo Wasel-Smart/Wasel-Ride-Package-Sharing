@@ -19,6 +19,8 @@ export const trustCenterExpanded = {
     driverDocuments: 'Driver documents',
     walletStanding: 'Wallet standing',
     ready: 'Ready',
+    sanadReference: 'Sanad reference or session ID',
+    phoneNumberLabel: 'Phone number',
     postRides: 'Post rides',
     carryPackages: 'Carry packages',
     receivePayouts: 'Receive payouts',
@@ -60,6 +62,7 @@ export const trustCenterExpanded = {
     driverLicenseNumber: 'Driver license number',
     documentReferenceOptional: 'Document reference (optional)',
     submitDocuments: 'Submit documents',
+    submitForReview: 'Submit for review',
     resubmit: 'Resubmit',
     lastUpdate: 'Last update:',
     openWallet: 'Open wallet',
@@ -75,13 +78,15 @@ export const trustCenterExpanded = {
     eachCardShowsState:
       'Each card below shows whether a step is Not Started, In Progress, Completed, or Failed, with a clear reason.',
     blockedChecksNeeded:
-      'Blocked checks still need to be resolved before the account is fully ready.',
+      '{count} blocked checks still need to be resolved before the account is fully ready.',
     noCapabilitiesGated:
       'No core capability is currently gated. Use this page for periodic review only.',
     capabilityReady: 'This action is available right now.',
     capabilityMatrixTitle: 'Capability matrix',
     capabilityMatrixSubtitle:
       'Final trust state should read as open or blocked capabilities.',
+    workflowStepSubtitle:
+      'Each step has a direct action and no state is allowed to remain indeterminate.',
   },
   ar: {
     eyebrow: 'مركز الثقة',
@@ -102,6 +107,8 @@ export const trustCenterExpanded = {
     driverDocuments: 'وثائق السائق',
     walletStanding: 'سلامة المحفظة',
     ready: 'جاهز',
+    sanadReference: 'مرجع سند أو رقم الجلسة',
+    phoneNumberLabel: 'رقم الهاتف',
     postRides: 'نشر رحلة',
     carryPackages: 'حمل الطرود',
     receivePayouts: 'استلام الدفعات',
@@ -143,6 +150,7 @@ export const trustCenterExpanded = {
     driverLicenseNumber: 'رقم رخصة السائق',
     documentReferenceOptional: 'مرجع المستند (اختياري)',
     submitDocuments: 'إرسال الوثائق',
+    submitForReview: 'إرسال للمراجعة',
     resubmit: 'إعادة الإرسال',
     lastUpdate: 'آخر تحديث:',
     openWallet: 'افتح المحفظة',
@@ -155,10 +163,11 @@ export const trustCenterExpanded = {
     allResolved: 'جميع خطوات الثقة الآن محسومة ويمكن للمستخدم فهم وضع الحساب فوراً.',
     loadingState: 'تحميل حالة الثقة الحالية...',
     eachCardShowsState: 'كل بطاقة أدناه توضح حالة الخطوة: لم تبدأ، قيد التنفيذ، مكتملة، أو فشلت.',
-    blockedChecksNeeded: 'هناك خطوات محظورة يجب حلها قبل اعتبار الحساب جاهزاً بالكامل.',
+    blockedChecksNeeded: 'هناك {count} خطوة محظورة يجب حلها قبل اعتبار الحساب جاهزاً بالكاملا.',
     noCapabilitiesGated: 'لا توجد قدرة أساسية مقفلة الآن. استخدم هذه الصفحة للمراجعة الدورية فقط.',
     capabilityReady: 'الشرط مكتمل ويمكن تنفيذ الإجراء الآن.',
     capabilityMatrixTitle: 'مصفوفة القدرات',
     capabilityMatrixSubtitle: 'الحالة النهائية للثقة يجب أن تظهر كقدرات مفتوحة أو مغلقة بوضوح.',
+    workflowStepSubtitle: 'كل خطوة لديها إجراء واضح ولا يسمح لأي حالة أن تبقى غير محسومة.',
   },
 } as const;

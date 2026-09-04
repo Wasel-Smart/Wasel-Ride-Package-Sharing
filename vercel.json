@@ -7,9 +7,16 @@
   "env": {
     "NPM_CONFIG_PRODUCTION": "false"
   },
+  "redirects": [
+    {
+      "source": "/app/auth404",
+      "destination": "/app/auth",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
-      "source": "/:path((?!assets/|sw\\.js$|manifest\\.webmanifest$|initial-locale\\.js$|favicon|apple-touch-icon|icon-|robots\\.txt$|sitemap\\.xml$|precache-manifest\\.json$|offline\\.html$|brand/|\\.well-known/).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],

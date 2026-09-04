@@ -2,15 +2,17 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { toast } from 'sonner';
 import {
   Activity,
-  AlertTriangle,
   BadgeCheck,
   CheckCircle2,
   FileCheck,
+  Headphones,
   MailCheck,
+  Package,
   Shield,
   Wallet,
 } from 'lucide-react';
 import { WaselButton } from '../../components/wasel-ui/WaselButton';
+import { WaselInput } from '../../components/wasel-ui/WaselInput';
 import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import {
   MetricCard,
@@ -19,6 +21,7 @@ import {
   SectionCard,
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
+import { stateAccent, TrustScoreDisplay, VerificationSteps } from './components';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
@@ -39,11 +42,7 @@ import {
   type TrustStepState,
 } from '../../services/trustCenterModel';
 import { evaluateTrustCapability } from '../../services/trustRules';
-import { C, F, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
-import {
-  TrustScoreDisplay,
-  VerificationSteps,
-} from './components';
+import { C, F, R, SPACE, TYPE } from '../../utils/wasel-ds';
 
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) {return error.message;}
@@ -60,19 +59,6 @@ function getStepBadge(state: TrustStepState, t: (key: string) => string) {
       return { label: t('trustCenterExpanded.failed'), accent: C.error };
     default:
       return { label: t('trustCenterExpanded.notStarted'), accent: C.gold };
-  }
-}
-
-function getPanelAccent(state: TrustStepState) {
-  switch (state) {
-    case 'completed':
-      return C.green;
-    case 'in_progress':
-      return C.cyan;
-    case 'failed':
-      return C.error;
-    default:
-      return C.gold;
   }
 }
 
@@ -124,45 +110,34 @@ function getNextTrustStepDetail(
   }
 }
 
-function FormField({
-  value,
-  onChange,
-  placeholder,
-  type = 'text',
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  type?: string;
-}) {
+function FailureNotice({ message }: { message: string }) {
   return (
-    <input
-      type={type}
-      value={value}
-      onChange={event => onChange(event.target.value)}
-      placeholder={placeholder}
+    <div
       style={{
-        width: '100%',
-        minHeight: 42,
-        padding: '0 12px',
-        borderRadius: R.md,
-        border: `1px solid ${C.border}`,
-        background: C.elevated,
-        color: C.text,
+        borderRadius: R.lg,
+        border: `1px solid ${C.error}33`,
+        background: C.errorDim,
+        padding: '12px 14px',
+        color: C.error,
+        fontSize: TYPE.size.sm,
         fontFamily: F,
-        outline: 'none',
-        boxShadow: SH.none,
+        lineHeight: 1.6,
       }}
-    />
+    >
+      {message}
+    </div>
   );
 }
+
+const cardSurface = {
+  background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
+};
 
 function StepCard({
   title,
   subtitle,
   state,
   icon,
-  ar: _ar,
   children,
   footer,
 }: {
@@ -170,12 +145,11 @@ function StepCard({
   subtitle: string;
   state: TrustStepState;
   icon: ReactNode;
-  ar: boolean;
   children?: ReactNode;
   footer?: ReactNode;
 }) {
   const { t } = useLanguage();
-  const accent = getPanelAccent(state);
+  const accent = stateAccent(state);
   const badge = getStepBadge(state, t);
 
   return (
@@ -184,7 +158,7 @@ function StepCard({
         display: 'grid',
         gap: SPACE[4],
         padding: SPACE[4],
-        borderRadius: 20,
+        borderRadius: R.xl,
         border: `1px solid ${accent}24`,
         background: `radial-gradient(circle at top left, ${accent}12, transparent 32%), ${C.elevated}`,
       }}
@@ -290,6 +264,15 @@ export default function TrustCenterPage() {
     }
   }, [user]);
 
+  const emailBadge = useMemo(
+    () => getStepBadge(effectiveStatus?.steps.email.state ?? 'not_started', t),
+    [t, effectiveStatus?.steps.email.state],
+  );
+  const phoneBadge = useMemo(
+    () => getStepBadge(effectiveStatus?.steps.phone.state ?? 'not_started', t),
+    [t, effectiveStatus?.steps.phone.state],
+  );
+
   useEffect(() => {
     if (!user) {
       setTrustStatus(null);
@@ -316,18 +299,22 @@ export default function TrustCenterPage() {
   const capabilityRows = [
     {
       title: t('trustCenterExpanded.postRides'),
+      icon: <BadgeCheck size={18} />,
       gate: evaluateTrustCapability(user, 'offer_ride'),
     },
     {
       title: t('trustCenterExpanded.carryPackages'),
+      icon: <Package size={18} />,
       gate: evaluateTrustCapability(user, 'carry_packages'),
     },
     {
       title: t('trustCenterExpanded.receivePayouts'),
+      icon: <Wallet size={18} />,
       gate: evaluateTrustCapability(user, 'receive_payouts'),
     },
     {
       title: t('trustCenterExpanded.prioritySupport'),
+      icon: <Headphones size={18} />,
       gate: evaluateTrustCapability(user, 'priority_support'),
     },
   ];
@@ -481,6 +468,12 @@ export default function TrustCenterPage() {
     });
   };
 
+  const identityStep = effectiveStatus?.steps.identity;
+  const emailStep = effectiveStatus?.steps.email;
+  const phoneStep = effectiveStatus?.steps.phone;
+  const driverStep = effectiveStatus?.steps.driverDocuments;
+  const walletStandingStep = effectiveStatus?.steps.walletStanding;
+
   return (
     <PageShell maxWidth={880} dir={ar ? 'rtl' : 'ltr'}>
       <div style={{ paddingInline: SPACE[4] }}>
@@ -530,8 +523,12 @@ export default function TrustCenterPage() {
                 <StatusBadge
                   label={
                     effectiveStatus
-                      ? `${effectiveStatus.completedSteps}/${effectiveStatus.totalSteps} ${ar ? 'مكتمل' : 'complete'}`
-                      : `0/5 ${ar ? 'مكتمل' : 'complete'}`
+                      ? t('trustCenterExpanded.stepCounter')
+                          .replace('{completed}', String(effectiveStatus.completedSteps))
+                          .replace('{total}', String(effectiveStatus.totalSteps))
+                      : t('trustCenterExpanded.stepCounter')
+                          .replace('{completed}', '0')
+                          .replace('{total}', '5')
                   }
                   accent={C.cyan}
                 />
@@ -544,18 +541,15 @@ export default function TrustCenterPage() {
                 />
               </div>
               <TrustScoreDisplay score={user.trustScore} label={t('trustCenterExpanded.trustScore')} />
-              <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7 }}>
-                {ar
-                  ? 'كل بطاقة أدناه توضح ما إذا كانت الخطوة لم تبدأ أو قيد التنفيذ أو مكتملة أو فاشلة، مع سبب واضح.'
-                  : t('trustCenterExpanded.eachCardShowsState')}
+              <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7, fontFamily: F }}>
+                {t('trustCenterExpanded.eachCardShowsState')}
               </div>
             </div>
           }
         />
 
-        {/* ── 5-segment progress bar ── */}
         <VerificationSteps
-          steps={(effectiveStatus?.steps ?? {}) as Record<string, { state: string; detail?: string; failureReason?: string | null; meta?: Record<string, unknown> }>}
+          steps={(effectiveStatus?.steps ?? {}) as Record<string, { state: string; detail?: string }>}
           t={t}
         />
 
@@ -589,7 +583,7 @@ export default function TrustCenterPage() {
             label={t('trustCenterExpanded.blockedChecks')}
             value={`${effectiveStatus?.blockedSteps.length ?? 0}`}
             detail={t('trustCenterExpanded.failedStepsDetail')}
-            icon={<AlertTriangle size={18} />}
+            icon={<Activity size={18} />}
             accent={(effectiveStatus?.blockedSteps.length ?? 0) > 0 ? C.error : C.green}
           />
           <MetricCard
@@ -602,8 +596,8 @@ export default function TrustCenterPage() {
         </div>
 
         <SectionCard
-          title={t('trustCenterExpanded.title')}
-          subtitle={t('trustCenterExpanded.subtitle')}
+          title={t('trustCenterExpanded.nextUnlock')}
+          subtitle={t('trustCenterExpanded.capabilitiesStillGated')}
           icon={<BadgeCheck size={16} color={heroAccent} />}
         >
           <div
@@ -618,7 +612,7 @@ export default function TrustCenterPage() {
                 display: 'grid',
                 gap: SPACE[3],
                 padding: SPACE[4],
-                borderRadius: 20,
+                borderRadius: R.xl,
                 border: `1px solid ${heroAccent}24`,
                 background: `radial-gradient(circle at top left, ${heroAccent}12, transparent 36%), ${C.elevated}`,
               }}
@@ -658,7 +652,7 @@ export default function TrustCenterPage() {
               {effectiveStatus?.blockedSteps.length ? (
                 <div
                   style={{
-                    borderRadius: 14,
+                    borderRadius: R.lg,
                     padding: '12px 14px',
                     border: `1px solid ${C.error}26`,
                     background: `${C.error}12`,
@@ -668,9 +662,10 @@ export default function TrustCenterPage() {
                     fontFamily: F,
                   }}
                 >
-                  {ar
-                    ? `هناك ${effectiveStatus.blockedSteps.length} خطوة محظورة يجب حلها قبل اعتبار الحساب جاهزاً بالكامل.`
-                    : `${effectiveStatus.blockedSteps.length} blocked checks still need to be resolved before the account is fully ready.`}
+                  {t('trustCenterExpanded.blockedChecksNeeded').replace(
+                    '{count}',
+                    String(effectiveStatus.blockedSteps.length),
+                  )}
                 </div>
               ) : null}
             </div>
@@ -680,7 +675,7 @@ export default function TrustCenterPage() {
                 display: 'grid',
                 gap: SPACE[3],
                 padding: SPACE[4],
-                borderRadius: 20,
+                borderRadius: R.xl,
                 border: `1px solid ${C.border}`,
                 background: C.elevated,
               }}
@@ -706,7 +701,7 @@ export default function TrustCenterPage() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       gap: 10,
-                      borderRadius: 14,
+                      borderRadius: R.lg,
                       border: `1px solid ${C.border}`,
                       padding: '10px 12px',
                       background: C.card2,
@@ -730,9 +725,7 @@ export default function TrustCenterPage() {
                     fontFamily: F,
                   }}
                 >
-                  {ar
-                    ? 'لا توجد قدرة أساسية مقفلة الآن. استخدم هذه الصفحة للمراجعة الدورية فقط.'
-                    : 'No core capability is currently gated. Use this page for periodic review only.'}
+                  {t('trustCenterExpanded.noCapabilitiesGated')}
                 </div>
               )}
             </div>
@@ -742,27 +735,19 @@ export default function TrustCenterPage() {
         <div ref={workflowRef} style={{ display: 'grid', gap: SPACE[5], marginBottom: SPACE[6] }}>
           <SectionCard
             title={t('trustCenterExpanded.subtitle')}
-            subtitle={
-              ar
-                ? 'كل خطوة لديها إجراء واضح ولا يسمح لأي حالة أن تبقى غير محسومة.'
-                : 'Each step has a direct action and no state is allowed to remain indeterminate.'
-            }
+            subtitle={t('trustCenterExpanded.workflowStepSubtitle')}
             icon={<Activity size={16} color={C.cyan} />}
           >
             <div style={{ display: 'grid', gap: SPACE[4] }}>
               <div ref={identityRef}>
                 <StepCard
                   title={t('trustCenterExpanded.identity')}
-                  subtitle={
-                    effectiveStatus?.steps.identity.detail ??
-                    'Submit Sanad verification to continue.'
-                  }
-                  state={effectiveStatus?.steps.identity.state ?? 'not_started'}
-                  ar={ar}
+                  subtitle={identityStep?.detail ?? t('trustCenterExpanded.reviewFlowBelow')}
+                  state={identityStep?.state ?? 'not_started'}
                   icon={
                     <Shield
                       size={16}
-                      color={getPanelAccent(effectiveStatus?.steps.identity.state ?? 'not_started')}
+                      color={stateAccent(identityStep?.state ?? 'not_started')}
                     />
                   }
                   footer={
@@ -774,17 +759,13 @@ export default function TrustCenterPage() {
                         loading={actionKey === 'identity'}
                         disabled={
                           actionKey === 'identity' ||
-                          effectiveStatus?.steps.identity.state === 'in_progress'
+                          identityStep?.state === 'in_progress'
                         }
                         variant="primary"
                       >
-                        {effectiveStatus?.steps.identity.state === 'failed'
-                          ? ar
-                            ? 'إعادة الإرسال'
-                            : 'Resubmit'
-                          : ar
-                            ? 'إرسال للمراجعة'
-                            : 'Submit for review'}
+                        {identityStep?.state === 'failed'
+                          ? t('trustCenterExpanded.resubmit')
+                          : t('trustCenterExpanded.submitForReview')}
                       </WaselButton>
                       <WaselButton
                         variant="outline"
@@ -797,61 +778,41 @@ export default function TrustCenterPage() {
                     </div>
                   }
                 >
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {effectiveStatus?.steps.identity.failureReason ? (
-                      <div
-                        style={{
-                          borderRadius: 14,
-                          border: `1px solid ${C.error}33`,
-                          background: `${C.error}12`,
-                          padding: '12px 14px',
-                          color: C.error,
-                          fontSize: TYPE.size.sm,
-                          fontFamily: F,
-                          lineHeight: 1.6,
-                        }}
-                      >
-                        {effectiveStatus.steps.identity.failureReason}
-                      </div>
-                    ) : null}
-                    <FormField
-                      value={identityReference}
-                      onChange={setIdentityReference}
-                      placeholder={ar ? 'مرجع سند أو رقم الجلسة' : 'Sanad reference or session id'}
-                    />
-                    <FormField
-                      value={identityDocumentReference}
-                      onChange={setIdentityDocumentReference}
-                      placeholder={ar ? 'مرجع المستند (اختياري)' : 'Document reference (optional)'}
-                    />
-                    {formatTimestamp(effectiveStatus?.steps.identity.updatedAt) ? (
-                      <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
-                        {ar ? 'آخر تحديث:' : 'Last update:'}{' '}
-                        {formatTimestamp(effectiveStatus?.steps.identity.updatedAt)}
-                      </div>
-                    ) : null}
-                  </div>
+                  {identityStep?.failureReason ? (
+                    <FailureNotice message={identityStep.failureReason} />
+                  ) : null}
+                  <WaselInput
+                    id="identity-reference"
+                    label={t('trustCenterExpanded.sanadReference')}
+                    value={identityReference}
+                    onChange={setIdentityReference}
+                    dir={ar ? 'rtl' : 'ltr'}
+                  />
+                  <WaselInput
+                    id="identity-document-ref"
+                    label={t('trustCenterExpanded.documentReferenceOptional')}
+                    value={identityDocumentReference}
+                    onChange={setIdentityDocumentReference}
+                    dir={ar ? 'rtl' : 'ltr'}
+                  />
+                  {formatTimestamp(identityStep?.updatedAt) ? (
+                    <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
+                      {t('trustCenterExpanded.lastUpdate')} {formatTimestamp(identityStep?.updatedAt)}
+                    </div>
+                  ) : null}
                 </StepCard>
               </div>
 
               <div ref={contactRef}>
                 <StepCard
-                  title={ar ? 'البريد والهاتف' : 'Email and phone'}
-                  subtitle={
-                    ar
-                      ? 'تأكيد البريد والهاتف يجب أن يغيّر الحالة مباشرة.'
-                      : 'Email and phone verification should move state immediately.'
-                  }
-                  ar={ar}
+                  title={t('trustCenterExpanded.emailPhoneTitle')}
+                  subtitle={t('trustCenterExpanded.emailPhoneSubtitle')}
                   state={
-                    effectiveStatus?.steps.phone.state === 'failed' ||
-                    effectiveStatus?.steps.email.state === 'failed'
+                    phoneStep?.state === 'failed' || emailStep?.state === 'failed'
                       ? 'failed'
-                      : effectiveStatus?.steps.phone.state === 'completed' &&
-                          effectiveStatus?.steps.email.state === 'completed'
+                      : phoneStep?.state === 'completed' && emailStep?.state === 'completed'
                         ? 'completed'
-                        : effectiveStatus?.steps.phone.state === 'in_progress' ||
-                            effectiveStatus?.steps.email.state === 'in_progress'
+                        : phoneStep?.state === 'in_progress' || emailStep?.state === 'in_progress'
                           ? 'in_progress'
                           : 'not_started'
                   }
@@ -869,9 +830,9 @@ export default function TrustCenterPage() {
                         display: 'grid',
                         gap: 10,
                         padding: SPACE[4],
-                        borderRadius: 16,
-                        border: `1px solid ${getPanelAccent(effectiveStatus?.steps.email.state ?? 'not_started')}24`,
-                        background: C.card2,
+                        borderRadius: R.lg,
+                        border: `1px solid ${stateAccent(emailStep?.state ?? 'not_started')}24`,
+                        ...cardSurface,
                       }}
                     >
                       <div
@@ -885,16 +846,7 @@ export default function TrustCenterPage() {
                         <div style={{ color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F }}>
                           {t('trustCenterExpanded.emailConfirmation')}
                         </div>
-                        <StatusBadge
-                          label={
-                            getStepBadge(effectiveStatus?.steps.email.state ?? 'not_started', t)
-                              .label
-                          }
-                          accent={
-                            getStepBadge(effectiveStatus?.steps.email.state ?? 'not_started', t)
-                              .accent
-                          }
-                        />
+                        <StatusBadge label={emailBadge.label} accent={emailBadge.accent} />
                       </div>
                       <div
                         style={{
@@ -915,10 +867,7 @@ export default function TrustCenterPage() {
                             void handleResendEmail();
                           }}
                           loading={actionKey === 'email'}
-                          disabled={
-                            actionKey === 'email' ||
-                            effectiveStatus?.steps.email.state === 'completed'
-                          }
+                          disabled={actionKey === 'email' || effectiveStatus?.steps.email.state === 'completed'}
                           variant="primary"
                         >
                           {effectiveStatus?.steps.email.state === 'completed'
@@ -933,9 +882,9 @@ export default function TrustCenterPage() {
                         display: 'grid',
                         gap: 10,
                         padding: SPACE[4],
-                        borderRadius: 16,
-                        border: `1px solid ${getPanelAccent(effectiveStatus?.steps.phone.state ?? 'not_started')}24`,
-                        background: C.card2,
+                        borderRadius: R.lg,
+                        border: `1px solid ${stateAccent(phoneStep?.state ?? 'not_started')}24`,
+                        ...cardSurface,
                       }}
                     >
                       <div
@@ -947,18 +896,9 @@ export default function TrustCenterPage() {
                         }}
                       >
                         <div style={{ color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F }}>
-                          {ar ? 'تأكيد الهاتف' : 'Phone confirmation'}
+                          {t('trustCenterExpanded.phoneConfirmation')}
                         </div>
-                        <StatusBadge
-                          label={
-                            getStepBadge(effectiveStatus?.steps.phone.state ?? 'not_started', t)
-                              .label
-                          }
-                          accent={
-                            getStepBadge(effectiveStatus?.steps.phone.state ?? 'not_started', t)
-                              .accent
-                          }
-                        />
+                        <StatusBadge label={phoneBadge.label} accent={phoneBadge.accent} />
                       </div>
                       <div
                         style={{
@@ -970,27 +910,16 @@ export default function TrustCenterPage() {
                       >
                         {effectiveStatus?.steps.phone.detail}
                       </div>
-                      {effectiveStatus?.steps.phone.failureReason ? (
-                        <div
-                          style={{
-                            borderRadius: 14,
-                            border: `1px solid ${C.error}33`,
-                            background: `${C.error}12`,
-                            padding: '12px 14px',
-                            color: C.error,
-                            fontSize: TYPE.size.sm,
-                            fontFamily: F,
-                            lineHeight: 1.6,
-                          }}
-                        >
-                          {effectiveStatus.steps.phone.failureReason}
-                        </div>
+                      {phoneStep?.failureReason ? (
+                        <FailureNotice message={phoneStep.failureReason} />
                       ) : null}
-                      <FormField
+                      <WaselInput
+                        id="phone-number"
+                        label={t('trustCenterExpanded.phoneNumberLabel')}
                         value={phoneInput}
                         onChange={setPhoneInput}
-                        placeholder="+962791234567"
                         type="tel"
+                        dir="ltr"
                       />
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                         <WaselButton
@@ -1001,18 +930,20 @@ export default function TrustCenterPage() {
                           disabled={actionKey === 'phone-start'}
                           variant="primary"
                         >
-                          {effectiveStatus?.steps.phone.state === 'in_progress'
+                          {phoneStep?.state === 'in_progress'
                             ? t('trustCenterExpanded.resendCode')
                             : t('trustCenterExpanded.sendCode')}
                         </WaselButton>
                       </div>
-                      {(effectiveStatus?.steps.phone.state === 'in_progress' ||
-                        effectiveStatus?.steps.phone.state === 'failed') && (
+                      {phoneStep?.state === 'in_progress' || phoneStep?.state === 'failed' ? (
                         <div style={{ display: 'grid', gap: 10 }}>
-                          <FormField
+                          <WaselInput
+                            id="phone-code"
+                            label={t('trustCenterExpanded.enterVerificationCode')}
                             value={phoneCode}
                             onChange={setPhoneCode}
-                            placeholder={t('trustCenterExpanded.enterVerificationCode')}
+                            type="text"
+                            dir="ltr"
                           />
                           <WaselButton
                             onClick={() => {
@@ -1022,18 +953,16 @@ export default function TrustCenterPage() {
                             disabled={actionKey === 'phone-confirm'}
                             variant="primary"
                           >
-                            {ar ? 'تأكيد الهاتف' : 'Confirm phone'}
+                            {t('trustCenterExpanded.confirmPhone')}
                           </WaselButton>
-                          {formatTimestamp(effectiveStatus?.steps.phone.meta.expiresAt) ? (
-                            <div
-                              style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}
-                            >
-                              {ar ? 'ينتهي الكود:' : 'Code expires:'}{' '}
-                              {formatTimestamp(effectiveStatus?.steps.phone.meta.expiresAt)}
+                          {formatTimestamp(phoneStep?.meta.expiresAt) ? (
+                            <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
+                              {t('trustCenterExpanded.codeExpires')}{' '}
+                              {formatTimestamp(phoneStep?.meta.expiresAt)}
                             </div>
                           ) : null}
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 </StepCard>
@@ -1041,40 +970,23 @@ export default function TrustCenterPage() {
 
               <div ref={documentsRef}>
                 <StepCard
-                  title={ar ? 'وثائق السائق' : 'Driver documents'}
+                  title={t('trustCenterExpanded.driverDocumentsTitle')}
                   subtitle={
-                    effectiveStatus?.steps.driverDocuments.detail ??
-                    'Submit driver license and compliance documents.'
+                    driverStep?.detail ?? 'Submit driver license and compliance documents.'
                   }
-                  state={effectiveStatus?.steps.driverDocuments.state ?? 'not_started'}
-                  ar={ar}
+                  state={driverStep?.state ?? 'not_started'}
                   icon={
                     <FileCheck
                       size={16}
-                      color={getPanelAccent(
-                        effectiveStatus?.steps.driverDocuments.state ?? 'not_started',
-                      )}
+                      color={stateAccent(driverStep?.state ?? 'not_started')}
                     />
                   }
                 >
                   <div style={{ display: 'grid', gap: 10 }}>
-                    {effectiveStatus?.steps.driverDocuments.failureReason ? (
-                      <div
-                        style={{
-                          borderRadius: 14,
-                          border: `1px solid ${C.error}33`,
-                          background: `${C.error}12`,
-                          padding: '12px 14px',
-                          color: C.error,
-                          fontSize: TYPE.size.sm,
-                          fontFamily: F,
-                          lineHeight: 1.6,
-                        }}
-                      >
-                        {effectiveStatus.steps.driverDocuments.failureReason}
-                      </div>
+                    {driverStep?.failureReason ? (
+                      <FailureNotice message={driverStep.failureReason} />
                     ) : null}
-                    {effectiveStatus?.steps.driverDocuments.meta.role === 'rider' ? (
+                    {driverStep?.meta.role === 'rider' ? (
                       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                         <WaselButton
                           onClick={() => {
@@ -1084,22 +996,24 @@ export default function TrustCenterPage() {
                           disabled={actionKey === 'driver-mode'}
                           variant="primary"
                         >
-                          {ar ? 'تفعيل وضع السائق' : 'Enable Driver mode'}
+                          {t('trustCenterExpanded.enableDriverMode')}
                         </WaselButton>
                       </div>
                     ) : (
                       <>
-                        <FormField
+                        <WaselInput
+                          id="driver-license"
+                          label={t('trustCenterExpanded.driverLicenseNumber')}
                           value={licenseNumber}
                           onChange={setLicenseNumber}
-                          placeholder={ar ? 'رقم رخصة السائق' : 'Driver license number'}
+                          dir={ar ? 'rtl' : 'ltr'}
                         />
-                        <FormField
+                        <WaselInput
+                          id="driver-document-ref"
+                          label={t('trustCenterExpanded.documentReferenceOptional')}
                           value={driverDocumentReference}
                           onChange={setDriverDocumentReference}
-                          placeholder={
-                            ar ? 'مرجع المستند (اختياري)' : 'Document reference (optional)'
-                          }
+                          dir={ar ? 'rtl' : 'ltr'}
                         />
                         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                           <WaselButton
@@ -1109,25 +1023,20 @@ export default function TrustCenterPage() {
                             loading={actionKey === 'driver-documents'}
                             disabled={
                               actionKey === 'driver-documents' ||
-                              effectiveStatus?.steps.driverDocuments.state === 'in_progress'
+                              driverStep?.state === 'in_progress'
                             }
                             variant="primary"
                           >
-                            {effectiveStatus?.steps.driverDocuments.state === 'failed'
-                              ? ar
-                                ? 'إعادة الإرسال'
-                                : 'Resubmit'
-                              : ar
-                                ? 'إرسال الوثائق'
-                                : 'Submit documents'}
+                            {driverStep?.state === 'failed'
+                              ? t('trustCenterExpanded.resubmit')
+                              : t('trustCenterExpanded.submitDocuments')}
                           </WaselButton>
                         </div>
                       </>
                     )}
-                    {formatTimestamp(effectiveStatus?.steps.driverDocuments.updatedAt) ? (
+                    {formatTimestamp(driverStep?.updatedAt) ? (
                       <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
-                        {ar ? 'آخر تحديث:' : 'Last update:'}{' '}
-                        {formatTimestamp(effectiveStatus?.steps.driverDocuments.updatedAt)}
+                        {t('trustCenterExpanded.lastUpdate')} {formatTimestamp(driverStep?.updatedAt)}
                       </div>
                     ) : null}
                   </div>
@@ -1136,49 +1045,33 @@ export default function TrustCenterPage() {
 
               <div ref={walletRef}>
                 <StepCard
-                  title={ar ? 'سلامة المحفظة' : 'Wallet standing'}
+                  title={t('trustCenterExpanded.walletStandingTitle')}
                   subtitle={
-                    effectiveStatus?.steps.walletStanding.detail ?? 'Wallet status unavailable.'
+                    walletStandingStep?.detail ?? 'Wallet status unavailable.'
                   }
-                  state={effectiveStatus?.steps.walletStanding.state ?? 'failed'}
-                  ar={ar}
+                  state={walletStandingStep?.state ?? 'failed'}
                   icon={
                     <Wallet
                       size={16}
-                      color={getPanelAccent(
-                        effectiveStatus?.steps.walletStanding.state ?? 'failed',
-                      )}
+                      color={stateAccent(walletStandingStep?.state ?? 'failed')}
                     />
                   }
                   footer={
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                       <WaselButton onClick={() => nav('/app/wallet')} variant="primary">
-                        {ar ? 'افتح المحفظة' : 'Open wallet'}
+                        {t('trustCenterExpanded.openWallet')}
                       </WaselButton>
                       <WaselButton
                         variant="outline"
                         onClick={() => nav('/app/settings?section=account')}
                       >
-                        {ar ? 'إعدادات الحساب' : 'Account settings'}
+                        {t('trustCenterExpanded.accountSettings')}
                       </WaselButton>
                     </div>
                   }
                 >
-                  {effectiveStatus?.steps.walletStanding.failureReason ? (
-                    <div
-                      style={{
-                        borderRadius: 14,
-                        border: `1px solid ${C.error}33`,
-                        background: `${C.error}12`,
-                        padding: '12px 14px',
-                        color: C.error,
-                        fontSize: TYPE.size.sm,
-                        fontFamily: F,
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {effectiveStatus.steps.walletStanding.failureReason}
-                    </div>
+                  {walletStandingStep?.failureReason ? (
+                    <FailureNotice message={walletStandingStep.failureReason} />
                   ) : null}
                 </StepCard>
               </div>
@@ -1187,12 +1080,8 @@ export default function TrustCenterPage() {
         </div>
 
         <SectionCard
-          title={ar ? 'القدرات المفتوحة الآن' : 'Capability matrix'}
-          subtitle={
-            ar
-              ? 'الحالة النهائية للثقة يجب أن تظهر كقدرات مفتوحة أو مغلقة بوضوح.'
-              : 'Final trust state should read as open or blocked capabilities.'
-          }
+          title={t('trustCenterExpanded.capabilityMatrixTitle')}
+          subtitle={t('trustCenterExpanded.capabilityMatrixSubtitle')}
           icon={<BadgeCheck size={16} color={C.green} />}
         >
           <div style={{ display: 'grid', gap: SPACE[3] }}>
@@ -1205,35 +1094,51 @@ export default function TrustCenterPage() {
                   gap: 12,
                   alignItems: 'center',
                   padding: `${SPACE[4]} ${SPACE[4]}`,
-                  borderRadius: 16,
+                  borderRadius: R.lg,
                   border: `1px solid ${item.gate.allowed ? C.green : C.gold}24`,
                   background: C.elevated,
                   flexWrap: 'wrap',
                 }}
               >
-                <div style={{ display: 'grid', gap: 6, minWidth: 0 }}>
-                  <div style={{ color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F }}>
-                    {item.title}
-                  </div>
-                  <div
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                  <span
                     style={{
-                      color: C.textMuted,
-                      fontSize: TYPE.size.sm,
-                      fontFamily: F,
-                      lineHeight: 1.6,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 36,
+                      height: 36,
+                      borderRadius: R.md,
+                      color: item.gate.allowed ? C.green : C.gold,
+                      background: `${item.gate.allowed ? C.green : C.gold}18`,
+                      border: `1px solid ${item.gate.allowed ? C.green : C.gold}28`,
+                      flexShrink: 0,
                     }}
                   >
-                    {item.gate.allowed
-                      ? ar
-                        ? 'الشرط مكتمل ويمكن تنفيذ الإجراء الآن.'
-                        : 'This action is available right now.'
-                      : (item.gate.reason ??
-                        item.gate.recommendation ??
-                        (ar ? 'خطوة إضافية مطلوبة.' : 'One more step is required.'))}
+                    {item.icon}
+                  </span>
+                  <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+                    <div style={{ color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F }}>
+                      {item.title}
+                    </div>
+                    <div
+                      style={{
+                        color: C.textMuted,
+                        fontSize: TYPE.size.sm,
+                        fontFamily: F,
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {item.gate.allowed
+                        ? t('trustCenterExpanded.capabilityReady')
+                        : (item.gate.reason ??
+                          item.gate.recommendation ??
+                          t('trustCenterExpanded.oneMoreStep'))}
+                    </div>
                   </div>
                 </div>
                 <StatusBadge
-                  label={item.gate.allowed ? (ar ? 'مفتوح' : 'Open') : ar ? 'مغلق' : 'Locked'}
+                  label={item.gate.allowed ? t('trustCenterExpanded.open') : t('trustCenterExpanded.locked')}
                   accent={item.gate.allowed ? C.green : C.gold}
                 />
               </div>

@@ -1,4 +1,4 @@
-import { C, F, R, TYPE } from '../../utils/wasel-ds';
+import { C, F, R, TYPE } from '../../../utils/wasel-ds';
 
 export interface ReviewItem {
   id: string;

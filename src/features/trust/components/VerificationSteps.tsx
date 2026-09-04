@@ -1,5 +1,5 @@
-import { C, F, TYPE } from '../../utils/wasel-ds';
-import type { TrustStepState } from '../../services/trustCenterModel';
+import { C, F, TYPE } from '../../../utils/wasel-ds';
+import type { TrustStepState } from '../../../services/trustCenterModel';
 
 export const VERIFICATION_STEP_ORDER = [
   'identity',
@@ -14,7 +14,7 @@ export function stateAccent(state: TrustStepState): string {
     case 'completed':
       return C.green;
     case 'in_progress':
-      return C.teal;
+      return C.cyan;
     case 'failed':
       return C.error;
     default:
