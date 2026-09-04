@@ -3,6 +3,11 @@
 @import "./styles/globals.css";
 
 @layer base {
+  html {
+    --app-min-height: 100vh;
+    --app-min-height: 100dvh;
+  }
+
   html,
   body {
     min-height: 100vh;
