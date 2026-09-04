@@ -24,7 +24,7 @@ import {
   getDirectUserBookings,
   updateDirectBookingStatus,
 } from './directSupabase';
-import { trackGrowthEvent } from './growthEngine';
+import { supabase as db } from '../utils/supabase/client';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
