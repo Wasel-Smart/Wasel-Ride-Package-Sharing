@@ -101,7 +101,8 @@ class RootErrorBoundary extends React.Component<React.PropsWithChildren, { hasEr
     const isChunkError =
       /loading chunk/i.test(message) ||
       /failed to fetch dynamically imported module/i.test(message) ||
-      /importing a module script failed/i.test(message);
+      /importing a module script failed/i.test(message) ||
+      /Invalid hook call/i.test(message);
     if (isChunkError) {
       const hardRecover = (window as unknown as { waselHardRecover?: () => void }).waselHardRecover;
       if (typeof hardRecover === 'function') {
@@ -253,11 +254,13 @@ if (environmentIsValid) {
         );
       } catch { /* non-fatal */ }
 
-      let swUpdateDetected = false;
-
       const onControllerChange = () => {
         navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
-        if (swUpdateDetected && navigator.serviceWorker.controller) {
+        // Always reload when the SW controller changes — a new SW means a new
+        // deploy with potentially different chunk URLs.  Stale module caches
+        // from the old SW can cause "Invalid hook call" if a mix of old and
+        // new chunks end up loaded.
+        if (navigator.serviceWorker.controller) {
           window.location.reload();
         }
       };
@@ -268,14 +271,12 @@ if (environmentIsValid) {
         navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
 
         if (registration.waiting) {
-          swUpdateDetected = true;
           registration.waiting.postMessage({ type: 'SKIP_WAITING' });
         }
 
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
-            swUpdateDetected = true;
             newWorker.postMessage({ type: 'SKIP_WAITING' });
           }
         });
@@ -315,7 +316,7 @@ if (environmentIsValid) {
     document.documentElement.classList.add('pwa-standalone');
   }
 
-  type ServiceWorkerMessage = { type: 'NAVIGATE'; url: string } | { type: 'BACKGROUND_SYNC' };
+  type ServiceWorkerMessage = { type: 'NAVIGATE'; url: string } | { type: 'BACKGROUND_SYNC' } | { type: 'SW_UPDATED' };
 
   function handleServiceWorkerMessage(event: MessageEvent<ServiceWorkerMessage>) {
     const message = event.data;
@@ -328,6 +329,10 @@ if (environmentIsValid) {
 
     if (message.type === 'BACKGROUND_SYNC') {
       window.dispatchEvent(new Event('online'));
+    }
+
+    if (message.type === 'SW_UPDATED') {
+      window.location.reload();
     }
   }
 

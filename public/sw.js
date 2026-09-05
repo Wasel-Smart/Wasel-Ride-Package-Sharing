@@ -105,16 +105,24 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
+    // First, clear ALL caches — including stale ones from previous
+    // CACHE_VERSIONs — so that no old chunk with a mismatched React
+    // module graph can ever be served after we take control.
     caches
       .keys()
       .then((names) =>
-        Promise.all(
-          names
-            .filter((name) => ![PRECACHE, RUNTIME].includes(name))
-            .map((name) => caches.delete(name)),
-        ),
+        Promise.all(names.map((name) => caches.delete(name))),
       )
-      .then(() => self.clients.claim()),
+      .then(() => self.clients.claim())
+      .then(() => {
+        // Tell every open client to reload so the fresh shell + chunks
+        // are picked up atomically.
+        return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      })
+      .then((clients) => {
+        clients.forEach((client) => client.postMessage({ type: 'SW_UPDATED' }));
+      })
+      .catch(() => self.clients.claim()),
   );
 });
 
@@ -173,24 +181,27 @@ async function handleNavigation(request) {
 
     return response;
   } catch {
-    // Only fall back to a cached navigation response that was itself stored
-    // from a real, successful, recent network fetch (see handleNavigation's
-    // own cache.put above / the runtime cache in general) - never to a
-    // permanently precached snapshot, since that snapshot's asset hashes can
-    // point at files a later deploy has already deleted from the server.
-    const cachedPage = await caches.match(request);
+    // Only fall back to the CURRENT version's caches, never to stale
+    // precached snapshots from an older deploy whose asset hashes may
+    // reference chunks that no longer exist on the server.
+    const cachedPage = (await caches.match(request, { cacheName: RUNTIME }))
+      || (await caches.match(request, { cacheName: PRECACHE }));
     if (cachedPage) return cachedPage;
 
-    const cachedRoot = await caches.match('/');
+    const cachedRoot = (await caches.match('/', { cacheName: RUNTIME }))
+      || (await caches.match('/', { cacheName: PRECACHE }));
     if (cachedRoot) return cachedRoot;
 
-    return caches.match('/offline.html');
+    return caches.match('/offline.html', { cacheName: PRECACHE });
   }
 }
 
 async function networkFirst(request) {
   try {
-    if (!isSafeUrl(request.url)) return caches.match(request) || new Response('Offline', { status: 503, statusText: 'Offline' });
+    if (!isSafeUrl(request.url)) {
+      const cachedRoot = await caches.match(request, { cacheName: RUNTIME });
+      return cachedRoot || caches.match(request, { cacheName: PRECACHE }) || new Response('Offline', { status: 503, statusText: 'Offline' });
+    }
 
     const response = await fetchWithTimeout(request);
 
@@ -202,7 +213,11 @@ async function networkFirst(request) {
 
     return response;
   } catch {
-    const cached = await caches.match(request);
+    // Only fall back to the CURRENT version's caches, never to stale
+    // old-version caches that may hold chunks with a different React
+    // module graph (which causes "Invalid hook call" errors).
+    const cached = (await caches.match(request, { cacheName: RUNTIME }))
+      || (await caches.match(request, { cacheName: PRECACHE }));
     if (cached) return cached;
     return new Response('Offline', { status: 503, statusText: 'Offline' });
   }
