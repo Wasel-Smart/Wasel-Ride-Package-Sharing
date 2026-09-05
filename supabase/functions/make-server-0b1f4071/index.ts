@@ -6167,6 +6167,15 @@ const ROUTES: RouteDescriptor[] = [
     test: ( path ) => path === '/payment/refund',
     handle: ( request ) => handlePaymentRefund( request ),
   },
+  {
+    id: 'booking-payment-status',
+    methods: [ 'GET' ],
+    test: ( path ) => /^\/booking\/[^/]+\/payment-status$/.test( path ),
+    handle: ( request, path ) => {
+      const parts = path.split( '/' );
+      return handleGetPaymentStatus( request, decodeURIComponent( parts[ 2 ] ) );
+    },
+  },
 ];
 
 async function handleWalletDispatch ( request: Request, path: string ): Promise<Response | undefined> {

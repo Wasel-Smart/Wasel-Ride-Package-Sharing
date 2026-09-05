@@ -31,37 +31,34 @@ export function usePayments() {
     }
   }, []);
 
-  const confirmPayment = useCallback(
-    async (_clientSecret: string, elements: StripeElements, returnUrl?: string) => {
-      if (!stripe) {
-        throw new Error('Stripe not initialized');
+  const confirmPayment = useCallback(async (clientSecret: string, elements: StripeElements, returnUrl?: string) => {
+    if (!stripe) {
+      throw new Error('Stripe not initialized');
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error: confirmError } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: returnUrl || `${window.location.origin}/app/bookings`,
+        },
+      });
+
+      if (confirmError) {
+        setError(confirmError.message || 'Payment confirmation failed');
+        throw confirmError;
       }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const { error: confirmError } = await stripe.confirmPayment({
-          elements,
-          confirmParams: {
-            return_url: returnUrl || `${window.location.origin}/app/bookings`,
-          },
-        });
-
-        if (confirmError) {
-          setError(confirmError.message || 'Payment confirmation failed');
-          throw confirmError;
-        }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Payment confirmation failed';
-        setError(errorMessage);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [stripe],
-  );
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Payment confirmation failed';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [stripe]);
 
   const processRefund = useCallback(async (bookingId: string, reason: string, amount?: number) => {
     setLoading(true);
@@ -83,6 +80,25 @@ export function usePayments() {
     }
   }, []);
 
+  const waitForPayment = useCallback(async (bookingId: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const status = await paymentService.confirmPayment(bookingId);
+      if (status !== 'succeeded') {
+        throw new Error(`Payment did not succeed (status: ${status})`);
+      }
+      return status;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Payment status check failed';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     stripe,
     loading,
@@ -90,6 +106,7 @@ export function usePayments() {
     initializeStripe,
     createPaymentIntent,
     confirmPayment,
+    waitForPayment,
     processRefund,
   };
 }

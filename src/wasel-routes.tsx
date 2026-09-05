@@ -106,7 +106,9 @@ const RouteErrorFallback = memo(() => {
   const isHookError = isInvalidHookCallError(message);
 
   useEffect(() => {
-    if (!isHookError) return;
+    if (!isHookError) {
+      return;
+    }
 
     const timer = setTimeout(() => {
       const hardRecover = (window as unknown as { waselHardRecover?: () => void }).waselHardRecover;

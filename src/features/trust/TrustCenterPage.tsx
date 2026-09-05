@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   Activity,
+  AlertTriangle,
   BadgeCheck,
   CheckCircle2,
   FileCheck,
@@ -42,7 +43,7 @@ import {
   type TrustStepState,
 } from '../../services/trustCenterModel';
 import { evaluateTrustCapability } from '../../services/trustRules';
-import { C, F, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { C, F, GRAD_AURORA, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) {return error.message;}
@@ -419,6 +420,25 @@ export default function TrustCenterPage() {
           <TrustSkeleton />
         ) : (
           <>
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'relative',
+                marginBottom: -SPACE[6],
+                pointerEvents: 'none',
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: GRAD_AURORA,
+                  opacity: 0.7,
+                  filter: 'blur(40px)',
+                  transform: 'scale(1.05)',
+                }}
+              />
+            </div>
             <PageHero
           eyebrow={t('trustCenterExpanded.eyebrow')}
           icon={<StatusBadge label={heroLabel} accent={heroAccent} />}
@@ -612,9 +632,13 @@ export default function TrustCenterPage() {
                {effectiveStatus?.blockedSteps.length ? (
                  <div
                    style={{
-                     borderRadius: R.lg,
+                     display: 'flex',
+                     alignItems: 'flex-start',
+                     gap: SPACE[3],
                      padding: `${SPACE[3]} ${SPACE[4]}`,
-                     border: `1px solid ${C.error}26`,
+                     borderRadius: R.lg,
+                     border: `1px solid ${C.error}33`,
+                     borderLeft: `3px solid ${C.error}`,
                      background: `${C.error}12`,
                      color: C.error,
                      fontSize: TYPE.size.sm,
@@ -622,12 +646,15 @@ export default function TrustCenterPage() {
                      fontFamily: F,
                    }}
                  >
-                  {t('trustCenterExpanded.blockedChecksNeeded').replace(
-                    '{count}',
-                    String(effectiveStatus.blockedSteps.length),
-                  )}
-                </div>
-              ) : null}
+                   <AlertTriangle size={16} style={{ marginTop: 2, flexShrink: 0 }} />
+                   <span>
+                     {t('trustCenterExpanded.blockedChecksNeeded').replace(
+                       '{count}',
+                       String(effectiveStatus.blockedSteps.length),
+                     )}
+                   </span>
+                 </div>
+               ) : null}
             </div>
 
             <div
@@ -653,22 +680,23 @@ export default function TrustCenterPage() {
               >
                 {t('trustCenterExpanded.capabilitiesStillGated')}
               </div>
-              {lockedCapabilities.length > 0 ? (
-                lockedCapabilities.map(item => (
-                  <div
-                    key={item.title}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: SPACE[3],
-                      padding: `${SPACE[3]} ${SPACE[4]}`,
-                      borderRadius: R.lg,
-                      border: `1px solid ${C.border}`,
-                      background: C.card,
-                      flexWrap: 'wrap',
-                    }}
-                  >
+               {lockedCapabilities.length > 0 ? (
+                 lockedCapabilities.map(item => (
+                   <div
+                     key={item.title}
+                     style={{
+                       display: 'flex',
+                       alignItems: 'center',
+                       justifyContent: 'space-between',
+                       gap: SPACE[3],
+                       padding: `${SPACE[3]} ${SPACE[4]}`,
+                       borderRadius: R.lg,
+                       border: `1px solid ${C.border}`,
+                       borderLeft: `3px solid ${heroAccent}`,
+                       background: C.card,
+                       flexWrap: 'wrap',
+                     }}
+                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], minWidth: 0 }}>
                       <span
                         style={{
@@ -1089,21 +1117,22 @@ export default function TrustCenterPage() {
         >
           <div style={{ display: 'grid', gap: SPACE[3] }}>
             {capabilityRows.map(item => (
-             <div
-               key={item.title}
-               style={{
-                 display: 'flex',
-                 justifyContent: 'space-between',
-                 gap: SPACE[3],
-                 alignItems: 'center',
-                 padding: `${SPACE[4]} ${SPACE[4]}`,
-                 borderRadius: R.xl,
-                 border: `1px solid ${item.gate.allowed ? C.green : C.cyan}24`,
-                 background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
-                 boxShadow: SH.sm,
-                 flexWrap: 'wrap',
-               }}
-             >
+              <div
+                key={item.title}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  gap: SPACE[3],
+                  alignItems: 'center',
+                  padding: `${SPACE[4]} ${SPACE[4]}`,
+                  borderRadius: R.xl,
+                  border: `1px solid ${item.gate.allowed ? C.green : C.cyan}24`,
+                  borderLeft: `3px solid ${item.gate.allowed ? C.green : C.cyan}`,
+                  background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
+                  boxShadow: SH.sm,
+                  flexWrap: 'wrap',
+                }}
+              >
                <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], minWidth: 0 }}>
                  <span
                    style={{
