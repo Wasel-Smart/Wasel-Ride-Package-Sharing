@@ -171,19 +171,8 @@ const WaselRootInner = memo(() => {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
 
-    const meta = getRouteMeta(location.pathname);
     if (meta?.analyticsKey) {
       trackPageView(meta.analyticsKey);
-    }
-
-    if (meta) {
-      useSeo({
-        title: meta.title,
-        titleAr: meta.titleAr,
-        description: meta.description,
-        descriptionAr: meta.descriptionAr,
-        canonical: `https://wasel14.online${meta.path}`,
-      });
     }
   }, [location.pathname]);
 
