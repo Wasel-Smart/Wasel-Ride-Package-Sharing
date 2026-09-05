@@ -2,21 +2,30 @@
 
 Wasel should be explainable in production under failure, latency, and scale pressure. That requires logs, metrics, tracing, and error reporting that align with the service boundaries.
 
-## Current repo posture
+---
 
-- Structured log entry helper: `src/platform/observability.ts`
-- Runtime monitoring and Sentry integration: `src/utils/monitoring.ts`
-- API timing breadcrumbs: `trackAPICall`
-- Domain event breadcrumbs: `trackDomainEvent`
-- Client-side performance hooks: `src/utils/performance.ts`
+## Actual production stack
 
-## Recommended production stack
+| Signal | Tool | Source |
+|---|---|---|
+| Runtime errors | Sentry | `src/utils/monitoring.ts` |
+| Client metrics & breadcrumbs | App Insights | `src/utils/appInsights.ts` |
+| Structured log entries | Custom helper | `src/platform/observability.ts` |
+| API timing breadcrumbs | `trackAPICall` | `src/platform/observability.ts` |
+| Domain event breadcrumbs | `trackDomainEvent` | `src/platform/observability.ts` |
+| Performance hooks | Web Vitals | `src/utils/performance.ts` |
+| Grafana dashboard | Wasel Overview | `.github/workflows/grafana-dashboard-wasel-overview.json` |
+| Uptime + broker health | `GET /v1/health` | Returns `broker.outboxPending` + `broker.deadLetterCount` |
+
+## Recommended production stack additions
 
 - Logs: Loki or ELK
 - Metrics: Prometheus + Grafana
-- Traces: OpenTelemetry
-- Errors: Sentry
+- Traces: OpenTelemetry collector
+- Errors: Sentry (already wired)
 - Dashboards: route latency, matching lag, payment failures, location-stream throttling, notification delivery
+
+---
 
 ## Golden signals
 
@@ -50,6 +59,37 @@ Wasel should be explainable in production under failure, latency, and scale pres
 - `websocket_connections_active`
 - `trace_sampling_rate`
 
+---
+
+## Alert thresholds
+
+| Metric | Warning | Critical |
+|---|---|---|
+| API error rate | > 1% for 10 min | > 5% |
+| API p95 latency | > 500ms | > 1000ms |
+| Queue lag (`rides.requested`) | > 30s | > 60s |
+| Package location update drop rate | > 3% | > 5% |
+| Payment capture failure rate | > 1% | > 2% |
+| Notification delivery delay | > 15s | > 30s |
+| DB connection pool usage | > 80% | > 95% |
+| Worker circuit breaker open | any | — |
+| DLQ depth (any topic) | > 10 | > 50 |
+
+---
+
+## DLQ monitoring
+
+Every queue topic has a typed DLQ suffix defined in `src/platform/queue-contracts.ts` (e.g. `rides.requested.dlq`). The health endpoint at `GET /v1/health` exposes `broker.deadLetterCount`. Alert when this exceeds 10 on any topic.
+
+Dead-letter messages carry:
+- original `traceId`
+- original entity ID
+- failure reason and attempt count
+
+This allows safe replay without re-triggering side effects.
+
+---
+
 ## Trace model
 
 Every request should carry:
@@ -59,30 +99,42 @@ Every request should carry:
 - service name
 - route or operation name
 - user role when safe
-- entity id when safe
+- entity ID when safe
 
-The client already adds request IDs to outbound API calls. The server-side gateway should preserve them across every downstream hop.
+The client already adds request IDs to outbound API calls via `src/platform/observability.ts`. The server-side gateway preserves them across every downstream hop.
+
+---
 
 ## Logging rules
 
-- Emit structured JSON, not plain text blobs.
-- Never log secrets, tokens, payment instruments, or personal identity documents.
-- Prefer event names and entity IDs over long message strings.
-- Treat every async worker as its own logging producer.
+- Emit structured JSON, not plain text blobs
+- Never log secrets, tokens, payment instruments, or personal identity documents
+- Prefer event names and entity IDs over long message strings
+- Treat every async worker as its own logging producer
 
-## Failure triage
+---
 
-1. Check API gateway latency and error rates.
-2. Check ride and package queue lag.
-3. Check notification worker delivery failures.
-4. Check payment authorization and capture error spikes.
-5. Check location-stream throttling and GPS drop patterns.
+## Failure triage order
 
-## Minimal SLO starter set
+1. Check API gateway latency and error rates
+2. Check ride and package queue lag
+3. Check DLQ depth on all topics
+4. Check notification worker delivery failures
+5. Check payment authorization and capture error spikes
+6. Check location-stream throttling and GPS drop patterns
 
-- API availability: `99.9%`
-- Ride request acceptance path: `p95 < 700ms`
-- Package tracking update ingestion: `p95 < 400ms`
-- Notification enqueue after domain event: `p95 < 2s`
+---
+
+## SLO starter set
+
+| Service | Availability | Latency / Freshness |
+|---|---|---|
+| API gateway | 99.9% | p95 < 250ms |
+| Identity service | 99.95% | p95 < 200ms |
+| Ride matching | 99.9% | p95 < 700ms |
+| Package delivery | 99.9% | p95 < 400ms, freshness < 5s |
+| Payment service | 99.95% | p95 < 350ms |
+| Notification worker | 99.9% | freshness < 2s |
+| Ops worker | 99.5% | freshness < 5m |
 
 See [reliability-slos.md](./reliability-slos.md) for the service-by-service objective sheet and error-budget rules.
