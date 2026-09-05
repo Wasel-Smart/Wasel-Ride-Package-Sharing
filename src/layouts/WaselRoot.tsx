@@ -174,7 +174,7 @@ const WaselRootInner = memo(() => {
     if (meta?.analyticsKey) {
       trackPageView(meta.analyticsKey);
     }
-  }, [location.pathname]);
+  }, [location.pathname, meta]);
 
   useRoutePrefetch();
 
