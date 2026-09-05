@@ -20,9 +20,15 @@ async function getTrustUserId (): Promise<string> {
   if ( !supabase ) {
     throw new Error( 'Supabase client is not initialised' );
   }
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+
+  let session;
+  try {
+    const result = await supabase.auth.getSession();
+    session = result.data?.session ?? null;
+  } catch {
+    throw new Error( 'Unable to verify your session. Please sign in again.' );
+  }
+
   if ( !session?.user?.id ) {
     throw new Error( 'Not authenticated' );
   }
@@ -53,9 +59,15 @@ export async function getTrustCenterStatus ( user?: WaselUser | null ): Promise<
     throw new Error( 'Supabase client is not initialised' );
   }
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  let session;
+  try {
+    const result = await supabase.auth.getSession();
+    session = result.data?.session ?? null;
+  } catch {
+    if ( user ) { return buildFallbackTrustCenterStatus( user ); }
+    throw new Error( 'Unable to verify your session. Please sign in again.' );
+  }
+
   if ( !session ) {
     if ( user ) { return buildFallbackTrustCenterStatus( user ); }
     throw new Error( 'Not authenticated' );
@@ -84,7 +96,7 @@ export async function startTrustPhoneVerification ( payload: StartPhoneVerificat
   }>( {
     operation: 'Phone verification start',
     authMode: 'required',
-    fallbackPolicy: 'never',
+    fallbackPolicy: 'writes-if-enabled',
     edge: context =>
       requestEdgeJson( {
         path: '/v1/trust/phone/start',
@@ -110,7 +122,7 @@ export async function confirmTrustPhoneVerification ( payload: ConfirmPhoneVerif
   }>( {
     operation: 'Phone verification confirmation',
     authMode: 'required',
-    fallbackPolicy: 'never',
+    fallbackPolicy: 'writes-if-enabled',
     edge: context =>
       requestEdgeJson( {
         path: '/v1/trust/phone/confirm',
@@ -136,7 +148,7 @@ export async function submitTrustIdentityVerification ( payload: IdentityVerific
   }>( {
     operation: 'Identity verification submission',
     authMode: 'required',
-    fallbackPolicy: 'never',
+    fallbackPolicy: 'writes-if-enabled',
     edge: context =>
       requestEdgeJson( {
         path: '/v1/trust/identity/submit',
@@ -162,7 +174,7 @@ export async function enableTrustDriverMode () {
   }>( {
     operation: 'Driver mode enablement',
     authMode: 'required',
-    fallbackPolicy: 'never',
+    fallbackPolicy: 'writes-if-enabled',
     edge: context =>
       requestEdgeJson( {
         path: '/v1/trust/driver-mode/enable',
@@ -184,7 +196,7 @@ export async function submitTrustDriverDocuments ( payload: DriverDocumentsPaylo
   }>( {
     operation: 'Driver documents submission',
     authMode: 'required',
-    fallbackPolicy: 'never',
+    fallbackPolicy: 'writes-if-enabled',
     edge: context =>
       requestEdgeJson( {
         path: '/v1/trust/driver-documents/submit',

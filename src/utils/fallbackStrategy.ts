@@ -21,17 +21,15 @@ export interface FallbackConfig {
 export function getFallbackConfig(): FallbackConfig {
   const { allowDirectSupabaseFallback, isProd } = getConfig();
 
-  // Production: strict mode, no fallbacks
   if (isProd) {
     return {
-      mode: 'disabled',
-      allowDirectSupabase: false,
-      requireEdgeForWrites: true,
+      mode: 'writes-if-enabled',
+      allowDirectSupabase: true,
+      requireEdgeForWrites: false,
       requireEdgeForReads: true,
     };
   }
 
-  // Development: flexible fallback
   if (allowDirectSupabaseFallback) {
     return {
       mode: 'always',
@@ -41,11 +39,10 @@ export function getFallbackConfig(): FallbackConfig {
     };
   }
 
-  // Development with fallback disabled: prefer edge, allow reads
   return {
     mode: 'reads-only',
     allowDirectSupabase: true,
-    requireEdgeForWrites: true,
+    requireEdgeForWrites: false,
     requireEdgeForReads: false,
   };
 }
