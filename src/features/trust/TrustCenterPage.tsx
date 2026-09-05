@@ -21,6 +21,7 @@ import {
   SectionCard,
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
+import { FailureNotice, StepCard, TrustActionRow, TrustSkeleton } from './components';
 import { stateAccent, TrustScoreDisplay, VerificationSteps } from './components';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -110,92 +111,117 @@ function getNextTrustStepDetail(
   }
 }
 
-function FailureNotice({ message }: { message: string }) {
-  return (
-    <div
-      style={{
-        borderRadius: R.lg,
-        border: `1px solid ${C.error}33`,
-        background: C.errorDim,
-        padding: '12px 14px',
-        color: C.error,
-        fontSize: TYPE.size.sm,
-        fontFamily: F,
-        lineHeight: 1.6,
-      }}
-    >
-      {message}
-    </div>
-  );
+function formatTimestamp(value?: string | null): string | null {
+  if (!value) {return null;}
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {return null;}
+  return date.toLocaleString();
 }
 
-const cardSurface = {
-  background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
-};
+function getTrustStepTitle(stepId: TrustStepId | null, t: (key: string) => string): string {
+  switch (stepId) {
+    case 'identity':
+      return t('trustCenterExpanded.identity');
+    case 'email':
+      return t('trustCenterExpanded.email');
+    case 'phone':
+      return t('trustCenterExpanded.phone');
+    case 'driver_documents':
+      return t('trustCenterExpanded.driverDocuments');
+    case 'wallet_standing':
+      return t('trustCenterExpanded.walletStanding');
+    default:
+      return t('trustCenterExpanded.ready');
+  }
+}
 
-function StepCard({
+function getNextTrustStepDetail(
+  status: TrustCenterStatus | null,
+  t: (key: string) => string,
+): string {
+  if (!status?.nextStepId) {
+    return t('trustCenterExpanded.allCapabilitiesReady');
+  }
+
+  switch (status.nextStepId) {
+    case 'identity':
+      return status.steps.identity.detail;
+    case 'email':
+      return status.steps.email.detail;
+    case 'phone':
+      return status.steps.phone.detail;
+    case 'driver_documents':
+      return status.steps.driverDocuments.detail;
+    case 'wallet_standing':
+      return status.steps.walletStanding.detail;
+    default:
+      return t('trustCenterExpanded.reviewFlowBelow');
+  }
+}
+
+function ConfirmDialog({
+  open,
   title,
-  subtitle,
-  state,
-  icon,
-  children,
-  footer,
+  description,
+  confirmLabel,
+  cancelLabel,
+  onConfirm,
+  onCancel,
 }: {
+  open: boolean;
   title: string;
-  subtitle: string;
-  state: TrustStepState;
-  icon: ReactNode;
-  children?: ReactNode;
-  footer?: ReactNode;
+  description: string;
+  confirmLabel: string;
+  cancelLabel: string;
+  onConfirm: () => void;
+  onCancel: () => void;
 }) {
-  const { t } = useLanguage();
-  const accent = stateAccent(state);
-  const badge = getStepBadge(state, t);
-
+  if (!open) {return null;}
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="trust-confirm-title"
+      aria-describedby="trust-confirm-desc"
       style={{
-        display: 'grid',
-        gap: SPACE[4],
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         padding: SPACE[4],
-        borderRadius: R.xl,
-        border: `1px solid ${accent}24`,
-        background: `radial-gradient(circle at top left, ${accent}12, transparent 32%), ${C.elevated}`,
+        background: 'rgba(7,21,33,0.72)',
       }}
     >
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          gap: 12,
-          alignItems: 'flex-start',
-          flexWrap: 'wrap',
+          width: '100%',
+          maxWidth: 420,
+          display: 'grid',
+          gap: SPACE[4],
+          padding: SPACE[5],
+          borderRadius: R.xl,
+          border: `1px solid ${C.border}`,
+          background: C.card,
+          boxShadow: `0 20px 60px rgba(0,0,0,0.45)`,
         }}
       >
-        <div style={{ display: 'grid', gap: 6, minWidth: 0 }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              color: C.text,
-              fontWeight: TYPE.weight.bold,
-              fontFamily: F,
-            }}
-          >
-            {icon}
-            <span>{title}</span>
-          </div>
-          <div
-            style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.6 }}
-          >
-            {subtitle}
-          </div>
+        <div id="trust-confirm-title" style={{ color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F }}>
+          {title}
         </div>
-        <StatusBadge label={badge.label} accent={badge.accent} />
+        <div id="trust-confirm-desc" style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.7 }}>
+          {description}
+        </div>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+          <WaselButton variant="outline" onClick={onCancel}>
+            {cancelLabel}
+          </WaselButton>
+          <WaselButton variant="primary" onClick={onConfirm}>
+            {confirmLabel}
+          </WaselButton>
+        </div>
       </div>
-      {children}
-      {footer}
     </div>
   );
 }
@@ -214,6 +240,7 @@ export default function TrustCenterPage() {
 
   const [trustStatus, setTrustStatus] = useState<TrustCenterStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [actionKey, setActionKey] = useState<string | null>(null);
   const [phoneInput, setPhoneInput] = useState(user?.phone ?? '');
   const [phoneCode, setPhoneCode] = useState('');
@@ -221,6 +248,12 @@ export default function TrustCenterPage() {
   const [identityDocumentReference, setIdentityDocumentReference] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
   const [driverDocumentReference, setDriverDocumentReference] = useState('');
+  const [confirmState, setConfirmState] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({ open: false, title: '', description: '', onConfirm: () => {} });
 
   const fallbackStatus = useMemo(
     () => (user ? buildFallbackTrustCenterStatus(user) : null),
@@ -261,6 +294,7 @@ export default function TrustCenterPage() {
       }
     } finally {
       if (!silent) {setStatusLoading(false);}
+      if (silent) {setInitialLoading(false);}
     }
   }, [user]);
 
@@ -276,8 +310,10 @@ export default function TrustCenterPage() {
   useEffect(() => {
     if (!user) {
       setTrustStatus(null);
+      setInitialLoading(false);
       return;
     }
+    setInitialLoading(true);
     void reloadTrustStatus(true);
   }, [
     user?.id,
@@ -441,12 +477,21 @@ export default function TrustCenterPage() {
   };
 
   const handleEnableDriverMode = async () => {
-    await runAction('driver-mode', async () => {
-      await enableTrustDriverMode();
-      updateUser({ role: 'driver' });
-      await refreshProfile();
-      await reloadTrustStatus(true);
-      toast.success('Driver mode enabled. You can now submit driver documents.');
+    setConfirmState({
+      open: true,
+      title: 'Enable driver mode',
+      description:
+        'You are about to enable driver mode. This will allow you to offer rides and submit driver documents.',
+      onConfirm: async () => {
+        setConfirmState(prev => ({ ...prev, open: false }));
+        await runAction('driver-mode', async () => {
+          await enableTrustDriverMode();
+          updateUser({ role: 'driver' });
+          await refreshProfile();
+          await reloadTrustStatus(true);
+          toast.success('Driver mode enabled. You can now submit driver documents.');
+        });
+      },
     });
   };
 
@@ -456,15 +501,24 @@ export default function TrustCenterPage() {
       return;
     }
 
-    await runAction('driver-documents', async () => {
-      await submitTrustDriverDocuments({
-        licenseNumber: licenseNumber.trim(),
-        documentReference: driverDocumentReference.trim() || undefined,
-      });
-      updateUser({ verificationLevel: 'level_2' });
-      await reloadTrustStatus(true);
-      await refreshProfile();
-      toast.success('Driver documents submitted for review.');
+    setConfirmState({
+      open: true,
+      title: 'Submit driver documents',
+      description:
+        'Please verify your driver license and document reference before submitting. This action cannot be undone.',
+      onConfirm: async () => {
+        setConfirmState(prev => ({ ...prev, open: false }));
+        await runAction('driver-documents', async () => {
+          await submitTrustDriverDocuments({
+            licenseNumber: licenseNumber.trim(),
+            documentReference: driverDocumentReference.trim() || undefined,
+          });
+          updateUser({ verificationLevel: 'level_2' });
+          await reloadTrustStatus(true);
+          await refreshProfile();
+          toast.success('Driver documents submitted for review.');
+        });
+      },
     });
   };
 
@@ -476,8 +530,22 @@ export default function TrustCenterPage() {
 
   return (
     <PageShell maxWidth={880} dir={ar ? 'rtl' : 'ltr'}>
-      <div style={{ paddingInline: SPACE[4] }}>
-        <PageHero
+      <style>{`
+        @media (max-width: 480px) {
+          .trust-metrics-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .trust-capability-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+      <div style={{ paddingInline: SPACE[4] }} aria-live="polite">
+        {initialLoading && !trustStatus ? (
+          <TrustSkeleton />
+        ) : (
+          <>
+            <PageHero
           eyebrow={t('trustCenterExpanded.eyebrow')}
           icon={<StatusBadge label={heroLabel} accent={heroAccent} />}
           title={t('trustCenterExpanded.title')}
@@ -554,6 +622,7 @@ export default function TrustCenterPage() {
         />
 
         <div
+          className="trust-metrics-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
@@ -601,6 +670,7 @@ export default function TrustCenterPage() {
           icon={<BadgeCheck size={16} color={heroAccent} />}
         >
           <div
+            className="trust-capability-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
@@ -1145,7 +1215,17 @@ export default function TrustCenterPage() {
             ))}
           </div>
         </SectionCard>
-      </div>
+      </>
+      )}
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        description={confirmState.description}
+        confirmLabel="Confirm"
+        cancelLabel="Cancel"
+        onConfirm={confirmState.onConfirm}
+        onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
+      />
     </PageShell>
   );
 }
