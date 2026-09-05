@@ -18,6 +18,7 @@ export interface PaymentIntentResponse {
 export interface RefundRequest {
   bookingId: string;
   amount?: number;
+  amountMinor?: number;
   reason: string;
 }
 
@@ -25,9 +26,20 @@ export interface RefundResponse {
   success: boolean;
   refundId: string;
   amount: number;
+  amountMinor: number;
+  status: string;
 }
 
 const PAYMENT_TIMEOUT_MS = 15_000;
+const PAYMENT_POLL_INTERVAL = 2_000;
+const PAYMENT_POLL_MAX_DURATION = 30_000;
+
+interface PendingPaymentRequest {
+  controller: AbortController;
+  timestamp: number;
+}
+
+const pendingPaymentRequests = new Map<string, PendingPaymentRequest>();
 
 class PaymentService {
   async createPaymentIntent(request: PaymentIntentRequest): Promise<PaymentIntentResponse> {
