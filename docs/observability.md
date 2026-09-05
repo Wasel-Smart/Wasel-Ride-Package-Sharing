@@ -17,11 +17,13 @@ Wasel should be explainable in production under failure, latency, and scale pres
 | Grafana dashboard | Wasel Overview | `.github/workflows/grafana-dashboard-wasel-overview.json` |
 | Uptime + broker health | `GET /v1/health` | Returns `broker.outboxPending` + `broker.deadLetterCount` |
 
+| Distributed tracing | OpenTelemetry OTLP | `src/platform/telemetry.ts` — set `VITE_OTEL_EXPORTER_OTLP_ENDPOINT` to enable export |
+
 ## Recommended production stack additions
 
 - Logs: Loki or ELK
 - Metrics: Prometheus + Grafana
-- Traces: OpenTelemetry collector
+- Traces: OpenTelemetry collector (Grafana Tempo, Jaeger, Honeycomb)
 - Errors: Sentry (already wired)
 - Dashboards: route latency, matching lag, payment failures, location-stream throttling, notification delivery
 

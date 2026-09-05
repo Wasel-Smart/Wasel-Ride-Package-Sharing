@@ -1,5 +1,7 @@
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 
+type DLQTopicCounts = Record<string, number>;
+
 type HealthResponse = {
   status: 'ok' | 'degraded';
   service: 'wasel-web';
@@ -19,6 +21,7 @@ type HealthResponse = {
     outboxPending: number;
     deadLetterCount: number;
     outboxFailed: number;
+    deadLetterByTopic: DLQTopicCounts;
   };
 };
 
@@ -53,7 +56,7 @@ function getRequestHeader(request: VercelRequest, name: string): string | undefi
 function hasInternalHealthAccess(request: VercelRequest): boolean {
   const expected = getEnv('WASEL_INTERNAL_HEALTH_TOKEN');
   const provided = getRequestHeader(request, 'x-wasel-health-token');
-  if (!expected || !provided) {return false;}
+  if (!expected || !provided) { return false; }
 
   const expectedBuffer = Buffer.from(expected);
   const providedBuffer = Buffer.from(provided);
@@ -81,7 +84,7 @@ async function querySupabaseMetrics(): Promise<HealthResponse['broker']> {
       setTimeout(() => reject(new Error('health-check-timeout')), 2000),
     );
 
-    const [{ count: outboxPending }, { count: deadLetterCount }, { count: outboxFailed }] =
+    const [outboxPendingResult, deadLetterResult, outboxFailedResult, dlqTopicsResult] =
       await Promise.race([
         Promise.all([
           supabase
@@ -95,15 +98,31 @@ async function querySupabaseMetrics(): Promise<HealthResponse['broker']> {
             .from('event_outbox')
             .select('*', { count: 'exact', head: true })
             .eq('status', 'failed'),
+          supabase
+            .from('dead_letter_messages')
+            .select('topic'),
         ]),
         timeout,
-      ]).catch(() => [{ count: -1 }, { count: -1 }, { count: -1 }]);
+      ]).catch(() => [
+        { count: -1 },
+        { count: -1 },
+        { count: -1 },
+        { data: null },
+      ]);
+
+    const deadLetterByTopic: DLQTopicCounts = {};
+    const dlqRows = (dlqTopicsResult as { data: Array<{ topic?: string }> | null }).data ?? [];
+    for (const row of dlqRows) {
+      const topic = row.topic ?? 'unknown';
+      deadLetterByTopic[topic] = (deadLetterByTopic[topic] ?? 0) + 1;
+    }
 
     return {
       kind: getEnv('VITE_EVENT_BROKER') === 'memory' ? 'memory' : 'supabase',
-      outboxPending: outboxPending ?? 0,
-      deadLetterCount: deadLetterCount ?? 0,
-      outboxFailed: outboxFailed ?? 0,
+      outboxPending: (outboxPendingResult as { count: number | null }).count ?? 0,
+      deadLetterCount: (deadLetterResult as { count: number | null }).count ?? 0,
+      outboxFailed: (outboxFailedResult as { count: number | null }).count ?? 0,
+      deadLetterByTopic,
     };
   } catch {
     return undefined;
@@ -144,9 +163,6 @@ export default async function handler(request: VercelRequest, response: VercelRe
   };
   const ready = internalChecks.supabaseConfigured && internalChecks.stripeConfigured;
 
-  // Queue depths and provider configuration are operational data. Public
-  // probes retain a small readiness contract; trusted monitors can opt into
-  // diagnostics with a dedicated, constant-time-checked token.
   const broker = isInternal && internalChecks.supabaseConfigured
     ? await querySupabaseMetrics()
     : undefined;

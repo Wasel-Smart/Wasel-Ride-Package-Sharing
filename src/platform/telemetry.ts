@@ -108,6 +108,8 @@ class TelemetryCollector {
           }),
         );
       }
+      // Forward completed span to OTLP collector if configured
+      import('./telemetry').then(({ exportSpanToOtlp }) => exportSpanToOtlp(span)).catch(() => undefined);
     }
   }
 
@@ -190,6 +192,89 @@ class TelemetryCollector {
 }
 
 export const telemetry = new TelemetryCollector();
+
+// ---------------------------------------------------------------------------
+// OpenTelemetry-compatible OTLP HTTP export
+// ---------------------------------------------------------------------------
+// Forwards completed spans to any OTLP/HTTP collector (Grafana Tempo,
+// Jaeger, Honeycomb, etc.) when VITE_OTEL_EXPORTER_OTLP_ENDPOINT is set.
+// The payload shape follows the OTLP JSON encoding spec so it can be
+// ingested without an SDK dependency.
+// ---------------------------------------------------------------------------
+
+const OTEL_ENDPOINT =
+  typeof import.meta !== 'undefined'
+    ? (import.meta.env?.VITE_OTEL_EXPORTER_OTLP_ENDPOINT as string | undefined)
+    : undefined;
+
+const OTEL_SERVICE_NAME =
+  typeof import.meta !== 'undefined'
+    ? ((import.meta.env?.VITE_OTEL_SERVICE_NAME as string | undefined) ?? 'wasel-web')
+    : 'wasel-web';
+
+function toOtelTimeUnixNano(ms: number): string {
+  // OTLP expects nanoseconds as a string to avoid JS integer overflow
+  return String(ms * 1_000_000);
+}
+
+function spanToOtlpResourceSpan(span: TraceSpan) {
+  return {
+    resourceSpans: [
+      {
+        resource: {
+          attributes: [
+            { key: 'service.name', value: { stringValue: OTEL_SERVICE_NAME } },
+          ],
+        },
+        scopeSpans: [
+          {
+            scope: { name: 'wasel-telemetry', version: '1.0.0' },
+            spans: [
+              {
+                traceId: span.traceId.replace(/-/g, '').slice(0, 32).padEnd(32, '0'),
+                spanId: span.spanId.replace(/-/g, '').slice(0, 16).padEnd(16, '0'),
+                parentSpanId: span.parentSpanId
+                  ? span.parentSpanId.replace(/-/g, '').slice(0, 16).padEnd(16, '0')
+                  : undefined,
+                name: span.name,
+                kind: 1, // SPAN_KIND_INTERNAL
+                startTimeUnixNano: toOtelTimeUnixNano(span.startTime),
+                endTimeUnixNano: toOtelTimeUnixNano(span.endTime ?? span.startTime),
+                attributes: Object.entries(span.attributes).map(([key, value]) => ({
+                  key,
+                  value:
+                    typeof value === 'boolean'
+                      ? { boolValue: value }
+                      : typeof value === 'number'
+                        ? { doubleValue: value }
+                        : { stringValue: String(value) },
+                })),
+                status: {
+                  code: span.status === 'error' ? 2 : 1, // STATUS_CODE_ERROR : STATUS_CODE_OK
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+export async function exportSpanToOtlp(span: TraceSpan): Promise<void> {
+  if (!OTEL_ENDPOINT || typeof fetch === 'undefined') { return; }
+
+  try {
+    await fetch(`${OTEL_ENDPOINT.replace(/\/$/, '')}/v1/traces`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(spanToOtlpResourceSpan(span)),
+      keepalive: true,
+    });
+  } catch {
+    // OTLP export failures are non-fatal — swallow silently.
+  }
+}
 
 // Track Web Vitals (CLS, FID, FCP, LCP, TTFB)
 export function initWebVitals(): void {
