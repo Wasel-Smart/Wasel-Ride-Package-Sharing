@@ -814,6 +814,7 @@ export default function TrustCenterPage() {
                   title={t('trustCenterExpanded.identity')}
                   subtitle={identityStep?.detail ?? t('trustCenterExpanded.reviewFlowBelow')}
                   state={identityStep?.state ?? 'not_started'}
+                  badgeLabel={getStepBadge(identityStep?.state ?? 'not_started', t).label}
                   icon={
                     <Shield
                       size={16}
@@ -821,31 +822,28 @@ export default function TrustCenterPage() {
                     />
                   }
                   footer={
-                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                      <WaselButton
-                        onClick={() => {
-                          void handleSubmitIdentity();
-                        }}
-                        loading={actionKey === 'identity'}
-                        disabled={
-                          actionKey === 'identity' ||
-                          identityStep?.state === 'in_progress'
-                        }
-                        variant="primary"
-                      >
-                        {identityStep?.state === 'failed'
-                          ? t('trustCenterExpanded.resubmit')
-                          : t('trustCenterExpanded.submitForReview')}
-                      </WaselButton>
-                      <WaselButton
-                        variant="outline"
-                        onClick={() => {
-                          void reloadTrustStatus();
-                        }}
-                      >
-                        {t('common.refresh')}
-                      </WaselButton>
-                    </div>
+                    <TrustActionRow
+                      primary={
+                        <WaselButton
+                          onClick={() => {
+                            void handleSubmitIdentity();
+                          }}
+                          loading={actionKey === 'identity'}
+                          disabled={
+                            actionKey === 'identity' ||
+                            identityStep?.state === 'in_progress'
+                          }
+                          variant="primary"
+                        >
+                          {identityStep?.state === 'failed'
+                            ? t('trustCenterExpanded.resubmit')
+                            : t('trustCenterExpanded.submitForReview')}
+                        </WaselButton>
+                      }
+                      refresh={() => {
+                        void reloadTrustStatus();
+                      }}
+                    />
                   }
                 >
                   {identityStep?.failureReason ? (
@@ -885,6 +883,15 @@ export default function TrustCenterPage() {
                         : phoneStep?.state === 'in_progress' || emailStep?.state === 'in_progress'
                           ? 'in_progress'
                           : 'not_started'
+                  }
+                  badgeLabel={
+                    phoneStep?.state === 'failed' || emailStep?.state === 'failed'
+                      ? t('trustCenterExpanded.failed')
+                      : phoneStep?.state === 'completed' && emailStep?.state === 'completed'
+                        ? t('trustCenterExpanded.completed')
+                        : phoneStep?.state === 'in_progress' || emailStep?.state === 'in_progress'
+                          ? t('trustCenterExpanded.inProgress')
+                          : t('trustCenterExpanded.notStarted')
                   }
                   icon={<MailCheck size={16} color={C.cyan} />}
                 >
@@ -1045,6 +1052,7 @@ export default function TrustCenterPage() {
                     driverStep?.detail ?? 'Submit driver license and compliance documents.'
                   }
                   state={driverStep?.state ?? 'not_started'}
+                  badgeLabel={getStepBadge(driverStep?.state ?? 'not_started', t).label}
                   icon={
                     <FileCheck
                       size={16}
@@ -1057,18 +1065,20 @@ export default function TrustCenterPage() {
                       <FailureNotice message={driverStep.failureReason} />
                     ) : null}
                     {driverStep?.meta.role === 'rider' ? (
-                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <WaselButton
-                          onClick={() => {
-                            void handleEnableDriverMode();
-                          }}
-                          loading={actionKey === 'driver-mode'}
-                          disabled={actionKey === 'driver-mode'}
-                          variant="primary"
-                        >
-                          {t('trustCenterExpanded.enableDriverMode')}
-                        </WaselButton>
-                      </div>
+                      <TrustActionRow
+                        primary={
+                          <WaselButton
+                            onClick={() => {
+                              void handleEnableDriverMode();
+                            }}
+                            loading={actionKey === 'driver-mode'}
+                            disabled={actionKey === 'driver-mode'}
+                            variant="primary"
+                          >
+                            {t('trustCenterExpanded.enableDriverMode')}
+                          </WaselButton>
+                        }
+                      />
                     ) : (
                       <>
                         <WaselInput
@@ -1120,6 +1130,7 @@ export default function TrustCenterPage() {
                     walletStandingStep?.detail ?? 'Wallet status unavailable.'
                   }
                   state={walletStandingStep?.state ?? 'failed'}
+                  badgeLabel={getStepBadge(walletStandingStep?.state ?? 'failed', t).label}
                   icon={
                     <Wallet
                       size={16}
@@ -1127,17 +1138,21 @@ export default function TrustCenterPage() {
                     />
                   }
                   footer={
-                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                      <WaselButton onClick={() => nav('/app/wallet')} variant="primary">
-                        {t('trustCenterExpanded.openWallet')}
-                      </WaselButton>
-                      <WaselButton
-                        variant="outline"
-                        onClick={() => nav('/app/settings?section=account')}
-                      >
-                        {t('trustCenterExpanded.accountSettings')}
-                      </WaselButton>
-                    </div>
+                    <TrustActionRow
+                      primary={
+                        <WaselButton onClick={() => nav('/app/wallet')} variant="primary">
+                          {t('trustCenterExpanded.openWallet')}
+                        </WaselButton>
+                      }
+                      secondary={
+                        <WaselButton
+                          variant="outline"
+                          onClick={() => nav('/app/settings?section=account')}
+                        >
+                          {t('trustCenterExpanded.accountSettings')}
+                        </WaselButton>
+                      }
+                    />
                   }
                 >
                   {walletStandingStep?.failureReason ? (
