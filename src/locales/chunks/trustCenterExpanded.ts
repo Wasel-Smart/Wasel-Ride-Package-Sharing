@@ -87,6 +87,9 @@ export const trustCenterExpanded = {
       'Final trust state should read as open or blocked capabilities.',
     workflowStepSubtitle:
       'Each step has a direct action and no state is allowed to remain indeterminate.',
+    scoreStrong: 'Strong',
+    scoreFair: 'Fair',
+    scoreWeak: 'Weak',
   },
   ar: {
     eyebrow: 'مركز الثقة',
@@ -169,5 +172,8 @@ export const trustCenterExpanded = {
     capabilityMatrixTitle: 'مصفوفة القدرات',
     capabilityMatrixSubtitle: 'الحالة النهائية للثقة يجب أن تظهر كقدرات مفتوحة أو مغلقة بوضوح.',
     workflowStepSubtitle: 'كل خطوة لديها إجراء واضح ولا يسمح لأي حالة أن تبقى غير محسومة.',
+    scoreStrong: 'قوي',
+    scoreFair: 'متوسط',
+    scoreWeak: 'ضعيف',
   },
 } as const;

@@ -1,10 +1,7 @@
 import { supabase } from '@/utils/supabase/client';
 import { toMinorUnits } from '../shared/currency/currency';
-import {
-  requestEdgeJson,
-  BackendRequestError,
-  getAuthDetails,
-} from '../services/core';
+import { requestEdgeJson, BackendRequestError } from './backendWorkflow';
+import { getAuthDetails } from './core';
 
 export interface PaymentIntentRequest {
   amount: number;

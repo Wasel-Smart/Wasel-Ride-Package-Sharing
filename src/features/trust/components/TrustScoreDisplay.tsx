@@ -1,4 +1,4 @@
-import { C, F, R, TYPE } from '../../../utils/wasel-ds';
+import { C, F, FA, R, TYPE } from '../../../utils/wasel-ds';
 
 const RING_SIZE = 120;
 const STROKE = 10;
@@ -11,20 +11,22 @@ function scoreColor(score: number): string {
   return C.error;
 }
 
-function scoreLabel(score: number): string {
-  if (score >= 80) {return 'Strong';}
-  if (score >= 50) {return 'Fair';}
-  return 'Weak';
-}
-
 export function TrustScoreDisplay({
   score,
   label,
-}: { score: number; label: string }) {
+  scoreLabel,
+  dir,
+}: {
+  score: number;
+  label: string;
+  scoreLabel?: string;
+  dir?: 'ltr' | 'rtl';
+}) {
   const clamped = Math.max(0, Math.min(100, score));
   const color = scoreColor(clamped);
-  const labelText = scoreLabel(clamped);
+  const labelText = scoreLabel ?? (clamped >= 80 ? 'Strong' : clamped >= 50 ? 'Fair' : 'Weak');
   const offset = CIRCUMFERENCE - (clamped / 100) * CIRCUMFERENCE;
+  const fontFamily = dir === 'rtl' ? FA : F;
 
   return (
     <div
@@ -40,6 +42,11 @@ export function TrustScoreDisplay({
       }}
     >
       <svg width={RING_SIZE} height={RING_SIZE} viewBox="0 0 130 130">
+        <defs>
+          <filter id="trust-score-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="0" stdDeviation="3" floodColor={color} floodOpacity="0.35" />
+          </filter>
+        </defs>
         <circle
           cx="65"
           cy="65"
@@ -59,6 +66,7 @@ export function TrustScoreDisplay({
           strokeDasharray={CIRCUMFERENCE}
           strokeDashoffset={offset}
           strokeLinecap="round"
+          filter="url(#trust-score-glow)"
           style={{
             transition: 'stroke-dashoffset 600ms ease-out, stroke 300ms',
             transform: 'rotate(-90deg)',
@@ -71,14 +79,14 @@ export function TrustScoreDisplay({
           textAnchor="middle"
           dominantBaseline="middle"
           fill={C.text}
-          fontFamily={F}
+          fontFamily={fontFamily}
           fontSize={32}
           fontWeight={TYPE.weight.ultra}
         >
           {clamped}
         </text>
       </svg>
-      <div style={{ fontWeight: TYPE.weight.bold, fontFamily: F, color: C.textMuted, fontSize: TYPE.size.sm }}>
+      <div style={{ fontWeight: TYPE.weight.bold, fontFamily, color: C.textMuted, fontSize: TYPE.size.sm }}>
         {label}
       </div>
       <div
@@ -89,7 +97,7 @@ export function TrustScoreDisplay({
           color,
           fontSize: TYPE.size.xs,
           fontWeight: TYPE.weight.bold,
-          fontFamily: F,
+          fontFamily,
           border: `1px solid ${color}28`,
         }}
       >
