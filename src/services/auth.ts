@@ -1,4 +1,4 @@
-import { API_URL, fetchWithRetry, getAuthDetails, supabase } from './core';
+import { API_URL, fetchWithRetry, getAuthDetails } from './core';
 import {
   getSecureBackendFallbackError,
   hasConfiguredEdgeTransport,
@@ -87,13 +87,13 @@ function normalizeAuthError(
   return message || 'Request failed.';
 }
 
-function requireSupabase() {
+async function requireSupabase() {
+  const { supabase } = await import('../utils/supabase/client');
   if (!supabase) {
     throw new Error(
       'Supabase auth is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.',
     );
   }
-
   return supabase;
 }
 
@@ -145,7 +145,7 @@ function mergeVerificationIntoProfile(
  * Throws an error if no valid session can be obtained.
  */
 async function getRefreshedSession() {
-  const client = requireSupabase();
+  const client = await requireSupabase();
 
   // First, try to get the current session.
   const { data: { session: initialSession } } = await client.auth.getSession();
@@ -213,7 +213,7 @@ export const authAPI = {
     phone: string,
     returnTo?: string,
   ) {
-    const client = requireSupabase();
+    const client = await requireSupabase();
     const redirectTo = getAuthCallbackUrl(
       resolveAuthRedirectOrigin(),
       returnTo ? { returnTo } : undefined,
@@ -276,7 +276,7 @@ export const authAPI = {
   },
 
   async signIn(email: string, password: string) {
-    const client = requireSupabase();
+    const client = await requireSupabase();
     const { data, error } = await client.auth.signInWithPassword({ email, password });
 
     if (error) {
@@ -289,13 +289,13 @@ export const authAPI = {
   },
 
   async signOut() {
-    const client = requireSupabase();
+    const client = await requireSupabase();
     const { error } = await client.auth.signOut();
     if (error) {throw error;}
   },
 
   async getSession() {
-    const client = requireSupabase();
+    const client = await requireSupabase();
     const { data, error } = await client.auth.getSession();
     if (error) {throw error;}
     return data;
