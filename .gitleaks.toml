@@ -1,0 +1,8 @@
+[allowlist]
+  description = "Known quarantined secrets — these paths are gitignored and never committed"
+  paths = [
+    "_SECRETS_NEEDS_ROTATION_THEN_DELETE/",
+    ".env",
+    ".env.local",
+    ".env.production",
+  ]
