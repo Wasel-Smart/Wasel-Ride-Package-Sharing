@@ -8,6 +8,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const APP_ORIGIN = Deno.env.get("APP_ORIGIN") ??
   Deno.env.get("PUBLIC_SITE_URL") ?? "";
+const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ?? "https://wasel14.online,https://www.wasel14.online")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 if (!STRIPE_SECRET) throw new Error("Missing STRIPE_SECRET_KEY");
 // Supabase persistence is optional; payments are still processed without it.
@@ -22,16 +26,31 @@ const paymentRateLimit = createRateLimitMiddleware(
 const ALLOWED_CURRENCIES = new Set(["jod", "usd"]);
 const MAX_PAYMENT_AMOUNT_MINOR = 500_000;
 
-
+function getCorsHeaders(request: Request): Record<string, string> {
+  const origin = request.headers.get("origin");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+  };
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+    headers["Access-Control-Allow-Credentials"] = "true";
+    headers["Vary"] = "Origin";
+  }
+  return headers;
+}
 
 function jsonResponse(
   body: Record<string, unknown>,
   init: ResponseInit = {},
+  request?: Request,
 ): Response {
+  const corsHeaders = request ? getCorsHeaders(request) : {};
   return new Response(JSON.stringify(body), {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      ...corsHeaders,
       ...(init.headers ?? {}),
     },
   });
@@ -119,6 +138,31 @@ function getAdminClient() {
 }
 
 Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    const origin = req.headers.get("origin");
+    const allowedOrigins = (Deno.env.get("ALLOWED_ORIGINS") ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json; charset=utf-8",
+      "X-Content-Type-Options": "nosniff",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers":
+        "authorization, apikey, content-type, x-client-info, x-supabase-client, x-supabase-session",
+      "Access-Control-Max-Age": "86400",
+    };
+
+    if (origin && (allowedOrigins.includes(origin) || allowedOrigins.includes("*"))) {
+      headers["Access-Control-Allow-Origin"] = origin;
+      headers["Access-Control-Allow-Credentials"] = "true";
+      headers["Vary"] = "Origin";
+    }
+
+    return new Response(null, { status: 204, headers });
+  }
+
   const rateLimitResponse = paymentRateLimit(req);
   if (rateLimitResponse) return rateLimitResponse;
 

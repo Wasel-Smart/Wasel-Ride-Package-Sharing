@@ -44,7 +44,7 @@ export interface WaselUser {
   verified: boolean;
   sanadVerified: boolean;
   verificationLevel: string;
-  walletStatus: 'active' | 'limited' | 'frozen' | 'closed';
+  walletStatus: 'active' | 'limited' | 'frozen' | 'closed' | 'unavailable';
   avatar?: string;
   joinedAt: string;
   emailVerified: boolean;
@@ -208,7 +208,8 @@ export function mapBackendProfile({
   const walletStatus: WaselUser['walletStatus'] =
     profile?.wallet_status === 'limited' ||
     profile?.wallet_status === 'frozen' ||
-    profile?.wallet_status === 'closed'
+    profile?.wallet_status === 'closed' ||
+    profile?.wallet_status === 'unavailable'
       ? profile.wallet_status
       : 'active';
 

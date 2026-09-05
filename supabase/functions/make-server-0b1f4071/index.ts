@@ -1,6 +1,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { Client } from 'https://deno.land/x/postgres@v0.19.3/mod.ts';
+import Stripe from 'https://esm.sh/stripe@12.12.0?target=deno';
 import {
   buildFailurePatch,
   buildIdempotencyKey,
@@ -48,6 +49,7 @@ const SUPABASE_URL = Deno.env.get( 'SUPABASE_URL' ) ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get( 'SUPABASE_SERVICE_ROLE_KEY' ) ?? '';
 const SUPABASE_DB_URL = Deno.env.get( 'SUPABASE_DB_URL' ) ?? '';
 const STRIPE_SECRET_KEY = Deno.env.get( 'STRIPE_SECRET_KEY' ) ?? '';
+const stripe = STRIPE_SECRET_KEY ? new Stripe( STRIPE_SECRET_KEY, { apiVersion: '2024-11-20' } ) : null;
 const STRIPE_WEBHOOK_SECRET = Deno.env.get( 'STRIPE_WEBHOOK_SECRET' ) ?? '';
 const STRIPE_API_VERSION = Deno.env.get( 'STRIPE_API_VERSION' ) ?? '2026-02-25.clover';
 const TWILIO_VERIFY_SERVICE_SID = Deno.env.get( 'TWILIO_VERIFY_SERVICE_SID' ) ?? '';
@@ -2401,6 +2403,16 @@ function normalizeWalletPaymentMethod ( method: unknown ): string {
     : mapWalletPaymentMethod( value );
 }
 
+function mapReferenceTypeToTransactionType ( referenceType: string ): string {
+  switch ( referenceType ) {
+    case 'ride_booking': return 'ride_payment';
+    case 'package_delivery': return 'package_payment';
+    case 'bus_booking': return 'bus_payment';
+    case 'subscription': return 'subscription_payment';
+    default: return 'purchase';
+  }
+}
+
 function buildWalletPayload (
   wallet: WalletRow,
   transactions: WalletTransactionRow[],
@@ -4563,6 +4575,165 @@ async function handleWalletSubscribe ( request: Request, requestedUserId: string
   }
 }
 
+const ALLOWED_PAYMENT_CURRENCIES = new Set( [ 'usd', 'jod' ] );
+const MAX_PAYMENT_AMOUNT_MINOR = 500_000;
+
+function normalizePaymentAmount ( value: unknown ): number | null {
+  if ( typeof value !== 'number' || !Number.isFinite( value ) ) return null;
+  const amount = Math.round( value );
+  if ( amount < 50 || amount > MAX_PAYMENT_AMOUNT_MINOR ) return null;
+  return amount;
+}
+
+async function handlePaymentIntentCreate ( request: Request ): Promise<Response> {
+  if ( !stripe ) {
+    return json( { error: 'Stripe is not configured' }, 503 );
+  }
+
+  const auth = await authenticateRequest( request );
+  if ( 'error' in auth ) return auth.error;
+
+  const body = await request.json().catch( () => ( {} ) );
+  const {
+    action,
+    amount,
+    currency = 'usd',
+    customer_id,
+    metadata,
+    idempotency_key,
+  } = body as {
+    action?: string;
+    amount?: unknown;
+    currency?: string;
+    customer_id?: string;
+    metadata?: Record<string, string>;
+    idempotency_key?: string;
+  };
+
+  if ( action && action !== 'create-payment-intent' ) {
+    return json( { error: 'Unsupported payment action' }, 400 );
+  }
+
+  const normalizedAmount = normalizePaymentAmount( amount );
+  const normalizedCurrency = String( currency ).toLowerCase();
+  if ( !normalizedAmount ) {
+    return json( { error: 'Invalid amount' }, 400 );
+  }
+  if ( !ALLOWED_PAYMENT_CURRENCIES.has( normalizedCurrency ) ) {
+    return json( { error: 'Invalid currency' }, 400 );
+  }
+
+  try {
+    const pi = await stripe.paymentIntents.create(
+      {
+        amount: normalizedAmount,
+        currency: normalizedCurrency,
+        customer: customer_id || undefined,
+        metadata: {
+          ...( metadata || {} ),
+          user_id: auth.authUser.id,
+        },
+      },
+      idempotency_key ? { idempotencyKey: idempotency_key } : undefined,
+    );
+
+    return json( {
+      clientSecret: pi.client_secret,
+      paymentIntentId: pi.id,
+      client_secret: pi.client_secret,
+    } );
+  } catch ( error ) {
+    const message = error instanceof Error ? error.message : String( error );
+    return json( { error: `Payment intent creation failed: ${ message }` }, 502 );
+  }
+}
+
+async function handlePaymentRefund ( request: Request ): Promise<Response> {
+  if ( !stripe ) {
+    return json( { error: 'Stripe is not configured' }, 503 );
+  }
+
+  const auth = await authenticateRequest( request );
+  if ( 'error' in auth ) return auth.error;
+
+  const body = await request.json().catch( () => ( {} ) );
+  const { payment_intent_id, amount, reason } = body as {
+    payment_intent_id?: string;
+    amount?: number;
+    reason?: string;
+  };
+
+  if ( !payment_intent_id ) {
+    return json( { error: 'payment_intent_id is required' }, 400 );
+  }
+
+  try {
+    const params: Stripe.RefundCreateParams = {
+      payment_intent: payment_intent_id,
+      reason: ( reason as Stripe.RefundCreateParams['reason'] ) ?? 'requested_by_customer',
+    };
+    if ( amount ) {
+      params.amount = amount;
+    }
+    const refund = await stripe.refunds.create( params );
+    return json( {
+      refundId: refund.id,
+      amount: refund.amount,
+      status: refund.status,
+    } );
+  } catch ( error ) {
+    const message = error instanceof Error ? error.message : String( error );
+    return json( { error: `Refund failed: ${ message }` }, 502 );
+  }
+}
+
+async function handleWalletPay ( request: Request, requestedUserId: string ) {
+  const auth = await authenticateWalletRequest( request, requestedUserId );
+  if ( 'error' in auth ) return auth.error;
+
+  const body = await request.json().catch( () => ( {} ) );
+  const amountJod = toMoneyNumber( body.amount );
+  const referenceType = String( body.referenceType ?? body.reference_type ?? 'ride_booking' ).trim();
+  const referenceId = String( body.referenceId ?? body.reference_id ?? '' ).trim();
+  const metadata = body.metadata ?? {};
+
+  if ( amountJod <= 0 ) {
+    return json( { error: 'Amount must be greater than zero.' }, 400 );
+  }
+
+  const allowedReferenceTypes = [ 'ride_booking', 'package_delivery', 'bus_booking', 'subscription', 'purchase' ];
+  if ( !allowedReferenceTypes.includes( referenceType ) ) {
+    return json( { error: `Invalid reference type. Must be one of: ${ allowedReferenceTypes.join( ', ' ) }` }, 400 );
+  }
+
+  try {
+    const wallet = await ensureWalletForUser( auth.admin, auth.canonicalUser.id );
+    if ( toNumber( wallet.balance, 0 ) < amountJod ) {
+      return json( { error: 'Insufficient wallet balance.' }, 400 );
+    }
+
+    const transactionType = mapReferenceTypeToTransactionType( referenceType );
+    const { error } = await auth.admin.rpc( 'app_pay_with_wallet', {
+      p_user_id: auth.canonicalUser.id,
+      p_amount: amountJod,
+      p_transaction_type: transactionType,
+      p_payment_method: 'wallet_balance',
+      p_reference_type: referenceType,
+      p_reference_id: referenceId || null,
+      p_metadata: metadata,
+    } );
+
+    if ( error ) {
+      throw new Error( String( error.message ?? error ) );
+    }
+
+    const updatedWallet = await loadWalletPayload( auth.admin, auth.canonicalUser.id );
+    return json( { success: true, wallet: updatedWallet, transactionType, referenceId } );
+  } catch ( error ) {
+    return json( { error: error instanceof Error ? error.message : String( error ) }, 500 );
+  }
+}
+
 async function handleStripeWebhook ( request: Request ) {
   if ( !STRIPE_WEBHOOK_SECRET ) {
     return json( { error: 'Stripe webhook secret is not configured.' }, 503 );
@@ -5939,10 +6110,22 @@ const ROUTES: RouteDescriptor[] = [
     handle: ( request ) => handleResendWebhook( request ),
   },
   {
-    id: 'communications-webhook-twilio',
+    id: 'payments-webhook-twilio',
     methods: [ 'POST' ],
     test: ( path ) => path === '/communications/webhooks/twilio',
     handle: ( request ) => handleTwilioWebhook( request ),
+  },
+  {
+    id: 'payments-create-intent',
+    methods: [ 'POST' ],
+    test: ( path ) => path === '/payment/create-intent',
+    handle: ( request ) => handlePaymentIntentCreate( request ),
+  },
+  {
+    id: 'payments-create-refund',
+    methods: [ 'POST' ],
+    test: ( path ) => path === '/payment/refund',
+    handle: ( request ) => handlePaymentRefund( request ),
   },
 ];
 
@@ -5970,6 +6153,7 @@ async function handleWalletDispatch ( request: Request, path: string ): Promise<
   if ( method === 'GET' && action === 'subscription' ) return handleGetWalletSubscription( request, userId );
   if ( method === 'POST' && action === 'top-up' ) return handleWalletTopUp( request, userId );
   if ( method === 'POST' && action === 'subscribe' ) return handleWalletSubscribe( request, userId );
+  if ( method === 'POST' && action === 'pay' ) return handleWalletPay( request, userId );
   return undefined;
 }
 

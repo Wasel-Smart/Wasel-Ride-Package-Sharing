@@ -48,13 +48,6 @@ vi.mock('../directSupabase/userContext', () => ({
 
 import { getDb } from '../directSupabase/helpers';
 import { buildUserContext } from '../directSupabase/userContext';
-import {
-  submitDirectTrustIdentityVerification,
-  startDirectTrustPhoneVerification,
-  confirmDirectTrustPhoneVerification,
-  enableDirectTrustDriverMode,
-  submitDirectTrustDriverDocuments,
-} from '../directSupabase/trust';
 
 const mockDb = getDb();
 const mockBuildUserContext = buildUserContext as any;
@@ -62,11 +55,10 @@ const mockBuildUserContext = buildUserContext as any;
 describe('Direct Trust Phone Verification', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    const mod = require('../directSupabase/trust');
-    mod.clearOtpStartRateLimit?.();
   });
 
   it('starts verification with normalized phone and OTP session', async () => {
+    const { startDirectTrustPhoneVerification } = await import('../directSupabase/trust');
     const mockUser = {
       id: 'user-123',
       email: 'test@example.com',
@@ -78,10 +70,7 @@ describe('Direct Trust Phone Verification', () => {
     };
 
     mockBuildUserContext.mockResolvedValue({ user: mockUser });
-
-    mockDb.from.mockImplementation((table: string) => {
-      return createMockQueryBuilder();
-    });
+    mockDb.from.mockImplementation((table: string) => createMockQueryBuilder());
 
     const result = await startDirectTrustPhoneVerification('user-123', '+962 79 123 4567');
 
@@ -92,6 +81,7 @@ describe('Direct Trust Phone Verification', () => {
   });
 
   it('enforces rate limit on repeated OTP start requests', async () => {
+    const { startDirectTrustPhoneVerification } = await import('../directSupabase/trust');
     const mockUser = {
       id: 'user-456',
       email: 'test@example.com',
@@ -112,14 +102,16 @@ describe('Direct Trust Phone Verification', () => {
   });
 
   it('rejects invalid phone numbers', async () => {
-    mockBuildUserContext.mockResolvedValue({ user: { id: 'user-123' } });
+    const { startDirectTrustPhoneVerification } = await import('../directSupabase/trust');
+    mockBuildUserContext.mockResolvedValue({ user: { id: 'user-999' } });
 
-    await expect(startDirectTrustPhoneVerification('user-123', 'invalid')).rejects.toThrow(
+    await expect(startDirectTrustPhoneVerification('user-999', 'invalid')).rejects.toThrow(
       'Invalid phone number provided',
     );
   });
 
   it('confirms verification with valid code', async () => {
+    const { confirmDirectTrustPhoneVerification } = await import('../directSupabase/trust');
     const mockUser = {
       id: 'user-123',
       phone_number: '+962791234567',
@@ -163,6 +155,7 @@ describe('Direct Trust Phone Verification', () => {
   });
 
   it('rejects confirmation without code', async () => {
+    const { confirmDirectTrustPhoneVerification } = await import('../directSupabase/trust');
     mockBuildUserContext.mockResolvedValue({ user: { id: 'user-123' } });
 
     mockDb.from.mockImplementation((table: string) => {
@@ -179,6 +172,7 @@ describe('Direct Trust Phone Verification', () => {
   });
 
   it('rejects expired OTP sessions', async () => {
+    const { confirmDirectTrustPhoneVerification } = await import('../directSupabase/trust');
     mockBuildUserContext.mockResolvedValue({ user: { id: 'user-123' } });
 
     const expiredSession = {
@@ -207,6 +201,7 @@ describe('Direct Trust Phone Verification', () => {
   });
 
   it('rejects after max attempts exceeded', async () => {
+    const { confirmDirectTrustPhoneVerification } = await import('../directSupabase/trust');
     mockBuildUserContext.mockResolvedValue({ user: { id: 'user-123' } });
 
     const exhaustedSession = {
@@ -235,6 +230,7 @@ describe('Direct Trust Phone Verification', () => {
   });
 
   it('rejects consumed OTP sessions', async () => {
+    const { confirmDirectTrustPhoneVerification } = await import('../directSupabase/trust');
     mockBuildUserContext.mockResolvedValue({ user: { id: 'user-123' } });
 
     const consumedSession = {
@@ -279,6 +275,7 @@ describe('Direct Trust Driver Mode', () => {
       return builder;
     });
 
+    const { enableDirectTrustDriverMode } = await import('../directSupabase/trust');
     const result = await enableDirectTrustDriverMode('user-123');
     expect(result.enabled).toBe(true);
     expect(result.role).toBe('driver');
@@ -291,6 +288,7 @@ describe('Direct Trust Driver Documents', () => {
   });
 
   it('submits driver documents for driver role', async () => {
+    const { submitDirectTrustDriverDocuments } = await import('../directSupabase/trust');
     mockBuildUserContext.mockResolvedValue({
       user: { id: 'user-123', role: 'driver', verification_level: 'level_2' },
       driver: { driver_id: 'driver-123' },
@@ -320,6 +318,7 @@ describe('Direct Trust Driver Documents', () => {
   });
 
   it('rejects driver documents for non-driver role', async () => {
+    const { submitDirectTrustDriverDocuments } = await import('../directSupabase/trust');
     mockBuildUserContext.mockResolvedValue({
       user: { id: 'user-123', role: 'rider' },
     });
@@ -330,6 +329,7 @@ describe('Direct Trust Driver Documents', () => {
   });
 
   it('rejects short license numbers', async () => {
+    const { submitDirectTrustDriverDocuments } = await import('../directSupabase/trust');
     mockBuildUserContext.mockResolvedValue({
       user: { id: 'user-123', role: 'driver' },
     });

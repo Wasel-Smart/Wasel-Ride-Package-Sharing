@@ -1,5 +1,10 @@
 import { supabase } from '@/utils/supabase/client';
 import { toMinorUnits } from '../shared/currency/currency';
+import {
+  requestEdgeJson,
+  BackendRequestError,
+  getAuthDetails,
+} from '../services/core';
 
 export interface PaymentIntentRequest {
   amount: number;
@@ -27,77 +32,78 @@ export interface RefundResponse {
 
 const PAYMENT_TIMEOUT_MS = 15_000;
 
-function requireSupabaseClient() {
-  if (!supabase) {
-    throw new Error(
-      'Payments are not available: Supabase client is not configured. ' +
-        'Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.',
-    );
-  }
-  return supabase;
-}
-
 class PaymentService {
-  private async callPaymentsFunction<T>(body: Record<string, unknown>): Promise<T> {
-    const client = requireSupabaseClient();
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Payment request timed out')), PAYMENT_TIMEOUT_MS),
-    );
-
-    const {
-      data: { session },
-      error: sessionError,
-    } = await client.auth.getSession();
-    if (sessionError || !session?.access_token) {
-      throw new Error('Not authenticated');
-    }
-
-    const invocation = client.functions.invoke('stripe-payments-v2', {
-      body,
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    });
-    const { data, error } = await Promise.race([invocation, timeout]);
-    if (error) {throw error;}
-    return data as T;
-  }
-
   async createPaymentIntent(request: PaymentIntentRequest): Promise<PaymentIntentResponse> {
-    const client = requireSupabaseClient();
+    const client = supabase ?? (() => { throw new Error('Payments unavailable: Supabase client not configured'); })();
 
     const {
-      data: { session },
-      error: sessionError,
-    } = await client.auth.getSession();
-    if (sessionError || !session?.user) {
-      throw new Error('Not authenticated');
+      data: { user },
+      error: userError,
+    } = await client.auth.getUser();
+
+    if (userError || !user) {
+      throw new BackendRequestError('Not authenticated', { status: 401, recoverable: true });
     }
 
-    const user = session.user;
     const amountMinor = toMinorUnits(request.amount, request.currency ?? 'jod');
     if (!Number.isSafeInteger(amountMinor) || amountMinor < 50) {
       throw new Error('Payment amount must be at least 0.50');
     }
-    const data = await this.callPaymentsFunction<{ clientSecret?: string; paymentIntentId?: string }>({
-      action: 'create-payment-intent',
-      amount: amountMinor,
-      currency: request.currency ?? 'jod',
-      metadata: { ...request.metadata, booking_id: request.bookingId, user_id: user.id },
-      idempotency_key: `booking:${request.bookingId}`,
+
+    const { token } = await getAuthDetails();
+
+    const data = await requestEdgeJson<{
+      clientSecret?: string;
+      paymentIntentId?: string;
+      client_secret?: string;
+    }>({
+      path: '/payment/create-intent',
+      operation: 'createPaymentIntent',
+      authMode: 'required',
+      context: { token, userId: user.id },
+      method: 'POST',
+      body: {
+        action: 'create-payment-intent',
+        amount: amountMinor,
+        currency: request.currency ?? 'jod',
+        metadata: { ...request.metadata, booking_id: request.bookingId, user_id: user.id },
+        idempotency_key: `booking:${request.bookingId}`,
+      },
+      timeout: PAYMENT_TIMEOUT_MS,
     });
-    if (!data.clientSecret || !data.paymentIntentId) {throw new Error('Invalid payment response');}
-    return { clientSecret: data.clientSecret, paymentIntentId: data.paymentIntentId };
+
+    const clientSecret = data.clientSecret ?? data.client_secret;
+    if (!clientSecret || !data.paymentIntentId) {
+      throw new BackendRequestError('Invalid payment response', { status: 502 });
+    }
+
+    return { clientSecret, paymentIntentId: data.paymentIntentId };
   }
 
   async processRefund(request: RefundRequest): Promise<RefundResponse> {
-    const data = await this.callPaymentsFunction<{ refundId?: string; amount?: number }>({
-      action: 'create-refund',
-      booking_id: request.bookingId,
-      amount: request.amount !== null && request.amount !== undefined
-        ? toMinorUnits(request.amount, 'jod')
-        : undefined,
-      reason: request.reason,
+    const { token, userId } = await getAuthDetails();
+
+    const data = await requestEdgeJson<{ refundId?: string; amount?: number }>({
+      path: '/payment/refund',
+      operation: 'processRefund',
+      authMode: 'required',
+      context: { token, userId },
+      method: 'POST',
+      body: {
+        action: 'create-refund',
+        booking_id: request.bookingId,
+        amount: request.amount !== null && request.amount !== undefined
+          ? toMinorUnits(request.amount, 'jod')
+          : undefined,
+        reason: request.reason,
+      },
+      timeout: PAYMENT_TIMEOUT_MS,
     });
-    if (!data.refundId) {throw new Error('Invalid refund response');}
+
+    if (!data.refundId) {
+      throw new BackendRequestError('Invalid refund response', { status: 502 });
+    }
+
     return {
       success: true,
       refundId: data.refundId,
@@ -112,7 +118,7 @@ class PaymentService {
   }
 
   async getPaymentStatus(bookingId: string): Promise<string> {
-    const client = requireSupabaseClient();
+    const client = supabase ?? (() => { throw new Error('Payments unavailable: Supabase client not configured'); })();
 
     const {
       data: { user },
@@ -120,7 +126,7 @@ class PaymentService {
     } = await client.auth.getUser();
 
     if (userError || !user) {
-      throw new Error('Not authenticated');
+      throw new BackendRequestError('Not authenticated', { status: 401, recoverable: true });
     }
 
     const { data, error } = await client
@@ -130,7 +136,9 @@ class PaymentService {
       .eq('passenger_id', user.id)
       .single();
 
-    if (error) {throw error;}
+    if (error) {
+      throw error;
+    }
     return data.payment_status as string;
   }
 }
