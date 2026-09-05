@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   Activity,
@@ -39,7 +39,6 @@ import {
 import {
   buildFallbackTrustCenterStatus,
   type TrustCenterStatus,
-  type TrustStepId,
   type TrustStepState,
 } from '../../services/trustCenterModel';
 import { evaluateTrustCapability } from '../../services/trustRules';
@@ -70,55 +69,7 @@ function formatTimestamp(value?: string | null): string | null {
   return date.toLocaleString();
 }
 
-function getTrustStepTitle(stepId: TrustStepId | null, t: (key: string) => string): string {
-  switch (stepId) {
-    case 'identity':
-      return t('trustCenterExpanded.identity');
-    case 'email':
-      return t('trustCenterExpanded.email');
-    case 'phone':
-      return t('trustCenterExpanded.phone');
-    case 'driver_documents':
-      return t('trustCenterExpanded.driverDocuments');
-    case 'wallet_standing':
-      return t('trustCenterExpanded.walletStanding');
-    default:
-      return t('trustCenterExpanded.ready');
-  }
-}
-
-function getNextTrustStepDetail(
-  status: TrustCenterStatus | null,
-  t: (key: string) => string,
-): string {
-  if (!status?.nextStepId) {
-    return t('trustCenterExpanded.allCapabilitiesReady');
-  }
-
-  switch (status.nextStepId) {
-    case 'identity':
-      return status.steps.identity.detail;
-    case 'email':
-      return status.steps.email.detail;
-    case 'phone':
-      return status.steps.phone.detail;
-    case 'driver_documents':
-      return status.steps.driverDocuments.detail;
-    case 'wallet_standing':
-      return status.steps.walletStanding.detail;
-    default:
-      return t('trustCenterExpanded.reviewFlowBelow');
-  }
-}
-
-function formatTimestamp(value?: string | null): string | null {
-  if (!value) {return null;}
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {return null;}
-  return date.toLocaleString();
-}
-
-function getTrustStepTitle(stepId: TrustStepId | null, t: (key: string) => string): string {
+function getTrustStepTitle(stepId: string | null, t: (key: string) => string): string {
   switch (stepId) {
     case 'identity':
       return t('trustCenterExpanded.identity');
@@ -909,7 +860,7 @@ export default function TrustCenterPage() {
                         padding: SPACE[4],
                         borderRadius: R.lg,
                         border: `1px solid ${stateAccent(emailStep?.state ?? 'not_started')}24`,
-                        ...cardSurface,
+                        background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
                       }}
                     >
                       <div
@@ -938,20 +889,22 @@ export default function TrustCenterPage() {
                       <div style={{ color: C.text, fontSize: TYPE.size.sm, fontFamily: F }}>
                         {user.email || effectiveStatus?.steps.email.meta.email || 'No email'}
                       </div>
-                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <WaselButton
-                          onClick={() => {
-                            void handleResendEmail();
-                          }}
-                          loading={actionKey === 'email'}
-                          disabled={actionKey === 'email' || effectiveStatus?.steps.email.state === 'completed'}
-                          variant="primary"
-                        >
-                          {effectiveStatus?.steps.email.state === 'completed'
-                            ? t('trustCenterExpanded.confirmed')
-                            : t('trustCenterExpanded.sendConfirmation')}
-                        </WaselButton>
-                      </div>
+                      <TrustActionRow
+                        primary={
+                          <WaselButton
+                            onClick={() => {
+                              void handleResendEmail();
+                            }}
+                            loading={actionKey === 'email'}
+                            disabled={actionKey === 'email' || effectiveStatus?.steps.email.state === 'completed'}
+                            variant="primary"
+                          >
+                            {effectiveStatus?.steps.email.state === 'completed'
+                              ? t('trustCenterExpanded.confirmed')
+                              : t('trustCenterExpanded.sendConfirmation')}
+                          </WaselButton>
+                        }
+                      />
                     </div>
 
                     <div
@@ -961,7 +914,7 @@ export default function TrustCenterPage() {
                         padding: SPACE[4],
                         borderRadius: R.lg,
                         border: `1px solid ${stateAccent(phoneStep?.state ?? 'not_started')}24`,
-                        ...cardSurface,
+                        background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
                       }}
                     >
                       <div
@@ -998,20 +951,22 @@ export default function TrustCenterPage() {
                         type="tel"
                         dir="ltr"
                       />
-                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                        <WaselButton
-                          onClick={() => {
-                            void handleStartPhone();
-                          }}
-                          loading={actionKey === 'phone-start'}
-                          disabled={actionKey === 'phone-start'}
-                          variant="primary"
-                        >
-                          {phoneStep?.state === 'in_progress'
-                            ? t('trustCenterExpanded.resendCode')
-                            : t('trustCenterExpanded.sendCode')}
-                        </WaselButton>
-                      </div>
+                      <TrustActionRow
+                        primary={
+                          <WaselButton
+                            onClick={() => {
+                              void handleStartPhone();
+                            }}
+                            loading={actionKey === 'phone-start'}
+                            disabled={actionKey === 'phone-start'}
+                            variant="primary"
+                          >
+                            {phoneStep?.state === 'in_progress'
+                              ? t('trustCenterExpanded.resendCode')
+                              : t('trustCenterExpanded.sendCode')}
+                          </WaselButton>
+                        }
+                      />
                       {phoneStep?.state === 'in_progress' || phoneStep?.state === 'failed' ? (
                         <div style={{ display: 'grid', gap: 10 }}>
                           <WaselInput
@@ -1095,23 +1050,25 @@ export default function TrustCenterPage() {
                           onChange={setDriverDocumentReference}
                           dir={ar ? 'rtl' : 'ltr'}
                         />
-                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                          <WaselButton
-                            onClick={() => {
-                              void handleSubmitDriverDocuments();
-                            }}
-                            loading={actionKey === 'driver-documents'}
-                            disabled={
-                              actionKey === 'driver-documents' ||
-                              driverStep?.state === 'in_progress'
-                            }
-                            variant="primary"
-                          >
-                            {driverStep?.state === 'failed'
-                              ? t('trustCenterExpanded.resubmit')
-                              : t('trustCenterExpanded.submitDocuments')}
-                          </WaselButton>
-                        </div>
+                        <TrustActionRow
+                          primary={
+                            <WaselButton
+                              onClick={() => {
+                                void handleSubmitDriverDocuments();
+                              }}
+                              loading={actionKey === 'driver-documents'}
+                              disabled={
+                                actionKey === 'driver-documents' ||
+                                driverStep?.state === 'in_progress'
+                              }
+                              variant="primary"
+                            >
+                              {driverStep?.state === 'failed'
+                                ? t('trustCenterExpanded.resubmit')
+                                : t('trustCenterExpanded.submitDocuments')}
+                            </WaselButton>
+                          }
+                        />
                       </>
                     )}
                     {formatTimestamp(driverStep?.updatedAt) ? (
@@ -1241,6 +1198,7 @@ export default function TrustCenterPage() {
         onConfirm={confirmState.onConfirm}
         onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
       />
+      </div>
     </PageShell>
   );
 }

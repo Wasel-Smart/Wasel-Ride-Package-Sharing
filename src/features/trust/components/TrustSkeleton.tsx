@@ -1,4 +1,4 @@
-import { C, F, R, SPACE, TYPE } from '../../../utils/wasel-ds';
+import { C, R, SPACE } from '../../../utils/wasel-ds';
 
 export function TrustSkeleton() {
   return (
