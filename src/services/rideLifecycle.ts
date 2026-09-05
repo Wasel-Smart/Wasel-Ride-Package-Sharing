@@ -24,7 +24,6 @@ import {
   getDirectUserBookings,
   updateDirectBookingStatus,
 } from './directSupabase';
-import { supabase as db } from '../utils/supabase/client';
 import { trackGrowthEvent } from './growthEngine';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -410,15 +409,18 @@ export async function hydrateRideBookings(
   );
 
   const nameMap = new Map<string, string>();
-  if (passengerIds.length > 0 && db) {
+  if (passengerIds.length > 0) {
     try {
-      const { data: profiles } = await db
-        .from('profiles')
-        .select('id, full_name, email')
-        .in('id', passengerIds);
-      if (Array.isArray(profiles)) {
-        for (const u of profiles as { id: string; full_name?: string; email?: string }[]) {
-          nameMap.set(String(u.id), u.full_name?.trim() || u.email?.split('@')[0] || 'Passenger');
+      const { supabase: db } = await import('../utils/supabase/client');
+      if (db) {
+        const { data: profiles } = await db
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', passengerIds);
+        if (Array.isArray(profiles)) {
+          for (const u of profiles as { id: string; full_name?: string; email?: string }[]) {
+            nameMap.set(String(u.id), u.full_name?.trim() || u.email?.split('@')[0] || 'Passenger');
+          }
         }
       }
     } catch {

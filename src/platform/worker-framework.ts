@@ -20,54 +20,27 @@ import { createStructuredLogEntry } from './observability';
 import { telemetry } from './telemetry';
 import { sanitizeLogMessage } from '../utils/sanitization';
 
-function resolveWorkerSecret(): string | null {
-  // The worker secret is a server-side credential and must never be inlined
-  // into the browser bundle (import.meta.env.VITE_*). Only a Node/edge-server
-  // context may supply it via process.env.
+async function proxyWriteDeadLetter(dlqPayload: Record<string, unknown>): Promise<boolean> {
+  // Re-use the broker's proxy helpers to avoid duplication
   try {
-    if (typeof window !== 'undefined' || typeof import.meta === 'undefined') {
-      return typeof process !== 'undefined' ? process.env.VITE_EVENT_BROKER_WORKER_SECRET ?? null : null;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
+    const { eventBroker } = await import('./event-broker');
+    // Only the Supabase broker exposes a proxy; memory broker has no endpoint
+    if (eventBroker.kind !== 'supabase') {return false;}
 
-function resolveProxyBaseUrl(): string | null {
-  try {
-    const direct =
-      (typeof import.meta !== 'undefined' &&
-        (import.meta.env.VITE_EVENT_BROKER_PROXY_URL as string | undefined)) ||
-      (typeof process !== 'undefined' && process.env.VITE_EVENT_BROKER_PROXY_URL);
-    if (direct && direct.trim()) {return direct.trim().replace(/\/$/, '');}
-
+    // Reach the proxy via the same path the broker uses for dead-letter writes
     const supabaseUrl =
       (typeof import.meta !== 'undefined' &&
         (import.meta.env.VITE_SUPABASE_URL as string | undefined)) ||
       (typeof process !== 'undefined' && process.env.VITE_SUPABASE_URL);
-    if (supabaseUrl && supabaseUrl.trim()) {
-      return `${supabaseUrl.trim().replace(/\/$/, '')}/functions/v1/event-broker-proxy`;
-    }
-  } catch {
-    // ignore
-  }
-  return null;
-}
+    const secret =
+      typeof process !== 'undefined' ? process.env.VITE_EVENT_BROKER_WORKER_SECRET ?? null : null;
 
-async function proxyWriteDeadLetter(dlqPayload: Record<string, unknown>): Promise<boolean> {
-  const baseUrl = resolveProxyBaseUrl();
-  const secret = resolveWorkerSecret();
+    if (!supabaseUrl || !secret) {return false;}
 
-  if (!baseUrl || !secret) {return false;}
-
-  try {
+    const baseUrl = `${supabaseUrl.trim().replace(/\/$/, '')}/functions/v1/event-broker-proxy`;
     const response = await fetch(`${baseUrl}/dead-letter`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Event-Broker-Secret': secret,
-      },
+      headers: { 'Content-Type': 'application/json', 'X-Event-Broker-Secret': secret },
       body: JSON.stringify(dlqPayload),
     });
 
@@ -75,7 +48,6 @@ async function proxyWriteDeadLetter(dlqPayload: Record<string, unknown>): Promis
       console.warn('[dlq] proxy write failed', sanitizeLogMessage(await response.text().catch(() => 'unknown')));
       return false;
     }
-
     return true;
   } catch (err) {
     console.warn('[dlq] proxy write threw', sanitizeLogMessage(err));
@@ -128,10 +100,10 @@ export abstract class BaseWorker<T = unknown> {
     this.isRunning = true;
 
       console.info(
-        createStructuredLogEntry('info', `Worker ${sanitizeLogMessage(this.config.name)} started`, sanitizeLogMessage(this.config.name), {
+        JSON.stringify(createStructuredLogEntry('info', `Worker ${sanitizeLogMessage(this.config.name)} started`, sanitizeLogMessage(this.config.name), {
           topics: this.config.topics,
           broker: this.broker.kind,
-        }),
+        })),
       );
 
     const handler: BrokerMessageHandler = message => {
@@ -149,7 +121,7 @@ export abstract class BaseWorker<T = unknown> {
     this.unsubscribers.forEach(unsub => unsub());
     this.unsubscribers = [];
     console.info(
-      createStructuredLogEntry('info', `Worker ${sanitizeLogMessage(this.config.name)} stopped`, sanitizeLogMessage(this.config.name)),
+      JSON.stringify(createStructuredLogEntry('info', `Worker ${sanitizeLogMessage(this.config.name)} stopped`, sanitizeLogMessage(this.config.name))),
     );
   }
 
@@ -199,7 +171,7 @@ export abstract class BaseWorker<T = unknown> {
       telemetry.recordSLO(this.config.name, 'process', Date.now() - startTime, false);
 
       console.error(
-        createStructuredLogEntry(
+        JSON.stringify(createStructuredLogEntry(
           'error',
           `Worker ${sanitizeLogMessage(this.config.name)} failed to process message`,
           sanitizeLogMessage(this.config.name),
@@ -210,7 +182,7 @@ export abstract class BaseWorker<T = unknown> {
             retryCount: message.retryCount,
           },
           message.correlationId,
-        ),
+        )),
       );
 
       if (this.config.circuitBreaker) {
@@ -220,11 +192,11 @@ export abstract class BaseWorker<T = unknown> {
         if (this.failureCount >= this.config.circuitBreaker.failureThreshold) {
           this.circuitBreakerState = 'open';
           console.error(
-            createStructuredLogEntry(
+            JSON.stringify(createStructuredLogEntry(
               'error',
               `Circuit breaker opened for ${sanitizeLogMessage(this.config.name)}`,
               sanitizeLogMessage(this.config.name),
-            ),
+            )),
           );
         }
       }
@@ -261,7 +233,7 @@ export abstract class BaseWorker<T = unknown> {
     };
 
     console.error(
-      createStructuredLogEntry(
+      JSON.stringify(createStructuredLogEntry(
         'error',
         'Message sent to dead letter queue',
         sanitizeLogMessage(this.config.name),
@@ -271,7 +243,7 @@ export abstract class BaseWorker<T = unknown> {
           error: sanitizeLogMessage(error instanceof Error ? error.message : String(error)),
         },
         message.correlationId,
-      ),
+      )),
     );
 
     telemetry.recordMetric('worker.dead_letter', 1, 'count', {

@@ -191,9 +191,53 @@ class TelemetryCollector {
 
 export const telemetry = new TelemetryCollector();
 
-// Track Web Vitals
+// Track Web Vitals (CLS, FID, FCP, LCP, TTFB)
 export function initWebVitals(): void {
-  // Browser-only function - no-op in Node.js
+  if (typeof window === 'undefined' || !('PerformanceObserver' in window)) {return;}
+
+  // Use PerformanceObserver to capture paint and LCP metrics
+  try {
+    const paintObserver = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        const name = entry.name === 'first-contentful-paint' ? 'FCP' : 'FP';
+        telemetry.recordMetric(`web_vital.${name}`, entry.startTime, 'ms', { name });
+      }
+    });
+    paintObserver.observe({ type: 'paint', buffered: true });
+
+    const lcpObserver = new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      const last = entries[entries.length - 1];
+      if (last) {
+        telemetry.recordMetric('web_vital.LCP', last.startTime, 'ms', { name: 'LCP' });
+      }
+    });
+    lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+
+    const clsObserver = new PerformanceObserver((list) => {
+      let clsValue = 0;
+      for (const entry of list.getEntries()) {
+        if (!(entry as PerformanceEntry & { hadRecentInput?: boolean }).hadRecentInput) {
+          clsValue += (entry as PerformanceEntry & { value?: number }).value ?? 0;
+        }
+      }
+      if (clsValue > 0) {
+        telemetry.recordMetric('web_vital.CLS', clsValue, 'score', { name: 'CLS' });
+      }
+    });
+    clsObserver.observe({ type: 'layout-shift', buffered: true });
+
+    // TTFB from navigation timing
+    const navObserver = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        const nav = entry as PerformanceNavigationTiming;
+        telemetry.recordMetric('web_vital.TTFB', nav.responseStart - nav.requestStart, 'ms', { name: 'TTFB' });
+      }
+    });
+    navObserver.observe({ type: 'navigation', buffered: true });
+  } catch {
+    // PerformanceObserver not supported for this entry type — skip silently
+  }
 }
 
 // Track route changes

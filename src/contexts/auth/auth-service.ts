@@ -8,6 +8,6 @@ export async function loadProfileFromBackend(): Promise<Profile | null> {
   return (profileData?.profile as Profile | null) ?? null;
 }
 
-export async function getSupabaseClient(): Promise<SupabaseClient | null> {
+export function getSupabaseClient(): SupabaseClient | null {
   return supabase;
 }

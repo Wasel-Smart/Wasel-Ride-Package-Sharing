@@ -85,7 +85,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const optimisticRef = useRef<Partial<WaselUser> | null>(null);
 
   const fetchProfile = useCallback(async (forceCreate = false, authUser?: User | null) => {
-    if (!authUser || !(await getSupabaseClient())) {
+    if (!authUser || !getSupabaseClient()) {
       setProfile(null);
       return null;
     }
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     const initializeAuth = async () => {
       try {
-        const client = await getSupabaseClient();
+        const client = getSupabaseClient();
         if (!mounted) {return;}
 
         if (!client) {
@@ -248,7 +248,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       phone?: string,
       returnTo?: string,
     ): Promise<SignUpResult> => {
-      if (!(await getSupabaseClient())) {
+      if (!getSupabaseClient()) {
         return { error: new Error('Backend not configured') };
       }
 
@@ -443,7 +443,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const resetPassword = useCallback(
     async (email: string, returnTo?: string): Promise<{ error: AuthOperationError }> => {
-      const client = await getSupabaseClient();
+      const client = getSupabaseClient();
       if (!client) {return { error: new Error('Backend not configured') };}
 
       try {
@@ -463,7 +463,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const changePassword = useCallback(
     async (nextPassword: string): Promise<{ error: AuthOperationError }> => {
-      const client = await getSupabaseClient();
+      const client = getSupabaseClient();
       if (!client) {return { error: new Error('Backend not configured') };}
 
       setBusy(true);

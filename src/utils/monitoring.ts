@@ -174,8 +174,13 @@ export const logger = {
 
   startTransaction(name: string, op: string) {
     const requestId = createCorrelationId('txn');
-    logger.addBreadcrumb(`Transaction:${name}`, 'performance', { op, requestId });
-    return { finish: () => undefined };
+    const startTime = Date.now();
+    logger.addBreadcrumb(`Transaction:${sanitizeLogMessage(name)}`, 'performance', { op, requestId });
+    if (typeof (sentryClient as unknown as Record<string, unknown> | null)?.startInactiveSpan === 'function') {
+      const span = (sentryClient as unknown as { startInactiveSpan: (o: unknown) => { end: () => void } }).startInactiveSpan({ name: sanitizeLogMessage(name), op });
+      return { finish: () => { span.end(); logger.metric(`txn.${sanitizeLogMessage(name)}.duration_ms`, Date.now() - startTime); } };
+    }
+    return { finish: () => { logger.metric(`txn.${sanitizeLogMessage(name)}.duration_ms`, Date.now() - startTime); } };
   },
 
   addBreadcrumb(message: string, category: string, data?: Record<string, unknown>): void {

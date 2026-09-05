@@ -219,7 +219,8 @@ export function hasPermission(role: AccessRole, permission: AccessPermission): b
 
 export function assertPermission(role: AccessRole, permission: AccessPermission): void {
   if (!hasPermission(role, permission)) {
-    throw new Error(`Role '${role}' is not allowed to perform '${permission}'`);
+    // Use a generic message to avoid leaking role/permission details to callers
+    throw new Error('Access denied: insufficient permissions for this operation');
   }
 }
 

@@ -49,6 +49,7 @@ export class CircuitBreaker {
   private lastFailureTime = 0;
   private lastSuccessTime = 0;
   private lastStateChange = Date.now();
+  private windowStart = Date.now();
   private config: CircuitBreakerConfig;
   private name: string;
 
@@ -104,8 +105,15 @@ export class CircuitBreaker {
    * Handle failed execution
    */
   private onFailure(): void {
+    const now = Date.now();
+    // Reset failure count if outside the monitoring window
+    if (now - this.windowStart > this.config.monitoringPeriod) {
+      this.failures = 0;
+      this.windowStart = now;
+    }
+
     this.failures++;
-    this.lastFailureTime = Date.now();
+    this.lastFailureTime = now;
     this.successes = 0;
 
     logger.warning(`Circuit breaker ${sanitizeLogMessage(this.name)} failure`, {
@@ -156,6 +164,7 @@ export class CircuitBreaker {
     this.lastFailureTime = 0;
     this.lastSuccessTime = 0;
     this.lastStateChange = Date.now();
+    this.windowStart = Date.now();
     logger.info(`Circuit breaker ${sanitizeLogMessage(this.name)} manually reset`);
   }
 
