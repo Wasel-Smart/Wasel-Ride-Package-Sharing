@@ -1,116 +1,349 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-describe('Trust Center Service', () => {
+function createMockQueryBuilder() {
+  const builder: any = {
+    from: vi.fn(),
+    select: vi.fn(),
+    eq: vi.fn(),
+    neq: vi.fn(),
+    single: vi.fn(),
+    maybeSingle: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    upsert: vi.fn(),
+    order: vi.fn(),
+    limit: vi.fn(),
+    in: vi.fn(),
+    delete: vi.fn(),
+    is: vi.fn(),
+  };
+
+  Object.keys(builder).forEach((key) => {
+    if (typeof builder[key] === 'function') {
+      builder[key].mockReturnValue(builder);
+    }
+  });
+
+  builder.single.mockResolvedValue({ data: null, error: null });
+  builder.maybeSingle.mockResolvedValue({ data: null, error: null });
+
+  builder.then = (resolve: any) => resolve({ error: null, data: null });
+
+  return builder;
+}
+
+vi.mock('../directSupabase/helpers', () => {
+  const mockDb = {
+    from: vi.fn((table: string) => createMockQueryBuilder()),
+  };
+
+  return {
+    getDb: vi.fn(() => mockDb),
+  };
+});
+
+vi.mock('../directSupabase/userContext', () => ({
+  buildUserContext: vi.fn(),
+}));
+
+import { getDb } from '../directSupabase/helpers';
+import { buildUserContext } from '../directSupabase/userContext';
+import {
+  submitDirectTrustIdentityVerification,
+  startDirectTrustPhoneVerification,
+  confirmDirectTrustPhoneVerification,
+  enableDirectTrustDriverMode,
+  submitDirectTrustDriverDocuments,
+} from '../directSupabase/trust';
+
+const mockDb = getDb();
+const mockBuildUserContext = buildUserContext as any;
+
+describe('Direct Trust Phone Verification', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    const mod = require('../directSupabase/trust');
+    mod.clearOtpStartRateLimit?.();
+  });
+
+  it('starts verification with normalized phone and OTP session', async () => {
+    const mockUser = {
+      id: 'user-123',
+      email: 'test@example.com',
+      full_name: 'Test User',
+      phone_number: null,
+      role: 'rider',
+      verification_level: 'level_0',
+      sanad_verified_status: null,
+    };
+
+    mockBuildUserContext.mockResolvedValue({ user: mockUser });
+
+    mockDb.from.mockImplementation((table: string) => {
+      return createMockQueryBuilder();
+    });
+
+    const result = await startDirectTrustPhoneVerification('user-123', '+962 79 123 4567');
+
+    expect(result.started).toBe(true);
+    expect(result.phoneNumber).toBe('+962791234567');
+    expect(result.code).toBeUndefined();
+    expect(result.expiresAt).toBeDefined();
+  });
+
+  it('enforces rate limit on repeated OTP start requests', async () => {
+    const mockUser = {
+      id: 'user-456',
+      email: 'test@example.com',
+      full_name: 'Test User',
+      phone_number: null,
+      role: 'rider',
+      verification_level: 'level_0',
+      sanad_verified_status: null,
+    };
+
+    mockBuildUserContext.mockResolvedValue({ user: mockUser });
+    mockDb.from.mockImplementation((table: string) => createMockQueryBuilder());
+
+    await startDirectTrustPhoneVerification('user-456', '+962 79 123 4567');
+    await expect(startDirectTrustPhoneVerification('user-456', '+962 79 123 4567')).rejects.toThrow(
+      'Too many verification attempts',
+    );
+  });
+
+  it('rejects invalid phone numbers', async () => {
+    mockBuildUserContext.mockResolvedValue({ user: { id: 'user-123' } });
+
+    await expect(startDirectTrustPhoneVerification('user-123', 'invalid')).rejects.toThrow(
+      'Invalid phone number provided',
+    );
+  });
+
+  it('confirms verification with valid code', async () => {
+    const mockUser = {
+      id: 'user-123',
+      phone_number: '+962791234567',
+      phone_verified_at: null,
+    };
+
+    mockBuildUserContext.mockResolvedValue({ user: mockUser });
+
+    const code = '123456';
+    const codeHash = Array.from(
+      new Uint8Array(
+        await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code)),
+      ),
+    )
+      .map((chunk) => chunk.toString(16).padStart(2, '0'))
+      .join('');
+
+    const mockOtpSession = {
+      otp_session_id: 'session-123',
+      phone_number: '+962791234567',
+      otp_hash: codeHash,
+      attempts: 0,
+      max_attempts: 5,
+      expires_at: new Date(Date.now() + 60000).toISOString(),
+      consumed_at: null,
+    };
+
+    mockDb.from.mockImplementation((table: string) => {
+      const builder = createMockQueryBuilder();
+      if (table === 'users') {
+        builder.single.mockResolvedValue({ data: mockUser, error: null });
+      } else if (table === 'otp_sessions') {
+        builder.maybeSingle.mockResolvedValue({ data: mockOtpSession, error: null });
+      }
+      return builder;
+    });
+
+    const result = await confirmDirectTrustPhoneVerification('user-123', code);
+    expect(result.verified).toBe(true);
+    expect(result.phoneNumber).toBe('+962791234567');
+  });
+
+  it('rejects confirmation without code', async () => {
+    mockBuildUserContext.mockResolvedValue({ user: { id: 'user-123' } });
+
+    mockDb.from.mockImplementation((table: string) => {
+      const builder = createMockQueryBuilder();
+      if (table === 'users') {
+        builder.single.mockResolvedValue({ data: { id: 'user-123' }, error: null });
+      }
+      return builder;
+    });
+
+    await expect(confirmDirectTrustPhoneVerification('user-123', '')).rejects.toThrow(
+      'Verification code is required',
+    );
+  });
+
+  it('rejects expired OTP sessions', async () => {
+    mockBuildUserContext.mockResolvedValue({ user: { id: 'user-123' } });
+
+    const expiredSession = {
+      otp_session_id: 'session-123',
+      phone_number: '+962791234567',
+      otp_hash: 'hash',
+      attempts: 0,
+      max_attempts: 5,
+      expires_at: new Date(Date.now() - 60000).toISOString(),
+      consumed_at: null,
+    };
+
+    mockDb.from.mockImplementation((table: string) => {
+      const builder = createMockQueryBuilder();
+      if (table === 'users') {
+        builder.single.mockResolvedValue({ data: { id: 'user-123' }, error: null });
+      } else if (table === 'otp_sessions') {
+        builder.maybeSingle.mockResolvedValue({ data: expiredSession, error: null });
+      }
+      return builder;
+    });
+
+    await expect(confirmDirectTrustPhoneVerification('user-123', '123456')).rejects.toThrow(
+      'The verification code expired',
+    );
+  });
+
+  it('rejects after max attempts exceeded', async () => {
+    mockBuildUserContext.mockResolvedValue({ user: { id: 'user-123' } });
+
+    const exhaustedSession = {
+      otp_session_id: 'session-123',
+      phone_number: '+962791234567',
+      otp_hash: 'hash',
+      attempts: 5,
+      max_attempts: 5,
+      expires_at: new Date(Date.now() + 60000).toISOString(),
+      consumed_at: null,
+    };
+
+    mockDb.from.mockImplementation((table: string) => {
+      const builder = createMockQueryBuilder();
+      if (table === 'users') {
+        builder.single.mockResolvedValue({ data: { id: 'user-123' }, error: null });
+      } else if (table === 'otp_sessions') {
+        builder.maybeSingle.mockResolvedValue({ data: exhaustedSession, error: null });
+      }
+      return builder;
+    });
+
+    await expect(confirmDirectTrustPhoneVerification('user-123', '123456')).rejects.toThrow(
+      'Too many incorrect verification attempts',
+    );
+  });
+
+  it('rejects consumed OTP sessions', async () => {
+    mockBuildUserContext.mockResolvedValue({ user: { id: 'user-123' } });
+
+    const consumedSession = {
+      otp_session_id: 'session-123',
+      phone_number: '+962791234567',
+      otp_hash: 'hash',
+      attempts: 0,
+      max_attempts: 5,
+      expires_at: new Date(Date.now() + 60000).toISOString(),
+      consumed_at: new Date().toISOString(),
+    };
+
+    mockDb.from.mockImplementation((table: string) => {
+      const builder = createMockQueryBuilder();
+      if (table === 'users') {
+        builder.single.mockResolvedValue({ data: { id: 'user-123' }, error: null });
+      } else if (table === 'otp_sessions') {
+        builder.maybeSingle.mockResolvedValue({ data: consumedSession, error: null });
+      }
+      return builder;
+    });
+
+    await expect(confirmDirectTrustPhoneVerification('user-123', '123456')).rejects.toThrow(
+      'No active verification session',
+    );
+  });
+});
+
+describe('Direct Trust Driver Mode', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('Happy paths', () => {
-    it('should calculate trust score from completed steps', async () => {
-      const steps = {
-        phone: { id: 'phone', state: 'completed' },
-        email: { id: 'email', state: 'completed' },
-        identity: { id: 'identity', state: 'completed' },
-        driverDocuments: { id: 'driverDocuments', state: 'completed' },
-        walletStanding: { id: 'walletStanding', state: 'completed' },
-      };
+  it('enables driver mode', async () => {
+    mockBuildUserContext.mockResolvedValue({ user: { id: 'user-123', role: 'rider' } });
 
-      const completedSteps = Object.values(steps).filter(s => s.state === 'completed').length;
-      expect(completedSteps).toBe(5);
+    mockDb.from.mockImplementation((table: string) => {
+      const builder = createMockQueryBuilder();
+      if (table === 'users') {
+        builder.single.mockResolvedValue({ data: { id: 'user-123', role: 'rider' }, error: null });
+      }
+      return builder;
     });
 
-    it('should identify next incomplete step', async () => {
-      const steps = {
-        phone: { id: 'phone', state: 'completed' },
-        email: { id: 'email', state: 'completed' },
-        identity: { id: 'identity', state: 'in_progress' },
-        driverDocuments: { id: 'driverDocuments', state: 'not_started' },
-        walletStanding: { id: 'walletStanding', state: 'not_started' },
-      };
+    const result = await enableDirectTrustDriverMode('user-123');
+    expect(result.enabled).toBe(true);
+    expect(result.role).toBe('driver');
+  });
+});
 
-      const nextStep = Object.values(steps).find(s => s.state !== 'completed');
-      expect(nextStep?.id).toBe('identity');
-    });
-
-    it('should detect failed steps', async () => {
-      const steps = {
-        phone: { id: 'phone', state: 'completed' },
-        email: { id: 'email', state: 'completed' },
-        identity: { id: 'identity', state: 'failed', failureReason: 'Document rejected' },
-        driverDocuments: { id: 'driverDocuments', state: 'not_started' },
-        walletStanding: { id: 'walletStanding', state: 'not_started' },
-      };
-
-      const blockedSteps = Object.values(steps).filter(s => s.state === 'failed').map(s => s.id);
-      expect(blockedSteps).toContain('identity');
-    });
+describe('Direct Trust Driver Documents', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  describe('Validation', () => {
-    it('should reject invalid verification level', async () => {
-      const validLevels = ['level_0', 'level_1', 'level_2', 'level_3'];
-      const level = 'invalid_level';
-      const isValid = validLevels.includes(level);
-      expect(isValid).toBe(false);
+  it('submits driver documents for driver role', async () => {
+    mockBuildUserContext.mockResolvedValue({
+      user: { id: 'user-123', role: 'driver', verification_level: 'level_2' },
+      driver: { driver_id: 'driver-123' },
     });
 
-    it('should accept valid verification level', async () => {
-      const validLevels = ['level_0', 'level_1', 'level_2', 'level_3'];
-      const level = 'level_2';
-      const isValid = validLevels.includes(level);
-      expect(isValid).toBe(true);
+    mockDb.from.mockImplementation((table: string) => {
+      const builder = createMockQueryBuilder();
+      if (table === 'users') {
+        builder.update.mockReturnValue(builder);
+      } else if (table === 'drivers') {
+        builder.single.mockResolvedValue({ data: { driver_id: 'driver-123' }, error: null });
+        builder.update.mockReturnValue(builder);
+        builder.insert.mockResolvedValue({ data: { driver_id: 'driver-456' }, error: null });
+      } else if (table === 'verification_records') {
+        builder.insert.mockResolvedValue({ error: null });
+      }
+      return builder;
     });
+
+    const result = await submitDirectTrustDriverDocuments('user-123', {
+      licenseNumber: 'DL123456',
+      documentReference: 'doc-ref-1',
+    });
+
+    expect(result.submitted).toBe(true);
+    expect(result.driverId).toBe('driver-123');
   });
 
-  describe('Authorization', () => {
-    it('should allow trust role to view any users trust status', async () => {
-      const userRole = 'trust';
-      const canViewAny = ['trust', 'admin'].includes(userRole);
-      expect(canViewAny).toBe(true);
+  it('rejects driver documents for non-driver role', async () => {
+    mockBuildUserContext.mockResolvedValue({
+      user: { id: 'user-123', role: 'rider' },
     });
 
-    it('should restrict normal users to own trust status', async () => {
-      const userRole = 'user';
-      const canViewAny = ['trust', 'admin'].includes(userRole);
-      expect(canViewAny).toBe(false);
-    });
-
-    it('should allow admin to moderate trust', async () => {
-      const userRole = 'admin';
-      const canModerate = ['trust', 'admin'].includes(userRole);
-      expect(canModerate).toBe(true);
-    });
+    await expect(
+      submitDirectTrustDriverDocuments('user-123', { licenseNumber: 'DL123456' }),
+    ).rejects.toThrow('Enable Driver mode before submitting driver documents');
   });
 
-  describe('Business rules', () => {
-    it('should mark identity as stale after 24 hours pending', async () => {
-      const hoursInPending = 25;
-      const isStale = hoursInPending > 24;
-      expect(isStale).toBe(true);
+  it('rejects short license numbers', async () => {
+    mockBuildUserContext.mockResolvedValue({
+      user: { id: 'user-123', role: 'driver' },
     });
 
-    it('should not mark identity as stale within 24 hours', async () => {
-      const hoursInPending = 12;
-      const isStale = hoursInPending > 24;
-      expect(isStale).toBe(false);
+    mockDb.from.mockImplementation((table: string) => {
+      const builder = createMockQueryBuilder();
+      if (table === 'users') {
+        builder.update.mockReturnValue(builder);
+      }
+      return builder;
     });
 
-    it('should mark driver documents as stale after 72 hours', async () => {
-      const hoursInPending = 73;
-      const isStale = hoursInPending > 72;
-      expect(isStale).toBe(true);
-    });
-  });
-
-  describe('Failure handling', () => {
-    it('should handle missing verification record', async () => {
-      const verification = null;
-      expect(verification).toBeNull();
-    });
-
-    it('should handle database error', async () => {
-      const error = { message: 'Database connection failed' };
-      expect(error.message).toBe('Database connection failed');
-    });
+    await expect(
+      submitDirectTrustDriverDocuments('user-123', { licenseNumber: 'DL' }),
+    ).rejects.toThrow('Enter the driver license number before submitting');
   });
 });

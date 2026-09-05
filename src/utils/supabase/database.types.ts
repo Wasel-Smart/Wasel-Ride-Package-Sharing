@@ -138,6 +138,19 @@ export interface Database {
         created_at: string;
       }>;
 
+      otp_sessions: RowSet<{
+        otp_session_id: string;
+        user_id: string;
+        phone_number: string;
+        purpose: string;
+        otp_hash: string;
+        attempts: number;
+        max_attempts: number;
+        expires_at: string;
+        consumed_at: string | null;
+        created_at: string;
+      }>;
+
       package_events: RowSet<{
         package_event_id: string;
         package_id: string;

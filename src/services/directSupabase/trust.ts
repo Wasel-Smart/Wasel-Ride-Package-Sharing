@@ -1,6 +1,7 @@
 import { getDb } from './helpers';
 import { buildUserContext } from './userContext';
 import type { DriverRow } from './types';
+import { normalizePhone, isValidE164Phone } from '../../shared/validation/phone';
 
 function isDriverRole(role?: string | null): boolean {
   return role === 'driver' || role === 'both';
@@ -10,6 +11,45 @@ function currentSanadStatus(value?: string | null) {
   return value === 'verified' || value === 'pending' || value === 'rejected' || value === 'expired'
     ? value
     : 'unverified';
+}
+
+function generateOtpCode(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function hashOtpCode(code: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
+  return Array.from(new Uint8Array(digest))
+    .map((chunk) => chunk.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function constantTimeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+function isExpired(isoValue?: string | null): boolean {
+  if (!isoValue) return false;
+  const expiresAt = new Date(isoValue).getTime();
+  if (Number.isNaN(expiresAt)) return false;
+  return Date.now() > expiresAt;
+}
+
+interface OtpSessionRow {
+  otp_session_id: string;
+  phone_number: string;
+  purpose: string;
+  otp_hash: string;
+  attempts: number;
+  max_attempts: number;
+  expires_at: string;
+  consumed_at: string | null;
+  created_at: string;
 }
 
 export async function submitDirectTrustIdentityVerification(
@@ -47,41 +87,143 @@ export async function submitDirectTrustIdentityVerification(
   };
 }
 
+const otpStartTimestamps = new Map<string, number>();
+const OTP_START_COOLDOWN_MS = 30_000;
+
+export function clearOtpStartRateLimit() {
+  otpStartTimestamps.clear();
+}
+
+function enforceOtpStartRateLimit(userId: string) {
+  const lastStart = otpStartTimestamps.get(userId) ?? 0;
+  const now = Date.now();
+  if (now - lastStart < OTP_START_COOLDOWN_MS) {
+    throw new Error('Too many verification attempts. Please wait before requesting a new code.');
+  }
+  otpStartTimestamps.set(userId, now);
+}
+
 export async function startDirectTrustPhoneVerification(userId: string, phoneNumber: string) {
   const context = await buildUserContext(userId);
   const db = getDb();
 
-  const normalized = phoneNumber.trim();
-  if (!normalized) {
-    throw new Error('Enter a valid phone number to verify.');
+  enforceOtpStartRateLimit(userId);
+
+  const normalized = normalizePhone(phoneNumber);
+  if (!isValidE164Phone(normalized)) {
+    throw new Error('Enter a valid E.164 phone number such as +962791234567.');
   }
 
-  const { error } = await db
+  const { data: existingPhoneOwner } = await db
+    .from('users')
+    .select('id')
+    .eq('phone_number', normalized)
+    .neq('id', context.user.id)
+    .maybeSingle();
+  if (existingPhoneOwner) {
+    throw new Error('This phone number is already linked to another account.');
+  }
+
+  const { error: updateError } = await db
     .from('users')
     .update({ phone_number: normalized })
     .eq('id', context.user.id);
-  if (error) {throw error;}
+  if (updateError) {throw updateError;}
+
+  const now = new Date().toISOString();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+  const code = generateOtpCode();
+  const otpHash = await hashOtpCode(code);
+
+  const { error: invalidateError } = await db
+    .from('otp_sessions')
+    .update({ consumed_at: now })
+    .eq('user_id', context.user.id)
+    .eq('purpose', 'driver_action')
+    .is('consumed_at', null);
+  if (invalidateError) {throw invalidateError;}
+
+  const { error: otpError } = await db
+    .from('otp_sessions')
+    .insert({
+      user_id: context.user.id,
+      phone_number: normalized,
+      purpose: 'driver_action',
+      otp_hash: otpHash,
+      attempts: 0,
+      max_attempts: 5,
+      expires_at: expiresAt,
+    });
+  if (otpError) {throw otpError;}
 
   return {
     started: true,
     phoneNumber: normalized,
-    expiresAt: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+    expiresAt,
   };
 }
 
-export async function confirmDirectTrustPhoneVerification(userId: string) {
+export async function confirmDirectTrustPhoneVerification(userId: string, code: string) {
   const context = await buildUserContext(userId);
   const db = getDb();
 
+  const trimmedCode = String(code ?? '').trim();
+  if (!trimmedCode) {
+    throw new Error('Verification code is required.');
+  }
+
+  const { data: otpSession, error: otpError } = await db
+    .from('otp_sessions')
+    .select('otp_session_id, phone_number, otp_hash, attempts, max_attempts, expires_at, consumed_at')
+    .eq('user_id', context.user.id)
+    .eq('purpose', 'driver_action')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle<OtpSessionRow>();
+  if (otpError) {throw otpError;}
+
+  if (!otpSession || otpSession.consumed_at) {
+    throw new Error('No active verification session. Send a new code and try again.');
+  }
+
+  if (isExpired(otpSession.expires_at)) {
+    throw new Error('The verification code expired. Send a new code.');
+  }
+
+  const attempts = Number(otpSession.attempts ?? 0);
+  const maxAttempts = Number(otpSession.max_attempts ?? 5);
+  if (attempts >= maxAttempts) {
+    throw new Error('Too many incorrect verification attempts. Send a new code.');
+  }
+
+  const hashedCode = await hashOtpCode(trimmedCode);
+  const isCodeValid = constantTimeEqual(hashedCode, String(otpSession.otp_hash ?? ''));
+
+  const nextAttempts = attempts + 1;
+  const now = new Date().toISOString();
+
+  if (!isCodeValid) {
+    await db
+      .from('otp_sessions')
+      .update({ attempts: nextAttempts })
+      .eq('otp_session_id', otpSession.otp_session_id);
+    throw new Error('That verification code is incorrect.');
+  }
+
+  await db
+    .from('otp_sessions')
+    .update({ consumed_at: now })
+    .eq('otp_session_id', otpSession.otp_session_id);
+
   const { error } = await db
     .from('users')
-    .update({ phone_verified_at: new Date().toISOString() })
+    .update({ phone_verified_at: now, phone_number: otpSession.phone_number })
     .eq('id', context.user.id);
   if (error) {throw error;}
 
   return {
     verified: true,
-    phoneNumber: context.user.phone_number ?? '',
+    phoneNumber: otpSession.phone_number,
   };
 }
 

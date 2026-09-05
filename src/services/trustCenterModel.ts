@@ -57,7 +57,7 @@ type FallbackTrustUser = {
   emailVerified: boolean;
   phone?: string;
   phoneVerified: boolean;
-  walletStatus: 'active' | 'limited' | 'frozen' | 'closed';
+  walletStatus: 'active' | 'limited' | 'frozen' | 'closed' | 'unavailable';
   sanadVerified?: boolean;
   verified?: boolean;
 };
@@ -133,7 +133,7 @@ export function buildFallbackTrustCenterStatus(user: FallbackTrustUser): TrustCe
 
   const phone = buildStatus(
     'phone',
-    user.phoneVerified ? 'completed' : user.phone ? 'not_started' : 'not_started',
+    user.phoneVerified ? 'completed' : user.phone ? 'in_progress' : 'not_started',
     user.phoneVerified
       ? 'Phone number is verified.'
       : user.phone

@@ -134,7 +134,7 @@ export async function confirmTrustPhoneVerification ( payload: ConfirmPhoneVerif
       } ),
     fallback: async () => {
       const userId = await getTrustUserId();
-      return confirmDirectTrustPhoneVerification( userId );
+      return confirmDirectTrustPhoneVerification( userId, payload.code );
     },
   } );
 
