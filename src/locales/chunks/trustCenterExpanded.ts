@@ -175,8 +175,5 @@ export const trustCenterExpanded = {
     capabilityMatrixTitle: 'مصفوفة القدرات',
     capabilityMatrixSubtitle: 'الحالة النهائية للثقة يجب أن تظهر كقدرات مفتوحة أو مغلقة بوضوح.',
     workflowStepSubtitle: 'كل خطوة لديها إجراء واضح ولا يسمح لأي حالة أن تبقى غير محسومة.',
-    scoreStrong: 'قوي',
-    scoreFair: 'متوسط',
-    scoreWeak: 'ضعيف',
   },
 } as const;

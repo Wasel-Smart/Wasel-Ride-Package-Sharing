@@ -4657,19 +4657,40 @@ async function handlePaymentRefund ( request: Request ): Promise<Response> {
   if ( 'error' in auth ) return auth.error;
 
   const body = await request.json().catch( () => ( {} ) );
-  const { payment_intent_id, amount, reason } = body as {
+  const { payment_intent_id, booking_id, amount, reason } = body as {
     payment_intent_id?: string;
+    booking_id?: string;
     amount?: number;
     reason?: string;
   };
 
-  if ( !payment_intent_id ) {
-    return json( { error: 'payment_intent_id is required' }, 400 );
+  let resolvedPaymentIntentId = payment_intent_id;
+
+  if ( !resolvedPaymentIntentId && booking_id ) {
+    const admin = auth.admin;
+    const { data: paymentRecord, error: lookupError } = await admin
+      .from( 'payments' )
+      .select( 'id' )
+      .eq( 'booking_id', booking_id )
+      .eq( 'user_id', auth.authUser.id )
+      .order( 'created_at', { ascending: false } )
+      .limit( 1 )
+      .maybeSingle();
+
+    if ( lookupError ) {
+      return json( { error: `Payment lookup failed: ${ lookupError.message }` }, 500 );
+    }
+
+    resolvedPaymentIntentId = paymentRecord?.id;
+  }
+
+  if ( !resolvedPaymentIntentId ) {
+    return json( { error: 'payment_intent_id or booking_id is required' }, 400 );
   }
 
   try {
     const params: Stripe.RefundCreateParams = {
-      payment_intent: payment_intent_id,
+      payment_intent: resolvedPaymentIntentId,
       reason: ( reason as Stripe.RefundCreateParams['reason'] ) ?? 'requested_by_customer',
     };
     if ( amount ) {
@@ -4685,6 +4706,25 @@ async function handlePaymentRefund ( request: Request ): Promise<Response> {
     const message = error instanceof Error ? error.message : String( error );
     return json( { error: `Refund failed: ${ message }` }, 502 );
   }
+}
+
+async function handleGetPaymentStatus ( request: Request, bookingId: string ): Promise<Response> {
+  const auth = await authenticateRequest( request );
+  if ( 'error' in auth ) return auth.error;
+
+  const admin = auth.admin;
+  const { data, error } = await admin
+    .from( 'bookings' )
+    .select( 'payment_status' )
+    .eq( 'id', bookingId )
+    .eq( 'passenger_id', auth.authUser.id )
+    .maybeSingle();
+
+  if ( error ) {
+    return json( { error: error.message }, error.code === 'PGRST116' ? 404 : 500 );
+  }
+
+  return json( { paymentStatus: data?.payment_status ?? 'unknown' } );
 }
 
 async function handleWalletPay ( request: Request, requestedUserId: string ) {

@@ -13,7 +13,7 @@ interface WaselDialogProps {
   open: boolean;
   title: string;
   description?: string;
-  children: ReactNode;
+  children?: ReactNode;
   footer?: ReactNode;
   size?: DialogSize;
   onClose: () => void;
