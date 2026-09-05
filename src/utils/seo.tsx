@@ -11,12 +11,12 @@ export interface SeoMeta {
   noIndex?: boolean;
 }
 
-export function useSeo(meta: SeoMeta) {
+export function useSeo(meta?: SeoMeta) {
   const { language } = useLanguage();
   const ar = language === 'ar';
 
   useEffect(() => {
-    if (typeof document === 'undefined') {return;}
+    if (!meta || typeof document === 'undefined') {return;}
 
     const title = ar ? meta.titleAr : meta.title;
     const description = ar ? meta.descriptionAr : meta.description;
