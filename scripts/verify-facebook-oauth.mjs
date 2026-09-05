@@ -32,7 +32,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
 
 const EXPECTED_SUPABASE_HOST = 'zexlxabdcsjefptmjhuq.supabase.co';
-const EXPECTED_FACEBOOK_APP_ID = '1438623708121685';
+const EXPECTED_FACEBOOK_APP_ID = '2154021471813673';
 const EXPECTED_FACEBOOK_OAUTH_CALLBACK_PATH = '/auth/v1/callback';
 
 const colors = {

@@ -23,18 +23,18 @@ The codebase already implements the OAuth flow. There is no JavaScript SDK integ
 
 | Setting | Value | Lives in |
 |---|---|---|
-| Facebook App ID | `1438623708121685` | Facebook Developers → Waseljo → Settings → Basic |
+| Facebook App ID | `2154021471813673` | Facebook Developers → Waseljo → Settings → Basic |
 | Facebook App Mode | **Live** | Facebook Developers → Waseljo → Settings → Basic → App Mode |
 | Facebook App Secret | (rotated, never in repo or chat) | Facebook Developers → Waseljo → Settings → Basic → "Show" |
 | Facebook Login → Valid OAuth Redirect URIs | `https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback` | Facebook Developers → Waseljo → Facebook Login → Settings |
 | Supabase Auth Provider → Facebook enabled | ON | Old Supabase dashboard → Authentication → Providers → Facebook |
-| Supabase Auth Provider → Facebook Client ID | `1438623708121685` | Old Supabase dashboard → Authentication → Providers → Facebook |
+| Supabase Auth Provider → Facebook Client ID | `2154021471813673` | Old Supabase dashboard → Authentication → Providers → Facebook |
 | Supabase Auth Provider → Facebook Client Secret | (rotated, never in repo or chat) | Old Supabase dashboard → Authentication → Providers → Facebook |
 | Supabase Auth Provider → Facebook Callback URL | `https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback` | Old Supabase dashboard → Authentication → Providers → Facebook |
 | Vercel env `VITE_SUPABASE_URL` | `https://zexlxabdcsjefptmjhuq.supabase.co` | Vercel → wasel-jo → Settings → Environment Variables |
 | Vercel env `VITE_SUPABASE_PUBLISHABLE_KEY` | (current Supabase publishable key) | Vercel → wasel-jo → Settings → Environment Variables |
-| Vercel env `VITE_FACEBOOK_APP_ID` | `1438623708121685` | Vercel → wasel-jo → Settings → Environment Variables |
-| Vercel env `SUPABASE_AUTH_FACEBOOK_CLIENT_ID` | `1438623708121685` | Vercel → wasel-jo → Settings → Environment Variables |
+| Vercel env `VITE_FACEBOOK_APP_ID` | `2154021471813673` | Vercel → wasel-jo → Settings → Environment Variables |
+| Vercel env `SUPABASE_AUTH_FACEBOOK_CLIENT_ID` | `2154021471813673` | Vercel → wasel-jo → Settings → Environment Variables |
 | Vercel env `SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET` | (current Facebook App Secret) | Vercel → wasel-jo → Settings → Environment Variables |
 | Vercel Deployment Protection → Vercel Authentication | **OFF** | Vercel → wasel-jo → Settings → Deployment Protection |
 | Vercel Deployment Protection → Password Protection | **OFF** | Vercel → wasel-jo → Settings → Deployment Protection |
@@ -45,7 +45,7 @@ The `VITE_FACEBOOK_APP_ID` env var is intentionally not read by the web app at r
 
 ### 2.1 Facebook app (Waseljo)
 
-1. Open https://developers.facebook.com/apps/1438623708121685/.
+1. Open https://developers.facebook.com/apps/2154021471813673/.
 2. **Settings → Basic**:
    - App Mode: toggle to **Live** (a banner at the top confirms the change).
    - Copy **App ID** and **App Secret**. The App ID is public (`VITE_FACEBOOK_APP_ID`); the App Secret must only ever be pasted into Supabase and Vercel, never into chat or git.
@@ -59,7 +59,7 @@ The `VITE_FACEBOOK_APP_ID` env var is intentionally not read by the web app at r
 1. Open https://supabase.com/dashboard/project/zexlxabdcsjefptmjhuq/auth/providers.
 2. **Authentication → Providers → Facebook**:
    - **Facebook enabled**: ON.
-   - **Facebook Client ID**: `1438623708121685`.
+   - **Facebook Client ID**: `2154021471813673`.
    - **Facebook Secret**: paste the current Facebook App Secret.
    - **Callback URL**: `https://zexlxabdcsjefptmjhuq.supabase.co/auth/v1/callback` (read-only; this is your project's fixed callback).
    - Save.
@@ -70,8 +70,8 @@ The `VITE_FACEBOOK_APP_ID` env var is intentionally not read by the web app at r
 2. For **Production** environment, ensure these are set (hide the values; mark as Sensitive):
    - `VITE_SUPABASE_URL` = `https://zexlxabdcsjefptmjhuq.supabase.co`
    - `VITE_SUPABASE_PUBLISHABLE_KEY` = current publishable key (from Supabase → Settings → API)
-   - `VITE_FACEBOOK_APP_ID` = `1438623708121685`
-   - `SUPABASE_AUTH_FACEBOOK_CLIENT_ID` = `1438623708121685`
+   - `VITE_FACEBOOK_APP_ID` = `2154021471813673`
+   - `SUPABASE_AUTH_FACEBOOK_CLIENT_ID` = `2154021471813673`
    - `SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET` = current Facebook App Secret
 3. **Settings → Deployment Protection**:
    - **Vercel Authentication**: **OFF**.
@@ -84,8 +84,8 @@ The repo's `.env` and `.env.production` are gitignored. They should match the pr
 
 - `.env:110` `VITE_SUPABASE_URL` = `https://zexlxabdcsjefptmjhuq.supabase.co`
 - `.env:114` `VITE_SUPABASE_PUBLISHABLE_KEY` = current publishable key
-- `.env:233` `VITE_FACEBOOK_APP_ID` = `1438623708121685`
-- `.env:234` `SUPABASE_AUTH_FACEBOOK_CLIENT_ID` = `1438623708121685`
+- `.env:233` `VITE_FACEBOOK_APP_ID` = `2154021471813673`
+- `.env:234` `SUPABASE_AUTH_FACEBOOK_CLIENT_ID` = `2154021471813673`
 - `.env:235` `SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET` = leave as `SET_IN_SECRET_MANAGER` (real secret stays in Supabase UI; do not write it into a OneDrive-synced file)
 - `.env.production` mirrors the same values for the build step.
 
