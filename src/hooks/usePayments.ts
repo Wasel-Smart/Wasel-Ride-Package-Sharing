@@ -31,7 +31,7 @@ export function usePayments() {
     }
   }, []);
 
-  const confirmPayment = useCallback(async (clientSecret: string, elements: StripeElements, returnUrl?: string) => {
+  const confirmPayment = useCallback(async (_clientSecret: string, elements: StripeElements, returnUrl?: string) => {
     if (!stripe) {
       throw new Error('Stripe not initialized');
     }
