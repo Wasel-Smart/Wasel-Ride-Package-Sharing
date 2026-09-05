@@ -10,6 +10,7 @@ export function StepCard({
   icon,
   children,
   footer,
+  badgeLabel,
 }: {
   title: string;
   subtitle: string;
@@ -17,6 +18,7 @@ export function StepCard({
   icon: ReactNode;
   children?: ReactNode;
   footer?: ReactNode;
+  badgeLabel?: string;
 }) {
   const accent = stateAccent(state);
 
@@ -62,13 +64,14 @@ export function StepCard({
         </div>
         <StatusBadge
           label={
-            state === 'completed'
-              ? 'Completed'
-              : state === 'in_progress'
-                ? 'In progress'
-                : state === 'failed'
-                  ? 'Failed'
-                  : 'Not started'
+            badgeLabel ??
+              (state === 'completed'
+                ? 'Completed'
+                : state === 'in_progress'
+                  ? 'In progress'
+                  : state === 'failed'
+                    ? 'Failed'
+                    : 'Not started')
           }
           accent={accent}
         />
