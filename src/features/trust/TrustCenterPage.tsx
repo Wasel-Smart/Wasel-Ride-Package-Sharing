@@ -12,7 +12,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { WaselButton } from '../../components/wasel-ui/WaselButton';
-import { WaselInput } from '../../components/wasel-ui/WaselInput';
+import { WaselDialog, WaselInput, WaselLogo } from '../../components/wasel-ui';
 import { ProtectedPagePreview } from '../../components/system/ProtectedPagePreview';
 import {
   MetricCard,
@@ -42,7 +42,7 @@ import {
   type TrustStepState,
 } from '../../services/trustCenterModel';
 import { evaluateTrustCapability } from '../../services/trustRules';
-import { C, F, R, SPACE, TYPE } from '../../utils/wasel-ds';
+import { C, F, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) {return error.message;}
@@ -108,73 +108,6 @@ function getNextTrustStepDetail(
     default:
       return t('trustCenterExpanded.reviewFlowBelow');
   }
-}
-
-function ConfirmDialog({
-  open,
-  title,
-  description,
-  confirmLabel,
-  cancelLabel,
-  onConfirm,
-  onCancel,
-}: {
-  open: boolean;
-  title: string;
-  description: string;
-  confirmLabel: string;
-  cancelLabel: string;
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  if (!open) {return null;}
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="trust-confirm-title"
-      aria-describedby="trust-confirm-desc"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: SPACE[4],
-        background: 'rgba(7,21,33,0.72)',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 420,
-          display: 'grid',
-          gap: SPACE[4],
-          padding: SPACE[5],
-          borderRadius: R.xl,
-          border: `1px solid ${C.border}`,
-          background: C.card,
-          boxShadow: `0 20px 60px rgba(0,0,0,0.45)`,
-        }}
-      >
-        <div id="trust-confirm-title" style={{ color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F }}>
-          {title}
-        </div>
-        <div id="trust-confirm-desc" style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.7 }}>
-          {description}
-        </div>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-          <WaselButton variant="outline" onClick={onCancel}>
-            {cancelLabel}
-          </WaselButton>
-          <WaselButton variant="primary" onClick={onConfirm}>
-            {confirmLabel}
-          </WaselButton>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export default function TrustCenterPage() {
@@ -321,7 +254,7 @@ export default function TrustCenterPage() {
   const heroAccent = effectiveStatus?.blockedSteps.length
     ? C.error
     : effectiveStatus?.nextStepId
-      ? C.gold
+      ? C.cyan
       : C.green;
   const heroLabel = effectiveStatus?.blockedSteps.length
     ? t('trustCenterExpanded.needsReview')
@@ -481,16 +414,6 @@ export default function TrustCenterPage() {
 
   return (
     <PageShell maxWidth={880} dir={ar ? 'rtl' : 'ltr'}>
-      <style>{`
-        @media (max-width: 480px) {
-          .trust-metrics-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .trust-capability-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
       <div style={{ paddingInline: SPACE[4] }} aria-live="polite">
         {initialLoading && !trustStatus ? (
           <TrustSkeleton />
@@ -530,12 +453,15 @@ export default function TrustCenterPage() {
             </>
           }
           aside={
-            <div style={{ display: 'grid', gap: 12 }}>
+            <div style={{ display: 'grid', gap: SPACE[3] }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <WaselLogo size={28} theme="dark" />
+              </div>
               <div
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  gap: 12,
+                  gap: SPACE[3],
                   flexWrap: 'wrap',
                 }}
               >
@@ -559,8 +485,19 @@ export default function TrustCenterPage() {
                   accent={C.green}
                 />
               </div>
-              <TrustScoreDisplay score={user.trustScore} label={t('trustCenterExpanded.trustScore')} />
-              <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7, fontFamily: F }}>
+              <TrustScoreDisplay
+                score={user.trustScore}
+                label={t('trustCenterExpanded.trustScore')}
+                scoreLabel={
+                  user.trustScore >= 80
+                    ? t('trustCenterExpanded.scoreStrong')
+                    : user.trustScore >= 50
+                      ? t('trustCenterExpanded.scoreFair')
+                      : t('trustCenterExpanded.scoreWeak')
+                }
+                dir={ar ? 'rtl' : 'ltr'}
+              />
+              <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: TYPE.lineHeight.relaxed, fontFamily: F }}>
                 {t('trustCenterExpanded.eachCardShowsState')}
               </div>
             </div>
@@ -570,6 +507,7 @@ export default function TrustCenterPage() {
         <VerificationSteps
           steps={(effectiveStatus?.steps ?? {}) as Record<string, { state: string; detail?: string }>}
           t={t}
+          dir={ar ? 'rtl' : 'ltr'}
         />
 
         <div
@@ -631,11 +569,12 @@ export default function TrustCenterPage() {
             <div
               style={{
                 display: 'grid',
-                gap: SPACE[3],
-                padding: SPACE[4],
-                borderRadius: R.xl,
+                gap: SPACE[4],
+                padding: SPACE[5],
+                borderRadius: R.xxl,
                 border: `1px solid ${heroAccent}24`,
-                background: `radial-gradient(circle at top left, ${heroAccent}12, transparent 36%), ${C.elevated}`,
+                background: `radial-gradient(circle at top left, ${heroAccent}12, transparent 34%), ${C.card}`,
+                boxShadow: SH.md,
               }}
             >
               <div
@@ -670,19 +609,19 @@ export default function TrustCenterPage() {
               >
                 {getNextTrustStepDetail(effectiveStatus ?? null, t)}
               </div>
-              {effectiveStatus?.blockedSteps.length ? (
-                <div
-                  style={{
-                    borderRadius: R.lg,
-                    padding: '12px 14px',
-                    border: `1px solid ${C.error}26`,
-                    background: `${C.error}12`,
-                    color: C.error,
-                    fontSize: TYPE.size.sm,
-                    lineHeight: 1.65,
-                    fontFamily: F,
-                  }}
-                >
+               {effectiveStatus?.blockedSteps.length ? (
+                 <div
+                   style={{
+                     borderRadius: R.lg,
+                     padding: `${SPACE[3]} ${SPACE[4]}`,
+                     border: `1px solid ${C.error}26`,
+                     background: `${C.error}12`,
+                     color: C.error,
+                     fontSize: TYPE.size.sm,
+                     lineHeight: TYPE.lineHeight.relaxed,
+                     fontFamily: F,
+                   }}
+                 >
                   {t('trustCenterExpanded.blockedChecksNeeded').replace(
                     '{count}',
                     String(effectiveStatus.blockedSteps.length),
@@ -694,11 +633,12 @@ export default function TrustCenterPage() {
             <div
               style={{
                 display: 'grid',
-                gap: SPACE[3],
-                padding: SPACE[4],
-                borderRadius: R.xl,
+                gap: SPACE[4],
+                padding: SPACE[5],
+                borderRadius: R.xxl,
                 border: `1px solid ${C.border}`,
-                background: C.elevated,
+                background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
+                boxShadow: SH.sm,
               }}
             >
               <div
@@ -721,16 +661,35 @@ export default function TrustCenterPage() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      gap: 10,
+                      gap: SPACE[3],
+                      padding: `${SPACE[3]} ${SPACE[4]}`,
                       borderRadius: R.lg,
                       border: `1px solid ${C.border}`,
-                      padding: '10px 12px',
-                      background: C.card2,
+                      background: C.card,
+                      flexWrap: 'wrap',
                     }}
                   >
-                    <span style={{ color: C.text, fontSize: TYPE.size.sm, fontFamily: F }}>
-                      {item.title}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], minWidth: 0 }}>
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 42,
+                          height: 42,
+                          borderRadius: R.lg,
+                          color: heroAccent,
+                          background: `${heroAccent}18`,
+                          border: `1px solid ${heroAccent}28`,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {item.icon}
+                      </span>
+                      <span style={{ color: C.text, fontSize: TYPE.size.sm, fontFamily: F }}>
+                        {item.title}
+                      </span>
+                    </div>
                     <StatusBadge
                       label={t('trustCenterExpanded.waitingOnNextStep')}
                       accent={heroAccent}
@@ -742,7 +701,7 @@ export default function TrustCenterPage() {
                   style={{
                     color: C.textMuted,
                     fontSize: TYPE.size.sm,
-                    lineHeight: 1.7,
+                    lineHeight: TYPE.lineHeight.relaxed,
                     fontFamily: F,
                   }}
                 >
@@ -856,11 +815,12 @@ export default function TrustCenterPage() {
                     <div
                       style={{
                         display: 'grid',
-                        gap: 10,
+                        gap: SPACE[4],
                         padding: SPACE[4],
-                        borderRadius: R.lg,
+                        borderRadius: R.xl,
                         border: `1px solid ${stateAccent(emailStep?.state ?? 'not_started')}24`,
-                        background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
+                        background: `radial-gradient(circle at top left, ${stateAccent(emailStep?.state ?? 'not_started')}12, transparent 34%), ${C.card}`,
+                        boxShadow: SH.sm,
                       }}
                     >
                       <div
@@ -910,11 +870,12 @@ export default function TrustCenterPage() {
                     <div
                       style={{
                         display: 'grid',
-                        gap: 10,
+                        gap: SPACE[4],
                         padding: SPACE[4],
-                        borderRadius: R.lg,
+                        borderRadius: R.xl,
                         border: `1px solid ${stateAccent(phoneStep?.state ?? 'not_started')}24`,
-                        background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
+                        background: `radial-gradient(circle at top left, ${stateAccent(phoneStep?.state ?? 'not_started')}12, transparent 34%), ${C.card}`,
+                        boxShadow: SH.sm,
                       }}
                     >
                       <div
@@ -1128,75 +1089,88 @@ export default function TrustCenterPage() {
         >
           <div style={{ display: 'grid', gap: SPACE[3] }}>
             {capabilityRows.map(item => (
-              <div
-                key={item.title}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                  alignItems: 'center',
-                  padding: `${SPACE[4]} ${SPACE[4]}`,
-                  borderRadius: R.lg,
-                  border: `1px solid ${item.gate.allowed ? C.green : C.gold}24`,
-                  background: C.elevated,
-                  flexWrap: 'wrap',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: 36,
-                      height: 36,
-                      borderRadius: R.md,
-                      color: item.gate.allowed ? C.green : C.gold,
-                      background: `${item.gate.allowed ? C.green : C.gold}18`,
-                      border: `1px solid ${item.gate.allowed ? C.green : C.gold}28`,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {item.icon}
-                  </span>
-                  <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
-                    <div style={{ color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F }}>
-                      {item.title}
-                    </div>
-                    <div
-                      style={{
-                        color: C.textMuted,
-                        fontSize: TYPE.size.sm,
-                        fontFamily: F,
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {item.gate.allowed
-                        ? t('trustCenterExpanded.capabilityReady')
-                        : (item.gate.reason ??
-                          item.gate.recommendation ??
-                          t('trustCenterExpanded.oneMoreStep'))}
-                    </div>
-                  </div>
-                </div>
-                <StatusBadge
-                  label={item.gate.allowed ? t('trustCenterExpanded.open') : t('trustCenterExpanded.locked')}
-                  accent={item.gate.allowed ? C.green : C.gold}
-                />
-              </div>
+             <div
+               key={item.title}
+               style={{
+                 display: 'flex',
+                 justifyContent: 'space-between',
+                 gap: SPACE[3],
+                 alignItems: 'center',
+                 padding: `${SPACE[4]} ${SPACE[4]}`,
+                 borderRadius: R.xl,
+                 border: `1px solid ${item.gate.allowed ? C.green : C.cyan}24`,
+                 background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
+                 boxShadow: SH.sm,
+                 flexWrap: 'wrap',
+               }}
+             >
+               <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3], minWidth: 0 }}>
+                 <span
+                   style={{
+                     display: 'inline-flex',
+                     alignItems: 'center',
+                     justifyContent: 'center',
+                     width: 42,
+                     height: 42,
+                     borderRadius: R.lg,
+                     color: item.gate.allowed ? C.green : C.cyan,
+                     background: `${item.gate.allowed ? C.green : C.cyan}18`,
+                     border: `1px solid ${item.gate.allowed ? C.green : C.cyan}28`,
+                     flexShrink: 0,
+                   }}
+                 >
+                   {item.icon}
+                 </span>
+                 <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
+                   <div style={{ color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F }}>
+                     {item.title}
+                   </div>
+                   <div
+                     style={{
+                       color: C.textMuted,
+                       fontSize: TYPE.size.sm,
+                       fontFamily: F,
+                       lineHeight: TYPE.lineHeight.relaxed,
+                     }}
+                   >
+                     {item.gate.allowed
+                       ? t('trustCenterExpanded.capabilityReady')
+                       : (item.gate.reason ??
+                         item.gate.recommendation ??
+                         t('trustCenterExpanded.oneMoreStep'))}
+                   </div>
+                 </div>
+               </div>
+               <StatusBadge
+                 label={item.gate.allowed ? t('trustCenterExpanded.open') : t('trustCenterExpanded.locked')}
+                 accent={item.gate.allowed ? C.green : C.cyan}
+               />
+             </div>
             ))}
           </div>
         </SectionCard>
       </>
       )}
-      <ConfirmDialog
+      <WaselDialog
         open={confirmState.open}
         title={confirmState.title}
         description={confirmState.description}
-        confirmLabel="Confirm"
-        cancelLabel="Cancel"
-        onConfirm={confirmState.onConfirm}
-        onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
+        size="sm"
+        onClose={() => setConfirmState(prev => ({ ...prev, open: false }))}
+        closeLabel="Close"
+        footer={
+          <>
+            <WaselButton
+              variant="outline"
+              onClick={() => setConfirmState(prev => ({ ...prev, open: false }))}
+            >
+              Cancel
+            </WaselButton>
+            <WaselButton variant="primary" onClick={confirmState.onConfirm}>
+              Confirm
+            </WaselButton>
+          </>
+        }
       />
       </div>
     </PageShell>

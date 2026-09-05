@@ -1,4 +1,4 @@
-import { C, R, SPACE } from '../../../utils/wasel-ds';
+import { C, R, SPACE, TYPE } from '../../../utils/wasel-ds';
 
 export function TrustSkeleton() {
   return (
@@ -11,58 +11,33 @@ export function TrustSkeleton() {
         style={{
           display: 'grid',
           gap: SPACE[4],
-          padding: SPACE[4],
-          borderRadius: R.xl,
+          padding: SPACE[5],
+          borderRadius: R.xxl,
           border: `1px solid ${C.border}`,
-          background: C.elevated,
+          background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
+          boxShadow: '0 1px 0 rgba(0,229,255,0.06)',
         }}
       >
         <div style={{ display: 'grid', gap: 8 }}>
-          <div
-            style={{
-              height: 14,
-              width: '60%',
-              borderRadius: R.md,
-              background: C.borderFaint,
-              opacity: 0.6,
-            }}
-          />
-          <div
-            style={{
-              height: 12,
-              width: '100%',
-              borderRadius: R.md,
-              background: C.borderFaint,
-              opacity: 0.4,
-            }}
-          />
+          <div className="skeleton-base sk-line" style={{ width: '60%' }} />
+          <div className="skeleton-base sk-line" style={{ width: '100%' }} />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: SPACE[3] }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            gap: SPACE[3],
+          }}
+        >
           {Array.from({ length: 4 }).map((_, index) => (
-            <div
-              key={index}
-              style={{
-                height: 80,
-                borderRadius: R.lg,
-                border: `1px solid ${C.border}`,
-                background: C.card,
-              }}
-            />
+            <div key={index} className="skeleton-base sk-card" />
           ))}
         </div>
       </div>
 
       <div style={{ display: 'grid', gap: SPACE[4] }}>
         {Array.from({ length: 3 }).map((_, index) => (
-          <div
-            key={index}
-            style={{
-              height: 140,
-              borderRadius: R.xl,
-              border: `1px solid ${C.border}`,
-              background: C.card,
-            }}
-          />
+          <div key={index} className="skeleton-base sk-card" />
         ))}
       </div>
     </div>

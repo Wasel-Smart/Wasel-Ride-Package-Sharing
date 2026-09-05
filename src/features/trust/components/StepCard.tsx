@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { C, F, R, SPACE, TYPE } from '../../../utils/wasel-ds';
+import { C, F, R, SH, SPACE, TYPE } from '../../../utils/wasel-ds';
 import { StatusBadge } from '../../../components/wasel-ui/WaselPagePrimitives';
 import { stateAccent, type TrustStepState } from './VerificationSteps';
 
@@ -27,17 +27,18 @@ export function StepCard({
       style={{
         display: 'grid',
         gap: SPACE[4],
-        padding: SPACE[4],
-        borderRadius: R.xl,
+        padding: SPACE[5],
+        borderRadius: R.xxl,
         border: `1px solid ${accent}24`,
-        background: `radial-gradient(circle at top left, ${accent}12, transparent 32%), ${C.elevated}`,
+        background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${C.card}`,
+        boxShadow: SH.md,
       }}
     >
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
-          gap: 12,
+          gap: SPACE[4],
           alignItems: 'flex-start',
           flexWrap: 'wrap',
         }}
@@ -47,7 +48,7 @@ export function StepCard({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
+              gap: SPACE[3],
               color: C.text,
               fontWeight: TYPE.weight.bold,
               fontFamily: F,
@@ -57,7 +58,7 @@ export function StepCard({
             <span>{title}</span>
           </div>
           <div
-            style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: 1.6 }}
+            style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: TYPE.lineHeight.relaxed }}
           >
             {subtitle}
           </div>

@@ -10,7 +10,7 @@
  *  - WaselServicePage.tsx retained as the source of truth for FindRide, OfferRide, Packages
  *    until those are individually migrated; BusPage is now fully standalone.
  */
-import React, { memo, Suspense } from 'react';
+import React, { memo, Suspense, useEffect } from 'react';
 import { AlertTriangle, LoaderCircle, SearchX } from 'lucide-react';
 import { createBrowserRouter, isRouteErrorResponse, Navigate, useRouteError } from 'react-router';
 import { Button } from './components/ui/button';
@@ -88,6 +88,9 @@ const NotFound = memo(() => {
 const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'));
 const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage'));
 
+const isInvalidHookCallError = (message: string): boolean =>
+  /invalid hook call/i.test(message);
+
 const RouteErrorFallback = memo(() => {
   const { language } = useLanguage();
   const ar = language === 'ar';
@@ -99,6 +102,55 @@ const RouteErrorFallback = memo(() => {
       : ar
         ? 'تعذر تحميل هذه الصفحة.'
         : 'This page could not be loaded.';
+
+  const isHookError = isInvalidHookCallError(message);
+
+  useEffect(() => {
+    if (!isHookError) return;
+
+    const timer = setTimeout(() => {
+      const hardRecover = (window as unknown as { waselHardRecover?: () => void }).waselHardRecover;
+      if (typeof hardRecover === 'function') {
+        hardRecover();
+      } else {
+        window.location.reload();
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [isHookError]);
+
+  if (isHookError) {
+    return (
+      <WaselStateCard
+        eyebrow={ar ? 'خطأ في التطبيق' : 'App Error'}
+        title={ar ? 'تعذر تحميل هذه الصفحة' : 'This page could not be loaded'}
+        description={message}
+        icon={AlertTriangle}
+        tone="danger"
+        minHeight="100vh"
+        actions={
+          <>
+            <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+              <a href="/app/find-ride">{ar ? 'ابحث عن مشوار' : 'Find a ride'}</a>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="border-white/15 bg-white/5 text-white hover:bg-white/10"
+            >
+              <a href="/">{ar ? 'العودة للرئيسية' : 'Go home'}</a>
+            </Button>
+          </>
+        }
+        footer={
+          ar
+            ? 'تم اكتشاف خطأ في استدعاء Hook. جارٍ إعادة تشغيل التطبيق تلقائياً...'
+            : 'Invalid hook call detected. Automatically recovering...'
+        }
+      />
+    );
+  }
 
   return (
     <WaselStateCard
