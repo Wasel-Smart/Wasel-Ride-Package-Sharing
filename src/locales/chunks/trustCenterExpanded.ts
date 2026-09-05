@@ -90,9 +90,6 @@ export const trustCenterExpanded = {
       'Final trust state should read as open or blocked capabilities.',
     workflowStepSubtitle:
       'Each step has a direct action and no state is allowed to remain indeterminate.',
-    scoreStrong: 'Strong',
-    scoreFair: 'Fair',
-    scoreWeak: 'Weak',
   },
   ar: {
     eyebrow: 'مركز الثقة',

@@ -54,45 +54,94 @@ class PaymentService {
       throw new BackendRequestError('Not authenticated', { status: 401, recoverable: true });
     }
 
+    const existing = pendingPaymentRequests.get(request.bookingId);
+    if (existing) {
+      const age = Date.now() - existing.timestamp;
+      if (age < 10_000) {
+        existing.controller.abort();
+      }
+    }
+
+    const controller = new AbortController();
+    pendingPaymentRequests.set(request.bookingId, { controller, timestamp: Date.now() });
+
     const amountMinor = toMinorUnits(request.amount, request.currency ?? 'jod');
     if (!Number.isSafeInteger(amountMinor) || amountMinor < 50) {
       throw new Error('Payment amount must be at least 0.50');
     }
 
-    const { token } = await getAuthDetails();
+    try {
+      const { token } = await getAuthDetails();
 
-    const data = await requestEdgeJson<{
-      clientSecret?: string;
-      paymentIntentId?: string;
-      client_secret?: string;
-    }>({
-      path: '/payment/create-intent',
-      operation: 'createPaymentIntent',
-      authMode: 'required',
-      context: { token, userId: user.id },
-      method: 'POST',
-      body: {
-        action: 'create-payment-intent',
-        amount: amountMinor,
-        currency: request.currency ?? 'jod',
-        metadata: { ...request.metadata, booking_id: request.bookingId, user_id: user.id },
-        idempotency_key: `booking:${request.bookingId}`,
-      },
-      timeout: PAYMENT_TIMEOUT_MS,
-    });
+      const data = await requestEdgeJson<{
+        clientSecret?: string;
+        paymentIntentId?: string;
+        client_secret?: string;
+      }>({
+        path: '/payment/create-intent',
+        operation: 'createPaymentIntent',
+        authMode: 'required',
+        context: { token, userId: user.id },
+        method: 'POST',
+        body: {
+          action: 'create-payment-intent',
+          amount: amountMinor,
+          currency: request.currency ?? 'jod',
+          booking_id: request.bookingId,
+          metadata: { ...request.metadata, booking_id: request.bookingId, user_id: user.id },
+          idempotency_key: `booking:${request.bookingId}`,
+        },
+        timeout: PAYMENT_TIMEOUT_MS,
+        retries: 1,
+      });
 
-    const clientSecret = data.clientSecret ?? data.client_secret;
-    if (!clientSecret || !data.paymentIntentId) {
-      throw new BackendRequestError('Invalid payment response', { status: 502 });
+      const clientSecret = data.clientSecret ?? data.client_secret;
+      if (!clientSecret || !data.paymentIntentId) {
+        throw new BackendRequestError('Invalid payment response', { status: 502 });
+      }
+
+      return { clientSecret, paymentIntentId: data.paymentIntentId };
+    } finally {
+      pendingPaymentRequests.delete(request.bookingId);
+    }
+  }
+
+  async confirmPayment(bookingId: string): Promise<'succeeded' | 'failed' | 'pending'> {
+    const { token, userId } = await getAuthDetails();
+
+    const startTime = Date.now();
+    while (Date.now() - startTime < PAYMENT_POLL_MAX_DURATION) {
+      const status = await requestEdgeJson<string>({
+        path: `/booking/${encodeURIComponent(bookingId)}/payment-status`,
+        operation: 'getPaymentStatus',
+        authMode: 'required',
+        context: { token, userId },
+        method: 'GET',
+        timeout: 10_000,
+      });
+
+      if (status === 'succeeded' || status === 'failed') {
+        return status;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, PAYMENT_POLL_INTERVAL));
     }
 
-    return { clientSecret, paymentIntentId: data.paymentIntentId };
+    return 'pending';
   }
 
   async processRefund(request: RefundRequest): Promise<RefundResponse> {
     const { token, userId } = await getAuthDetails();
+    const amountMinor = request.amountMinor ??
+      (request.amount !== undefined && request.amount !== null
+        ? toMinorUnits(request.amount, 'jod')
+        : undefined);
 
-    const data = await requestEdgeJson<{ refundId?: string; amount?: number }>({
+    const data = await requestEdgeJson<{
+      refundId?: string;
+      amount?: number;
+      status?: string;
+    }>({
       path: '/payment/refund',
       operation: 'processRefund',
       authMode: 'required',
@@ -101,12 +150,11 @@ class PaymentService {
       body: {
         action: 'create-refund',
         booking_id: request.bookingId,
-        amount: request.amount !== null && request.amount !== undefined
-          ? toMinorUnits(request.amount, 'jod')
-          : undefined,
+        amount: amountMinor,
         reason: request.reason,
       },
       timeout: PAYMENT_TIMEOUT_MS,
+      retries: 1,
     });
 
     if (!data.refundId) {
@@ -117,38 +165,24 @@ class PaymentService {
       success: true,
       refundId: data.refundId,
       amount: data.amount ?? request.amount ?? 0,
+      amountMinor: data.amount ?? amountMinor ?? 0,
+      status: data.status ?? 'succeeded',
     };
   }
 
-  async confirmPayment(bookingId: string, paymentIntentId: string): Promise<void> {
-    void bookingId;
-    void paymentIntentId;
-    // Stripe webhooks are the sole authority for booking payment state.
-  }
-
   async getPaymentStatus(bookingId: string): Promise<string> {
-    const client = supabase ?? (() => { throw new Error('Payments unavailable: Supabase client not configured'); })();
+    const { token, userId } = await getAuthDetails();
 
-    const {
-      data: { user },
-      error: userError,
-    } = await client.auth.getUser();
+    const status = await requestEdgeJson<string>({
+      path: `/booking/${encodeURIComponent(bookingId)}/payment-status`,
+      operation: 'getPaymentStatus',
+      authMode: 'required',
+      context: { token, userId },
+      method: 'GET',
+      timeout: 10_000,
+    });
 
-    if (userError || !user) {
-      throw new BackendRequestError('Not authenticated', { status: 401, recoverable: true });
-    }
-
-    const { data, error } = await client
-      .from('bookings')
-      .select('payment_status')
-      .eq('id', bookingId)
-      .eq('passenger_id', user.id)
-      .single();
-
-    if (error) {
-      throw error;
-    }
-    return data.payment_status as string;
+    return status;
   }
 }
 
