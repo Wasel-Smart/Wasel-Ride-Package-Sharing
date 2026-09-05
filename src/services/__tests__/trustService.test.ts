@@ -34,7 +34,7 @@ function createMockQueryBuilder() {
 
 vi.mock('../directSupabase/helpers', () => {
   const mockDb = {
-    from: vi.fn((table: string) => createMockQueryBuilder()),
+    from: vi.fn((_table: string) => createMockQueryBuilder()),
   };
 
   return {
@@ -49,7 +49,12 @@ vi.mock('../directSupabase/userContext', () => ({
 import { getDb } from '../directSupabase/helpers';
 import { buildUserContext } from '../directSupabase/userContext';
 
-const mockDb = getDb();
+// getDb is mocked above to return a plain object of vi.fn()s, but its
+// production type (PostgrestQueryBuilder overloads, etc.) doesn't expose
+// vitest mock methods like `.mockImplementation`. Cast to `any` here so the
+// mock's actual (test-only) shape is usable below without re-casting at
+// every call site.
+const mockDb = getDb() as any;
 const mockBuildUserContext = buildUserContext as any;
 
 describe('Direct Trust Phone Verification', () => {
@@ -70,13 +75,17 @@ describe('Direct Trust Phone Verification', () => {
     };
 
     mockBuildUserContext.mockResolvedValue({ user: mockUser });
-    mockDb.from.mockImplementation((table: string) => createMockQueryBuilder());
+    mockDb.from.mockImplementation((_table: string) => createMockQueryBuilder());
 
     const result = await startDirectTrustPhoneVerification('user-123', '+962 79 123 4567');
 
     expect(result.started).toBe(true);
     expect(result.phoneNumber).toBe('+962791234567');
-    expect(result.code).toBeUndefined();
+    // The OTP code is intentionally not part of the returned shape (it must
+    // never be exposed to the client). Cast to `any` since `code` doesn't
+    // exist on the typed response — this assertion guards against someone
+    // accidentally adding it back.
+    expect((result as any).code).toBeUndefined();
     expect(result.expiresAt).toBeDefined();
   });
 
@@ -93,7 +102,7 @@ describe('Direct Trust Phone Verification', () => {
     };
 
     mockBuildUserContext.mockResolvedValue({ user: mockUser });
-    mockDb.from.mockImplementation((table: string) => createMockQueryBuilder());
+    mockDb.from.mockImplementation((_table: string) => createMockQueryBuilder());
 
     await startDirectTrustPhoneVerification('user-456', '+962 79 123 4567');
     await expect(startDirectTrustPhoneVerification('user-456', '+962 79 123 4567')).rejects.toThrow(

@@ -114,6 +114,24 @@ const WaselRootInner = memo(() => {
 
   const navigate = useCallback((path: string) => nav(path), [nav]);
 
+  const meta = getRouteMeta(location.pathname);
+
+  const seoMeta = useMemo(
+    () =>
+      meta
+        ? {
+            title: meta.title,
+            titleAr: meta.titleAr,
+            description: meta.description,
+            descriptionAr: meta.descriptionAr,
+            canonical: `https://wasel14.online${meta.path}`,
+          }
+        : undefined,
+    [meta],
+  );
+
+  useSeo(seoMeta);
+
   useEffect(() => {
     const isPwa =
       window.matchMedia('(display-mode: standalone)').matches ||

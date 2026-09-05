@@ -306,6 +306,6 @@ describe('payment.test.ts', () => {
 
   it('confirmPayment is a no-op', async () => {
     const { paymentService: ps } = await import('@/services/payment');
-    await expect(ps.confirmPayment('b-1', 'pi-1')).resolves.toBeUndefined();
+    await expect(ps.confirmPayment('b-1')).resolves.toBeUndefined();
   });
 });
