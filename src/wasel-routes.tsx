@@ -224,7 +224,7 @@ const LEGACY_APP_ALIASES = [
 ] as const;
 
 // ── Route children factory ────────────────────────────────────────────────────
-const buildMainChildren = () => [
+const buildMainChildren = (): RouteObject[] => [
   // ── Landing ──────────────────────────────────────────────────────────────
   {
     index: true,
