@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as BackendWorkflow from '@/services/backendWorkflow';
 
 const createMockSupabase = () => {
   const mockEq = vi.fn();
@@ -58,9 +57,7 @@ describe('payment.test.ts', () => {
       getAuthDetails: mockGetAuthDetails,
     }));
     vi.doMock('@/services/backendWorkflow', async () => {
-      const actual = await vi.importActual<BackendWorkflow>(
-        '@/services/backendWorkflow',
-      );
+      const actual = await vi.importActual('@/services/backendWorkflow');
       return {
         ...actual,
         requestEdgeJson: mockRequestEdgeJson,
