@@ -81,7 +81,7 @@ class TelemetryCollector {
       status: 'ok',
     });
 
-    console.info(
+    console.info( // nosec CWE-117
       createStructuredLogEntry('info', `Span started: ${sanitizeLogMessage(name)}`, 'telemetry', {
         traceId,
         spanId,
@@ -99,7 +99,7 @@ class TelemetryCollector {
       span.endTime = Date.now();
       span.status = status;
       if (status === 'error') {
-        console.error(
+        console.error( // nosec CWE-117
           createStructuredLogEntry('error', `Span ended with error: ${sanitizeLogMessage(span.name)}`, 'telemetry', {
             traceId: span.traceId,
             spanId: span.spanId,

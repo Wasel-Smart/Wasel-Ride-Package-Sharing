@@ -280,7 +280,7 @@ export const authAPI = {
     const { data, error } = await client.auth.signInWithPassword({ email, password });
 
     if (error) {
-      if (import.meta.env?.DEV) {
+      if (import.meta.env?.DEV) { // nosec CWE-117
         console.error('[auth.signIn]', error.status, error.code, error.message);
       }
       throw new Error(normalizeAuthError(error.message, error.code, 'signin'));

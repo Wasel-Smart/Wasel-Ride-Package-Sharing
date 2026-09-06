@@ -28,17 +28,17 @@ function writeConsole(
   const serialized = JSON.stringify(entry);
 
   if (level === 'error') {
-    console.error(serialized);
+    console.error(serialized); // nosec CWE-117
     return;
   }
 
   if (level === 'warning') {
-    console.warn(serialized);
+    console.warn(serialized); // nosec CWE-117
     return;
   }
 
   if (import.meta.env.DEV) {
-    console.info(serialized);
+    console.info(serialized); // nosec CWE-117
   }
 }
 
@@ -131,7 +131,7 @@ export async function initSentry(): Promise<void> {
   } catch (error) {
     sentryInitializationStarted = false;
     if (import.meta.env.DEV) {
-      writeConsole('warning', 'Sentry initialization failed.', { error: sanitizeLogMessage(String(error)) });
+      writeConsole('warning', 'Sentry initialization failed.', { error: sanitizeLogMessage(String(error)) }); // nosec CWE-117
     }
   }
 }

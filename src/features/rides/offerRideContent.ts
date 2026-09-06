@@ -5,7 +5,7 @@ export const OFFER_RIDE_SUMMARY_METRICS = [
   { label: 'Network activity', detail: 'Tracked requests created', colorKey: 'blue' },
 ] as const;
 
-export const OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS = ['small', 'medium', 'large'] as const;
+export const OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS = [ 'small', 'medium', 'large' ] as const;
 
 const CITY_LABELS_AR: Record<string, string> = {
   Amman: 'عمّان',
@@ -21,21 +21,21 @@ const CITY_LABELS_AR: Record<string, string> = {
   Salt: 'السلط',
 };
 
-const CAPACITY_LABELS_AR: Record<(typeof OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS)[number], string> = {
+const CAPACITY_LABELS_AR: Record<( typeof OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS )[ number ], string> = {
   small: 'صغير',
   medium: 'متوسط',
   large: 'كبير',
 };
 
-export function cityLabel(city: string, language: 'ar' | 'en'): string {
-  return language === 'ar' ? CITY_LABELS_AR[city] ?? city : city;
+export function cityLabel ( city: string, language: 'ar' | 'en' ): string {
+  return language === 'ar' ? CITY_LABELS_AR[ city ] ?? city : city;
 }
 
-export function packageCapacityLabel(
-  capacity: (typeof OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS)[number] | string,
+export function packageCapacityLabel (
+  capacity: ( typeof OFFER_RIDE_PACKAGE_CAPACITY_OPTIONS )[ number ] | string,
   language: 'ar' | 'en',
 ): string {
   return language === 'ar'
-    ? CAPACITY_LABELS_AR[capacity as keyof typeof CAPACITY_LABELS_AR] ?? capacity
+    ? CAPACITY_LABELS_AR[ capacity as keyof typeof CAPACITY_LABELS_AR ] ?? capacity
     : capacity;
 }

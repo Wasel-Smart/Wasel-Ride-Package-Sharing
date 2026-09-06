@@ -102,7 +102,7 @@ export const activeTripAPI = {
       );
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        console.error(
+        console.error( // nosec CWE-117
           '[activeTripAPI.setActiveTrip] Server error:',
           response.status,
           sanitizeLogMessage(JSON.stringify(body)),

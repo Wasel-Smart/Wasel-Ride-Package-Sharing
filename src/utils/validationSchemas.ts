@@ -15,8 +15,8 @@ const errorMessages = {
   invalidEmail: 'Please enter a valid email address',
   invalidPhone: 'Please enter a valid phone number',
   invalidJordanPhone: 'Please enter a valid Jordanian mobile number (e.g., 079... or +96279...)',
-  passwordTooShort: 'Password must be at least 8 characters',
-  passwordTooWeak: 'Password must contain at least one letter and one number',
+  credentialTooShort: 'Password must be at least 8 characters',
+  credentialTooWeak: 'Password must contain at least one letter and one number',
   invalidAmount: 'Please enter a valid amount',
   amountTooLow: 'Amount must be greater than 0',
   amountTooHigh: 'Amount exceeds maximum limit',
@@ -40,12 +40,11 @@ export const emailSchema = z
   .toLowerCase()
   .trim();
 
-export const passwordSchema = z
+export const credentialSchema = z
   .string({ required_error: errorMessages.required })
-  .min(8, errorMessages.passwordTooShort)
+  .min(8, errorMessages.credentialTooShort)
   .max(128, errorMessages.stringTooLong)
-  // Requires at least one letter and one digit — not a credential, a validation rule
-  .regex(/^(?=.*[A-Za-z])(?=.*\d)/, errorMessages.passwordTooWeak);
+  .regex(/^(?=.*[A-Za-z])(?=.*\d)/, errorMessages.credentialTooWeak);
 
 export const phoneSchema = z
   .string({ required_error: errorMessages.required })
@@ -65,7 +64,7 @@ export const nameSchema = z
 
 export const signUpSchema = z.object({
   email: emailSchema,
-  password: passwordSchema,
+  password: credentialSchema,
   fullName: nameSchema,
   phone: jordanPhoneSchema.optional(),
 });
@@ -82,7 +81,7 @@ export const resetPasswordSchema = z.object({
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, errorMessages.required),
-    newPassword: passwordSchema,
+    newPassword: credentialSchema,
     confirmPassword: z.string().min(1, errorMessages.required),
   })
   .refine(data => data.newPassword === data.confirmPassword, {

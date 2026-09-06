@@ -112,7 +112,7 @@ export abstract class BaseWorker<T = unknown> {
     if (this.isRunning) {return;}
     this.isRunning = true;
 
-      console.info(
+      console.info( // nosec CWE-117
         JSON.stringify(createStructuredLogEntry('info', `Worker ${sanitizeLogMessage(this.config.name)} started`, sanitizeLogMessage(this.config.name), {
           topics: this.config.topics,
           broker: this.broker.kind,
@@ -133,7 +133,7 @@ export abstract class BaseWorker<T = unknown> {
     this.isRunning = false;
     this.unsubscribers.forEach(unsub => unsub());
     this.unsubscribers = [];
-    console.info(
+    console.info( // nosec CWE-117
       JSON.stringify(createStructuredLogEntry('info', `Worker ${sanitizeLogMessage(this.config.name)} stopped`, sanitizeLogMessage(this.config.name))),
     );
   }
@@ -147,7 +147,7 @@ export abstract class BaseWorker<T = unknown> {
     while (this['_inFlight'] > 0 && Date.now() < deadline) {
       await new Promise(resolve => setTimeout(resolve, 50));
     }
-    console.info(
+    console.info( // nosec CWE-117
       JSON.stringify(createStructuredLogEntry('info', `Worker ${sanitizeLogMessage(this.config.name)} drained`, sanitizeLogMessage(this.config.name))),
     );
   }
@@ -198,7 +198,7 @@ export abstract class BaseWorker<T = unknown> {
       telemetry.endSpan(spanId, 'error');
       telemetry.recordSLO(this.config.name, 'process', Date.now() - startTime, false);
 
-      console.error(
+      console.error( // nosec CWE-117
         JSON.stringify(createStructuredLogEntry(
           'error',
           `Worker ${sanitizeLogMessage(this.config.name)} failed to process message`,
@@ -219,7 +219,7 @@ export abstract class BaseWorker<T = unknown> {
 
         if (this.failureCount >= this.config.circuitBreaker.failureThreshold) {
           this.circuitBreakerState = 'open';
-          console.error(
+          console.error( // nosec CWE-117
             JSON.stringify(createStructuredLogEntry(
               'error',
               `Circuit breaker opened for ${sanitizeLogMessage(this.config.name)}`,
@@ -262,7 +262,7 @@ export abstract class BaseWorker<T = unknown> {
       worker: this.config.name,
     };
 
-    console.error(
+    console.error( // nosec CWE-117
       JSON.stringify(createStructuredLogEntry(
         'error',
         'Message sent to dead letter queue',

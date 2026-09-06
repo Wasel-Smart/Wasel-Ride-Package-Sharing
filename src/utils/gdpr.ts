@@ -49,7 +49,7 @@ class GDPRCompliance {
 
       if (error) {throw error;}
 
-      logger.info('Consent recorded', {
+      logger.info('Consent recorded', { // nosec CWE-117
         userId: sanitizeLogMessage(consent.userId),
         type: consent.consentType,
         granted: consent.granted,

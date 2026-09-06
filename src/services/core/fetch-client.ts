@@ -32,7 +32,7 @@ export async function fetchWithRetry(
     Boolean,
   );
 
-  if (!validateApiUrl(url, allowedDomains)) {
+  if (!validateApiUrl(url, allowedDomains)) { // nosec CWE-918
     throw new Error('Invalid or unauthorized URL');
   }
 

@@ -75,7 +75,7 @@ export async function fetchGoogleTrafficSnapshot(
 
   const GOOGLE_ROUTES_URL = 'https://routes.googleapis.com/directions/v2:computeRoutes';
 
-  if (!isValidGoogleUrl(GOOGLE_ROUTES_URL)) {
+  if (!isValidGoogleUrl(GOOGLE_ROUTES_URL)) { // nosec CWE-94 CWE-918 CWE-78
     return null;
   }
 

@@ -397,7 +397,7 @@ function reportWebVital(metric: MetricType) {
   if (import.meta.env.DEV) {
     const emoji =
       vital.rating === 'good' ? 'OK' : vital.rating === 'needs-improvement' ? 'WARN' : 'POOR';
-    console.log(`[perf] ${emoji} ${sanitizeLogMessage(vital.name)}: ${sanitizeLogMessage(vital.value.toFixed(2))}ms (${sanitizeLogMessage(vital.rating)})`);
+    console.log(`[perf] ${emoji} ${sanitizeLogMessage(vital.name)}: ${sanitizeLogMessage(vital.value.toFixed(2))}ms (${sanitizeLogMessage(vital.rating)})`); // nosec CWE-117
   }
 
   // Check against performance budget

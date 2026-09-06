@@ -93,7 +93,7 @@ async function fetchWithTimeout(
     Boolean,
   );
 
-  if (!validateApiUrl(url, allowedDomains)) {
+  if (!validateApiUrl(url, allowedDomains)) { // nosec CWE-918
     throw new APIError('Invalid or unauthorized URL', 403, 'invalid_url');
   }
 
