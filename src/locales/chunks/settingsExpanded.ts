@@ -177,7 +177,7 @@ export const settingsExpanded = {
       enterCodeFromAuthenticatorApp: 'أدخل رمز من تطبيق المصادق لإنهاء التفعيل.',
       useThisFieldWhenDisabling2FA: 'استخدم هذا الحقل عند تعطيل 2FA أو اختبار الأكواد الاحتياطية.',
       currentSetupDetails: 'تفاصيل الإعداد الحالي',
-      twoFaSecret: 'الرمز السري'
+      twoFaSecret: 'الرمز السري',
       backupCodes: 'أكواد احتياطية',
       oneActiveSessionOnThisDevice: 'جلسة نشطة واحدة على هذا الجهاز - Supabase',
       signInToViewActiveSessions: 'سجّل دخول لرؤية الجلسات النشطة',

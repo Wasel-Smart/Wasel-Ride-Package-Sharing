@@ -142,44 +142,21 @@ export function mapBackendProfile(args: {
   const role = toRole(profile?.role ?? metadata.role);
   const phone = profile?.phone_number ?? profile?.phone ?? authUser.phone ?? undefined;
   const rating = typeof profile?.rating === 'number' ? profile.rating : 4.7;
-  const trips =
-    typeof profile?.trip_count === 'number'
-      ? profile.trip_count
-      : typeof profile?.trips === 'number'
-        ? profile.trips
-        : 0;
+  const trips = resolveTripCount(profile);
   const verified = Boolean(profile?.verified);
   const phoneVerified = Boolean(profile?.phone_verified ?? authUser.phone_confirmed_at ?? false);
   const emailVerified = Boolean(profile?.email_verified ?? authUser.email_confirmed_at ?? false);
-  const verificationLevel = ((): WaselVerificationLevel => {
-    const raw = profile?.verification_level;
-    if (raw === 'level_0' || raw === 'level_1' || raw === 'level_2' || raw === 'level_3')
-      {return raw;}
-    return deriveVerificationLevel({ phoneVerified, role, verified });
-  })();
+  const verificationLevel = resolveVerificationLevel(profile, phoneVerified, role, verified);
 
   return {
     id: authUser.id,
-    name: String(
-      profile?.full_name ??
-        profile?.fullName ??
-        profile?.name ??
-        metadata.full_name ??
-        metadata.name ??
-        authUser.email?.split('@')[0] ??
-        'Wasel User',
-    ),
+    name: resolveName(profile, metadata, authUser),
     email: authUser.email ?? '',
     role,
     verified: verified || verificationLevel === 'level_2' || verificationLevel === 'level_3',
     rating,
     trips,
-    balance:
-      typeof profile?.wallet_balance === 'number'
-        ? profile.wallet_balance
-        : typeof profile?.balance === 'number'
-          ? profile.balance
-          : 0,
+    balance: resolveBalance(profile),
     phone,
     avatar: typeof profile?.avatar_url === 'string' ? profile.avatar_url : undefined,
     joinedAt: profile?.created_at ?? profile?.joined_at ?? authUser.created_at?.slice(0, 10),
@@ -188,12 +165,54 @@ export function mapBackendProfile(args: {
     sanadVerified: false,
     verificationLevel,
     trustScore: deriveTrustScore({ verificationLevel, rating, trips }),
-    walletStatus:
-      profile?.wallet_status === 'limited' ||
-      profile?.wallet_status === 'frozen' ||
-      profile?.wallet_status === 'closed'
-        ? profile.wallet_status
-        : 'active',
+    walletStatus: resolveWalletStatus(profile),
     backendMode: 'supabase',
   };
+}
+
+function resolveTripCount(profile?: PartialProfileSource | null): number {
+  if (typeof profile?.trip_count === 'number') {return profile.trip_count;}
+  if (typeof profile?.trips === 'number') {return profile.trips;}
+  return 0;
+}
+
+function resolveVerificationLevel(
+  profile: PartialProfileSource | null | undefined,
+  phoneVerified: boolean,
+  role: WaselUserRole,
+  verified: boolean,
+): WaselVerificationLevel {
+  const raw = profile?.verification_level;
+  if (raw === 'level_0' || raw === 'level_1' || raw === 'level_2' || raw === 'level_3') {
+    return raw;
+  }
+  return deriveVerificationLevel({ phoneVerified, role, verified });
+}
+
+function resolveName(
+  profile: PartialProfileSource | null | undefined,
+  metadata: Record<string, unknown>,
+  authUser: { email?: string },
+): string {
+  return String(
+    profile?.full_name ??
+      profile?.fullName ??
+      profile?.name ??
+      metadata.full_name ??
+      metadata.name ??
+      authUser.email?.split('@')[0] ??
+      'Wasel User',
+  );
+}
+
+function resolveBalance(profile?: PartialProfileSource | null): number {
+  if (typeof profile?.wallet_balance === 'number') {return profile.wallet_balance;}
+  if (typeof profile?.balance === 'number') {return profile.balance;}
+  return 0;
+}
+
+function resolveWalletStatus(profile?: PartialProfileSource | null): WaselWalletStatus {
+  const status = profile?.wallet_status;
+  if (status === 'limited' || status === 'frozen' || status === 'closed') {return status;}
+  return 'active';
 }

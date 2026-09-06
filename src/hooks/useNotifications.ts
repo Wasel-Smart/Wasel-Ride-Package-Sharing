@@ -76,7 +76,11 @@ export function useNotifications() {
   );
 
   useEffect(() => {
-    setArchivedIds(readArchivedNotificationIds(effectiveUserId));
+    if (typeof window === 'undefined') {return;}
+    const stored = readArchivedNotificationIds(effectiveUserId);
+    if (stored.length > 0 || effectiveUserId) {
+      setArchivedIds(stored);
+    }
   }, [effectiveUserId]);
 
   const {

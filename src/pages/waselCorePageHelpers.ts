@@ -95,79 +95,103 @@ export function parseFindRideParams(search: string) {
   };
 }
 
+function tr(ar: boolean, en: string, arText: string): string {
+  return ar ? arText : en;
+}
+
 export function createFindRideCopy(ar: boolean): FindRideCopy {
   return {
-    from: ar ? 'من' : 'FROM',
-    to: ar ? 'إلى' : 'TO',
-    date: ar ? 'التاريخ' : 'DATE',
-    searchRides: ar ? 'ابحث عن الرحلات' : 'Search Rides',
-    searching: ar ? 'جارٍ البحث...' : 'Searching...',
-    searchRoute: ar ? 'مسار البحث' : 'Search Route',
-    previewCorridor: ar
-      ? 'عاين المسار قبل استعراض الرحلات.'
-      : 'Preview the corridor before browsing rides.',
-    clearFirstStep: ar ? 'واضح من الخطوة الأولى' : 'Clear from the first step',
-    popularRoutes: ar ? 'مسارات شائعة' : 'Popular routes',
-    showing: ar ? 'عرض' : 'Showing',
-    rides: ar ? 'رحلات' : 'rides',
-    ride: ar ? 'رحلة' : 'ride',
-    found: ar ? 'موجودة' : 'found',
-    cheapest: ar ? 'الأرخص' : 'Cheapest',
-    earliest: ar ? 'الأبكر' : 'Earliest',
-    topRated: ar ? 'الأعلى تقييماً' : 'Top Rated',
-    noRidesFound: ar ? 'لا توجد رحلات' : 'No rides found',
-    tryDifferent: ar ? 'جرّب مساراً أو تاريخاً مختلفاً' : 'Try a different route or date',
-    routeReady: ar ? 'جاهزية المسار' : 'Route readiness',
-    bookingReady: ar ? 'جاهزية الحجز' : 'Booking readiness',
-    recentSearches: ar ? 'عمليات البحث الأخيرة' : 'Recent searches',
-    recommendedForYou: ar ? 'موصى بها لك' : 'Recommended for you',
-    instantMatch: ar ? 'مطابقة فورية' : 'Instant match',
-    searchHelp: ar
-      ? 'اختر مدينتين مختلفتين لعرض أفضل الرحلات.'
-      : 'Choose two different cities to unlock the best rides.',
-    dateHelp: ar
-      ? 'التاريخ اختياري، لكن إضافته تجعل النتائج أدق.'
-      : 'Date is optional, but it makes the results more precise.',
-    bookedTrips: ar ? 'رحلاتك المحجوزة' : 'Your booked trips',
-    bookingSaved: ar ? 'تم حفظ الحجز في حسابك.' : 'This booking is now saved in your account.',
-    bookingStarted: ar ? 'تم بدء الحجز' : 'Booking started',
-    chooseDifferentCities: ar
-      ? 'اختر مدينتين مختلفتين.'
-      : 'Choose different origin and destination cities.',
-    routeSummary: ar ? 'ملخص المسار' : 'Route summary',
-    seatsLeft: ar ? 'مقاعد متبقية' : 'Seats left',
-    routeIntensity: ar ? 'كثافة المسار' : 'Route intensity',
-    fallbackOptions: ar ? 'خيارات بديلة' : 'Fallback options',
-    clearDateFilter: ar ? 'امسح فلتر التاريخ' : 'Clear date filter',
-    openBusFallback: ar ? 'افتح الباصات لهذا المسار' : 'Open bus fallback',
-    nearbyCorridors: ar ? 'ممرات قريبة' : 'Nearby corridors',
-    seatsStillMove: ar
-      ? 'المقاعد تتحرك سريعاً على هذا المسار.'
-      : 'Seats move quickly on this corridor.',
-    noTripsYet: ar
-      ? 'لا توجد رحلات محفوظة بعد. أول حجز سيظهر هنا.'
-      : 'No trips reserved yet. Your first confirmed ride will appear here.',
-    bookingSavedBetter: ar
-      ? 'تم حفظ المقعد مع التنبيهات وتفاصيل الصعود.'
-      : 'Seat saved with departure alerts and boarding details.',
-    busSupport: ar
-      ? 'إذا امتلأت الرحلة، افتح الباصات أو جرّب موعداً قريباً.'
-      : 'If the ride fills up, open buses or try a nearby departure.',
-    sendPackageTitle: ar ? 'أرسل طرداً مع رحلة' : 'Send a Package with a Ride',
-    deliveryRoute: ar ? 'مسار التوصيل' : 'Delivery Route',
-    deliveryHint: ar
-      ? 'المسار يربط بين المرسل والراكب والمستلم في رحلة واحدة واضحة.'
-      : 'The route connects sender, rider, and receiver in one clear trip.',
-    packageFriendly: ar ? 'مناسب للطرود' : 'Package-friendly',
-    weight: ar ? 'الوزن' : 'Weight',
-    note: ar ? 'ملاحظة' : 'Note',
-    notePh: ar ? 'قابل للكسر، يرجى التعامل بحذر...' : 'Fragile, handle with care...',
-    sendPackageBtn: ar ? 'إرسال الطرد مع الرحلة' : 'Send package with ride',
-    sentTitle: ar ? 'تم إرسال طلب الطرد للراكب!' : 'Package request sent to a rider',
-    sendAnother: ar ? 'أرسل طرداً آخر' : 'Send Another',
-    matchingDesc: ar
-      ? 'سنطابقك مع راكب موثوق متجه إلى'
-      : "We'll match you with a verified rider heading to",
+    from: tr(ar, 'FROM', 'من'),
+    to: tr(ar, 'TO', 'إلى'),
+    date: tr(ar, 'DATE', 'التاريخ'),
+    searchRides: tr(ar, 'Search Rides', 'ابحث عن الرحلات'),
+    searching: tr(ar, 'Searching...', 'جارٍ البحث...'),
+    searchRoute: tr(ar, 'Search Route', 'مسار البحث'),
+    previewCorridor: tr(
+      ar,
+      'Preview the corridor before browsing rides.',
+      'عاين المسار قبل استعراض الرحلات.',
+    ),
+    clearFirstStep: tr(ar, 'Clear from the first step', 'واضح من الخطوة الأولى'),
+    popularRoutes: tr(ar, 'Popular routes', 'مسارات شائعة'),
+    showing: tr(ar, 'Showing', 'عرض'),
+    rides: tr(ar, 'rides', 'رحلات'),
+    ride: tr(ar, 'ride', 'رحلة'),
+    found: tr(ar, 'found', 'موجودة'),
+    cheapest: tr(ar, 'Cheapest', 'الأرخص'),
+    earliest: tr(ar, 'Earliest', 'الأبكر'),
+    topRated: tr(ar, 'Top Rated', 'الأعلى تقييماً'),
+    noRidesFound: tr(ar, 'No rides found', 'لا توجد رحلات'),
+    tryDifferent: tr(ar, 'Try a different route or date', 'جرّب مساراً أو تاريخاً مختلفاً'),
+    routeReady: tr(ar, 'Route readiness', 'جاهزية المسار'),
+    bookingReady: tr(ar, 'Booking readiness', 'جاهزية الحجز'),
+    recentSearches: tr(ar, 'Recent searches', 'عمليات البحث الأخيرة'),
+    recommendedForYou: tr(ar, 'Recommended for you', 'موصى بها لك'),
+    instantMatch: tr(ar, 'Instant match', 'مطابقة فورية'),
+    searchHelp: tr(
+      ar,
+      'Choose two different cities to unlock the best rides.',
+      'اختر مدينتين مختلفتين لعرض أفضل الرحلات.',
+    ),
+    dateHelp: tr(
+      ar,
+      'Date is optional, but it makes the results more precise.',
+      'التاريخ اختياري، لكن إضافته تجعل النتائج أدق.',
+    ),
+    bookedTrips: tr(ar, 'Your booked trips', 'رحلاتك المحجوزة'),
+    bookingSaved: tr(ar, 'This booking is now saved in your account.', 'تم حفظ الحجز في حسابك.'),
+    bookingStarted: tr(ar, 'Booking started', 'تم بدء الحجز'),
+    chooseDifferentCities: tr(
+      ar,
+      'Choose different origin and destination cities.',
+      'اختر مدينتين مختلفتين.',
+    ),
+    routeSummary: tr(ar, 'Route summary', 'ملخص المسار'),
+    seatsLeft: tr(ar, 'Seats left', 'مقاعد متبقية'),
+    routeIntensity: tr(ar, 'Route intensity', 'كثافة المسار'),
+    fallbackOptions: tr(ar, 'Fallback options', 'خيارات بديلة'),
+    clearDateFilter: tr(ar, 'Clear date filter', 'امسح فلتر التاريخ'),
+    openBusFallback: tr(ar, 'Open bus fallback', 'افتح الباصات لهذا المسار'),
+    nearbyCorridors: tr(ar, 'Nearby corridors', 'ممرات قريبة'),
+    seatsStillMove: tr(
+      ar,
+      'Seats move quickly on this corridor.',
+      'المقاعد تتحرك سريعاً على هذا المسار.',
+    ),
+    noTripsYet: tr(
+      ar,
+      'No trips reserved yet. Your first confirmed ride will appear here.',
+      'لا توجد رحلات محفوظة بعد. أول حجز سيظهر هنا.',
+    ),
+    bookingSavedBetter: tr(
+      ar,
+      'Seat saved with departure alerts and boarding details.',
+      'تم حفظ المقعد مع التنبيهات وتفاصيل الصعود.',
+    ),
+    busSupport: tr(
+      ar,
+      'If the ride fills up, open buses or try a nearby departure.',
+      'إذا امتلأت الرحلة، افتح الباصات أو جرّب موعداً قريباً.',
+    ),
+    sendPackageTitle: tr(ar, 'Send a Package with a Ride', 'أرسل طرداً مع رحلة'),
+    deliveryRoute: tr(ar, 'Delivery Route', 'مسار التوصيل'),
+    deliveryHint: tr(
+      ar,
+      'The route connects sender, rider, and receiver in one clear trip.',
+      'المسار يربط بين المرسل والراكب والمستلم في رحلة واحدة واضحة.',
+    ),
+    packageFriendly: tr(ar, 'Package-friendly', 'مناسب للطرود'),
+    weight: tr(ar, 'Weight', 'الوزن'),
+    note: tr(ar, 'Note', 'ملاحظة'),
+    notePh: tr(ar, 'Fragile, handle with care...', 'قابل للكسر، يرجى التعامل بحذر...'),
+    sendPackageBtn: tr(ar, 'Send package with ride', 'إرسال الطرد مع الرحلة'),
+    sentTitle: tr(ar, 'Package request sent to a rider', 'تم إرسال طلب الطرد للراكب!'),
+    sendAnother: tr(ar, 'Send Another', 'أرسل طرداً آخر'),
+    matchingDesc: tr(
+      ar,
+      "We'll match you with a verified rider heading to",
+      'سنطابقك مع راكب موثوق متجه إلى',
+    ),
   };
 }
 

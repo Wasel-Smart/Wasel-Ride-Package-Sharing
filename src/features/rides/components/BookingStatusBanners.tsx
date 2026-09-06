@@ -1,7 +1,7 @@
 import { CheckCircle2, Sparkles } from 'lucide-react';
-import { WaselButton } from '../../components/wasel-ui';
-import { C } from '../../utils/wasel-ds';
-import { DS, pill, r } from '../../pages/waselServiceShared';
+import { WaselButton } from '../../../components/wasel-ui';
+import { C } from '../../../utils/wasel-ds';
+import { DS, pill, r } from '../../../pages/waselServiceShared';
 
 export type BookingSuccessState = {
   status: 'pending_driver' | 'confirmed';

@@ -62,42 +62,44 @@ function AppRuntimeCoordinator() {
 
         if (typeof navigator !== 'undefined') {
           if (import.meta.env.DEV) {
-            console.log('[Wasel] Online:', navigator.onLine);
+            console.info('[Wasel] Online:', navigator.onLine);
           }
         }
 
-        cancelScheduledWork = scheduleWhenIdle(async () => {
-          if (cancelled) {return;}
+        cancelScheduledWork = scheduleWhenIdle(() => {
+          void (async () => {
+            if (cancelled) {return;}
 
-          try {
-            void initSentry();
-            initPerformanceMonitoring();
+            try {
+              void initSentry();
+              initPerformanceMonitoring();
 
-            validation.issues.forEach(issue => {
-              if (issue.severity === 'error') {
-                monitoringLogger.error(issue.message);
-              } else {
-                monitoringLogger.warning(issue.message);
+              validation.issues.forEach(issue => {
+                if (issue.severity === 'error') {
+                  monitoringLogger.error(issue.message);
+                } else {
+                  monitoringLogger.warning(issue.message);
+                }
+              });
+
+              warmUpServer();
+
+              const stopPolling = startAvailabilityPolling();
+
+              const stopEvents = domainEventBus.subscribeAll(event => {
+                trackDomainEvent(event);
+              });
+
+              cleanup = () => {
+                stopPolling?.();
+                stopEvents?.();
+              };
+            } catch (e) {
+              if (import.meta.env.DEV) {
+                console.warn('[Runtime deferred tasks failed]', e);
               }
-            });
-
-            warmUpServer();
-
-            const stopPolling = startAvailabilityPolling();
-
-            const stopEvents = domainEventBus.subscribeAll(event => {
-              trackDomainEvent(event);
-            });
-
-            cleanup = () => {
-              stopPolling?.();
-              stopEvents?.();
-            };
-          } catch (e) {
-            if (import.meta.env.DEV) {
-              console.warn('[Runtime deferred tasks failed]', e);
             }
-          }
+          })();
         });
       } catch (e) {
         if (import.meta.env.DEV) {

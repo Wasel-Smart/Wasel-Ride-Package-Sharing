@@ -77,21 +77,116 @@ type FallbackTrustUser = {
 function buildStatus<TMeta>(
   id: TrustStepId,
   state: TrustStepState,
-  detail: string,
   meta: TMeta,
-  options?: {
-    failureReason?: string | null;
-    updatedAt?: string | null;
-  },
+  options: { detail: string; failureReason?: string | null; updatedAt?: string | null },
 ): TrustStepStatus<TMeta> {
   return {
     id,
     state,
-    detail,
-    failureReason: options?.failureReason ?? null,
-    updatedAt: options?.updatedAt ?? null,
+    detail: options.detail,
+    failureReason: options.failureReason ?? null,
+    updatedAt: options.updatedAt ?? null,
     meta,
   };
+}
+
+function buildIdentityStep(user: FallbackTrustUser, verificationLevel: string): TrustStepStatus<IdentityStepMeta> {
+  const identityComplete =
+    Boolean(user.sanadVerified || user.verified) ||
+    verificationLevel === 'level_2' ||
+    verificationLevel === 'level_3';
+
+  const meta: IdentityStepMeta = { providerReference: null, documentReference: null };
+
+  if (identityComplete) {
+    return buildStatus('identity', 'completed', meta, { detail: 'Identity verification is complete.' });
+  }
+
+  const state = verificationLevel === 'level_1' ? 'in_progress' : 'not_started';
+  const detail =
+    verificationLevel === 'level_1'
+      ? 'Identity verification is still in progress.'
+      : 'Submit Sanad verification to continue.';
+  return buildStatus('identity', state, meta, { detail });
+}
+
+function buildEmailStep(user: FallbackTrustUser): TrustStepStatus<EmailStepMeta> {
+  const state = user.emailVerified ? 'completed' : user.email ? 'in_progress' : 'not_started';
+  const detail = user.emailVerified
+    ? 'Email is verified.'
+    : user.email
+      ? 'Email confirmation is still required.'
+      : 'Add an email address to continue.';
+  return buildStatus('email', state, { email: user.email ?? null }, { detail });
+}
+
+function buildPhoneStep(user: FallbackTrustUser): TrustStepStatus<PhoneStepMeta> {
+  const state = user.phoneVerified ? 'completed' : user.phone ? 'in_progress' : 'not_started';
+  const detail = user.phoneVerified
+    ? 'Phone number is verified.'
+    : user.phone
+      ? 'Send a verification code to confirm this phone number.'
+      : 'Add a phone number to receive a verification code.';
+  return buildStatus('phone', state, { phone: user.phone ?? null, expiresAt: null }, { detail });
+}
+
+function buildDriverDocsStep(
+  user: FallbackTrustUser,
+  verificationLevel: string,
+): TrustStepStatus<DriverDocumentsStepMeta> {
+  const isDriver = user.role === 'driver' || user.role === 'both';
+  const meta: DriverDocumentsStepMeta = { role: user.role, licenseNumber: null };
+
+  if (!isDriver) {
+    return buildStatus('driver_documents', 'not_started', meta, {
+      detail: 'Enable Driver mode before submitting driver documents.',
+    });
+  }
+
+  if (verificationLevel === 'level_3') {
+    return buildStatus('driver_documents', 'completed', meta, {
+      detail: 'Driver documents are approved.',
+    });
+  }
+
+  const state = verificationLevel === 'level_2' ? 'in_progress' : 'not_started';
+  const detail =
+    verificationLevel === 'level_2'
+      ? 'Driver documents are waiting for final review.'
+      : 'Submit driver license and compliance documents.';
+  return buildStatus('driver_documents', state, meta, { detail });
+}
+
+function buildWalletStep(user: FallbackTrustUser): TrustCenterStatus['steps']['walletStanding'] {
+  const walletStatus = resolveWalletStatusValue(user.walletStatus);
+
+  if (user.walletStatus === 'active') {
+    return buildStatus('wallet_standing', 'completed', { walletStatus: 'active' }, {
+      detail: 'Wallet standing is healthy.',
+    });
+  }
+
+  if (user.walletStatus === 'limited') {
+    return buildStatus('wallet_standing', 'in_progress', { walletStatus: 'limited' }, {
+      detail: 'Wallet standing is limited and may block some actions.',
+    });
+  }
+
+  return buildStatus('wallet_standing', 'failed', { walletStatus }, {
+    detail: `Wallet standing is ${user.walletStatus}.`,
+    failureReason:
+      user.walletStatus === 'closed'
+        ? 'Wallet is closed and must be restored before payouts can continue.'
+        : 'Wallet is frozen and needs review before payouts can continue.',
+  });
+}
+
+function resolveWalletStatusValue(
+  status: 'active' | 'limited' | 'frozen' | 'closed' | 'unavailable',
+): 'active' | 'limited' | 'frozen' | 'closed' {
+  if (status === 'closed') {return 'closed';}
+  if (status === 'frozen') {return 'frozen';}
+  return 'unavailable';
 }
 
 function pickNextStepId(steps: TrustCenterStatus['steps']): TrustCenterStatus['nextStepId'] {
@@ -108,123 +203,13 @@ function pickNextStepId(steps: TrustCenterStatus['steps']): TrustCenterStatus['n
 
 export function buildFallbackTrustCenterStatus(user: FallbackTrustUser): TrustCenterStatus {
   const verificationLevel = String(user.verificationLevel ?? 'level_0');
-  const identityComplete =
-    Boolean(user.sanadVerified || user.verified) ||
-    verificationLevel === 'level_2' ||
-    verificationLevel === 'level_3';
-
-  const identity = identityComplete
-    ? buildStatus('identity', 'completed', 'Identity verification is complete.', {
-        providerReference: null,
-        documentReference: null,
-      })
-    : buildStatus(
-        'identity',
-        verificationLevel === 'level_1' ? 'in_progress' : 'not_started',
-        verificationLevel === 'level_1'
-          ? 'Identity verification is still in progress.'
-          : 'Submit Sanad verification to continue.',
-        {
-          providerReference: null,
-          documentReference: null,
-        },
-      );
-
-  const email = buildStatus(
-    'email',
-    user.emailVerified ? 'completed' : user.email ? 'in_progress' : 'not_started',
-    user.emailVerified
-      ? 'Email is verified.'
-      : user.email
-        ? 'Email confirmation is still required.'
-        : 'Add an email address to continue.',
-    {
-      email: user.email ?? null,
-    },
-  );
-
-  const phone = buildStatus(
-    'phone',
-    user.phoneVerified ? 'completed' : user.phone ? 'in_progress' : 'not_started',
-    user.phoneVerified
-      ? 'Phone number is verified.'
-      : user.phone
-        ? 'Send a verification code to confirm this phone number.'
-        : 'Add a phone number to receive a verification code.',
-    {
-      phone: user.phone ?? null,
-      expiresAt: null,
-    },
-  );
-
-  const driverDocuments =
-    user.role === 'driver' || user.role === 'both'
-      ? verificationLevel === 'level_3'
-        ? buildStatus('driver_documents', 'completed', 'Driver documents are approved.', {
-            role: user.role,
-            licenseNumber: null,
-          })
-        : buildStatus(
-            'driver_documents',
-            verificationLevel === 'level_2' ? 'in_progress' : 'not_started',
-            verificationLevel === 'level_2'
-              ? 'Driver documents are waiting for final review.'
-              : 'Submit driver license and compliance documents.',
-            {
-              role: user.role,
-              licenseNumber: null,
-            },
-          )
-      : buildStatus(
-          'driver_documents',
-          'not_started',
-          'Enable Driver mode before submitting driver documents.',
-          {
-            role: user.role,
-            licenseNumber: null,
-          },
-        );
-
-  const walletStanding: TrustCenterStatus['steps']['walletStanding'] =
-    user.walletStatus === 'active'
-      ? buildStatus('wallet_standing', 'completed', 'Wallet standing is healthy.', {
-          walletStatus: 'active',
-        })
-      : user.walletStatus === 'limited'
-        ? buildStatus(
-            'wallet_standing',
-            'in_progress',
-            'Wallet standing is limited and may block some actions.',
-            {
-              walletStatus: 'limited',
-            },
-          )
-        : buildStatus(
-            'wallet_standing',
-            'failed',
-            `Wallet standing is ${user.walletStatus}.`,
-            {
-              walletStatus:
-                user.walletStatus === 'closed'
-                  ? 'closed'
-                  : user.walletStatus === 'frozen'
-                    ? 'frozen'
-                    : 'unavailable',
-            },
-            {
-              failureReason:
-                user.walletStatus === 'closed'
-                  ? 'Wallet is closed and must be restored before payouts can continue.'
-                  : 'Wallet is frozen and needs review before payouts can continue.',
-            },
-          );
 
   const steps = {
-    identity,
-    email,
-    phone,
-    driverDocuments,
-    walletStanding,
+    identity: buildIdentityStep(user, verificationLevel),
+    email: buildEmailStep(user),
+    phone: buildPhoneStep(user),
+    driverDocuments: buildDriverDocsStep(user, verificationLevel),
+    walletStanding: buildWalletStep(user),
   };
   const allSteps = Object.values(steps);
 

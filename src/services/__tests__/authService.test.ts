@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock Supabase client - returns proper promise-based responses
-const createMockQueryBuilder = ( response: any ) => ( {
+const createMockQueryBuilder = ( response: unknown ) => ( {
   from: vi.fn().mockReturnThis(),
   select: vi.fn().mockReturnThis(),
   eq: vi.fn().mockReturnThis(),

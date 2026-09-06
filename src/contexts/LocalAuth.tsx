@@ -48,14 +48,7 @@ export function useLocalAuth(): LocalAuthCtx {
     returnTo?: string;
   }) => {
     const { name, email, password, phone, returnTo } = input;
-    const result = await auth.signUp({
-      email,
-      password,
-      firstName: name.split(' ')[0] ?? name,
-      lastName: name.split(' ').slice(1).join(' ') || name.split(' ')[0] ?? name,
-      phone: phone ?? '',
-      returnTo,
-    });
+    const result = await auth.signUp(email, password, name, phone, returnTo);
     return {
       error: result.error ? String(result.error.message) : null,
       requiresEmailConfirmation: result.requiresEmailConfirmation,

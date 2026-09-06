@@ -137,18 +137,19 @@ export function addEventListenerWithCleanup<K extends keyof WindowEventMap>(
 
   return cleanup;
 }
+
+export function addEventListenerWithCleanupDocument<K extends keyof DocumentEventMap>(
   target: Document,
   type: K,
   listener: (event: DocumentEventMap[K]) => void,
-  options?: boolean | AddEventListenerOptions,
-  name?: string,
+  options?: AddEventListenerOptionsWithName,
 ): CleanupFn {
   const wrappedListener = (event: DocumentEventMap[K]) => {
     try {
       listener(event);
     } catch (error) {
       logger.error('Document event listener failed', {
-        name,
+        name: options?.name,
         type,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -161,8 +162,8 @@ export function addEventListenerWithCleanup<K extends keyof WindowEventMap>(
     target.removeEventListener(type, wrappedListener, options);
   };
 
-  if (name) {
-    return cleanupRegistry.register(name, cleanup);
+  if (options?.name) {
+    return cleanupRegistry.register(options.name, cleanup);
   }
 
   return cleanup;
