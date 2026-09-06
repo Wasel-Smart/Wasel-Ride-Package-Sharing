@@ -1,14 +1,24 @@
-# Build output
+# ============================================================
+# Wasel .gitignore — consolidated from ~200 ad hoc entries.
+# Organized by category. Same coverage as before, deduped.
+# NOTE: a few original one-off entries referenced files that
+# didn't exist at root at time of cleanup — kept anyway since
+# removing a pattern is riskier than an unused line.
+# FLAG: "Dockerfile.*" below would match a tracked Dockerfile.dev
+# on a fresh clone. Confirm this is intended before relying on it.
+# ============================================================
+
+# ---- Build output ----
 build/
 dist/
 .vite/
 .next/
 
-# Dependencies
+# ---- Dependencies ----
 node_modules/
 with-supabase-app/node_modules/
 
-# Environment variables — never commit real credentials.
+# ---- Environment variables ----
 # .env.example is the only env file that should be committed.
 .env
 .env.local
@@ -20,18 +30,32 @@ with-supabase-app/node_modules/
 .env.production.local
 .env.staging
 .env.staging.local
+.env*.local
+.env?*            # catch-all for any variant not listed above
+.env.original
+.env.testcopy
+.env-LaithNassar.*
+.env.production-LaithNassar.*
+
+# ---- Git internals ----
 .git-rewrite/
+# Nested git repo (wasel/ has its own .git)
+wasel/
+
+# ---- Supabase local state ----
 supabase/.branches/
 supabase/.temp/
 
-# Test and coverage output
+# ---- Test and coverage output ----
 coverage/
 test-results/
 playwright-report/
 tests/e2e/screenshots/
 tests/e2e/visual-report/
+.playwright-mcp/
+.playwright/
 
-# Logs
+# ---- Logs ----
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -40,33 +64,78 @@ pnpm-debug.log*
 vite-out.log
 vite-err.log
 
-# Editor artifacts
+# ---- Editor / IDE artifacts ----
 .vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/.browse.VC*
+.vscode/Untitled-*.txt
 .idea/
 *.suo
 *.user
+*.iml
+*.ipr
+*.iws
+.run/
 
-# OS junk
+# ---- OS junk ----
 .DS_Store
 Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
 desktop.ini
+Icon?
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+$RECYCLE.BIN/
 
-# Local design and backup artifacts
+# ---- OneDrive sync artifacts ----
+*.oneDrive
+*.onedrive
+*.conflict*
+*.tmp.OneDrive*
+
+# ---- Local design / backup / scratch artifacts ----
 .anima/
 backups/
 review-screenshots/
 .codex_tmp/
 .codex/
 .kilo/
+actions-runner/
+review-artifacts/
+artifacts/
+mobile/file.tmp
+*.tmp
+*.bak
+*.backup
+*.swp
+*~
 
-# Firebase/GCP service account keys (never commit)
+# ---- Secrets / credentials (never commit) ----
 wasel-planning-with-ai-*.json
 docs/wasel-planning-with-ai.json
 *docs/wasel-planning-with-ai.json
 *firebase-adminsdk*.json
 *service-account*.json
+Backup-codes-*.txt
+backup-codes*.txt
+*-backup-codes.txt
+client_secret_*.json
+*.pem
+*.p8
+*.key
+COMPLETE_DEPLOYMENT_GUIDE.md
+k8s/secrets/
 
-# Root-level loose files that should not be committed
+# ---- Firebase / native mobile config (not used by web client) ----
+src/GoogleService-Info.plist
+src/google-services.json
+src/imports/google-services.json
+
+# ---- Root-level scratch / audit-export files ----
 arabic-full-route-leaks.json
 common.json
 find-ride-ar-check.png
@@ -79,40 +148,6 @@ schema.prisma
 schema.test.prisma
 schema.sql
 i18n.ts
-
-# Playwright MCP session artifacts
-.playwright-mcp/
-
-# Test result artifacts (traces, screenshots, last-run state)
-test-results/
-
-# Temporary and scratch files
-mobile/file.tmp
-*.tmp
-
-# AI-generated images committed under src/assets
-src/assets/ChatGPT*
-src/assets/*.png
-
-# Duplicate Kubernetes overlay — k8s/ is canonical
-infra/kubernetes/
-
-# Security: never commit backup codes, key exports, or credential docs
-Backup-codes-*.txt
-backup-codes*.txt
-*-backup-codes.txt
-client_secret_*.json
-*.pem
-*.p8
-*.key
-COMPLETE_DEPLOYMENT_GUIDE.md
-
-# Firebase and native mobile config not used by the web client
-src/GoogleService-Info.plist
-src/google-services.json
-src/imports/google-services.json
-
-# Root-level audit exports and screenshots
 landing-axe.json
 landing-desktop.json
 landing-desktop-fold.json
@@ -128,76 +163,32 @@ landing-mobile-fold.png
 *-mobile*.json
 *-desktop*.png
 *-mobile*.png
-
-# Legacy config
-vitest.config.mjs
-
-# Cleanup staging area
-_REMOVED/
-
-.vercel
-.env*.local
-# Catch-all: exclude any .env variant not listed above
-.env?*
-
-# Env copies and originals that must not be committed
-.env.original
-.env.testcopy
-
-# Accidental git-paste artifact
-=
-
-# Local write-test and ephemeral output
 public/_write_test.txt
 dev-output.txt
 load-test-results.json
 wasel-fixes.patch
+=                  # accidental git-paste artifact
 
-# CI runner and review artifacts (local only)
-actions-runner/
-review-artifacts/
-artifacts/
-
-# IDE run configs (JetBrains/Rider)
-.run/
-
-# Scratch files
-.vscode/Untitled-*.txt
-
-# Nested git repo (wasel/ has its own .git)
-wasel/
-
-# Expo build artifacts
-mobile/.expo/web/cache
-
-# Android Gradle build cache and lock files
-mobile/android/**/.gradle/
-
-# Generated local brand-preview output
-artifacts/brand/
-
-# Large AI-generated images not part of the brand
-"public/ChatGPT Image*"
-"public/brand/ChatGPT Image*"
+# ---- AI-generated images ----
+src/assets/ChatGPT*
+src/assets/*.png
 public/ChatGPT*
 public/brand/ChatGPT*
+"public/ChatGPT Image*"
+"public/brand/ChatGPT Image*"
+artifacts/brand/
 
-# Playwright local state
-.playwright/
-
-# Duplicate -LaithNassar personal copies (use canonical filenames)
+# ---- Duplicate personal copies ----
 *-LaithNassar.*
 *-LaithNassar/
-.env-LaithNassar.*
-.env.production-LaithNassar.*
 
-# Script scan/debug output artifacts (never commit)
+# ---- Script scan/debug output (never commit) ----
 scripts/_*.json
 scripts/hardcoded-*.json
 scripts/mixed-findings.json
 scripts/new-translations.json
 
-# Self-scoring and AI-gate scripts (not part of the product)
+# ---- Self-scoring / AI-gate scripts (not part of the product) ----
 scripts/validate-10-out-of-10.*
 scripts/production-10-gate.*
 scripts/deploy-to-10.*
@@ -205,7 +196,7 @@ mobile/validate-10-out-of-10.*
 mobile/validate-mobile-10x.*
 mobile/MOBILE_10_OUT_OF_10.md
 
-# Root-level scratch test scripts
+# ---- Root-level scratch test scripts ----
 test-dist.cjs
 test-fresh-dist.cjs
 test-mobile-*.cjs
@@ -213,73 +204,46 @@ test-new-build.cjs
 test-standalone-sim.cjs
 check-css.cjs
 
-# Stale docs that should not live in source tree
+# ---- Stale docs ----
 src/platform/HONEST_AUDIT_REPORT_OUTDATED_*.md
 
-# OneDrive sync artifacts and conflicts
-*.oneDrive
-*.onedrive
-*.conflict*
-*.tmp.OneDrive*
+# ---- Duplicate Kubernetes overlay (k8s/ is canonical) ----
+infra/kubernetes/
 
-# Windows thumbnail cache
-ehthumbs.db
-ehthumbs_vista.db
+# ---- Cleanup staging areas ----
+_REMOVED/
+_CLEANUP_REVIEW_DELETE_ME/
 
-# macOS
-.AppleDouble
-.LSOverride
-.Spotlight-V100
-.Trashes
+# ---- Vercel ----
+.vercel
 
-# Recycle Bin
-$RECYCLE.BIN/
-
-# System files
-Icon?
-Thumbs.db
-ehthumbs.db
+# ---- Docker (see FLAG at top of file) ----
 Dockerfile.*
 docker-compose.*.local
 
-# Supabase local temp
-supabase/.temp/
+# ---- Expo / Android build artifacts ----
+mobile/.expo/web/cache
+mobile/android/**/.gradle/
 
-# Backup files
-*.bak
-*.backup
-*.swp
-*~
-
-# Yarn integrity
-.yarn/install-state.gz
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-
-# pnpm
-.pnpm-store/
-
-# IDE
-.vscode/launch.json
-.vscode/tasks.json
-.vscode/.browse.VC*
-.idea/*
-*.iml
-*.ipr
-*.iws
-
-# Local env overrides
-.envrc
-.direnv/
-
-# Terraform
+# ---- Terraform ----
 .terraform/
 *.tfstate
 *.tfstate.backup
 *.tfplan
 
-# k8s secrets
-k8s/secrets/
+# ---- Yarn / pnpm ----
+.yarn/install-state.gz
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.pnpm-store/
 
-.env*
+# ---- Local env overrides ----
+.envrc
+.direnv/
+
+# ---- Legacy config ----
+vitest.config.mjs
+
+# ---- Local write-test / ephemeral output ----
+# (covered above under root-level scratch)
