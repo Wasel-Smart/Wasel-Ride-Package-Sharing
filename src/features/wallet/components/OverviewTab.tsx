@@ -227,7 +227,7 @@ export function OverviewTab({
             ) : (
               <Button
                 size="sm"
-                onClick={onSubscribe}
+                onClick={() => { void onSubscribe(); }}
                 disabled={!canSubscribe || actionLoading}
                 style={{ background: WaselColors.bronze }}
               >
@@ -246,7 +246,7 @@ export function OverviewTab({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onSetTab('transactions')}
+              onClick={() => { void onSetTab(); }}
               className="text-xs text-primary"
             >
               {t.viewAll} <ChevronRight className="w-3 h-3 ml-1" />

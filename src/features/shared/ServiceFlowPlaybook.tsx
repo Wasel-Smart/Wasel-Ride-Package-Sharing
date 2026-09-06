@@ -399,7 +399,7 @@ export function ServiceFlowPlaybook({
             <button
               key={serviceKey}
               type="button"
-              onClick={() => setActiveService(serviceKey)}
+              onClick={() => { void setActiveService(serviceKey); }}
               style={{
                 minHeight: 40,
                 padding: '0 14px',

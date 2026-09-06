@@ -15,7 +15,7 @@ export function CorridorBetaCard({ corridor, ar, onNavigate }: CorridorBetaCardP
   return (
     <motion.button
       type="button"
-      onClick={() => onNavigate(corridor.path, 'corridor_beta_card')}
+      onClick={() => { void onNavigate(corridor.path, 'corridor_beta_card'); }}
       style={{
         minHeight: 224,
         textAlign: 'left',

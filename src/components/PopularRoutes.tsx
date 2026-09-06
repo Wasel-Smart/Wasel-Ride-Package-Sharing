@@ -229,7 +229,7 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
                     <ArrowUpRight className="w-4 h-4" />
                   </Button>
                   <Button
-                    onClick={() => openSupply(route)}
+                    onClick={() => { void openSupply(route); }}
                     variant="outline"
                     className="w-full border-primary/30 text-primary hover:bg-primary/5"
                     size="sm"
@@ -257,14 +257,14 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
               </p>
               <div className="flex flex-col justify-center gap-4 sm:flex-row">
                 <Button
-                  onClick={handleGetStarted}
+                  onClick={() => { void handleGetStarted(); }}
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                   size="lg"
                 >
                   {isRTL ? 'استكشف الرحلات الحية' : 'Explore live ride supply'}
                 </Button>
                 <Button
-                  onClick={() => openSupply(popularRoutes[0])}
+                  onClick={() => { void openSupply(popularRoutes[0]); }}
                   variant="outline"
                   className="border-primary text-primary hover:bg-primary/5"
                   size="lg"

@@ -180,7 +180,7 @@ export function BusBookingForm({
               <button
                 key={time}
                 type="button"
-                onClick={() => setSelectedDeparture(time)}
+                onClick={() => { void setSelectedDeparture(time); }}
                 style={{
                   height: 36,
                   padding: '0 12px',
@@ -390,7 +390,7 @@ export function BusBookingForm({
         </div>
         <button
           data-testid="bus-confirm-booking"
-          onClick={handleBusBooking}
+          onClick={() => { void handleBusBooking(); }}
           disabled={bookingDisabled}
           type="button"
           style={{
@@ -478,7 +478,7 @@ export function BusBookingForm({
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
               <button
                 type="button"
-                onClick={openBusSupport}
+                onClick={() => { void openBusSupport(); }}
                 style={{
                   height: 38,
                   padding: '0 14px',

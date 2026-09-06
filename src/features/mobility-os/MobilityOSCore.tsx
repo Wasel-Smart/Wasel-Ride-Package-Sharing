@@ -401,7 +401,7 @@ export default function MobilityOSCore() {
                 key={projection.corridor.id}
                 data-testid={`mobility-os-corridor-${projection.corridor.id}`}
                 type="button"
-                onClick={() => setSelectedCorridorId(projection.corridor.id)}
+                onClick={() => { void setSelectedCorridorId(projection.corridor.id); }}
                 style={{
                   width: '100%',
                   textAlign: 'left',
@@ -637,7 +637,7 @@ export default function MobilityOSCore() {
         <button
           data-testid="mobility-os-booking-submit"
           type="button"
-          onClick={submitBooking}
+          onClick={() => { void submitBooking(); }}
           disabled={!selectedAvailability}
           style={{
             marginTop: 16,

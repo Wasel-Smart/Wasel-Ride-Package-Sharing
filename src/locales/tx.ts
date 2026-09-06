@@ -1,4 +1,4 @@
-import { translations, type Language, type TranslationNode } from './translations';
+﻿import { translations, type Language, type TranslationNode } from './translations';
 
 let currentLang: Language = 'ar';
 
@@ -11,7 +11,7 @@ export function getCurrentLang(): Language {
 }
 
 // Chunk objects (see ./chunks/*) are merged into a single flat table per
-// language in translations.ts — the chunk name (e.g. "waselAuth", "common")
+// language in translations.ts â€” the chunk name (e.g. "waselAuth", "common")
 // is organisational only and is NOT a nesting level in the merged table.
 // Call sites across the app still address strings as "namespace.key"
 // (e.g. tx('waselAuth.one_identity'), tx('common.email')), so resolution
@@ -31,7 +31,9 @@ function lookup(key: string, lang: Language): string | undefined {
     const flatTable = translations[lang];
     const tail = keys[keys.length - 1];
     const flatValue =
-      typeof flatTable === 'object' && flatTable !== null ? flatTable[tail] : undefined;
+      typeof flatTable === 'object' && flatTable !== null
+        ? (flatTable as Record<string, unknown>)[tail!]
+        : undefined;
     if (typeof flatValue === 'string') {return flatValue;}
   }
 
@@ -53,3 +55,4 @@ function interpolate(template: string, params?: Record<string, string | number>)
     params[name] !== undefined ? String(params[name]) : `{{${name}}}`,
   );
 }
+

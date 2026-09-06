@@ -85,9 +85,6 @@ const NotFound = memo(() => {
   );
 });
 
-const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'));
-const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage'));
-
 const isInvalidHookCallError = (message: string): boolean =>
   /invalid hook call/i.test(message);
 
@@ -289,7 +286,7 @@ const buildMainChildren = (): RouteObject[] => [
   // Each surface below is gated by its own permission — do not collapse
   // these back into one shared ProtectedOutlet, since roles differ per path
   // (e.g. a 'corporate' user must not reach 'moderation').
-  {
+   {
     Component: ProtectedOutlet,
     require: 'corporate:read',
     children: [
@@ -298,7 +295,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  },
+  } as any,
   {
     Component: ProtectedOutlet,
     require: 'school:read',
@@ -308,7 +305,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  },
+  } as any,
   {
     Component: ProtectedOutlet,
     require: 'operations:read',
@@ -323,7 +320,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  },
+  } as any,
   {
     Component: ProtectedOutlet,
     require: 'analytics:read',
@@ -333,7 +330,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  },
+  } as any,
   {
     Component: ProtectedOutlet,
     require: 'trust:moderate',
@@ -343,7 +340,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  },
+  } as any,
   // ── Admin ────────────────────────────────────────────────────────────────
   {
     Component: ProtectedOutlet,
@@ -351,10 +348,10 @@ const buildMainChildren = (): RouteObject[] => [
     children: [
       {
         path: 'admin',
-        lazy: lazy(() => import('./features/admin/AdminDashboardPage'), 'AdminDashboardPage'),
+        lazy: lazy(() => import('./features/admin/AdminDashboardPage')),
       },
     ],
-  },
+  } as any,
 
   // ── Wallet ────────────────────────────────────────────────────────────────
   {
@@ -377,16 +374,16 @@ const buildMainChildren = (): RouteObject[] => [
   },
 
   // ── Legal ─────────────────────────────────────────────────────────────────
-  { path: 'privacy', lazy: lazy(() => import('./features/legal/PrivacyPolicy'), 'PrivacyPolicy') },
-  { path: 'terms', lazy: lazy(() => import('./features/legal/TermsOfService'), 'TermsOfService') },
-  { path: 'security', lazy: lazy(() => import('./features/legal/SecurityPage'), 'SecurityPage') },
-  { path: 'support', lazy: lazy(() => import('./features/support/SupportPage'), 'SupportPage') },
+  { path: 'privacy', lazy: lazy(() => import('./features/legal/PrivacyPolicy')) },
+  { path: 'terms', lazy: lazy(() => import('./features/legal/TermsOfService')) },
+  { path: 'security', lazy: lazy(() => import('./features/legal/SecurityPage')) },
+  { path: 'support', lazy: lazy(() => import('./features/support/SupportPage')) },
   { path: 'legal/privacy', Component: () => <RedirectTo to="/app/privacy" /> },
   { path: 'legal/terms', Component: () => <RedirectTo to="/app/terms" /> },
 
   // ── Error pages ────────────────────────────────────────────────────────────
-  { path: '403', Component: ForbiddenPage },
-  { path: '500', Component: ServerErrorPage },
+  { path: '403', lazy: lazy(() => import('./pages/ForbiddenPage').then(m => ({ Component: m.ForbiddenPage }))) },
+  { path: '500', lazy: lazy(() => import('./pages/ServerErrorPage').then(m => ({ Component: m.ServerErrorPage }))) },
   { path: 'auth404', Component: () => <RedirectTo to="/app/auth" /> },
 
   // ── 404 catch-all ─────────────────────────────────────────────────────────

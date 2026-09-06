@@ -161,7 +161,7 @@ export function FindRideTripDetailModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        onClick={onClose}
+        onClick={() => { void onClose(); }}
         style={{
           position: 'fixed',
           inset: 0,
@@ -221,7 +221,7 @@ export function FindRideTripDetailModal({
               >
                 {tx('trips.tripDetails')}</h2>
               <WaselButton
-                onClick={onClose}
+                onClick={() => { void onClose(); }}
                 variant="ghost"
                 size="sm"
                 aria-label={tx('findRideTripDetailModal.close_trip_details')}

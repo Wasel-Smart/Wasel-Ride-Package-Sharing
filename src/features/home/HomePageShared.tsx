@@ -170,7 +170,7 @@ export function SectionHeader({
       {action && onAction ? (
         <button
           type="button"
-          onClick={onAction}
+          onClick={() => { void onAction(); }}
           className="wasel-home-section-action"
         >
           {action}
@@ -206,7 +206,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
       <button
         type="button"
-        onClick={() => setOpen(value => !value)}
+        onClick={() => { void setOpen(value => !value); }}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -248,7 +248,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
             <button
               type="button"
               key={code}
-              onClick={() => select(code)}
+              onClick={() => { void select(code); }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -296,7 +296,7 @@ export function SOSButton({ ar }: { ar: boolean }) {
   return (
     <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
       <motion.button
-        onClick={handleSOS}
+        onClick={() => { void handleSOS(); }}
         whileTap={{ scale: 0.97 }}
         style={{
           height: 42,
@@ -329,7 +329,7 @@ export function SOSButton({ ar }: { ar: boolean }) {
       {confirm && !pressed ? (
         <button
           type="button"
-          onClick={() => setConfirm(false)}
+          onClick={() => { void setConfirm(false); }}
           style={{
             background: 'none',
             border: 'none',
@@ -446,7 +446,7 @@ export function TrustScoreCard({
         </div>
         <button
           type="button"
-          onClick={() => setExpanded(value => !value)}
+          onClick={() => { void setExpanded(value => !value); }}
           style={{
             height: 34,
             padding: '0 12px',

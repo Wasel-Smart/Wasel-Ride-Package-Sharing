@@ -43,7 +43,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => { void setOpen(o => !o); }}
         title={ar ? 'غيّر العملة' : 'Change currency'}
         style={{
           height: 34,
@@ -113,7 +113,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
           {popular.map(code => (
             <button
               key={code}
-              onClick={() => handleSelect(code)}
+              onClick={() => { void handleSelect(code); }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -146,7 +146,7 @@ export function OnlineToggle({ ar }: { ar: boolean }) {
   const [online, setOnline] = useState(false);
   return (
     <button
-      onClick={() => setOnline(o => !o)}
+      onClick={() => { void setOnline(o => !o); }}
       title={
         online ? (ar ? 'تحويل إلى غير متصل' : 'Go offline') : ar ? 'تحويل إلى متصل' : 'Go online'
       }
@@ -207,7 +207,7 @@ export function LangToggle() {
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => { void setOpen(o => !o); }}
         title={ar ? 'غيّر اللغة' : 'Change language'}
         style={{
           height: 34,

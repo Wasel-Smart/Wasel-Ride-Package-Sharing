@@ -363,7 +363,7 @@ export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: Ac
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={() => { void onClick(); }}
       disabled={!clickable}
       style={{
         width: '100%',
@@ -446,7 +446,7 @@ export function DataRow({ label, value, sub, icon, badge, onClick, danger = fals
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={() => { void onClick(); }}
       disabled={!onClick}
       style={{
         width: '100%',

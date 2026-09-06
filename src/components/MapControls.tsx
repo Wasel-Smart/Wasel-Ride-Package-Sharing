@@ -105,6 +105,7 @@ function TrackingButton({ isTracking, startTracking, stopTracking, centerOnMe, t
   centerOnMe: () => void;
   tx: (key: string) => string;
 }) {
+  void centerOnMe;
   const baseStyle = {
     ...CONTROL_BUTTON_BASE,
     minHeight: 44,
@@ -165,7 +166,7 @@ function LayerControls({ mosquesOn, toggleMosques, radarsOn, toggleRadars, tx }:
         style={{ ...CONTROL_PANEL_STYLE, borderRadius: radii['2xl'] }}
       >
         <button
-          onClick={toggleMosques}
+          onClick={() => { void toggleMosques(); }}
           style={wideControlButtonStyle(mosquesOn)}
           title={tx('waselMap.mosques')}
         >
@@ -174,7 +175,7 @@ function LayerControls({ mosquesOn, toggleMosques, radarsOn, toggleRadars, tx }:
         </button>
         <div style={{ width: 1, height: 24, background: colors.border.light }} />
         <button
-          onClick={toggleRadars}
+          onClick={() => { void toggleRadars(); }}
           style={wideControlButtonStyle(radarsOn)}
           title={tx('waselMap.radars')}
         >
@@ -227,7 +228,7 @@ export function MapControls({
       <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
         <div className="flex flex-col overflow-hidden" style={{ ...CONTROL_PANEL_STYLE, borderRadius: radii['2xl'] }}>
           {(['roadmap', 'satellite', 'terrain'] as const).map(type => (
-            <button key={type} onClick={() => changeMapType(type)} style={mapTypeButtonStyle(mapType === type)}>
+            <button key={type} onClick={() => { void changeMapType(type); }} style={mapTypeButtonStyle(mapType === type)}>
               {type === 'roadmap' ? (
                 <Map className="w-3.5 h-3.5" />
               ) : type === 'satellite' ? (
@@ -241,16 +242,16 @@ export function MapControls({
         </div>
 
         <div className="flex flex-col overflow-hidden" style={{ ...CONTROL_PANEL_STYLE, borderRadius: radii['2xl'] }}>
-          <button onClick={zoomIn} style={compactControlButtonStyle()} aria-label="Zoom in">
+          <button onClick={() => { void zoomIn(); }} style={compactControlButtonStyle()} aria-label="Zoom in">
             <ZoomIn className="w-4 h-4" />
           </button>
           <div style={{ height: 1, background: colors.border.light }} />
-          <button onClick={zoomOut} style={compactControlButtonStyle()} aria-label="Zoom out">
+          <button onClick={() => { void zoomOut(); }} style={compactControlButtonStyle()} aria-label="Zoom out">
             <ZoomOut className="w-4 h-4" />
           </button>
         </div>
 
-        <button onClick={toggleFullscreen} style={compactControlButtonStyle(isFullscreen)} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
+        <button onClick={() => { void toggleFullscreen(); }} style={compactControlButtonStyle(isFullscreen)} aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}>
           {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
         </button>
       </div>
@@ -270,7 +271,7 @@ export function MapControls({
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
         {isTracking && (
           <button
-            onClick={centerOnMe}
+            onClick={() => { void centerOnMe(); }}
             style={compactControlButtonStyle()}
             title={tx('waselMap.center_on_my_location')}
             aria-label="Center on my location"

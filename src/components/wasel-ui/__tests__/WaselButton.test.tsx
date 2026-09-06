@@ -10,7 +10,7 @@ describe('WaselButton', () => {
 
   it('calls onClick when clicked', () => {
     const onClick = vi.fn();
-    render(<WaselButton onClick={onClick}>Click</WaselButton>);
+    render(<WaselButton onClick={() => { void onClick(); }}>Click</WaselButton>);
     fireEvent.click(screen.getByText('Click'));
     expect(onClick).toHaveBeenCalledTimes(1);
   });

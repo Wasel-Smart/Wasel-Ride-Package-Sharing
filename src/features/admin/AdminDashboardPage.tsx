@@ -142,7 +142,7 @@ export function AdminDashboardPage() {
               {(Object.keys(RANGE_LABELS) as Range[]).map(r => (
                 <button
                   key={r}
-                  onClick={() => setRange(r)}
+                  onClick={() => { void setRange(r); }}
                   style={{
                     padding: `${SPACE[2]} ${SPACE[4]}`,
                     background: range === r ? C.cyan : 'transparent',

@@ -144,14 +144,14 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
               type="button"
               variant="primary"
               iconEnd={ar ? <ArrowLeft size={15} /> : <ArrowRight size={15} />}
-              onClick={() => onNavigate('/auth?tab=register', 'proof_register')}
+              onClick={() => { void onNavigate('/auth?tab=register', 'proof_register'); }}
             >
               {ar ? 'أنشئ حسابا موثوقا' : 'Create trusted account'}
             </WaselButton>
             <WaselButton
               type="button"
               variant="outline"
-              onClick={() => onNavigate('/app/security', 'proof_security')}
+              onClick={() => { void onNavigate('/app/security', 'proof_security'); }}
               style={{ background: C.elevated, color: C.text }}
             >
               {ar ? 'راجع الأمان' : 'Review security'}
@@ -294,7 +294,7 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
           type="button"
           variant="outline"
           iconEnd={ar ? <ArrowLeft size={14} /> : <ArrowRight size={14} />}
-          onClick={() => onNavigate('/find-ride?demo=1', 'demo_start_footer')}
+          onClick={() => { void onNavigate('/find-ride?demo=1', 'demo_start_footer'); }}
           style={{ background: C.card, color: C.text }}
         >
           {ar ? 'جرب البداية الموجهة' : 'Try the guided start'}
@@ -442,7 +442,7 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
               <button
                 type="button"
                 key={card.key}
-                onClick={() => onNavigate(card.path, 'outcome_corridor')}
+                onClick={() => { void onNavigate(card.path, 'outcome_corridor'); }}
                 style={{
                   minHeight: 72,
                   textAlign: 'left',

@@ -278,7 +278,7 @@ export function NotificationCenter() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={restoreArchivedNotifications}
+                  onClick={() => { void restoreArchivedNotifications(); }}
                   className="border-white/15 bg-white/5 text-white hover:bg-white/10"
                 >
                   {labels.restoreArchived}
@@ -346,7 +346,7 @@ export function NotificationCenter() {
                 key={entry.value}
                 variant={filter === entry.value ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setFilter(entry.value)}
+                onClick={() => { void setFilter(entry.value); }}
                 className={
                   filter === entry.value
                     ? 'bg-primary text-primary-foreground'

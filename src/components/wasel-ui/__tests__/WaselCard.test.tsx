@@ -22,7 +22,7 @@ describe('WaselCard', () => {
   it('forwards additional props to the root element', () => {
     const onClick = vi.fn();
     const { container } = render(
-      <WaselCard onClick={onClick} data-testid="my-card">
+      <WaselCard onClick={() => { void onClick(); }} data-testid="my-card">
         Clickable
       </WaselCard>,
     );

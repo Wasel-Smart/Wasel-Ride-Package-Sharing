@@ -169,7 +169,7 @@ export function WalletDashboard() {
             <>
               {walletCapabilities.topUp ? (
                 <Button
-                  onClick={() => setShowTopUp(true)}
+                  onClick={() => { void setShowTopUp(true); }}
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   {t.topUp}
@@ -177,7 +177,7 @@ export function WalletDashboard() {
               ) : null}
               <Button
                 variant="outline"
-                onClick={handleRefresh}
+                onClick={() => { void handleRefresh(); }}
                 disabled={refreshing}
                 className="border-white/15 bg-white/5 text-white hover:bg-white/10"
               >
@@ -367,7 +367,7 @@ export function WalletDashboard() {
                       <p className="text-muted-foreground text-sm">{t.noRewards}</p>
                       <p className="text-xs text-muted-foreground mt-1">{t.rewardsEmptyHint}</p>
                       <button
-                        onClick={() => setTab('overview')}
+                        onClick={() => { void setTab(); }}
                         style={{
                           marginTop: 12,
                           padding: '8px 18px',
@@ -412,7 +412,7 @@ export function WalletDashboard() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleClaimReward(r.id)}
+                              onClick={() => { void handleClaimReward(r.id); }}
                               disabled={!walletCapabilities.rewardClaim}
                               className="text-xs border-purple-500/30 text-purple-400 hover:bg-purple-500/10 disabled:opacity-60"
                             >

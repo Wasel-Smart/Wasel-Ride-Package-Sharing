@@ -504,7 +504,7 @@ export function FindRidePage() {
                 {bookedRideIds.size} active booking{bookedRideIds.size > 1 ? 's' : ''} in progress
               </span>
             </div>
-            <WaselButton onClick={openMyTrips} variant="outline" size="sm">
+            <WaselButton onClick={() => { void openMyTrips(); }} variant="outline" size="sm">
               View in My Trips
             </WaselButton>
           </div>
@@ -519,7 +519,7 @@ export function FindRidePage() {
           ).map(([key, label]) => (
             <WaselButton
               key={key}
-              onClick={() => setTab(key)}
+              onClick={() => { void setTab(key); }}
               variant={tab === key ? 'primary' : 'outline'}
               style={{
                 flex: 1,
@@ -590,7 +590,7 @@ export function FindRidePage() {
                   <WaselInput
                     type="date"
                     value={date}
-                    onChange={setDate}
+                    onChange={() => { void setDate(); }}
                     min={new Date().toISOString().split('T')[0]}
                     icon={<Calendar size={15} color={DS.muted} />}
                     style={{ height: 46, colorScheme: 'dark' }}
@@ -619,7 +619,7 @@ export function FindRidePage() {
               )}
 
               <WaselButton
-                onClick={handleSearch}
+                onClick={() => { void handleSearch(); }}
                 data-testid="find-ride-search"
                 fullWidth
                 size="lg"
@@ -829,7 +829,7 @@ export function FindRidePage() {
                 ).map(([key, label]) => (
                   <WaselButton
                     key={key}
-                    onClick={() => setSort(key)}
+                    onClick={() => { void setSort(key); }}
                     variant={sort === key ? 'primary' : 'outline'}
                     size="sm"
                   >
@@ -892,7 +892,7 @@ export function FindRidePage() {
                       </WaselButton>
                     </div>
                     <WaselButton
-                      onClick={handleDemandCapture}
+                      onClick={() => { void handleDemandCapture(); }}
                       fullWidth
                       variant="outline"
                       style={{
@@ -923,7 +923,7 @@ export function FindRidePage() {
                           {nearbyCorridors.map(ride => (
                             <WaselButton
                               key={ride.id}
-                              onClick={() => handleOpenRide(ride)}
+                              onClick={() => { void handleOpenRide(ride); }}
                               variant="outline"
                               style={{
                                 textAlign: 'left',
@@ -1272,7 +1272,7 @@ export function FindRidePage() {
                               Search route
                             </WaselButton>
                             <WaselButton
-                              onClick={() => handleSaveReminder(suggestion.corridorId)}
+                              onClick={() => { void handleSaveReminder(suggestion.corridorId); }}
                               variant={alreadySaved ? 'gold' : 'primary'}
                               size="sm"
                             >
@@ -1363,7 +1363,7 @@ export function FindRidePage() {
                     return (
                       <WaselButton
                         key={ride.id}
-                        onClick={() => handleOpenRide(ride)}
+                        onClick={() => { void handleOpenRide(ride); }}
                         variant="outline"
                         style={{
                           textAlign: 'left',

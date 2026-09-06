@@ -47,7 +47,7 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
       label={label}
       value={value}
       icon={icon}
-      onClick={onClick}
+      onClick={() => { void onClick(); }}
       danger={danger}
       badge={badge}
     />
@@ -145,5 +145,5 @@ export interface QuickActionCardProps {
 }
 
 export function QuickActionCard({ label, detail, icon, color, onClick }: QuickActionCardProps) {
-  return <ActionTile label={label} detail={detail} icon={icon} accent={color} onClick={onClick} />;
+  return <ActionTile label={label} detail={detail} icon={icon} accent={color} onClick={() => { void onClick(); }} />;
 }

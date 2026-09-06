@@ -226,13 +226,13 @@ export function PrivacyPolicy() {
           accent={C.cyan}
           actions={
             <>
-              <WaselButton type="button" variant="primary" onClick={() => nav('/app/security')}>
+              <WaselButton type="button" variant="primary" onClick={() => { void nav(); }}>
                 {ar ? 'راجع الأمان' : 'Review security'}
               </WaselButton>
               <WaselButton
                 type="button"
                 variant="outline"
-                onClick={() => nav('/trust')}
+                onClick={() => { void nav(); }}
                 style={{ background: C.elevated, color: C.text }}
               >
                 {ar ? 'مركز الثقة' : 'Trust Center'}
@@ -240,7 +240,7 @@ export function PrivacyPolicy() {
               <WaselButton
                 type="button"
                 variant="outline"
-                onClick={() => nav('/app/support')}
+                onClick={() => { void nav(); }}
                 style={{ background: C.elevated, color: C.text }}
               >
                 {ar ? 'تواصل مع الدعم' : 'Contact support'}

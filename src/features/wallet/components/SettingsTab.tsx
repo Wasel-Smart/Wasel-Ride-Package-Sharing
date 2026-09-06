@@ -60,7 +60,7 @@ export function SettingsTab({
             <Button
               size="sm"
               variant="outline"
-              onClick={onShowPinSetup}
+              onClick={() => { void onShowPinSetup(); }}
               disabled={!canManagePin}
               className="text-xs"
             >

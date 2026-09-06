@@ -82,7 +82,7 @@ export function PackageReturnsPanel({
 
       <button
         disabled={busyState === 'creating'}
-        onClick={onCreateReturn}
+        onClick={() => { void onCreateReturn(); }}
         style={{
           padding: '14px 32px',
           borderRadius: '99px',

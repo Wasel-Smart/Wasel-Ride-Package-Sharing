@@ -516,7 +516,7 @@ export default function MobilityOSPage() {
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
               <WaselButton
-                onClick={() => setPaused(value => !value)}
+                onClick={() => { void setPaused(value => !value); }}
                 variant={paused ? 'outline' : 'primary'}
                 size="md"
                 icon={paused ? <Play size={16} /> : <Pause size={16} />}
@@ -524,7 +524,7 @@ export default function MobilityOSPage() {
                 {paused ? 'Resume Field' : 'Pause Field'}
               </WaselButton>
               <WaselButton
-                onClick={() => setTick(0)}
+                onClick={() => { void setTick(0); }}
                 variant="outline"
                 size="md"
                 icon={<RotateCcw size={16} />}
@@ -647,7 +647,7 @@ export default function MobilityOSPage() {
                 {(Object.keys(TABS) as TabKey[]).map(key => (
                   <WaselButton
                     key={key}
-                    onClick={() => setTab(key)}
+                    onClick={() => { void setTab(key); }}
                     variant={tab === key ? 'primary' : 'outline'}
                     size="sm"
                     style={{

@@ -114,7 +114,7 @@ function TripModeCard({ ar, tripMode, onTripModeChange }: TripModeCardProps) {
               type="button"
               aria-pressed={selected}
               key={option.key}
-              onClick={() => onTripModeChange(option.key)}
+              onClick={() => { void onTripModeChange(option.key); }}
               className="wasel-home-mode-button"
               style={{
                 background: selected ? C.cyanDim : 'transparent',
@@ -230,7 +230,7 @@ function LangToggle() {
   return (
     <button
       type="button"
-      onClick={() => setLanguage(ar ? 'en' : 'ar')}
+      onClick={() => { void setLanguage(ar ? 'en' : 'ar'); }}
       title={ar ? 'Switch to English' : 'التبديل إلى العربية'}
       className="wasel-home-section-action"
       style={{ height: 34, padding: '0 12px', fontSize: '0.75rem' }}
@@ -304,7 +304,7 @@ export function HomeHeroSection({
         <div className="wasel-home-hero-actions">
           <WaselButton
             type="button"
-            onClick={() => onNavigate(primaryTripPath, 'hero_primary_route')}
+            onClick={() => { void onNavigate(primaryTripPath, 'hero_primary_route'); }}
             variant="primary"
             size="lg"
             icon={<Route size={17} />}
@@ -314,7 +314,7 @@ export function HomeHeroSection({
           </WaselButton>
           <WaselButton
             type="button"
-            onClick={() => onNavigate('/offer-ride', 'hero_offer_seats')}
+            onClick={() => { void onNavigate('/offer-ride', 'hero_offer_seats'); }}
             variant="outline"
             size="lg"
             icon={<CircleDollarSign size={17} />}

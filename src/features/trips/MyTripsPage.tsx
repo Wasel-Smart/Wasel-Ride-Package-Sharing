@@ -471,7 +471,7 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
       }}
     >
       <WaselButton
-        onClick={() => setExpanded(value => !value)}
+        onClick={() => { void setExpanded(value => !value); }}
         variant="ghost"
         style={{
           width: '100%',
@@ -594,7 +594,7 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
                 'myTripsPage.operational_status_is_now_tied_to_live_booking_package_bus_and_support_records_so_this_view_shows_what_still_needs_action',
               )}
             </div>
-            <WaselButton onClick={onOpen} variant="outline" size="sm">
+            <WaselButton onClick={() => { void onOpen(); }} variant="outline" size="sm">
               {t('myTripsPage.open_journey')}
             </WaselButton>
           </div>
@@ -823,7 +823,7 @@ export default function MyTripsPage() {
           }
           accent={CYAN}
           actions={
-            <WaselButton onClick={() => nav(createPath)} icon={<Plus size={14} />}>
+            <WaselButton onClick={() => { void nav(createPath); }} icon={<Plus size={14} />}>
               {tab === 'rides'
                 ? isRTL
                   ? 'رحلة جديدة'
@@ -1091,7 +1091,7 @@ export default function MyTripsPage() {
                 {t('myTripsPage.bookings_route_matches_or_settlements_that_still_need_a_decision')}
               </div>
               <WaselButton
-                onClick={() => setFilter('attention')}
+                onClick={() => { void setFilter(); }}
                 variant="gold"
                 size="sm"
                 style={{ marginTop: 'auto' }}
@@ -1188,7 +1188,7 @@ export default function MyTripsPage() {
             ).map(([key, icon, label]) => (
               <WaselButton
                 key={key}
-                onClick={() => setTab(key)}
+                onClick={() => { void setTab(key); }}
                 variant={tab === key ? 'primary' : 'ghost'}
                 size="sm"
                 style={{
@@ -1205,7 +1205,7 @@ export default function MyTripsPage() {
             {filters.map(filterOption => (
               <WaselButton
                 key={filterOption.key}
-                onClick={() => setFilter(filterOption.key)}
+                onClick={() => { void setFilter(filterOption.key); }}
                 variant={filter === filterOption.key ? 'primary' : 'outline'}
                 size="sm"
               >
@@ -1239,7 +1239,7 @@ export default function MyTripsPage() {
                 {t('myTripsPage.match_this_lifecycle_filter_yet')}
               </p>
               <WaselButton
-                onClick={() => nav(createPath)}
+                onClick={() => { void nav(createPath); }}
                 variant="outline"
                 style={{ marginTop: 16 }}
                 iconEnd={<ArrowRight size={14} />}

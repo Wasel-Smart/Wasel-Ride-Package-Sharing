@@ -140,7 +140,7 @@ export function WaselDialog({
             variant="ghost"
             size="sm"
             aria-label={closeLabel}
-            onClick={onClose}
+            onClick={() => { void onClose(); }}
             style={{ width: '36px', padding: 0, flexShrink: 0 }}
           >
             <X size={16} />

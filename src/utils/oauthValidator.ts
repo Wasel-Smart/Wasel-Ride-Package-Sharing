@@ -1,4 +1,4 @@
-/**
+﻿/**
  * OAuth Configuration Validator
  * Validates that OAuth providers are properly configured before use
  */
@@ -41,7 +41,7 @@ export async function validateOAuthProvider(
     // signInWithOAuth with shouldCreateSession=false lets us check config
     // without initiating the full flow
     const { data, error } = await client.auth.signInWithOAuth({
-      provider,
+      provider: provider as unknown,
       options: {
         redirectTo: window.location.origin + '/app/auth/callback',
         skipBrowserRedirect: true,
@@ -120,9 +120,9 @@ export function getProviderSetupInstructions(provider: OAuthProvider): {
   if (provider === 'facebook') {
     return {
       steps: [
-        'Go to Facebook Developers → Your App → Facebook Login → Settings',
+        'Go to Facebook Developers â†’ Your App â†’ Facebook Login â†’ Settings',
         `Add "${redirectUri}" to Valid OAuth Redirect URIs`,
-        'Go to Supabase Dashboard → Authentication → Providers → Facebook',
+        'Go to Supabase Dashboard â†’ Authentication â†’ Providers â†’ Facebook',
         'Enable Facebook and enter your App ID + App Secret',
         'Ensure your Facebook app is in "Live" mode for public access',
       ],
@@ -133,9 +133,9 @@ export function getProviderSetupInstructions(provider: OAuthProvider): {
   if (provider === 'microsoft') {
     return {
       steps: [
-        'Go to Azure Portal → Microsoft Entra ID → App registrations',
+        'Go to Azure Portal â†’ Microsoft Entra ID â†’ App registrations',
         `Add "${redirectUri}" to Redirect URIs (web)`,
-        'Go to Supabase Dashboard → Authentication → Providers → Microsoft',
+        'Go to Supabase Dashboard â†’ Authentication â†’ Providers â†’ Microsoft',
         'Enable Microsoft and enter your Client ID + Client Secret',
         'Ensure the app is published and consent is granted for the required scopes',
       ],
@@ -146,9 +146,9 @@ export function getProviderSetupInstructions(provider: OAuthProvider): {
   if (provider === 'apple') {
     return {
       steps: [
-        'Go to Apple Developer → Certificates, Identifiers & Profiles → Identifiers',
+        'Go to Apple Developer â†’ Certificates, Identifiers & Profiles â†’ Identifiers',
         `Add "${redirectUri}" to Return URLs in your Apple Services ID`,
-        'Go to Supabase Dashboard → Authentication → Providers → Apple',
+        'Go to Supabase Dashboard â†’ Authentication â†’ Providers â†’ Apple',
         'Enable Apple and enter your Services ID, Team ID, Key ID, and Private Key',
         'Ensure your Apple app is configured for Sign in with Apple',
       ],
@@ -158,9 +158,9 @@ export function getProviderSetupInstructions(provider: OAuthProvider): {
 
   return {
     steps: [
-      'Go to Google Cloud Console → Credentials',
+      'Go to Google Cloud Console â†’ Credentials',
       `Add "${redirectUri}" to Authorized redirect URIs`,
-      'Go to Supabase Dashboard → Authentication → Providers → Google',
+      'Go to Supabase Dashboard â†’ Authentication â†’ Providers â†’ Google',
       'Enable Google and enter your Client ID + Client Secret',
     ],
     docsUrl: 'https://developers.google.com/identity/protocols/oauth2',
@@ -184,3 +184,4 @@ export function isOriginAllowed(allowedOrigins: string[]): boolean {
     }
   });
 }
+

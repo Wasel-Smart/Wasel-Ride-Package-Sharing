@@ -22,7 +22,7 @@ export function Toggle({ value, onChange }: { value: boolean; onChange: (v: bool
       type="button"
       role="switch"
       aria-checked={value}
-      onClick={() => onChange(!value)}
+      onClick={() => { void onChange(!value); }}
       className={`${styles.settingsToggle} ${value ? styles.settingsToggleActive : ''}`}
     >
       <span
@@ -49,7 +49,7 @@ export function ToggleRow({
         <div className={styles.settingsRowTitle}>{label}</div>
         {sub ? <div className={styles.settingsRowSub}>{sub}</div> : null}
       </div>
-      <Toggle value={value} onChange={onChange} />
+      <Toggle value={value} onChange={() => { void onChange(); }} />
     </div>
   );
 }
@@ -73,7 +73,7 @@ export function SelectRow({
           aria-label={label}
           options={options}
           value={value}
-          onChange={onChange}
+          onChange={() => { void onChange(); }}
           containerStyle={{ gap: 0 }}
           style={{ minHeight: 38, fontSize: TYPE.size.sm }}
         />
@@ -84,7 +84,7 @@ export function SelectRow({
 
 export function LinkRow({ label, sub, onClick }: { label: string; sub?: string; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className={styles.settingsLinkButton}>
+    <button type="button" onClick={() => { void onClick(); }} className={styles.settingsLinkButton}>
       <div className={styles.settingsLinkContent}>
         <div className={styles.settingsLinkTitle}>{label}</div>
         {sub ? <div className={styles.settingsLinkSub}>{sub}</div> : null}
@@ -118,7 +118,7 @@ export function ActionButton({
   return (
     <WaselButton
       type="button"
-      onClick={onClick}
+      onClick={() => { void onClick(); }}
       disabled={disabled}
       variant={variant === 'danger' ? 'danger' : variant === 'secondary' ? 'outline' : 'primary'}
       size="sm"
@@ -145,5 +145,5 @@ export function FormField({
   type?: string;
   placeholder?: string;
 }) {
-  return <WaselInput type={type} value={value} onChange={onChange} placeholder={placeholder} />;
+  return <WaselInput type={type} value={value} onChange={() => { void onChange(); }} placeholder={placeholder} />;
 }

@@ -547,7 +547,7 @@ export default function TrustCenterPage() {
           accent={heroAccent}
           actions={
             <>
-              <WaselButton onClick={handleNextAction} variant="primary">
+              <WaselButton onClick={() => { void handleNextAction(); }} variant="primary">
                 {effectiveStatus?.nextStepId
                   ? t('trustCenterExpanded.openNextStep')
                   : t('trustCenterExpanded.reviewSteps')}
@@ -900,7 +900,7 @@ export default function TrustCenterPage() {
                     id="identity-reference"
                     label={t('trustCenterExpanded.sanadReference')}
                     value={identityReference}
-                    onChange={setIdentityReference}
+                    onChange={() => { void setIdentityReference(); }}
                     dir={ar ? 'rtl' : 'ltr'}
                     aria-invalid={Boolean(validationErrors.identityReference)}
                     aria-describedby="identity-reference-error"
@@ -914,7 +914,7 @@ export default function TrustCenterPage() {
                     id="identity-document-ref"
                     label={t('trustCenterExpanded.documentReferenceOptional')}
                     value={identityDocumentReference}
-                    onChange={setIdentityDocumentReference}
+                    onChange={() => { void setIdentityDocumentReference(); }}
                     dir={ar ? 'rtl' : 'ltr'}
                   />
                   {formatTimestamp(identityStep?.updatedAt) ? (
@@ -1052,7 +1052,7 @@ export default function TrustCenterPage() {
                         id="phone-number"
                         label={t('trustCenterExpanded.phoneNumberLabel')}
                         value={phoneInput}
-                        onChange={setPhoneInput}
+                        onChange={() => { void setPhoneInput(); }}
                         type="tel"
                         dir="ltr"
                         aria-invalid={Boolean(validationErrors.phone)}
@@ -1085,7 +1085,7 @@ export default function TrustCenterPage() {
                             id="phone-code"
                             label={t('trustCenterExpanded.enterVerificationCode')}
                             value={phoneCode}
-                            onChange={setPhoneCode}
+                            onChange={() => { void setPhoneCode(); }}
                             type="text"
                             dir="ltr"
                             aria-invalid={Boolean(validationErrors.phoneCode)}
@@ -1159,7 +1159,7 @@ export default function TrustCenterPage() {
                           id="driver-license"
                           label={t('trustCenterExpanded.driverLicenseNumber')}
                           value={licenseNumber}
-                          onChange={setLicenseNumber}
+                          onChange={() => { void setLicenseNumber(); }}
                           dir={ar ? 'rtl' : 'ltr'}
                           aria-invalid={Boolean(validationErrors.licenseNumber)}
                           aria-describedby="driver-license-error"
@@ -1173,7 +1173,7 @@ export default function TrustCenterPage() {
                           id="driver-document-ref"
                           label={t('trustCenterExpanded.documentReferenceOptional')}
                           value={driverDocumentReference}
-                          onChange={setDriverDocumentReference}
+                          onChange={() => { void setDriverDocumentReference(); }}
                           dir={ar ? 'rtl' : 'ltr'}
                         />
                         <TrustActionRow
@@ -1223,14 +1223,14 @@ export default function TrustCenterPage() {
                   footer={
                     <TrustActionRow
                       primary={
-                        <WaselButton onClick={() => nav('/app/wallet')} variant="primary">
+                        <WaselButton onClick={() => { void nav(); }} variant="primary">
                           {t('trustCenterExpanded.openWallet')}
                         </WaselButton>
                       }
                       secondary={
                         <WaselButton
                           variant="outline"
-                          onClick={() => nav('/app/settings?section=account')}
+                          onClick={() => { void nav(); }}
                         >
                           {t('trustCenterExpanded.accountSettings')}
                         </WaselButton>

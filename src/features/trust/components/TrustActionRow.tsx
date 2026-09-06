@@ -22,7 +22,7 @@ export function TrustActionRow({
       {primary}
       {secondary}
       {refresh ? (
-        <WaselButton variant="outline" onClick={refresh}>
+        <WaselButton variant="outline" onClick={() => { void refresh(); }}>
           Refresh
         </WaselButton>
       ) : null}

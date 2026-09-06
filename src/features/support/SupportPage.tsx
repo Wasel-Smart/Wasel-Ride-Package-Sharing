@@ -201,7 +201,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
       }}
     >
       <button
-        onClick={() => setOpen(v => !v)}
+        onClick={() => { void setOpen(v => !v); }}
         style={{
           width: '100%',
           padding: `${SPACE[4]} ${SPACE[4]}`,
@@ -311,13 +311,13 @@ export function SupportPage() {
           accent={C.blueLight}
           actions={
             <>
-              <WaselButton type="button" variant="primary" onClick={() => nav('/app/my-trips')}>
+              <WaselButton type="button" variant="primary" onClick={() => { void nav(); }}>
                 {ar ? 'افتح رحلاتي' : 'Open my trips'}
               </WaselButton>
               <WaselButton
                 type="button"
                 variant="outline"
-                onClick={() => nav('/app/settings')}
+                onClick={() => { void nav(); }}
                 style={{ background: C.elevated, color: C.text }}
               >
                 {ar ? 'إعدادات الحساب' : 'Account settings'}
@@ -573,7 +573,7 @@ export function SupportPage() {
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
+            <form onSubmit={() => { void handleSubmit(); }} style={{ display: 'grid', gap: 12 }}>
               <input
                 required
                 type="email"

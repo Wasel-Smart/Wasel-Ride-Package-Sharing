@@ -177,7 +177,7 @@ export function PackageSendPanel({
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button
-            onClick={onOpenTracking}
+            onClick={() => { void onOpenTracking(); }}
             style={{
               padding: '10px 24px',
               borderRadius: '99px',
@@ -192,7 +192,7 @@ export function PackageSendPanel({
             {tx('packageSendPanel.open_tracking')}
           </button>
           <button
-            onClick={onReset}
+            onClick={() => { void onReset(); }}
             style={{
               padding: '10px 24px',
               borderRadius: '99px',
@@ -455,7 +455,7 @@ export function PackageSendPanel({
         <button
           data-testid="package-create-request"
           disabled={busyState === 'creating'}
-          onClick={onCreate}
+          onClick={() => { void onCreate(); }}
           style={{
             gridColumn: '1/-1',
             height: 52,
@@ -580,7 +580,7 @@ export function PackageSendPanel({
               {recentPackages.map(item => (
                 <button
                   key={item.trackingId}
-                  onClick={() => onOpenRecent(item)}
+                  onClick={() => { void onOpenRecent(item); }}
                   style={{
                     textAlign: 'left',
                     borderRadius: r(12),

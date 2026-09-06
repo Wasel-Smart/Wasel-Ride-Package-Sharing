@@ -22,7 +22,7 @@ function PasswordToggle({ showPassword, onToggle }: { showPassword: boolean; onT
   return (
     <button
       type="button"
-      onClick={onToggle}
+      onClick={() => { void onToggle(); }}
       aria-label={showPassword ? 'Hide password' : 'Show password'}
       style={{
         background: 'none',

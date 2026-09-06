@@ -291,7 +291,7 @@ export function ReturnMatching() {
                         key={retailerItem.id}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setRetailer(retailerItem.id)}
+                        onClick={() => { void setRetailer(retailerItem.id); }}
                         style={{
                           background:
                             retailer === retailerItem.id ? `${retailerItem.color}12` : D.card2,
@@ -440,7 +440,7 @@ export function ReturnMatching() {
                         {(['small', 'medium', 'large'] as const).map(option => (
                           <button
                             key={option}
-                            onClick={() => setSize(option)}
+                            onClick={() => { void setSize(option); }}
                             style={{
                               height: 42,
                               borderRadius: 12,
@@ -473,7 +473,7 @@ export function ReturnMatching() {
                         {RETURN_REASONS.map(reasonItem => (
                           <button
                             key={reasonItem.id}
-                            onClick={() => setReason(reasonItem.id)}
+                            onClick={() => { void setReason(reasonItem.id); }}
                             style={{
                               padding: '12px 14px',
                               borderRadius: 12,
@@ -502,7 +502,7 @@ export function ReturnMatching() {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 1.1fr', gap: 8 }}>
                     <button
-                      onClick={() => setStep(0)}
+                      onClick={() => { void setStep(0); }}
                       style={{
                         height: 48,
                         borderRadius: 12,
@@ -574,7 +574,7 @@ export function ReturnMatching() {
                       {matches.map(match => (
                         <button
                           key={match.id}
-                          onClick={() => setSelectedMatch(match.id)}
+                          onClick={() => { void setSelectedMatch(match.id); }}
                           style={{
                             background: selectedMatch === match.id ? `${D.gold}10` : D.card2,
                             border: `1px solid ${selectedMatch === match.id ? `${D.gold}55` : D.border}`,
@@ -649,7 +649,7 @@ export function ReturnMatching() {
 
                   <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 1.1fr', gap: 8 }}>
                     <button
-                      onClick={() => setStep(1)}
+                      onClick={() => { void setStep(1); }}
                       style={{
                         height: 48,
                         borderRadius: 12,
@@ -789,7 +789,7 @@ export function ReturnMatching() {
                         {t('returnMatching.new_return')}
                       </button>
                       <button
-                        onClick={() => nav('/app/packages')}
+                        onClick={() => { void nav(); }}
                         style={{
                           height: 44,
                           borderRadius: 12,
@@ -949,7 +949,7 @@ export function ReturnMatching() {
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
                 <button
-                  onClick={() => nav('/app/packages')}
+                  onClick={() => { void nav(); }}
                   style={{
                     height: 42,
                     borderRadius: R.md,
@@ -963,7 +963,7 @@ export function ReturnMatching() {
                   {t('returnMatching.open_package_tracking')}
                 </button>
                 <button
-                  onClick={() => nav('/app/find-ride')}
+                  onClick={() => { void nav(); }}
                   style={{
                     height: 42,
                     borderRadius: R.md,

@@ -339,7 +339,7 @@ export function OfferRideFormPanel({
           <div style={{ gridColumn: '1/-1' }}>{errorDisplay}</div>
           <button
             data-testid="offer-ride-step-1"
-            onClick={() => onStepChange(2)}
+            onClick={() => { void onStepChange(2); }}
             style={{
               gridColumn: '1/-1',
               height: 50,
@@ -520,7 +520,7 @@ export function OfferRideFormPanel({
             />
           </div>
           <button
-            onClick={() => onUpdate('acceptsPackages', !form.acceptsPackages)}
+            onClick={() => { void onUpdate('acceptsPackages', !form.acceptsPackages); }}
             style={{
               padding: '12px 18px',
               borderRadius: r(10),
@@ -578,7 +578,7 @@ export function OfferRideFormPanel({
           {errorDisplay}
           <div style={{ display: 'flex', gap: 10 }}>
             <button
-              onClick={() => onStepChange(1)}
+              onClick={() => { void onStepChange(1); }}
               style={{
                 flex: 1,
                 height: 50,
@@ -595,7 +595,7 @@ export function OfferRideFormPanel({
             </button>
             <button
               data-testid="offer-ride-step-2"
-              onClick={() => onStepChange(3)}
+              onClick={() => { void onStepChange(3); }}
               style={{
                 flex: 2,
                 height: 50,
@@ -638,7 +638,7 @@ export function OfferRideFormPanel({
               {Object.entries(genderMeta).map(([key, value]) => (
                 <button
                   key={key}
-                  onClick={() => onUpdate('gender', key)}
+                  onClick={() => { void onUpdate('gender', key); }}
                   style={{
                     padding: '8px 16px',
                     borderRadius: '99px',
@@ -657,7 +657,7 @@ export function OfferRideFormPanel({
             </div>
           </div>
           <button
-            onClick={() => onUpdate('prayer', !form.prayer)}
+            onClick={() => { void onUpdate('prayer', !form.prayer); }}
             style={{
               padding: '12px 18px',
               borderRadius: r(10),
@@ -786,7 +786,7 @@ export function OfferRideFormPanel({
           {errorDisplay}
           <div style={{ display: 'flex', gap: 10 }}>
             <button
-              onClick={() => onStepChange(2)}
+              onClick={() => { void onStepChange(2); }}
               style={{
                 flex: 1,
                 height: 50,
@@ -804,7 +804,7 @@ export function OfferRideFormPanel({
             <button
               data-testid="offer-ride-submit"
               disabled={busyState === 'posting'}
-              onClick={onSubmit}
+              onClick={() => { void onSubmit(); }}
               style={{
                 flex: 2,
                 height: 50,

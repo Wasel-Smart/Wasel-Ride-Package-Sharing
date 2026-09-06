@@ -62,10 +62,10 @@ export function TrustOnboarding({
           {t('trustCenterExpanded.onboardingEstimatedTime')}
         </div>
         <div style={{ display: 'flex', gap: SPACE[3], flexWrap: 'wrap' }}>
-          <WaselButton onClick={onStart} variant="primary">
+          <WaselButton onClick={() => { void onStart(); }} variant="primary">
             {t('trustCenterExpanded.onboardingStartButton')}
           </WaselButton>
-          <WaselButton onClick={onDismiss} variant="outline">
+          <WaselButton onClick={() => { void onDismiss(); }} variant="outline">
             {t('trustCenterExpanded.onboardingDismissButton')}
           </WaselButton>
         </div>

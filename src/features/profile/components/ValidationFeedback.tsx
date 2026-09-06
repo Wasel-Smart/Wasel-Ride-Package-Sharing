@@ -139,7 +139,7 @@ export function SaveButton({
 }) {
   return (
     <button
-      onClick={onClick}
+      onClick={() => { void onClick(); }}
       disabled={disabled || loading}
       style={{
         padding: '10px 16px',

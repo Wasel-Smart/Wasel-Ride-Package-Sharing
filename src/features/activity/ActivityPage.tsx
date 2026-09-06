@@ -251,7 +251,7 @@ export function ActivityPage() {
           {filterDefs.map(f => (
             <button
               key={f.key}
-              onClick={() => setFilter(f.key)}
+              onClick={() => { void setFilter(f.key); }}
               style={{
                 padding: '6px 14px',
                 borderRadius: R.sm,
@@ -294,7 +294,7 @@ export function ActivityPage() {
                       {t('activity.noItemsYet')}
                     </div>
                     <button
-                      onClick={() => nav(cta.path)}
+                      onClick={() => { void nav(cta.path); }}
                       style={{
                         marginTop: 16,
                         padding: '8px 20px',
@@ -355,7 +355,7 @@ export function ActivityPage() {
                   return (
                     <button
                       key={item.id}
-                      onClick={() => nav(item.path)}
+                      onClick={() => { void nav(item.path); }}
                       style={{
                         display: 'flex',
                         alignItems: 'center',

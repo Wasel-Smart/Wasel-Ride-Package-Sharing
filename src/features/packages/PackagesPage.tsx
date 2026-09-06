@@ -625,7 +625,7 @@ export function PackagesPage() {
           ).map(([key, label]) => (
             <button
               key={key}
-              onClick={() => setActiveTab(key)}
+              onClick={() => { void setActiveTab(key); }}
               style={{
                 flex: 1,
                 height: 44,

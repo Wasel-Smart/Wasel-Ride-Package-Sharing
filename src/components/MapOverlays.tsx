@@ -102,7 +102,7 @@ export function MapOverlays({
                 )}
               </div>
               <button
-                onClick={onClosePOI}
+                onClick={() => { void onClosePOI(); }}
                 className="shrink-0 p-1 rounded-lg transition-colors" style={{ color: colors.text.muted }}
               >
                 <X className="w-4 h-4" />
@@ -126,7 +126,7 @@ export function MapOverlays({
               <WifiOff className="w-4 h-4 shrink-0 mt-0.5" style={{ color: colors.status.error }} />
               <p className="text-xs" style={{ color: colors.text.light }}>{locationError}</p>
               <button
-                onClick={onCloseError}
+                onClick={() => { void onCloseError(); }}
                 className="ml-auto shrink-0" style={{ color: colors.status.error }}
               >
                 <X className="w-3.5 h-3.5" />

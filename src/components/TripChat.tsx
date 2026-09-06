@@ -100,7 +100,7 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
       <div className="flex items-center justify-between p-4 border-b">
         <h3 className="font-semibold">{tx('tripChat.trip_chat')}</h3>
         {onClose && (
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <button onClick={() => { void onClose(); }} className="text-gray-500 hover:text-gray-700">
             ✕
           </button>
         )}
@@ -159,7 +159,7 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
             className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={sending}
           />
-          <Button onClick={() => handleSend()} disabled={!newMessage.trim() || sending} className="px-4">
+          <Button onClick={() => { void handleSend(); }} disabled={!newMessage.trim() || sending} className="px-4">
             {sending ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
           </Button>
         </div>

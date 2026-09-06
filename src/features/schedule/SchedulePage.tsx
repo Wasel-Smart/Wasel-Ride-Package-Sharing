@@ -302,7 +302,7 @@ export function SchedulePage() {
               <RefreshCw size={14} />
             </button>
             <button
-              onClick={() => setShowForm(true)}
+              onClick={() => { void setShowForm(true); }}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -633,7 +633,7 @@ export function SchedulePage() {
 
                     {/* Inline cancel trigger — no prompt() */}
                     <button
-                      onClick={() => setCancellingId(isCancelling ? null : item.id)}
+                      onClick={() => { void setCancellingId(isCancelling ? null : item.id); }}
                       aria-label={ar ? 'إلغاء الرحلة' : 'Cancel trip'}
                       style={{
                         background: 'transparent',
@@ -683,7 +683,7 @@ export function SchedulePage() {
                           {t('scheduleExpanded.yesCancel')}
                         </button>
                         <button
-                          onClick={() => setCancellingId(null)}
+                          onClick={() => { void setCancellingId(null); }}
                           style={{
                             padding: '6px 14px',
                             borderRadius: R.sm,
@@ -797,7 +797,7 @@ export function SchedulePage() {
           {past.length > 5 && (
             <div style={{ padding: '12px 16px', borderTop: `1px solid ${C.borderFaint}` }}>
               <button
-                onClick={() => setShowAllPast(v => !v)}
+                onClick={() => { void setShowAllPast(v => !v); }}
                 style={{
                   background: 'transparent',
                   border: 'none',

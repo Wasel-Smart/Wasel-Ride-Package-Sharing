@@ -86,7 +86,7 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
       {activeItems.map(item => (
         <button
           key={item.id}
-          onClick={() => onNavigate(item.path)}
+          onClick={() => { void onNavigate(item.path); }}
           style={{
             display: 'flex',
             alignItems: 'center',

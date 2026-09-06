@@ -100,10 +100,10 @@ export function BookingStatusBanners({
             </span>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <WaselButton onClick={onOpenMyTrips} variant="gold" size="sm">
+            <WaselButton onClick={() => { void onOpenMyTrips(); }} variant="gold" size="sm">
               {openMyTripsLabel}
             </WaselButton>
-            <WaselButton onClick={onDismissSuccess} variant="outline" size="sm">
+            <WaselButton onClick={() => { void onDismissSuccess(); }} variant="outline" size="sm">
               {keepBrowsingLabel}
             </WaselButton>
           </div>

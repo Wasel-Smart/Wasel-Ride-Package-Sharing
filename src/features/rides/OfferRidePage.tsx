@@ -245,7 +245,7 @@ export function OfferRidePage() {
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
               <button
-                onClick={() => nav('/app/trust')}
+                onClick={() => { void nav(); }}
                 style={{
                   height: 40,
                   padding: '0 16px',
@@ -260,7 +260,7 @@ export function OfferRidePage() {
                 {tx('offerRidePage.finish_checks')}
               </button>
               <button
-                onClick={() => nav('/app/driver')}
+                onClick={() => { void nav(); }}
                 style={{
                   height: 40,
                   padding: '0 16px',
@@ -447,7 +447,7 @@ export function OfferRidePage() {
                 liveSignal={selectedSignal}
                 onUpdate={updateForm}
                 onStepChange={moveToStep}
-                onSubmit={handlePostRide}
+                onSubmit={() => { void handlePostRide(); }}
               />
             )}
           </div>
@@ -670,7 +670,7 @@ export function OfferRidePage() {
               </div>
               <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
                 <button
-                  onClick={() => nav('/app/driver')}
+                  onClick={() => { void nav(); }}
                   style={{
                     height: 42,
                     borderRadius: '999px',
@@ -684,7 +684,7 @@ export function OfferRidePage() {
                   {tx('offerRidePage.open_driver_console')}
                 </button>
                 <button
-                  onClick={() => nav('/app/trust')}
+                  onClick={() => { void nav(); }}
                   style={{
                     height: 42,
                     borderRadius: '999px',

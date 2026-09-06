@@ -6,6 +6,7 @@
  */
 import { useAuth } from './AuthContext';
 import type { WaselUser } from './authContextHelpers';
+import { splitFullName } from './auth/helpers';
 
 export type { WaselUser };
 
@@ -21,8 +22,8 @@ export interface LocalAuthCtx {
     returnTo?: string;
   }) => Promise<{
     error: string | null;
-    requiresEmailConfirmation?: boolean;
-    email?: string;
+    requiresEmailConfirmation: boolean;
+    email: string;
   }>;
   signOut: () => Promise<void>;
   updateUser: (updates: Partial<WaselUser>) => Promise<void>;
@@ -37,7 +38,9 @@ export function useLocalAuth(): LocalAuthCtx {
 
   const signIn = async (email: string, password: string) => {
     const result = await auth.signIn(email, password);
-    return { error: result.error ? String(result.error.message) : null };
+    return {
+      error: result.error ? String(result.error) : null,
+    };
   };
 
   const register = async (input: {
@@ -48,9 +51,9 @@ export function useLocalAuth(): LocalAuthCtx {
     returnTo?: string;
   }) => {
     const { name, email, password, phone, returnTo } = input;
-    const result = await auth.signUp(email, password, name, phone, returnTo);
+    const result = await auth.signUp(email, password, name, phone ?? '', returnTo);
     return {
-      error: result.error ? String(result.error.message) : null,
+      error: result.error ? String(result.error) : null,
       requiresEmailConfirmation: result.requiresEmailConfirmation,
       email,
     };

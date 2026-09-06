@@ -181,7 +181,7 @@ function ProfilePageContent({
           ref={photoInputRef}
           type="file"
           accept="image/*"
-          onChange={handlePhotoSelection}
+          onChange={() => { void handlePhotoSelection(); }}
           style={{ display: 'none' }}
         />
 
@@ -204,14 +204,14 @@ function ProfilePageContent({
               </WaselButton>
               <WaselButton
                 variant="outline"
-                onClick={() => nav('/app/trust')}
+                onClick={() => { void nav(); }}
                 className="border-white/15 bg-white/5 text-white hover:bg-white/10"
               >
                 {t('profileExpanded.trustCenter')}
               </WaselButton>
               <WaselButton
                 variant="outline"
-                onClick={() => nav('/app/settings?section=account')}
+                onClick={() => { void nav(); }}
                 className="border-white/15 bg-white/5 text-white hover:bg-white/10"
               >
                 {t('profileExpanded.settings')}
@@ -339,7 +339,7 @@ function ProfilePageContent({
                 {savingField === 'name' ? '...' : t('profileExpanded.save')}
               </button>
               <button
-                onClick={() => setEditingField(null)}
+                onClick={() => { void setEditingField(null); }}
                 style={{
                   padding: '10px 12px',
                   borderRadius: 10,
@@ -471,14 +471,14 @@ function ProfilePageContent({
                   {item.status}
                 </span>
               }
-              onClick={() => nav('/app/settings?section=account')}
+              onClick={() => { void nav(); }}
             />
           ))}
           <SharedRow
             label={t('profileExpanded.operationalStanding')}
             value={`${trustTier} - ${memberLabel}`}
             icon={<CheckCircle size={15} />}
-            onClick={() => nav('/app/my-trips')}
+            onClick={() => { void nav(); }}
           />
         </SharedSection>
 
@@ -550,19 +550,19 @@ function ProfilePageContent({
               label={t('profileExpanded.myVehicle')}
               value={t('profileExpanded.notAddedYet')}
               icon={<Car size={15} />}
-              onClick={() => nav('/app/settings?section=account')}
+              onClick={() => { void nav(); }}
             />
             <SharedRow
               label={t('profileExpanded.documents')}
               value={t('profileExpanded.licenseInsuranceRegistration')}
               icon={<FileText size={15} />}
               badge={<CheckCircle size={14} color={C.green} />}
-              onClick={() => nav('/app/trust')}
+              onClick={() => { void nav(); }}
             />
             <SharedRow
               label={t('profileExpanded.earnings')}
               icon={<TrendingUp size={15} />}
-              onClick={() => nav('/app/wallet')}
+              onClick={() => { void nav(); }}
             />
           </SharedSection>
         )}
@@ -572,18 +572,18 @@ function ProfilePageContent({
             label={t('profileExpanded.genderPreference')}
             value={t('profileExpanded.mixedDefault')}
             icon={<Settings size={15} />}
-            onClick={() => nav('/app/settings?section=account')}
+            onClick={() => { void nav(); }}
           />
           <SharedRow
             label={t('profileExpanded.currency')}
             value="JOD"
             icon={<CreditCard size={15} />}
-            onClick={() => nav('/app/settings?section=account')}
+            onClick={() => { void nav(); }}
           />
           <SharedRow
             label={t('profileExpanded.advancedSettings')}
             icon={<Settings size={15} />}
-            onClick={() => nav('/app/settings?section=account')}
+            onClick={() => { void nav(); }}
           />
         </SharedSection>
 
@@ -591,7 +591,7 @@ function ProfilePageContent({
           <SharedRow
             label={t('profileExpanded.changePassword')}
             icon={<Key size={15} />}
-            onClick={() => nav('/app/settings?section=security')}
+            onClick={() => { void nav(); }}
           />
           <SharedRow
             label={t('profileExpanded.twoFactorAuth2FA')}
@@ -611,12 +611,12 @@ function ProfilePageContent({
               </span>
             }
             icon={<Shield size={15} />}
-            onClick={() => nav('/app/settings?section=security')}
+            onClick={() => { void nav(); }}
           />
           <SharedRow
             label={t('profileExpanded.activeSessions')}
             icon={<Monitor size={15} />}
-            onClick={() => nav('/app/settings?section=security')}
+            onClick={() => { void nav(); }}
           />
         </SharedSection>
 
@@ -634,12 +634,12 @@ function ProfilePageContent({
           <SharedRow
             label={t('profileExpanded.privacyPolicy')}
             icon={<FileText size={15} />}
-            onClick={() => nav('/app/privacy')}
+            onClick={() => { void nav(); }}
           />
           <SharedRow
             label={t('profileExpanded.termsOfService')}
             icon={<FileText size={15} />}
-            onClick={() => nav('/app/terms')}
+            onClick={() => { void nav(); }}
           />
         </SharedSection>
 
@@ -647,13 +647,13 @@ function ProfilePageContent({
           <SharedRow
             label={t('profileExpanded.exportMyData')}
             icon={<FileText size={15} />}
-            onClick={handleExportData}
+            onClick={() => { void handleExportData(); }}
           />
           <SharedRow
             label={t('profileExpanded.requestAccountDeletion')}
             danger
             icon={<LogOut size={15} />}
-            onClick={() => setShowDeleteConfirm(true)}
+            onClick={() => { void setShowDeleteConfirm(true); }}
           />
           <SharedRow
             label={t('profileExpanded.signOut')}
@@ -722,7 +722,7 @@ function ProfilePageContent({
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button
-                onClick={() => setShowDeleteConfirm(false)}
+                onClick={() => { void setShowDeleteConfirm(false); }}
                 style={{
                   flex: 1,
                   height: 40,

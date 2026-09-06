@@ -372,7 +372,7 @@ export function HomePage() {
             </span>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
               <button
-                onClick={declineCookies}
+                onClick={() => { void declineCookies(); }}
                 style={{
                   padding: '8px 14px',
                   borderRadius: 10,
@@ -388,7 +388,7 @@ export function HomePage() {
                 {t('cookies.reject_all')}
               </button>
               <button
-                onClick={acceptCookies}
+                onClick={() => { void acceptCookies(); }}
                 style={{
                   padding: '8px 18px',
                   borderRadius: 10,
@@ -411,7 +411,7 @@ export function HomePage() {
         <div className="wasel-home-sticky-cta">
           <button
             type="button"
-            onClick={() => handleNavigate(primaryTripPath, 'sticky_find')}
+            onClick={() => { void handleNavigate(primaryTripPath, 'sticky_find'); }}
             style={{
               height: 48,
               borderRadius: 12,
@@ -428,7 +428,7 @@ export function HomePage() {
           </button>
           <button
             type="button"
-            onClick={() => handleNavigate('/offer-ride', 'sticky_offer')}
+            onClick={() => { void handleNavigate('/offer-ride', 'sticky_offer'); }}
             style={{
               height: 48,
               borderRadius: 12,
@@ -718,7 +718,7 @@ function FinalCtaBanner({ ar, onNavigate }: { ar: boolean; onNavigate: (path: st
             size="lg"
             icon={<Route size={17} />}
             iconEnd={ar ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
-            onClick={() => onNavigate('/find-ride', 'final_cta_find')}
+            onClick={() => { void onNavigate('/find-ride', 'final_cta_find'); }}
           >
             {t('homeSections.finalCtaFind')}
           </WaselButton>
@@ -727,7 +727,7 @@ function FinalCtaBanner({ ar, onNavigate }: { ar: boolean; onNavigate: (path: st
             variant="outline"
             size="lg"
             icon={<Globe2 size={17} />}
-            onClick={() => onNavigate('/auth?tab=register', 'final_cta_register')}
+            onClick={() => { void onNavigate('/auth?tab=register', 'final_cta_register'); }}
             style={{ background: C.elevated, color: C.text, border: `1px solid ${C.border}` }}
           >
             {t('homeSections.finalCtaRegister')}

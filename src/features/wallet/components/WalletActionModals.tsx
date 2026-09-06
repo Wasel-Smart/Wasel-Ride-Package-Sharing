@@ -128,7 +128,7 @@ export function WalletActionModals({
                 <button
                   key={method.id}
                   type="button"
-                  onClick={() => setTopUpMethod(method.id)}
+                  onClick={() => { void setTopUpMethod(method.id); }}
                   className={`flex items-center gap-2 rounded-lg border p-3 text-sm transition-all ${topUpMethod === method.id ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-slate-500'}`}
                 >
                   <method.icon className="h-4 w-4" />
@@ -138,7 +138,7 @@ export function WalletActionModals({
             </div>
           </div>
           <Button
-            onClick={onTopUp}
+            onClick={() => { void onTopUp(); }}
             disabled={actionLoading}
             className="h-11 w-full rounded-xl font-semibold"
             style={{ background: WaselColors.teal }}
@@ -186,7 +186,7 @@ export function WalletActionModals({
               <button
                 key={method.id}
                 type="button"
-                onClick={() => setWithdrawMethod(method.id)}
+                onClick={() => { void setWithdrawMethod(method.id); }}
                 className={`rounded-lg border p-3 text-left transition-all ${withdrawMethod === method.id ? 'border-primary bg-primary/10' : 'border-border hover:border-slate-500'}`}
               >
                 <p className="text-sm font-medium">{method.label}</p>
@@ -195,7 +195,7 @@ export function WalletActionModals({
             ))}
           </div>
           <Button
-            onClick={onWithdraw}
+            onClick={() => { void onWithdraw(); }}
             disabled={actionLoading}
             className="h-11 w-full rounded-xl font-semibold"
             style={{ background: WaselColors.bronze }}
@@ -236,7 +236,7 @@ export function WalletActionModals({
             />
           </div>
           <Button
-            onClick={onSend}
+            onClick={() => { void onSend(); }}
             disabled={actionLoading}
             className="h-11 w-full rounded-xl font-semibold"
             style={{ background: WaselColors.teal }}
@@ -278,7 +278,7 @@ export function WalletActionModals({
             autoFocus
           />
           <Button
-            onClick={onSetPin}
+            onClick={() => { void onSetPin(); }}
             disabled={actionLoading || pinValue.length !== 4}
             className="h-11 w-full rounded-xl font-semibold"
             style={{ background: WaselColors.teal }}

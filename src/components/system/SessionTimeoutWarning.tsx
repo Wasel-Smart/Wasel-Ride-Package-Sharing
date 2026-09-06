@@ -73,8 +73,8 @@ export function SessionTimeoutWarning() {
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={handleLogout}>{tx('auth.logout')}</AlertDialogCancel>
-          <AlertDialogAction onClick={handleExtendSession}>
+          <AlertDialogCancel onClick={() => { void handleLogout(); }}>{tx('auth.logout')}</AlertDialogCancel>
+          <AlertDialogAction onClick={() => { void handleExtendSession(); }}>
             {tx('sessionTimeoutWarning.extend_session')}
           </AlertDialogAction>
         </AlertDialogFooter>

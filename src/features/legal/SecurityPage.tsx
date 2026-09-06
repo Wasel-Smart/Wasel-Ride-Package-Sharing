@@ -139,14 +139,14 @@ export function SecurityPage() {
               <WaselButton
                 type="button"
                 variant="primary"
-                onClick={() => nav('/app/settings?section=security')}
+                onClick={() => { void nav(); }}
               >
                 {ar ? 'إدارة أمان الحساب' : 'Manage account security'}
               </WaselButton>
               <WaselButton
                 type="button"
                 variant="outline"
-                onClick={() => nav('/app/trust')}
+                onClick={() => { void nav(); }}
                 style={{ background: C.elevated, color: C.text }}
               >
                 {ar ? 'افتح مركز الثقة' : 'Open trust center'}
@@ -398,7 +398,7 @@ function TwoFactorSection() {
             <WaselButton
               type="button"
               variant="primary"
-              onClick={handleSetup}
+              onClick={() => { void handleSetup(); }}
               loading={loading}
               disabled={loading}
               icon={<Smartphone size={16} />}
@@ -434,7 +434,7 @@ function TwoFactorSection() {
                 <WaselButton
                   type="button"
                   variant="primary"
-                  onClick={handleVerify}
+                  onClick={() => { void handleVerify(); }}
                   loading={verifying}
                   disabled={verifying}
                 >
@@ -458,7 +458,7 @@ function TwoFactorSection() {
                 <WaselButton
                   type="button"
                   variant="outline"
-                  onClick={handleCopyBackupCodes}
+                  onClick={() => { void handleCopyBackupCodes(); }}
                   style={{ marginTop: SPACE[3], background: C.elevated, color: C.text }}
                   icon={<RefreshCw size={14} />}
                 >
@@ -488,7 +488,7 @@ function TwoFactorSection() {
               <WaselButton
                 type="button"
                 variant="outline"
-                onClick={handleDisable}
+                onClick={() => { void handleDisable(); }}
                 loading={verifying}
                 disabled={verifying}
                 style={{ background: `${C.error}15`, borderColor: `${C.error}40`, color: C.error }}

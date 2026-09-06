@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { Download, X } from 'lucide-react';
 import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 import { WaselButton } from '../wasel-ui/WaselButton';
@@ -81,22 +81,22 @@ export function PWAInstallPrompt() {
     }
   }, []);
 
-  if (state !== 'available' || isStandalone) {
-    return null;
-  }
-
-  const now = useMemo(() => Date.now(), []);
   const wasRecentlyDismissed = (() => {
     try {
       const dismissed = sessionStorage.getItem('wasel-pwa-install-dismissed');
       if (!dismissed) {return false;}
       const dismissedTime = parseInt(dismissed, 10);
       const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
       return now - dismissedTime < sevenDays;
     } catch {
       return false;
     }
   })();
+
+  if (state !== 'available' || isStandalone) {
+    return null;
+  }
 
   if (wasRecentlyDismissed || state !== 'available') {
     return null;

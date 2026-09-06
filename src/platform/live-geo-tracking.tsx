@@ -6,7 +6,7 @@
 import { geoStream, type DriverLocation } from './geo-stream-realtime';
 import { telemetry } from './telemetry';
 import { productionMetricsCollector } from './production-metrics';
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 import { tx } from '../locales/tx';
 import { sanitizeLogMessage } from '../utils/sanitization';
 
@@ -261,7 +261,7 @@ export function LiveDriverMap({
               key={driver.driverId}
               driver={driver}
               isSelected={selectedDriver === driver.driverId}
-              onClick={() => handleDriverClick(driver)}
+              onClick={() => { void handleDriverClick(driver); }}
             />
           ))}
         </div>
@@ -327,7 +327,7 @@ function DriverCard({
 
   return (
     <button
-      onClick={onClick}
+      onClick={() => { void onClick(); }}
       className={`w-full rounded-lg border-2 p-2 text-left transition-all ${
         isSelected
           ? 'border-blue-500 bg-blue-50'

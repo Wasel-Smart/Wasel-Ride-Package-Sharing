@@ -336,7 +336,7 @@ export function AppCommandCenter() {
 
           <button
             type="button"
-            onClick={() => navigate(nextAction.path)}
+            onClick={() => { void navigate(nextAction.path); }}
             style={{
               minHeight: 52,
               padding: '0 18px',

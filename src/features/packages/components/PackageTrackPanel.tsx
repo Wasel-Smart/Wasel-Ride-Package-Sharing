@@ -109,7 +109,7 @@ export function PackageTrackPanel({
         />
         <button
           disabled={busyState === 'tracking'}
-          onClick={onSearch}
+          onClick={() => { void onSearch(); }}
           style={{
             padding: '0 22px',
             borderRadius: r(12),
@@ -368,7 +368,7 @@ export function PackageTrackPanel({
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 18 }}>
             <button
-              onClick={() => onVerificationAction('share_code')}
+              onClick={() => { void onVerificationAction(); }}
               disabled={Boolean(trackedPackage.verification.senderCodeSharedAt)}
               style={{
                 padding: '10px 16px',
@@ -391,7 +391,7 @@ export function PackageTrackPanel({
                   : 'Share OTP handoff'}
             </button>
             <button
-              onClick={() => onVerificationAction('confirm_pickup')}
+              onClick={() => { void onVerificationAction(); }}
               disabled={
                 !trackedPackage.verification.senderCodeSharedAt ||
                 Boolean(trackedPackage.verification.riderPickupConfirmedAt)
@@ -427,7 +427,7 @@ export function PackageTrackPanel({
                   : 'Confirm rider pickup'}
             </button>
             <button
-              onClick={() => onVerificationAction('confirm_delivery')}
+              onClick={() => { void onVerificationAction(); }}
               disabled={
                 !trackedPackage.verification.riderPickupConfirmedAt ||
                 Boolean(trackedPackage.verification.receiverDeliveryConfirmedAt)
@@ -465,7 +465,7 @@ export function PackageTrackPanel({
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
             <button
-              onClick={onOpenSupport}
+              onClick={() => { void onOpenSupport(); }}
               style={{
                 padding: '10px 16px',
                 borderRadius: '99px',
@@ -549,7 +549,7 @@ export function PackageTrackPanel({
             {recentPackages.map(item => (
               <button
                 key={item.trackingId}
-                onClick={() => onOpenRecent(item)}
+                onClick={() => { void onOpenRecent(item); }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',

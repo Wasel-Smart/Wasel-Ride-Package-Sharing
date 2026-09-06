@@ -376,7 +376,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
             <Button
               size="lg"
               variant="outline"
-              onClick={() => navigate(config.secondaryTarget)}
+              onClick={() => { void navigate(config.secondaryTarget); }}
               className="border-white/15 bg-white/5 text-white hover:bg-white/10"
             >
               {config.secondaryLabel}

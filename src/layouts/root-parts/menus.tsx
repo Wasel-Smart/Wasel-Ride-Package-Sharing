@@ -64,7 +64,7 @@ export function NavDropdown({
           key={item.label}
           role="menuitem"
           tabIndex={0}
-          onClick={() => onNavigate(item.path)}
+          onClick={() => { void onNavigate(item.path); }}
           onKeyDown={e => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
@@ -152,7 +152,7 @@ export function UserMenu({
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => { void setOpen(o => !o); }}
         aria-haspopup="true"
         aria-expanded={open}
         style={{
@@ -373,7 +373,7 @@ export function MobileDrawer({
         background: 'rgba(0,0,0,0.75)',
         contain: 'layout style',
       }}
-      onClick={onClose}
+      onClick={() => { void onClose(); }}
     >
       <div
         style={{
@@ -407,7 +407,7 @@ export function MobileDrawer({
         >
           <WaselLogo size={56} theme="light" variant="full" />
           <button
-            onClick={onClose}
+            onClick={() => { void onClose(); }}
             aria-label={ar ? 'إغلاق القائمة' : 'Close menu'}
             style={{
               background: C.card,

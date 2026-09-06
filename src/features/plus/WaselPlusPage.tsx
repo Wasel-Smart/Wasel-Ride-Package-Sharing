@@ -217,7 +217,7 @@ export default function WaselPlusPage() {
               ))}
             </div>
             <button
-              onClick={handleActivatePlus}
+              onClick={() => { void handleActivatePlus(); }}
               style={{
                 width: '100%',
                 height: 50,
@@ -402,7 +402,7 @@ export default function WaselPlusPage() {
                     ))}
                   </div>
                   <button
-                    onClick={() => handleStartPass(corridor.id)}
+                    onClick={() => { void handleStartPass(corridor.id); }}
                     style={{
                       width: '100%',
                       height: 42,
@@ -507,7 +507,7 @@ export default function WaselPlusPage() {
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
                       <button
-                        onClick={() => handleSaveReminder(suggestion.corridorId)}
+                        onClick={() => { void handleSaveReminder(suggestion.corridorId); }}
                         style={{
                           height: 38,
                           padding: '0 14px',

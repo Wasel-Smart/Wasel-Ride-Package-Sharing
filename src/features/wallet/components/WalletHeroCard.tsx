@@ -54,7 +54,7 @@ export function WalletHeroCard({
           <span className="text-sm text-slate-400">{t.balance}</span>
           <button
             type="button"
-            onClick={onToggleBalance}
+            onClick={() => { void onToggleBalance(); }}
             className="text-slate-400 transition-colors hover:text-white"
           >
             {balanceVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
@@ -89,7 +89,7 @@ export function WalletHeroCard({
 
         <div className="grid grid-cols-3 gap-3">
           <Button
-            onClick={onShowTopUp}
+            onClick={() => { void onShowTopUp(); }}
             disabled={!canTopUp}
             className="h-12 rounded-xl text-sm font-semibold disabled:opacity-60"
             style={{ background: WaselColors.teal }}
@@ -98,7 +98,7 @@ export function WalletHeroCard({
             {t.addMoney}
           </Button>
           <Button
-            onClick={onShowWithdraw}
+            onClick={() => { void onShowWithdraw(); }}
             variant="outline"
             className="h-12 rounded-xl border-slate-600 text-sm font-semibold text-slate-200 hover:bg-slate-700/50"
           >
@@ -106,7 +106,7 @@ export function WalletHeroCard({
             {t.withdraw}
           </Button>
           <Button
-            onClick={onShowSend}
+            onClick={() => { void onShowSend(); }}
             variant="outline"
             className="h-12 rounded-xl border-slate-600 text-sm font-semibold text-slate-200 hover:bg-slate-700/50"
           >

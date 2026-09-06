@@ -85,7 +85,7 @@ export function RateDriverModal({
             <button
               key={star}
               type="button"
-              onClick={() => setRating(star)}
+              onClick={() => { void setRating(star); }}
               onMouseEnter={() => setHoveredRating(star)}
               onMouseLeave={() => setHoveredRating(0)}
               className="transition-transform hover:scale-110"
@@ -111,7 +111,7 @@ export function RateDriverModal({
               <button
                 key={tag}
                 type="button"
-                onClick={() => toggleTag(tag)}
+                onClick={() => { void toggleTag(tag); }}
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   selectedTags.includes(tag)
                     ? 'bg-blue-500 text-white'
@@ -147,10 +147,10 @@ export function RateDriverModal({
         )}
 
         <div className="flex gap-3">
-          <WaselButton onClick={onClose} variant="outline" style={{ flex: 1 }} disabled={loading}>
+          <WaselButton onClick={() => { void onClose(); }} variant="outline" style={{ flex: 1 }} disabled={loading}>
             {tx('common.cancel')}
           </WaselButton>
-          <WaselButton onClick={() => handleSubmit()} style={{ flex: 1 }} disabled={loading || rating === 0}>
+          <WaselButton onClick={() => { void handleSubmit(); }} style={{ flex: 1 }} disabled={loading || rating === 0}>
             {loading ? 'Submitting...' : 'Submit Rating'}
           </WaselButton>
         </div>

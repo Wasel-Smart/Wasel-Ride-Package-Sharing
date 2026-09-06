@@ -137,7 +137,7 @@ export const FindRideCard = React.memo(({
         event.currentTarget.style.transform = '';
         event.currentTarget.style.boxShadow = '';
       }}
-      onClick={onOpen}
+      onClick={() => { void onOpen(); }}
     >
       <div style={{ height: 2, background: DS.gradC }} />
       <div className="sp-ride-card-body" style={{ padding: '20px 24px' }}>

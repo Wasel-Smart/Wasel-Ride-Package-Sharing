@@ -228,7 +228,7 @@ export const NotificationItem = React.memo(({
             }}
           >
             {notification.action_url && (
-              <WaselButton size="sm" onClick={() => onOpen(notification)}>
+              <WaselButton size="sm" onClick={() => { void onOpen(notification); }}>
                 {labels.view}
               </WaselButton>
             )}
@@ -238,7 +238,7 @@ export const NotificationItem = React.memo(({
                 variant="outline"
                 size="sm"
                 icon={<Check size={16} />}
-                onClick={() => onMarkRead(notification.id)}
+                onClick={() => { void onMarkRead(notification.id); }}
               >
                 {labels.markRead}
               </WaselButton>
@@ -249,7 +249,7 @@ export const NotificationItem = React.memo(({
                 variant="ghost"
                 size="sm"
                 icon={<Trash2 size={16} />}
-                onClick={() => onArchive(notification.id)}
+                onClick={() => { void onArchive(notification.id); }}
               >
                 {labels.archive}
               </WaselButton>

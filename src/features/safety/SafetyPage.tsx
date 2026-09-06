@@ -95,7 +95,7 @@ export default function SafetyPage() {
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button
-              onClick={() => setSosActive(v => !v)}
+              onClick={() => { void setSosActive(v => !v); }}
               style={{
                 ...pillStyle(C.error),
                 border: 'none',

@@ -132,7 +132,7 @@ export function CookieConsentBanner() {
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <WaselButton
-            onClick={handleDecline}
+            onClick={() => { void handleDecline(); }}
             variant="outline"
             style={{
               borderColor: 'rgba(85, 233, 255, 0.3)',
@@ -143,7 +143,7 @@ export function CookieConsentBanner() {
           </WaselButton>
           <WaselButton
             id="cookie-accept-btn"
-            onClick={handleAccept}
+            onClick={() => { void handleAccept(); }}
             style={{
               background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 100%)',
               color: '#041018',

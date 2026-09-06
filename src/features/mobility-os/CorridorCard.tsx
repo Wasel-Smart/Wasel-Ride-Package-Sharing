@@ -37,7 +37,7 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
     <button
       data-testid={`mobility-os-corridor-${projection.corridor.id}`}
       type="button"
-      onClick={onSelect}
+      onClick={() => { void onSelect(); }}
       style={{
         width: '100%',
         textAlign: 'left',

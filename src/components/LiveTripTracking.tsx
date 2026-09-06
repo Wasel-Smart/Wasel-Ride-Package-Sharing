@@ -241,14 +241,14 @@ function SOSDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
             {!confirmed ? (
               <div className="space-y-3">
                 <Button
-                  onClick={handleSOS}
+                  onClick={() => { void handleSOS(); }}
                   className="w-full bg-red-500 hover:bg-red-600 text-white font-bold h-12 rounded-xl shadow-lg shadow-red-500/20"
                 >
                   <AlertTriangle className="w-4 h-4 mr-2" />
                   {tx('liveTripTracking.send_emergency_alert')}
                 </Button>
                 <Button
-                  onClick={onClose}
+                  onClick={() => { void onClose(); }}
                   variant="ghost"
                   className="w-full text-slate-400 hover:text-white rounded-xl h-10"
                 >
@@ -368,7 +368,7 @@ function TripRatingSheet({
                   key={s}
                   onMouseEnter={() => setHovered(s)}
                   onMouseLeave={() => setHovered(0)}
-                  onClick={() => setStars(s)}
+                  onClick={() => { void setStars(s); }}
                   className="flex flex-col items-center gap-1 group"
                 >
                   <motion.div
@@ -423,14 +423,14 @@ function TripRatingSheet({
               <Button
                 variant="ghost"
                 className="flex-1 h-11 border border-border text-slate-400 hover:text-white rounded-xl"
-                onClick={onSkip}
+                onClick={() => { void onSkip(); }}
                 disabled={submitting}
               >
                 {tx('liveTripTracking.skip')}
               </Button>
               <Button
                 className="flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 disabled:opacity-60"
-                onClick={handleSubmit}
+                onClick={() => { void handleSubmit(); }}
                 disabled={submitting || !stars}
               >
                 {submitting ? (
@@ -508,14 +508,14 @@ function CancelConfirmDialog({
               <Button
                 variant="ghost"
                 className="flex-1 h-11 border border-border text-slate-400 hover:text-white rounded-xl"
-                onClick={onClose}
+                onClick={() => { void onClose(); }}
                 disabled={cancelling}
               >
                 {tx('liveTripTracking.keep_ride')}
               </Button>
               <Button
                 className="flex-1 h-11 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-bold rounded-xl disabled:opacity-60"
-                onClick={onConfirm}
+                onClick={() => { void onConfirm(); }}
                 disabled={cancelling}
               >
                 {cancelling ? (
@@ -709,7 +709,7 @@ export function LiveTripTracking() {
           </p>
           <Button
             className="mt-6 h-11 rounded-xl px-5 font-semibold"
-            onClick={() => navigate('/app/my-trips')}
+            onClick={() => { void navigate(); }}
           >
             {tx('liveTripTracking.open_my_trips')}
           </Button>
@@ -835,7 +835,7 @@ export function LiveTripTracking() {
             </span>
           </div>
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => { void navigate(-1); }}
             className="text-slate-500 hover:text-white transition-colors"
             aria-label="Close trip tracking"
           >
@@ -929,7 +929,7 @@ export function LiveTripTracking() {
 
           {/* Safety code */}
           <button
-            onClick={copyShareCode}
+            onClick={() => { void copyShareCode(); }}
             className="w-full flex items-center gap-2 bg-card border border-border rounded-xl px-3 py-2.5 hover:border-muted-foreground/30 transition-all group"
           >
             <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" />
@@ -942,7 +942,7 @@ export function LiveTripTracking() {
 
           {/* Toggle trip details */}
           <button
-            onClick={() => setShowDetails(!showDetails)}
+            onClick={() => { void setShowDetails(!showDetails); }}
             className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-card border border-border text-sm text-slate-400 hover:text-white transition-all"
           >
             <span>{tx('liveTripTracking.trip_details')}</span>
@@ -1016,7 +1016,7 @@ export function LiveTripTracking() {
                   )}
                 </p>
                 <button
-                  onClick={() => setAiTip(false)}
+                  onClick={() => { void setAiTip(false); }}
                   className="text-slate-700 hover:text-slate-500"
                 >
                   <X className="w-3 h-3" />
@@ -1048,7 +1048,7 @@ export function LiveTripTracking() {
           {/* Cancel ride — only shown while trip is not yet complete */}
           {!arrived && (
             <Button
-              onClick={() => setShowCancel(true)}
+              onClick={() => { void setShowCancel(true); }}
               variant="ghost"
               className="w-full h-10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/5 hover:text-orange-300 hover:border-orange-500/40 rounded-xl text-sm font-medium"
             >
@@ -1058,7 +1058,7 @@ export function LiveTripTracking() {
           )}
 
           <Button
-            onClick={() => setShowSOS(true)}
+            onClick={() => { void setShowSOS(true); }}
             className="w-full h-10 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 rounded-xl text-sm font-bold transition-all"
           >
             <AlertTriangle className="w-3.5 h-3.5 mr-2" />
@@ -1074,7 +1074,7 @@ export function LiveTripTracking() {
       <CancelConfirmDialog
         open={showCancel}
         onClose={() => setShowCancel(false)}
-        onConfirm={handleCancelConfirm}
+        onConfirm={() => { void handleCancelConfirm(); }}
         cancelling={cancelling}
       />
 
@@ -1085,7 +1085,7 @@ export function LiveTripTracking() {
         driverImg={trip.driver.img}
         driverInitials={trip.driver.initials}
         fare={trip.price.toFixed(3)}
-        onSubmit={handleRatingSubmit}
+        onSubmit={() => { void handleRatingSubmit(); }}
         onSkip={handleRatingSkip}
       />
     </div>

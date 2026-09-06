@@ -30,18 +30,19 @@ export interface StructuredLogEntryOptions {
   requestId?: string;
 }
 
-export function createStructuredLogEntry({
-  level,
-  message,
-  service,
-  context,
-  requestId = createCorrelationId(),
-}: StructuredLogEntryOptions): StructuredLogEntry {
+export function createStructuredLogEntry(
+  level: StructuredLogLevel,
+  message: string,
+  service: string,
+  context?: Record<string, unknown>,
+  requestId?: string,
+): StructuredLogEntry {
+  const resolvedRequestId = requestId ?? createCorrelationId();
   return {
     level,
     message: sanitizeLogMessage(message),
     service: sanitizeLogMessage(service),
-    requestId,
+    requestId: resolvedRequestId,
     timestamp: new Date().toISOString(),
     context: sanitizeContext(context),
   };
