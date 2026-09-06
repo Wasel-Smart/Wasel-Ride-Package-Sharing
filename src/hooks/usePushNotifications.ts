@@ -17,7 +17,7 @@
  * ✅ Returns `isSupported` so callers can gracefully degrade
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { API_URL, fetchWithRetry, getAuthDetails } from '../services/core';
 import { sanitizeHtml } from '../utils/sanitization';
 
@@ -54,7 +54,7 @@ export function usePushNotifications() {
   const activeNotif = useRef<Notification | null>(null);
 
   // Keep permission state in sync with actual browser value
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isSupported) {return;}
     setPermission(NotificationApi.permission as NotifPermission);
   }, [isSupported, NotificationApi]);

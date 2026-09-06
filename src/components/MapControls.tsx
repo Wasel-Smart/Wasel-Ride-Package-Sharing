@@ -5,7 +5,6 @@ import {
   Minimize2,
   MapPin,
   Radio,
-  Locate,
   Navigation2,
   Map,
   Mountain,
@@ -133,6 +132,7 @@ function TrackingButton({ isTracking, startTracking, stopTracking, centerOnMe, t
         boxShadow: shadows.md,
       };
 
+  void centerOnMe;
   return (
     <button onClick={isTracking ? stopTracking : startTracking} style={style}>
       {isTracking ? (

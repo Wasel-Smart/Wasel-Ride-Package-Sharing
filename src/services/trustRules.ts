@@ -22,7 +22,39 @@ function verificationRank ( level?: string ): number {
   }
 }
 
-export function evaluateTrustCapability (
+function evaluateOfferRide(user: Pick<WaselUser, 'role' | 'phoneVerified' | 'emailVerified' | 'verificationLevel' | 'driverStatus'>): TrustGateResult {
+  if (user.role !== 'driver' && user.role !== 'both') {
+    return { allowed: false, reason: 'Turn on Driver mode first.', recommendation: 'Open Driver to start.' };
+  }
+  if (!user.phoneVerified || !user.emailVerified) {
+    return { allowed: false, reason: 'Verify phone and email.', recommendation: 'Finish checks in Trust Center.' };
+  }
+  const level = verificationRank(user.verificationLevel);
+  if (level < 3 || user.driverStatus !== 'approved') {
+    return { allowed: false, reason: 'Driver approval is required before publishing rides.', recommendation: 'Submit your driver documents and wait for final approval.' };
+  }
+  return { allowed: true, reason: null, recommendation: null };
+}
+
+function evaluateCarryPackages(user: Pick<WaselUser, 'role' | 'trustScore' | 'verificationLevel'>): TrustGateResult {
+  if (user.role !== 'driver' && user.role !== 'both') {
+    return { allowed: false, reason: 'Turn on Driver mode first.', recommendation: 'Complete driver setup.' };
+  }
+  const level = verificationRank(user.verificationLevel);
+  if (level < 3 || user.trustScore < 70) {
+    return { allowed: false, reason: 'Packages need full trust approval.', recommendation: 'Reach full driver verification first.' };
+  }
+  return { allowed: true, reason: null, recommendation: null };
+}
+
+function evaluateReceivePayouts(user: Pick<WaselUser, 'emailVerified'>): TrustGateResult {
+  if (!user.emailVerified) {
+    return { allowed: false, reason: 'Payouts need a verified email.', recommendation: 'Confirm your email address.' };
+  }
+  return { allowed: true, reason: null, recommendation: null };
+}
+
+export function evaluateTrustCapability(
   user:
     | Pick<
       WaselUser,
@@ -38,88 +70,33 @@ export function evaluateTrustCapability (
     | undefined,
   capability: TrustCapability,
 ): TrustGateResult {
-  if ( !user ) {
-    return {
-      allowed: false,
-      reason: 'Sign in to continue.',
-      recommendation: 'Open your account first.',
-    };
+  if (!user) {
+    return { allowed: false, reason: 'Sign in to continue.', recommendation: 'Open your account first.' };
   }
 
-  const level = verificationRank( user.verificationLevel );
   const walletBlocked =
     user.walletStatus === 'frozen' ||
     user.walletStatus === 'closed' ||
     user.walletStatus === 'unavailable';
 
-  if ( walletBlocked && capability !== 'priority_support' ) {
-    return {
-      allowed: false,
-      reason: 'Wallet needs review.',
-      recommendation: 'Fix wallet status in Wallet or Settings.',
-    };
+  if (walletBlocked && capability !== 'priority_support') {
+    return { allowed: false, reason: 'Wallet needs review.', recommendation: 'Fix wallet status in Wallet or Settings.' };
   }
 
-  if ( capability === 'offer_ride' ) {
-    if ( user.role !== 'driver' && user.role !== 'both' ) {
-      return {
-        allowed: false,
-        reason: 'Turn on Driver mode first.',
-        recommendation: 'Open Driver to start.',
-      };
-    }
-    if ( !user.phoneVerified || !user.emailVerified ) {
-      return {
-        allowed: false,
-        reason: 'Verify phone and email.',
-        recommendation: 'Finish checks in Trust Center.',
-      };
-    }
-    if ( level < 3 || user.driverStatus !== 'approved' ) {
-      return {
-        allowed: false,
-        reason: 'Driver approval is required before publishing rides.',
-        recommendation: 'Submit your driver documents and wait for final approval.',
-      };
-    }
-    return { allowed: true, reason: null, recommendation: null };
+  if (capability === 'offer_ride') {
+    return evaluateOfferRide(user);
   }
 
-  if ( capability === 'carry_packages' ) {
-    if ( user.role !== 'driver' && user.role !== 'both' ) {
-      return {
-        allowed: false,
-        reason: 'Turn on Driver mode first.',
-        recommendation: 'Complete driver setup.',
-      };
-    }
-    if ( level < 3 || user.trustScore < 70 ) {
-      return {
-        allowed: false,
-        reason: 'Packages need full trust approval.',
-        recommendation: 'Reach full driver verification first.',
-      };
-    }
-    return { allowed: true, reason: null, recommendation: null };
+  if (capability === 'carry_packages') {
+    return evaluateCarryPackages(user);
   }
 
-  if ( capability === 'receive_payouts' ) {
-    if ( !user.emailVerified ) {
-      return {
-        allowed: false,
-        reason: 'Payouts need a verified email.',
-        recommendation: 'Confirm your email address.',
-      };
-    }
-    return { allowed: true, reason: null, recommendation: null };
+  if (capability === 'receive_payouts') {
+    return evaluateReceivePayouts(user);
   }
 
-  if ( user.trustScore < 70 ) {
-    return {
-      allowed: false,
-      reason: 'Priority support needs stronger trust.',
-      recommendation: 'Complete checks and keep a good trip record.',
-    };
+  if (user.trustScore < 70) {
+    return { allowed: false, reason: 'Priority support needs stronger trust.', recommendation: 'Complete checks and keep a good trip record.' };
   }
 
   return { allowed: true, reason: null, recommendation: null };

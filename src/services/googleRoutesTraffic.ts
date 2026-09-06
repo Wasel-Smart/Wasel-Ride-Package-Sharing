@@ -54,6 +54,41 @@ function parseGoogleDurationSeconds(value: string | null | undefined): number | 
   return Number.isFinite(seconds) ? seconds : null;
 }
 
+function buildGoogleRoutesRequestBody(
+  origin: { lat: number; lng: number },
+  destination: { lat: number; lng: number },
+): Record<string, unknown> {
+  return {
+    origin: { location: { latLng: { latitude: origin.lat, longitude: origin.lng } } },
+    destination: {
+      location: { latLng: { latitude: destination.lat, longitude: destination.lng } },
+    },
+    travelMode: 'DRIVE',
+    routingPreference: 'TRAFFIC_AWARE',
+    departureTime: new Date().toISOString(),
+  };
+}
+
+function parseGoogleRoutesResponse(
+  json: Record<string, unknown>,
+): { speedKph: number; congestion: number; durationSeconds: number | null; distanceMeters: number } | null {
+  const route = Array.isArray(json?.routes) ? json.routes[0] : null;
+  const durationSeconds = parseGoogleDurationSeconds(route?.duration);
+  const staticDurationSeconds = parseGoogleDurationSeconds(route?.staticDuration);
+  const distanceMeters = Number(route?.distanceMeters ?? 0);
+
+  if (!durationSeconds || distanceMeters <= 0) {return null;}
+
+  const speedKph = Math.max(18, Math.round((distanceMeters / durationSeconds) * 3.6));
+  const trafficRatio =
+    staticDurationSeconds && staticDurationSeconds > 0
+      ? durationSeconds / staticDurationSeconds
+      : 1;
+  const congestion = Math.max(0.05, Math.min(0.98, (trafficRatio - 1) / 0.65));
+
+  return { speedKph, congestion, durationSeconds, distanceMeters };
+}
+
 export async function fetchGoogleTrafficSnapshot(
   routeId: string,
   from: string,
@@ -92,35 +127,17 @@ export async function fetchGoogleTrafficSnapshot(
         'X-Goog-Api-Key': apiKey,
         'X-Goog-FieldMask': 'routes.duration,routes.staticDuration,routes.distanceMeters',
       },
-      body: JSON.stringify({
-        origin: { location: { latLng: { latitude: origin.lat, longitude: origin.lng } } },
-        destination: {
-          location: { latLng: { latitude: destination.lat, longitude: destination.lng } },
-        },
-        travelMode: 'DRIVE',
-        routingPreference: 'TRAFFIC_AWARE',
-        departureTime: new Date().toISOString(),
-      }),
+      body: JSON.stringify(buildGoogleRoutesRequestBody(origin, destination)),
     });
 
     if (!response.ok) {return null;}
     const json = await response.json();
-    const route = Array.isArray(json?.routes) ? json.routes[0] : null;
-    const durationSeconds = parseGoogleDurationSeconds(route?.duration);
-    const staticDurationSeconds = parseGoogleDurationSeconds(route?.staticDuration);
-    const distanceMeters = Number(route?.distanceMeters ?? 0);
+    const parsed = parseGoogleRoutesResponse(json);
+    if (!parsed) {return null;}
 
-    if (!durationSeconds || distanceMeters <= 0) {return null;}
-
-    const speedKph = Math.max(18, Math.round((distanceMeters / durationSeconds) * 3.6));
-    const trafficRatio =
-      staticDurationSeconds && staticDurationSeconds > 0
-        ? durationSeconds / staticDurationSeconds
-        : 1;
-    const congestion = Math.max(0.05, Math.min(0.98, (trafficRatio - 1) / 0.65));
     const snapshot = {
-      speedKph,
-      congestion,
+      speedKph: parsed.speedKph,
+      congestion: parsed.congestion,
       updatedAt: new Date().toISOString(),
     };
 

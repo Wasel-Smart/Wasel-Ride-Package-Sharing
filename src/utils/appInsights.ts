@@ -9,57 +9,58 @@ import {
     ApplicationInsights,
     DistributedTracingModes,
 } from '@microsoft/applicationinsights-web';
+import { onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals';
 
 let appInsights: ApplicationInsights | null = null;
 
 export function initializeAppInsights(): void {
-    const instrumentationKey = import.meta.env.VITE_APP_INSIGHTS_KEY;
+    // Prefer connection string (modern); fall back to instrumentation key (legacy).
+    const connectionString = import.meta.env.VITE_APP_INSIGHTS_CONNECTION_STRING as string | undefined;
+    const instrumentationKey = import.meta.env.VITE_APP_INSIGHTS_KEY as string | undefined;
 
-    // Only initialize if instrumentation key is provided
-    if (!instrumentationKey) {
+    if (!connectionString && !instrumentationKey) {
         return;
     }
 
     try {
         appInsights = new ApplicationInsights({
             config: {
-                instrumentationKey,
+                ...(connectionString ? { connectionString } : { instrumentationKey }),
                 enableAutoRouteTracking: true,
                 enableAjaxErrorStatusText: true,
                 enableCorsCorrelation: true,
                 distributedTracingMode: DistributedTracingModes.AI_AND_W3C,
-                // Capture frontend performance metrics
                 maxAjaxCallsPerView: 500,
                 maxMessageLimit: 10000,
-                // Disable automatic exception catching in development
                 disableExceptionTracking: false,
-                // Enable console error tracking
-                loggingLevelConsole: 1,
+                loggingLevelConsole: import.meta.env.DEV ? 1 : 0,
             },
         });
 
         appInsights.loadAppInsights();
         appInsights.trackPageView();
 
-        // Track unhandled promise rejections
+        // Wire real Web Vitals into App Insights as custom metrics.
+        onCLS(({ value }) => appInsights?.trackMetric({ name: 'web_vital_CLS', average: value }));
+        onFCP(({ value }) => appInsights?.trackMetric({ name: 'web_vital_FCP', average: value }));
+        onINP(({ value }) => appInsights?.trackMetric({ name: 'web_vital_INP', average: value }));
+        onLCP(({ value }) => appInsights?.trackMetric({ name: 'web_vital_LCP', average: value }));
+        onTTFB(({ value }) => appInsights?.trackMetric({ name: 'web_vital_TTFB', average: value }));
+
         window.addEventListener('unhandledrejection', (event) => {
             if (appInsights) {
                 const exception = event.reason instanceof Error
                     ? event.reason
                     : new Error(String(event.reason ?? 'Unhandled promise rejection'));
-                appInsights.trackException({
-                    exception,
-                    severityLevel: 2,
-                });
+                appInsights.trackException({ exception, severityLevel: 2 });
             }
         });
 
-        // Track errors from error boundaries
         window.addEventListener('error', (event) => {
             if (appInsights) {
                 appInsights.trackException({
-                    exception: event.error || new Error(event.message),
-                    severityLevel: 2, // Error
+                    exception: event.error instanceof Error ? event.error : new Error(event.message),
+                    severityLevel: 2,
                 });
             }
         });

@@ -1,4 +1,4 @@
-import '@testing-library/jest-native/extend-expect';
+import '@testing-library/react-native/extend-expect';
 
 console.log('jest.setup.js BEFORE polyfill: crypto.randomUUID type:', typeof globalThis.crypto?.randomUUID);
 console.log('jest.setup.js BEFORE polyfill: fetch type:', typeof globalThis.fetch);

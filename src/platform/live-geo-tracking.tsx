@@ -6,7 +6,7 @@
 import { geoStream, type DriverLocation } from './geo-stream-realtime';
 import { telemetry } from './telemetry';
 import { productionMetricsCollector } from './production-metrics';
-import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { useCallback, useLayoutEffect, useState } from 'react';
 import { tx } from '../locales/tx';
 import { sanitizeLogMessage } from '../utils/sanitization';
 
