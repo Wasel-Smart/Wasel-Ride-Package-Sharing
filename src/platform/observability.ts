@@ -22,13 +22,21 @@ function sanitizeContext(context?: Record<string, unknown>): Record<string, unkn
   );
 }
 
-export function createStructuredLogEntry(
-  level: StructuredLogLevel,
-  message: string,
-  service: string,
-  context?: Record<string, unknown>,
-  requestId: string = createCorrelationId(),
-): StructuredLogEntry {
+export interface StructuredLogEntryOptions {
+  level: StructuredLogLevel;
+  message: string;
+  service: string;
+  context?: Record<string, unknown>;
+  requestId?: string;
+}
+
+export function createStructuredLogEntry({
+  level,
+  message,
+  service,
+  context,
+  requestId = createCorrelationId(),
+}: StructuredLogEntryOptions): StructuredLogEntry {
   return {
     level,
     message: sanitizeLogMessage(message),

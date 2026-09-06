@@ -28,60 +28,18 @@ interface MobileBottomNavProps {
   language?: 'en' | 'ar';
 }
 
-export function MobileBottomNav({ language }: MobileBottomNavProps) {
-  const { language: activeLanguage } = useLanguage();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const resolvedLanguage = language ?? activeLanguage;
-  const isArabic = resolvedLanguage === 'ar';
-
-  const isActive = (path: string) => {
-    if (path === '/')
-      {return (
-        location.pathname === '/' || location.pathname === '/app' || location.pathname === '/app/'
-      );}
-    return location.pathname.startsWith(path) || location.pathname.startsWith('/app' + path);
-  };
-
-  return (
-    <>
-      <style>{`
-        .wasel-bottom-nav {
-          display: flex !important;
-        }
-        .wrl-main-content {
-          padding-bottom: 80px !important;
-        }
-      `}</style>
-
-      <nav
-        className="wasel-bottom-nav"
-        aria-label={isArabic ? 'التنقل الرئيسي' : 'Main navigation'}
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 600,
-          background: BG,
-          borderTop: `1px solid ${BORDER}`,
-          boxShadow: '0 -12px 36px rgba(0,0,0,0.42), 0 -1px 0 rgba(88,221,255,0.08)',
-          paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))',
-          flexDirection: 'row',
-          justifyContent: 'space-around',
-          alignItems: 'stretch',
-          willChange: 'transform',
-          transform: 'translateZ(0)',
-        }}
-      >
-function NavItem({ item, isActive, isArabic }: { item: typeof CORE_NAV_ITEMS[number]; isActive: boolean; isArabic: boolean }) {
+function NavItem({ item, isActive, isArabic, navigate }: {
+  item: typeof CORE_NAV_ITEMS[number];
+  isActive: boolean;
+  isArabic: boolean;
+  navigate: ReturnType<typeof useNavigate>;
+}) {
   const Icon = ICONS[item.id as keyof typeof ICONS];
   const isPost = item.id === 'post';
   const itemColor = item.accent === 'gold' ? GOLD : CYAN;
 
   return (
     <button
-      key={item.id}
       onClick={() => { void navigate(item.path); }}
       aria-label={isArabic ? item.labelAr : item.label}
       aria-current={isActive ? 'page' : undefined}
@@ -184,6 +142,56 @@ function NavItem({ item, isActive, isArabic }: { item: typeof CORE_NAV_ITEMS[num
     </button>
   );
 }
+
+export function MobileBottomNav({ language }: MobileBottomNavProps) {
+  const { language: activeLanguage } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const resolvedLanguage = language ?? activeLanguage;
+  const isArabic = resolvedLanguage === 'ar';
+
+  const isActive = (path: string) => {
+    if (path === '/')
+      {return (
+        location.pathname === '/' || location.pathname === '/app' || location.pathname === '/app/'
+      );}
+    return location.pathname.startsWith(path) || location.pathname.startsWith('/app' + path);
+  };
+
+  return (
+    <>
+      <style>{`
+        .wasel-bottom-nav {
+          display: flex !important;
+        }
+        .wrl-main-content {
+          padding-bottom: 80px !important;
+        }
+      `}</style>
+
+      <nav
+        className="wasel-bottom-nav"
+        aria-label={isArabic ? 'التنقل الرئيسي' : 'Main navigation'}
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 600,
+          background: BG,
+          borderTop: `1px solid ${BORDER}`,
+          boxShadow: '0 -12px 36px rgba(0,0,0,0.42), 0 -1px 0 rgba(88,221,255,0.08)',
+          paddingBottom: 'max(8px, env(safe-area-inset-bottom, 8px))',
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          alignItems: 'stretch',
+          willChange: 'transform',
+          transform: 'translateZ(0)',
+        }}
+      >
+        {CORE_NAV_ITEMS.map(item => (
+          <NavItem key={item.id} item={item} isActive={isActive(item.path)} isArabic={isArabic} navigate={navigate} />
+        ))}
       </nav>
     </>
   );

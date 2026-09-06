@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 
 export function usePerformanceOptimization() {
   const rafId = useRef<number | null>(null);
