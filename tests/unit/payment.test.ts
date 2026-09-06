@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type * as BackendWorkflow from '@/services/backendWorkflow';
+import * as BackendWorkflow from '@/services/backendWorkflow';
 
 const createMockSupabase = () => {
   const mockEq = vi.fn();
@@ -119,8 +119,8 @@ describe('payment.test.ts', () => {
       bookingId: 'b-1',
     });
 
-    const callArgs = mockRequestEdgeJson.mock.calls[0][0] as { body: { amount: number } };
-    expect(callArgs.body.amount).toBe(1500);
+    const callArgs = mockRequestEdgeJson.mock.calls[0]?.[0] as { body: { amount: number } };
+    expect(callArgs?.body?.amount).toBe(1500);
   });
 
   it('normalizes non-JOD amount to minor units (multiplier 100)', async () => {
@@ -137,8 +137,8 @@ describe('payment.test.ts', () => {
       bookingId: 'b-1',
     });
 
-    const callArgs = mockRequestEdgeJson.mock.calls[0][0] as { body: { amount: number } };
-    expect(callArgs.body.amount).toBe(1000);
+    const callArgs = mockRequestEdgeJson.mock.calls[0]?.[0] as { body: { amount: number } };
+    expect(callArgs?.body?.amount).toBe(1000);
   });
 
   it('rejects amounts below minimum', async () => {
