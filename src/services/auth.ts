@@ -66,7 +66,7 @@ const ERROR_RULES: Array<{
     message: 'Your account has been suspended. Please contact support.',
   },
   {
-    test: (lower, code) => code === 'weak_password',
+    test: (_lower, code) => code === 'weak_password',
     message: 'Password is too weak. Please choose a stronger password.',
   },
   {
