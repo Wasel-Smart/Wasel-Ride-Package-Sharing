@@ -85,13 +85,14 @@ export function PWAInstallPrompt() {
     return null;
   }
 
+  const now = useMemo(() => Date.now(), []);
   const wasRecentlyDismissed = (() => {
     try {
       const dismissed = sessionStorage.getItem('wasel-pwa-install-dismissed');
       if (!dismissed) {return false;}
       const dismissedTime = parseInt(dismissed, 10);
       const sevenDays = 7 * 24 * 60 * 60 * 1000;
-      return Date.now() - dismissedTime < sevenDays;
+      return now - dismissedTime < sevenDays;
     } catch {
       return false;
     }
