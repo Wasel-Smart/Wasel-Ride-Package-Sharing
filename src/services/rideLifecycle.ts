@@ -226,7 +226,9 @@ export async function createRideBooking(input: {
     });
     persisted = result.booking;
   } catch (error) {
-    console.warn('[RideLifecycle] Supabase write failed, using local fallback:', error);
+    throw new Error(
+      `Booking could not be created: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 
   // ── 2. Build canonical record using the persisted ID (or local fallback) ───

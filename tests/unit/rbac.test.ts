@@ -251,9 +251,9 @@ describe('RBAC — resolveAccessRole', () => {
     expect(resolveAccessRole('')).toBe('guest');
   });
 
-  it('returns user for unknown role string', () => {
-    expect(resolveAccessRole('superuser')).toBe('user');
-    expect(resolveAccessRole('moderator')).toBe('user');
+  it('returns guest for unknown role string (fail-closed)', () => {
+    expect(resolveAccessRole('superuser')).toBe('guest');
+    expect(resolveAccessRole('moderator')).toBe('guest');
   });
 
   it.each(ALL_ROLES)('passes through valid role %s unchanged', (role) => {

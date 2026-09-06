@@ -137,6 +137,20 @@ export abstract class BaseWorker<T = unknown> {
     );
   }
 
+  /** Drain in-flight messages before stopping. Waits up to `timeoutMs`. */
+  async drain(timeoutMs = 10_000): Promise<void> {
+    this.isRunning = false;
+    this.unsubscribers.forEach(unsub => unsub());
+    this.unsubscribers = [];
+    const deadline = Date.now() + timeoutMs;
+    while (this['_inFlight'] > 0 && Date.now() < deadline) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    console.info(
+      JSON.stringify(createStructuredLogEntry('info', `Worker ${sanitizeLogMessage(this.config.name)} drained`, sanitizeLogMessage(this.config.name))),
+    );
+  }
+
   private toQueueMessage(message: BrokerMessage): QueueMessage<T> {
     return {
       id: message.id,
