@@ -835,7 +835,7 @@ export function LiveTripTracking() {
             </span>
           </div>
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => { void navigate(-1); }}
             className="text-slate-500 hover:text-white transition-colors"
             aria-label="Close trip tracking"
           >
@@ -1074,7 +1074,7 @@ export function LiveTripTracking() {
       <CancelConfirmDialog
         open={showCancel}
         onClose={() => setShowCancel(false)}
-        onConfirm={handleCancelConfirm}
+        onConfirm={() => handleCancelConfirm()}
         cancelling={cancelling}
       />
 
@@ -1085,7 +1085,7 @@ export function LiveTripTracking() {
         driverImg={trip.driver.img}
         driverInitials={trip.driver.initials}
         fare={trip.price.toFixed(3)}
-        onSubmit={handleRatingSubmit}
+        onSubmit={() => handleRatingSubmit()}
         onSkip={handleRatingSkip}
       />
     </div>
