@@ -1,7 +1,9 @@
 import { C, F, SPACE, TYPE } from '../../../utils/wasel-ds';
 
 export function FieldError({ message }: { message: string | null }) {
-  if (!message) return null;
+  if (!message) {
+    return null;
+  }
   return (
     <div
       role="alert"
@@ -39,7 +41,9 @@ export function FieldError({ message }: { message: string | null }) {
 }
 
 export function FieldSuccess({ message }: { message?: string }) {
-  if (!message) return null;
+  if (!message) {
+    return null;
+  }
   return (
     <div
       style={{

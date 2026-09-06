@@ -901,9 +901,10 @@ export default function TrustCenterPage() {
                     label={t('trustCenterExpanded.sanadReference')}
                     value={identityReference}
                     onChange={setIdentityReference}
-                    dir={ar ? 'rtl' : 'ltr'}
-                    aria-invalid={!!validationErrors.identityReference}
-                    aria-describedby="identity-reference-error"
+                          dir={ar ? 'rtl' : 'ltr'}
+                          aria-invalid={Boolean(validationErrors.identityReference)}
+                          aria-describedby="identity-reference-error"
+
                   />
                   {validationErrors.identityReference ? (
                     <div id="identity-reference-error" style={{ color: C.error, fontSize: TYPE.size.xs, fontFamily: F, marginTop: SPACE[1] }}>
@@ -1055,7 +1056,7 @@ export default function TrustCenterPage() {
                         onChange={setPhoneInput}
                         type="tel"
                         dir="ltr"
-                        aria-invalid={!!validationErrors.phone}
+                        aria-invalid={Boolean(validationErrors.phone)}
                         aria-describedby="phone-number-error"
                       />
                       {validationErrors.phone ? (
@@ -1088,7 +1089,7 @@ export default function TrustCenterPage() {
                             onChange={setPhoneCode}
                             type="text"
                             dir="ltr"
-                            aria-invalid={!!validationErrors.phoneCode}
+                            aria-invalid={Boolean(validationErrors.phoneCode)}
                             aria-describedby="phone-code-error"
                           />
                           {validationErrors.phoneCode ? (
@@ -1161,7 +1162,7 @@ export default function TrustCenterPage() {
                           value={licenseNumber}
                           onChange={setLicenseNumber}
                           dir={ar ? 'rtl' : 'ltr'}
-                          aria-invalid={!!validationErrors.licenseNumber}
+                          aria-invalid={Boolean(validationErrors.licenseNumber)}
                           aria-describedby="driver-license-error"
                         />
                         {validationErrors.licenseNumber ? (

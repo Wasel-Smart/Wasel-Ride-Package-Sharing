@@ -13,9 +13,13 @@ function statusStyle(status: ReviewHistoryItem['status']) {
 }
 
 function formatDate(iso: string | null): string {
-  if (!iso) return 'No date';
+  if (!iso) {
+    return 'No date';
+  }
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return 'No date';
+  if (Number.isNaN(date.getTime())) {
+    return 'No date';
+  }
   return date.toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
