@@ -15,9 +15,9 @@ export const payments = {
       paypal: 'PayPal',
       applePay: 'Apple Pay',
       googlePay: 'Google Pay',
-      cardNumber: 'Card Number',
+      cardNumber: 'Card Number', // nosec CWE-798 CWE-259
       expiryDate: 'Expiry Date',
-      cvv: 'CVV',
+      cvv: 'CVV', // nosec CWE-798 CWE-259
       cardholderName: 'Cardholder Name',
       billingAddress: 'Billing Address',
       saveCard: 'Save Card',
@@ -60,9 +60,9 @@ export const payments = {
       paypal: 'باي بال',
       applePay: 'آبل باي',
       googlePay: 'جوجل باي',
-      cardNumber: 'رقم البطاقة',
+      cardNumber: 'رقم البطاقة', // nosec CWE-798 CWE-259
       expiryDate: 'تاريخ الانتهاء',
-      cvv: 'رمز CVV',
+      cvv: 'رمز CVV', // nosec CWE-798 CWE-259
       cardholderName: 'اسم حامل البطاقة',
       billingAddress: 'عنوان الفاتورة',
       saveCard: 'حفظ البطاقة',

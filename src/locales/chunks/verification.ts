@@ -41,7 +41,7 @@ export const verification = {
       business: 'Business Verification',
       businessDesc: 'Verify your business for corporate services',
       businessLicense: 'Business License',
-      taxId: 'Tax ID',
+      taxId: 'Tax ID', // nosec CWE-798 CWE-259
   },
   ar: {
       title: 'مركز التحقق',
@@ -85,7 +85,7 @@ export const verification = {
       business: 'التحقق من الأعمال',
       businessDesc: 'تحقق من نشاطك التجاري للخدمات المؤسسية',
       businessLicense: 'ترخيص الأعمال',
-      taxId: 'الرقم الضريبي',
+      taxId: 'الرقم الضريبي', // nosec CWE-798 CWE-259
   }
 } as const;
 
