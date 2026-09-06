@@ -85,9 +85,6 @@ const NotFound = memo(() => {
   );
 });
 
-const ForbiddenPage = lazy(() => import('./pages/ForbiddenPage'));
-const ServerErrorPage = lazy(() => import('./pages/ServerErrorPage'));
-
 const isInvalidHookCallError = (message: string): boolean =>
   /invalid hook call/i.test(message);
 
@@ -298,7 +295,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  },
+  } as any,
   {
     Component: ProtectedOutlet,
     require: 'school:read',
@@ -308,7 +305,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  },
+  } as any,
   {
     Component: ProtectedOutlet,
     require: 'operations:read',
@@ -323,7 +320,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  },
+  } as any,
   {
     Component: ProtectedOutlet,
     require: 'analytics:read',
@@ -333,7 +330,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  },
+  } as any,
   {
     Component: ProtectedOutlet,
     require: 'trust:moderate',
@@ -343,7 +340,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  },
+  } as any,
   // ── Admin ────────────────────────────────────────────────────────────────
   {
     Component: ProtectedOutlet,

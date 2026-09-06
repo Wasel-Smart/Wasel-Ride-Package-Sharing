@@ -154,7 +154,6 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!settingsHydratedRef.current) {return;}
-
     const handle = window.setTimeout(() => {
       void updateAccountSettings(user?.id ?? null, {
         privacy,
@@ -165,10 +164,7 @@ export default function SettingsPage() {
         },
       });
     }, 250);
-
-    return () => {
-      window.clearTimeout(handle);
-    };
+    return () => { window.clearTimeout(handle); };
   }, [ar, display, language, privacy, user?.id]);
 
   useEffect(() => {

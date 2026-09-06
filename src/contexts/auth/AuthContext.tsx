@@ -84,7 +84,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [waselUser, setWaselUser] = useState<WaselUser | null>(null);
   const optimisticRef = useRef<Partial<WaselUser> | null>(null);
 
-  const fetchProfile = useCallback(async (forceCreate = false, authUser?: User | null) => {
+  const fetchProfile = useCallback(async (options: { forceCreate?: boolean; authUser?: User | null } = {}) => {
+    const { forceCreate = false, authUser } = options;
     if (!authUser || !getSupabaseClient()) {
       setProfile(null);
       return null;
@@ -161,7 +162,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             return;
           }
 
-          void fetchProfile(shouldEnsureProfile, nextSession.user)
+          void fetchProfile({ forceCreate: shouldEnsureProfile, authUser: nextSession.user })
             .catch(error => {
               if (import.meta.env?.DEV) {
                 console.warn('[Auth] Profile refresh warning:', sanitizeLogMessage(String(error)));
@@ -191,7 +192,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
             setSession(data.session);
             setUser(data.session.user);
-            await fetchProfile(true, data.session.user);
+            await fetchProfile({ forceCreate: true, authUser: data.session.user });
           } catch (error) {
             if (import.meta.env?.DEV) {
               console.warn('Auth callback sync warning:', sanitizeLogMessage(String(error)));
@@ -241,13 +242,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [user, profile]);
 
   const signUp = useCallback(
-    async (
-      email: string,
-      password: string,
-      fullName: string,
-      phone?: string,
-      returnTo?: string,
-    ): Promise<SignUpResult> => {
+    async (options: {
+      email: string;
+      password: string;
+      fullName: string;
+      phone?: string;
+      returnTo?: string;
+    }): Promise<SignUpResult> => {
       if (!getSupabaseClient()) {
         return { error: new Error('Backend not configured') };
       }
@@ -258,12 +259,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         const { authAPI } = await import('../../services/auth');
         const data = await authAPI.signUp({
-          email,
-          password,
+          email: options.email,
+          password: options.password,
           firstName,
           lastName,
-          phone: phone ?? '',
-          returnTo,
+          phone: options.phone ?? '',
+          returnTo: options.returnTo,
         });
         const authUser = data.user ?? data.session?.user ?? null;
 
@@ -406,7 +407,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshProfile = useCallback(async () => {
     if (!user) {return;}
-    await fetchProfile(false, user);
+    await fetchProfile({ forceCreate: false, authUser: user });
   }, [fetchProfile, user]);
 
   const updateUser = useCallback(
