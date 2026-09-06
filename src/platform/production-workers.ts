@@ -301,16 +301,18 @@ const notificationWorker = createWorker<AnyRecord>(
         .eq('booking_id', payload.bookingId as string)
         .maybeSingle();
 
-      const userId = (booking?.passenger_id as string) ?? (payload.driverId as string);
-      if (userId) {
-        await notificationsAPI.createNotification({
-          title: 'Driver assigned',
-          message: `A driver has been assigned to your ride.`,
-          type: 'booking',
-          priority: 'high',
-          action_url: '/app/my-trips?tab=rides',
-        } as never);
+      const userId = booking?.passenger_id as string | undefined;
+      if (!userId) {
+        console.warn('[notification-worker] rides.assigned: booking not found, skipping', sanitizeLogMessage(payload.bookingId as string));
+        return;
       }
+      await notificationsAPI.createNotification({
+        title: 'Driver assigned',
+        message: `A driver has been assigned to your ride.`,
+        type: 'booking',
+        priority: 'high',
+        action_url: '/app/my-trips?tab=rides',
+      } as never);
     } else if (topic === 'packages.delivered') {
       if (!ensureBackend() || !client) {return;}
       const { data: pkg } = await client
@@ -364,32 +366,12 @@ const opsWorker = createWorker<AnyRecord>(
         const client = supabase;
         if (!client) {return;}
         const metricDate = new Date().toISOString().slice(0, 10);
-        const { data: existing } = await client
-          .from('ops_aggregates')
-          .select('id, value, sample_count')
-          .eq('metric_date', metricDate)
-          .eq('metric_name', 'revenue_captured')
-          .maybeSingle();
-
-        if (existing) {
-          await client
-            .from('ops_aggregates')
-            .update({
-              value: (existing.value ?? 0) + ((payload.amount as number) ?? 0),
-              sample_count: (existing.sample_count ?? 0) + 1,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', existing.id);
-        } else {
-          await client.from('ops_aggregates').insert({
-            metric_date: metricDate,
-            metric_name: 'revenue_captured',
-            dimension: (payload.entityType as string) ?? 'unknown',
-            value: (payload.amount as number) ?? 0,
-            sample_count: 1,
-            updated_at: new Date().toISOString(),
-          });
-        }
+        await client.rpc('increment_ops_aggregate', {
+          p_metric_date: metricDate,
+          p_metric_name: 'revenue_captured',
+          p_dimension: (payload.entityType as string) ?? 'unknown',
+          p_amount: (payload.amount as number) ?? 0,
+        });
       }
     }
 

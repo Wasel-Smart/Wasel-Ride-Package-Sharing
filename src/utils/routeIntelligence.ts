@@ -322,13 +322,21 @@ export function checkPackageCompatibility(
  * Optimise stop order for a multi-stop trip using nearest-neighbour TSP.
  * Prayer stops are injected automatically at 2-hour intervals.
  */
-export function optimizeMultiStopRoute(
-  origin: string,
-  destination: string,
-  waypoints: string[],
-  departureTimeISO: string,
-  distanceMatrix: Record<string, Record<string, number>>, // city → city → km
-): RouteOptimizationResult {
+export interface OptimizeMultiStopRouteOptions {
+  origin: string;
+  destination: string;
+  waypoints: string[];
+  departureTimeISO: string;
+  distanceMatrix: Record<string, Record<string, number>>;
+}
+
+export function optimizeMultiStopRoute({
+  origin,
+  destination,
+  waypoints,
+  departureTimeISO,
+  distanceMatrix,
+}: OptimizeMultiStopRouteOptions): RouteOptimizationResult {
   void departureTimeISO;
   if (waypoints.length === 0) {
     const direct = distanceMatrix[origin]?.[destination] ?? 0;

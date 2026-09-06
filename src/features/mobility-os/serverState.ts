@@ -68,7 +68,7 @@ export function useMobilityOSServerState() {
 
   useEffect(() => {
     activeRef.current = true;
-    void loadSnapshot();
+    const timer = setTimeout(() => void loadSnapshot(), 0);
 
     const unsubscribe = subscribeToMobilityCorridorChanges(() => {
       setSource('server');
@@ -82,6 +82,7 @@ export function useMobilityOSServerState() {
 
     return () => {
       activeRef.current = false;
+      clearTimeout(timer);
       clearReconcileTimer();
       unsubscribe();
       unsubscribeFallback();

@@ -391,9 +391,11 @@ export const productionMetricsCollector = new ProductionMetricsCollector();
 // Auto-collect metrics every 5 minutes in production
 let productionMetricsTimer: ReturnType<typeof setInterval> | null = null;
 if (import.meta.env.MODE === 'production') {
-  productionMetricsTimer = setInterval(async () => {
-    const metrics = await productionMetricsCollector.collectProductionMetrics('5min');
-    await productionMetricsCollector.publishMetrics(metrics);
+  productionMetricsTimer = setInterval(() => {
+    void (async () => {
+      const metrics = await productionMetricsCollector.collectProductionMetrics('5min');
+      await productionMetricsCollector.publishMetrics(metrics);
+    })();
   }, 300000);
 }
 

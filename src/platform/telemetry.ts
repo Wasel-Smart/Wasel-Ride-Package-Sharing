@@ -35,9 +35,14 @@ class TelemetryCollector {
   private traces: Map<string, TraceSpan> = new Map();
   private flushInterval: number = 30000; // 30 seconds
   private endpoint: string;
+  private authToken: string | undefined;
 
   constructor(endpoint?: string) {
     this.endpoint = endpoint || '/api/telemetry';
+    this.authToken =
+      typeof import.meta !== 'undefined'
+        ? (import.meta.env?.VITE_TELEMETRY_TOKEN as string | undefined)
+        : undefined;
     this.startAutoFlush();
   }
 
@@ -162,7 +167,10 @@ class TelemetryCollector {
     try {
       await fetch(this.endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(this.authToken ? { Authorization: `Bearer ${this.authToken}` } : {}),
+        },
         body: JSON.stringify(payload),
         keepalive: true,
       });
