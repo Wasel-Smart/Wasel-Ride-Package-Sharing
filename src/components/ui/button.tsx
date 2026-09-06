@@ -63,6 +63,7 @@ const Button = React.forwardRef<
     // OPTIMIZED: Attach instant feedback on mount - DEFERRED to avoid blocking FID
     React.useEffect(() => {
       const element = buttonRef.current;
+      const cleanups = feedbackCleanups.current;
       if (!element || !enableFeedback) {return;}
 
       // Defer feedback attachment to avoid blocking initial interactions
@@ -70,7 +71,7 @@ const Button = React.forwardRef<
         const cleanupTouch = instantFeedback.attachTouchFeedback(element, feedbackType);
         const cleanupClick = instantFeedback.attachClickFeedback(element, feedbackType);
 
-        feedbackCleanups.current.set(element, () => {
+        cleanups.set(element, () => {
           cleanupTouch();
           cleanupClick();
         });
@@ -78,8 +79,8 @@ const Button = React.forwardRef<
 
       return () => {
         clearTimeout(timeoutId);
-        const cleanup = buttonRef.current
-          ? feedbackCleanups.current.get(buttonRef.current)
+        const cleanup = element
+          ? cleanups.get(element)
           : undefined;
         cleanup?.();
       };

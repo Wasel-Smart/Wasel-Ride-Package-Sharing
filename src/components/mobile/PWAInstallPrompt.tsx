@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { Download, X } from 'lucide-react';
 import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 import { WaselButton } from '../wasel-ui/WaselButton';
@@ -16,7 +16,7 @@ export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === 'undefined') {return;}
 
     const isStandaloneMode =
