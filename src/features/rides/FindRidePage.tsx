@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import { useRideFilters } from './hooks/useRideFilters';
@@ -478,7 +478,7 @@ export function FindRidePage() {
         <SectionHead
           emoji={<Search size={24} />}
           title="Book a Ride"
-          titleAr="احجز مشوار"
+          titleAr="Ø§Ø­Ø¬Ø² Ù…Ø´ÙˆØ§Ø±"
           sub="Compare verified routes, live demand, and route-level price clarity."
           action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
         />
@@ -677,7 +677,7 @@ export function FindRidePage() {
                     </p>
                     <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>
                       {selectedSignal
-                        ? `${selectedSignal.liveSearches} people searching · ${selectedSignal.liveBookings} booked · ${selectedSignal.activeDemandAlerts} watching`
+                        ? `${selectedSignal.liveSearches} people searching Â· ${selectedSignal.liveBookings} booked Â· ${selectedSignal.activeDemandAlerts} watching`
                         : 'Select a route above to see live demand.'}
                     </p>
                   </div>
@@ -697,113 +697,15 @@ export function FindRidePage() {
                   showRadars={false}
                 />
               </div>
-
-              {bookingMessage && (
-                <div
-                  role="status"
-                  aria-live="polite"
-                  style={{
-                    marginTop: 14,
-                    display: 'flex',
-                    gap: 10,
-                    alignItems: 'center',
-                    background: C.greenDim,
-                    border: `1px solid ${C.greenDim}`,
-                    borderRadius: r(14),
-                    padding: '12px 14px',
-                    color: C.text,
-                    fontSize: '0.84rem',
-                  }}
-                >
-                  <CheckCircle2 size={16} color={DS.green} />
-                  <span>{bookingMessage}</span>
-                </div>
-              )}
-              {bookingSuccess && (
-                <div
-                  style={{
-                    marginTop: 14,
-                    background: `linear-gradient(135deg, ${C.greenDim}, ${C.cyanDim})`,
-                    border: `1px solid ${C.greenDim}`,
-                    borderRadius: r(16),
-                    padding: '16px 18px',
-                    display: 'grid',
-                    gap: 12,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      flexWrap: 'wrap',
-                    }}
-                  >
-                    <div>
-                      <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem' }}>
-                        {bookingSuccess.status === 'pending_driver'
-                          ? 'Request sent'
-                          : 'Seat confirmed'}
-                      </div>
-                      <div
-                        style={{ color: DS.sub, fontSize: '0.8rem', lineHeight: 1.6, marginTop: 6 }}
-                      >
-                        {bookingSuccess.status === 'pending_driver'
-                          ? `${bookingSuccess.routeLabel} is now waiting on ${bookingSuccess.driverName}. Wasel will update My Trips as soon as the driver confirms.`
-                          : `${bookingSuccess.routeLabel} is secured at ${bookingSuccess.priceJod} JOD. Boarding details and ticket tracking are now ready in My Trips.`}
-                      </div>
-                    </div>
-                    <span
-                      style={{
-                        ...pill(bookingSuccess.status === 'pending_driver' ? DS.gold : DS.green),
-                        fontSize: '0.72rem',
-                      }}
-                    >
-                      {bookingSuccess.status === 'pending_driver'
-                        ? `${bookingSuccess.priceJod} JOD pending`
-                        : `${bookingSuccess.priceJod} JOD confirmed`}
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <WaselButton onClick={openMyTrips} variant="gold" size="sm">
-                      Open My Trips
-                    </WaselButton>
-                    <WaselButton
-                      onClick={() => setBookingSuccess(null)}
-                      variant="outline"
-                      size="sm"
-                    >
-                      Keep browsing
-                    </WaselButton>
-                  </div>
-                  {bookingSuccess.ticketCode ? (
-                    <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
-                      Ticket {bookingSuccess.ticketCode}
-                    </div>
-                  ) : null}
-                </div>
-              )}
-              {retentionMessage && (
-                <div
-                  style={{
-                    marginTop: 14,
-                    display: 'flex',
-                    gap: 10,
-                    alignItems: 'center',
-                    background: `${DS.cyan}12`,
-                    border: `1px solid ${DS.cyan}30`,
-                    borderRadius: r(14),
-                    padding: '12px 14px',
-                    color: C.text,
-                    fontSize: '0.84rem',
-                  }}
-                >
-                  <Sparkles size={16} color={DS.cyan} />
-                  <span>{retentionMessage}</span>
-                </div>
-              )}
-
+              <BookingStatusBanners
+                bookingMessage={bookingMessage}
+                bookingSuccess={bookingSuccess}
+                retentionMessage={retentionMessage}
+                onDismissSuccess={() => setBookingSuccess(null)}
+                onOpenMyTrips={openMyTrips}
+                openMyTripsLabel="Open My Trips"
+                keepBrowsingLabel="Keep Browsing"
+              />
               <div
                 className="sp-4col"
                 style={{
@@ -820,7 +722,7 @@ export function FindRidePage() {
                       ? `${selectedSignal.activeSupply} departures`
                       : `${corridorRides.length} departures`,
                     sub: selectedSignal
-                      ? `${selectedSignal.liveBookings} booked · ${selectedSignal.activeDemandAlerts} watching`
+                      ? `${selectedSignal.liveBookings} booked Â· ${selectedSignal.activeDemandAlerts} watching`
                       : 'Live supply on this route',
                     tone: DS.cyan,
                   },
@@ -850,7 +752,7 @@ export function FindRidePage() {
                       ? `${selectedSignal.routeOwnershipScore}/100`
                       : (corridorPlan?.routeMoat ?? 'Growing'),
                     sub: selectedSignal
-                      ? selectedSignal.productionSources.slice(0, 2).join(' · ')
+                      ? selectedSignal.productionSources.slice(0, 2).join(' Â· ')
                       : `${demandStats.active} saved alerts`,
                     tone: DS.cyan,
                   },
@@ -909,12 +811,12 @@ export function FindRidePage() {
             >
               <h2 style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
                 {searched
-                  ? `${from} → ${to} · ${results.length} ride${results.length !== 1 ? 's' : ''} found`
-                  : `Popular routes · ${results.length} departures`}
+                  ? `${from} â†’ ${to} Â· ${results.length} ride${results.length !== 1 ? 's' : ''} found`
+                  : `Popular routes Â· ${results.length} departures`}
               </h2>
               {selectedSignal ? (
                 <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
-                  Best price {selectedSignal.priceQuote.finalPriceJod} JOD · Next departure {selectedSignal.nextWaveWindow}
+                  Best price {selectedSignal.priceQuote.finalPriceJod} JOD Â· Next departure {selectedSignal.nextWaveWindow}
                 </div>
               ) : null}
               <div className="sp-sort-bar" style={{ display: 'flex', gap: 6 }}>
@@ -1115,7 +1017,7 @@ export function FindRidePage() {
                   <div>
                     <div style={{ color: C.text, fontWeight: 800 }}>Why this route fits</div>
                     <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 2 }}>
-                      Demand signals for {from} → {to}.
+                      Demand signals for {from} â†’ {to}.
                     </div>
                   </div>
                 </div>
