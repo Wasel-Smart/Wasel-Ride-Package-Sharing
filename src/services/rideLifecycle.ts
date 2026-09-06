@@ -213,7 +213,6 @@ function resolveBookingDate(ride: PostedRide | undefined, raw: Record<string, un
   if (ride?.date) {return ride.date;}
   return new Date(String(raw.created_at ?? new Date().toISOString())).toISOString().slice(0, 10);
 }
-}
 
 // ── Public API ────────────────────────────────────────────────────────────────
 

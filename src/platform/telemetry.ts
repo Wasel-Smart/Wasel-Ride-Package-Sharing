@@ -174,7 +174,7 @@ class TelemetryCollector {
   private startAutoFlush(): void {
     if (typeof window === 'undefined') {return;}
 
-    this.flushTimer = setInterval(() => this.flush(), this.flushInterval);
+    this.flushTimer = setInterval(() => { void this.flush(); }, this.flushInterval);
 
     window.addEventListener('beforeunload', () => {
       this.flush();
