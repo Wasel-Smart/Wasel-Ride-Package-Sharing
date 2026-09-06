@@ -104,6 +104,7 @@ function TrackingButton({ isTracking, startTracking, stopTracking, centerOnMe, t
   centerOnMe: () => void;
   tx: (key: string) => string;
 }) {
+  void centerOnMe;
   const baseStyle = {
     ...CONTROL_BUTTON_BASE,
     minHeight: 44,
