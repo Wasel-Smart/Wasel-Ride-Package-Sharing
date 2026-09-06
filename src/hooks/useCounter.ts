@@ -6,10 +6,10 @@ interface CounterState {
 }
 
 export function useCounter(initialValue = 0) {
-  const [state, setState] = useState<CounterState>({
+  const [state, setState] = useState<CounterState>(() => ({
     count: initialValue,
     lastUpdated: Date.now(),
-  });
+  }));
 
   const countRef = useRef(initialValue);
   const listenersRef = useRef<Set<(state: CounterState) => void>>(new Set());

@@ -150,7 +150,7 @@ export function RateDriverModal({
           <WaselButton onClick={onClose} variant="outline" style={{ flex: 1 }} disabled={loading}>
             {tx('common.cancel')}
           </WaselButton>
-          <WaselButton onClick={handleSubmit} style={{ flex: 1 }} disabled={loading || rating === 0}>
+          <WaselButton onClick={() => handleSubmit()} style={{ flex: 1 }} disabled={loading || rating === 0}>
             {loading ? 'Submitting...' : 'Submit Rating'}
           </WaselButton>
         </div>

@@ -47,13 +47,13 @@ export function normalizeBookingList(bookings: unknown): BookingListResponse {
 }
 
 export const bookingsAPI = {
-  async createBooking(
-    tripId: string,
-    seatsRequested: number,
-    pickup?: string,
-    dropoff?: string,
-    metadata?: Record<string, unknown>,
-  ): Promise<BookingRecord> {
+  async createBooking(input: {
+    tripId: string;
+    seatsRequested: number;
+    pickup?: string;
+    dropoff?: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<BookingRecord> {
     return runBackendWorkflow({
       operation: 'Booking creation',
       authMode: 'required',
@@ -61,12 +61,12 @@ export const bookingsAPI = {
       fallback: async ({ userId }) =>
         normalizeBookingRecord(
           await createDirectBooking({
-            tripId,
+            tripId: input.tripId,
             userId: userId ?? '',
-            seatsRequested,
-            pickup,
-            dropoff,
-            metadata,
+            seatsRequested: input.seatsRequested,
+            pickup: input.pickup,
+            dropoff: input.dropoff,
+            metadata: input.metadata,
           }),
         ),
       edge: context =>
@@ -76,11 +76,11 @@ export const bookingsAPI = {
           authMode: 'required',
           context,
           body: {
-            trip_id: tripId,
-            seats_requested: seatsRequested,
-            pickup_stop: pickup,
-            dropoff_stop: dropoff,
-            ...metadata,
+            trip_id: input.tripId,
+            seats_requested: input.seatsRequested,
+            pickup_stop: input.pickup,
+            dropoff_stop: input.dropoff,
+            ...input.metadata,
           },
           operation: 'Failed to create booking',
         }),

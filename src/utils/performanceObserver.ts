@@ -98,9 +98,10 @@ function initLayoutShiftObserver() {
   try {
     const observer = new PerformanceObserver((list) => {
       list.getEntries().forEach((entry) => {
-        if ((entry as PerformanceEntry & { value?: number }).value && (entry as PerformanceEntry & { value?: number }).value! > 0.01) {
+        const entryValue = (entry as PerformanceEntry & { value?: number }).value;
+        if (entryValue && entryValue > 0.01) {
           logger.warning('Layout shift detected', {
-            value: (entry as PerformanceEntry & { value?: number }).value,
+            value: entryValue,
             startTime: entry.startTime,
           });
         }

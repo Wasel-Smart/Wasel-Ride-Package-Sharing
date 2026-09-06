@@ -76,6 +76,7 @@ import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { FindRideCard } from './components/FindRideCard';
 import { FindRidePackagePanel } from './components/FindRidePackagePanel';
 import { FindRideTripDetailModal } from './components/FindRideTripDetailModal';
+import { BookingStatusBanners } from './components/BookingStatusBanners';
 import { getFindRideStaticCopy } from './findRideContent';
 import { useRideInventory } from './useRideInventory';
 

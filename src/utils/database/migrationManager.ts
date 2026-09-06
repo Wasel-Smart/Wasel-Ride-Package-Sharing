@@ -93,7 +93,7 @@ export class MigrationManager {
     const backupLabel = `pre-rollback-backup-${version}-${Date.now()}`;
     try {
       const { backupId } = await this.createBackup(backupLabel);
-      console.log(`[MigrationManager] Created safety backup ${sanitizeLogMessage(backupId)} before rolling back ${sanitizeLogMessage(version)}.`);
+       console.info(`[MigrationManager] Created safety backup ${sanitizeLogMessage(backupId)} before rolling back ${sanitizeLogMessage(version)}.`);
 
       await this.rollbackMigration(version);
 
