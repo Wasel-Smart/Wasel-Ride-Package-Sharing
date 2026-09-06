@@ -234,6 +234,8 @@ export abstract class BaseWorker<T = unknown> {
       } else {
         await this.sendToDeadLetter(message, error);
       }
+    } finally {
+      this._inFlight--;
     }
   }
 
