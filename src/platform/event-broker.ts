@@ -463,14 +463,12 @@ class OptimizedSupabaseEventBroker implements EventBroker {
     this.processing = true;
 
     try {
-      // Check proxy recovery
       if (!this.proxyAvailable && Date.now() >= this.proxyRetryAt) {
         this.proxyAvailable = true;
       }
 
       let rows: Array<Record<string, unknown>> = [];
 
-      // Fetch pending events
       if (this.proxyAvailable) {
         const pollResult = await proxyFetch('/poll', { limit: this.getBatchSize() });
         if (pollResult.ok && pollResult.data) {
@@ -483,74 +481,14 @@ class OptimizedSupabaseEventBroker implements EventBroker {
       }
 
       if (!this.proxyAvailable) {
-        const { data, error } = await this.client
-          .from(CONFIG.OUTBOX_TABLE)
-          .select('id, topic, payload, producer, trace_id, created_at, status, attempts')
-          .eq('status', 'pending')
-          .order('created_at', { ascending: true })
-          .limit(this.getBatchSize());
-
-        if (error) {
-          const message = String(error.message ?? error);
-          if (message.includes('does not exist') || message.includes('schema cache')) {
-            if (import.meta.env.DEV) {
-              console.warn('[broker] table missing, stopping poller', sanitizeLogMessage(message));
-            }
-            this.stopPolling();
-            return;
-          }
-          console.warn('[broker] poll failed', sanitizeLogMessage(message));
-          this.consecutiveErrors++;
-          this.checkHealth();
-          return;
-        }
-        rows = (data as Array<Record<string, unknown>>) ?? [];
+        rows = await this.pollSupabase();
       }
 
-      // Adjust polling rate based on workload
       this.adjustPollingRate(rows.length > 0);
 
-      // Process events
       for (const row of rows) {
         if (this.stopped) {break;}
-
-        const attempts = Number((row as Record<string, unknown>).attempts ?? 0);
-        const message: BrokerMessage = {
-          id: row.id as string,
-          topic: row.topic as string,
-          payload: (row.payload ?? {}) as unknown,
-          producer: (row.producer as string) ?? 'unknown',
-          traceId: (row.trace_id as string) ?? '',
-          occurredAt: (row.created_at as string) ?? new Date().toISOString(),
-          attempts,
-        };
-
-        let delivered = false;
-        try {
-          await this.deliverLocally(message);
-          delivered = true;
-        } catch (deliverErr) {
-          console.error('[broker] handler error for', sanitizeLogMessage(message.topic), sanitizeLogMessage(deliverErr));
-        }
-
-        // Acknowledge or fail
-        await this.acknowledgeEvent(message, delivered, attempts);
-
-        if (delivered) {
-          this.health.processedEvents++;
-          this.health.lastEventAt = new Date().toISOString();
-          this.consecutiveErrors = 0;
-        } else {
-          this.health.failedEvents++;
-          this.consecutiveErrors++;
-        }
-
-        this.checkHealth();
-
-        // Backpressure: yield to event loop between batches
-        if (rows.length > 10) {
-          await new Promise(resolve => setTimeout(resolve, CONFIG.BACKPRESSURE_DELAY_MS));
-        }
+        await this.processRow(row, rows.length);
       }
     } catch (err) {
       console.error('[broker] processPending error', sanitizeLogMessage(err));
@@ -558,6 +496,70 @@ class OptimizedSupabaseEventBroker implements EventBroker {
       this.checkHealth();
     } finally {
       this.processing = false;
+    }
+  }
+
+  private async pollSupabase(): Promise<Array<Record<string, unknown>>> {
+    const { data, error } = await this.client
+      .from(CONFIG.OUTBOX_TABLE)
+      .select('id, topic, payload, producer, trace_id, created_at, status, attempts')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true })
+      .limit(this.getBatchSize());
+
+    if (error) {
+      const message = String(error.message ?? error);
+      if (message.includes('does not exist') || message.includes('schema cache')) {
+        if (import.meta.env.DEV) {
+          console.warn('[broker] table missing, stopping poller', sanitizeLogMessage(message));
+        }
+        this.stopPolling();
+        return [];
+      }
+      console.warn('[broker] poll failed', sanitizeLogMessage(message));
+      this.consecutiveErrors++;
+      this.checkHealth();
+      return [];
+    }
+
+    return (data as Array<Record<string, unknown>>) ?? [];
+  }
+
+  private async processRow(row: Record<string, unknown>, batchSize: number): Promise<void> {
+    const attempts = Number((row as Record<string, unknown>).attempts ?? 0);
+    const message: BrokerMessage = {
+      id: row.id as string,
+      topic: row.topic as string,
+      payload: (row.payload ?? {}) as unknown,
+      producer: (row.producer as string) ?? 'unknown',
+      traceId: (row.trace_id as string) ?? '',
+      occurredAt: (row.created_at as string) ?? new Date().toISOString(),
+      attempts,
+    };
+
+    let delivered = false;
+    try {
+      await this.deliverLocally(message);
+      delivered = true;
+    } catch (deliverErr) {
+      console.error('[broker] handler error for', sanitizeLogMessage(message.topic), sanitizeLogMessage(deliverErr));
+    }
+
+    await this.acknowledgeEvent(message, delivered, attempts);
+
+    if (delivered) {
+      this.health.processedEvents++;
+      this.health.lastEventAt = new Date().toISOString();
+      this.consecutiveErrors = 0;
+    } else {
+      this.health.failedEvents++;
+      this.consecutiveErrors++;
+    }
+
+    this.checkHealth();
+
+    if (batchSize > 10) {
+      await new Promise(resolve => setTimeout(resolve, CONFIG.BACKPRESSURE_DELAY_MS));
     }
   }
 
