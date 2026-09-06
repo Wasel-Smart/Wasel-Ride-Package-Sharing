@@ -76,7 +76,7 @@ export const settingsExpanded = {
         'Enter a code from your authenticator app to finish enabling 2FA.',
       useThisFieldWhenDisabling2FA: 'Use this field when disabling 2FA or testing backup codes.',
       currentSetupDetails: 'Current setup details',
-      twoFaSecret: 'Secret'
+      twoFaSecret: 'Secret',
       backupCodes: 'Backup codes',
       oneActiveSessionOnThisDevice: 'One active session on this device - Supabase',
       signInToViewActiveSessions: 'Sign in to view active sessions',
