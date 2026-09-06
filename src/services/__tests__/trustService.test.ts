@@ -85,7 +85,7 @@ describe('Direct Trust Phone Verification', () => {
     // never be exposed to the client). Cast to `any` since `code` doesn't
     // exist on the typed response — this assertion guards against someone
     // accidentally adding it back.
-    expect((result as any).code).toBeUndefined();
+    expect((result as unknown as { code?: unknown }).code).toBeUndefined();
     expect(result.expiresAt).toBeDefined();
   });
 

@@ -173,6 +173,23 @@ function resolveLifecycleStatus(
   return projectRideLifecycleState(current, mapBookingStatusToRideLifecycleState(nextStatus));
 }
 
+function resolveRemoteStatus(
+  persistedStatus: string | null | undefined,
+  persistedId: string,
+  routeMode: 'live_post' | 'network_inventory',
+): RideBookingStatus {
+  if (
+    persistedStatus === 'confirmed' ||
+    persistedStatus === 'cancelled' ||
+    persistedStatus === 'completed'
+  ) {
+    return persistedStatus;
+  }
+  if (persistedStatus === 'accepted') {return 'confirmed';}
+  if (persistedId) {return routeMode === 'live_post' ? 'pending_driver' : 'confirmed';}
+  return 'pending_driver';
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /** Returns cached bookings for instant UI render. Call hydrateRideBookings to refresh. */

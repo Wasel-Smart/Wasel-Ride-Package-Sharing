@@ -26,7 +26,9 @@ export function ObservabilityDashboard() {
     };
 
     fetchMetrics();
-    const interval = setInterval(fetchMetrics, 5000); // Refresh every 5s
+    const interval = setInterval(() => {
+      void fetchMetrics();
+    }, 5000); // Refresh every 5s
 
     return () => clearInterval(interval);
   }, []);
