@@ -280,19 +280,19 @@ export function getStoredBusBookings(): StoredBusBooking[] {
 
 export async function createBusBooking(payload: BusBookingPayload): Promise<BusBookingResult> {
   try {
-    const server = await bookingsAPI.createBooking(
-      payload.tripId,
-      payload.seatsRequested,
-      payload.pickupStop,
-      payload.dropoffStop,
-      {
+    const server = await bookingsAPI.createBooking({
+      tripId: payload.tripId,
+      seatsRequested: payload.seatsRequested,
+      pickup: payload.pickupStop,
+      dropoff: payload.dropoffStop,
+      metadata: {
         schedule_date: payload.scheduleDate,
         departure_time: payload.departureTime,
         seat_preference: payload.seatPreference,
         schedule_mode: payload.scheduleMode,
         total_price: payload.totalPrice,
       },
-    );
+    });
 
     const bookingId =
       server.booking_id || (typeof server.id === 'string' ? server.id : `server-${Date.now()}`);
