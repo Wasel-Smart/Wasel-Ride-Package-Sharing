@@ -10,7 +10,7 @@
  * ✅ Full dark Wasel design system
  */
 
-import { Suspense, lazy, useState, useEffect, useCallback, useRef } from 'react';
+import { Suspense, lazy, useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Navigation,
@@ -430,7 +430,7 @@ function TripRatingSheet({
               </Button>
               <Button
                 className="flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 disabled:opacity-60"
-                onClick={handleSubmit}
+                onClick={() => handleSubmit()}
                 disabled={submitting || !stars}
               >
                 {submitting ? (
@@ -565,7 +565,7 @@ export function LiveTripTracking() {
     completed: false,
   });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!user?.id) {
       setLiveTrip(null);
       setTripLoaded(true);
@@ -646,7 +646,7 @@ export function LiveTripTracking() {
       setShowRating(false);
       navigate('/app/my-trips');
     },
-    [liveTrip?.tripId, navigate, trip.driver.id, trip.shareCode],
+    [liveTrip, navigate, trip.driver.id, trip.shareCode],
   );
 
   const handleRatingSkip = useCallback(() => {
@@ -664,7 +664,7 @@ export function LiveTripTracking() {
     setShowCancel(false);
     toast.info('Ride cancelled · تم إلغاء الرحلة');
     navigate('/app/dashboard');
-  }, [liveTrip?.bookingId, navigate]);
+  }, [liveTrip, navigate]);
 
   const copyShareCode = useCallback(() => {
     navigator.clipboard?.writeText(trip.shareCode).then(() => {
@@ -929,7 +929,7 @@ export function LiveTripTracking() {
 
           {/* Safety code */}
           <button
-            onClick={copyShareCode}
+            onClick={() => copyShareCode()}
             className="w-full flex items-center gap-2 bg-card border border-border rounded-xl px-3 py-2.5 hover:border-muted-foreground/30 transition-all group"
           >
             <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" />
@@ -1029,15 +1029,15 @@ export function LiveTripTracking() {
         {/* Bottom actions */}
         <div className="p-4 border-t border-border space-y-2.5 bg-background">
           <Button
-            onClick={() =>
-              shareContent({
+            onClick={() => {
+              void shareContent({
                 title: `Wasel Trip ${liveTrip?.tripId ?? trip.shareCode} — Live Location`,
                 text: `Track my trip from ${trip.from} to ${trip.to} on Wasel. Safety code: ${trip.shareCode}`,
                 url: `${window.location.origin}/track/${liveTrip?.tripId ?? trip.shareCode}`,
                 successMessage: 'Live trip link copied!',
                 successMessageAr: 'تم نسخ رابط الرحلة!',
-              })
-            }
+              });
+            }}
             variant="ghost"
             className="w-full h-10 border border-border text-slate-300 hover:text-white hover:border-muted-foreground/30 rounded-xl text-sm font-medium"
           >

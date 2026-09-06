@@ -45,7 +45,7 @@ export async function fetchWithRetry(
     breaker.reset();
   }
 
-  return breaker.execute(async () => {
+  const executeFetch = async (): Promise<Response> => {
     const { timeout = 5_000, signal: callerSignal, ...fetchOptions } = options;
 
     if (fetchOptions.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(fetchOptions.method)) {
@@ -111,7 +111,9 @@ export async function fetchWithRetry(
       clearTimeout(timer);
       callerSignal?.removeEventListener('abort', onCallerAbort);
     }
-  });
+  };
+
+  return breaker.execute(executeFetch);
 }
 
 function delay(ms: number): Promise<void> {

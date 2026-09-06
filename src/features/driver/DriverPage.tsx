@@ -82,7 +82,7 @@ export default function DriverPage() {
           action={{
             label: 'Offer a ride',
             labelAr: t('driverPageExpanded.offerRide'),
-            onClick: () => navigate('/app/offer-ride'),
+            onClick: () => { void navigate('/app/offer-ride'); },
           }}
         />
 
@@ -196,9 +196,9 @@ export default function DriverPage() {
                 gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
               }}
             >
-              <button
-                onClick={() => navigate('/app/offer-ride')}
-                style={{
+                <button
+                  onClick={() => { void navigate('/app/offer-ride'); }}
+                  style={{
                   height: 46,
                   borderRadius: '999px',
                   border: 'none',
@@ -210,9 +210,9 @@ export default function DriverPage() {
               >
                 {t('driverPageExpanded.openRoute')}
               </button>
-              <button
-                onClick={() => navigate('/app/trust')}
-                style={{
+                <button
+                  onClick={() => { void navigate('/app/trust'); }}
+                  style={{
                   height: 46,
                   borderRadius: '999px',
                   border: `1px solid ${DS.border}`,
@@ -224,9 +224,9 @@ export default function DriverPage() {
               >
                 {t('driverPageExpanded.trust')}
               </button>
-              <button
-                onClick={() => navigate('/app/settings')}
-                style={{
+                <button
+                  onClick={() => { void navigate('/app/settings'); }}
+                  style={{
                   height: 46,
                   borderRadius: '999px',
                   border: `1px solid ${DS.border}`,

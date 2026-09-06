@@ -1,6 +1,29 @@
 # Wasel Project Audit Report
 
-## Status: FIXES APPLIED — re-run CI to verify
+## Status: FIXES APPLIED (session 2) — re-run CI to verify
+
+Additional fixes applied this session:
+
+| Issue | Fix Applied |
+|---|---|
+| `createStructuredLogEntry` only accepted options-object — callers in `monitoring.ts` and `telemetry.ts` used positional args | Added positional overload signature; both call styles now type-check |
+| `appInsights.ts` used deprecated `instrumentationKey` field | Migrated to `connectionString` (modern App Insights API); `instrumentationKey` retained as fallback |
+| Web Vitals reported as estimates, not real telemetry | Wired `web-vitals` library (`onCLS`, `onFCP`, `onINP`, `onLCP`, `onTTFB`) into both Sentry (`monitoring.ts`) and App Insights (`appInsights.ts`) — values now flow from the browser's PerformanceObserver API |
+| Real Supabase project ref (`zexlxabdcsjefptmjhuq`) hardcoded in committed `.env` template | Replaced with `YOUR-PROJECT-REF` placeholder in all three occurrences |
+| `30_DAY_PRODUCTION_REPORT.md` reported estimated metrics as production facts | Rewritten to clearly distinguish verified telemetry sources from targets; includes instructions for connecting Sentry and App Insights |
+| `SECURITY_CHECKLIST.md` missing `_SECRETS_NEEDS_ROTATION_THEN_DELETE/` deletion step | Added deletion step; marked `.env` project ref fix as done |
+
+## Outstanding manual actions (cannot be fixed by code changes)
+
+1. **Rotate the Google service account key** — committed to git history; purge with `git filter-repo` or BFG
+2. **Rotate `COMMUNICATION_WORKER_SECRET` and `COMMUNICATION_WEBHOOK_TOKEN`**
+3. **Move `.env.local` outside OneDrive sync**
+4. **Delete `_SECRETS_NEEDS_ROTATION_THEN_DELETE/`** after rotating the Google OAuth client secret JSON inside it
+5. **Enable GitHub Secret Scanning + Push Protection**
+6. **Connect `VITE_SENTRY_DSN`** in Vercel env vars to activate real error telemetry
+7. **Connect `VITE_APP_INSIGHTS_CONNECTION_STRING`** in Vercel env vars to activate Web Vitals in Azure
+
+---
 
 The following issues identified in the previous audit have been resolved:
 
