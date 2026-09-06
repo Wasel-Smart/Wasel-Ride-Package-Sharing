@@ -115,7 +115,7 @@ describe('Direct Trust Phone Verification', () => {
     mockBuildUserContext.mockResolvedValue({ user: { id: 'user-999' } });
 
     await expect(startDirectTrustPhoneVerification('user-999', 'invalid')).rejects.toThrow(
-      'Enter a valid E.164 phone number',
+      'Invalid phone number provided.',
     );
   });
 
