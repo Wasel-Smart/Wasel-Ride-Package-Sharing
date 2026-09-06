@@ -25,7 +25,7 @@ async function hashOtpCode(code: string): Promise<string> {
 }
 
 function constantTimeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
+  if (a.length !== b.length) {return false;}
   let result = 0;
   for (let i = 0; i < a.length; i++) {
     result |= a.charCodeAt(i) ^ b.charCodeAt(i);
@@ -34,9 +34,9 @@ function constantTimeEqual(a: string, b: string): boolean {
 }
 
 function isExpired(isoValue?: string | null): boolean {
-  if (!isoValue) return false;
+  if (!isoValue) {return false;}
   const expiresAt = new Date(isoValue).getTime();
-  if (Number.isNaN(expiresAt)) return false;
+  if (Number.isNaN(expiresAt)) {return false;}
   return Date.now() > expiresAt;
 }
 

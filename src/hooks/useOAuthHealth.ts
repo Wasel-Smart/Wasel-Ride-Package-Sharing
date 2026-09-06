@@ -81,7 +81,7 @@ export function useOAuthProviderEnabled(
   const [loading, setLoading] = useState(false);
 
   const checkEnabled = useCallback(async () => {
-    if (!client) return;
+    if (!client) {return;}
 
     setLoading(true);
     try {

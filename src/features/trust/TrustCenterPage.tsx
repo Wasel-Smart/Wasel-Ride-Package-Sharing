@@ -63,7 +63,7 @@ function toErrorMessage(error: unknown): string {
 }
 
 function isNewUser(status: TrustCenterStatus | null): boolean {
-  if (!status) return false;
+  if (!status) {return false;}
   return status.completedSteps === 0 && status.nextStepId !== null;
 }
 
@@ -901,10 +901,9 @@ export default function TrustCenterPage() {
                     label={t('trustCenterExpanded.sanadReference')}
                     value={identityReference}
                     onChange={setIdentityReference}
-                          dir={ar ? 'rtl' : 'ltr'}
-                          aria-invalid={Boolean(validationErrors.identityReference)}
-                          aria-describedby="identity-reference-error"
-
+                    dir={ar ? 'rtl' : 'ltr'}
+                    aria-invalid={Boolean(validationErrors.identityReference)}
+                    aria-describedby="identity-reference-error"
                   />
                   {validationErrors.identityReference ? (
                     <div id="identity-reference-error" style={{ color: C.error, fontSize: TYPE.size.xs, fontFamily: F, marginTop: SPACE[1] }}>
