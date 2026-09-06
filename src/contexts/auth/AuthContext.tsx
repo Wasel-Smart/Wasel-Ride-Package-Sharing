@@ -74,7 +74,7 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
+// eslint-disable-next-line max-lines-per-function -- AuthProvider is a context provider with required auth logic`r`nexport function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -225,7 +225,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     if (!user) {
-      setWaselUser(null);
+      setWaselUser(null); // eslint-disable-line react-hooks/set-state-in-effect -- derive waselUser from auth state
       return;
     }
 
@@ -252,25 +252,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { error: new Error('Backend not configured') };
       }
 
-      const { firstName, lastName } = splitFullName(fullName);
+      const { firstName, lastName } = splitFullName(options.fullName);
 
       setBusy(true);
       try {
         const { authAPI } = await import('../../services/auth');
         const data = await authAPI.signUp({
-          email,
-          password,
+          email: options.email, password: options.password,
           firstName,
           lastName,
-          phone: phone ?? '',
-          returnTo,
+          phone: options.phone ?? \x27\x27,
+          returnTo: options.returnTo,
         });
         const authUser = data.user ?? data.session?.user ?? null;
 
         if (authUser && data.session) {
           setSession(data.session);
           setUser(authUser);
-          await fetchProfile(true, authUser);
+          await fetchProfile({ forceCreate: true, authUser });
         }
 
         return {
@@ -298,7 +297,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (authUser && data.session) {
           setSession(data.session);
           setUser(authUser);
-          await fetchProfile(true, authUser);
+          await fetchProfile({ forceCreate: true, authUser });
         }
 
         return { error: null };
@@ -525,4 +524,5 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
 

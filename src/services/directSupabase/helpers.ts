@@ -42,6 +42,15 @@ export function mapCanonicalRole(role?: string | null): string | null {
   return role;
 }
 
+function resolveVerificationLevel(context: UserContext): string {
+  return (
+    context.verification?.verification_level ??
+    context.driver?.verification_level ??
+    context.user.verification_level ??
+    'level_0'
+  );
+}
+
 export function mapProfileFromContext(
   context: UserContext,
   stats?: { tripCount?: number; rating?: number },
@@ -63,7 +72,6 @@ export function mapProfileFromContext(
     phone: context.user.phone_number ?? null,
     phone_number: context.user.phone_number ?? null,
     phone_verified: Boolean(context.user.phone_verified_at),
-    // Email confirmation lives in auth, not the canonical user row.
     email_verified: null,
     wallet_balance: walletBalance,
     rating,
@@ -74,11 +82,7 @@ export function mapProfileFromContext(
     id_verified: sanadVerified,
     is_verified: sanadVerified,
     sanad_verified: sanadVerified,
-    verification_level:
-      context.verification?.verification_level ??
-      context.driver?.verification_level ??
-      context.user.verification_level ??
-      'level_0',
+    verification_level: resolveVerificationLevel(context),
     wallet_status: context.wallet?.wallet_status ?? 'active',
     avatar_url: context.user.avatar_url ?? null,
     two_factor_enabled: Boolean(context.user.two_factor_enabled),
@@ -132,6 +136,23 @@ export function ensureBookingEligibility(profile: RawProfile, allowPackageCarry 
   }
 }
 
+function mapTripDriver(driverProfile?: RawProfile | null): TripSearchResult['driver'] {
+  return {
+    id: String(driverProfile?.id ?? 'driver'),
+    name: String(
+      driverProfile?.full_name || driverProfile?.email?.split('@')[0] || 'Wasel Driver',
+    ),
+    rating: toNumber(driverProfile?.rating_as_driver ?? driverProfile?.rating, 5),
+    verified: Boolean(
+      driverProfile?.id_verified ??
+      driverProfile?.is_verified ??
+      driverProfile?.sanad_verified ??
+      driverProfile?.verified ??
+      false,
+    ),
+  };
+}
+
 export function mapTripRow(row: TripRow, driverProfile?: RawProfile | null): TripSearchResult {
   const createdAt = String(row.created_at ?? new Date().toISOString());
   const date = formatDate(row.departure_time, createdAt.slice(0, 10));
@@ -143,20 +164,7 @@ export function mapTripRow(row: TripRow, driverProfile?: RawProfile | null): Tri
     time: formatTime(row.departure_time),
     seats: toNumber(row.available_seats, 0),
     price: toNumber(row.price_per_seat, 0),
-    driver: {
-      id: String(driverProfile?.id ?? 'driver'),
-      name: String(
-        driverProfile?.full_name || driverProfile?.email?.split('@')[0] || 'Wasel Driver',
-      ),
-      rating: toNumber(driverProfile?.rating_as_driver ?? driverProfile?.rating, 5),
-      verified: Boolean(
-        driverProfile?.id_verified ??
-        driverProfile?.is_verified ??
-        driverProfile?.sanad_verified ??
-        driverProfile?.verified ??
-        false,
-      ),
-    },
+    driver: mapTripDriver(driverProfile),
   };
 }
 

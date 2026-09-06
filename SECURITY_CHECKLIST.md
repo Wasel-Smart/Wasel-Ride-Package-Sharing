@@ -36,11 +36,13 @@ sensitive values were found in local environment files.
 
 ## Repository hardening
 
+- [x] Real Supabase project ref (`zexlxabdcsjefptmjhuq`) replaced with placeholder in committed `.env` template
 - [ ] Run `git log --all --full-history -- .env` to confirm `.env` was never committed
 - [ ] Run `git log --all --full-history -- .env.local` to confirm `.env.local` was never committed
 - [ ] If either command returns commits, run `git filter-repo --invert-paths --path .env` to scrub history
 - [ ] Run `git ls-files --error-unmatch .env` — should error (not tracked)
 - [ ] Run `git ls-files --error-unmatch .env.local` — should error (not tracked)
+- [ ] Delete `_SECRETS_NEEDS_ROTATION_THEN_DELETE/` directory after rotating the Google OAuth client secret JSON stored there
 - [ ] Enable GitHub → Settings → Security → Secret scanning
 - [ ] Enable GitHub → Settings → Security → Push protection
 - [ ] Confirm no `.crt`, `.pem`, or `.key` files are tracked: `git ls-files | grep -E '\.(pem|key|crt|cer|p12|pfx)'`

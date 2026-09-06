@@ -9,7 +9,10 @@ export function useCounter(initialValue = 0) {
   const [state, setState] = useState<CounterState>({ count: initialValue, lastUpdated: 0 });
 
   useEffect(() => {
-    setState({ count: initialValue, lastUpdated: Date.now() });
+    const id = setTimeout(() => {
+      setState({ count: initialValue, lastUpdated: Date.now() });
+    }, 0);
+    return () => clearTimeout(id);
   }, [initialValue]);
 
   const countRef = useRef(initialValue);

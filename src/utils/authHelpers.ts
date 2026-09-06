@@ -2,6 +2,29 @@
  * Shared auth error message normaliser.
  * Single source of truth — imported by WaselAuth and auth.ts.
  */
+type AuthErrorMatch = { patterns: string[]; code?: string; message: string };
+
+const AUTH_ERROR_MATCHES: AuthErrorMatch[] = [
+  { patterns: ['invalid login credentials', 'invalid credentials', 'authentication failed', 'wrong email', 'wrong password'], code: 'invalid_credentials', message: 'Incorrect email or password.' },
+  { patterns: ['email not confirmed'], code: 'email_not_confirmed', message: 'Please confirm your email before signing in.' },
+  { patterns: ['already registered', 'already been registered'], code: 'email_exists', message: 'This email is already registered.' },
+  { patterns: ['user not found'], code: 'user_not_found', message: 'Account not found. Please check your email or sign up.' },
+  { patterns: ['too many requests'], code: 'over_request_rate_limit', message: 'Too many attempts. Please wait a moment and try again.' },
+  { patterns: ['signups not allowed', 'not allowed for this email domain'], code: 'email_address_not_authorized', message: 'Sign-up is not allowed for this email domain.' },
+  { patterns: ['invalid email'], code: 'email_address_invalid', message: 'Please enter a valid email address.' },
+  { patterns: ['user banned'], code: 'user_banned', message: 'Your account has been suspended. Please contact support.' },
+  { patterns: ['signup disabled'], code: 'signup_disabled', message: 'Sign-up is currently disabled. Please contact support.' },
+  { patterns: ['phone already exists'], code: 'phone_exists', message: 'This phone number is already registered.' },
+];
+
+function matchAuthError(lower: string, normalizedCode: string | undefined): string | undefined {
+  for (const entry of AUTH_ERROR_MATCHES) {
+    if (entry.code && entry.code === normalizedCode) {return entry.message;}
+    if (entry.patterns.some(pattern => lower.includes(pattern))) {return entry.message;}
+  }
+  return undefined;
+}
+
 export function friendlyAuthError(error: unknown, fallback: string, code?: string): string {
   const message = error instanceof Error ? error.message : String(error ?? '');
   const lower = message.toLowerCase();
@@ -14,53 +37,12 @@ export function friendlyAuthError(error: unknown, fallback: string, code?: strin
       : undefined);
   const normalizedCode = typeof errorCode === 'string' ? errorCode : undefined;
 
-  if (
-    lower.includes('invalid login credentials') ||
-    lower.includes('invalid credentials') ||
-    lower.includes('authentication failed') ||
-    lower.includes('wrong email') ||
-    lower.includes('wrong password') ||
-    normalizedCode === 'invalid_credentials'
-  )
-    {return 'Incorrect email or password.';}
+  const matched = matchAuthError(lower, normalizedCode);
+  if (matched) {return matched;}
 
-  if (lower.includes('email not confirmed') || normalizedCode === 'email_not_confirmed')
-    {return 'Please confirm your email before signing in.';}
-
-  if (
-    lower.includes('already registered') ||
-    lower.includes('already been registered') ||
-    normalizedCode === 'email_exists'
-  )
-    {return 'This email is already registered.';}
-
-  if (normalizedCode === 'user_not_found' || lower.includes('user not found'))
-    {return 'Account not found. Please check your email or sign up.';}
-
-  if (normalizedCode === 'over_request_rate_limit' || lower.includes('too many requests'))
-    {return 'Too many attempts. Please wait a moment and try again.';}
-
-  if (
-    normalizedCode === 'email_address_not_authorized' ||
-    lower.includes('signups not allowed') ||
-    lower.includes('not allowed for this email domain')
-  )
-    {return 'Sign-up is not allowed for this email domain.';}
-
-  if (normalizedCode === 'email_address_invalid' || lower.includes('invalid email'))
-    {return 'Please enter a valid email address.';}
-
-  if (normalizedCode === 'user_banned' || lower.includes('user banned'))
-    {return 'Your account has been suspended. Please contact support.';}
-
-  if (normalizedCode === 'weak_password')
-    {return 'Password is too weak. Please choose a stronger password.';}
-
-  if (normalizedCode === 'signup_disabled' || lower.includes('signup disabled'))
-    {return 'Sign-up is currently disabled. Please contact support.';}
-
-  if (normalizedCode === 'phone_exists' || lower.includes('phone already exists'))
-    {return 'This phone number is already registered.';}
+  if (normalizedCode === 'weak_password') {
+    return 'Password is too weak. Please choose a stronger password.';
+  }
 
   return message || fallback;
 }

@@ -2,6 +2,7 @@ import type { DomainEventEnvelope } from '../domain/events';
 import type * as Sentry from '@sentry/react';
 import { createCorrelationId, createStructuredLogEntry } from '../platform/observability';
 import { sanitizeLogMessage } from './sanitization';
+import { onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals';
 
 let sentryInitialized = false;
 let sentryInitializationStarted = false;
@@ -128,6 +129,21 @@ export async function initSentry(): Promise<void> {
 
     sentryInitialized = true;
     writeConsole('info', 'Sentry initialized.');
+
+    // Report real Core Web Vitals to Sentry as measurements.
+    const reportVital = (name: string, value: number) => {
+      if (typeof (sentryClient as unknown as Record<string, unknown> | null)?.getCurrentScope === 'function') {
+        (sentryClient as unknown as { getCurrentScope: () => { setMeasurement: (n: string, v: number, u: string) => void } })
+          .getCurrentScope()
+          .setMeasurement(name, value, name === 'CLS' ? '' : 'millisecond');
+      }
+      logger.metric(`web_vital.${name}`, value, { name });
+    };
+    onCLS(({ value }) => reportVital('CLS', value));
+    onFCP(({ value }) => reportVital('FCP', value));
+    onINP(({ value }) => reportVital('INP', value));
+    onLCP(({ value }) => reportVital('LCP', value));
+    onTTFB(({ value }) => reportVital('TTFB', value));
   } catch (error) {
     sentryInitializationStarted = false;
     if (import.meta.env.DEV) {

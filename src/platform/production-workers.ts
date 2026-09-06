@@ -383,17 +383,28 @@ const opsWorker = createWorker<AnyRecord>(
 // WORKER REGISTRY & LIFECYCLE
 // ============================================================================
 
+// VITE_DISABLE_BROWSER_WORKERS=true gates all in-browser workers off once the
+// corresponding edge functions are confirmed live. Set this flag in production
+// as each worker is migrated to the edge runtime to eliminate the race with
+// deployed edge workers on shared Postgres tables.
+const BROWSER_WORKERS_DISABLED =
+  typeof import.meta !== 'undefined' &&
+  import.meta.env?.VITE_DISABLE_BROWSER_WORKERS === 'true';
+
 export const productionWorkerRegistry = new WorkerRegistry();
 
-productionWorkerRegistry.register(matchingWorker);
-productionWorkerRegistry.register(packageWorker);
-productionWorkerRegistry.register(paymentWorker);
-productionWorkerRegistry.register(notificationWorker);
-productionWorkerRegistry.register(opsWorker);
+if (!BROWSER_WORKERS_DISABLED) {
+  productionWorkerRegistry.register(matchingWorker);
+  productionWorkerRegistry.register(packageWorker);
+  productionWorkerRegistry.register(paymentWorker);
+  productionWorkerRegistry.register(notificationWorker);
+  productionWorkerRegistry.register(opsWorker);
+}
 
 export { matchingWorker, packageWorker, paymentWorker, notificationWorker, opsWorker };
 
 export async function startProductionWorkers(): Promise<void> {
+  if (BROWSER_WORKERS_DISABLED) {return;}
   await productionWorkerRegistry.startAll();
 }
 

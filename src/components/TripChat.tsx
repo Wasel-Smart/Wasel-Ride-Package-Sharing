@@ -44,19 +44,21 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-   useEffect(() => {
-      void loadMessages();
+  useEffect(() => {
+    const run = async () => {
+      await loadMessages();
       const unsubscribe = chatService.subscribeToTrip(tripId, message => {
         setMessages(prev => [...prev, message]);
         if (message.sender_id !== user?.id) {
           chatService.markAsRead([message.id]);
         }
       });
-
-      return () => {
-        unsubscribe();
-      };
-    }, [loadMessages, tripId, user?.id]);
+      return unsubscribe;
+    };
+    let unsub: (() => void) | undefined;
+    run().then(u => { unsub = u; });
+    return () => { unsub?.(); };
+  }, [loadMessages, tripId, user?.id]);
 
    useEffect(() => {
      scrollToBottom();
