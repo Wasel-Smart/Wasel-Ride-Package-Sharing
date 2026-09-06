@@ -183,7 +183,7 @@ function buildWalletStep(user: FallbackTrustUser): TrustCenterStatus['steps']['w
 
 function resolveWalletStatusValue(
   status: 'active' | 'limited' | 'frozen' | 'closed' | 'unavailable',
-): 'active' | 'limited' | 'frozen' | 'closed' {
+): 'active' | 'limited' | 'frozen' | 'closed' | 'unavailable' {
   if (status === 'closed') {return 'closed';}
   if (status === 'frozen') {return 'frozen';}
   return 'unavailable';

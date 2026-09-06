@@ -150,7 +150,7 @@ describe('Performance Utilities', () => {
     it('calculates correct window for fixed height items', async () => {
       const { calculateVirtualWindow } = await import('../../src/utils/performance');
 
-      const result = calculateVirtualWindow(100, 200, 1000, 50, 3);
+      const result = calculateVirtualWindow({ scrollTop: 100, viewportHeight: 200, itemCount: 1000, itemHeight: 50, overscan: 3 });
 
       expect(result.startIndex).toBe(0);
       expect(result.endIndex).toBeGreaterThan(0);
@@ -160,7 +160,7 @@ describe('Performance Utilities', () => {
     it('handles scroll position in middle of list', async () => {
       const { calculateVirtualWindow } = await import('../../src/utils/performance');
 
-      const result = calculateVirtualWindow(5000, 200, 1000, 50, 5);
+      const result = calculateVirtualWindow({ scrollTop: 5000, viewportHeight: 200, itemCount: 1000, itemHeight: 50, overscan: 5 });
 
       expect(result.startIndex).toBeGreaterThan(0);
       expect(result.endIndex).toBeGreaterThan(result.startIndex);
@@ -169,7 +169,7 @@ describe('Performance Utilities', () => {
     it('respects overscan', async () => {
       const { calculateVirtualWindow } = await import('../../src/utils/performance');
 
-      const result = calculateVirtualWindow(0, 200, 1000, 50, 10);
+      const result = calculateVirtualWindow({ scrollTop: 0, viewportHeight: 200, itemCount: 1000, itemHeight: 50, overscan: 10 });
 
       expect(result.startIndex).toBe(0);
       expect(result.endIndex).toBeLessThanOrEqual(1000);

@@ -91,6 +91,101 @@ function wideControlButtonStyle(active = false) {
   } as const;
 }
 
+function mapTypeLabel(type: MapType) {
+  const ar = getCurrentLang() === 'ar';
+  if (type === 'roadmap') {return ar ? 'خريطة الطرق' : 'Road map';}
+  if (type === 'satellite') {return ar ? 'قمر صناعي' : 'Satellite';}
+  return ar ? 'تضاريس' : 'Terrain';
+}
+
+function TrackingButton({ isTracking, startTracking, stopTracking, centerOnMe, tx }: {
+  isTracking: boolean;
+  startTracking: () => void;
+  stopTracking: () => void;
+  centerOnMe: () => void;
+  tx: (key: string) => string;
+}) {
+  const baseStyle = {
+    ...CONTROL_BUTTON_BASE,
+    minHeight: 44,
+    padding: '0 18px',
+    borderRadius: 18,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 10,
+    fontSize: '0.86rem',
+    fontWeight: typography.weight.extrabold,
+  } as const;
+
+  const style = isTracking
+    ? {
+        ...baseStyle,
+        color: colors.text.dark,
+        background: colors.primary.brand,
+        border: `1px solid ${colors.border.activeLight}`,
+        boxShadow: shadows.activeLg,
+      }
+    : {
+        ...baseStyle,
+        color: colors.text.light,
+        background: colors.background.panel,
+        border: `1px solid ${colors.border.primary}`,
+        boxShadow: shadows.md,
+      };
+
+  return (
+    <button onClick={isTracking ? stopTracking : startTracking} style={style}>
+      {isTracking ? (
+        <>
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+          <Locate className="w-4 h-4" />
+          <span>{tx('waselMap.live_active')}</span>
+        </>
+      ) : (
+        <>
+          <Locate className="w-4 h-4" />
+          <span>{tx('waselMap.share_my_location')}</span>
+        </>
+      )}
+    </button>
+  );
+}
+
+function LayerControls({ mosquesOn, toggleMosques, radarsOn, toggleRadars, tx }: {
+  mosquesOn: boolean;
+  toggleMosques: () => void;
+  radarsOn: boolean;
+  toggleRadars: () => void;
+  tx: (key: string) => string;
+}) {
+  return (
+    <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-20">
+      <div
+        className="flex items-center gap-1 px-3 py-2"
+        style={{ ...CONTROL_PANEL_STYLE, borderRadius: radii['2xl'] }}
+      >
+        <button
+          onClick={toggleMosques}
+          style={wideControlButtonStyle(mosquesOn)}
+          title={tx('waselMap.mosques')}
+        >
+          <MapPin className="w-3.5 h-3.5" />
+          <span>{tx('waselMap.mosques_2')}</span>
+        </button>
+        <div style={{ width: 1, height: 24, background: colors.border.light }} />
+        <button
+          onClick={toggleRadars}
+          style={wideControlButtonStyle(radarsOn)}
+          title={tx('waselMap.radars')}
+        >
+          <Radio className="w-3.5 h-3.5" />
+          <span>{tx('waselMap.radars_2')}</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function MapControls({
   isFullscreen,
   toggleFullscreen,
@@ -126,13 +221,6 @@ export function MapControls({
   compact: boolean;
   tx: (key: string) => string;
 }) {
-  const mapTypeLabel = (type: MapType) => {
-    const ar = getCurrentLang() === 'ar';
-    if (type === 'roadmap') {return ar ? 'خريطة الطرق' : 'Road map';}
-    if (type === 'satellite') {return ar ? 'قمر صناعي' : 'Satellite';}
-    return ar ? 'تضاريس' : 'Terrain';
-  };
-
   return (
     <>
       {/* -- Top-right: Map type + zoom + fullscreen -- */}
@@ -169,30 +257,13 @@ export function MapControls({
 
       {/* -- Bottom: Layer controls -- */}
       {!compact && (
-        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-20">
-          <div
-            className="flex items-center gap-1 px-3 py-2"
-            style={{ ...CONTROL_PANEL_STYLE, borderRadius: radii['2xl'] }}
-          >
-            <button
-              onClick={toggleMosques}
-              style={wideControlButtonStyle(mosquesOn)}
-              title={tx('waselMap.mosques')}
-            >
-              <MapPin className="w-3.5 h-3.5" />
-              <span>{tx('waselMap.mosques_2')}</span>
-            </button>
-            <div style={{ width: 1, height: 24, background: colors.border.light }} />
-            <button
-              onClick={toggleRadars}
-              style={wideControlButtonStyle(radarsOn)}
-              title={tx('waselMap.radars')}
-            >
-              <Radio className="w-3.5 h-3.5" />
-              <span>{tx('waselMap.radars_2')}</span>
-            </button>
-          </div>
-        </div>
+        <LayerControls
+          mosquesOn={mosquesOn}
+          toggleMosques={toggleMosques}
+          radarsOn={radarsOn}
+          toggleRadars={toggleRadars}
+          tx={tx}
+        />
       )}
 
       {/* -- Bottom: GPS controls -- */}
@@ -208,51 +279,13 @@ export function MapControls({
           </button>
         )}
 
-        <button
-          onClick={isTracking ? stopTracking : startTracking}
-          style={
-            isTracking
-              ? {
-                  ...CONTROL_BUTTON_BASE,
-                  minHeight: 44,
-                  padding: '0 18px', borderRadius: 18,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  fontSize: '0.86rem', fontWeight: typography.weight.extrabold,
-                  color: colors.text.dark,
-                  background: colors.primary.brand,
-                  border: `1px solid ${colors.border.activeLight}`,
-                  boxShadow: shadows.activeLg,
-                }
-              : {
-                  ...CONTROL_BUTTON_BASE,
-                  minHeight: 44,
-                  padding: '0 18px', borderRadius: 18,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  fontSize: '0.86rem', fontWeight: typography.weight.extrabold,
-                  color: colors.text.light,
-                  background: colors.background.panel,
-                  border: `1px solid ${colors.border.primary}`,
-                  boxShadow: shadows.md,
-                }
-          }
-        >
-          {isTracking ? (
-            <>
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-              <Locate className="w-4 h-4" />
-              <span>{tx('waselMap.live_active')}</span>
-            </>
-          ) : (
-            <>
-              <Locate className="w-4 h-4" />
-              <span>{tx('waselMap.share_my_location')}</span>
-            </>
-          )}
-        </button>
+        <TrackingButton
+          isTracking={isTracking}
+          startTracking={startTracking}
+          stopTracking={stopTracking}
+          centerOnMe={centerOnMe}
+          tx={tx}
+        />
       </div>
     </>
   );

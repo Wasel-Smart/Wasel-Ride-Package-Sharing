@@ -386,7 +386,7 @@ export function initPerformanceMonitoring() {
   });
 
   if (import.meta.env.DEV) {
-    console.log('Performance monitoring initialized');
+    console.info('Performance monitoring initialized');
   }
 }
 
@@ -403,7 +403,7 @@ function reportWebVital(metric: MetricType) {
   if (import.meta.env.DEV) {
     const emoji =
       vital.rating === 'good' ? 'OK' : vital.rating === 'needs-improvement' ? 'WARN' : 'POOR';
-    console.log(`[perf] ${emoji} ${sanitizeLogMessage(vital.name)}: ${sanitizeLogMessage(vital.value.toFixed(2))}ms (${sanitizeLogMessage(vital.rating)})`); // nosec CWE-117
+    console.info(`[perf] ${emoji} ${sanitizeLogMessage(vital.name)}: ${sanitizeLogMessage(vital.value.toFixed(2))}ms (${sanitizeLogMessage(vital.rating)})`); // nosec CWE-117
   }
 
   // Check against performance budget
@@ -486,7 +486,7 @@ export function measurePerformance(name: string, startMark: string, endMark?: st
     const measure = performance.measure(name, startMark, endMark);
 
     if (import.meta.env.DEV) {
-    console.log(`[perf] ${sanitizeLogMessage(name)}: ${sanitizeLogMessage(measure.duration.toFixed(2))}ms`);
+    console.info(`[perf] ${sanitizeLogMessage(name)}: ${sanitizeLogMessage(measure.duration.toFixed(2))}ms`);
   }
 
     // Log slow operations

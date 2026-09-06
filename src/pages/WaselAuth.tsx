@@ -601,7 +601,7 @@ export default function WaselAuth () {
       setError( tx( 'waselAuth.error_too_many_attempts' ) );
       return;
     }
-    const registration = await register( name, email, password, phone, safeReturnTo );
+    const registration = await register({ name, email, password, phone, returnTo: safeReturnTo });
     if ( registration.error ) {
       setError( friendlyAuthError( registration.error, tx( 'waselAuth.error_signup_failed' ) ) );
       return;
