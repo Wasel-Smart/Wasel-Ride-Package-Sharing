@@ -169,6 +169,7 @@ export function SectionHeader({
       </div>
       {action && onAction ? (
         <button
+          type="button"
           onClick={onAction}
           className="wasel-home-section-action"
         >
@@ -204,6 +205,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
   return (
     <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
       <button
+        type="button"
         onClick={() => setOpen(value => !value)}
         style={{
           display: 'flex',
@@ -244,6 +246,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
         >
           {popular.map(code => (
             <button
+              type="button"
               key={code}
               onClick={() => select(code)}
               style={{
@@ -325,6 +328,7 @@ export function SOSButton({ ar }: { ar: boolean }) {
       </motion.button>
       {confirm && !pressed ? (
         <button
+          type="button"
           onClick={() => setConfirm(false)}
           style={{
             background: 'none',
@@ -441,6 +445,7 @@ export function TrustScoreCard({
           </div>
         </div>
         <button
+          type="button"
           onClick={() => setExpanded(value => !value)}
           style={{
             height: 34,

@@ -120,6 +120,10 @@ export default defineConfig(({ mode }) => ({
 
             if (id.includes('/node_modules/leaflet/')) return 'maps';
             if (id.includes('/node_modules/recharts/')) return 'charts';
+            if (
+              id.includes('/node_modules/motion/') ||
+              id.includes('/node_modules/framer-motion/')
+            ) return 'motion';
 
             if (
               id.includes('/node_modules/react-hook-form/') ||

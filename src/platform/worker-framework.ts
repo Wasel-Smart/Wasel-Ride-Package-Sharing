@@ -99,6 +99,7 @@ export abstract class BaseWorker<T = unknown> {
   private failureCount = 0;
   private lastFailureTime = 0;
   private unsubscribers: Array<() => void> = [];
+  private _inFlight = 0;
 
   constructor(config: WorkerConfig, broker: EventBroker = defaultBroker) {
     this.config = config;
