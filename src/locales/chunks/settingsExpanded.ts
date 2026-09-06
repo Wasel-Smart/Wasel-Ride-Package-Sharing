@@ -53,14 +53,14 @@ export const settingsExpanded = {
       anonymousUsage: 'Anonymous usage',
       resetToDefaults: 'Reset to Defaults',
       security: 'Security',
-      changePassword: 'Change Password',
-      newPassword: 'New password',
-      confirmNewPassword: 'Confirm new password',
+      changePassword: 'Change Password', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      newPassword: 'New password', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      confirmNewPassword: 'Confirm new password', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       strength: 'Strength',
-      useStrongPasswordWith8Chars: 'Use a strong password with at least 8 characters.',
+      useStrongPasswordWith8Chars: 'Use a strong password with at least 8 characters.', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       saving: 'Saving...',
-      updatePassword: 'Update Password',
-      sendResetLink: 'Send Reset Link',
+      updatePassword: 'Update Password', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      sendResetLink: 'Send Reset Link', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       twoFactorAuthentication: 'Two-Factor Authentication',
       unavailableOnThisDevice: 'Unavailable on this device or in this environment.',
       enabledOnThisAccount: 'Enabled on this account.',
@@ -76,7 +76,7 @@ export const settingsExpanded = {
         'Enter a code from your authenticator app to finish enabling 2FA.',
       useThisFieldWhenDisabling2FA: 'Use this field when disabling 2FA or testing backup codes.',
       currentSetupDetails: 'Current setup details',
-      secret: 'Secret',
+      secret: 'Secret', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       backupCodes: 'Backup codes',
       oneActiveSessionOnThisDevice: 'One active session on this device - Supabase',
       signInToViewActiveSessions: 'Sign in to view active sessions',
@@ -156,14 +156,14 @@ export const settingsExpanded = {
       anonymousUsage: 'استخدام مجهول',
       resetToDefaults: 'إعادة إلى الافتراضي',
       security: 'الأمان',
-      changePassword: 'تغيير كلمة المرور',
-      newPassword: 'كلمة مرور جديدة',
-      confirmNewPassword: 'تأكيد كلمة المرور الجديدة',
+      changePassword: 'تغيير كلمة المرور', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      newPassword: 'كلمة مرور جديدة', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      confirmNewPassword: 'تأكيد كلمة المرور الجديدة', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       strength: 'القوة',
-      useStrongPasswordWith8Chars: 'استخدم كلمة مرور قوية ب 8 أحرف على الأقل.',
+      useStrongPasswordWith8Chars: 'استخدم كلمة مرور قوية ب 8 أحرف على الأقل.', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       saving: 'جاري الحفظ...',
-      updatePassword: 'تحديث كلمة المرور',
-      sendResetLink: 'إرسال رابط إعادة التعيين',
+      updatePassword: 'تحديث كلمة المرور', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      sendResetLink: 'إرسال رابط إعادة التعيين', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       twoFactorAuthentication: 'المصادقة الثنائية',
       unavailableOnThisDevice: 'غير متاح على هذا الجهاز أو البيئة.',
       enabledOnThisAccount: 'مفعل على هذا الحساب.',
@@ -177,7 +177,7 @@ export const settingsExpanded = {
       enterCodeFromAuthenticatorApp: 'أدخل رمز من تطبيق المصادق لإنهاء التفعيل.',
       useThisFieldWhenDisabling2FA: 'استخدم هذا الحقل عند تعطيل 2FA أو اختبار الأكواد الاحتياطية.',
       currentSetupDetails: 'تفاصيل الإعداد الحالي',
-      secret: 'الرمز السري',
+      secret: 'الرمز السري', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       backupCodes: 'أكواد احتياطية',
       oneActiveSessionOnThisDevice: 'جلسة نشطة واحدة على هذا الجهاز - Supabase',
       signInToViewActiveSessions: 'سجّل دخول لرؤية الجلسات النشطة',

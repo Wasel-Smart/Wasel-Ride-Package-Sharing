@@ -5,13 +5,13 @@ export const auth = {
       signOut: 'Sign Out',
       logout: 'Logout',
       email: 'Email Address',
-      password: 'Password',
+      password: 'Password', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       fullName: 'Full Name',
       createAccount: 'Create Account',
       alreadyHaveAccount: 'Already have an account?',
       dontHaveAccount: "Don't have an account?",
-      forgotPassword: 'Forgot Password?',
-      resetPassword: 'Reset Password',
+      forgotPassword: 'Forgot Password?', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      resetPassword: 'Reset Password', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       sendResetEmail: 'Send Reset Email',
       resetEmailSent: 'Password reset email sent',
       continueWithGoogle: 'Continue with Google',
@@ -33,13 +33,13 @@ export const auth = {
       signOut: 'اطلع',
       logout: 'اطلع',
       email: 'البريد الإلكتروني',
-      password: 'كلمة المرور',
+      password: 'كلمة المرور', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       fullName: 'الاسم الكامل',
       createAccount: 'سجّل حساب',
       alreadyHaveAccount: 'عندك حساب؟',
       dontHaveAccount: 'ما عندك حساب؟',
-      forgotPassword: 'نسيت كلمة السر؟',
-      resetPassword: 'غيّر كلمة السر',
+      forgotPassword: 'نسيت كلمة السر؟', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      resetPassword: 'غيّر كلمة السر', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       sendResetEmail: 'ابعث إيميل تغيير',
       resetEmailSent: 'تم إرسال إيميل تغيير كلمة السر',
       continueWithGoogle: 'كمّل بجوجل',
@@ -56,4 +56,3 @@ export const auth = {
       verifyPhone: 'تأكيد رقم التلفون',
   }
 } as const;
-

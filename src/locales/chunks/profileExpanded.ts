@@ -44,7 +44,7 @@ export const profileExpanded = {
       currency: 'Currency',
       advancedSettings: 'Advanced Settings',
       security: 'Security',
-      changePassword: 'Change Password',
+      changePassword: 'Change Password', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       twoFactorAuth2FA: 'Two-Factor Auth (2FA)',
       on: 'On',
       off: 'Off',
@@ -101,7 +101,7 @@ export const profileExpanded = {
       currency: 'العملة',
       advancedSettings: 'الإعدادات المتقدمة',
       security: 'الأمان',
-      changePassword: 'تغيير كلمة المرور',
+      changePassword: 'تغيير كلمة المرور', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       twoFactorAuth: 'التحقق الثنائي',
       on: 'مفعل',
       off: 'غير مفعل',

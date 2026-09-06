@@ -12,20 +12,20 @@ export const waselAuth = {
       as_shown_on_your_profile: 'As shown on your profile',
       you_example_com: 'you@example.com',
       used_for_sign_in: 'Used for sign in',
-      your_account_password: 'Your account password',
+      your_account_password: 'Your account password', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       minimum_8_characters: 'Minimum 8 characters',
-      enter_your_password: 'Enter your password',
-      create_a_secure_password: 'Create a secure password',
-      forgot_password: 'Forgot password?',
+      enter_your_password: 'Enter your password', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      create_a_secure_password: 'Create a secure password', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      forgot_password: 'Forgot password?', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       or_continue_with: 'or continue with',
       by_continuing_you_agree_to_our: 'By continuing, you agree to our',
       and: 'and',
       error_enter_email: 'Please enter your email address.',
       error_enter_valid_email: 'Please enter a valid email address.',
-      error_enter_password: 'Please enter your password.',
+      error_enter_password: 'Please enter your password.', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       error_too_many_attempts: 'Too many attempts. Please wait a minute and try again.',
-      error_password_min_length: 'Password must be at least 8 characters long.',
-      error_password_requirements: 'Password must include lowercase, uppercase, a number, and a special character.',
+      error_password_min_length: 'Password must be at least 8 characters long.', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      error_password_requirements: 'Password must include lowercase, uppercase, a number, and a special character.', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       error_enter_full_name: 'Please enter your full name.',
       error_enter_email_first: 'Enter your email address above first.',
       error_whatsapp_not_configured: 'WhatsApp support is not configured yet.',
@@ -34,12 +34,12 @@ export const waselAuth = {
       submit_signin: 'Submit sign in',
       submit_signup: 'Submit sign up',
       confirm_email_notice: 'Check {{email}} and confirm your email address to finish creating your account.',
-      reset_link_sent: 'If {{email}} is registered, a password reset link has been sent.',
+      reset_link_sent: 'If {{email}} is registered, a password reset link has been sent.', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       error_signin_failed: 'Sign in failed. Please try again.',
       error_signup_failed: 'Sign up failed. Please try again.',
       error_google_failed: 'Google sign in failed. Please try again.',
       error_facebook_failed: 'Facebook sign in failed. Please try again.',
-      error_reset_failed: 'Password reset failed.',
+      error_reset_failed: 'Password reset failed.', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       sign_in: 'Sign in',
       create_account: 'Create account',
   },
@@ -56,20 +56,20 @@ export const waselAuth = {
       as_shown_on_your_profile: 'مثل ما يظهر في ملفك',
       you_example_com: 'you@example.com',
       used_for_sign_in: 'يُستخدم لتسجيل الدخول',
-      your_account_password: 'كلمة مرور حسابك',
+      your_account_password: 'كلمة مرور حسابك', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       minimum_8_characters: '8 أحرف على الأقل',
-      enter_your_password: 'أدخل كلمة المرور',
-      create_a_secure_password: 'أنشئ كلمة مرور آمنة',
-      forgot_password: 'نسيت كلمة المرور؟',
+      enter_your_password: 'أدخل كلمة المرور', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      create_a_secure_password: 'أنشئ كلمة مرور آمنة', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      forgot_password: 'نسيت كلمة المرور؟', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       or_continue_with: 'أو المتابعة باستخدام',
       by_continuing_you_agree_to_our: 'بالمتابعة، فإنك توافق على',
       and: 'و',
       error_enter_email: 'الرجاء إدخال بريدك الإلكتروني.',
       error_enter_valid_email: 'الرجاء إدخال بريد إلكتروني صحيح.',
-      error_enter_password: 'الرجاء إدخال كلمة المرور.',
+      error_enter_password: 'الرجاء إدخال كلمة المرور.', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       error_too_many_attempts: 'محاولات كثيرة جدًا. الرجاء الانتظار دقيقة والمحاولة مرة أخرى.',
-      error_password_min_length: 'يجب ألا تقل كلمة المرور عن 8 أحرف.',
-      error_password_requirements: 'يجب أن تتضمن كلمة المرور حرفًا صغيرًا وحرفًا كبيرًا ورقمًا ورمزًا خاصًا.',
+      error_password_min_length: 'يجب ألا تقل كلمة المرور عن 8 أحرف.', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+      error_password_requirements: 'يجب أن تتضمن كلمة المرور حرفًا صغيرًا وحرفًا كبيرًا ورقمًا ورمزًا خاصًا.', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       error_enter_full_name: 'الرجاء إدخال اسمك الكامل.',
       error_enter_email_first: 'أدخل بريدك الإلكتروني أعلاه أولاً.',
       error_whatsapp_not_configured: 'دعم واتساب غير مُفعّل حاليًا.',
@@ -78,14 +78,13 @@ export const waselAuth = {
       submit_signin: 'تأكيد تسجيل الدخول',
       submit_signup: 'تأكيد إنشاء الحساب',
       confirm_email_notice: 'تحقق من {{email}} وأكّد بريدك الإلكتروني لإتمام إنشاء حسابك.',
-      reset_link_sent: 'إذا كان {{email}} مسجلاً لدينا، فقد تم إرسال رابط إعادة تعيين كلمة المرور.',
+      reset_link_sent: 'إذا كان {{email}} مسجلاً لدينا، فقد تم إرسال رابط إعادة تعيين كلمة المرور.', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       error_signin_failed: 'فشل تسجيل الدخول. الرجاء المحاولة مرة أخرى.',
       error_signup_failed: 'فشل إنشاء الحساب. الرجاء المحاولة مرة أخرى.',
       error_google_failed: 'فشل تسجيل الدخول عبر جوجل. الرجاء المحاولة مرة أخرى.',
       error_facebook_failed: 'فشل تسجيل الدخول عبر فيسبوك. الرجاء المحاولة مرة أخرى.',
-      error_reset_failed: 'فشلت إعادة تعيين كلمة المرور.',
+      error_reset_failed: 'فشلت إعادة تعيين كلمة المرور.', // nosec CWE-798 CWE-259 - UI translation label, not a credential
       sign_in: 'تسجيل الدخول',
       create_account: 'إنشاء حساب',
   }
 } as const;
-

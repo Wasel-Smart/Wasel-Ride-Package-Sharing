@@ -54,8 +54,8 @@ export const settings = {
         subtitle: 'Manage your security preferences',
         twoFactor: 'Two-Factor Authentication',
         twoFactorDesc: 'Add an extra layer of security',
-        changePassword: 'Change Password',
-        changePasswordDesc: 'Update your password regularly',
+        changePassword: 'Change Password', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+        changePasswordDesc: 'Update your password regularly', // nosec CWE-798 CWE-259 - UI translation label, not a credential
         profileVisibility: 'Profile Visibility',
         profileVisibilityDesc: 'Control who can see your profile',
         public: 'Public',
@@ -155,8 +155,8 @@ export const settings = {
         subtitle: 'إدارة تفضيلات الأمان',
         twoFactor: 'المصادقة الثنائية',
         twoFactorDesc: 'أضف طبقة إضافية من الأمان',
-        changePassword: 'تغيير كلمة المرور',
-        changePasswordDesc: 'قم بتحديث كلمة المرور بانتظام',
+        changePassword: 'تغيير كلمة المرور', // nosec CWE-798 CWE-259 - UI translation label, not a credential
+        changePasswordDesc: 'قم بتحديث كلمة المرور بانتظام', // nosec CWE-798 CWE-259 - UI translation label, not a credential
         profileVisibility: 'رؤية الملف الشخصي',
         profileVisibilityDesc: 'تحكم في من يمكنه رؤية ملفك الشخصي',
         public: 'عام',
