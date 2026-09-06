@@ -57,3 +57,21 @@ sensitive values were found in local environment files.
 ---
 
 *Generated: 2026-06-11*
+
+---
+
+## Session update (file-level verification only, no exec access)
+
+- `docs/wasel-planning-with-ai.json` (the real service account key) is
+  **no longer present in the working tree** — only the `.example` placeholder
+  remains. It may still be in git history; the `git filter-repo`/BFG
+  commands above under "Repository hardening" still need to be run and
+  confirmed by a human with push access.
+- The Google OAuth `client_secret_*.json` sits in
+  `_SECRETS_NEEDS_ROTATION_THEN_DELETE/` — never committed to git (lower
+  severity than the service-account key), but still on disk inside a
+  OneDrive-synced folder.
+- Full status tracker for that specific file lives at
+  `_SECRETS_NEEDS_ROTATION_THEN_DELETE/ROTATION_CHECKLIST.md` (short pointer
+  back to this document — this file remains the canonical checklist).
+- No credential in this table has been confirmed rotated as of this session.

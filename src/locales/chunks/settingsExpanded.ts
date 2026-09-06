@@ -60,7 +60,7 @@ export const settingsExpanded = {
       useStrongCredentialWith8Chars: 'Use a strong password with at least 8 characters.',
       saving: 'Saving...',
       updateCredential: 'Update Password',
-      sendResetLink: 'Send Reset Link'
+      sendResetLink: 'Send Reset Link',
       twoFactorAuthentication: 'Two-Factor Authentication',
       unavailableOnThisDevice: 'Unavailable on this device or in this environment.',
       enabledOnThisAccount: 'Enabled on this account.',
