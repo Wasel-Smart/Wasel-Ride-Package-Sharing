@@ -329,5 +329,5 @@ export function useLiveRouteIntelligence(args?: { from?: string | null; to?: str
     };
   }, []);
 
-  return useMemo(() => buildRouteIntelligenceSnapshot(args), [args?.from, args?.to, tick]);
+  return useMemo(() => buildRouteIntelligenceSnapshot(args), [args, tick]);
 }

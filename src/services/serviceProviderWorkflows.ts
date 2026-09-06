@@ -44,6 +44,63 @@ function getRoute(routeId: string, fallbackId: string): CityRoute {
   return resolved;
 }
 
+function buildServiceProviders(
+  recurringVisitsPerWeek: number,
+  crewUtilizationPercent: number,
+): ServiceProviderWorkflowSnapshot['serviceProviders'] {
+  return [
+    {
+      name: 'Wasel Field Ops',
+      specialty: 'Installations and site visits',
+      weeklyStops: Math.round(recurringVisitsPerWeek * 0.42),
+      utilizationPercent: clamp(crewUtilizationPercent + 4, 60, 97),
+      serviceLevel: 'Same-day lane bundle',
+    },
+    {
+      name: 'RouteCare Technicians',
+      specialty: 'Maintenance and preventive checks',
+      weeklyStops: Math.round(recurringVisitsPerWeek * 0.33),
+      utilizationPercent: clamp(crewUtilizationPercent - 3, 54, 92),
+      serviceLevel: 'Next-wave dispatch',
+    },
+    {
+      name: 'Document Relay Teams',
+      specialty: 'Samples, returns, and regulated handoffs',
+      weeklyStops: Math.round(recurringVisitsPerWeek * 0.25),
+      utilizationPercent: clamp(crewUtilizationPercent - 8, 48, 88),
+      serviceLevel: 'Backhaul-first delivery',
+    },
+  ];
+}
+
+function buildDispatchWindows(
+  baseDispatchPrice: number,
+  route: CityRoute,
+  liveSignal: LiveCorridorSignal | null,
+): ServiceProviderWorkflowSnapshot['dispatchWindows'] {
+  const pickup = liveSignal?.recommendedPickupPoint;
+  return [
+    {
+      label: 'Morning density window',
+      serviceMix: 'Installations, employee handoffs, urgent samples',
+      targetPriceJod: roundMoney(baseDispatchPrice * 0.92),
+      recommendedPickupPoint: pickup ?? `${route.from} primary node`,
+    },
+    {
+      label: 'Midday service lane',
+      serviceMix: 'Technician hops, invoice pickups, low-friction returns',
+      targetPriceJod: roundMoney(baseDispatchPrice),
+      recommendedPickupPoint: pickup ?? `${route.to} central connector`,
+    },
+    {
+      label: 'Evening backhaul window',
+      serviceMix: 'Returns, tools, empty-seat recovery',
+      targetPriceJod: roundMoney(baseDispatchPrice * 0.88),
+      recommendedPickupPoint: pickup ?? `${route.to} return-lane gate`,
+    },
+  ];
+}
+
 export function buildServiceProviderWorkflowSnapshot(
   routeId = 'JO_AMM_ZRQ',
 ): ServiceProviderWorkflowSnapshot {
@@ -80,51 +137,8 @@ export function buildServiceProviderWorkflowSnapshot(
     crewUtilizationPercent,
     packageBackhaulPercent,
     invoiceCadence: 'Weekly approval, monthly invoice settlement',
-    serviceProviders: [
-      {
-        name: 'Wasel Field Ops',
-        specialty: 'Installations and site visits',
-        weeklyStops: Math.round(recurringVisitsPerWeek * 0.42),
-        utilizationPercent: clamp(crewUtilizationPercent + 4, 60, 97),
-        serviceLevel: 'Same-day lane bundle',
-      },
-      {
-        name: 'RouteCare Technicians',
-        specialty: 'Maintenance and preventive checks',
-        weeklyStops: Math.round(recurringVisitsPerWeek * 0.33),
-        utilizationPercent: clamp(crewUtilizationPercent - 3, 54, 92),
-        serviceLevel: 'Next-wave dispatch',
-      },
-      {
-        name: 'Document Relay Teams',
-        specialty: 'Samples, returns, and regulated handoffs',
-        weeklyStops: Math.round(recurringVisitsPerWeek * 0.25),
-        utilizationPercent: clamp(crewUtilizationPercent - 8, 48, 88),
-        serviceLevel: 'Backhaul-first delivery',
-      },
-    ],
-    dispatchWindows: [
-      {
-        label: 'Morning density window',
-        serviceMix: 'Installations, employee handoffs, urgent samples',
-        targetPriceJod: roundMoney(baseDispatchPrice * 0.92),
-        recommendedPickupPoint: liveSignal?.recommendedPickupPoint ?? `${route.from} primary node`,
-      },
-      {
-        label: 'Midday service lane',
-        serviceMix: 'Technician hops, invoice pickups, low-friction returns',
-        targetPriceJod: roundMoney(baseDispatchPrice),
-        recommendedPickupPoint:
-          liveSignal?.recommendedPickupPoint ?? `${route.to} central connector`,
-      },
-      {
-        label: 'Evening backhaul window',
-        serviceMix: 'Returns, tools, empty-seat recovery',
-        targetPriceJod: roundMoney(baseDispatchPrice * 0.88),
-        recommendedPickupPoint:
-          liveSignal?.recommendedPickupPoint ?? `${route.to} return-lane gate`,
-      },
-    ],
+    serviceProviders: buildServiceProviders(recurringVisitsPerWeek, crewUtilizationPercent),
+    dispatchWindows: buildDispatchWindows(baseDispatchPrice, route, liveSignal),
     workflowSteps: [
       `Pin recurring jobs on ${route.from} to ${route.to} instead of dispatching ad hoc rides.`,
       'Group technicians, employee seats, and return packages into the same corridor wave.',

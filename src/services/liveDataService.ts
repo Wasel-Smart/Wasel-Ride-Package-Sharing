@@ -120,7 +120,8 @@ export function useLiveUserStats(): { stats: LiveUserStats | null; loading: bool
 
   useEffect(() => {
     fetchingRef.current = false;
-    void load();
+    const timer = setTimeout(() => void load(), 0);
+    return () => clearTimeout(timer);
   }, [load]);
 
   return { stats, loading };
@@ -168,9 +169,12 @@ export function useLivePlatformStats(): LivePlatformStats | null {
   }, []);
 
   useEffect(() => {
-    refresh(); // Initial refresh
-    const timer = setInterval(refresh, REFRESH_INTERVAL_MS);
-    return () => clearInterval(timer);
+    const timer = setTimeout(() => void refresh(), 0);
+    const interval = setInterval(refresh, REFRESH_INTERVAL_MS);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, [refresh]);
 
   return stats;

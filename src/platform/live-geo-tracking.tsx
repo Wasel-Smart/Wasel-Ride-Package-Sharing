@@ -6,7 +6,7 @@
 import { geoStream, type DriverLocation } from './geo-stream-realtime';
 import { telemetry } from './telemetry';
 import { productionMetricsCollector } from './production-metrics';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { tx } from '../locales/tx';
 import { sanitizeLogMessage } from '../utils/sanitization';
 
@@ -129,7 +129,7 @@ export function useLiveDriverTracking(
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     try {
       setError(null);
       setIsConnected(true);
@@ -169,7 +169,7 @@ export function useDriverTracking(driverId: string): {
   const [history, setHistory] = useState<DriverLocation[]>([]);
   const [isConnected, setIsConnected] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!driverId) {return;}
 
     setIsConnected(true);

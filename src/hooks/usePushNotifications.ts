@@ -142,7 +142,7 @@ export function usePushNotifications() {
       activeNotif.current = notif;
       return notif;
     },
-    [isSupported, permission],
+    [isSupported, permission, NotificationApi],
   );
 
   // ── Trip-event helpers ─────────────────────────────────────────────────────

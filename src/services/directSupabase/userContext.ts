@@ -23,6 +23,35 @@ export async function resolveCanonicalUser(userKey: string): Promise<UserRow | n
   return (byId as UserRow | null) ?? null;
 }
 
+function resolveAuthUserProperty(
+  authUser: { email?: string | null; user_metadata?: Record<string, unknown>; phone?: string | null },
+  key: 'email' | 'full_name' | 'phone_number' | 'role',
+  fallback: string | null,
+): string | null {
+  if (key === 'email') {
+    return authUser.email || null;
+  }
+  if (key === 'full_name') {
+    const name =
+      String(authUser.user_metadata?.full_name ?? authUser.user_metadata?.name ?? '').trim();
+    return name || null;
+  }
+  if (key === 'phone_number') {
+    const phone =
+      String(
+        authUser.user_metadata?.phone_number ??
+          authUser.user_metadata?.phone ??
+          authUser.phone ??
+          '',
+      ).trim();
+    return phone || null;
+  }
+  if (key === 'role') {
+    return String(authUser.user_metadata?.role ?? '').trim() || null;
+  }
+  return fallback;
+}
+
 async function resolveAuthSeed(userKey: string, seed?: UserSeed): Promise<UserSeed> {
   const mergedSeed: UserSeed = {
     email: seed?.email?.trim() || null,
@@ -37,22 +66,17 @@ async function resolveAuthSeed(userKey: string, seed?: UserSeed): Promise<UserSe
     } = await supabase.auth.getUser().catch(() => ({ data: { user: null } }));
 
     if (authUser && authUser.id === userKey) {
-      mergedSeed.email = mergedSeed.email || authUser.email || null;
+      mergedSeed.email = mergedSeed.email || resolveAuthUserProperty(authUser, 'email', null) || null;
       mergedSeed.full_name =
         mergedSeed.full_name ||
-        String(authUser.user_metadata?.full_name ?? authUser.user_metadata?.name ?? '').trim() ||
+        resolveAuthUserProperty(authUser, 'full_name', null) ||
         null;
       mergedSeed.phone_number =
         mergedSeed.phone_number ||
-        String(
-          authUser.user_metadata?.phone_number ??
-            authUser.user_metadata?.phone ??
-            authUser.phone ??
-            '',
-        ).trim() ||
+        resolveAuthUserProperty(authUser, 'phone_number', null) ||
         null;
       mergedSeed.role =
-        mergedSeed.role || String(authUser.user_metadata?.role ?? '').trim() || null;
+        mergedSeed.role || resolveAuthUserProperty(authUser, 'role', null) || null;
     }
   }
 
