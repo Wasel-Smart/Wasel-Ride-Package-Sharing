@@ -30,6 +30,135 @@ interface WaselSelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>,
   containerStyle?: CSSProperties;
 }
 
+function SelectLabel({ label, description, selectId, dir }: {
+  label?: string;
+  description?: string;
+  selectId: string;
+  dir: 'ltr' | 'rtl';
+}) {
+  if (!label && !description) {return null;}
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: dir === 'rtl' ? 'flex-end' : 'space-between',
+        alignItems: 'baseline',
+        gap: '8px',
+      }}
+    >
+      {label && (
+        <label
+          htmlFor={selectId}
+          style={{
+            fontSize: TYPE.size.sm,
+            fontWeight: TYPE.weight.bold,
+            color: C.textSub,
+            fontFamily: F,
+            lineHeight: 1.4,
+          }}
+        >
+          {label}
+        </label>
+      )}
+      {description && (
+        <span
+          id={`${selectId}-description`}
+          style={{ fontSize: TYPE.size.xs, color: C.textMuted, fontFamily: F }}
+        >
+          {description}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function SelectField({ dir, focused, disabled, hasError, borderColor, boxShadow, style, selectId, value, defaultValue, placeholder, options, onChange, rest, onFocus, onBlur }: {
+  dir: 'ltr' | 'rtl';
+  focused: boolean;
+  disabled: boolean;
+  hasError: boolean;
+  borderColor: string;
+  boxShadow: string;
+  style: CSSProperties | undefined;
+  selectId: string;
+  value: string | number | readonly string[] | undefined;
+  defaultValue: string | number | readonly string[] | undefined;
+  placeholder?: string;
+  options: WaselSelectOption[];
+  onChange?: (value: string) => void;
+  rest: SelectHTMLAttributes<HTMLSelectElement>;
+  onFocus: (e: React.FocusEvent<HTMLSelectElement>) => void;
+  onBlur: (e: React.FocusEvent<HTMLSelectElement>) => void;
+}) {
+  return (
+    <div
+      style={{
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: '50px',
+        borderRadius: R.lg,
+        background: focused ? C.card2 : C.cardSolid,
+        border: `1.5px solid ${borderColor}`,
+        boxShadow,
+        transition: `border-color ${ANIM.dur.normal} ${ANIM.ease.default}, box-shadow ${ANIM.dur.normal} ${ANIM.ease.default}, background ${ANIM.dur.normal} ${ANIM.ease.default}`,
+        opacity: disabled ? 0.62 : 1,
+      }}
+    >
+      <select
+        {...rest}
+        id={selectId}
+        value={value}
+        defaultValue={defaultValue ?? (placeholder ? '' : undefined)}
+        disabled={disabled}
+        aria-invalid={hasError || undefined}
+        onChange={e => onChange?.(e.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        style={{
+          width: '100%',
+          minWidth: 0,
+          minHeight: '48px',
+          padding: dir === 'rtl' ? '0 14px 0 42px' : '0 42px 0 14px',
+          appearance: 'none',
+          WebkitAppearance: 'none',
+          border: 'none',
+          outline: 'none',
+          background: 'transparent',
+          color: C.text,
+          fontSize: TYPE.size.base,
+          fontFamily: F,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          ...style,
+        }}
+      >
+        {placeholder && (
+          <option value="" disabled>
+            {placeholder}
+          </option>
+        )}
+        {options.map(option => (
+          <option key={option.value} value={option.value} disabled={option.disabled}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      <ChevronDown
+        aria-hidden="true"
+        size={16}
+        style={{
+          position: 'absolute',
+          right: dir === 'rtl' ? undefined : '14px',
+          left: dir === 'rtl' ? '14px' : undefined,
+          pointerEvents: 'none',
+          color: C.textMuted,
+        }}
+      />
+    </div>
+  );
+}
+
 export function WaselSelect({
   label,
   description,
@@ -49,8 +178,6 @@ export function WaselSelect({
 }: WaselSelectProps) {
   const generatedId = useId();
   const selectId = id ?? generatedId;
-  const descriptionId = description ? `${selectId}-description` : undefined;
-  const errorId = error ? `${selectId}-error` : undefined;
   const [focused, setFocused] = useState(false);
 
   const hasError = Boolean(error);
@@ -71,115 +198,35 @@ export function WaselSelect({
         ...containerStyle,
       }}
     >
-      {(label || description) && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'baseline',
-            gap: '8px',
-          }}
-        >
-          {label && (
-            <label
-              htmlFor={selectId}
-              style={{
-                fontSize: TYPE.size.sm,
-                fontWeight: TYPE.weight.bold,
-                color: C.textSub,
-                fontFamily: F,
-                lineHeight: 1.4,
-              }}
-            >
-              {label}
-            </label>
-          )}
-          {description && (
-            <span
-              id={descriptionId}
-              style={{ fontSize: TYPE.size.xs, color: C.textMuted, fontFamily: F }}
-            >
-              {description}
-            </span>
-          )}
-        </div>
-      )}
+      <SelectLabel label={label} description={description} selectId={selectId} dir={dir} />
 
-      <div
-        style={{
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          minHeight: '50px',
-          borderRadius: R.lg,
-          background: focused ? C.card2 : C.cardSolid,
-          border: `1.5px solid ${borderColor}`,
-          boxShadow,
-          transition: `border-color ${ANIM.dur.normal} ${ANIM.ease.default}, box-shadow ${ANIM.dur.normal} ${ANIM.ease.default}, background ${ANIM.dur.normal} ${ANIM.ease.default}`,
-          opacity: disabled ? 0.62 : 1,
+      <SelectField
+        dir={dir}
+        focused={focused}
+        disabled={disabled ?? false}
+        hasError={hasError}
+        borderColor={borderColor}
+        boxShadow={boxShadow}
+        style={style}
+        selectId={selectId}
+        value={value}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        options={options}
+        onChange={onChange}
+        rest={rest}
+        onFocus={e => {
+          setFocused(true);
+          rest.onFocus?.(e);
         }}
-      >
-        <select
-          {...rest}
-          id={selectId}
-          value={value}
-          defaultValue={defaultValue ?? (placeholder ? '' : undefined)}
-          disabled={disabled}
-          aria-invalid={hasError || undefined}
-          aria-describedby={[descriptionId, errorId].filter(Boolean).join(' ') || undefined}
-          onChange={e => onChange?.(e.target.value)}
-          onFocus={e => {
-            setFocused(true);
-            rest.onFocus?.(e);
-          }}
-          onBlur={e => {
-            setFocused(false);
-            rest.onBlur?.(e);
-          }}
-          style={{
-            width: '100%',
-            minWidth: 0,
-            minHeight: '48px',
-            padding: dir === 'rtl' ? '0 14px 0 42px' : '0 42px 0 14px',
-            appearance: 'none',
-            WebkitAppearance: 'none',
-            border: 'none',
-            outline: 'none',
-            background: 'transparent',
-            color: C.text,
-            fontSize: TYPE.size.base,
-            fontFamily: F,
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            ...style,
-          }}
-        >
-          {placeholder && (
-            <option value="" disabled>
-              {placeholder}
-            </option>
-          )}
-          {options.map(option => (
-            <option key={option.value} value={option.value} disabled={option.disabled}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
-        <ChevronDown
-          aria-hidden="true"
-          size={16}
-          style={{
-            position: 'absolute',
-            right: dir === 'rtl' ? undefined : '14px',
-            left: dir === 'rtl' ? '14px' : undefined,
-            pointerEvents: 'none',
-            color: C.textMuted,
-          }}
-        />
-      </div>
+        onBlur={e => {
+          setFocused(false);
+          rest.onBlur?.(e);
+        }}
+      />
 
       {error && (
-        <span id={errorId} style={{ fontSize: TYPE.size.xs, color: C.error, fontFamily: F }}>
+        <span id={`${selectId}-error`} style={{ fontSize: TYPE.size.xs, color: C.error, fontFamily: F }}>
           {error}
         </span>
       )}

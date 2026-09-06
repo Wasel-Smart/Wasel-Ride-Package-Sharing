@@ -182,7 +182,7 @@ export function startHealthCheckMonitoring(intervalMs = 60_000): () => void {
 
   const scheduleNextCheck = (interval: number) => {
     if (timerId) {clearTimeout(timerId);}
-    timerId = setTimeout(check, interval);
+    timerId = setTimeout(() => void check(), interval);
   };
 
   const check = async () => {
