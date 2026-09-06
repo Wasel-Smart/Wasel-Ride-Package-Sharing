@@ -1069,4 +1069,55 @@ export function LiveTripTracking() {
               });
             }}
             variant="ghost"
-            className="w-full h-10 b
+            className="w-full h-10 border border-border text-slate-300 hover:text-white hover:border-muted-foreground/30 rounded-xl text-sm font-medium"
+          >
+            <Share2 className="w-3.5 h-3.5 mr-2" />
+            {tx('liveTripTracking.share_live_location')}
+          </Button>
+
+          {/* Cancel ride — only shown while trip is not yet complete */}
+          {!arrived && (
+            <Button
+              onClick={() => setShowCancel(true)}
+              variant="ghost"
+              className="w-full h-10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/5 hover:text-orange-300 hover:border-orange-500/40 rounded-xl text-sm font-medium"
+            >
+              <XCircle className="w-3.5 h-3.5 mr-2" />
+              {tx('liveTripTracking.cancel_ride')}
+            </Button>
+          )}
+
+          <Button
+            onClick={() => setShowSOS(true)}
+            className="w-full h-10 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 rounded-xl text-sm font-bold transition-all"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 mr-2" />
+            {tx('liveTripTracking.emergency_sos_2')}
+          </Button>
+        </div>
+      </div>
+
+      {/* SOS Dialog */}
+      <SOSDialog open={showSOS} onClose={() => setShowSOS(false)} />
+
+      {/* Cancel Confirmation */}
+      <CancelConfirmDialog
+        open={showCancel}
+        onClose={() => setShowCancel(false)}
+        onConfirm={() => { void handleCancelConfirm(); }}
+        cancelling={cancelling}
+      />
+
+      {/* Post-trip Rating Sheet */}
+      <TripRatingSheet
+        open={showRating}
+        driverName={trip.driver.name}
+        driverImg={trip.driver.img}
+        driverInitials={trip.driver.initials}
+        fare={trip.price.toFixed(3)}
+        onSubmit={(stars, comment) => { void handleRatingSubmit(stars, comment); }}
+        onSkip={handleRatingSkip}
+      />
+    </div>
+  );
+}
