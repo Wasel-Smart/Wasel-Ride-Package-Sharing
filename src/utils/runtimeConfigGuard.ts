@@ -14,6 +14,10 @@ export function getStartupConfigurationError(environment: StartupEnvironment): s
     return null;
   }
 
+  if (environment.VITE_E2E_LOCAL_AUTH === 'true') {
+    return null;
+  }
+
   if (environment.MODE === 'test') {
     return null;
   }
@@ -29,7 +33,10 @@ export function getStartupConfigurationError(environment: StartupEnvironment): s
     return 'Supabase URL must use HTTPS.';
   }
 
-  if (!supabaseKey.startsWith('eyJ')) {
+  // Supabase publishable keys come in two valid formats: the current
+  // `sb_publishable_...` format, and the legacy JWT-style anon key
+  // (`eyJ...`) still issued for older projects.
+  if (!supabaseKey.startsWith('eyJ') && !supabaseKey.startsWith('sb_publishable_')) {
     return 'Supabase publishable key appears to be invalid.';
   }
 

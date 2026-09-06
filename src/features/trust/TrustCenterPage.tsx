@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   FileCheck,
   Headphones,
-  HelpCircle,
   MailCheck,
   Package,
   Shield,
@@ -32,10 +31,9 @@ import {
   TrustScoreDisplay,
   TrustScoreExplanation,
   TrustSkeleton,
-  ValidationRules,
   VerificationSteps,
+  stateAccent,
 } from './components';
-import { stateAccent, TrustScoreDisplay as TrustScoreDisplayExport } from './components';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
@@ -326,6 +324,7 @@ export default function TrustCenterPage() {
     : effectiveStatus?.nextStepId
       ? t('trustCenterExpanded.actionNeeded')
       : t('trustCenterExpanded.ready');
+  const showOnboarding = isNewUser(effectiveStatus) && !onboardingDismissed;
 
   const runAction = async (key: string, work: () => Promise<void>, optimisticPatch?: (current: TrustCenterStatus) => TrustCenterStatus) => {
     setActionKey(key);
@@ -502,6 +501,16 @@ export default function TrustCenterPage() {
           <TrustSkeleton />
         ) : (
           <>
+            {showOnboarding && (
+              <TrustOnboarding
+                t={t}
+                onDismiss={() => setOnboardingDismissed(true)}
+                onStart={() => {
+                  setOnboardingDismissed(true);
+                  handleNextAction();
+                }}
+              />
+            )}
             <div
               aria-hidden="true"
               style={{
@@ -599,12 +608,30 @@ export default function TrustCenterPage() {
                 }
                 dir={ar ? 'rtl' : 'ltr'}
               />
+              <TrustScoreExplanation score={user.trustScore} t={t} compact />
               <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: TYPE.lineHeight.relaxed, fontFamily: F }}>
                 {t('trustCenterExpanded.eachCardShowsState')}
               </div>
             </div>
           }
         />
+
+        {pendingSync && (
+          <div
+            role="status"
+            style={{
+              padding: `${SPACE[3]} ${SPACE[4]}`,
+              borderRadius: R.lg,
+              border: `1px solid ${C.cyan}33`,
+              background: `${C.cyan}12`,
+              color: C.cyan,
+              fontSize: TYPE.size.sm,
+              fontFamily: F,
+            }}
+          >
+            {t('trustCenterExpanded.validationPendingSync')}
+          </div>
+        )}
 
         <VerificationSteps
           steps={(effectiveStatus?.steps ?? {}) as Record<string, { state: string; detail?: string }>}
@@ -875,7 +902,14 @@ export default function TrustCenterPage() {
                     value={identityReference}
                     onChange={setIdentityReference}
                     dir={ar ? 'rtl' : 'ltr'}
+                    aria-invalid={!!validationErrors.identityReference}
+                    aria-describedby="identity-reference-error"
                   />
+                  {validationErrors.identityReference ? (
+                    <div id="identity-reference-error" style={{ color: C.error, fontSize: TYPE.size.xs, fontFamily: F, marginTop: SPACE[1] }}>
+                      {validationErrors.identityReference}
+                    </div>
+                  ) : null}
                   <WaselInput
                     id="identity-document-ref"
                     label={t('trustCenterExpanded.documentReferenceOptional')}
@@ -957,7 +991,7 @@ export default function TrustCenterPage() {
                         {effectiveStatus?.steps.email.detail}
                       </div>
                       <div style={{ color: C.text, fontSize: TYPE.size.sm, fontFamily: F }}>
-                        {user.email || effectiveStatus?.steps.email.meta.email || 'No email'}
+                        {user.email || effectiveStatus?.steps.email.meta.email || t('trustCenterExpanded.email')}
                       </div>
                       <TrustActionRow
                         primary={
@@ -1021,7 +1055,14 @@ export default function TrustCenterPage() {
                         onChange={setPhoneInput}
                         type="tel"
                         dir="ltr"
+                        aria-invalid={!!validationErrors.phone}
+                        aria-describedby="phone-number-error"
                       />
+                      {validationErrors.phone ? (
+                        <div id="phone-number-error" style={{ color: C.error, fontSize: TYPE.size.xs, fontFamily: F, marginTop: SPACE[1] }}>
+                          {validationErrors.phone}
+                        </div>
+                      ) : null}
                       <TrustActionRow
                         primary={
                           <WaselButton
@@ -1047,7 +1088,14 @@ export default function TrustCenterPage() {
                             onChange={setPhoneCode}
                             type="text"
                             dir="ltr"
+                            aria-invalid={!!validationErrors.phoneCode}
+                            aria-describedby="phone-code-error"
                           />
+                          {validationErrors.phoneCode ? (
+                            <div id="phone-code-error" style={{ color: C.error, fontSize: TYPE.size.xs, fontFamily: F, marginTop: SPACE[1] }}>
+                              {validationErrors.phoneCode}
+                            </div>
+                          ) : null}
                           <WaselButton
                             onClick={() => {
                               void handleConfirmPhone();
@@ -1075,7 +1123,7 @@ export default function TrustCenterPage() {
                 <StepCard
                   title={t('trustCenterExpanded.driverDocumentsTitle')}
                   subtitle={
-                    driverStep?.detail ?? 'Submit driver license and compliance documents.'
+                    driverStep?.detail ?? t('trustCenterExpanded.driverDocumentsTitle')
                   }
                   state={driverStep?.state ?? 'not_started'}
                   badgeLabel={getStepBadge(driverStep?.state ?? 'not_started', t).label}
@@ -1113,7 +1161,14 @@ export default function TrustCenterPage() {
                           value={licenseNumber}
                           onChange={setLicenseNumber}
                           dir={ar ? 'rtl' : 'ltr'}
+                          aria-invalid={!!validationErrors.licenseNumber}
+                          aria-describedby="driver-license-error"
                         />
+                        {validationErrors.licenseNumber ? (
+                          <div id="driver-license-error" style={{ color: C.error, fontSize: TYPE.size.xs, fontFamily: F, marginTop: SPACE[1] }}>
+                            {validationErrors.licenseNumber}
+                          </div>
+                        ) : null}
                         <WaselInput
                           id="driver-document-ref"
                           label={t('trustCenterExpanded.documentReferenceOptional')}
@@ -1155,7 +1210,7 @@ export default function TrustCenterPage() {
                 <StepCard
                   title={t('trustCenterExpanded.walletStandingTitle')}
                   subtitle={
-                    walletStandingStep?.detail ?? 'Wallet status unavailable.'
+                    walletStandingStep?.detail ?? t('trustCenterExpanded.walletStandingTitle')
                   }
                   state={walletStandingStep?.state ?? 'failed'}
                   badgeLabel={getStepBadge(walletStandingStep?.state ?? 'failed', t).label}
@@ -1191,6 +1246,14 @@ export default function TrustCenterPage() {
             </div>
           </SectionCard>
         </div>
+
+        <SectionCard
+          title={t('trustCenterExpanded.reviewHistoryTitle')}
+          subtitle={t('trustCenterExpanded.reviewHistorySubtitle')}
+          icon={<Activity size={16} color={C.cyan} />}
+        >
+          <ReviewTimeline items={reviewHistory} t={t} />
+        </SectionCard>
 
         <SectionCard
           title={t('trustCenterExpanded.capabilityMatrixTitle')}
@@ -1268,17 +1331,17 @@ export default function TrustCenterPage() {
         description={confirmState.description}
         size="sm"
         onClose={() => setConfirmState(prev => ({ ...prev, open: false }))}
-        closeLabel="Close"
+        closeLabel={t('common.close')}
         footer={
           <>
             <WaselButton
               variant="outline"
               onClick={() => setConfirmState(prev => ({ ...prev, open: false }))}
             >
-              Cancel
+              {t('common.cancel')}
             </WaselButton>
             <WaselButton variant="primary" onClick={confirmState.onConfirm}>
-              Confirm
+              {t('common.confirm')}
             </WaselButton>
           </>
         }

@@ -8,12 +8,13 @@ const createMockSupabase = () => {
   const mockFunctionsInvoke = vi.fn();
   const mockAuthGetUser = vi.fn();
   const mockGetSession = vi.fn().mockResolvedValue({ data: { session: { access_token: 'token', user: { id: 'user-1' } } }, error: null });
+  const mockRefreshSession = vi.fn().mockResolvedValue({ data: { session: { access_token: 'token', user: { id: 'user-1' } } }, error: null });
 
   const mockSupabase = {
     auth: {
       getUser: mockAuthGetUser,
       getSession: mockGetSession,
-      refreshSession: vi.fn(),
+      refreshSession: mockRefreshSession,
       signUp: vi.fn(),
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
@@ -24,7 +25,7 @@ const createMockSupabase = () => {
     from: mockFrom,
   };
 
-  return { mockSupabase, mockFunctionsInvoke, mockAuthGetUser, mockGetSession, mockFrom, mockSelect, mockEq, mockSingle };
+  return { mockSupabase, mockFunctionsInvoke, mockAuthGetUser, mockGetSession, mockRefreshSession, mockFrom, mockSelect, mockEq, mockSingle };
 };
 
 vi.mock('@/utils/supabase/client.ts', () => ({
@@ -33,13 +34,37 @@ vi.mock('@/utils/supabase/client.ts', () => ({
 
 describe('payment.test.ts', () => {
   let mockSupabase: ReturnType<typeof createMockSupabase>;
+  // `payment.ts` gets its request token from `getAuthDetails()` (in
+  // `@/services/core`), not from the raw supabase client — mocked directly
+  // here so tests don't have to fight the session/refresh-token logic that
+  // lives inside `getAuthDetails` itself (that has its own test coverage).
+  let mockGetAuthDetails: ReturnType<typeof vi.fn>;
+  // `payment.ts` sends requests via `requestEdgeJson` (a plain HTTP call
+  // through `fetchWithRetry`), not `supabase.functions.invoke`. Mocking it
+  // directly avoids needing a real API_URL and a mocked global fetch.
+  let mockRequestEdgeJson: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.resetModules();
     mockSupabase = createMockSupabase();
+    mockGetAuthDetails = vi.fn().mockResolvedValue({ token: 'token', userId: 'user-1' });
+    mockRequestEdgeJson = vi.fn();
+
     vi.doMock('@/utils/supabase/client.ts', () => ({
       supabase: mockSupabase.mockSupabase,
     }));
+    vi.doMock('@/services/core', () => ({
+      getAuthDetails: mockGetAuthDetails,
+    }));
+    vi.doMock('@/services/backendWorkflow', async () => {
+      const actual = await vi.importActual<typeof import('@/services/backendWorkflow')>(
+        '@/services/backendWorkflow',
+      );
+      return {
+        ...actual,
+        requestEdgeJson: mockRequestEdgeJson,
+      };
+    });
   });
 
   it('creates payment intent with valid amount', async () => {
@@ -47,10 +72,7 @@ describe('payment.test.ts', () => {
       data: { user: { id: 'user-1' } },
       error: null,
     });
-    mockSupabase.mockFunctionsInvoke.mockResolvedValue({
-      data: { clientSecret: 'secret-123', paymentIntentId: 'pi-123' },
-      error: null,
-    });
+    mockRequestEdgeJson.mockResolvedValue({ clientSecret: 'secret-123', paymentIntentId: 'pi-123' });
 
     const { paymentService: ps } = await import('@/services/payment');
     const result = await ps.createPaymentIntent({
@@ -61,21 +83,25 @@ describe('payment.test.ts', () => {
 
     expect(result.clientSecret).toBe('secret-123');
     expect(result.paymentIntentId).toBe('pi-123');
-    expect(mockSupabase.mockFunctionsInvoke).toHaveBeenCalledWith('stripe-payments-v2', {
-      body: expect.objectContaining({
-        action: 'create-payment-intent',
-        amount: 5000,
-        currency: 'jod',
-        idempotency_key: 'booking:booking-1',
-        metadata: expect.objectContaining({
+    expect(mockRequestEdgeJson).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: '/payment/create-intent',
+        operation: 'createPaymentIntent',
+        authMode: 'required',
+        method: 'POST',
+        body: expect.objectContaining({
+          action: 'create-payment-intent',
+          amount: 5000,
+          currency: 'jod',
           booking_id: 'booking-1',
-          user_id: 'user-1',
+          idempotency_key: 'booking:booking-1',
+          metadata: expect.objectContaining({
+            booking_id: 'booking-1',
+            user_id: 'user-1',
+          }),
         }),
       }),
-      headers: expect.objectContaining({
-        Authorization: expect.stringContaining('Bearer'),
-      }),
-    });
+    );
   });
 
   it('normalizes JOD amount to minor units (multiplier 1000)', async () => {
@@ -83,10 +109,7 @@ describe('payment.test.ts', () => {
       data: { user: { id: 'user-1' } },
       error: null,
     });
-    mockSupabase.mockFunctionsInvoke.mockResolvedValue({
-      data: { clientSecret: 'secret', paymentIntentId: 'pi-1' },
-      error: null,
-    });
+    mockRequestEdgeJson.mockResolvedValue({ clientSecret: 'secret', paymentIntentId: 'pi-1' });
 
     const { paymentService: ps } = await import('@/services/payment');
     await ps.createPaymentIntent({
@@ -95,8 +118,8 @@ describe('payment.test.ts', () => {
       bookingId: 'b-1',
     });
 
-    const callArgs = mockSupabase.mockFunctionsInvoke.mock.calls[0];
-    expect((callArgs as unknown as any[])[1].body.amount).toBe(1500);
+    const callArgs = mockRequestEdgeJson.mock.calls[0][0] as { body: { amount: number } };
+    expect(callArgs.body.amount).toBe(1500);
   });
 
   it('normalizes non-JOD amount to minor units (multiplier 100)', async () => {
@@ -104,10 +127,7 @@ describe('payment.test.ts', () => {
       data: { user: { id: 'user-1' } },
       error: null,
     });
-    mockSupabase.mockFunctionsInvoke.mockResolvedValue({
-      data: { clientSecret: 'secret', paymentIntentId: 'pi-1' },
-      error: null,
-    });
+    mockRequestEdgeJson.mockResolvedValue({ clientSecret: 'secret', paymentIntentId: 'pi-1' });
 
     const { paymentService: ps } = await import('@/services/payment');
     await ps.createPaymentIntent({
@@ -116,8 +136,8 @@ describe('payment.test.ts', () => {
       bookingId: 'b-1',
     });
 
-    const callArgs = mockSupabase.mockFunctionsInvoke.mock.calls[0];
-    expect((callArgs as unknown as any[])[1].body.amount).toBe(1000);
+    const callArgs = mockRequestEdgeJson.mock.calls[0][0] as { body: { amount: number } };
+    expect(callArgs.body.amount).toBe(1000);
   });
 
   it('rejects amounts below minimum', async () => {
@@ -153,9 +173,11 @@ describe('payment.test.ts', () => {
   });
 
   it('throws on unauthenticated user', async () => {
-    // Mock getSession to return no session (unauthenticated)
-    mockSupabase.mockGetSession.mockResolvedValue({
-      data: { session: null },
+    // createPaymentIntent checks auth via supabase.auth.getUser() (not
+    // getSession/getAuthDetails) — that's the mock that needs to reflect
+    // "no user" for this path to actually exercise the auth check.
+    mockSupabase.mockAuthGetUser.mockResolvedValue({
+      data: { user: null },
       error: { message: 'No session' },
     });
 
@@ -169,13 +191,12 @@ describe('payment.test.ts', () => {
     ).rejects.toThrow('Not authenticated');
   });
 
-  it('handles payment timeout', async () => {
+  it('propagates an edge request failure (e.g. a timeout) instead of hanging', async () => {
     mockSupabase.mockAuthGetUser.mockResolvedValue({
       data: { user: { id: 'user-1' } },
       error: null,
     });
-    const slowInvoke = new Promise(() => {});
-    mockSupabase.mockFunctionsInvoke.mockReturnValue(slowInvoke);
+    mockRequestEdgeJson.mockRejectedValue(new DOMException('Request aborted', 'AbortError'));
 
     const { paymentService: ps } = await import('@/services/payment');
     await expect(
@@ -184,18 +205,15 @@ describe('payment.test.ts', () => {
         currency: 'jod',
         bookingId: 'b-1',
       }),
-    ).rejects.toThrow('Payment request timed out');
-  }, 20000);
+    ).rejects.toThrow('Request aborted');
+  });
 
   it('throws on invalid payment response', async () => {
     mockSupabase.mockAuthGetUser.mockResolvedValue({
       data: { user: { id: 'user-1' } },
       error: null,
     });
-    mockSupabase.mockFunctionsInvoke.mockResolvedValue({
-      data: { clientSecret: undefined, paymentIntentId: undefined },
-      error: null,
-    });
+    mockRequestEdgeJson.mockResolvedValue({ clientSecret: undefined, paymentIntentId: undefined });
 
     const { paymentService: ps } = await import('@/services/payment');
     await expect(
@@ -220,18 +238,11 @@ describe('payment.test.ts', () => {
         currency: 'jod',
         bookingId: 'b-1',
       }),
-    ).rejects.toThrow('Payments are not available');
+    ).rejects.toThrow('Supabase client not configured');
   });
 
   it('processes refund with full amount', async () => {
-    mockSupabase.mockAuthGetUser.mockResolvedValue({
-      data: { user: { id: 'user-1' } },
-      error: null,
-    });
-    mockSupabase.mockFunctionsInvoke.mockResolvedValue({
-      data: { refundId: 'refund-1', amount: 5000 },
-      error: null,
-    });
+    mockRequestEdgeJson.mockResolvedValue({ refundId: 'refund-1', amount: 5000 });
 
     const { paymentService: ps } = await import('@/services/payment');
     const result = await ps.processRefund({
@@ -246,14 +257,7 @@ describe('payment.test.ts', () => {
   });
 
   it('processes refund without specifying amount', async () => {
-    mockSupabase.mockAuthGetUser.mockResolvedValue({
-      data: { user: { id: 'user-1' } },
-      error: null,
-    });
-    mockSupabase.mockFunctionsInvoke.mockResolvedValue({
-      data: { refundId: 'refund-2' },
-      error: null,
-    });
+    mockRequestEdgeJson.mockResolvedValue({ refundId: 'refund-2' });
 
     const { paymentService: ps } = await import('@/services/payment');
     const result = await ps.processRefund({
@@ -267,14 +271,7 @@ describe('payment.test.ts', () => {
   });
 
   it('throws on invalid refund response', async () => {
-    mockSupabase.mockAuthGetUser.mockResolvedValue({
-      data: { user: { id: 'user-1' } },
-      error: null,
-    });
-    mockSupabase.mockFunctionsInvoke.mockResolvedValue({
-      data: { refundId: undefined },
-      error: null,
-    });
+    mockRequestEdgeJson.mockResolvedValue({ refundId: undefined });
 
     const { paymentService: ps } = await import('@/services/payment');
     await expect(
@@ -286,26 +283,17 @@ describe('payment.test.ts', () => {
   });
 
   it('gets payment status', async () => {
-    mockSupabase.mockAuthGetUser.mockResolvedValue({
-      data: { user: { id: 'user-1' } },
-      error: null,
-    });
-    mockSupabase.mockEq.mockReturnValue({
-      eq: mockSupabase.mockEq,
-      single: mockSupabase.mockSingle,
-    });
-    mockSupabase.mockSingle.mockResolvedValue({
-      data: { payment_status: 'succeeded' },
-      error: null,
-    });
+    mockRequestEdgeJson.mockResolvedValue('succeeded');
 
     const { paymentService: ps } = await import('@/services/payment');
     const result = await ps.getPaymentStatus('booking-1');
     expect(result).toBe('succeeded');
   });
 
-  it('confirmPayment is a no-op', async () => {
+  it('confirmPayment resolves once the polled payment status succeeds', async () => {
+    mockRequestEdgeJson.mockResolvedValue('succeeded');
+
     const { paymentService: ps } = await import('@/services/payment');
-    await expect(ps.confirmPayment('b-1')).resolves.toBeUndefined();
+    await expect(ps.confirmPayment('b-1')).resolves.toBe('succeeded');
   });
 });

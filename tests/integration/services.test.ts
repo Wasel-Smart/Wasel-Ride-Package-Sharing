@@ -22,8 +22,9 @@ describe('RBAC Service', () => {
     expect(resolveAccessRole('admin')).toBe('admin');
     expect(resolveAccessRole('driver')).toBe('driver');
     expect(resolveAccessRole('guest')).toBe('guest');
-    // Unknown roles fall back to 'user'
-    expect(resolveAccessRole('unknown_role')).toBe('user');
+    // Unknown roles fail closed to 'guest' (least privilege) — see the
+    // fail-closed comment on resolveAccessRole in src/platform/rbac.ts.
+    expect(resolveAccessRole('unknown_role')).toBe('guest');
     // Undefined falls back to 'guest'
     expect(resolveAccessRole(undefined)).toBe('guest');
   });

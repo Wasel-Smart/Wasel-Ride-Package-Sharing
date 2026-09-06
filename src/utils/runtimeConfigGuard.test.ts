@@ -3,7 +3,9 @@ import { getStartupConfigurationError } from './runtimeConfigGuard';
 
 describe('getStartupConfigurationError', () => {
   it('blocks a missing Supabase URL outside local E2E mode', () => {
-    expect(getStartupConfigurationError({ DEV: false })).toBeNull();
+    expect(getStartupConfigurationError({ DEV: false })).toBe(
+      'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY.',
+    );
   });
 
   it('accepts the documented publishable-key configuration', () => {

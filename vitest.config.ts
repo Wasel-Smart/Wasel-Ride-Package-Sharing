@@ -52,6 +52,10 @@ export default defineConfig({
     env: {
       VITE_EVENT_BROKER: 'memory',
       VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true',
+      // Pin feature flags that tests assert defaults for, so a developer's
+      // local .env/.env.local (which Vite loads into every mode, including
+      // 'test') can't silently change what the test suite sees.
+      VITE_ENABLE_TWO_FACTOR_AUTH: 'false',
     },
     coverage: {
       provider: 'v8',

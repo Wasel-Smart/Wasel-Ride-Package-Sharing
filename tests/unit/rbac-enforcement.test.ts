@@ -58,8 +58,8 @@ describe('rbac-enforcement.test.ts', () => {
     expect(resolveAccessRole(undefined)).toBe('guest');
   });
 
-  it('resolveAccessRole falls back to user for unknown role', () => {
-    expect(resolveAccessRole('superadmin')).toBe('user');
+  it('resolveAccessRole fails closed to guest for an unknown role', () => {
+    expect(resolveAccessRole('superadmin')).toBe('guest');
   });
 
   it('userHasPermission treats undefined as guest', () => {

@@ -23,9 +23,9 @@ export function getFallbackConfig(): FallbackConfig {
 
   if (isProd) {
     return {
-      mode: 'writes-if-enabled',
-      allowDirectSupabase: true,
-      requireEdgeForWrites: false,
+      mode: allowDirectSupabaseFallback ? 'writes-if-enabled' : 'disabled',
+      allowDirectSupabase: allowDirectSupabaseFallback,
+      requireEdgeForWrites: !allowDirectSupabaseFallback,
       requireEdgeForReads: true,
     };
   }
