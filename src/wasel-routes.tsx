@@ -385,8 +385,8 @@ const buildMainChildren = (): RouteObject[] => [
   { path: 'legal/terms', Component: () => <RedirectTo to="/app/terms" /> },
 
   // ── Error pages ────────────────────────────────────────────────────────────
-  { path: '403', Component: ForbiddenPage },
-  { path: '500', Component: ServerErrorPage },
+  { path: '403', lazy: lazy(() => import('./pages/ForbiddenPage').then(m => ({ Component: m.ForbiddenPage }))) },
+  { path: '500', lazy: lazy(() => import('./pages/ServerErrorPage').then(m => ({ Component: m.ServerErrorPage }))) },
   { path: 'auth404', Component: () => <RedirectTo to="/app/auth" /> },
 
   // ── 404 catch-all ─────────────────────────────────────────────────────────
