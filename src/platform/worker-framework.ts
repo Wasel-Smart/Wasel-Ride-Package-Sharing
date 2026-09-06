@@ -165,6 +165,7 @@ export abstract class BaseWorker<T = unknown> {
   }
 
   protected async handleMessage(message: QueueMessage<T>): Promise<void> {
+    this._inFlight++;
     const spanId = telemetry.startSpan(`worker.${this.config.name}.process`, {
       topic: message.topic,
       messageId: message.id,
