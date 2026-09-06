@@ -202,8 +202,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           }
         };
 
-        window.addEventListener('message', handleAuthMessage);
-        removeAuthMessageListener = () => window.removeEventListener('message', handleAuthMessage);
+        const handleAuthMessageWrapper = (event: MessageEvent) => {
+          void handleAuthMessage(event);
+        };
+
+        window.addEventListener('message', handleAuthMessageWrapper);
+        removeAuthMessageListener = () => window.removeEventListener('message', handleAuthMessageWrapper);
       } catch (error) {
         if (import.meta.env?.DEV) {
           console.warn('[Auth] Session initialization skipped:', sanitizeLogMessage(String(error)));
