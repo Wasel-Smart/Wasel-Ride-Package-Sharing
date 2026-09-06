@@ -18,6 +18,27 @@ interface WaselInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'o
   onChange?: (value: string) => void;
 }
 
+function PasswordToggle({ showPassword, onToggle }: { showPassword: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-label={showPassword ? 'Hide password' : 'Show password'}
+      style={{
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        color: C.textMuted,
+        display: 'inline-flex',
+        padding: 0,
+        flexShrink: 0,
+      }}
+    >
+      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+    </button>
+  );
+}
+
 export function WaselInput({
   label,
   description,
@@ -129,22 +150,7 @@ export function WaselInput({
         />
 
         {isPassword && (
-          <button
-            type="button"
-            onClick={() => setShowPassword(v => !v)}
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              color: C.textMuted,
-              display: 'inline-flex',
-              padding: 0,
-              flexShrink: 0,
-            }}
-          >
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
+          <PasswordToggle showPassword={showPassword} onToggle={() => setShowPassword(v => !v)} />
         )}
 
         {trailing && !isPassword && (

@@ -423,6 +423,6 @@ export const waselRouter = createBrowserRouter([
     Component: WaselRoot,
     hydrateFallbackElement: <PageLoader />,
     errorElement: <RouteErrorFallback />,
-    children: buildMainChildren() as any,
+    children: buildMainChildren() as unknown as RouteObject[],
   },
-] as any);
+] as unknown as RouteObject[]);
