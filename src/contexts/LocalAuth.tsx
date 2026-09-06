@@ -13,13 +13,13 @@ export interface LocalAuthCtx {
   user: WaselUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  register: (
-    name: string,
-    email: string,
-    password: string,
-    phone?: string,
-    returnTo?: string,
-  ) => Promise<{
+  register: (input: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    returnTo?: string;
+  }) => Promise<{
     error: string | null;
     requiresEmailConfirmation?: boolean;
     email?: string;
@@ -40,14 +40,22 @@ export function useLocalAuth(): LocalAuthCtx {
     return { error: result.error ? String(result.error.message) : null };
   };
 
-  const register = async (
-    name: string,
-    email: string,
-    password: string,
-    phone?: string,
-    returnTo?: string,
-  ) => {
-    const result = await auth.signUp(email, password, name, phone, returnTo);
+  const register = async (input: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    returnTo?: string;
+  }) => {
+    const { name, email, password, phone, returnTo } = input;
+    const result = await auth.signUp({
+      email,
+      password,
+      firstName: name.split(' ')[0] ?? name,
+      lastName: name.split(' ').slice(1).join(' ') || name.split(' ')[0] ?? name,
+      phone: phone ?? '',
+      returnTo,
+    });
     return {
       error: result.error ? String(result.error.message) : null,
       requiresEmailConfirmation: result.requiresEmailConfirmation,

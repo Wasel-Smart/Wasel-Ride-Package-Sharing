@@ -163,7 +163,7 @@ export const settingsExpanded = {
       useStrongCredentialWith8Chars: 'استخدم كلمة مرور قوية ب 8 أحرف على الأقل.',
       saving: 'جاري الحفظ...',
       updateCredential: 'تحديث كلمة المرور',
-      sendResetLink: 'إرسال رابط إعادة التعيين'
+      sendResetLink: 'إرسال رابط إعادة التعيين',
       twoFactorAuthentication: 'المصادقة الثنائية',
       unavailableOnThisDevice: 'غير متاح على هذا الجهاز أو البيئة.',
       enabledOnThisAccount: 'مفعل على هذا الحساب.',
