@@ -289,13 +289,14 @@ export async function getTrustScoreDirect(userId: string) {
   };
 }
 
-export async function payWithWalletDirect(
-  userId: string,
-  amount: number,
-  referenceType: string,
-  referenceId?: string,
-  metadata?: Record<string, unknown>,
-): Promise<WalletData> {
+export async function payWithWalletDirect(args: {
+  userId: string;
+  amount: number;
+  referenceType: string;
+  referenceId?: string;
+  metadata?: Record<string, unknown>;
+}): Promise<WalletData> {
+  const { userId, amount, referenceType, referenceId, metadata } = args;
   const db = getDb();
   const transactionType = mapReferenceTypeToTransactionType(referenceType);
   const { error } = await db.rpc('app_pay_with_wallet', {

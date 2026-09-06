@@ -1,28 +1,33 @@
-# Credential Rotation Checklist
+# Rotation Status (see SECURITY.md and docs/CREDENTIAL_ROTATION_GUIDE.md for full steps)
 
-One file remains here: a Google OAuth `client_secret_*.json`.
-This has been an open blocker across multiple sessions. It also sits inside
-a OneDrive-synced folder, which means it may already be replicated to
-Microsoft's cloud — treat it as already-exposed, not just "at risk."
+Full instructions already exist in the repo — `SECURITY.md` and
+`docs/CREDENTIAL_ROTATION_GUIDE.md` are the canonical sources. This file is
+just a status tracker so nothing gets lost between sessions.
 
-Steps (must be done by Laith — requires authenticated dashboard access):
+## Verified this session (file-level only — I have no terminal/exec access)
+- `docs/wasel-planning-with-ai.json` (the real service account key) is
+  **no longer in the working tree** — only `wasel-planning-with-ai.example.json`
+  remains. Good. BUT per SECURITY.md it was committed at some point, so it may
+  still be in **git history** and needs a purge (`git filter-repo` or BFG —
+  exact commands are in `SECURITY.md`). This can only be confirmed/run by you,
+  from a terminal, with push access.
+- The OAuth `client_secret_*.json` in `_SECRETS_NEEDS_ROTATION_THEN_DELETE/`
+  was never committed to git (per SECURITY.md) — lower severity, but still
+  sitting inside a OneDrive-synced folder.
 
-1. Go to Google Cloud Console → APIs & Services → Credentials.
-2. Find the OAuth 2.0 Client ID matching this file's client_id.
-3. Reset/regenerate the client secret (or delete and recreate the OAuth
-   client if the console offers that instead of pure rotation).
-4. Update the new secret in:
-   - Supabase project environment variables (Auth provider config)
-   - Vercel project environment variables (all environments: preview,
-     staging, production)
-   - Any local `.env*` files still referencing the old value
-5. Redeploy so the new secret takes effect.
-6. Confirm login via Google OAuth still works end-to-end (test on
-   staging first, then production).
-7. Delete this entire `_SECRETS_NEEDS_ROTATION_THEN_DELETE/` folder —
-   including this checklist — once rotation is confirmed working.
-8. Search the repo (and OneDrive-synced history if possible) for any
-   other place the old secret value was pasted — e.g. old `.env.backup`
-   files, chat exports, docs — and remove those too.
+## Outstanding — none of these can be done via file access, all need you
+- [ ] Rotate Google OAuth client secret (Cloud Console)
+- [ ] Purge `docs/wasel-planning-with-ai.json` from git history + rotate that
+      service account key (IAM console)
+- [ ] Rotate Stripe secret key, publishable key, webhook secret
+- [ ] Rotate Twilio auth token + API key
+- [ ] Rotate Supabase JWT secret, anon key, service role key
+- [ ] Rotate Facebook app secret (if used)
+- [ ] Rotate Resend/SendGrid API keys
+- [ ] Generate new COMMUNICATION_WORKER_SECRET / COMMUNICATION_WEBHOOK_TOKEN
+- [ ] Move `.env`/`.env.local` outside the OneDrive-synced folder, or exclude
+      this folder from OneDrive sync entirely (Option A/B in SECURITY.md)
+- [ ] Run `npm run verify:live-integrations` after rotating to confirm nothing broke
 
-Status: NOT YET DONE as of this session.
+Status: rotation NOT done as of this session. This is the single biggest
+blocker to a real (not self-scored) 9+ security rating.

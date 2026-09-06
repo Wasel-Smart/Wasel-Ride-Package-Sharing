@@ -154,15 +154,18 @@ function countWeeksAtTarget(
   return Math.min(WEEKS_AT_TARGET_GOAL, weeks);
 }
 
-function buildRecord(
-  corridorId: string,
-  from: string,
-  to: string,
-  weekStart: string,
-  completedBookings: CorridorBetaRideBookingSource[],
-  cancelledBookings: CorridorBetaRideBookingSource[],
-  existingRecords: CorridorBetaMetricRecord[],
-): CorridorBetaMetricRecord {
+interface BuildRecordArgs {
+  corridorId: string;
+  from: string;
+  to: string;
+  weekStart: string;
+  completedBookings: CorridorBetaRideBookingSource[];
+  cancelledBookings: CorridorBetaRideBookingSource[];
+  existingRecords: CorridorBetaMetricRecord[];
+}
+
+function buildRecord(args: BuildRecordArgs): CorridorBetaMetricRecord {
+  const { corridorId, from, to, weekStart, completedBookings, cancelledBookings, existingRecords } = args;
   const riderCounts = new Map<string, number>();
   for (const booking of completedBookings) {
     const rider = normalizeRider(booking.passengerName ?? booking.ownerId ?? booking.id);
@@ -256,15 +259,15 @@ export function recordCorridorBetaMetricsFromBookings(
 
   const recordsByKey = new Map(existingRecords.map(record => [record.id, record]));
   for (const group of grouped.values()) {
-    const record = buildRecord(
-      group.corridorId,
-      group.from,
-      group.to,
-      group.weekStart,
-      group.completed,
-      group.cancelled,
-      Array.from(recordsByKey.values()),
-    );
+    const record = buildRecord({
+      corridorId: group.corridorId,
+      from: group.from,
+      to: group.to,
+      weekStart: group.weekStart,
+      completedBookings: group.completed,
+      cancelledBookings: group.cancelled,
+      existingRecords: Array.from(recordsByKey.values()),
+    });
     recordsByKey.set(record.id, record);
   }
 

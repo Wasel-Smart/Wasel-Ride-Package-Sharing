@@ -257,14 +257,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setBusy(true);
       try {
         const { authAPI } = await import('../../services/auth');
-        const data = await authAPI.signUp(
+        const data = await authAPI.signUp({
           email,
           password,
           firstName,
           lastName,
-          phone ?? '',
+          phone: phone ?? '',
           returnTo,
-        );
+        });
         const authUser = data.user ?? data.session?.user ?? null;
 
         if (authUser && data.session) {

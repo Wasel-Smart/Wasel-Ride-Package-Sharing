@@ -151,7 +151,7 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
 
                 <button
                   type="button"
-                  onClick={() => openRoute(route)}
+                  onClick={() => void openRoute(route)}
                   className="w-full text-left"
                   style={{
                     background: 'transparent',
@@ -221,7 +221,7 @@ export function PopularRoutes({ onGetStarted }: PopularRoutesProps) {
 
                 <div className="mt-4 grid gap-2">
                   <Button
-                    onClick={() => openRoute(route)}
+                    onClick={() => void openRoute(route)}
                     className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                     size="sm"
                   >

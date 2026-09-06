@@ -245,12 +245,21 @@ async function handleWalletRequest(request: Request, path: string) {
     const recipientId = String(body.recipientId ?? '').trim();
     const note = String(body.note ?? '').trim();
     if (amountJod <= 0) return json({ error: 'Amount must be greater than zero.' }, 400);
+    if (!recipientId) return json({ error: 'recipientId is required.' }, 400);
     try {
-      const recipient = recipientId.trim();
-      const { data: recipientUser } = await admin.from('users').select('id').or(`id.eq.${recipient},auth_user_id.eq.${recipient},email.eq.${recipient},phone_number.eq.${recipient}`).maybeSingle();
-      if (!recipientUser?.id) return json({ error: 'Recipient wallet was not found.' }, 404);
-      if (recipientUser.id === auth.canonicalUser.id) return json({ error: 'Cannot send wallet funds to the same account.' }, 400);
-      const { error } = await admin.rpc('app_transfer_wallet_funds', { p_from_user_id: auth.canonicalUser.id, p_to_user_id: String(recipientUser.id), p_amount: amountJod, p_payment_method: 'wallet_balance' });
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(recipientId);
+      let recipientUserId: string | null = null;
+      if (isUuid) {
+        const { data } = await admin.from('users').select('id').or(`id.eq.${recipientId},auth_user_id.eq.${recipientId}`).maybeSingle();
+        recipientUserId = data?.id ? String(data.id) : null;
+      }
+      if (!recipientUserId) {
+        const { data } = await admin.from('users').select('id').or(`email.eq.${recipientId},phone_number.eq.${recipientId}`).maybeSingle();
+        recipientUserId = data?.id ? String(data.id) : null;
+      }
+      if (!recipientUserId) return json({ error: 'Recipient wallet was not found.' }, 404);
+      if (recipientUserId === auth.canonicalUser.id) return json({ error: 'Cannot send wallet funds to the same account.' }, 400);
+      const { error } = await admin.rpc('app_transfer_wallet_funds', { p_from_user_id: auth.canonicalUser.id, p_to_user_id: recipientUserId, p_amount: amountJod, p_payment_method: 'wallet_balance' });
       if (error) throw new Error(error.message);
       return json({ success: true, note });
     } catch (error) {
@@ -263,6 +272,7 @@ async function handleWalletRequest(request: Request, path: string) {
 
 Deno.serve(async (request: Request) => {
   const headers = buildResponseHeaders(request);
+  headers.set('X-Api-Version', 'v1');
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
 
   try {
@@ -282,6 +292,8 @@ Deno.serve(async (request: Request) => {
     headers.forEach((value, key) => finalHeaders.set(key, value));
     return new Response(response.body, { status: response.status, headers: finalHeaders });
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : 'Internal server error' }, 500);
+    const finalHeaders = new Headers({ 'Content-Type': 'application/json' });
+    headers.forEach((value, key) => finalHeaders.set(key, value));
+    return new Response(JSON.stringify({ error: 'Internal server error', requestId: crypto.randomUUID() }), { status: 500, headers: finalHeaders });
   }
 });

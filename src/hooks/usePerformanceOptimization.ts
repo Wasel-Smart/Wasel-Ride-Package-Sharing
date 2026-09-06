@@ -175,9 +175,11 @@ export function useLazyLoad(threshold = 0.1) {
 
 export function useVirtualScroll<T>(items: T[], itemHeight: number, containerHeight: number) {
   const scrollTop = useRef(0);
-  const visibleStart = Math.floor(scrollTop.current / itemHeight);
-  const visibleEnd = Math.ceil((scrollTop.current + containerHeight) / itemHeight);
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 0 });
   const buffer = 3;
+
+  const visibleStart = visibleRange.start;
+  const visibleEnd = visibleRange.end;
 
   const visibleItems = items.slice(
     Math.max(0, visibleStart - buffer),
@@ -189,7 +191,10 @@ export function useVirtualScroll<T>(items: T[], itemHeight: number, containerHei
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     scrollTop.current = e.currentTarget.scrollTop;
-  }, []);
+    const start = Math.floor(scrollTop.current / itemHeight);
+    const end = Math.ceil((scrollTop.current + containerHeight) / itemHeight);
+    setVisibleRange({ start, end });
+  }, [itemHeight, containerHeight]);
 
   return {
     visibleItems,

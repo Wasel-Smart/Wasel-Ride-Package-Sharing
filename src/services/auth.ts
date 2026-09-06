@@ -16,6 +16,69 @@ function getDirectFallbackError(operation: string): Error {
   return getSecureBackendFallbackError(operation);
 }
 
+const ERROR_RULES: Array<{
+  test: (lower: string, code: string | undefined) => boolean;
+  message: string;
+}> = [
+  {
+    test: (lower) =>
+      lower.includes('invalid login credentials') ||
+      lower.includes('invalid credentials') ||
+      lower.includes('authentication failed') ||
+      lower.includes('wrong email') ||
+      lower.includes('wrong password'),
+    message: 'Incorrect email or password.',
+  },
+  {
+    test: (lower, code) => lower.includes('email not confirmed') || code === 'email_not_confirmed',
+    message: 'Please confirm your email before signing in.',
+  },
+  {
+    test: (lower, code) =>
+      lower.includes('already been registered') ||
+      lower.includes('already registered') ||
+      lower.includes('user already exists') ||
+      code === 'email_exists',
+    message: 'This email is already registered.',
+  },
+  {
+    test: (lower, code) => code === 'user_not_found' || lower.includes('user not found'),
+    message: 'Account not found. Please check your email or sign up.',
+  },
+  {
+    test: (lower, code) =>
+      code === 'over_request_rate_limit' || lower.includes('too many requests'),
+    message: 'Too many attempts. Please wait a moment and try again.',
+  },
+  {
+    test: (lower, code) =>
+      code === 'email_address_not_authorized' ||
+      lower.includes('signups not allowed') ||
+      lower.includes('not allowed for this email domain'),
+    message: 'Sign-up is not allowed for this email domain.',
+  },
+  {
+    test: (lower, code) => code === 'email_address_invalid' || lower.includes('invalid email'),
+    message: 'Please enter a valid email address.',
+  },
+  {
+    test: (lower, code) => code === 'user_banned' || lower.includes('user banned'),
+    message: 'Your account has been suspended. Please contact support.',
+  },
+  {
+    test: (lower, code) => code === 'weak_password',
+    message: 'Password is too weak. Please choose a stronger password.',
+  },
+  {
+    test: (lower, code) => code === 'signup_disabled' || lower.includes('signup disabled'),
+    message: 'Sign-up is currently disabled. Please contact support.',
+  },
+  {
+    test: (lower, code) => code === 'phone_exists' || lower.includes('phone already exists'),
+    message: 'This phone number is already registered.',
+  },
+];
+
 function normalizeAuthError(
   message: string,
   code: string | undefined,
@@ -23,64 +86,8 @@ function normalizeAuthError(
 ): string {
   const lower = message.toLowerCase();
 
-  if (
-    lower.includes('invalid login credentials') ||
-    lower.includes('invalid credentials') ||
-    lower.includes('authentication failed') ||
-    lower.includes('wrong email') ||
-    lower.includes('wrong password')
-  ) {
-    return 'Incorrect email or password.';
-  }
-
-  if (lower.includes('email not confirmed') || code === 'email_not_confirmed') {
-    return 'Please confirm your email before signing in.';
-  }
-
-  if (
-    lower.includes('already been registered') ||
-    lower.includes('already registered') ||
-    lower.includes('user already exists') ||
-    code === 'email_exists'
-  ) {
-    return 'This email is already registered.';
-  }
-
-  if (code === 'user_not_found' || lower.includes('user not found')) {
-    return 'Account not found. Please check your email or sign up.';
-  }
-
-  if (code === 'over_request_rate_limit' || lower.includes('too many requests')) {
-    return 'Too many attempts. Please wait a moment and try again.';
-  }
-
-  if (
-    code === 'email_address_not_authorized' ||
-    lower.includes('signups not allowed') ||
-    lower.includes('not allowed for this email domain')
-  ) {
-    return 'Sign-up is not allowed for this email domain.';
-  }
-
-  if (code === 'email_address_invalid' || lower.includes('invalid email')) {
-    return 'Please enter a valid email address.';
-  }
-
-  if (code === 'user_banned' || lower.includes('user banned')) {
-    return 'Your account has been suspended. Please contact support.';
-  }
-
-  if (code === 'weak_password') {
-    return 'Password is too weak. Please choose a stronger password.';
-  }
-
-  if (code === 'signup_disabled' || lower.includes('signup disabled')) {
-    return 'Sign-up is currently disabled. Please contact support.';
-  }
-
-  if (code === 'phone_exists' || lower.includes('phone already exists')) {
-    return 'This phone number is already registered.';
-  }
+  const match = ERROR_RULES.find(rule => rule.test(lower, code));
+  if (match) {return match.message;}
 
   if (context === 'signin') {return 'Sign in failed. Please try again.';}
   if (context === 'signup') {return 'Sign up failed. Please try again.';}
@@ -205,14 +212,15 @@ async function loadProfileViaFallback(userId: string) {
 }
 
 export const authAPI = {
-  async signUp(
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string,
-    phone: string,
-    returnTo?: string,
-  ) {
+  async signUp(input: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    returnTo?: string;
+  }) {
+    const { email, password, firstName, lastName, phone, returnTo } = input;
     const client = await requireSupabase();
     const redirectTo = getAuthCallbackUrl(
       resolveAuthRedirectOrigin(),

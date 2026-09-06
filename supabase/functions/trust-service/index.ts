@@ -101,7 +101,7 @@ async function buildReviewHistory(auth: Awaited<ReturnType<typeof authenticateRe
 
   if (error) throw new Error(error.message);
 
-  const items = (data ?? []).map((row: any) => {
+  const items = (data ?? []).map((row: Record<string, unknown>) => {
     const status = row.sanad_status === 'verified' || row.document_status === 'verified'
       ? 'approved'
       : row.sanad_status === 'rejected' || row.document_status === 'rejected'
@@ -229,6 +229,7 @@ async function handleTrustRequest(request: Request, path: string) {
 
 Deno.serve(async (request: Request) => {
   const headers = buildResponseHeaders(request);
+  headers.set('X-Api-Version', 'v1');
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
 
   try {
@@ -248,6 +249,8 @@ Deno.serve(async (request: Request) => {
     headers.forEach((value, key) => finalHeaders.set(key, value));
     return new Response(response.body, { status: response.status, headers: finalHeaders });
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : 'Internal server error' }, 500);
+    const finalHeaders = new Headers({ 'Content-Type': 'application/json' });
+    headers.forEach((value, key) => finalHeaders.set(key, value));
+    return new Response(JSON.stringify({ error: 'Internal server error', requestId: crypto.randomUUID() }), { status: 500, headers: finalHeaders });
   }
 });

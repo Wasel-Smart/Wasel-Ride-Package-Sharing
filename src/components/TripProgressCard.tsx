@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Car, Clock, Package } from 'lucide-react';
 import { getRideBookings } from '../services/rideLifecycle';
 import { getConnectedPackages } from '../services/journeyLogistics';
@@ -19,8 +19,14 @@ type ActiveItem = {
 };
 
 export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const [now, setNow] = useState(() => Date.now());
   const rideBookings = useMemo(() => getRideBookings(), []);
   const packages = useMemo(() => getConnectedPackages(), []);
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(id);
+  }, []);
 
   const activeItems: ActiveItem[] = useMemo(() => {
     const items: ActiveItem[] = [];
@@ -34,7 +40,7 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
           subtitle: `Seats: ${b.seatsRequested}`,
           eta: b.time,
           timeLeftMinutes: b.time
-            ? Math.max(1, Math.round((new Date(b.time).getTime() - Date.now()) / 60000))
+            ? Math.max(1, Math.round((new Date(b.time).getTime() - now) / 60000))
             : 0,
           status: b.status,
           statusColor: b.status === 'confirmed' ? C.green : C.gold,

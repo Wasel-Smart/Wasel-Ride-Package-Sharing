@@ -125,7 +125,7 @@ export async function signInWithOAuthProvider(
             : 'openid profile email';
 
     const { error } = await client.auth.signInWithOAuth({
-      provider: provider as any,
+      provider,
       options: {
         redirectTo,
         scopes,
@@ -163,6 +163,54 @@ function computeTrustScore(
   return deriveAccountTrustScore(user);
 }
 
+function resolveUserName(
+  profile: Profile | null,
+  authUser: Pick<User, 'user_metadata' | 'email'> | null,
+): string {
+  return (
+    profile?.full_name ||
+    authUser?.user_metadata?.full_name ||
+    authUser?.user_metadata?.name ||
+    authUser?.email?.split('@')?.[0] ||
+    'Wasel User'
+  );
+}
+
+function resolveUserRole(profileRole: string | null | undefined): WaselUser['role'] {
+  if (profileRole === 'driver' || profileRole === 'both') {return profileRole;}
+  if (profileRole === 'admin') {return 'admin';}
+  return 'rider';
+}
+
+function resolveVerificationLevel(
+  profile: Profile | null,
+  role: WaselUser['role'],
+  sanadVerified: boolean,
+  phoneVerified: boolean,
+  emailVerified: boolean,
+): string {
+  if (profile?.verification_level) {return profile.verification_level;}
+  if (sanadVerified) {
+    return role === 'driver' || role === 'both' ? 'level_3' : 'level_2';
+  }
+  if (phoneVerified || emailVerified) {return 'level_1';}
+  return 'level_0';
+}
+
+function resolveWalletStatus(
+  profileStatus: string | null | undefined,
+): WaselUser['walletStatus'] {
+  if (
+    profileStatus === 'limited' ||
+    profileStatus === 'frozen' ||
+    profileStatus === 'closed' ||
+    profileStatus === 'unavailable'
+  ) {
+    return profileStatus;
+  }
+  return 'active';
+}
+
 export function mapBackendProfile({
   authUser,
   profile,
@@ -179,39 +227,15 @@ export function mapBackendProfile({
   >;
   profile: Profile | null;
 }): WaselUser {
-  const name =
-    profile?.full_name ||
-    authUser?.user_metadata?.full_name ||
-    authUser?.user_metadata?.name ||
-    authUser?.email?.split('@')?.[0] ||
-    'Wasel User';
+  const name = resolveUserName(profile, authUser);
   const phone = profile?.phone_number ?? authUser?.phone ?? undefined;
   const verified = Boolean(profile?.verified ?? profile?.sanad_verified ?? false);
   const sanadVerified = Boolean(profile?.sanad_verified ?? verified);
   const emailVerified = Boolean(profile?.email_verified ?? authUser?.email_confirmed_at ?? false);
   const phoneVerified = Boolean(profile?.phone_verified ?? authUser?.phone_confirmed_at ?? false);
-  const role =
-    profile?.role === 'driver' || profile?.role === 'both'
-      ? profile.role
-      : profile?.role === 'admin'
-        ? 'admin'
-        : 'rider';
-  const verificationLevel =
-    profile?.verification_level ||
-    (sanadVerified
-      ? role === 'driver' || role === 'both'
-        ? 'level_3'
-        : 'level_2'
-      : phoneVerified || emailVerified
-        ? 'level_1'
-        : 'level_0');
-  const walletStatus: WaselUser['walletStatus'] =
-    profile?.wallet_status === 'limited' ||
-    profile?.wallet_status === 'frozen' ||
-    profile?.wallet_status === 'closed' ||
-    profile?.wallet_status === 'unavailable'
-      ? profile.wallet_status
-      : 'active';
+  const role = resolveUserRole(profile?.role);
+  const verificationLevel = resolveVerificationLevel(profile, role, sanadVerified, phoneVerified, emailVerified);
+  const walletStatus = resolveWalletStatus(profile?.wallet_status);
 
   const baseUser: WaselUser = {
     id: authUser?.id || `user-${Date.now()}`,

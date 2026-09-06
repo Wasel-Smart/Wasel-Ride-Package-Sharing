@@ -79,8 +79,13 @@ function mapPackageRow(row: Record<string, unknown>) {
   };
 }
 
-function calculateDirectPrice(type: string, weight?: number, distanceKm?: number, basePrice = 5): { total: number; breakdown: { base: number } } {
-  return { total: basePrice, breakdown: { base: basePrice } };
+function calculateDirectPrice(type: string, weight?: number, distanceKm?: number, basePrice = 5): { total: number; breakdown: { base: number; distance: number; weight: number } } {
+  const distance = distanceKm ?? 0;
+  const w = weight ?? 0;
+  const distanceFee = Number((distance * 0.5).toFixed(2));
+  const weightFee = Number((w * 0.2).toFixed(2));
+  const total = Number((basePrice + distanceFee + weightFee).toFixed(2));
+  return { total, breakdown: { base: basePrice, distance: distanceFee, weight: weightFee } };
 }
 
 function parseEntityRoute(path: string, prefix: string) {
@@ -135,18 +140,29 @@ async function handlePackageRequest(request: Request, path: string) {
     const { data, error } = await auth.admin.from('packages').select('*').eq('package_id', packageRoute.id).maybeSingle();
     if (error) return json({ error: error.message }, 500);
     if (!data) return json({ error: 'Package not found' }, 404);
+    const isOwner = data.sender_id === auth.canonicalUser.id || data.carrier_id === auth.canonicalUser.id;
+    if (!isOwner) return json({ error: 'Not authorized to view this package.' }, 403);
     return json(mapPackageRow(data));
   }
 
   if (request.method === 'GET' && path.startsWith('/packages/sender/')) {
     const userId = path.split('/packages/sender/')[1]?.split('/')[0];
     if (!userId) return json({ error: 'User ID required' }, 400);
-    const { data, error } = await auth.admin.from('packages').select('*').eq('sender_id', userId).order('created_at', { ascending: false });
+    if (userId !== auth.canonicalUser.id && userId !== auth.authUser.id) {
+      return json({ error: 'Not authorized to view these packages.' }, 403);
+    }
+    const { data, error } = await auth.admin.from('packages').select('*').eq('sender_id', auth.canonicalUser.id).order('created_at', { ascending: false });
     if (error) return json({ error: error.message }, 500);
     return json((Array.isArray(data) ? data : []).map(mapPackageRow));
   }
 
   if (request.method === 'POST' && packageRoute?.id && packageRoute.action === 'deliver') {
+    const { data: pkg, error: pkgErr } = await auth.admin.from('packages').select('package_id, sender_id, carrier_id').eq('package_id', packageRoute.id).maybeSingle();
+    if (pkgErr) return json({ error: pkgErr.message }, 500);
+    if (!pkg) return json({ error: 'Package not found' }, 404);
+    const isCarrier = pkg.carrier_id === auth.canonicalUser.id;
+    const isSender = pkg.sender_id === auth.canonicalUser.id;
+    if (!isCarrier && !isSender) return json({ error: 'Not authorized to deliver this package.' }, 403);
     const { data, error } = await auth.admin.from('packages').update({ status: 'delivered', delivered_at: new Date().toISOString() }).eq('package_id', packageRoute.id).select('*').single();
     if (error) return json({ error: error.message }, 500);
     return json(mapPackageRow(data));
@@ -157,6 +173,7 @@ async function handlePackageRequest(request: Request, path: string) {
 
 Deno.serve(async (request: Request) => {
   const headers = buildResponseHeaders(request);
+  headers.set('X-Api-Version', 'v1');
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers });
 
   try {
@@ -177,6 +194,8 @@ Deno.serve(async (request: Request) => {
     headers.forEach((value, key) => finalHeaders.set(key, value));
     return new Response(response.body, { status: response.status, headers: finalHeaders });
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : 'Internal server error' }, 500);
+    const finalHeaders = new Headers({ 'Content-Type': 'application/json' });
+    headers.forEach((value, key) => finalHeaders.set(key, value));
+    return new Response(JSON.stringify({ error: 'Internal server error', requestId: crypto.randomUUID() }), { status: 500, headers: finalHeaders });
   }
 });

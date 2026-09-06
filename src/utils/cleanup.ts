@@ -107,6 +107,12 @@ export function addEventListenerWithCleanup<K extends keyof WindowEventMap>(
   target: Window,
   type: K,
   listener: (event: WindowEventMap[K]) => void,
+  options?: AddEventListenerOptions,
+): CleanupFn;
+export function addEventListenerWithCleanup<K extends keyof WindowEventMap>(
+  target: Window,
+  type: K,
+  listener: (event: WindowEventMap[K]) => void,
   options?: boolean | AddEventListenerOptions,
   name?: string,
 ): CleanupFn {

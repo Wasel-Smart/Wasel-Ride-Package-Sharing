@@ -102,25 +102,23 @@ function mapTripRow ( row: Record<string, unknown>, driverProfile?: Record<strin
 async function fetchDriverProfiles ( admin: ReturnType<typeof getAdminClient>, driverIds: string[] ): Promise<Record<string, Record<string, unknown>>> {
   const uniqueIds = Array.from( new Set( driverIds.filter( Boolean ) ) );
   if ( uniqueIds.length === 0 ) return {};
-  const { data: drivers } = await admin.from( 'drivers' ).select( '*' ).in( 'driver_id', uniqueIds );
+  const { data: drivers } = await admin.from( 'drivers' ).select( 'driver_id, user_id, rating, sanad_identity_linked' ).in( 'driver_id', uniqueIds );
   const driverRows = Array.isArray( drivers ) ? drivers : [];
   const userIds = driverRows.map( ( d: Record<string, unknown> ) => String( d.user_id ?? '' ) );
   if ( userIds.length === 0 ) return {};
-  const { data: users } = await admin.from( 'users' ).select( '*' ).in( 'id', userIds );
+  const { data: users } = await admin.from( 'users' ).select( 'id, auth_user_id, full_name, email, rating, sanad_verified_status' ).in( 'id', userIds );
   const usersById = new Map<string, Record<string, unknown>>();
   ( Array.isArray( users ) ? users : [] ).forEach( ( u: Record<string, unknown> ) => usersById.set( String( u.id ), u ) );
   const result: Record<string, Record<string, unknown>> = {};
   for ( const driver of driverRows ) {
     const user = usersById.get( String( driver.user_id ?? '' ) );
     if ( user ) {
-      const { data: wallet } = await admin.from( 'wallets' ).select( 'balance' ).eq( 'user_id', String( user.id ) ).maybeSingle();
       result[ String( driver.driver_id ) ] = {
         id: String( user.auth_user_id ?? user.id ),
         full_name: user.full_name ?? null,
         email: user.email ?? null,
-        rating: toNumber( user.rating, 0 ),
-        verified: Boolean( user.sanad_verified_status === 'verified' ),
-        wallet_balance: toNumber( wallet?.balance, 0 ),
+        rating: toNumber( driver.rating ?? user.rating, 0 ),
+        verified: Boolean( user.sanad_verified_status === 'verified' || driver.sanad_identity_linked ),
       };
     }
   }
@@ -313,6 +311,7 @@ async function handleTripRequest ( request: Request, path: string ) {
 
 Deno.serve( async ( request: Request ) => {
   const headers = buildResponseHeaders( request );
+  headers.set( 'X-Api-Version', 'v1' );
   if ( request.method === 'OPTIONS' ) return new Response( null, { status: 204, headers } );
 
   try {
@@ -332,6 +331,8 @@ Deno.serve( async ( request: Request ) => {
     headers.forEach( ( value, key ) => finalHeaders.set( key, value ) );
     return new Response( response.body, { status: response.status, headers: finalHeaders } );
   } catch ( error ) {
-    return json( { error: error instanceof Error ? error.message : 'Internal server error' }, 500 );
+    const finalHeaders = new Headers( { 'Content-Type': 'application/json' } );
+    headers.forEach( ( value, key ) => finalHeaders.set( key, value ) );
+    return new Response( JSON.stringify( { error: 'Internal server error', requestId: crypto.randomUUID() } ), { status: 500, headers: finalHeaders } );
   }
 } );

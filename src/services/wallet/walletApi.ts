@@ -325,7 +325,7 @@ export const walletApi = {
   async pay(userId: string, amount: number, referenceType: string, referenceId?: string, metadata?: Record<string, unknown>) {
     return tryEdgeThenDirect(
       () => requestWalletJson(userId, '/pay', 'Wallet checkout payment', { method: 'POST', body: { amount, referenceType, referenceId, metadata } }),
-      () => payWithWalletDirect(userId, amount, referenceType, referenceId, metadata),
+       () => payWithWalletDirect({ userId, amount, referenceType, referenceId, metadata }),
     );
   },
 
