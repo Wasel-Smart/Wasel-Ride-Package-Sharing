@@ -387,7 +387,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const result = await authAPI.updateProfile(updates);
         if (result.success) {
           setProfile(prev => (prev ? { ...prev, ...updates } : prev));
-          fetchProfile(false, user).catch(() => { });
+          fetchProfile({ forceCreate: false, authUser: user }).catch(() => { });
           return { error: null };
         }
 

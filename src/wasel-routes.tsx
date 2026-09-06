@@ -348,10 +348,10 @@ const buildMainChildren = (): RouteObject[] => [
     children: [
       {
         path: 'admin',
-        lazy: lazy(() => import('./features/admin/AdminDashboardPage'), 'AdminDashboardPage'),
+        lazy: lazy(() => import('./features/admin/AdminDashboardPage')),
       },
     ],
-  },
+  } as any,
 
   // ── Wallet ────────────────────────────────────────────────────────────────
   {
