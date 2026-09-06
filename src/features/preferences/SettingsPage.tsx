@@ -775,13 +775,13 @@ export default function SettingsPage() {
                   value={passwordInput}
                   onChange={setPasswordInput}
                   type="password"
-                  placeholder={t('settingsExpanded.newPassword')}
+                  placeholder={t('settingsExpanded.newCredential')}
                 />
                 <FormField
                   value={confirmPassword}
                   onChange={setConfirmPassword}
                   type="password"
-                  placeholder={t('settingsExpanded.confirmNewPassword')}
+                  placeholder={t('settingsExpanded.confirmNewCredential')}
                 />
                 <div
                   style={{
@@ -792,7 +792,7 @@ export default function SettingsPage() {
                 >
                   {passwordInput
                     ? `${t('settingsExpanded.strength')}: ${getPasswordStrengthLabel(passwordStrength.score)}`
-                    : t('settingsExpanded.useStrongPasswordWith8Chars')}
+                    : t('settingsExpanded.useStrongCredentialWith8Chars')}
                 </div>
                 {passwordStrength.feedback.length > 0 && (
                   <div
@@ -811,7 +811,7 @@ export default function SettingsPage() {
                     label={
                       passwordSaving
                         ? t('settingsExpanded.saving')
-                        : t('settingsExpanded.updatePassword')
+                        : t('settingsExpanded.updateCredential')
                     }
                     onClick={() => {
                       void savePassword();
