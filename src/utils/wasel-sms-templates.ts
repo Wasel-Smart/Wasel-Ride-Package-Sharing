@@ -7,8 +7,6 @@
 
 import { sanitizeLogMessage } from './sanitization';
 
-import { sanitizeLogMessage } from './sanitization';
-
 export const SMS_TOKENS = {
   brandName: 'Wasel',
   brandNameAr: 'واصل',

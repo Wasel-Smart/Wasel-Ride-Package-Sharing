@@ -1,5 +1,5 @@
 import { C, F, R, SPACE, TYPE } from '../../../utils/wasel-ds';
-import type { ReviewHistoryItem } from '../../services/trustCenterModel';
+import type { ReviewHistoryItem } from '../../../services/trustCenterModel';
 
 function statusStyle(status: ReviewHistoryItem['status']) {
   switch (status) {
