@@ -1,4 +1,4 @@
-import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import type { AuthChangeEvent, Session, User } from '@supabase/auth-js';
 import { getAuthCallbackUrl, resolveAuthRedirectOrigin } from '../../utils/env';
 import { sanitizeLogMessage } from '../../utils/sanitization';
@@ -29,13 +29,13 @@ export interface AuthContextType {
   loading: boolean;
   isBackendConnected: boolean;
   waselUser: WaselUser | null;
-  signUp: (
-    email: string,
-    password: string,
-    fullName: string,
-    phone?: string,
-    returnTo?: string,
-  ) => Promise<SignUpResult>;
+  signUp: (options: {
+    email: string;
+    password: string;
+    fullName: string;
+    phone?: string;
+    returnTo?: string;
+  }) => Promise<SignUpResult>;
   signIn: (email: string, password: string) => Promise<{ error: AuthOperationError }>;
   signInWithGoogle: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
   signInWithFacebook: (returnTo?: string) => Promise<{ error: AuthOperationError }>;
@@ -81,18 +81,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [initializing, setInitializing] = useState(true);
   const [busy, setBusy] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
-  const [optimisticTick, setOptimisticTick] = useState(0);
-  const optimisticRef = useRef<Partial<WaselUser> | null>(null);
+  const [optimisticUpdates, setOptimisticUpdates] = useState<Partial<WaselUser> | null>(null);
 
   const waselUser = useMemo(() => {
-    if (!user) return null;
+    if (!user) {
+      return null;
+    }
     const mapped = mapBackendProfile({ authUser: user, profile });
-    const pending = optimisticRef.current;
+    const pending = optimisticUpdates;
     return pending ? applyUserUpdates(mapped, pending) : mapped;
-  }, [user, profile, optimisticTick]);
+  }, [user, profile, optimisticUpdates]);
 
+  // Clear stale optimistic updates when the underlying auth data changes.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
-    optimisticRef.current = null;
+    setOptimisticUpdates(null);
   }, [user, profile]);
 
   const fetchProfile = useCallback(async (options: { forceCreate?: boolean; authUser?: User | null } = {}) => {
@@ -239,23 +242,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [fetchProfile]);
 
-  useEffect(() => {
-    if (!user) {
-      setWaselUser(null);
-      return;
-    }
-
-    const mapped = mapBackendProfile({
-      authUser: user,
-      profile,
-    });
-
-    const pending = optimisticRef.current;
-    optimisticRef.current = null;
-    const nextUser = pending ? applyUserUpdates(mapped, pending) : mapped;
-    setWaselUser(nextUser);
-  }, [user, profile]);
-
   const signUp = useCallback(
     async (options: {
       email: string;
@@ -315,7 +301,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (authUser && data.session) {
           setSession(data.session);
           setUser(authUser);
-          await fetchProfile(true, authUser);
+          await fetchProfile({ forceCreate: true, authUser });
         }
 
         return { error: null };
@@ -341,7 +327,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const result = await signInWithOAuthProvider(client, provider, returnTo);
 
           if (result.error) {
-            const oauthError = parseOAuthError(result.error, provider as any);
+            const oauthError = parseOAuthError(result.error, provider);
             if (oauthError && import.meta.env?.DEV) {
               console.error(`[OAuth ${provider}]`, sanitizeLogMessage(oauthError));
             }
@@ -446,13 +432,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       if (updates.twoFactorEnabled !== undefined) {profileUpdates.two_factor_enabled = updates.twoFactorEnabled;}
       if (updates.driverStatus !== undefined) {profileUpdates.driver_status = updates.driverStatus;}
 
-      optimisticRef.current = { ...(optimisticRef.current ?? {}), ...updates };
-      setWaselUser(prev => (prev ? applyUserUpdates(prev, updates) : prev));
+      setOptimisticUpdates(prev => ({ ...(prev ?? {}), ...updates }));
 
       const result = await updateProfile(profileUpdates);
       if (result.error) {
-        optimisticRef.current = null;
-        setWaselUser(prev => (prev && user ? mapBackendProfile({ authUser: user, profile: profile }) : prev));
+        setOptimisticUpdates(null);
       }
     },
     [user, profile, updateProfile],
