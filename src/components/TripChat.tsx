@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, Loader2 } from 'lucide-react';
 import { chatService, type Message } from '@/services/chat';
 import { Button } from '@/components/ui/button';
@@ -21,42 +21,42 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-   const loadMessages = async () => {
-     try {
-       const data = await chatService.getMessages(tripId);
-       setMessages(data);
+   const loadMessages = useCallback(async () => {
+      try {
+        const data = await chatService.getMessages(tripId);
+        setMessages(data);
 
-       const unreadIds = data
-         .filter(m => m.sender_id !== user?.id && !m.read_by.includes(user?.id || ''))
-         .map(m => m.id);
+        const unreadIds = data
+          .filter(m => m.sender_id !== user?.id && !m.read_by.includes(user?.id || ''))
+          .map(m => m.id);
 
-       if (unreadIds.length > 0) {
-         await chatService.markAsRead(unreadIds);
-       }
-     } catch (error) {
-       console.error('Failed to load messages:', error);
-     } finally {
-       setLoading(false);
-     }
-   };
+        if (unreadIds.length > 0) {
+          await chatService.markAsRead(unreadIds);
+        }
+      } catch (error) {
+        console.error('Failed to load messages:', error);
+      } finally {
+        setLoading(false);
+      }
+    }, [tripId, user?.id]);
 
    const scrollToBottom = () => {
-     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-   };
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
 
    useEffect(() => {
-     loadMessages();
-     const unsubscribe = chatService.subscribeToTrip(tripId, message => {
-       setMessages(prev => [...prev, message]);
-       if (message.sender_id !== user?.id) {
-         chatService.markAsRead([message.id]);
-       }
-     });
+      void loadMessages();
+      const unsubscribe = chatService.subscribeToTrip(tripId, message => {
+        setMessages(prev => [...prev, message]);
+        if (message.sender_id !== user?.id) {
+          chatService.markAsRead([message.id]);
+        }
+      });
 
-     return () => {
-       unsubscribe();
-     };
-   }, [tripId, user?.id]);
+      return () => {
+        unsubscribe();
+      };
+    }, [loadMessages, tripId, user?.id]);
 
    useEffect(() => {
      scrollToBottom();

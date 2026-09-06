@@ -218,13 +218,19 @@ export interface VirtualWindow {
  * Calculates the visible window for virtual scrolling.
  * Only renders items that are visible in the viewport.
  */
-export function calculateVirtualWindow(
-  scrollTop: number,
-  viewportHeight: number,
-  itemCount: number,
-  itemHeight: number,
+export function calculateVirtualWindow({
+  scrollTop,
+  viewportHeight,
+  itemCount,
+  itemHeight,
   overscan = 5,
-): VirtualWindow {
+}: {
+  scrollTop: number;
+  viewportHeight: number;
+  itemCount: number;
+  itemHeight: number;
+  overscan?: number;
+}): VirtualWindow {
   const totalHeight = itemCount * itemHeight;
   const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
   const visibleCount = Math.ceil(viewportHeight / itemHeight) + overscan * 2;

@@ -115,7 +115,7 @@ export function AvailabilityBanner({ ar = false }: AvailabilityBannerProps) {
         </div>
 
         <button
-          onClick={handleProbe}
+          onClick={() => handleProbe()}
           disabled={checking}
           style={{
             minWidth: 112,

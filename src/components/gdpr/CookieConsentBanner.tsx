@@ -12,15 +12,11 @@ const CONSENT_KEY = 'wasel_cookie_consent';
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export function CookieConsentBanner() {
-  const [showBanner, setShowBanner] = useState(false);
-  const bannerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
+  const [showBanner, setShowBanner] = useState(() => {
     const consent = safeStorageGetItem('localStorage', CONSENT_KEY);
-    if (!consent) {
-      setShowBanner(true);
-    }
-  }, []);
+    return !consent;
+  });
+  const bannerRef = useRef<HTMLDivElement | null>(null);
 
   const handleAccept = useCallback(() => {
     safeStorageSetItem(

@@ -190,6 +190,31 @@ function resolveRemoteStatus(
   return 'pending_driver';
 }
 
+function resolveBookingStatus(statusRaw: string): RideBookingStatus {
+  if (
+    statusRaw === 'completed' ||
+    statusRaw === 'cancelled' ||
+    statusRaw === 'rejected' ||
+    statusRaw === 'confirmed'
+  ) {
+    return statusRaw;
+  }
+  if (statusRaw === 'accepted') {return 'confirmed';}
+  return 'pending_driver';
+}
+
+function resolvePaymentStatus(statusRaw: string): RidePaymentStatus {
+  if (statusRaw === 'completed') {return 'captured';}
+  if (statusRaw === 'cancelled' || statusRaw === 'rejected') {return 'failed';}
+  return 'authorized';
+}
+
+function resolveBookingDate(ride: PostedRide | undefined, raw: Record<string, unknown>): string {
+  if (ride?.date) {return ride.date;}
+  return new Date(String(raw.created_at ?? new Date().toISOString())).toISOString().slice(0, 10);
+}
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /** Returns cached bookings for instant UI render. Call hydrateRideBookings to refresh. */
@@ -395,6 +420,27 @@ export async function updateRideBooking(
  * Authoritative sync: pulls from Supabase and overwrites the local cache.
  * Should be called on app load and after auth state changes.
  */
+async function resolvePassengerNames(passengerIds: string[]): Promise<Map<string, string>> {
+  const nameMap = new Map<string, string>();
+  try {
+    const { supabase: db } = await import('../utils/supabase/client');
+    if (db) {
+      const { data: profiles } = await db
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', passengerIds);
+      if (Array.isArray(profiles)) {
+        for (const u of profiles as { id: string; full_name?: string; email?: string }[]) {
+          nameMap.set(String(u.id), u.full_name?.trim() || u.email?.split('@')[0] || 'Passenger');
+        }
+      }
+    }
+  } catch {
+    // Non-fatal — fall back to 'Passenger' for unresolved IDs.
+  }
+  return nameMap;
+}
+
 export async function hydrateRideBookings(
   userId: string,
   rides: PostedRide[] = [],
@@ -416,40 +462,13 @@ export async function hydrateRideBookings(
     new Set(allRaw.map(r => String(r.passenger_id ?? r.user_id ?? '')).filter(Boolean)),
   );
 
-  const nameMap = new Map<string, string>();
-  if (passengerIds.length > 0) {
-    try {
-      const { supabase: db } = await import('../utils/supabase/client');
-      if (db) {
-        const { data: profiles } = await db
-          .from('profiles')
-          .select('id, full_name, email')
-          .in('id', passengerIds);
-        if (Array.isArray(profiles)) {
-          for (const u of profiles as { id: string; full_name?: string; email?: string }[]) {
-            nameMap.set(String(u.id), u.full_name?.trim() || u.email?.split('@')[0] || 'Passenger');
-          }
-        }
-      }
-    } catch {
-      // Non-fatal — fall back to 'Passenger' for unresolved IDs.
-    }
-  }
+  const nameMap = passengerIds.length > 0 ? await resolvePassengerNames(passengerIds) : new Map<string, string>();
 
   const normalize = (raw: Record<string, unknown>): RideBookingRecord => {
     const rideId = String(raw.trip_id ?? '');
     const ride = knownRides.get(rideId);
     const statusRaw = String(raw.status ?? raw.booking_status ?? 'pending');
-    const status: RideBookingStatus =
-      statusRaw === 'completed' ||
-      statusRaw === 'cancelled' ||
-      statusRaw === 'rejected' ||
-      statusRaw === 'confirmed'
-        ? statusRaw
-        : statusRaw === 'accepted'
-          ? 'confirmed'
-          : 'pending_driver';
-
+    const status = resolveBookingStatus(statusRaw);
     const id = String(raw.booking_id ?? raw.id ?? '');
     return {
       id,
@@ -459,21 +478,14 @@ export async function hydrateRideBookings(
       passengerId: String(raw.passenger_id ?? raw.user_id ?? ''),
       from: String(raw.pickup_location ?? ride?.from ?? ''),
       to: String(raw.dropoff_location ?? ride?.to ?? ''),
-      date:
-        ride?.date ??
-        new Date(String(raw.created_at ?? new Date().toISOString())).toISOString().slice(0, 10),
+      date: resolveBookingDate(ride, raw),
       time: ride?.time ?? '08:00',
       driverName: ride ? ride.carModel || 'Wasel Captain' : 'Wasel Captain',
       passengerName: nameMap.get(String(raw.passenger_id ?? raw.user_id ?? '')) ?? 'Passenger',
       seatsRequested: Number(raw.seats_requested ?? 1) || 1,
       status,
       lifecycleStatus: mapBookingStatusToRideLifecycleState(status),
-      paymentStatus:
-        statusRaw === 'completed'
-          ? 'captured'
-          : statusRaw === 'cancelled' || statusRaw === 'rejected'
-            ? 'failed'
-            : 'authorized',
+      paymentStatus: resolvePaymentStatus(statusRaw),
       routeMode: ride ? 'live_post' : 'network_inventory',
       supportThreadOpen: false,
       ticketCode: `RIDE-${id.slice(-6).toUpperCase() || 'SYNCED'}`,

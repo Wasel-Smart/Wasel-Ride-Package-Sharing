@@ -16,7 +16,7 @@ export function useRoutePrefetch() {
         if (PREFETCHED_ROUTES.has(pathname)) {return;}
         PREFETCHED_ROUTES.add(pathname);
 
-        const prefetchMap: Record<string, () => void> = {
+        const prefetchMap: Record<string, () => Promise<unknown>> = {
           '/app/find-ride': () => import('../features/rides/FindRidePage'),
           '/app/offer-ride': () => import('../features/rides/OfferRidePage'),
           '/app/my-trips': () => import('../features/trips/MyTripsPage'),

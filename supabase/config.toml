@@ -138,3 +138,9 @@ enabled = true
 
 [functions.make-server-0b1f4071]
 verify_jwt = true
+
+[functions.outbox-worker]
+verify_jwt = false
+
+[functions.outbox-worker.cron]
+schedule = "*/10 * * * * *"

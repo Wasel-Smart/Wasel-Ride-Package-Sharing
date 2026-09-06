@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 interface CounterState {
   count: number;
@@ -6,10 +6,11 @@ interface CounterState {
 }
 
 export function useCounter(initialValue = 0) {
-  const [state, setState] = useState<CounterState>(() => ({
-    count: initialValue,
-    lastUpdated: Date.now(),
-  }));
+  const [state, setState] = useState<CounterState>({ count: initialValue, lastUpdated: 0 });
+
+  useEffect(() => {
+    setState({ count: initialValue, lastUpdated: Date.now() });
+  }, [initialValue]);
 
   const countRef = useRef(initialValue);
   const listenersRef = useRef<Set<(state: CounterState) => void>>(new Set());
