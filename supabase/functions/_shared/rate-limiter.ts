@@ -115,3 +115,38 @@ export function createRateLimitMiddleware(config: RateLimitConfig = DEFAULT_CONF
   };
 }
 
+// ---------------------------------------------------------------------------
+// Distributed (DB-backed) rate limit — consistent across all edge isolates.
+// Calls the check_rate_limit RPC which uses Postgres row-level locking.
+// Fails CLOSED: if the DB is unavailable the request is denied.
+// ---------------------------------------------------------------------------
+
+export interface DbRateLimitConfig {
+  maxAttempts: number;
+  windowMinutes: number;
+}
+
+export async function checkDbRateLimit(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  userId: string,
+  operation: string,
+  config: DbRateLimitConfig = { maxAttempts: 10, windowMinutes: 1 },
+): Promise<{ allowed: boolean }> {
+  try {
+    const admin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data, error } = await admin.rpc('check_rate_limit', {
+      p_user_id: userId,
+      p_operation: operation,
+      p_max_attempts: config.maxAttempts,
+      p_window_minutes: config.windowMinutes,
+    });
+    if (error) return { allowed: false };
+    return { allowed: Boolean(data) };
+  } catch {
+    // Fail closed: deny when DB is unreachable.
+    return { allowed: false };
+  }
+}

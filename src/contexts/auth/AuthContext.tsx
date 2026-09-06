@@ -253,6 +253,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       phone?: string;
       returnTo?: string;
     }): Promise<SignUpResult> => {
+      const { fullName } = options;
       if (!getSupabaseClient()) {
         return { error: new Error('Backend not configured') };
       }
