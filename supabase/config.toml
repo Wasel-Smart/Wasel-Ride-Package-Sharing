@@ -143,4 +143,4 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.outbox-worker.cron]
-schedule = "*/10 * * * * *"
+schedule = "* * * * *"

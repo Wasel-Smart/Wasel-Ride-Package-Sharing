@@ -81,8 +81,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [initializing, setInitializing] = useState(true);
   const [busy, setBusy] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
-  const [waselUser, setWaselUser] = useState<WaselUser | null>(null);
+  const [optimisticTick, setOptimisticTick] = useState(0);
   const optimisticRef = useRef<Partial<WaselUser> | null>(null);
+
+  const waselUser = useMemo(() => {
+    if (!user) return null;
+    const mapped = mapBackendProfile({ authUser: user, profile });
+    const pending = optimisticRef.current;
+    return pending ? applyUserUpdates(mapped, pending) : mapped;
+  }, [user, profile, optimisticTick]);
+
+  useEffect(() => {
+    optimisticRef.current = null;
+  }, [user, profile]);
 
   const fetchProfile = useCallback(async (options: { forceCreate?: boolean; authUser?: User | null } = {}) => {
     const { forceCreate = false, authUser } = options;
@@ -276,7 +287,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (authUser && data.session) {
           setSession(data.session);
           setUser(authUser);
-          await fetchProfile(true, authUser);
+          await fetchProfile({ forceCreate: true, authUser });
         }
 
         return {

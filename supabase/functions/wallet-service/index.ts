@@ -225,6 +225,8 @@ async function handleWalletRequest(request: Request, path: string) {
     const bankAccount = String(body.bankAccount ?? '').trim();
     if (amountJod <= 0) return json({ error: 'Amount must be greater than zero.' }, 400);
     if (!bankAccount) return json({ error: 'Bank account is required.' }, 400);
+    const rl = await checkDbRateLimit(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, auth.canonicalUser.id, 'wallet_withdraw', { maxAttempts: 3, windowMinutes: 60 });
+    if (!rl.allowed) return json({ error: 'Too many withdrawal attempts. Try again later.' }, 429);
     try {
       const wallet = await ensureWalletForUser(admin, auth.canonicalUser.id);
       if (toNumber(wallet.balance, 0) < amountJod) return json({ error: 'Insufficient wallet balance.' }, 400);
@@ -247,6 +249,8 @@ async function handleWalletRequest(request: Request, path: string) {
     const note = String(body.note ?? '').trim();
     if (amountJod <= 0) return json({ error: 'Amount must be greater than zero.' }, 400);
     if (!recipientId) return json({ error: 'recipientId is required.' }, 400);
+    const rl = await checkDbRateLimit(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, auth.canonicalUser.id, 'wallet_send', { maxAttempts: 10, windowMinutes: 60 });
+    if (!rl.allowed) return json({ error: 'Too many send attempts. Try again later.' }, 429);
     try {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(recipientId);
       let recipientUserId: string | null = null;
