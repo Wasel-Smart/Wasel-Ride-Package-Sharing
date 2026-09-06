@@ -7,6 +7,8 @@
 
 import { sanitizeLogMessage } from './sanitization';
 
+import { sanitizeLogMessage } from './sanitization';
+
 export const SMS_TOKENS = {
   brandName: 'Wasel',
   brandNameAr: 'واصل',
@@ -167,7 +169,7 @@ export function renderSmsTemplate(id: string, variables: Record<string, string>)
   }
 
   if (text.length > template.maxLength) {
-    console.warn(`SMS template ${id} exceeds max length: ${text.length}/${template.maxLength}`);
+    console.warn(`SMS template ${sanitizeLogMessage(id)} exceeds max length: ${text.length}/${template.maxLength}`);
   }
 
   return text;

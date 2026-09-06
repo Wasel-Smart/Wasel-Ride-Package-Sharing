@@ -8,6 +8,7 @@ const baseUser = {
     trustScore: 90,
     phoneVerified: true,
     emailVerified: true,
+    driverStatus: 'approved' as const,
 };
 
 describe( 'ride publishing trust gate', () => {

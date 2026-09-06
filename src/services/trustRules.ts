@@ -135,6 +135,7 @@ export function getTrustReadinessSummary (
       | 'trustScore'
       | 'phoneVerified'
       | 'emailVerified'
+      | 'driverStatus'
     >
     | null
     | undefined,

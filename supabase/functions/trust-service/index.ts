@@ -171,7 +171,7 @@ async function handleTrustRequest(request: Request, path: string) {
   const auth = await authenticateRequest(request);
   if ('error' in auth) return auth.error;
 
-  if (request.method === 'GET' && (path === '/trust/status' || path === '/trust')) {
+  if (request.method === 'GET' && (path === '/trust/status' || path === '/trust' || path === '/v1/trust/status' || path === '/v1/trust')) {
     try {
       const status = await buildTrustStatus(auth);
       if (!status) return json({ error: 'Unable to load trust status' }, 500);
@@ -193,7 +193,7 @@ Deno.serve(async (request: Request) => {
     const path = url.pathname.replace(/^.*trust-service/, '') || '/';
     let response: Response;
 
-    if (path.startsWith('/trust')) {
+    if (path.startsWith('/trust') || path.startsWith('/v1/trust')) {
       response = await handleTrustRequest(request, path);
     } else if (path === '/health') {
       response = json({ status: 'ok', service: 'trust-service', timestamp: new Date().toISOString() });

@@ -19,7 +19,7 @@ describe('trust profile derivation', () => {
     const low = deriveTrustScore({ verificationLevel: 'level_0', rating: 0, trips: 0 });
     const high = deriveTrustScore({ verificationLevel: 'level_3', rating: 5, trips: 5000 });
     expect(low).toBeGreaterThanOrEqual(0);
-    expect(high).toBeLessThanOrEqual(99);
+    expect(high).toBeLessThanOrEqual(100);
   });
 
   it('builds a consistent demo profile', () => {

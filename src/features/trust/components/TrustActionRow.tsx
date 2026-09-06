@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 
 export function TrustActionRow({
@@ -5,8 +6,8 @@ export function TrustActionRow({
   secondary,
   refresh,
 }: {
-  primary?: React.ReactNode;
-  secondary?: React.ReactNode;
+  primary?: ReactNode;
+  secondary?: ReactNode;
   refresh?: () => void;
 }) {
   return (
