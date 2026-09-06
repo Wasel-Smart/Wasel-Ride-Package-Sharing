@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   FileCheck,
   Headphones,
+  HelpCircle,
   MailCheck,
   Package,
   Shield,
@@ -22,8 +23,19 @@ import {
   SectionCard,
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
-import { FailureNotice, StepCard, TrustActionRow, TrustSkeleton } from './components';
-import { stateAccent, TrustScoreDisplay, VerificationSteps } from './components';
+import {
+  FailureNotice,
+  ReviewTimeline,
+  StepCard,
+  TrustActionRow,
+  TrustOnboarding,
+  TrustScoreDisplay,
+  TrustScoreExplanation,
+  TrustSkeleton,
+  ValidationRules,
+  VerificationSteps,
+} from './components';
+import { stateAccent, TrustScoreDisplay as TrustScoreDisplayExport } from './components';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
@@ -31,6 +43,7 @@ import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import {
   confirmTrustPhoneVerification,
   enableTrustDriverMode,
+  fetchReviewHistory,
   getTrustCenterStatus,
   resendTrustEmailConfirmation,
   startTrustPhoneVerification,
@@ -39,6 +52,7 @@ import {
 } from '../../services/trustCenter';
 import {
   buildFallbackTrustCenterStatus,
+  type ReviewHistoryItem,
   type TrustCenterStatus,
   type TrustStepState,
 } from '../../services/trustCenterModel';
@@ -48,6 +62,38 @@ import { C, F, GRAD_AURORA, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 function toErrorMessage(error: unknown): string {
   if (error instanceof Error) {return error.message;}
   return 'Trust Center request failed.';
+}
+
+function isNewUser(status: TrustCenterStatus | null): boolean {
+  if (!status) return false;
+  return status.completedSteps === 0 && status.nextStepId !== null;
+}
+
+function applyOptimisticStepUpdate(
+  status: TrustCenterStatus,
+  stepId: TrustStepState extends 'completed' ? 'identity' | 'email' | 'phone' | 'driver_documents' | 'wallet_standing' : string,
+  newState: TrustStepState,
+): TrustCenterStatus {
+  const next = { ...status, steps: { ...status.steps } } as TrustCenterStatus;
+  const stepKey = stepId as keyof TrustCenterStatus['steps'];
+  if (stepKey in next.steps) {
+    next.steps = {
+      ...next.steps,
+      [stepKey]: {
+        ...next.steps[stepKey],
+        state: newState,
+      },
+    };
+  }
+  const allSteps = Object.values(next.steps);
+  next.completedSteps = allSteps.filter((s) => s.state === 'completed').length;
+  next.totalSteps = allSteps.length;
+  next.nextStepId = (() => {
+    const ordered = [next.steps.phone, next.steps.email, next.steps.identity, next.steps.driverDocuments, next.steps.walletStanding];
+    return ordered.find((s) => s.state !== 'completed')?.id ?? null;
+  })();
+  next.blockedSteps = allSteps.filter((s) => s.state === 'failed').map((s) => s.id);
+  return next;
 }
 
 function getStepBadge(state: TrustStepState, t: (key: string) => string) {
@@ -139,6 +185,11 @@ export default function TrustCenterPage() {
     description: string;
     onConfirm: () => void;
   }>({ open: false, title: '', description: '', onConfirm: () => {} });
+  const [validationErrors, setValidationErrors] = useState<Record<string, string | null>>({});
+  const [reviewHistory, setReviewHistory] = useState<ReviewHistoryItem[]>([]);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [pendingSync, setPendingSync] = useState(false);
+  const previousStatusRef = useRef<TrustCenterStatus | null>(null);
 
   const fallbackStatus = useMemo(
     () => (user ? buildFallbackTrustCenterStatus(user) : null),
@@ -171,9 +222,11 @@ export default function TrustCenterPage() {
     try {
       const nextStatus = await getTrustCenterStatus(user);
       setTrustStatus(nextStatus);
+      previousStatusRef.current = nextStatus;
     } catch (error) {
       const fallback = buildFallbackTrustCenterStatus(user);
       setTrustStatus(fallback);
+      previousStatusRef.current = fallback;
       if (!silent) {
         console.warn('[Trust Center] Using fallback status:', error);
       }
@@ -182,6 +235,15 @@ export default function TrustCenterPage() {
       if (silent) {setInitialLoading(false);}
     }
   }, [user]);
+
+  const loadReviewHistory = useCallback(async () => {
+    try {
+      const items = await fetchReviewHistory();
+      setReviewHistory(items);
+    } catch {
+      setReviewHistory([]);
+    }
+  }, []);
 
   const emailBadge = useMemo(
     () => getStepBadge(effectiveStatus?.steps.email.state ?? 'not_started', t),
@@ -196,10 +258,12 @@ export default function TrustCenterPage() {
     if (!user) {
       setTrustStatus(null);
       setInitialLoading(false);
+      setReviewHistory([]);
       return;
     }
     setInitialLoading(true);
     void reloadTrustStatus(true);
+    void loadReviewHistory();
   }, [
     user?.id,
     user?.email,
@@ -263,14 +327,27 @@ export default function TrustCenterPage() {
       ? t('trustCenterExpanded.actionNeeded')
       : t('trustCenterExpanded.ready');
 
-  const runAction = async (key: string, work: () => Promise<void>) => {
+  const runAction = async (key: string, work: () => Promise<void>, optimisticPatch?: (current: TrustCenterStatus) => TrustCenterStatus) => {
     setActionKey(key);
+    setPendingSync(true);
+    const previous = previousStatusRef.current;
+    if (optimisticPatch && previous) {
+      const optimistic = optimisticPatch(previous);
+      setTrustStatus(optimistic);
+      previousStatusRef.current = optimistic;
+    }
     try {
       await work();
+      toast.success(t('trustCenterExpanded.validationSyncComplete'));
     } catch (error) {
+      if (previous) {
+        setTrustStatus(previous);
+        previousStatusRef.current = previous;
+      }
       toast.error(toErrorMessage(error));
     } finally {
       setActionKey(null);
+      setPendingSync(false);
     }
   };
 
@@ -297,13 +374,13 @@ export default function TrustCenterPage() {
 
   const handleResendEmail = async () => {
     if (!user.email) {
-      toast.error('No email is associated with this account.');
+      toast.error(t('trustCenterExpanded.validationRequired'));
       return;
     }
 
     await runAction('email', async () => {
       await resendTrustEmailConfirmation(user.email);
-      toast.success(`Confirmation email sent to ${user.email}.`);
+      toast.success(t('trustCenterExpanded.sendConfirmation') + ' ' + user.email);
       await reloadTrustStatus(true);
     });
   };
@@ -311,24 +388,26 @@ export default function TrustCenterPage() {
   const handleStartPhone = async () => {
     const normalizedPhone = phoneInput.trim();
     if (!normalizedPhone) {
-      toast.error('Enter a phone number before requesting a code.');
+      setValidationErrors((prev) => ({ ...prev, phone: t('trustCenterExpanded.validationRequired') }));
       return;
     }
+    setValidationErrors((prev) => ({ ...prev, phone: null }));
 
     await runAction('phone-start', async () => {
       const result = await startTrustPhoneVerification({ phoneNumber: normalizedPhone });
       updateUser({ phone: result.phoneNumber, phoneVerified: false });
       await refreshProfile();
       await reloadTrustStatus(true);
-      toast.success(`Verification code sent to ${result.phoneNumber}.`);
-    });
+      toast.success(t('trustCenterExpanded.sendCode') + ' ' + result.phoneNumber);
+    }, (current) => applyOptimisticStepUpdate(current, 'phone', 'in_progress'));
   };
 
   const handleConfirmPhone = async () => {
     if (!phoneCode.trim()) {
-      toast.error('Enter the verification code first.');
+      setValidationErrors((prev) => ({ ...prev, phoneCode: t('trustCenterExpanded.validationRequired') }));
       return;
     }
+    setValidationErrors((prev) => ({ ...prev, phoneCode: null }));
 
     await runAction('phone-confirm', async () => {
       const result = await confirmTrustPhoneVerification({ code: phoneCode.trim() });
@@ -339,15 +418,16 @@ export default function TrustCenterPage() {
       });
       await refreshProfile();
       await reloadTrustStatus(true);
-      toast.success('Phone verification completed.');
-    });
+      toast.success(t('trustCenterExpanded.confirmPhone'));
+    }, (current) => applyOptimisticStepUpdate(current, 'phone', 'completed'));
   };
 
   const handleSubmitIdentity = async () => {
     if (identityReference.trim().length < 6) {
-      toast.error('Enter a valid Sanad reference (minimum 6 characters).');
+      setValidationErrors((prev) => ({ ...prev, identityReference: t('trustCenterExpanded.validationTooShort').replace('{min}', '6') }));
       return;
     }
+    setValidationErrors((prev) => ({ ...prev, identityReference: null }));
 
     await runAction('identity', async () => {
       await submitTrustIdentityVerification({
@@ -357,16 +437,17 @@ export default function TrustCenterPage() {
       updateUser({ verificationLevel: 'level_1' });
       await reloadTrustStatus(true);
       await refreshProfile();
-      toast.success('Identity verification submitted for review.');
-    });
+      await loadReviewHistory();
+      toast.success(t('trustCenterExpanded.submitForReview'));
+    }, (current) => applyOptimisticStepUpdate(current, 'identity', 'in_progress'));
   };
 
   const handleEnableDriverMode = async () => {
     setConfirmState({
       open: true,
-      title: 'Enable driver mode',
+      title: t('trustCenterExpanded.enableDriverMode'),
       description:
-        'You are about to enable driver mode. This will allow you to offer rides and submit driver documents.',
+        t('trustCenterExpanded.identityHelpBody'),
       onConfirm: async () => {
         setConfirmState(prev => ({ ...prev, open: false }));
         await runAction('driver-mode', async () => {
@@ -374,7 +455,7 @@ export default function TrustCenterPage() {
           updateUser({ role: 'driver' });
           await refreshProfile();
           await reloadTrustStatus(true);
-          toast.success('Driver mode enabled. You can now submit driver documents.');
+          toast.success(t('trustCenterExpanded.enableDriverMode') + ' ' + t('trustCenterExpanded.capabilityReady'));
         });
       },
     });
@@ -382,15 +463,15 @@ export default function TrustCenterPage() {
 
   const handleSubmitDriverDocuments = async () => {
     if (licenseNumber.trim().length < 6) {
-      toast.error('Enter a valid driver license number (minimum 6 characters).');
+      setValidationErrors((prev) => ({ ...prev, licenseNumber: t('trustCenterExpanded.validationTooShort').replace('{min}', '6') }));
       return;
     }
+    setValidationErrors((prev) => ({ ...prev, licenseNumber: null }));
 
-    setConfirmState({
-      open: true,
-      title: 'Submit driver documents',
+    setConfirmState({      open: true,
+      title: t('trustCenterExpanded.driverDocumentsTitle'),
       description:
-        'Please verify your driver license and document reference before submitting. This action cannot be undone.',
+        t('trustCenterExpanded.submitDocuments') + '. ' + t('trustCenterExpanded.reviewFlowBelow'),
       onConfirm: async () => {
         setConfirmState(prev => ({ ...prev, open: false }));
         await runAction('driver-documents', async () => {
@@ -401,8 +482,9 @@ export default function TrustCenterPage() {
           updateUser({ verificationLevel: 'level_2' });
           await reloadTrustStatus(true);
           await refreshProfile();
-          toast.success('Driver documents submitted for review.');
-        });
+          await loadReviewHistory();
+          toast.success(t('trustCenterExpanded.submitDocuments'));
+        }, (current) => applyOptimisticStepUpdate(current, 'driver_documents', 'in_progress'));
       },
     });
   };
