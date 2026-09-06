@@ -225,7 +225,7 @@ export function assertPermission(role: AccessRole, permission: AccessPermission)
 
 /**
  * Maps a raw DB/JWT role string to the canonical AccessRole.
- * Falls back to 'user' for unknown values, 'guest' for undefined.
+ * Fails closed: unknown or undefined roles resolve to 'guest' (least privilege).
  */
 export function resolveAccessRole(role: string | undefined): AccessRole {
   const VALID: readonly string[] = [
@@ -234,7 +234,10 @@ export function resolveAccessRole(role: string | undefined): AccessRole {
   ];
   if (!role) {return 'guest';}
   if ((VALID as string[]).includes(role)) {return role as AccessRole;}
-  return 'user';
+  // Fail closed: unrecognised role strings (corrupt data, new DB enum values not yet
+  // mapped here, attacker-supplied values) must never silently grant the 'user'
+  // permission set. Default to the least-privileged role instead.
+  return 'guest';
 }
 
 /**

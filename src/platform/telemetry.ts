@@ -85,8 +85,7 @@ class TelemetryCollector {
       createStructuredLogEntry('info', `Span started: ${sanitizeLogMessage(name)}`, 'telemetry', {
         traceId,
         spanId,
-        parentSpanId: attributes.parentSpanId,
-        attributes,
+        parentSpanId: sanitizeLogMessage(attributes.parentSpanId),
       }),
     );
 

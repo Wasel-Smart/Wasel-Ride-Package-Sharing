@@ -7,12 +7,24 @@ let sentryInitialized = false;
 let sentryInitializationStarted = false;
 let sentryClient: typeof Sentry | null = null;
 
+function sanitizeContext(context?: Record<string, unknown>): Record<string, unknown> | undefined {
+  if (!context) { return undefined; }
+  return Object.fromEntries(
+    Object.entries(context).map(([k, v]) => [k, sanitizeLogMessage(v)]),
+  );
+}
+
 function writeConsole(
   level: 'info' | 'warning' | 'error',
   message: string,
   context?: Record<string, unknown>,
 ): void {
-  const entry = createStructuredLogEntry(level, sanitizeLogMessage(message), 'wasel-web', context);
+  const entry = createStructuredLogEntry(
+    level,
+    sanitizeLogMessage(message),
+    'wasel-web',
+    sanitizeContext(context),
+  );
   const serialized = JSON.stringify(entry);
 
   if (level === 'error') {
@@ -223,10 +235,11 @@ export function trackUserAction(action: string, data?: Record<string, unknown>):
 }
 
 export function trackNavigation(from: string, to: string): void {
-  logger.addBreadcrumb(`Navigation: ${from} -> ${to}`, 'navigation', {
-    from,
-    to,
-  });
+  logger.addBreadcrumb(
+    `Navigation: ${sanitizeLogMessage(from)} -> ${sanitizeLogMessage(to)}`,
+    'navigation',
+    { from: sanitizeLogMessage(from), to: sanitizeLogMessage(to) },
+  );
 }
 
 export function trackDomainEvent(event: DomainEventEnvelope): void {

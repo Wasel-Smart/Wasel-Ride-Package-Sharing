@@ -37,7 +37,19 @@ async function proxyWriteDeadLetter(dlqPayload: Record<string, unknown>): Promis
 
     if (!supabaseUrl || !secret) {return false;}
 
-    const baseUrl = `${supabaseUrl.trim().replace(/\/$/, '')}/functions/v1/event-broker-proxy`;
+    // Validate the Supabase URL is a legitimate HTTPS endpoint before using it
+    // in a server-side fetch to prevent SSRF via a misconfigured env var.
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(supabaseUrl.trim());
+    } catch {
+      return false;
+    }
+    if (parsedUrl.protocol !== 'https:' && parsedUrl.hostname !== 'localhost') {
+      return false;
+    }
+
+    const baseUrl = `${parsedUrl.origin}/functions/v1/event-broker-proxy`;
     const response = await fetch(`${baseUrl}/dead-letter`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-Event-Broker-Secret': secret },

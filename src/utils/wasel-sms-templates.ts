@@ -5,6 +5,8 @@
  * All templates are under 160 characters (single SMS) unless noted.
  */
 
+import { sanitizeLogMessage } from './sanitization';
+
 export const SMS_TOKENS = {
   brandName: 'Wasel',
   brandNameAr: 'واصل',

@@ -82,7 +82,7 @@ class GDPRCompliance {
 
       return data?.granted ?? false;
     } catch (error) {
-      logger.error('Failed to get consent', error, { consentType });
+      logger.error('Failed to get consent', error, { consentType: sanitizeLogMessage(consentType) });
       return false; // Fail closed
     }
   }

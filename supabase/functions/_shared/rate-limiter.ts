@@ -63,9 +63,19 @@ export function checkRateLimit(
 }
 
 export function getRateLimitKey(req: Request): string {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+  const rawIp =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     req.headers.get('x-real-ip') ||
     'unknown';
+
+  // Validate the IP is a plausible IPv4 or IPv6 address to prevent
+  // header-injection attacks where a client spoofs x-forwarded-for
+  // with an arbitrary string to bypass per-IP rate limiting.
+  const isValidIp =
+    /^(\d{1,3}\.){3}\d{1,3}$/.test(rawIp) ||
+    /^[0-9a-fA-F:]{2,39}$/.test(rawIp);
+
+  const ip = isValidIp ? rawIp : 'unknown';
 
   // Use epoch-based window bucket instead of clock hour to get a true sliding window
   return `${ip}:${Math.floor(Date.now() / DEFAULT_CONFIG.windowMs)}`;

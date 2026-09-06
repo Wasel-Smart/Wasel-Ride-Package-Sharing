@@ -1031,7 +1031,7 @@ async function handleTripRequest ( request: Request, path: string ) {
     if ( !tripOwner ) return json( { error: 'Trip not found' }, 404 );
     const driver = await getDriverForUser( auth.admin, auth.canonicalUser.id );
     const isOwner = Boolean( driver?.driver_id ) && String( tripOwner.driver_id ) === String( driver.driver_id );
-    const canManageTrips = hasPermission( auth.role, 'rides:assign' );
+    const canManageTrips = hasPermission( resolveAccessRole( auth.canonicalUser.role ), 'rides:assign' );
     if ( !isOwner && !canManageTrips ) {
       return json( { error: 'Not authorized to modify this trip.' }, 403 );
     }
@@ -1196,7 +1196,7 @@ async function handleBookingRequest ( request: Request, path: string ) {
         .maybeSingle();
       isDriver = tripRow?.driver_id === auth.canonicalUser.id;
     }
-    const canManage = hasPermission( auth.role, 'rides:assign' );
+    const canManage = hasPermission( resolveAccessRole( auth.canonicalUser.role ), 'rides:assign' );
     if ( !isPassenger && !isDriver && !canManage ) {
       return json( { error: 'Not authorized to update this booking.' }, 403 );
     }
@@ -1297,7 +1297,7 @@ async function handlePackageRequest ( request: Request, path: string ) {
     if ( error ) return json( { error: error.message }, 500 );
     if ( !data ) return json( { error: 'Package not found' }, 404 );
     const isOwner = data.sender_id === auth.canonicalUser.id || data.carrier_id === auth.canonicalUser.id;
-    const isStaff = hasPermission( auth.role, 'packages:read' );
+    const isStaff = hasPermission( resolveAccessRole( auth.canonicalUser.role ), 'packages:read' );
     if ( !isOwner && !isStaff ) {
       return json( { error: 'Not authorized to view this package.' }, 403 );
     }
@@ -1308,7 +1308,7 @@ async function handlePackageRequest ( request: Request, path: string ) {
     const userId = path.split( '/packages/sender/' )[ 1 ]?.split( '/' )[ 0 ];
     if ( !userId ) return json( { error: 'User ID required' }, 400 );
     // IDOR guard: only the sender themselves (or admin) may list their packages.
-    if ( !matchesAuthenticatedUser( auth, userId ) && !hasPermission( auth.role, 'packages:assign' ) ) {
+    if ( !matchesAuthenticatedUser( auth, userId ) && !hasPermission( resolveAccessRole( auth.canonicalUser.role ), 'packages:assign' ) ) {
       return json( { error: 'Not authorized to view these packages.' }, 403 );
     }
     const { data, error } = await auth.admin
@@ -1330,7 +1330,7 @@ async function handlePackageRequest ( request: Request, path: string ) {
     if ( !pkg ) return json( { error: 'Package not found' }, 404 );
     const isCarrier = pkg.carrier_id === auth.canonicalUser.id;
     const isSender = pkg.sender_id === auth.canonicalUser.id;
-    const isStaff = hasPermission( auth.role, 'packages:write' );
+    const isStaff = hasPermission( resolveAccessRole( auth.canonicalUser.role ), 'packages:write' );
     if ( !isCarrier && !isSender && !isStaff ) {
       return json( { error: 'Not authorized to deliver this package.' }, 403 );
     }

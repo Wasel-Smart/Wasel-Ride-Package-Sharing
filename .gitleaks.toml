@@ -4,5 +4,8 @@
     "_SECRETS_NEEDS_ROTATION_THEN_DELETE/",
     ".env",
     ".env.local",
-    ".env.production",
   ]
+
+# NOTE: .env.production is intentionally NOT allowlisted.
+# It must never contain real secrets. All secrets must use SET_IN_SECRET_MANAGER
+# placeholders and be injected at runtime via Vercel / Supabase secret management.
