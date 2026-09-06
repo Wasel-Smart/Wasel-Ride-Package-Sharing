@@ -44,19 +44,21 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
-   useEffect(() => {
-      void loadMessages();
+  useEffect(() => {
+    const run = async () => {
+      await loadMessages();
       const unsubscribe = chatService.subscribeToTrip(tripId, message => {
         setMessages(prev => [...prev, message]);
         if (message.sender_id !== user?.id) {
           chatService.markAsRead([message.id]);
         }
       });
-
-      return () => {
-        unsubscribe();
-      };
-    }, [loadMessages, tripId, user?.id]);
+      return unsubscribe;
+    };
+    let unsub: (() => void) | undefined;
+    run().then(u => { unsub = u; });
+    return () => { unsub?.(); };
+  }, [loadMessages, tripId, user?.id]);
 
    useEffect(() => {
      scrollToBottom();
@@ -159,7 +161,7 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
             className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={sending}
           />
-          <Button onClick={() => handleSend()} disabled={!newMessage.trim() || sending} className="px-4">
+          <Button onClick={() => { void handleSend(); }} disabled={!newMessage.trim() || sending} className="px-4">
             {sending ? <Loader2 className="animate-spin" size={20} /> : <Send size={20} />}
           </Button>
         </div>

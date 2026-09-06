@@ -125,7 +125,7 @@ export async function signInWithOAuthProvider(
             : 'openid profile email';
 
     const { error } = await client.auth.signInWithOAuth({
-      provider,
+      provider: provider as any,
       options: {
         redirectTo,
         scopes,

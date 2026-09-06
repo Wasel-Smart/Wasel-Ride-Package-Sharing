@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react';
 import { Download, X } from 'lucide-react';
 import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 import { WaselButton } from '../wasel-ui/WaselButton';

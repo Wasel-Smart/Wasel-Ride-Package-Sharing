@@ -31,7 +31,9 @@ function lookup(key: string, lang: Language): string | undefined {
     const flatTable = translations[lang];
     const tail = keys[keys.length - 1];
     const flatValue =
-      typeof flatTable === 'object' && flatTable !== null ? flatTable[tail] : undefined;
+      typeof flatTable === 'object' && flatTable !== null
+        ? (flatTable as Record<string, unknown>)[tail!]
+        : undefined;
     if (typeof flatValue === 'string') {return flatValue;}
   }
 

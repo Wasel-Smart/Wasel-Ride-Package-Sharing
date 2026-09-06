@@ -5,6 +5,7 @@ import {
   Minimize2,
   MapPin,
   Radio,
+  Locate,
   Navigation2,
   Map,
   Mountain,

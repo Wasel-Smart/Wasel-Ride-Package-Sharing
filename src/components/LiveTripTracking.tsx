@@ -286,6 +286,56 @@ const EMOJI_RATINGS = [
   { stars: 5, emoji: '🤩', label: 'Excellent', labelAr: 'ممتاز' },
 ];
 
+function RatingActions({
+  submitting,
+  stars,
+  onSkip,
+  onSubmit,
+}: {
+  submitting: boolean;
+  stars: number;
+  onSkip: () => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex gap-3">
+        <Button
+          variant="ghost"
+          className="flex-1 h-11 border border-border text-slate-400 hover:text-white rounded-xl"
+          onClick={onSkip}
+          disabled={submitting}
+        >
+          {tx('liveTripTracking.skip')}
+        </Button>
+        <Button
+          className="flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 disabled:opacity-60"
+          onClick={() => { void onSubmit(); }}
+          disabled={submitting || !stars}
+        >
+          {submitting ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2"
+            />
+          ) : (
+            <ThumbsUp className="w-4 h-4 mr-2" />
+          )}
+          {tx('liveTripTracking.submit_rating')}
+        </Button>
+      </div>
+      <p className="text-center text-[11px] text-slate-600">
+        {tx('liveTripTracking.ratings_earn_you')}{' '}
+        <span className="text-amber-400 font-semibold">
+          {tx('liveTripTracking.10_wasel_points')}
+        </span>{' '}
+        {tx('liveTripTracking.toward_gold_tier')}
+      </p>
+    </div>
+  );
+}
+
 function TripRatingSheet({
   open,
   driverName,
@@ -418,42 +468,12 @@ function TripRatingSheet({
               />
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3">
-              <Button
-                variant="ghost"
-                className="flex-1 h-11 border border-border text-slate-400 hover:text-white rounded-xl"
-                onClick={onSkip}
-                disabled={submitting}
-              >
-                {tx('liveTripTracking.skip')}
-              </Button>
-              <Button
-                className="flex-1 h-11 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 disabled:opacity-60"
-                onClick={() => handleSubmit()}
-                disabled={submitting || !stars}
-              >
-                {submitting ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full mr-2"
-                  />
-                ) : (
-                  <ThumbsUp className="w-4 h-4 mr-2" />
-                )}
-                {tx('liveTripTracking.submit_rating')}
-              </Button>
-            </div>
-
-            {/* Loyalty nudge */}
-            <p className="text-center text-[11px] text-slate-600">
-              {tx('liveTripTracking.ratings_earn_you')}{' '}
-              <span className="text-amber-400 font-semibold">
-                {tx('liveTripTracking.10_wasel_points')}
-              </span>{' '}
-              {tx('liveTripTracking.toward_gold_tier')}
-            </p>
+            <RatingActions
+              submitting={submitting}
+              stars={stars}
+              onSkip={onSkip}
+              onSubmit={() => { void handleSubmit(); }}
+            />
           </motion.div>
         </motion.div>
       )}
@@ -538,6 +558,52 @@ function CancelConfirmDialog({
 
 // ─── Main component ────────────────────────────────────────────────────────────
 
+function TripLoadingState() {
+  return (
+    <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-background p-6">
+      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center shadow-2xl">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+          <Navigation className="h-7 w-7 animate-pulse text-primary" />
+        </div>
+        <h2 className="text-xl font-bold text-white">
+          {tx('liveTripTracking.loading_live_trip')}
+        </h2>
+        <p className="mt-2 text-sm text-slate-400">
+          {tx(
+            'liveTripTracking.wasel_is_checking_the_active_booking_and_driver_telemetry_for_this_account',
+          )}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function TripEmptyState({ onNavigate }: { onNavigate: (to: string) => void }) {
+  return (
+    <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-background p-6">
+      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center shadow-2xl">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+          <Navigation className="h-7 w-7 text-primary" />
+        </div>
+        <h2 className="text-xl font-bold text-white">
+          {tx('liveTripTracking.no_active_trip_right_now')}
+        </h2>
+        <p className="mt-2 text-sm text-slate-400">
+          {tx(
+            'liveTripTracking.live_tracking_appears_here_once_a_confirmed_trip_starts_streaming_location_updates_from_the_driver',
+          )}
+        </p>
+        <Button
+          className="mt-6 h-11 rounded-xl px-5 font-semibold"
+          onClick={() => { void onNavigate('/app/my-trips'); }}
+        >
+          {tx('liveTripTracking.open_my_trips')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function LiveTripTracking() {
   const navigate = useNavigate();
   const { user } = useLocalAuth();
@@ -567,9 +633,11 @@ export function LiveTripTracking() {
 
   useLayoutEffect(() => {
     if (!user?.id) {
-      setLiveTrip(null);
-      setTripLoaded(true);
-      return () => {};
+      const id = setTimeout(() => {
+        setLiveTrip(null);
+        setTripLoaded(true);
+      }, 0);
+      return () => clearTimeout(id);
     }
 
     const unsubscribe = subscribeToLiveTripPresence(user.id, snapshot => {
@@ -673,49 +741,11 @@ export function LiveTripTracking() {
   }, [trip.shareCode]);
 
   if (!tripLoaded) {
-    return (
-      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-background p-6">
-        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center shadow-2xl">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-            <Navigation className="h-7 w-7 animate-pulse text-primary" />
-          </div>
-          <h2 className="text-xl font-bold text-white">
-            {tx('liveTripTracking.loading_live_trip')}
-          </h2>
-          <p className="mt-2 text-sm text-slate-400">
-            {tx(
-              'liveTripTracking.wasel_is_checking_the_active_booking_and_driver_telemetry_for_this_account',
-            )}
-          </p>
-        </div>
-      </div>
-    );
+    return <TripLoadingState />;
   }
 
   if (!liveTrip) {
-    return (
-      <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center bg-background p-6">
-        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-8 text-center shadow-2xl">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-            <Navigation className="h-7 w-7 text-primary" />
-          </div>
-          <h2 className="text-xl font-bold text-white">
-            {tx('liveTripTracking.no_active_trip_right_now')}
-          </h2>
-          <p className="mt-2 text-sm text-slate-400">
-            {tx(
-              'liveTripTracking.live_tracking_appears_here_once_a_confirmed_trip_starts_streaming_location_updates_from_the_driver',
-            )}
-          </p>
-          <Button
-            className="mt-6 h-11 rounded-xl px-5 font-semibold"
-            onClick={() => navigate('/app/my-trips')}
-          >
-            {tx('liveTripTracking.open_my_trips')}
-          </Button>
-        </div>
-      </div>
-    );
+    return <TripEmptyState onNavigate={navigate} />;
   }
 
   const arrived = trip.status === 'completed' || progress >= 100;
@@ -1039,55 +1069,4 @@ export function LiveTripTracking() {
               });
             }}
             variant="ghost"
-            className="w-full h-10 border border-border text-slate-300 hover:text-white hover:border-muted-foreground/30 rounded-xl text-sm font-medium"
-          >
-            <Share2 className="w-3.5 h-3.5 mr-2" />
-            {tx('liveTripTracking.share_live_location')}
-          </Button>
-
-          {/* Cancel ride — only shown while trip is not yet complete */}
-          {!arrived && (
-            <Button
-              onClick={() => setShowCancel(true)}
-              variant="ghost"
-              className="w-full h-10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/5 hover:text-orange-300 hover:border-orange-500/40 rounded-xl text-sm font-medium"
-            >
-              <XCircle className="w-3.5 h-3.5 mr-2" />
-              {tx('liveTripTracking.cancel_ride')}
-            </Button>
-          )}
-
-          <Button
-            onClick={() => setShowSOS(true)}
-            className="w-full h-10 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 rounded-xl text-sm font-bold transition-all"
-          >
-            <AlertTriangle className="w-3.5 h-3.5 mr-2" />
-            {tx('liveTripTracking.emergency_sos_2')}
-          </Button>
-        </div>
-      </div>
-
-      {/* SOS Dialog */}
-      <SOSDialog open={showSOS} onClose={() => setShowSOS(false)} />
-
-      {/* Cancel Confirmation */}
-      <CancelConfirmDialog
-        open={showCancel}
-        onClose={() => setShowCancel(false)}
-        onConfirm={() => handleCancelConfirm()}
-        cancelling={cancelling}
-      />
-
-      {/* Post-trip Rating Sheet */}
-      <TripRatingSheet
-        open={showRating}
-        driverName={trip.driver.name}
-        driverImg={trip.driver.img}
-        driverInitials={trip.driver.initials}
-        fare={trip.price.toFixed(3)}
-        onSubmit={() => handleRatingSubmit()}
-        onSkip={handleRatingSkip}
-      />
-    </div>
-  );
-}
+            className="w-full h-10 b

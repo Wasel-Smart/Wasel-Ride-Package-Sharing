@@ -41,7 +41,7 @@ export async function validateOAuthProvider(
     // signInWithOAuth with shouldCreateSession=false lets us check config
     // without initiating the full flow
     const { data, error } = await client.auth.signInWithOAuth({
-      provider,
+      provider: provider as any,
       options: {
         redirectTo: window.location.origin + '/app/auth/callback',
         skipBrowserRedirect: true,

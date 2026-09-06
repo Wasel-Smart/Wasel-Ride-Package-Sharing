@@ -379,8 +379,8 @@ const buildMainChildren = (): RouteObject[] => [
   // ── Legal ─────────────────────────────────────────────────────────────────
   { path: 'privacy', lazy: lazy(() => import('./features/legal/PrivacyPolicy'), 'PrivacyPolicy') },
   { path: 'terms', lazy: lazy(() => import('./features/legal/TermsOfService'), 'TermsOfService') },
-  { path: 'security', lazy: lazy(() => import('./features/legal/SecurityPage'), 'SecurityPage') },
-  { path: 'support', lazy: lazy(() => import('./features/support/SupportPage'), 'SupportPage') },
+  { path: 'security', lazy: lazy(() => import('./features/legal/SecurityPage')) },
+  { path: 'support', lazy: lazy(() => import('./features/support/SupportPage')) },
   { path: 'legal/privacy', Component: () => <RedirectTo to="/app/privacy" /> },
   { path: 'legal/terms', Component: () => <RedirectTo to="/app/terms" /> },
 
