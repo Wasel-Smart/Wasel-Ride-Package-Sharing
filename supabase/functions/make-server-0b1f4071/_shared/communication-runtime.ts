@@ -144,6 +144,7 @@ export function buildResendPayload(
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${env.resendApiKey}`,
+        'Idempotency-Key': delivery.delivery_id,
       },
       body: JSON.stringify({
         from: env.resendFromEmail,
@@ -243,6 +244,7 @@ export function buildTwilioRequest(
       headers: {
         Authorization: `Basic ${btoa(`${authUser}:${authPassword}`)}`,
         'Content-Type': 'application/x-www-form-urlencoded',
+        'X-Twilio-Idempotency-Token': delivery.delivery_id,
       },
       body: params.toString(),
     },
