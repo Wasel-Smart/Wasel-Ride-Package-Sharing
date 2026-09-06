@@ -1,7 +1,17 @@
 /**
  * Server-side Rate Limiting for Edge Functions
- * Uses in-memory store with TTL for request tracking
+ *
+ * Two tiers:
+ *  1. checkRateLimit()           — in-memory, isolate-local. Fast. Use for
+ *                                  general request throttling where cross-isolate
+ *                                  consistency is not required.
+ *  2. checkDbRateLimit()         — database-backed via check_rate_limit RPC.
+ *                                  Distributed and consistent across all isolates.
+ *                                  Use for sensitive operations: wallet send/withdraw,
+ *                                  package deliver, OTP, auth.
  */
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 interface RateLimitEntry {
   count: number;

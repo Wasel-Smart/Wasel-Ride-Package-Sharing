@@ -250,12 +250,24 @@ async function handleWalletRequest(request: Request, path: string) {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(recipientId);
       let recipientUserId: string | null = null;
       if (isUuid) {
-        const { data } = await admin.from('users').select('id').or(`id.eq.${recipientId},auth_user_id.eq.${recipientId}`).maybeSingle();
-        recipientUserId = data?.id ? String(data.id) : null;
+        // Two separate typed lookups — never interpolate user input into .or() strings.
+        const byId = await admin.from('users').select('id').eq('id', recipientId).maybeSingle();
+        if (byId.data?.id) {
+          recipientUserId = String(byId.data.id);
+        } else {
+          const byAuthId = await admin.from('users').select('id').eq('auth_user_id', recipientId).maybeSingle();
+          recipientUserId = byAuthId.data?.id ? String(byAuthId.data.id) : null;
+        }
       }
       if (!recipientUserId) {
-        const { data } = await admin.from('users').select('id').or(`email.eq.${recipientId},phone_number.eq.${recipientId}`).maybeSingle();
-        recipientUserId = data?.id ? String(data.id) : null;
+        // Email and phone are separate lookups to avoid raw .or() injection.
+        const byEmail = await admin.from('users').select('id').eq('email', recipientId).maybeSingle();
+        if (byEmail.data?.id) {
+          recipientUserId = String(byEmail.data.id);
+        } else {
+          const byPhone = await admin.from('users').select('id').eq('phone_number', recipientId).maybeSingle();
+          recipientUserId = byPhone.data?.id ? String(byPhone.data.id) : null;
+        }
       }
       if (!recipientUserId) return json({ error: 'Recipient wallet was not found.' }, 404);
       if (recipientUserId === auth.canonicalUser.id) return json({ error: 'Cannot send wallet funds to the same account.' }, 400);
