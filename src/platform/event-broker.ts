@@ -288,6 +288,11 @@ class OptimizedSupabaseEventBroker implements EventBroker {
   }
 
   private async persist(message: BrokerMessage): Promise<void> {
+    // Re-enable proxy after the retry window has elapsed
+    if (!this.proxyAvailable && Date.now() >= this.proxyRetryAt) {
+      this.proxyAvailable = true;
+    }
+
     if (this.proxyAvailable) {
       const result = await proxyFetch('/publish', {
         id: message.id,

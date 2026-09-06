@@ -9,7 +9,7 @@
  *    with a small random delta each refresh so the dashboard feels live.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useAuth } from '../contexts/AuthContext';
 import { walletApi } from './walletApi';
@@ -74,6 +74,7 @@ export function useLiveUserStats(): { stats: LiveUserStats | null; loading: bool
   const { user: authUser } = useAuth();
   const [stats, setStats] = useState<LiveUserStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const fetchingRef = useRef(false);
 
   const authUserId = authUser?.id;
   const localTrips = localUser?.trips;
@@ -81,6 +82,8 @@ export function useLiveUserStats(): { stats: LiveUserStats | null; loading: bool
   const localBalance = localUser?.balance;
 
   const load = useCallback(async () => {
+    if (fetchingRef.current) {return;}
+    fetchingRef.current = true;
     setLoading(true);
 
     const connectedStats = getConnectedStats();
@@ -103,6 +106,7 @@ export function useLiveUserStats(): { stats: LiveUserStats | null; loading: bool
           walletBalance: wallet.balance ?? baseStats.walletBalance,
         });
         setLoading(false);
+        fetchingRef.current = false;
         return;
       } catch {
         // wallet API unavailable — fall through to baseline
@@ -111,9 +115,11 @@ export function useLiveUserStats(): { stats: LiveUserStats | null; loading: bool
 
     setStats(baseStats);
     setLoading(false);
+    fetchingRef.current = false;
   }, [authUserId, localTrips, localRating, localBalance]);
 
   useEffect(() => {
+    fetchingRef.current = false;
     void load();
   }, [load]);
 

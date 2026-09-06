@@ -34,6 +34,17 @@ export interface WalletStandingStepMeta {
   walletStatus: 'active' | 'limited' | 'frozen' | 'closed' | 'unavailable';
 }
 
+export interface ReviewHistoryItem {
+  id: string;
+  type: 'identity' | 'driver_documents';
+  status: 'pending' | 'approved' | 'rejected';
+  submittedAt: string;
+  reviewedAt: string | null;
+  failureReason: string | null;
+  providerReference: string | null;
+  documentReference: string | null;
+}
+
 export interface TrustCenterStatus {
   fetchedAt: string;
   verificationLevel: string;
@@ -41,6 +52,7 @@ export interface TrustCenterStatus {
   totalSteps: number;
   nextStepId: TrustStepId | null;
   blockedSteps: TrustStepId[];
+  reviewHistory: ReviewHistoryItem[];
   steps: {
     identity: TrustStepStatus<IdentityStepMeta>;
     email: TrustStepStatus<EmailStepMeta>;
@@ -223,6 +235,7 @@ export function buildFallbackTrustCenterStatus(user: FallbackTrustUser): TrustCe
     totalSteps: allSteps.length,
     nextStepId: pickNextStepId(steps),
     blockedSteps: allSteps.filter(step => step.state === 'failed').map(step => step.id),
+    reviewHistory: [],
     steps,
   };
 }

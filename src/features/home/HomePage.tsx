@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, ArrowLeft, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -50,6 +50,7 @@ export function HomePage() {
   const [tripMode, setTripMode] = useState<TripMode>('one-way');
   const [cookieConsented, setCookieConsented] = useState(false);
   const [cookieDeclined, setCookieDeclined] = useState(false);
+  const cookieBannerRef = useRef<HTMLDivElement | null>(null);
   const [liveCorridors, setLiveCorridors] = useState<LiveCorridor[]>([]);
   const [corridorsLoading, setCorridorsLoading] = useState(true);
 
@@ -125,6 +126,42 @@ export function HomePage() {
     setCookieDeclined(true);
     setCookieConsented(true); // hide banner
   };
+
+  // Cookie banner: Escape key dismissal + focus trap
+  useEffect(() => {
+    if (cookieConsented || cookieDeclined) {return;}
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        declineCookies();
+        return;
+      }
+      if (e.key !== 'Tab') {return;}
+      const banner = cookieBannerRef.current;
+      if (!banner) {return;}
+      const focusable = Array.from(
+        banner.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')
+      );
+      if (focusable.length === 0) {return;}
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cookieConsented, cookieDeclined]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'performance' in window) {
@@ -294,6 +331,7 @@ export function HomePage() {
         {/* Cookie banner — bottom position, non-blocking */}
         {!cookieConsented && !cookieDeclined && (
           <div
+            ref={cookieBannerRef}
             style={{
               position: 'fixed',
               bottom: 0,
@@ -313,6 +351,7 @@ export function HomePage() {
             }}
             role="dialog"
             aria-label={t('cookies.title')}
+            aria-modal="true"
           >
             <span
               style={{
@@ -371,6 +410,7 @@ export function HomePage() {
         {/* Sticky mobile CTA */}
         <div className="wasel-home-sticky-cta">
           <button
+            type="button"
             onClick={() => handleNavigate(primaryTripPath, 'sticky_find')}
             style={{
               height: 48,
@@ -387,6 +427,7 @@ export function HomePage() {
             {t('homeSections.findRideCTA')}
           </button>
           <button
+            type="button"
             onClick={() => handleNavigate('/offer-ride', 'sticky_offer')}
             style={{
               height: 48,
@@ -485,9 +526,9 @@ export function HomePage() {
 
           <TrustPagesSection ar={ar} onNavigate={handleNavigate} />
 
-          <StatsStrip ar={ar} />
-          <HowItWorksSection ar={ar} />
-          <TestimonialsSection ar={ar} />
+          <StatsStrip />
+          <HowItWorksSection />
+          <TestimonialsSection />
           <FinalCtaBanner ar={ar} onNavigate={handleNavigate} />
 
           {user ? (
@@ -518,16 +559,17 @@ export function HomePage() {
   );
 }
 
-function StatsStrip({ ar }: { ar: boolean }) {
+function StatsStrip() {
+  const { t } = useLanguage();
   const stats = [
-    { value: '4', label: ar ? 'تدفقات أساسية' : 'Core flows' },
-    { value: '5', label: ar ? 'فحوصات ثقة' : 'Trust checks' },
-    { value: '0', label: ar ? 'بيع بيانات' : 'Data resale' },
-    { value: ar ? 'مباشر' : 'Live', label: ar ? 'إشارات تجربة' : 'UX signals' },
+    { value: '4', label: t('homeSections.statCoreFlows') },
+    { value: '5', label: t('homeSections.statTrustChecks') },
+    { value: '0', label: t('homeSections.statDataResale') },
+    { value: t('homeSections.statUxSignalsValue'), label: t('homeSections.statUxSignals') },
   ];
 
   return (
-    <motion.section initial={false} className="wasel-home-section">
+    <motion.section initial={false} className="wasel-home-section" aria-label={t('homeSections.statsTitle')}>
       <div className="wasel-home-stats-strip">
         {stats.map(stat => (
           <div key={stat.label} className="wasel-home-stat-item">
@@ -540,27 +582,28 @@ function StatsStrip({ ar }: { ar: boolean }) {
   );
 }
 
-function HowItWorksSection({ ar }: { ar: boolean }) {
+function HowItWorksSection() {
+  const { t } = useLanguage();
   const steps = [
     {
       icon: Route,
-      title: ar ? 'اختار المسار' : 'Choose the corridor',
-      detail: ar ? 'ابدأ من عمّان، العقبة، إربد، الزرقاء، البحر الميت، البتراء، أو مسارك المحفوظ.' : 'Start with Amman, Aqaba, Irbid, Zarqa, Dead Sea, Petra, or your saved route.',
+      title: t('homeSections.howStep1Title'),
+      detail: t('homeSections.howStep1Detail'),
     },
     {
       icon: BarChart3,
-      title: ar ? 'قارن الخيارات' : 'Compare real options',
-      detail: ar ? 'شاهد المقاعد المتاحة، البديل المجدول، سعر المسار، وسياق الثقة معاً.' : 'See seat supply, scheduled fallback, route price, and trust context together.',
+      title: t('homeSections.howStep2Title'),
+      detail: t('homeSections.howStep2Detail'),
     },
     {
       icon: BadgeCheck,
-      title: ar ? 'أكد بثقة' : 'Confirm with confidence',
-      detail: ar ? 'احجز، اعرض مقاعد، أو أرسل طرداً فقط بعد ظهور التفاصيل الصحيحة.' : 'Book, offer seats, or send a parcel only after the right details are visible.',
+      title: t('homeSections.howStep3Title'),
+      detail: t('homeSections.howStep3Detail'),
     },
     {
       icon: Headphones,
-      title: ar ? 'تتبع وحل' : 'Track and resolve',
-      detail: ar ? 'التتبع المباشر، إثبات التسليم، حالة المحفظة، والدعم تبقى مرتبطة.' : 'Live tracking, handoff proof, wallet status, and support stay attached.',
+      title: t('homeSections.howStep4Title'),
+      detail: t('homeSections.howStep4Detail'),
     },
   ];
 
@@ -572,7 +615,7 @@ function HowItWorksSection({ ar }: { ar: boolean }) {
             <Play size={16} />
           </div>
           <h2 className="wasel-home-section-title">
-            {ar ? 'كيف يعمل Wasel' : 'How Wasel works'}
+            {t('homeSections.howItWorksTitle')}
           </h2>
         </div>
       </div>
@@ -597,24 +640,25 @@ function HowItWorksSection({ ar }: { ar: boolean }) {
   );
 }
 
-function TestimonialsSection({ ar }: { ar: boolean }) {
+function TestimonialsSection() {
+  const { t } = useLanguage();
   const testimonials = [
     {
-      text: ar ? 'أفضل طريقة للسفر بين المدن. الأسعار واضحة والسائقون موثوقون.' : 'Best way to travel between cities. Clear prices and trusted drivers.',
-      name: ar ? 'أحمد' : 'Ahmad',
-      role: ar ? 'راكب منتظم' : 'Regular rider',
+      text: t('homeSections.testimonial1Text'),
+      name: t('homeSections.testimonial1Name'),
+      role: t('homeSections.testimonial1Role'),
       stars: 5,
     },
     {
-      text: ar ? 'أعرض مقاعدي بسهولة وأحصل على طلبات موثوقة. التطبيق يثق في المستخدمين.' : 'I offer my seats easily and get trusted requests. The app trusts its users.',
-      name: ar ? 'سارة' : 'Sara',
-      role: ar ? 'سائقة' : 'Driver',
+      text: t('homeSections.testimonial2Text'),
+      name: t('homeSections.testimonial2Name'),
+      role: t('homeSections.testimonial2Role'),
       stars: 5,
     },
     {
-      text: ar ? 'أرسل طرودي مع إثبات التسليم. لم أعد أقلق على شحناتي.' : 'I send parcels with delivery proof. I no longer worry about my shipments.',
-      name: ar ? 'خالد' : 'Khaled',
-      role: ar ? 'مرسل طرود' : 'Parcel sender',
+      text: t('homeSections.testimonial3Text'),
+      name: t('homeSections.testimonial3Name'),
+      role: t('homeSections.testimonial3Role'),
       stars: 5,
     },
   ];
@@ -627,7 +671,7 @@ function TestimonialsSection({ ar }: { ar: boolean }) {
             <MessageSquareQuote size={16} />
           </div>
           <h2 className="wasel-home-section-title">
-            {ar ? 'ماذا يقول مستخدموا Wasel' : 'What Wasel users say'}
+            {t('homeSections.testimonialsTitle')}
           </h2>
         </div>
       </div>
@@ -657,16 +701,15 @@ function TestimonialsSection({ ar }: { ar: boolean }) {
 }
 
 function FinalCtaBanner({ ar, onNavigate }: { ar: boolean; onNavigate: (path: string, source?: string) => void }) {
+  const { t } = useLanguage();
   return (
     <motion.section initial={false} className="wasel-home-section">
       <div className="wasel-home-cta-banner">
         <h2 className="wasel-home-cta-title">
-          {ar ? 'ابدأ رحلتك مع Wasel اليوم' : 'Start your Wasel journey today'}
+          {t('homeSections.finalCtaTitle')}
         </h2>
         <p className="wasel-home-cta-subtitle">
-          {ar
-            ? 'انضم إلى آلاف المستخدمين الذين يثقون بـ Wasel للتنقل الذكي في الأردن.'
-            : 'Join thousands of users who trust Wasel for smart mobility across Jordan.'}
+          {t('homeSections.finalCtaSubtitle')}
         </p>
         <div className="wasel-home-cta-actions">
           <WaselButton
@@ -677,7 +720,7 @@ function FinalCtaBanner({ ar, onNavigate }: { ar: boolean; onNavigate: (path: st
             iconEnd={ar ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
             onClick={() => onNavigate('/find-ride', 'final_cta_find')}
           >
-            {ar ? 'اعرض المسارات المتاحة' : 'Find a lower-cost route'}
+            {t('homeSections.finalCtaFind')}
           </WaselButton>
           <WaselButton
             type="button"
@@ -687,7 +730,7 @@ function FinalCtaBanner({ ar, onNavigate }: { ar: boolean; onNavigate: (path: st
             onClick={() => onNavigate('/auth?tab=register', 'final_cta_register')}
             style={{ background: C.elevated, color: C.text, border: `1px solid ${C.border}` }}
           >
-            {ar ? 'أنشئ حسابا مجانيا' : 'Create free account'}
+            {t('homeSections.finalCtaRegister')}
           </WaselButton>
         </div>
       </div>

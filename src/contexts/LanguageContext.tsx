@@ -45,11 +45,14 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
 
   const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
-    try {
-      localStorage.setItem('wasel-language', lang);
-    } catch (error) {
-      console.error('Failed to save language to localStorage:', error);
-    }
+    // Defer localStorage write to avoid blocking render (e.g. Safari private mode)
+    setTimeout(() => {
+      try {
+        localStorage.setItem('wasel-language', lang);
+      } catch (error) {
+        console.error('Failed to save language to localStorage:', error);
+      }
+    }, 0);
 
     // Update HTML dir attribute
     setCurrentLang(lang);

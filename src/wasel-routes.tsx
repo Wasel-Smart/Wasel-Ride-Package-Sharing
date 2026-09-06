@@ -220,6 +220,7 @@ const LEGACY_APP_ALIASES = [
   '/legal/privacy',
   '/legal/terms',
   '/moderation',
+  '/schedule',
 ] as const;
 
 // ── Route children factory ────────────────────────────────────────────────────
@@ -371,6 +372,7 @@ const buildMainChildren = () => [
       { path: 'trust', lazy: lazy(() => import('./features/trust/TrustCenterPage')) },
       { path: 'driver', lazy: lazy(() => import('./features/driver/DriverPage')) },
       { path: 'safety', lazy: lazy(() => import('./features/safety/SafetyPage')) },
+      { path: 'schedule', lazy: lazy(() => import('./features/schedule/SchedulePage')) },
     ],
   },
 
@@ -422,11 +424,5 @@ export const waselRouter = createBrowserRouter([
     hydrateFallbackElement: <PageLoader />,
     errorElement: <RouteErrorFallback />,
     children: buildMainChildren() as any,
-  },
-  {
-    path: '*',
-    Component: NotFound,
-    hydrateFallbackElement: <PageLoader />,
-    errorElement: <RouteErrorFallback />,
   },
 ] as any);

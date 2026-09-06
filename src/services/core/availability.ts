@@ -239,14 +239,26 @@ export async function warmUpServer(): Promise<void> {
 
 let healthPollTimer: ReturnType<typeof setInterval> | null = null;
 
+function onVisibilityChange() {
+  if (document.visibilityState === 'visible') {
+    void probeBackendHealth();
+  }
+}
+
 export function startAvailabilityPolling(intervalMs = 60_000): () => void {
   if (healthPollTimer) {
     return () => stopAvailabilityPolling();
   }
 
   healthPollTimer = setInterval(() => {
-    void probeBackendHealth();
+    if (typeof document === 'undefined' || document.visibilityState !== 'hidden') {
+      void probeBackendHealth();
+    }
   }, intervalMs);
+
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', onVisibilityChange);
+  }
 
   return () => stopAvailabilityPolling();
 }
@@ -258,6 +270,10 @@ export function stopAvailabilityPolling(): void {
 
   clearInterval(healthPollTimer);
   healthPollTimer = null;
+
+  if (typeof document !== 'undefined') {
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+  }
 }
 
 warmUpServer().catch(() => {

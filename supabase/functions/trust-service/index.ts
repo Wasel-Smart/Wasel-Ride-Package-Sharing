@@ -89,6 +89,40 @@ function computeTrustStepSummary(steps: Record<string, { id: string; state: stri
   };
 }
 
+async function buildReviewHistory(auth: Awaited<ReturnType<typeof authenticateRequest>>) {
+  if ('error' in auth) return [];
+
+  const { data, error } = await auth.admin
+    .from('verification_records')
+    .select('verification_id, sanad_status, document_status, verification_level, verification_timestamp, provider_reference, document_reference, failure_reason, updated_at')
+    .eq('user_id', auth.canonicalUser.id)
+    .order('verification_timestamp', { ascending: false })
+    .limit(20);
+
+  if (error) throw new Error(error.message);
+
+  const items = (data ?? []).map((row: any) => {
+    const status = row.sanad_status === 'verified' || row.document_status === 'verified'
+      ? 'approved'
+      : row.sanad_status === 'rejected' || row.document_status === 'rejected'
+        ? 'rejected'
+        : 'pending';
+
+    return {
+      id: row.verification_id,
+      type: row.document_status ? 'driver_documents' : 'identity' as const,
+      status,
+      submittedAt: row.verification_timestamp,
+      reviewedAt: row.updated_at ?? null,
+      failureReason: row.failure_reason ?? null,
+      providerReference: row.provider_reference ?? null,
+      documentReference: row.document_reference ?? null,
+    };
+  });
+
+  return items;
+}
+
 function buildTrustStep(id: string, state: string, detail: string, meta: Record<string, unknown>, options?: { failureReason?: string | null; updatedAt?: string | null }) {
   return { id, state, detail, failureReason: options?.failureReason ?? null, updatedAt: options?.updatedAt ?? null, meta };
 }
@@ -176,6 +210,15 @@ async function handleTrustRequest(request: Request, path: string) {
       const status = await buildTrustStatus(auth);
       if (!status) return json({ error: 'Unable to load trust status' }, 500);
       return json(status);
+    } catch (error) {
+      return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+    }
+  }
+
+  if (request.method === 'GET' && (path === '/trust/review-history' || path === '/v1/trust/review-history')) {
+    try {
+      const items = await buildReviewHistory(auth);
+      return json({ items });
     } catch (error) {
       return json({ error: error instanceof Error ? error.message : String(error) }, 500);
     }

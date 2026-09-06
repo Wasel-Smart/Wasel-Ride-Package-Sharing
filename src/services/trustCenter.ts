@@ -9,7 +9,7 @@ import {
   submitDirectTrustDriverDocuments,
   submitDirectTrustIdentityVerification,
 } from './directSupabase';
-import { buildFallbackTrustCenterStatus, type TrustCenterStatus } from './trustCenterModel';
+import { buildFallbackTrustCenterStatus, type ReviewHistoryItem, type TrustCenterStatus } from './trustCenterModel';
 
 function toErrorMessage ( error: unknown ): string {
   if ( error instanceof Error ) { return error.message; }
@@ -85,6 +85,35 @@ export async function getTrustCenterStatus ( user?: WaselUser | null ): Promise<
       return buildFallbackTrustCenterStatus( user );
     }
     throw new Error( toErrorMessage( error ), { cause: error } );
+  }
+}
+
+export async function fetchReviewHistory (): Promise<ReviewHistoryItem[]> {
+  if ( !supabase ) {
+    return [];
+  }
+
+  let session;
+  try {
+    const result = await supabase.auth.getSession();
+    session = result.data?.session ?? null;
+  } catch {
+    return [];
+  }
+
+  if ( !session ) {
+    return [];
+  }
+
+  try {
+    const payload = await requestEdgeJson<{ items: ReviewHistoryItem[] }>( {
+      path: '/v1/trust/review-history',
+      authMode: 'required',
+      operation: 'Trust Center review history',
+    } );
+    return payload.items ?? [];
+  } catch {
+    return [];
   }
 }
 
