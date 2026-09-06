@@ -185,7 +185,7 @@ export function PWAInstallPrompt() {
           </WaselButton>
           <WaselButton
             size="sm"
-            onClick={handleInstall}
+            onClick={() => handleInstall()}
             aria-label={tx('pWAInstallPrompt.install_wasel_app')}
             style={{
               minHeight: 36,
