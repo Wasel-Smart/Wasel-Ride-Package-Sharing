@@ -2,15 +2,6 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import TestRenderer from 'react-test-renderer';
 
-jest.mock('@expo/vector-icons', () => ({
-  Ionicons: 'Ionicons',
-}));
-
-jest.mock('expo-haptics', () => ({
-  impactAsync: jest.fn(),
-  ImpactFeedbackStyle: { Light: 0, Medium: 1, Heavy: 2 },
-}));
-
 import {
   ScreenShell,
   SectionHeader,

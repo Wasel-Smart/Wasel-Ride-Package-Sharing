@@ -14,7 +14,9 @@ function currentSanadStatus(value?: string | null) {
 }
 
 function generateOtpCode(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return String(100000 + (buf[0] % 900000));
 }
 
 async function hashOtpCode(code: string): Promise<string> {
