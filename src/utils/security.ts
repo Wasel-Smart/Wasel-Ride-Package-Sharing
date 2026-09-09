@@ -314,7 +314,8 @@ export function validateJordanPhone(phone: string): boolean {
 export function validateURL(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    // Only allow HTTPS in all environments — HTTP is never safe for API URLs
+    return parsed.protocol === 'https:';
   } catch {
     return false;
   }

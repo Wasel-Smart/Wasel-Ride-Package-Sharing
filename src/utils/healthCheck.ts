@@ -159,12 +159,14 @@ export async function verifyBackendConnection(): Promise<{ connected: boolean; m
 
     return {
       connected: false,
+      // Return generic service names only — never include internal error details
       message: `Backend services unavailable: ${failedServices.join(', ')}`,
     };
-  } catch (error) {
+  } catch {
+    // Do not propagate internal error messages to callers
     return {
       connected: false,
-      message: error instanceof Error ? error.message : 'Backend connection failed',
+      message: 'Backend connection failed',
     };
   }
 }

@@ -110,7 +110,8 @@ export class WaselError extends Error {
       userMessage: this.userMessage,
       retryable: this.retryable,
       timestamp: this.timestamp,
-      stack: this.stack,
+      // Stack traces are intentionally omitted from serialized output to
+      // prevent internal path/module disclosure in API responses and logs.
     };
   }
 }

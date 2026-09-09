@@ -174,9 +174,15 @@ export function normalizeTextTree<T>(value: T): T {
   }
 
   if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value as UnknownRecord).map(([key, item]) => [key, normalizeTextTree(item)]),
-    ) as T;
+    // Use Object.create(null) as the accumulator to avoid prototype pollution
+    // when iterating over untrusted data that may contain __proto__ keys.
+    const result = Object.create(null) as Record<string, unknown>;
+    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+      // Skip prototype-polluting keys
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {continue;}
+      result[key] = normalizeTextTree(item);
+    }
+    return result as T;
   }
 
   return value;

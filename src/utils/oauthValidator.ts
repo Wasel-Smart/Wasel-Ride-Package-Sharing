@@ -80,10 +80,12 @@ export async function validateOAuthProvider(
  */
 function classifyConfigError(message: string, provider: OAuthProvider): string {
   const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+  // Classify by pattern only — never reflect the raw error message back to
+  // the caller to avoid leaking internal OAuth configuration details.
   const lower = message.toLowerCase();
 
   if (lower.includes('redirect_uri') || lower.includes('redirect uri') || lower.includes('uri not allowed')) {
-    return `${providerName} redirect URI is not whitelisted. Add "${getExpectedRedirectUri()}" to your ${provider === 'facebook' ? 'Facebook Developer Console' : 'Google Cloud Console'} > Valid OAuth Redirect URIs.`;
+    return `${providerName} redirect URI is not whitelisted. Add the Supabase callback URL to your ${provider === 'facebook' ? 'Facebook Developer Console' : 'Google Cloud Console'} > Valid OAuth Redirect URIs.`;
   }
 
   if (lower.includes('client_id') || lower.includes('client id') || lower.includes('invalid_client')) {
@@ -98,7 +100,8 @@ function classifyConfigError(message: string, provider: OAuthProvider): string {
     return `${providerName} provider is not enabled in Supabase Dashboard > Authentication > Providers.`;
   }
 
-  return `${providerName} OAuth configuration error: ${message}`;
+  // Return a generic message — do NOT include the raw error string
+  return `${providerName} OAuth configuration error. Check your Supabase Dashboard > Authentication > Providers > ${providerName}.`;
 }
 
 /**

@@ -133,6 +133,11 @@ class GDPRCompliance {
         throw new Error('Supabase not initialized');
       }
 
+      // Validate userId is a UUID before using it in a storage path
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+        throw new Error('Invalid userId format');
+      }
+
       const [profile, bookings, packages, transactions, consents] = await Promise.all([
         supabase.from('users').select('*').eq('id', userId).maybeSingle(),
         supabase.from('ride_bookings').select('*').eq('passenger_id', userId),

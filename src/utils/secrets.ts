@@ -11,15 +11,10 @@ interface SecretConfig {
   fallbackEnvVar?: string;
 }
 
-interface SecretsCache {
-  [key: string]: {
-    value: string;
-    expiresAt: number;
-  };
-}
-
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-const secretsCache: SecretsCache = Object.create(null) as SecretsCache;
+// Use a Map instead of a plain object to prevent prototype-pollution attacks
+// where a caller passes '__proto__' or 'constructor' as a key.
+const secretsCacheMap = new Map<string, { value: string; expiresAt: number }>();
 
 /**
  * Secret keys that should never be exposed to the client
@@ -60,11 +55,11 @@ function validateSecretAccess(key: string): void {
  * Get secret from cache if not expired
  */
 function getCachedSecret(key: string): string | null {
-  const cached = secretsCache[key];
+  const cached = secretsCacheMap.get(key);
   if (!cached) {return null;}
 
   if (Date.now() > cached.expiresAt) {
-    delete secretsCache[key];
+    secretsCacheMap.delete(key);
     return null;
   }
 
@@ -75,10 +70,10 @@ function getCachedSecret(key: string): string | null {
  * Cache secret with TTL
  */
 function cacheSecret(key: string, value: string): void {
-  secretsCache[key] = {
+  secretsCacheMap.set(key, {
     value,
     expiresAt: Date.now() + CACHE_TTL_MS,
-  };
+  });
 }
 
 /**
@@ -190,9 +185,7 @@ export async function getSecrets(
  * Clear secrets cache (useful for testing or security)
  */
 export function clearSecretsCache(): void {
-  Object.keys(secretsCache).forEach(key => {
-    delete secretsCache[key];
-  });
+  secretsCacheMap.clear();
 }
 
 /**
@@ -270,7 +263,7 @@ export async function getCommunicationWorkerSecret(): Promise<string> {
  * Rotate secret (invalidate cache)
  */
 export function rotateSecret(key: string): void {
-  delete secretsCache[key];
+  secretsCacheMap.delete(key);
 }
 
 export const SecretsManager = {

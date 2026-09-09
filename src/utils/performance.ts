@@ -456,8 +456,21 @@ function sendToAnalytics(vital: WebVital) {
   }
 
   // Send to custom analytics endpoint
-  if (import.meta.env.VITE_ANALYTICS_ENDPOINT) {
-    fetch(import.meta.env.VITE_ANALYTICS_ENDPOINT, {
+  const analyticsEndpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT as string | undefined;
+  if (analyticsEndpoint) {
+    // Validate the endpoint is a safe HTTPS URL before sending to prevent SSRF
+    let parsedEndpoint: URL;
+    try {
+      parsedEndpoint = new URL(analyticsEndpoint);
+    } catch {
+      return;
+    }
+    if (parsedEndpoint.protocol !== 'https:') {return;}
+    // Block private/loopback ranges
+    const h = parsedEndpoint.hostname;
+    if (/^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|localhost$|::1$)/i.test(h)) {return;}
+
+    fetch(parsedEndpoint.toString(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
