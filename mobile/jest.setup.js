@@ -75,6 +75,70 @@ jest.mock('expo-device', () => ({
   osVersion: '17.0',
 }));
 
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: () => null,
+  FontAwesome: () => null,
+  MaterialIcons: () => null,
+}));
+
+const RN = require('react-native');
+
+jest.mock('react-native', () => {
+  const React = require('react');
+
+  const createPassThrough = (name) => {
+    const Component = ({ children, ...props }) => {
+      if (children) {
+        return React.createElement(React.Fragment, null, children);
+      }
+      return null;
+    };
+    Component.displayName = name;
+    return Component;
+  };
+
+  return {
+    ...RN,
+    View: createPassThrough('View'),
+    Text: createPassThrough('Text'),
+    TouchableOpacity: createPassThrough('TouchableOpacity'),
+    TouchableWithoutFeedback: createPassThrough('TouchableWithoutFeedback'),
+    Pressable: createPassThrough('Pressable'),
+    Image: createPassThrough('Image'),
+    ImageBackground: createPassThrough('ImageBackground'),
+    ScrollView: createPassThrough('ScrollView'),
+    FlatList: createPassThrough('FlatList'),
+    ActivityIndicator: createPassThrough('ActivityIndicator'),
+    TextInput: createPassThrough('TextInput'),
+    KeyboardAvoidingView: createPassThrough('KeyboardAvoidingView'),
+    SafeAreaView: createPassThrough('SafeAreaView'),
+    StatusBar: createPassThrough('StatusBar'),
+    RefreshControl: createPassThrough('RefreshControl'),
+    SectionList: createPassThrough('SectionList'),
+    VirtualizedList: createPassThrough('VirtualizedList'),
+    Switch: createPassThrough('Switch'),
+    Slider: createPassThrough('Slider'),
+    WebView: createPassThrough('WebView'),
+    StyleSheet: {
+      create: (styles) => styles,
+      flatten: (style) => style,
+      hairlineWidth: 1,
+    },
+    Platform: {
+      OS: 'ios',
+      select: (obj) => obj.ios || obj.default,
+    },
+    Dimensions: {
+      get: () => ({ width: 375, height: 812 }),
+      addEventListener: jest.fn(),
+    },
+    PixelRatio: {
+      getFontScale: jest.fn(() => 1),
+      getPixelSizeForLayoutSize: jest.fn((size) => size),
+    },
+  };
+});
+
 jest.mock('expo-constants', () => ({
   __esModule: true,
   default: {
