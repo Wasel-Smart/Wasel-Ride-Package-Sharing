@@ -101,7 +101,7 @@ describe('auth.test.ts', () => {
     });
 
     const { authAPI: api } = await import('../../src/services/auth');
-    await expect(api.signUp('test@example.com', 'pass', 'J', 'D', '')).rejects.toThrow('Password is too weak. Please choose a stronger password.');
+    await expect(api.signUp({ email: 'test@example.com', password: 'pass', firstName: 'J', lastName: 'D', phone: '' })).rejects.toThrow('Password is too weak. Please choose a stronger password.');
   });
 
   it('signUp normalizes signup disabled error', async () => {
@@ -111,7 +111,7 @@ describe('auth.test.ts', () => {
     });
 
     const { authAPI: api } = await import('../../src/services/auth');
-    await expect(api.signUp('test@example.com', 'pass', 'J', 'D', '')).rejects.toThrow('Sign-up is currently disabled. Please contact support.');
+    await expect(api.signUp({ email: 'test@example.com', password: 'pass', firstName: 'J', lastName: 'D', phone: '' })).rejects.toThrow('Sign-up is currently disabled. Please contact support.');
   });
 
   it('signUp with valid data', async () => {
@@ -121,13 +121,14 @@ describe('auth.test.ts', () => {
     });
 
     const { authAPI: api } = await import('../../src/services/auth');
-    const result = await api.signUp('test@example.com', 'password123', 'John', 'Doe', '+962770000000');
+    const result = await api.signUp({ email: 'test@example.com', password: 'password123', firstName: 'John', lastName: 'Doe', phone: '+962770000000' });
 
     expect(mockSupabase.auth.signUp).toHaveBeenCalledWith({
       email: 'test@example.com',
       password: 'password123',
       options: expect.objectContaining({
         data: { full_name: 'John Doe', phone: '+962770000000' },
+        emailRedirectTo: expect.any(String),
       }),
     });
     expect(result.user?.id).toBe('user-1');
@@ -140,7 +141,7 @@ describe('auth.test.ts', () => {
     });
 
     const { authAPI: api } = await import('../../src/services/auth');
-    await expect(api.signUp('test@example.com', 'pass', 'J', 'D', '')).rejects.toThrow('This email is already registered.');
+    await expect(api.signUp({ email: 'test@example.com', password: 'pass', firstName: 'J', lastName: 'D', phone: '' })).rejects.toThrow('This email is already registered.');
   });
 
   it('signOut', async () => {
@@ -179,7 +180,7 @@ describe('auth.test.ts', () => {
     });
 
     const { authAPI: api } = await import('../../src/services/auth');
-    await api.signUp('test@example.com', 'password', 'John', 'Doe', '');
+    await api.signUp({ email: 'test@example.com', password: 'password', firstName: 'John', lastName: 'Doe', phone: '' });
 
     const callArgs = mockSupabase.auth.signUp.mock.calls[0];
     expect((callArgs as unknown as any[])[0].options.data).toEqual({ full_name: 'John Doe' });

@@ -20,9 +20,7 @@ describe('bookings.test.ts', () => {
 
   it('createBooking passes correct fields to edge', async () => {
     const { bookingsAPI: api } = await import('@/services/bookings');
-    const result = await api.createBooking('trip-1', 2, 'pickup-stop', 'dropoff-stop', {
-      notes: 'hello',
-    });
+    const result = await api.createBooking({ tripId: 'trip-1', seatsRequested: 2, pickup: 'pickup-stop', dropoff: 'dropoff-stop', metadata: { notes: 'hello' } });
 
     expect(result).toEqual({
       trip_id: 'trip-1',
