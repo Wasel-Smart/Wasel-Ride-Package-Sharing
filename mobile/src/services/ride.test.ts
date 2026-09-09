@@ -25,13 +25,18 @@ jest.mock('../services/offline', () => ({
   },
 }));
 
-const mockFetch = jest.fn() as jest.Mock;
-const originalFetch = globalThis.fetch;
-Object.defineProperty(globalThis, 'fetch', {
-  value: mockFetch,
-  writable: true,
-  configurable: true,
-});
+const mockApiClient = {
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn(),
+  patch: jest.fn(),
+  delete: jest.fn(),
+  request: jest.fn(),
+};
+
+jest.mock('../lib/api', () => ({
+  apiClient: mockApiClient,
+}));
 
 jest.mock('../services/auth', () => ({
   mobileAuth: {
@@ -48,11 +53,6 @@ beforeAll(() => {
 
 afterAll(() => {
   delete process.env.EXPO_PUBLIC_API_URL;
-  Object.defineProperty(globalThis, 'fetch', {
-    value: originalFetch,
-    writable: true,
-    configurable: true,
-  });
 });
 
 describe('RideLifecycleService', () => {
@@ -90,22 +90,23 @@ describe('RideLifecycleService', () => {
     });
 
     it('sends request to API and returns ride on success', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ride: { id: 'ride-1', status: 'requested', origin_address: 'Amman' } }),
+      mockApiClient.post.mockResolvedValueOnce({
+        data: { ride: { id: 'ride-1', status: 'requested', origin_address: 'Amman' } },
+        error: null,
+        status: 200,
       });
 
       const result = await service.requestRide(validRequest);
       expect(result.ride).toBeDefined();
       expect(result.ride?.id).toBe('ride-1');
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockApiClient.post).toHaveBeenCalledWith(
         expect.stringContaining('/trips'),
         expect.objectContaining({ method: 'POST' }),
       );
     });
 
     it('returns error on API failure', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Internal Server Error' });
+      mockApiClient.post.mockResolvedValueOnce({ data: null, error: new Error('Server error'), status: 500 });
 
       const result = await service.requestRide(validRequest);
       expect(result.error).toBeDefined();
@@ -125,11 +126,11 @@ describe('RideLifecycleService', () => {
     });
 
     it('sends cancel request to API on success', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({}) });
+      mockApiClient.post.mockResolvedValueOnce({ data: {}, error: null, status: 200 });
 
       const result = await service.cancelRide('ride-1');
       expect(result).toEqual({});
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockApiClient.post).toHaveBeenCalledWith(
         expect.stringContaining('/cancellations/bookings'),
         expect.objectContaining({ method: 'POST' }),
       );
@@ -149,7 +150,7 @@ describe('RideLifecycleService', () => {
     });
 
     it('sends rating to API on success', async () => {
-      mockFetch.mockResolvedValueOnce({ ok: true, status: 200, json: async () => ({}) });
+      mockApiClient.post.mockResolvedValueOnce({ data: {}, error: null, status: 200 });
 
       const result = await service.rateRide('ride-1', 5, 'Great ride');
       expect(result).toEqual({});
@@ -168,9 +169,10 @@ describe('RideLifecycleService', () => {
     });
 
     it('returns null when no active ride online', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ride: null }),
+      mockApiClient.get.mockResolvedValueOnce({
+        data: { ride: null },
+        error: null,
+        status: 200,
       });
 
       const ride = await service.getActiveRide();
@@ -189,9 +191,10 @@ describe('RideLifecycleService', () => {
     });
 
     it('returns rides from API on success', async () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ rides: [{ id: 'ride-1', status: 'completed', origin_address: 'Amman' }] }),
+      mockApiClient.get.mockResolvedValueOnce({
+        data: { rides: [{ id: 'ride-1', status: 'completed', origin_address: 'Amman' }] },
+        error: null,
+        status: 200,
       });
 
       const rides = await service.getRideHistory();

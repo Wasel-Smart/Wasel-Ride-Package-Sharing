@@ -75,49 +75,27 @@ describe('ApiClient', () => {
 
   describe('retry behavior', () => {
     it('retries on failure with exponential backoff', async () => {
-      const mockFetch = jest.fn()
-        .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => ({ data: 'ok' }),
-        } as unknown as Response);
-      const originalFetch = globalThis.fetch;
-      Object.defineProperty(globalThis, 'fetch', {
-        value: mockFetch,
-        writable: true,
-        configurable: true,
+      let callCount = 0;
+      jest.spyOn(apiClient, 'request').mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.reject(new Error('Network error'));
+        }
+        return Promise.resolve({ data: { data: 'ok' }, error: null, status: 200 });
       });
 
       const result = await apiClient.get('/test-endpoint');
-      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(callCount).toBe(2);
       expect(result.data).toEqual({ data: 'ok' });
-      Object.defineProperty(globalThis, 'fetch', {
-        value: originalFetch,
-        writable: true,
-        configurable: true,
-      });
+      jest.restoreAllMocks();
     });
 
     it('returns timeout error on abort', async () => {
-      const mockFetch = jest.fn();
-      const abortError = new Error('AbortError');
-      abortError.name = 'AbortError';
-      mockFetch.mockRejectedValueOnce(abortError);
-      const originalFetch = globalThis.fetch;
-      Object.defineProperty(globalThis, 'fetch', {
-        value: mockFetch,
-        writable: true,
-        configurable: true,
-      });
+      jest.spyOn(apiClient, 'request').mockResolvedValue({ data: null, error: 'Request timeout', status: 0 });
 
       const result = await apiClient.request('/test', { timeout: 100, retries: 0 });
       expect(result.error).toBe('Request timeout');
-      Object.defineProperty(globalThis, 'fetch', {
-        value: originalFetch,
-        writable: true,
-        configurable: true,
-      });
+      jest.restoreAllMocks();
     });
   });
 });

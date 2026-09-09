@@ -114,7 +114,7 @@ describe('MobileErrorBoundary', () => {
 
     const resetButton = screen.getByRole('button', { name: 'حاول مرة ثانية' });
     await act(async () => {
-      resetButton.props.onPress();
+      resetButton.props.onPress?.();
     });
 
     expect(screen.queryByText('حدث خطأ غير متوقع')).toBeNull();
