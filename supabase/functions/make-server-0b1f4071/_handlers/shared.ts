@@ -843,7 +843,7 @@ export async function fetchDriverProfiles (
 }
 
 
-export async async ensureMobilitySeed ( admin: ReturnType<typeof getAdminClient> ) {
+export async ensureMobilitySeed ( admin: ReturnType<typeof getAdminClient> ) {
   if ( SUPABASE_DB_URL ) {
     await executeSqlStatements( EVENT_OUTBOX_SQL ).catch( () => undefined );
   }
@@ -948,7 +948,7 @@ export hasTwilioVerifyRuntime (): boolean {
   return Boolean( deliveryEnv.twilioAccountSid && TWILIO_VERIFY_SERVICE_SID && getTwilioAuthPair() );
 }
 
-export async async callTwilioVerify ( path: string, params: URLSearchParams ) {
+export async callTwilioVerify ( path: string, params: URLSearchParams ) {
   const authPair = getTwilioAuthPair();
   if ( !authPair || !deliveryEnv.twilioAccountSid || !TWILIO_VERIFY_SERVICE_SID ) {
     return {
@@ -982,7 +982,7 @@ export async async callTwilioVerify ( path: string, params: URLSearchParams ) {
   };
 }
 
-export async async startTwilioPhoneVerification ( phoneNumber: string ) {
+export async startTwilioPhoneVerification ( phoneNumber: string ) {
   const result = await callTwilioVerify(
     '/Verifications',
     new URLSearchParams( {
@@ -999,7 +999,7 @@ export async async startTwilioPhoneVerification ( phoneNumber: string ) {
   };
 }
 
-export async async checkTwilioPhoneVerification ( phoneNumber: string, code: string ) {
+export async checkTwilioPhoneVerification ( phoneNumber: string, code: string ) {
   const result = await callTwilioVerify(
     '/VerificationCheck',
     new URLSearchParams( {
@@ -1016,7 +1016,7 @@ export async async checkTwilioPhoneVerification ( phoneNumber: string, code: str
   };
 }
 
-export async async hashOtpCode ( code: string ): Promise<string> {
+export async hashOtpCode ( code: string ): Promise<string> {
   const digest = await crypto.subtle.digest( 'SHA-256', new TextEncoder().encode( code ) );
   return Array.from( new Uint8Array( digest ) )
     .map( ( chunk ) => chunk.toString( 16 ).padStart( 2, '0' ) )
@@ -1044,7 +1044,7 @@ export buildTrustStep ( id: string, state: string, detail: string, meta: Record<
   updatedAt?: string | null;
 } ) {
 
-export async async buildTrustStatus (
+export async buildTrustStatus (
   auth: Awaited<ReturnType<typeof authenticateRequest>>,
 ) {
   if ( 'error' in auth ) {
@@ -1381,14 +1381,14 @@ export async async buildTrustStatus (
   };
 }
 
-export async async stripeApiRequest (
+export async stripeApiRequest (
   path: string,
   init?: {
     method?: 'GET' | 'POST';
     params?: URLSearchParams;
   },
 
-export async async getExistingStripeCustomerId (
+export async getExistingStripeCustomerId (
   admin: ReturnType<typeof getAdminClient>,
   userId: string,
 ): Promise<string | null> {
@@ -1407,12 +1407,12 @@ export async async getExistingStripeCustomerId (
   return data?.stripe_customer_id ? String( data.stripe_customer_id ) : null;
 }
 
-export async async ensureStripeCustomer ( input: {
+export async ensureStripeCustomer ( input: {
   admin: ReturnType<typeof getAdminClient>;
   canonicalUser: { id: string; email?: string | null; full_name?: string | null; phone_number?: string | null };
 } ): Promise<string> {
 
-export async async fetchStripeSubscription ( subscriptionId: string ) {
+export async fetchStripeSubscription ( subscriptionId: string ) {
   const params = new URLSearchParams();
   params.append( 'expand[]', 'items.data.price.product' );
   return stripeApiRequest( `/v1/subscriptions/${ encodeURIComponent( subscriptionId ) }`, {
@@ -1460,7 +1460,7 @@ export buildSubscriptionRecord (
   };
 }
 
-export async async getCanonicalUserIdForSubscription (
+export async getCanonicalUserIdForSubscription (
   admin: ReturnType<typeof getAdminClient>,
   subscription: Record<string, unknown>,
 ): Promise<string | null> {
@@ -1485,13 +1485,13 @@ export async async getCanonicalUserIdForSubscription (
   return data?.user_id ? String( data.user_id ) : null;
 }
 
-export async async syncStripeSubscriptionRecord ( input: {
+export async syncStripeSubscriptionRecord ( input: {
   admin: ReturnType<typeof getAdminClient>;
   subscription: Record<string, unknown>;
   planOverride?: string | null;
 } ) {
 
-export async async getWalletSubscription (
+export async getWalletSubscription (
   admin: ReturnType<typeof getAdminClient>,
   userId: string,
 ) {
@@ -1680,7 +1680,7 @@ export buildWalletPayload (
   };
 }
 
-export async async ensureWalletForUser ( admin: ReturnType<typeof getAdminClient>, userId: string ): Promise<WalletRow> {
+export async ensureWalletForUser ( admin: ReturnType<typeof getAdminClient>, userId: string ): Promise<WalletRow> {
   const { data: existing, error: existingError } = await admin
     .from( 'wallets' )
     .select( '*' )
@@ -1707,7 +1707,7 @@ export async async ensureWalletForUser ( admin: ReturnType<typeof getAdminClient
   return created as WalletRow;
 }
 
-export async async loadWalletDetails ( admin: ReturnType<typeof getAdminClient>, userId: string ) {
+export async loadWalletDetails ( admin: ReturnType<typeof getAdminClient>, userId: string ) {
   const wallet = await ensureWalletForUser( admin, userId );
   const [ { data: transactions, error: transactionsError }, { data: paymentMethods, error: paymentMethodsError }, subscription ] = await Promise.all( [
     admin
@@ -1736,7 +1736,7 @@ export async async loadWalletDetails ( admin: ReturnType<typeof getAdminClient>,
   };
 }
 
-export async async loadWalletPayload ( admin: ReturnType<typeof getAdminClient>, userId: string ) {
+export async loadWalletPayload ( admin: ReturnType<typeof getAdminClient>, userId: string ) {
   const details = await loadWalletDetails( admin, userId );
   return buildWalletPayload(
     details.wallet,
@@ -1746,7 +1746,7 @@ export async async loadWalletPayload ( admin: ReturnType<typeof getAdminClient>,
   );
 }
 
-export async async authenticateWalletRequest ( request: Request, requestedUserId: string ) {
+export async authenticateWalletRequest ( request: Request, requestedUserId: string ) {
   const auth = await authenticateRequest( request );
   if ( 'error' in auth ) return auth;
   if ( !matchesAuthenticatedUser( auth, requestedUserId ) ) {
@@ -1784,13 +1784,13 @@ export timingSafeEqual ( left: Uint8Array, right: Uint8Array ): boolean {
   return diff === 0;
 }
 
-export async async hashLegacyWalletPin ( pin: string ): Promise<string> {
+export async hashLegacyWalletPin ( pin: string ): Promise<string> {
   const bytes = new TextEncoder().encode( `wasel-wallet-pin:${ pin }` );
   const digest = await crypto.subtle.digest( 'SHA-256', bytes );
   return toHex( new Uint8Array( digest as ArrayBuffer ) );
 }
 
-export async async hashWalletPin ( pin: string ): Promise<string> {
+export async hashWalletPin ( pin: string ): Promise<string> {
   const salt = crypto.getRandomValues( new Uint8Array( 16 ) );
   const iterations = 210_000;
   const key = await crypto.subtle.importKey(
@@ -1808,7 +1808,7 @@ export async async hashWalletPin ( pin: string ): Promise<string> {
   return `pbkdf2_sha256$${ iterations }$${ toHex( salt ) }$${ toHex( new Uint8Array( derivedBits ) ) }`;
 }
 
-export async async verifyWalletPinHash ( pin: string, storedHash?: string | null ): Promise<boolean> {
+export async verifyWalletPinHash ( pin: string, storedHash?: string | null ): Promise<boolean> {
   if ( !storedHash ) return false;
   const parts = storedHash.split( '$' );
   if ( parts.length !== 4 || parts[ 0 ] !== 'pbkdf2_sha256' ) {
@@ -1838,7 +1838,7 @@ export async async verifyWalletPinHash ( pin: string, storedHash?: string | null
   return timingSafeEqual( new Uint8Array( derivedBits ), expected );
 }
 
-export async async resolveWalletRecipient ( admin: ReturnType<typeof getAdminClient>, recipientId: string ) {
+export async resolveWalletRecipient ( admin: ReturnType<typeof getAdminClient>, recipientId: string ) {
   const recipient = recipientId.trim();
   if ( !recipient ) return null;
 
@@ -1862,7 +1862,7 @@ export async async resolveWalletRecipient ( admin: ReturnType<typeof getAdminCli
   return data?.id ? String( data.id ) : null;
 }
 
-export async async createPendingTopUpTransaction (
+export async createPendingTopUpTransaction (
   admin: ReturnType<typeof getAdminClient>,
   walletId: string,
   amountJod: number,
@@ -1896,7 +1896,7 @@ export async async createPendingTopUpTransaction (
   };
 }
 
-export async async updateTopUpTransactionMetadata (
+export async updateTopUpTransactionMetadata (
   admin: ReturnType<typeof getAdminClient>,
   transactionId: string,
   metadataPatch: Record<string, unknown>,
@@ -1925,7 +1925,7 @@ export async async updateTopUpTransactionMetadata (
   }
 }
 
-export async async markTopUpTransactionFailed (
+export async markTopUpTransactionFailed (
   admin: ReturnType<typeof getAdminClient>,
   transactionId: string,
   externalReference: string | null,
@@ -1966,7 +1966,7 @@ export async async markTopUpTransactionFailed (
   }
 }
 
-export async async finalizeTopUpTransaction (
+export async finalizeTopUpTransaction (
   transactionId: string,
   externalReference: string,
   providerPayload: unknown,
@@ -2029,7 +2029,7 @@ export async async finalizeTopUpTransaction (
   }
 }
 
-export async async createStripeCheckoutSession ( input: {
+export async createStripeCheckoutSession ( input: {
   amountJod: number;
   paymentMethod: string;
   transactionId: string;
@@ -2038,14 +2038,14 @@ export async async createStripeCheckoutSession ( input: {
   request: Request;
 } ) {
 
-export async async createStripeSubscriptionCheckoutSession ( input: {
+export async createStripeSubscriptionCheckoutSession ( input: {
   admin: ReturnType<typeof getAdminClient>;
   canonicalUser: { id: string; email?: string | null; full_name?: string | null; phone_number?: string | null };
   planName: string;
   request: Request;
 } ) {
 
-export async async createCliqCheckoutSession ( input: {
+export async createCliqCheckoutSession ( input: {
   transactionId: string;
   amountJod: number;
   currency: string;
@@ -2061,11 +2061,11 @@ export constantTimeEquals ( left: string, right: string ): boolean {
   return mismatch === 0;
 }
 
-export async async computeStripeSignature ( secret: string, payload: string, timestamp: string ): Promise<string> {
+export async computeStripeSignature ( secret: string, payload: string, timestamp: string ): Promise<string> {
   return computeHmacHex( secret, `${ timestamp }.${ payload }` );
 }
 
-export async async computeHmacHex ( secret: string, payload: string ): Promise<string> {
+export async computeHmacHex ( secret: string, payload: string ): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     'raw',
@@ -2080,7 +2080,7 @@ export async async computeHmacHex ( secret: string, payload: string ): Promise<s
     .join( '' );
 }
 
-export async async verifyStripeWebhookSignature ( payload: string, signatureHeader: string | null ): Promise<boolean> {
+export async verifyStripeWebhookSignature ( payload: string, signatureHeader: string | null ): Promise<boolean> {
   if ( !STRIPE_WEBHOOK_SECRET || !signatureHeader ) {
     return false;
   }
@@ -2117,14 +2117,14 @@ export normalizeSignatureHeader ( value: string | null ): string {
   return trimmed.replace( /^sha256=/, '' );
 }
 
-export async async verifyProviderWebhookSignature ( args: {
+export async verifyProviderWebhookSignature ( args: {
   payload: string;
   secret: string;
   signature: string | null;
   timestamp?: string | null;
 } ): Promise<boolean> {
 
-export async async sendDelivery (
+export async sendDelivery (
   admin: ReturnType<typeof getAdminClient>,
   delivery: CommunicationDeliveryRecord,
   functionBaseUrl: string,
@@ -2222,7 +2222,7 @@ export async async sendDelivery (
   }
 }
 
-export async async processQueuedDeliveries (
+export async processQueuedDeliveries (
   admin: ReturnType<typeof getAdminClient>,
   functionBaseUrl: string,
 ) {
@@ -2265,13 +2265,13 @@ export normalizePaymentAmount ( value: unknown ): number | null {
   return amount;
 }
 
-export async async submitSanadVerificationRequest ( input: {
+export async submitSanadVerificationRequest ( input: {
   userId: string;
   providerReference: string;
   documentReference: string | null;
 } ) {
 
-export async async assertTripParticipant ( admin: ReturnType<typeof getAdminClient>, tripId: string, userId: string ) {
+export async assertTripParticipant ( admin: ReturnType<typeof getAdminClient>, tripId: string, userId: string ) {
   const [ { data: trip, error: tripError }, { data: booking, error: bookingError } ] = await Promise.all( [
     admin.from( 'trips' ).select( 'id, trip_id, driver_id' ).or( `id.eq.${ tripId },trip_id.eq.${ tripId }` ).maybeSingle(),
     admin
@@ -2297,7 +2297,7 @@ export cityCoord ( city: string | null | undefined ) {
   return coords[ String( city ?? '' ).toLowerCase() ] ?? coords.amman;
 }
 
-export async async resolveRoute ( request: Request ): Promise<Response> {
+export async resolveRoute ( request: Request ): Promise<Response> {
   const url = new URL( request.url );
   let path = url.pathname.replace( /^.*make-server-0b1f4071/, '' ) || '/';
 
