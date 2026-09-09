@@ -1,17 +1,8 @@
 import os
 import re
 
-# Use the monolith from the wasel-env-10-of-10 branch
-monolith_path = '/tmp/monolith.ts'
-output_dir = os.path.join(os.path.dirname(__file__), '../supabase/functions/make-server-0b1f4071')
-handlers_dir = os.path.join(output_dir, '_handlers')
-
-# Clean up old handlers
-for f in os.listdir(handlers_dir):
-    if f.endswith('.ts'):
-        os.remove(os.path.join(handlers_dir, f))
-
-with open(monolith_path, 'r') as f:
+# Read the monolith with UTF-16 LE encoding
+with open('/tmp/monolith.ts', 'r', encoding='utf-16-le') as f:
     monolith = f.read()
 
 lines = monolith.split('\n')
@@ -101,7 +92,6 @@ handler_starts = []
 for match in handler_pattern.finditer(monolith):
     name = match.group(1)
     if name in handler_domains:
-        # Find the line number (1-indexed)
         line_start = monolith[:match.start()].count('\n') + 1
         handler_starts.append((name, line_start))
 
@@ -200,7 +190,6 @@ else:
 # ============================================================
 # Extract shared utilities (non-handler functions)
 # ============================================================
-# Find all top-level functions that are NOT handlers
 all_functions = []
 for match in re.finditer(r'^(async )?function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(', monolith, re.MULTILINE):
     name = match.group(2)
@@ -224,7 +213,6 @@ print(f'Found {len(utilities)} utility functions')
 # ============================================================
 # Extract shared constants and imports
 # ============================================================
-# The shared section is everything before the first handler
 first_handler_line = min(h['start_line'] for h in handlers) if handlers else len(lines)
 shared_section = '\n'.join(lines[:first_handler_line - 1])
 
@@ -271,7 +259,6 @@ export_async_functions = [
     'buildTrustStatus', 'ensureStripeCustomer', 'fetchStripeSubscription', 'stripeApiRequest'
 ]
 
-# Apply exports to shared section
 for name in export_constants:
     shared_section = re.sub(r'^const ' + re.escape(name) + r'\b', 'export const ' + name, shared_section, count=1, flags=re.MULTILINE)
 
