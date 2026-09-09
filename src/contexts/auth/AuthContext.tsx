@@ -261,7 +261,7 @@ interface AuthProviderProps {
           email: options.email, password: options.password,
           firstName,
           lastName,
-          phone: options.phone ?? \x27\x27,
+          phone: options.phone ?? '',
           returnTo: options.returnTo,
         });
         const authUser = data.user ?? data.session?.user ?? null;
