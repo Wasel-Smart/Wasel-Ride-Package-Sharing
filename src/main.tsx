@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
-import { getStartupConfigurationError } from './utils/runtimeConfigGuard';
+import { getStartupConfigurationError, getObservabilityWarnings } from './utils/runtimeConfigGuard';
 import { sanitizeLogMessage } from './utils/sanitization';
 import { safeStorageGetItem, safeStorageRemoveItem, safeStorageSetItem } from './utils/browserStorage';
 import { initializeAppInsights } from './utils/appInsights';
@@ -135,6 +135,10 @@ const environmentIsValid = (() => {
   try {
     const configError = getStartupConfigurationError(import.meta.env);
     if (configError) {throw new Error(configError);}
+    const obsWarnings = getObservabilityWarnings(import.meta.env);
+    for (const warning of obsWarnings) {
+      console.warn('[Wasel] Observability:', sanitizeLogMessage(warning));
+    }
     return true;
   } catch (envError) {
     console.error('[Wasel] Environment not configured:', envError);

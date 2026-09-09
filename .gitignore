@@ -115,6 +115,8 @@ mobile/file.tmp
 *~
 
 # ---- Secrets / credentials (never commit) ----
+_SECRETS_NEEDS_ROTATION_THEN_DELETE/
+client_secret_*.json
 wasel-planning-with-ai-*.json
 docs/wasel-planning-with-ai.json
 *docs/wasel-planning-with-ai.json
@@ -209,6 +211,20 @@ src/platform/HONEST_AUDIT_REPORT_OUTDATED_*.md
 
 # ---- Duplicate Kubernetes overlay (k8s/ is canonical) ----
 infra/kubernetes/
+
+# ---- Root-level ESLint snapshot exports (never commit) ----
+eslint-current*.json
+eslint-all.json
+eslint-warnings.txt
+remaining-warnings.txt
+
+# ---- Root-level scratch fix/test scripts ----
+fix-all-handlers.cjs
+fix-event-handlers*.cjs
+fix-nav-onclick.cjs
+fix-profile.cjs
+test-lt.cjs
+test-regex.cjs
 
 # ---- Cleanup staging areas ----
 _REMOVED/
