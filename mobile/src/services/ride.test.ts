@@ -26,7 +26,7 @@ jest.mock('../services/offline', () => ({
 }));
 
 const mockFetch = jest.fn() as jest.Mock;
-global.fetch = mockFetch;
+jest.spyOn(globalThis, 'fetch').mockImplementation(mockFetch as unknown as typeof fetch);
 
 jest.mock('../services/auth', () => ({
   mobileAuth: {

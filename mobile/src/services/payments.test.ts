@@ -79,6 +79,7 @@ describe('PaymentService', () => {
       const fromMock = {
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
+        is: jest.fn().mockReturnThis(),
         order: jest.fn().mockResolvedValue({ data: mockData, error: null }),
       };
       (supabase as any).from.mockReturnValue(fromMock);
@@ -95,6 +96,7 @@ describe('PaymentService', () => {
       const fromMock = {
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
+        is: jest.fn().mockReturnThis(),
         order: jest.fn().mockResolvedValue({ data: null, error: new Error('DB error') }),
       };
       (supabase as any).from.mockReturnValue(fromMock);

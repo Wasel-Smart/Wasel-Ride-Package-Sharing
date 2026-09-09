@@ -82,11 +82,12 @@ describe('ApiClient', () => {
           status: 200,
           json: async () => ({ data: 'ok' }),
         } as unknown as Response);
-      (globalThis as { fetch: typeof fetch }).fetch = mockFetch as unknown as typeof fetch;
+      jest.spyOn(globalThis, 'fetch').mockImplementation(mockFetch as unknown as typeof fetch);
 
       const result = await apiClient.get('/test-endpoint');
       expect(mockFetch).toHaveBeenCalledTimes(2);
       expect(result.data).toEqual({ data: 'ok' });
+      jest.restoreAllMocks();
     });
 
     it('returns timeout error on abort', async () => {
@@ -94,10 +95,11 @@ describe('ApiClient', () => {
       const abortError = new Error('AbortError');
       abortError.name = 'AbortError';
       mockFetch.mockRejectedValueOnce(abortError);
-      (globalThis as { fetch: typeof fetch }).fetch = mockFetch as unknown as typeof fetch;
+      jest.spyOn(globalThis, 'fetch').mockImplementation(mockFetch as unknown as typeof fetch);
 
       const result = await apiClient.request('/test', { timeout: 100, retries: 0 });
       expect(result.error).toBe('Request timeout');
+      jest.restoreAllMocks();
     });
   });
 });
