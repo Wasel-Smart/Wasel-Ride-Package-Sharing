@@ -197,13 +197,17 @@ for h in handlers:
 # ============================================================
 # STEP 2: Append utilities to shared.ts
 # ============================================================
-shared_path = path.join(handlers_dir, 'shared.ts')
+shared_path = os.path.join(handlers_dir, 'shared.ts')
 with open(shared_path, 'r') as f:
     shared_ts = f.read()
 
 for util in utilities:
-    prefix = 'export async ' if util['content'].startswith('async function') else 'export '
-    cleaned = util['content'].replace('function ', '', 1) if not util['content'].startswith('async') else util['content'].replace('async function ', 'async ', 1)
+    if util['content'].startswith('async function'):
+        prefix = 'export async '
+        cleaned = util['content'].replace('async function ', 'async ', 1)
+    else:
+        prefix = 'export '
+        cleaned = util['content'].replace('function ', '', 1)
     shared_ts += '\n\n' + prefix + cleaned
 
 with open(shared_path, 'w') as f:
@@ -255,7 +259,7 @@ domain_imports = """import {
 
 for domain, hs in sorted(domains.items()):
     content = '\n\n'.join(h['content'] for h in hs)
-    file_path = path.join(handlers_dir, f'{domain}.ts')
+    file_path = os.path.join(handlers_dir, f'{domain}.ts')
     with open(file_path, 'w') as f:
         f.write(domain_imports + '\n' + content)
     print(f'Created _handlers/{domain}.ts ({len(hs)} handlers)')
@@ -295,37 +299,33 @@ routes_section = '\n'.join(lines[routes_start:routes_end]) if routes_start >= 0 
 resolve_route_match = re.search(r'async function resolveRoute \([\s\S]*?^\}', monolith, re.MULTILINE)
 resolve_route_section = resolve_route_match.group(0) if resolve_route_match else ''
 
-new_index = f"""{domain_import_lines}
+new_index = domain_import_lines + '\n\n' + routes_section + '\n\n' + resolve_route_section + '''
 
-{routes_section}
-
-{resolve_route_section}
-
-Deno.serve(async (request: Request) => {{
+Deno.serve(async (request: Request) => {
   let response: Response | undefined;
-  if (!isOriginAllowed(request)) {{
-    response = json({{ error: 'Origin not allowed' }}, 403);
+  if (!isOriginAllowed(request)) {
+    response = json({ error: 'Origin not allowed' }, 403);
     return finalizeResponse(request, response);
-  }}
-  if (request.method === 'OPTIONS') {{
+  }
+  if (request.method === 'OPTIONS') {
     response = noContent();
     return finalizeResponse(request, response);
-  }}
-  try {{
+  }
+  try {
     const url = new URL(request.url);
     const path = url.pathname.replace(/^.*make-server-0b1f4071/, '') || '/';
-    if (request.method === 'GET' && path === '/health') {{
+    if (request.method === 'GET' && path === '/health') {
       response = await handleHealth(request);
       return finalizeResponse(request, response);
-    }}
+    }
     response = await resolveRoute(request);
-  }} catch (error) {{
+  } catch (error) {
     logUnhandledRouteError(error, request);
     response = sanitizedUnhandledErrorResponse();
-  }}
-  return finalizeResponse(request, response ?? json({{ error: 'Route not found' }}, 404));
-}});
-"""
+  }
+  return finalizeResponse(request, response ?? json({ error: 'Route not found' }, 404));
+});
+'''
 
 with open(monolith_path, 'w') as f:
     f.write(new_index)
