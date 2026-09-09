@@ -48,6 +48,11 @@ beforeAll(() => {
 
 afterAll(() => {
   delete process.env.EXPO_PUBLIC_API_URL;
+  Object.defineProperty(globalThis, 'fetch', {
+    value: originalFetch,
+    writable: true,
+    configurable: true,
+  });
 });
 
 describe('RideLifecycleService', () => {
