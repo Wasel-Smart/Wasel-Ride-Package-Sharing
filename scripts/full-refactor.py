@@ -1,11 +1,11 @@
 import os
 import re
 
-monolith_path = path.resolve(path.dirname(__file__), '../supabase/functions/make-server-0b1f4071/index.ts')
-output_dir = path.dirname(monolith_path)
-handlers_dir = path.join(output_dir, '_handlers')
+monolith_path = os.path.join(os.path.dirname(__file__), '../supabase/functions/make-server-0b1f4071/index.ts')
+output_dir = os.path.dirname(monolith_path)
+handlers_dir = os.path.join(output_dir, '_handlers')
 
-path.os.makedirs(handlers_dir, exist_ok=True)
+os.makedirs(handlers_dir, exist_ok=True)
 
 with open(monolith_path, 'r') as f:
     monolith = f.read()
