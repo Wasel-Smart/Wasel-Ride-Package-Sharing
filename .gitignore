@@ -13,10 +13,13 @@ build/
 dist/
 .vite/
 .next/
+*.tsbuildinfo
 
 # ---- Dependencies ----
 node_modules/
 with-supabase-app/node_modules/
+yarn.lock
+.yarn/
 
 # ---- Environment variables ----
 # .env.example is the only env file that should be committed.
@@ -238,7 +241,8 @@ Dockerfile.*
 docker-compose.*.local
 
 # ---- Expo / Android build artifacts ----
-mobile/.expo/web/cache
+.expo/
+.expo-shared/
 mobile/android/**/.gradle/
 
 # ---- Terraform ----
