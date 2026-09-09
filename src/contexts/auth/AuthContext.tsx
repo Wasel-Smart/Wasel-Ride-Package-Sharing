@@ -74,7 +74,8 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-// eslint-disable-next-line max-lines-per-function -- AuthProvider is a context provider with required auth logic`r`nexport function AuthProvider({ children }: AuthProviderProps) {
+// eslint-disable-next-line max-lines-per-function -- AuthProvider is a context provider with required auth logic
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -252,24 +253,24 @@ interface AuthProviderProps {
         return { error: new Error('Backend not configured') };
       }
 
-      const { firstName, lastName } = splitFullName(options.fullName);
+      const { firstName, lastName } = splitFullName(fullName);
 
       setBusy(true);
       try {
         const { authAPI } = await import('../../services/auth');
         const data = await authAPI.signUp({
-          email: options.email, password: options.password,
+          email, password,
           firstName,
           lastName,
-          phone: options.phone ?? '',
-          returnTo: options.returnTo,
+          phone: phone ?? '',
+          returnTo,
         });
         const authUser = data.user ?? data.session?.user ?? null;
 
         if (authUser && data.session) {
           setSession(data.session);
           setUser(authUser);
-          await fetchProfile({ forceCreate: true, authUser });
+          await fetchProfile(true, authUser);
         }
 
         return {
@@ -297,7 +298,7 @@ interface AuthProviderProps {
         if (authUser && data.session) {
           setSession(data.session);
           setUser(authUser);
-          await fetchProfile({ forceCreate: true, authUser });
+          await fetchProfile(true, authUser);
         }
 
         return { error: null };
