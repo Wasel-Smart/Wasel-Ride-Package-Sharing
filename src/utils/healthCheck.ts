@@ -62,7 +62,7 @@ async function checkEdgeFunctionHealth(): Promise<boolean> {
       headers,
       signal: AbortSignal.timeout(5_000),
     });
-    return response.ok || response.status === 404;
+    return response.ok;
   } catch {
     return false;
   }

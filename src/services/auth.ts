@@ -247,7 +247,7 @@ export const authAPI = {
     return data;
   },
 
-  async createProfile(userId: string, email: string, firstName: string, lastName: string) {
+   async createProfile(userId: string, email: string, firstName: string, lastName: string) {
     if (!hasConfiguredEdgeTransport('required')) {
       if (!getConfig().allowDirectSupabaseFallback) {
         throw getDirectFallbackError('Profile creation');
@@ -274,7 +274,16 @@ export const authAPI = {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || `Failed to create profile: ${response.status}`);
+        const errorMessage = errorData.error || `Failed to create profile: ${response.status}`;
+
+        if (response.status === 404 && getConfig().allowDirectSupabaseFallback) {
+          return updateDirectProfile(userId, {
+            email,
+            full_name: `${firstName} ${lastName}`.trim(),
+          });
+        }
+
+        throw new Error(errorMessage);
       }
 
       return await response.json();
@@ -317,7 +326,7 @@ export const authAPI = {
         return loadProfileViaFallback(context.userId);
       }
 
-      try {
+       try {
         const data = await requestEdgeJson<Record<string, unknown>>({
           path: `/v1/profile/${context.userId}`,
           authMode: 'required',
@@ -326,8 +335,11 @@ export const authAPI = {
         });
         const enrichedProfile = await enrichProfileWithVerification(context.userId, data);
         return { profile: enrichedProfile };
-      } catch {
-        return loadProfileViaFallback(context.userId);
+      } catch (edgeError) {
+        if (getConfig().allowDirectSupabaseFallback) {
+          return loadProfileViaFallback(context.userId);
+        }
+        throw edgeError;
       }
     } catch {
       return { profile: null };

@@ -53,7 +53,7 @@ async function authenticateRequest(request: Request) {
   const { data: authData, error: authError } = await admin.auth.getUser(token);
   if (authError || !authData.user) return { error: json({ error: 'Invalid auth token' }, 401) };
   const { data: byAuthUser, error: byAuthError } = await admin.from('users').select('*').eq('auth_user_id', authData.user.id).maybeSingle();
-  if (byAuthError) return { error: json({ error: byAuthError.message }, 500) };
+  if (byAuthError) return { error: json({ error: 'Internal server error' }, 500) };
   let canonicalUser = byAuthUser;
   if (!canonicalUser) {
     const fallback = await admin.from('users').select('*').eq('id', authData.user.id).maybeSingle();
@@ -94,7 +94,7 @@ async function handleBookingCollectionForTrip(request: Request, tripId: string) 
   const auth = await authenticateRequest(request);
   if ('error' in auth) return auth.error;
   const { data, error } = await auth.admin.from('bookings').select('*').eq('trip_id', tripId).order('created_at', { ascending: false });
-  if (error) return json({ error: error.message }, 500);
+  if (error) return json({ error: 'Internal server error' }, 500);
   return json((Array.isArray(data) ? data : []).map(mapBookingRow));
 }
 
@@ -107,7 +107,7 @@ async function handleBookingRequest(request: Request, path: string) {
     const tripId = String(body.trip_id ?? '');
     const seatsRequested = Math.max(1, toNumber(body.seats_requested, 1));
     const { data: trip, error: tripError } = await auth.admin.from('trips').select('trip_id, available_seats, price_per_seat, trip_status').eq('trip_id', tripId).single();
-    if (tripError) return json({ error: tripError.message }, 500);
+    if (tripError) return json({ error: 'Internal server error' }, 500);
     const availableSeats = toNumber(trip.available_seats, 0);
     if (availableSeats < seatsRequested) return json({ error: 'Not enough seats available' }, 409);
 
@@ -121,7 +121,7 @@ async function handleBookingRequest(request: Request, path: string) {
       booking_status: status, status, confirmed_by_driver: status !== 'pending_driver',
       amount: totalPrice, price_per_seat: toNumber(trip.price_per_seat, 0), total_price: totalPrice,
     }).select('*').single();
-    if (error) return json({ error: error.message }, 500);
+    if (error) return json({ error: 'Internal server error' }, 500);
     if (status !== 'pending_driver') {
       await auth.admin.from('trips').update({
         available_seats: Math.max(availableSeats - seatsRequested, 0),
@@ -134,7 +134,7 @@ async function handleBookingRequest(request: Request, path: string) {
   const bookingRoute = parseEntityRoute(path, 'bookings');
   if (request.method === 'GET' && bookingRoute?.id === 'user') {
     const { data, error } = await auth.admin.from('bookings').select('*').eq('passenger_id', auth.canonicalUser.id).order('created_at', { ascending: false });
-    if (error) return json({ error: error.message }, 500);
+    if (error) return json({ error: 'Internal server error' }, 500);
     return json((Array.isArray(data) ? data : []).map(mapBookingRow));
   }
 
@@ -148,7 +148,7 @@ async function handleBookingRequest(request: Request, path: string) {
     const { data, error } = await auth.admin.from('bookings').update({
       booking_status: status, status, confirmed_by_driver: status === 'confirmed',
     }).eq('booking_id', bookingRoute.id).select('*').single();
-    if (error) return json({ error: error.message }, 500);
+    if (error) return json({ error: 'Internal server error' }, 500);
     return json(mapBookingRow(data));
   }
 
@@ -177,6 +177,7 @@ Deno.serve(async (request: Request) => {
     headers.forEach((value, key) => finalHeaders.set(key, value));
     return new Response(response.body, { status: response.status, headers: finalHeaders });
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : 'Internal server error' }, 500);
+    console.error('Booking service error:', error instanceof Error ? error.message : String(error));
+    return json({ error: 'Internal server error' }, 500);
   }
 });

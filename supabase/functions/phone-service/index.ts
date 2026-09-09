@@ -54,7 +54,7 @@ async function authenticateRequest(request: Request) {
   const { data: authData, error: authError } = await admin.auth.getUser(token);
   if (authError || !authData.user) return { error: json({ error: 'Invalid auth token' }, 401) };
   const { data: byAuthUser, error: byAuthError } = await admin.from('users').select('*').eq('auth_user_id', authData.user.id).maybeSingle();
-  if (byAuthError) return { error: json({ error: byAuthError.message }, 500) };
+  if (byAuthError) return { error: json({ error: 'Internal server error' }, 500) };
   let canonicalUser = byAuthUser;
   if (!canonicalUser) {
     const fallback = await admin.from('users').select('*').eq('id', authData.user.id).maybeSingle();
@@ -186,6 +186,7 @@ Deno.serve(async (request: Request) => {
     headers.forEach((value, key) => finalHeaders.set(key, value));
     return new Response(response.body, { status: response.status, headers: finalHeaders });
   } catch (error) {
-    return json({ error: error instanceof Error ? error.message : 'Internal server error' }, 500);
+    console.error('Phone service error:', error instanceof Error ? error.message : String(error));
+    return json({ error: 'Internal server error' }, 500);
   }
 });

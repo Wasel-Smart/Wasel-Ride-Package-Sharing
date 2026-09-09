@@ -73,7 +73,7 @@ async function authenticateRequest(request: Request) {
     .eq('auth_user_id', authData.user.id)
     .maybeSingle();
 
-  if (byAuthError) return { error: json({ error: byAuthError.message }, 500) };
+  if (byAuthError) return { error: json({ error: 'Internal server error' }, 500) };
 
   let canonicalUser = byAuthUser;
   if (!canonicalUser) {
@@ -177,7 +177,7 @@ async function handleProfileRequest(request: Request, path: string) {
 
     if (Object.keys(patch).length > 0) {
       const { error } = await auth.admin.from('users').update(patch).eq('id', user.id);
-      if (error) return json({ error: error.message }, 500);
+      if (error) return json({ error: 'Internal server error' }, 500);
     }
 
     if (canWriteUsers && typeof body.wallet_status === 'string') {
@@ -186,7 +186,7 @@ async function handleProfileRequest(request: Request, path: string) {
   }
 
   const { data: nextUser, error } = await auth.admin.from('users').select('*').eq('id', user.id).single();
-  if (error) return json({ error: error.message }, 500);
+  if (error) return json({ error: 'Internal server error' }, 500);
   return json(await buildProfilePayload(auth.admin, nextUser));
 }
 

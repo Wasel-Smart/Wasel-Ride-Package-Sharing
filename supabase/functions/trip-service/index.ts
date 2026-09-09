@@ -53,7 +53,7 @@ async function authenticateRequest ( request: Request ) {
   const { data: authData, error: authError } = await admin.auth.getUser( token );
   if ( authError || !authData.user ) return { error: json( { error: 'Invalid auth token' }, 401 ) };
   const { data: byAuthUser, error: byAuthError } = await admin.from( 'users' ).select( '*' ).eq( 'auth_user_id', authData.user.id ).maybeSingle();
-  if ( byAuthError ) return { error: json( { error: byAuthError.message }, 500 ) };
+  if ( byAuthError ) return { error: json( { error: 'Internal server error' }, 500 ) };
   let canonicalUser = byAuthUser;
   if ( !canonicalUser ) {
     const fallback = await admin.from( 'users' ).select( '*' ).eq( 'id', authData.user.id ).maybeSingle();
@@ -176,14 +176,14 @@ async function authorizeTripOwner (
     .select( 'driver_id, user_id, driver_status, background_check_status, verification_level' )
     .eq( 'user_id', auth.canonicalUser.id )
     .maybeSingle();
-  if ( error ) return { error: json( { error: error.message }, 500 ) };
+  if ( error ) return { error: json( { error: 'Internal server error' }, 500 ) };
 
   const { data: trip, error: tripError } = await auth.admin
     .from( 'trips' )
     .select( 'trip_id, driver_id' )
     .eq( 'trip_id', tripId )
     .maybeSingle();
-  if ( tripError ) return { error: json( { error: tripError.message }, 500 ) };
+  if ( tripError ) return { error: json( { error: 'Internal server error' }, 500 ) };
   if ( !trip ) return { error: json( { error: 'Trip not found' }, 404 ) };
   if ( !driver || String( trip.driver_id ) !== String( driver.driver_id ) ) {
     return { error: json( { error: 'You do not own this trip' }, 403 ) };
@@ -219,7 +219,7 @@ async function handleTripRequest ( request: Request, path: string ) {
     if ( date ) query = query.gte( 'departure_time', `${ date }T00:00:00` ).lt( 'departure_time', `${ date }T23:59:59.999` );
     if ( seats ) query = query.gte( 'available_seats', Number( seats ) );
     const { data, error } = await query.in( 'trip_status', [ 'open', 'booked', 'in_progress' ] ).order( 'departure_time' );
-    if ( error ) return json( { error: error.message }, 500 );
+    if ( error ) return json( { error: 'Internal server error' }, 500 );
     const rows = Array.isArray( data ) ? data : [];
     const profiles = await fetchDriverProfiles( admin, rows.map( ( r: Record<string, unknown> ) => String( r.driver_id ?? '' ) ) );
     return json( rows.map( ( r: Record<string, unknown> ) => mapTripRow( r, profiles[ String( r.driver_id ?? '' ) ] ) ) );
@@ -237,13 +237,13 @@ async function handleTripRequest ( request: Request, path: string ) {
     if ( 'error' in auth ) return auth.error;
     const driver = await ensureDriverForUser( auth.admin, auth.canonicalUser );
     const { data, error } = await auth.admin.from( 'trips' ).select( '*' ).eq( 'driver_id', driver.driver_id ).order( 'departure_time', { ascending: false } );
-    if ( error ) return json( { error: error.message }, 500 );
+    if ( error ) return json( { error: 'Internal server error' }, 500 );
     return json( ( Array.isArray( data ) ? data : [] ).map( ( r: Record<string, unknown> ) => mapTripRow( r, null ) ) );
   }
 
   if ( request.method === 'GET' && tripRoute?.id ) {
     const { data, error } = await admin.from( 'trips' ).select( '*' ).eq( 'trip_id', tripRoute.id ).maybeSingle();
-    if ( error ) return json( { error: error.message }, 500 );
+    if ( error ) return json( { error: 'Internal server error' }, 500 );
     if ( !data ) return json( { error: 'Trip not found' }, 404 );
     const profiles = await fetchDriverProfiles( admin, [ String( data.driver_id ?? '' ) ] );
     return json( mapTripRow( data, profiles[ String( data.driver_id ?? '' ) ] ) );
@@ -270,7 +270,7 @@ async function handleTripRequest ( request: Request, path: string ) {
       vehicle_make: vehicleMake, vehicle_model: vehicleRest.length > 0 ? vehicleRest.join( ' ' ) : body.carModel ?? null,
       notes: body.note ?? null,
     } ).select( '*' ).single();
-    if ( error ) return json( { error: error.message }, 500 );
+    if ( error ) return json( { error: 'Internal server error' }, 500 );
     return json( mapTripRow( data, await ( async () => {
       const p = await fetchDriverProfiles( auth.admin, [ String( data.driver_id ?? '' ) ] );
       return p[ String( data.driver_id ?? '' ) ];
@@ -284,11 +284,11 @@ async function handleTripRequest ( request: Request, path: string ) {
     if ( 'error' in ownership ) return ownership.error;
     if ( request.method === 'DELETE' ) {
       const { error } = await auth.admin.from( 'trips' ).update( { trip_status: 'cancelled', deleted_at: new Date().toISOString() } ).eq( 'trip_id', tripRoute.id ).eq( 'driver_id', ownership.driver.driver_id );
-      return error ? json( { error: error.message }, 500 ) : json( { success: true } );
+      return error ? json( { error: 'Internal server error' }, 500 ) : json( { success: true } );
     }
     if ( request.method === 'POST' ) {
       const { error } = await auth.admin.from( 'trips' ).update( { trip_status: 'open' } ).eq( 'trip_id', tripRoute.id ).eq( 'driver_id', ownership.driver.driver_id );
-      return error ? json( { error: error.message }, 500 ) : json( { success: true } );
+      return error ? json( { error: 'Internal server error' }, 500 ) : json( { success: true } );
     }
     const body = await request.json().catch( () => ( {} ) );
     const patch: Record<string, unknown> = {};
@@ -301,7 +301,7 @@ async function handleTripRequest ( request: Request, path: string ) {
     if ( typeof body.status === 'string' ) patch.trip_status = body.status === 'active' ? 'open' : body.status;
     if ( typeof body.note === 'string' ) patch.notes = body.note;
     const { data, error } = await auth.admin.from( 'trips' ).update( patch ).eq( 'trip_id', tripRoute.id ).eq( 'driver_id', ownership.driver.driver_id ).select( '*' ).single();
-    if ( error ) return json( { error: error.message }, 500 );
+    if ( error ) return json( { error: 'Internal server error' }, 500 );
     const profiles = await fetchDriverProfiles( auth.admin, [ String( data.driver_id ?? '' ) ] );
     return json( mapTripRow( data, profiles[ String( data.driver_id ?? '' ) ] ) );
   }

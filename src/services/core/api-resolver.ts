@@ -34,8 +34,32 @@ const defaultFunctionsBaseUrl = projectId ? `https://${projectId}.supabase.co/fu
 const resolvedFunctionsBaseUrl = configuredFunctionsBaseUrl || defaultFunctionsBaseUrl;
 const resolvedFunctionName = configuredFunctionName || getEdgeFunctionName();
 
-export const API_URL = configuredApiUrl
-  ? configuredApiUrl.replace(/\/$/, '')
-  : resolvedFunctionsBaseUrl
-    ? `${resolvedFunctionsBaseUrl.replace(/\/$/, '')}/${resolvedFunctionName}`
-    : '';
+function isFunctionsBaseUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    const normalized = u.pathname.replace(/\/$/, '');
+    return normalized.endsWith('/functions/v1');
+  } catch {
+    return false;
+  }
+}
+
+const resolvedApiUrl = (() => {
+  const trimmed = (configuredApiUrl || '').replace(/\/$/, '');
+
+  if (trimmed && !isFunctionsBaseUrl(trimmed)) {
+    return trimmed;
+  }
+
+  if (isFunctionsBaseUrl(trimmed)) {
+    return `${trimmed}/${resolvedFunctionName}`;
+  }
+
+  if (resolvedFunctionsBaseUrl) {
+    return `${resolvedFunctionsBaseUrl.replace(/\/$/, '')}/${resolvedFunctionName}`;
+  }
+
+  return '';
+})();
+
+export const API_URL = resolvedApiUrl;

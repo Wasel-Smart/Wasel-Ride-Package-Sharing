@@ -55,7 +55,7 @@ async function authenticateRequest(request: Request) {
   const { data: authData, error: authError } = await admin.auth.getUser(token);
   if (authError || !authData.user) return { error: json({ error: 'Invalid auth token' }, 401) };
   const { data: byAuthUser, error: byAuthError } = await admin.from('users').select('*').eq('auth_user_id', authData.user.id).maybeSingle();
-  if (byAuthError) return { error: json({ error: byAuthError.message }, 500) };
+  if (byAuthError) return { error: json({ error: 'Internal server error' }, 500) };
   let canonicalUser = byAuthUser;
   if (!canonicalUser) {
     const fallback = await admin.from('users').select('*').eq('id', authData.user.id).maybeSingle();
@@ -99,7 +99,7 @@ async function buildReviewHistory(auth: Awaited<ReturnType<typeof authenticateRe
     .order('verification_timestamp', { ascending: false })
     .limit(20);
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error('Review history lookup failed');
 
   const items = (data ?? []).map((row: Record<string, unknown>) => {
     const status = row.sanad_status === 'verified' || row.document_status === 'verified'
@@ -137,10 +137,10 @@ async function buildTrustStatus(auth: Awaited<ReturnType<typeof authenticateRequ
     auth.admin.from('otp_sessions').select('otp_session_id, phone_number, attempts, max_attempts, expires_at, consumed_at, created_at').eq('user_id', auth.canonicalUser.id).eq('purpose', 'driver_action').order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
 
-  if (verificationResult.error) throw new Error(verificationResult.error.message);
-  if (driverResult.error) throw new Error(driverResult.error.message);
-  if (walletResult.error) throw new Error(walletResult.error.message);
-  if (otpResult.error) throw new Error(otpResult.error.message);
+  if (verificationResult.error) throw new Error('Verification lookup failed');
+  if (driverResult.error) throw new Error('Driver lookup failed');
+  if (walletResult.error) throw new Error('Wallet lookup failed');
+  if (otpResult.error) throw new Error('OTP lookup failed');
 
   const verification = verificationResult.data;
   const driver = driverResult.data;
@@ -211,7 +211,8 @@ async function handleTrustRequest(request: Request, path: string) {
       if (!status) return json({ error: 'Unable to load trust status' }, 500);
       return json(status);
     } catch (error) {
-      return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+      console.error('Trust status error:', error instanceof Error ? error.message : String(error));
+      return json({ error: 'Internal server error' }, 500);
     }
   }
 
@@ -220,11 +221,9 @@ async function handleTrustRequest(request: Request, path: string) {
       const items = await buildReviewHistory(auth);
       return json({ items });
     } catch (error) {
-      return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+      console.error('Trust review history error:', error instanceof Error ? error.message : String(error));
+      return json({ error: 'Internal server error' }, 500);
     }
-  }
-
-  return json({ error: 'Not found' }, 404);
 }
 
 Deno.serve(async (request: Request) => {

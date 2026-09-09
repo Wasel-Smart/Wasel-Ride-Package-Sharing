@@ -54,7 +54,7 @@ async function authenticateRequest(request: Request) {
   const { data: authData, error: authError } = await admin.auth.getUser(token);
   if (authError || !authData.user) return { error: json({ error: 'Invalid auth token' }, 401) };
   const { data: byAuthUser, error: byAuthError } = await admin.from('users').select('*').eq('auth_user_id', authData.user.id).maybeSingle();
-  if (byAuthError) return { error: json({ error: byAuthError.message }, 500) };
+  if (byAuthError) return { error: json({ error: 'Internal server error' }, 500) };
   let canonicalUser = byAuthUser;
   if (!canonicalUser) {
     const fallback = await admin.from('users').select('*').eq('id', authData.user.id).maybeSingle();
@@ -84,10 +84,10 @@ type WalletRow = {
 
 async function ensureWalletForUser(admin: ReturnType<typeof getAdminClient>, userId: string): Promise<WalletRow> {
   const { data: existing, error: existingError } = await admin.from('wallets').select('*').eq('user_id', userId).maybeSingle();
-  if (existingError) throw new Error(existingError.message);
+  if (existingError) throw new Error('Wallet lookup failed');
   if (existing?.wallet_id) return existing as WalletRow;
   const { data: created, error: createError } = await admin.from('wallets').insert({ user_id: userId }).select('*').single();
-  if (createError) throw new Error(createError.message);
+  if (createError) throw new Error('Wallet creation failed');
   return created as WalletRow;
 }
 
@@ -163,7 +163,8 @@ async function handleWalletRequest(request: Request, path: string) {
         transactions: (Array.isArray(transactions) ? transactions : []).map((t: Record<string, unknown>) => ({ id: String(t.transaction_id ?? ''), type: String(t.transaction_type ?? 'wallet'), amount: toNumber(t.amount, 0), createdAt: String(t.created_at ?? new Date().toISOString()) })),
       });
     } catch (error) {
-      return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+      console.error('Wallet GET error:', error instanceof Error ? error.message : String(error));
+      return json({ error: 'Internal server error' }, 500);
     }
   }
 
@@ -173,7 +174,8 @@ async function handleWalletRequest(request: Request, path: string) {
       const { data: transactions } = await admin.from('transactions').select('*').eq('wallet_id', wallet.wallet_id).order('created_at', { ascending: false }).limit(50);
       return json({ transactions: (Array.isArray(transactions) ? transactions : []).map((t: Record<string, unknown>) => ({ id: String(t.transaction_id ?? ''), type: String(t.transaction_type ?? 'wallet'), amount: toNumber(t.amount, 0), createdAt: String(t.created_at ?? new Date().toISOString()) })) });
     } catch (error) {
-      return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+      console.error('Wallet transactions error:', error instanceof Error ? error.message : String(error));
+      return json({ error: 'Internal server error' }, 500);
     }
   }
 
@@ -184,10 +186,11 @@ async function handleWalletRequest(request: Request, path: string) {
     try {
       const pinHash = await hashWalletPin(pin);
       const { error } = await admin.from('wallets').update({ pin_hash: pinHash, updated_at: new Date().toISOString() }).eq('user_id', auth.canonicalUser.id);
-      if (error) throw new Error(error.message);
+      if (error) throw new Error('PIN update failed');
       return json({ success: true });
     } catch (error) {
-      return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+      console.error('Set PIN error:', error instanceof Error ? error.message : String(error));
+      return json({ error: 'Internal server error' }, 500);
     }
   }
 
@@ -199,7 +202,8 @@ async function handleWalletRequest(request: Request, path: string) {
       const verified = await verifyWalletPinHash(pin, wallet.pin_hash);
       return json({ verified });
     } catch (error) {
-      return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+      console.error('Verify PIN error:', error instanceof Error ? error.message : String(error));
+      return json({ error: 'Internal server error' }, 500);
     }
   }
 
@@ -212,10 +216,11 @@ async function handleWalletRequest(request: Request, path: string) {
         auto_top_up_enabled: Boolean(body.enabled), auto_top_up_amount: amount > 0 ? amount : 20,
         auto_top_up_threshold: threshold >= 0 ? threshold : 5, updated_at: new Date().toISOString(),
       }).eq('user_id', auth.canonicalUser.id);
-      if (error) throw new Error(error.message);
+      if (error) throw new Error('Auto top-up update failed');
       return json({ success: true });
     } catch (error) {
-      return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+      console.error('Auto top-up error:', error instanceof Error ? error.message : String(error));
+      return json({ error: 'Internal server error' }, 500);
     }
   }
 
@@ -235,10 +240,11 @@ async function handleWalletRequest(request: Request, path: string) {
         p_payment_method: 'local_gateway', p_direction: 'debit', p_reference_type: 'bank_account',
         p_reference_id: null, p_metadata: { bank_account: bankAccount, description: 'Wallet withdrawal' },
       });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error('Withdrawal failed');
       return json({ success: true });
     } catch (error) {
-      return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+      console.error('Withdraw error:', error instanceof Error ? error.message : String(error));
+      return json({ error: 'Internal server error' }, 500);
     }
   }
 
@@ -277,10 +283,11 @@ async function handleWalletRequest(request: Request, path: string) {
       if (!recipientUserId) return json({ error: 'Recipient wallet was not found.' }, 404);
       if (recipientUserId === auth.canonicalUser.id) return json({ error: 'Cannot send wallet funds to the same account.' }, 400);
       const { error } = await admin.rpc('app_transfer_wallet_funds', { p_from_user_id: auth.canonicalUser.id, p_to_user_id: recipientUserId, p_amount: amountJod, p_payment_method: 'wallet_balance' });
-      if (error) throw new Error(error.message);
+      if (error) throw new Error('Transfer failed');
       return json({ success: true, note });
     } catch (error) {
-      return json({ error: error instanceof Error ? error.message : String(error) }, 500);
+      console.error('Send error:', error instanceof Error ? error.message : String(error));
+      return json({ error: 'Internal server error' }, 500);
     }
   }
 
