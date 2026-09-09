@@ -23,7 +23,7 @@ describe('MobileErrorBoundary', () => {
         <React.Fragment>Child content</React.Fragment>
       </MobileErrorBoundary>,
     );
-    expect(screen.toJSON()).toContain('Child content');
+    expect(JSON.stringify(screen.toJSON())).toContain('Child content');
   });
 
   it('renders custom fallback when provided', () => {
@@ -32,7 +32,7 @@ describe('MobileErrorBoundary', () => {
         <React.Fragment>Child content</React.Fragment>
       </MobileErrorBoundary>,
     );
-    expect(screen.toJSON()).toContain('Child content');
+    expect(JSON.stringify(screen.toJSON())).toContain('Child content');
   });
 
   it('renders error UI with error ID when a child throws', () => {
@@ -46,8 +46,8 @@ describe('MobileErrorBoundary', () => {
         <ThrowComponent />
       </MobileErrorBoundary>,
     );
-    expect(screen.toJSON()).toContain('حدث خطأ غير متوقع');
-    expect(screen.toJSON()).toContain('err_');
+    expect(JSON.stringify(screen.toJSON())).toContain('حدث خطأ غير متوقع');
+    expect(JSON.stringify(screen.toJSON())).toContain('err_');
     expect(console.error).toHaveBeenCalled();
   });
 
@@ -79,8 +79,8 @@ describe('MobileErrorBoundary', () => {
         <ThrowComponent />
       </MobileErrorBoundary>,
     );
-    expect(screen.toJSON()).toContain('Dev mode crash');
-    expect(screen.toJSON()).toContain('معرف الخطأ');
+    expect(JSON.stringify(screen.toJSON())).toContain('Dev mode crash');
+    expect(JSON.stringify(screen.toJSON())).toContain('معرف الخطأ');
   });
 
   it('renders retry and support buttons in error state', () => {
@@ -94,8 +94,8 @@ describe('MobileErrorBoundary', () => {
         <ThrowComponent />
       </MobileErrorBoundary>,
     );
-    expect(screen.toJSON()).toContain('حاول مرة ثانية');
-    expect(screen.toJSON()).toContain('دعم');
+    expect(JSON.stringify(screen.toJSON())).toContain('حاول مرة ثانية');
+    expect(JSON.stringify(screen.toJSON())).toContain('دعم');
   });
 
   it('handleReset clears the error state', async () => {
@@ -110,7 +110,7 @@ describe('MobileErrorBoundary', () => {
       </MobileErrorBoundary>,
     );
 
-    expect(screen.toJSON()).toContain('حدث خطأ غير متوقع');
+    expect(JSON.stringify(screen.toJSON())).toContain('حدث خطأ غير متوقع');
 
     const resetButton = screen.getByRole('button', { name: 'حاول مرة ثانية' });
     await act(async () => {

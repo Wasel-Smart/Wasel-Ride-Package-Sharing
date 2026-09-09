@@ -2,6 +2,7 @@ import { supabase } from '@/utils/supabase/client';
 import { toMinorUnits } from '../shared/currency/currency';
 import { requestEdgeJson, BackendRequestError } from './backendWorkflow';
 import { getAuthDetails } from './core';
+import { generateJordanCliqDeeplink, generateJordanCliqQrPayload } from '../domain/payments/cliq';
 
 export interface PaymentIntentRequest {
   amount: number;
@@ -42,32 +43,32 @@ interface PendingPaymentRequest {
 const pendingPaymentRequests = new Map<string, PendingPaymentRequest>();
 
 class PaymentService {
-  async createPaymentIntent(request: PaymentIntentRequest): Promise<PaymentIntentResponse> {
-    const client = supabase ?? (() => { throw new Error('Payments unavailable: Supabase client not configured'); })();
+  async createPaymentIntent ( request: PaymentIntentRequest ): Promise<PaymentIntentResponse> {
+    const client = supabase ?? ( () => { throw new Error( 'Payments unavailable: Supabase client not configured' ); } )();
 
     const {
       data: { user },
       error: userError,
     } = await client.auth.getUser();
 
-    if (userError || !user) {
-      throw new BackendRequestError('Not authenticated', { status: 401, recoverable: true });
+    if ( userError || !user ) {
+      throw new BackendRequestError( 'Not authenticated', { status: 401, recoverable: true } );
     }
 
-    const existing = pendingPaymentRequests.get(request.bookingId);
-    if (existing) {
+    const existing = pendingPaymentRequests.get( request.bookingId );
+    if ( existing ) {
       const age = Date.now() - existing.timestamp;
-      if (age < 10_000) {
+      if ( age < 10_000 ) {
         existing.controller.abort();
       }
     }
 
     const controller = new AbortController();
-    pendingPaymentRequests.set(request.bookingId, { controller, timestamp: Date.now() });
+    pendingPaymentRequests.set( request.bookingId, { controller, timestamp: Date.now() } );
 
-    const amountMinor = toMinorUnits(request.amount, request.currency ?? 'jod');
-    if (!Number.isSafeInteger(amountMinor) || amountMinor < 50) {
-      throw new Error('Payment amount must be at least 0.50');
+    const amountMinor = toMinorUnits( request.amount, request.currency ?? 'jod' );
+    if ( !Number.isSafeInteger( amountMinor ) || amountMinor < 50 ) {
+      throw new Error( 'Payment amount must be at least 0.50' );
     }
 
     try {
@@ -77,7 +78,7 @@ class PaymentService {
         clientSecret?: string;
         paymentIntentId?: string;
         client_secret?: string;
-      }>({
+      }>( {
         path: '/payment/create-intent',
         operation: 'createPaymentIntent',
         authMode: 'required',
@@ -89,59 +90,59 @@ class PaymentService {
           currency: request.currency ?? 'jod',
           booking_id: request.bookingId,
           metadata: { ...request.metadata, booking_id: request.bookingId, user_id: user.id },
-          idempotency_key: `booking:${request.bookingId}`,
+          idempotency_key: `booking:${ request.bookingId }`,
         },
         timeout: PAYMENT_TIMEOUT_MS,
         retries: 1,
-      });
+      } );
 
       const clientSecret = data.clientSecret ?? data.client_secret;
-      if (!clientSecret || !data.paymentIntentId) {
-        throw new BackendRequestError('Invalid payment response', { status: 502 });
+      if ( !clientSecret || !data.paymentIntentId ) {
+        throw new BackendRequestError( 'Invalid payment response', { status: 502 } );
       }
 
       return { clientSecret, paymentIntentId: data.paymentIntentId };
     } finally {
-      pendingPaymentRequests.delete(request.bookingId);
+      pendingPaymentRequests.delete( request.bookingId );
     }
   }
 
-  async confirmPayment(bookingId: string): Promise<'succeeded' | 'failed' | 'pending'> {
+  async confirmPayment ( bookingId: string ): Promise<'succeeded' | 'failed' | 'pending'> {
     const { token, userId } = await getAuthDetails();
 
     const startTime = Date.now();
-    while (Date.now() - startTime < PAYMENT_POLL_MAX_DURATION) {
-      const status = await requestEdgeJson<string>({
-        path: `/booking/${encodeURIComponent(bookingId)}/payment-status`,
+    while ( Date.now() - startTime < PAYMENT_POLL_MAX_DURATION ) {
+      const status = await requestEdgeJson<string>( {
+        path: `/booking/${ encodeURIComponent( bookingId ) }/payment-status`,
         operation: 'getPaymentStatus',
         authMode: 'required',
         context: { token, userId },
         method: 'GET',
         timeout: 10_000,
-      });
+      } );
 
-      if (status === 'succeeded' || status === 'failed') {
+      if ( status === 'succeeded' || status === 'failed' ) {
         return status;
       }
 
-      await new Promise((resolve) => setTimeout(resolve, PAYMENT_POLL_INTERVAL));
+      await new Promise( ( resolve ) => setTimeout( resolve, PAYMENT_POLL_INTERVAL ) );
     }
 
     return 'pending';
   }
 
-  async processRefund(request: RefundRequest): Promise<RefundResponse> {
+  async processRefund ( request: RefundRequest ): Promise<RefundResponse> {
     const { token, userId } = await getAuthDetails();
     const amountMinor = request.amountMinor ??
-      (request.amount !== undefined && request.amount !== null
-        ? toMinorUnits(request.amount, 'jod')
-        : undefined);
+      ( request.amount !== undefined && request.amount !== null
+        ? toMinorUnits( request.amount, 'jod' )
+        : undefined );
 
     const data = await requestEdgeJson<{
       refundId?: string;
       amount?: number;
       status?: string;
-    }>({
+    }>( {
       path: '/payment/refund',
       operation: 'processRefund',
       authMode: 'required',
@@ -155,10 +156,10 @@ class PaymentService {
       },
       timeout: PAYMENT_TIMEOUT_MS,
       retries: 1,
-    });
+    } );
 
-    if (!data.refundId) {
-      throw new BackendRequestError('Invalid refund response', { status: 502 });
+    if ( !data.refundId ) {
+      throw new BackendRequestError( 'Invalid refund response', { status: 502 } );
     }
 
     return {
@@ -170,17 +171,17 @@ class PaymentService {
     };
   }
 
-  async getPaymentStatus(bookingId: string): Promise<string> {
+  async getPaymentStatus ( bookingId: string ): Promise<string> {
     const { token, userId } = await getAuthDetails();
 
-    const status = await requestEdgeJson<string>({
-      path: `/booking/${encodeURIComponent(bookingId)}/payment-status`,
+    const status = await requestEdgeJson<string>( {
+      path: `/booking/${ encodeURIComponent( bookingId ) }/payment-status`,
       operation: 'getPaymentStatus',
       authMode: 'required',
       context: { token, userId },
       method: 'GET',
       timeout: 10_000,
-    });
+    } );
 
     return status;
   }
@@ -188,8 +189,7 @@ class PaymentService {
   /**
    * Generates a Jordanian CliQ instant payment payload (JoPACC) with deep link and QR string.
    */
-  generateCliqPaymentDetails(bookingId: string, amountJod: number, alias: string = 'WASELSMART') {
-    const { generateJordanCliqDeeplink, generateJordanCliqQrPayload } = require('../domain/payments/cliq');
+  generateCliqPaymentDetails ( bookingId: string, amountJod: number, alias: string = 'WASELSMART' ) {
     const req = {
       identifierType: 'alias' as const,
       identifierValue: alias,
@@ -197,8 +197,8 @@ class PaymentService {
       orderOrBookingId: bookingId,
     };
     return {
-      deeplink: generateJordanCliqDeeplink(req),
-      qrPayload: generateJordanCliqQrPayload(req),
+      deeplink: generateJordanCliqDeeplink( req ),
+      qrPayload: generateJordanCliqQrPayload( req ),
     };
   }
 }

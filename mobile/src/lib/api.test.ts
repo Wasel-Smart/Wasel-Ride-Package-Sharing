@@ -82,12 +82,21 @@ describe('ApiClient', () => {
           status: 200,
           json: async () => ({ data: 'ok' }),
         } as unknown as Response);
-      jest.spyOn(globalThis, 'fetch').mockImplementation(mockFetch as unknown as typeof fetch);
+      const originalFetch = globalThis.fetch;
+      Object.defineProperty(globalThis, 'fetch', {
+        value: mockFetch,
+        writable: true,
+        configurable: true,
+      });
 
       const result = await apiClient.get('/test-endpoint');
       expect(mockFetch).toHaveBeenCalledTimes(2);
       expect(result.data).toEqual({ data: 'ok' });
-      jest.restoreAllMocks();
+      Object.defineProperty(globalThis, 'fetch', {
+        value: originalFetch,
+        writable: true,
+        configurable: true,
+      });
     });
 
     it('returns timeout error on abort', async () => {
@@ -95,11 +104,20 @@ describe('ApiClient', () => {
       const abortError = new Error('AbortError');
       abortError.name = 'AbortError';
       mockFetch.mockRejectedValueOnce(abortError);
-      jest.spyOn(globalThis, 'fetch').mockImplementation(mockFetch as unknown as typeof fetch);
+      const originalFetch = globalThis.fetch;
+      Object.defineProperty(globalThis, 'fetch', {
+        value: mockFetch,
+        writable: true,
+        configurable: true,
+      });
 
       const result = await apiClient.request('/test', { timeout: 100, retries: 0 });
       expect(result.error).toBe('Request timeout');
-      jest.restoreAllMocks();
+      Object.defineProperty(globalThis, 'fetch', {
+        value: originalFetch,
+        writable: true,
+        configurable: true,
+      });
     });
   });
 });
