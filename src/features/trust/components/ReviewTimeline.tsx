@@ -13,9 +13,9 @@ function statusStyle(status: ReviewHistoryItem['status']) {
 }
 
 function formatDate(iso: string | null): string {
-  if (!iso) {return 'No date';}
+  if (!iso) {return '—';}
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) {return 'No date';}
+  if (Number.isNaN(date.getTime())) {return '—';}
   return date.toLocaleDateString(undefined, {
     year: 'numeric',
     month: 'short',
@@ -87,7 +87,7 @@ export function ReviewTimeline({ items, t }: { items: ReviewHistoryItem[]; t: (k
               </div>
               {item.providerReference && (
                 <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
-                  Ref: {item.providerReference}
+                  {t('trustCenterExpanded.sanadReference')}: {item.providerReference}
                 </div>
               )}
               {item.failureReason && (

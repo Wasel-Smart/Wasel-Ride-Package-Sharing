@@ -5,10 +5,12 @@ export function TrustActionRow({
   primary,
   secondary,
   refresh,
+  refreshLabel = 'Refresh',
 }: {
   primary?: ReactNode;
   secondary?: ReactNode;
   refresh?: () => void;
+  refreshLabel?: string;
 }) {
   return (
     <div
@@ -23,7 +25,7 @@ export function TrustActionRow({
       {secondary}
       {refresh ? (
         <WaselButton variant="outline" onClick={() => { void refresh(); }}>
-          Refresh
+          {refreshLabel}
         </WaselButton>
       ) : null}
     </div>

@@ -747,7 +747,7 @@ export default function TrustCenterPage() {
                      padding: `${SPACE[3]} ${SPACE[4]}`,
                      borderRadius: R.lg,
                      border: `1px solid ${C.error}33`,
-                     borderLeft: `3px solid ${C.error}`,
+                     borderInlineStart: `3px solid ${C.error}`,
                      background: `${C.error}12`,
                      color: C.error,
                      fontSize: TYPE.size.sm,
@@ -801,7 +801,7 @@ export default function TrustCenterPage() {
                        padding: `${SPACE[3]} ${SPACE[4]}`,
                        borderRadius: R.lg,
                        border: `1px solid ${C.border}`,
-                       borderLeft: `3px solid ${heroAccent}`,
+                       borderInlineStart: `3px solid ${heroAccent}`,
                        background: C.card,
                        flexWrap: 'wrap',
                      }}
@@ -890,6 +890,7 @@ export default function TrustCenterPage() {
                       refresh={() => {
                         void reloadTrustStatus();
                       }}
+                      refreshLabel={t('trustCenterExpanded.refreshStatus')}
                     />
                   }
                 >
@@ -900,7 +901,7 @@ export default function TrustCenterPage() {
                     id="identity-reference"
                     label={t('trustCenterExpanded.sanadReference')}
                     value={identityReference}
-                    onChange={() => { void setIdentityReference(); }}
+                    onChange={(val) => setIdentityReference(val)}
                     dir={ar ? 'rtl' : 'ltr'}
                     aria-invalid={Boolean(validationErrors.identityReference)}
                     aria-describedby="identity-reference-error"
@@ -914,7 +915,7 @@ export default function TrustCenterPage() {
                     id="identity-document-ref"
                     label={t('trustCenterExpanded.documentReferenceOptional')}
                     value={identityDocumentReference}
-                    onChange={() => { void setIdentityDocumentReference(); }}
+                    onChange={(val) => setIdentityDocumentReference(val)}
                     dir={ar ? 'rtl' : 'ltr'}
                   />
                   {formatTimestamp(identityStep?.updatedAt) ? (
@@ -1052,7 +1053,7 @@ export default function TrustCenterPage() {
                         id="phone-number"
                         label={t('trustCenterExpanded.phoneNumberLabel')}
                         value={phoneInput}
-                        onChange={() => { void setPhoneInput(); }}
+                        onChange={(val) => setPhoneInput(val)}
                         type="tel"
                         dir="ltr"
                         aria-invalid={Boolean(validationErrors.phone)}
@@ -1085,7 +1086,7 @@ export default function TrustCenterPage() {
                             id="phone-code"
                             label={t('trustCenterExpanded.enterVerificationCode')}
                             value={phoneCode}
-                            onChange={() => { void setPhoneCode(); }}
+                            onChange={(val) => setPhoneCode(val)}
                             type="text"
                             dir="ltr"
                             aria-invalid={Boolean(validationErrors.phoneCode)}
@@ -1159,7 +1160,7 @@ export default function TrustCenterPage() {
                           id="driver-license"
                           label={t('trustCenterExpanded.driverLicenseNumber')}
                           value={licenseNumber}
-                          onChange={() => { void setLicenseNumber(); }}
+                          onChange={(val) => setLicenseNumber(val)}
                           dir={ar ? 'rtl' : 'ltr'}
                           aria-invalid={Boolean(validationErrors.licenseNumber)}
                           aria-describedby="driver-license-error"
@@ -1173,7 +1174,7 @@ export default function TrustCenterPage() {
                           id="driver-document-ref"
                           label={t('trustCenterExpanded.documentReferenceOptional')}
                           value={driverDocumentReference}
-                          onChange={() => { void setDriverDocumentReference(); }}
+                          onChange={(val) => setDriverDocumentReference(val)}
                           dir={ar ? 'rtl' : 'ltr'}
                         />
                         <TrustActionRow
@@ -1223,14 +1224,14 @@ export default function TrustCenterPage() {
                   footer={
                     <TrustActionRow
                       primary={
-                        <WaselButton onClick={() => { void nav(); }} variant="primary">
+                        <WaselButton onClick={() => { void nav('/app/wallet'); }} variant="primary">
                           {t('trustCenterExpanded.openWallet')}
                         </WaselButton>
                       }
                       secondary={
                         <WaselButton
                           variant="outline"
-                          onClick={() => { void nav(); }}
+                          onClick={() => { void nav('/app/settings'); }}
                         >
                           {t('trustCenterExpanded.accountSettings')}
                         </WaselButton>
@@ -1272,7 +1273,7 @@ export default function TrustCenterPage() {
                   padding: `${SPACE[4]} ${SPACE[4]}`,
                   borderRadius: R.xl,
                   border: `1px solid ${item.gate.allowed ? C.green : C.cyan}24`,
-                  borderLeft: `3px solid ${item.gate.allowed ? C.green : C.cyan}`,
+                  borderInlineStart: `3px solid ${item.gate.allowed ? C.green : C.cyan}`,
                   background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
                   boxShadow: SH.sm,
                   flexWrap: 'wrap',

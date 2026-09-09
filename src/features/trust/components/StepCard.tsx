@@ -19,6 +19,7 @@ export function StepCard({
   children?: ReactNode;
   footer?: ReactNode;
   badgeLabel?: string;
+  t?: (key: string) => string;
 }) {
   const accent = stateAccent(state);
 
@@ -66,13 +67,25 @@ export function StepCard({
         <StatusBadge
           label={
             badgeLabel ??
-              (state === 'completed'
-                ? 'Completed'
-                : state === 'in_progress'
-                  ? 'In progress'
-                  : state === 'failed'
-                    ? 'Failed'
-                    : 'Not started')
+              (t
+                ? t(
+                    `trustCenterExpanded.${
+                      state === 'completed'
+                        ? 'completed'
+                        : state === 'in_progress'
+                          ? 'inProgress'
+                          : state === 'failed'
+                            ? 'failed'
+                            : 'notStarted'
+                    }`,
+                  )
+                : state === 'completed'
+                  ? 'Completed'
+                  : state === 'in_progress'
+                    ? 'In progress'
+                    : state === 'failed'
+                      ? 'Failed'
+                      : 'Not started')
           }
           accent={accent}
         />

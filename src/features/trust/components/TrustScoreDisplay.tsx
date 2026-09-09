@@ -23,9 +23,19 @@ export function TrustScoreDisplay({
   dir?: 'ltr' | 'rtl';
 }) {
   const clamped = Math.max(0, Math.min(100, score));
-  const color = scoreColor(clamped);
-  const labelText = scoreLabel ?? (clamped >= 80 ? 'Strong' : clamped >= 50 ? 'Fair' : 'Weak');
-  const offset = CIRCUMFERENCE - (clamped / 100) * CIRCUMFERENCE;
+  const labelText =
+    scoreLabel ??
+    (clamped >= 80
+      ? dir === 'rtl'
+        ? 'قوي'
+        : 'Strong'
+      : clamped >= 50
+        ? dir === 'rtl'
+          ? 'جيد'
+          : 'Fair'
+        : dir === 'rtl'
+          ? 'ضعيف'
+          : 'Weak');
   const fontFamily = dir === 'rtl' ? FA : F;
 
   return (
