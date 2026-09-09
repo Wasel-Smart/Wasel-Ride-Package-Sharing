@@ -70,50 +70,6 @@ import {
   fetchDriverProfiles,
 } from './shared.ts';
 
-noContent,
-  buildResponseHeaders,
-  finalizeResponse,
-  isOriginAllowed,
-  isWebhookRoute,
-  enforceRequestSecurity,
-  ensureRuntimeAdminAccess,
-  authenticateRequest,
-  getAdminClient,
-  authenticateAuthUser,
-  enforcePermission,
-  hasAnyPermission,
-  getFunctionBaseUrl,
-  executeSqlStatements,
-  getAppBaseUrl,
-  matchesAuthenticatedUser,
-  ensureCanonicalUserForAuth,
-  getWalletForUser,
-  getVerificationForUser,
-  getDriverForUser,
-  ensureDriverForUser,
-  isApprovedDriver,
-  buildProfilePayload,
-  mapTripRow,
-  mapBookingRow,
-  mapPackageRow,
-  fetchDriverProfiles,
-  authorizeTripOwner,
-  buildTrustStatus,
-  ensureMobilitySeed,
-  handleWalletDispatch,
-  resolveRoute,
-  logUnhandledRouteError,
-  sanitizedUnhandledErrorResponse,
-  const auth = await authenticateWalletRequest( request, requestedUserId );
-  if ( 'error' in auth ) return auth.error;
-
-  try {
-    return json( await loadWalletPayload( auth.admin, auth.canonicalUser.id ) );
-  } catch ( error ) {
-    return json( { error: error instanceof Error ? error.message : String( error ) }, 500 );
-  }
-}
-
 async function handleGetWalletTransactions ( request: Request, requestedUserId: string ) {
   const auth = await authenticateWalletRequest( request, requestedUserId );
   if ( 'error' in auth ) return auth.error;

@@ -70,52 +70,6 @@ import {
   fetchDriverProfiles,
 } from './shared.ts';
 
-noContent,
-  buildResponseHeaders,
-  finalizeResponse,
-  isOriginAllowed,
-  isWebhookRoute,
-  enforceRequestSecurity,
-  ensureRuntimeAdminAccess,
-  authenticateRequest,
-  getAdminClient,
-  authenticateAuthUser,
-  enforcePermission,
-  hasAnyPermission,
-  getFunctionBaseUrl,
-  executeSqlStatements,
-  getAppBaseUrl,
-  matchesAuthenticatedUser,
-  ensureCanonicalUserForAuth,
-  getWalletForUser,
-  getVerificationForUser,
-  getDriverForUser,
-  ensureDriverForUser,
-  isApprovedDriver,
-  buildProfilePayload,
-  mapTripRow,
-  mapBookingRow,
-  mapPackageRow,
-  fetchDriverProfiles,
-  authorizeTripOwner,
-  buildTrustStatus,
-  ensureMobilitySeed,
-  handleWalletDispatch,
-  resolveRoute,
-  logUnhandledRouteError,
-  sanitizedUnhandledErrorResponse,
-  const accessError = ensureRuntimeAdminAccess( request );
-  if ( accessError ) return accessError;
-
-  await executeSqlStatements( CONTENT_MODERATION_SQL );
-
-  return json( {
-    applied: [
-      '20260503010000_content_moderation_runtime.sql',
-    ],
-  } );
-}
-
 async function handleSubmitReport ( request: Request ) {
   const auth = await authenticateRequest( request );
   if ( auth.error ) return auth.error;

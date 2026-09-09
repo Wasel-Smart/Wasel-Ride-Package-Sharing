@@ -70,60 +70,6 @@ import {
   fetchDriverProfiles,
 } from './shared.ts';
 
-noContent,
-  buildResponseHeaders,
-  finalizeResponse,
-  isOriginAllowed,
-  isWebhookRoute,
-  enforceRequestSecurity,
-  ensureRuntimeAdminAccess,
-  authenticateRequest,
-  getAdminClient,
-  authenticateAuthUser,
-  enforcePermission,
-  hasAnyPermission,
-  getFunctionBaseUrl,
-  executeSqlStatements,
-  getAppBaseUrl,
-  matchesAuthenticatedUser,
-  ensureCanonicalUserForAuth,
-  getWalletForUser,
-  getVerificationForUser,
-  getDriverForUser,
-  ensureDriverForUser,
-  isApprovedDriver,
-  buildProfilePayload,
-  mapTripRow,
-  mapBookingRow,
-  mapPackageRow,
-  fetchDriverProfiles,
-  authorizeTripOwner,
-  buildTrustStatus,
-  ensureMobilitySeed,
-  handleWalletDispatch,
-  resolveRoute,
-  logUnhandledRouteError,
-  sanitizedUnhandledErrorResponse,
-  const auth = await authenticateRequest( request );
-  if ( auth.error ) return auth.error;
-
-  const tripId = decodeURIComponent( path.split( '/' )[ 3 ] ?? '' );
-  if ( !( await assertTripParticipant( auth.admin, tripId, auth.canonicalUser.id ) ) ) {
-    return json( { error: 'Not authorized to read messages in this trip' }, 403 );
-  }
-
-  const limit = Math.min( Number( new URL( request.url ).searchParams.get( 'limit' ) ?? 50 ), 100 );
-  const { data, error } = await auth.admin
-    .from( 'messages' )
-    .select( 'id, trip_id, sender_id, content, type, metadata, read_by, created_at, sender:profiles(id, full_name, avatar_url)' )
-    .eq( 'trip_id', tripId )
-    .order( 'created_at', { ascending: false } )
-    .limit( limit );
-
-  if ( error ) return json( { error: error.message }, 500 );
-  return json( { messages: ( data ?? [] ).reverse() } );
-}
-
 async function handleSendChatMessage ( request: Request, path: string ) {
   const auth = await authenticateRequest( request );
   if ( auth.error ) return auth.error;

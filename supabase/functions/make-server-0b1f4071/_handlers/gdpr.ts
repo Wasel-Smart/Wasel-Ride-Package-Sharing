@@ -70,60 +70,6 @@ import {
   fetchDriverProfiles,
 } from './shared.ts';
 
-noContent,
-  buildResponseHeaders,
-  finalizeResponse,
-  isOriginAllowed,
-  isWebhookRoute,
-  enforceRequestSecurity,
-  ensureRuntimeAdminAccess,
-  authenticateRequest,
-  getAdminClient,
-  authenticateAuthUser,
-  enforcePermission,
-  hasAnyPermission,
-  getFunctionBaseUrl,
-  executeSqlStatements,
-  getAppBaseUrl,
-  matchesAuthenticatedUser,
-  ensureCanonicalUserForAuth,
-  getWalletForUser,
-  getVerificationForUser,
-  getDriverForUser,
-  ensureDriverForUser,
-  isApprovedDriver,
-  buildProfilePayload,
-  mapTripRow,
-  mapBookingRow,
-  mapPackageRow,
-  fetchDriverProfiles,
-  authorizeTripOwner,
-  buildTrustStatus,
-  ensureMobilitySeed,
-  handleWalletDispatch,
-  resolveRoute,
-  logUnhandledRouteError,
-  sanitizedUnhandledErrorResponse,
-  const auth = await authenticateRequest( request );
-  if ( auth.error ) return auth.error;
-
-  const body = await request.json();
-  const userId = String( body.userId ?? auth.canonicalUser.id );
-  if ( userId !== auth.canonicalUser.id ) return json( { error: 'Unauthorized' }, 403 );
-
-  const { error } = await auth.admin.from( 'user_consents' ).insert( {
-    user_id: userId,
-    consent_type: String( body.consentType ?? '' ),
-    granted: Boolean( body.granted ),
-    ip_address: typeof body.ipAddress === 'string' ? body.ipAddress : null,
-    user_agent: typeof body.userAgent === 'string' ? body.userAgent : request.headers.get( 'user-agent' ),
-    created_at: new Date( Number( body.timestamp ?? Date.now() ) ).toISOString(),
-  } );
-
-  if ( error ) return json( { error: error.message }, 500 );
-  return json( { ok: true }, 201 );
-}
-
 async function handleGetConsent ( request: Request, path: string ) {
   const auth = await authenticateRequest( request );
   if ( auth.error ) return auth.error;

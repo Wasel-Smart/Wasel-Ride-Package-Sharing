@@ -70,67 +70,6 @@ import {
   fetchDriverProfiles,
 } from './shared.ts';
 
-noContent,
-  buildResponseHeaders,
-  finalizeResponse,
-  isOriginAllowed,
-  isWebhookRoute,
-  enforceRequestSecurity,
-  ensureRuntimeAdminAccess,
-  authenticateRequest,
-  getAdminClient,
-  authenticateAuthUser,
-  enforcePermission,
-  hasAnyPermission,
-  getFunctionBaseUrl,
-  executeSqlStatements,
-  getAppBaseUrl,
-  matchesAuthenticatedUser,
-  ensureCanonicalUserForAuth,
-  getWalletForUser,
-  getVerificationForUser,
-  getDriverForUser,
-  ensureDriverForUser,
-  isApprovedDriver,
-  buildProfilePayload,
-  mapTripRow,
-  mapBookingRow,
-  mapPackageRow,
-  fetchDriverProfiles,
-  authorizeTripOwner,
-  buildTrustStatus,
-  ensureMobilitySeed,
-  handleWalletDispatch,
-  resolveRoute,
-  logUnhandledRouteError,
-  sanitizedUnhandledErrorResponse,
-  try {
-    const admin = getAdminClient();
-    await ensureMobilitySeed( admin );
-    const { data, error } = await admin
-      .from( 'mobility_corridors' )
-      .select( 'id, origin_city, destination_city, base_price_seat, demand_index, seats_total, seats_booked, updated_at' )
-      .order( 'demand_index', { ascending: false } )
-      .limit( 12 );
-    if ( error ) return json( { error: error.message }, 500 );
-
-    const corridors = ( Array.isArray( data ) ? data : [] ).map( ( row: Record<string, unknown> ) => ( {
-      id: String( row.id ?? '' ),
-      from: String( row.origin_city ?? '' ),
-      to: String( row.destination_city ?? '' ),
-      priceJod: Number( row.base_price_seat ?? 0 ),
-      demand: Number( row.demand_index ?? 0 ),
-      seatsTotal: Number( row.seats_total ?? 0 ),
-      seatsBooked: Number( row.seats_booked ?? 0 ),
-      updatedAt: String( row.updated_at ?? new Date().toISOString() ),
-    } ) );
-
-    return json( { corridors, generatedAt: new Date().toISOString() } );
-  } catch ( err ) {
-    return json( { error: err instanceof Error ? err.message : 'Snapshot failed' }, 500 );
-  }
-}
-
 async function handleMobilityOSRequest ( request: Request, path: string ) {
   const auth = await authenticateRequest( request );
   if ( 'error' in auth ) return auth.error;

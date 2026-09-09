@@ -70,56 +70,6 @@ import {
   fetchDriverProfiles,
 } from './shared.ts';
 
-noContent,
-  buildResponseHeaders,
-  finalizeResponse,
-  isOriginAllowed,
-  isWebhookRoute,
-  enforceRequestSecurity,
-  ensureRuntimeAdminAccess,
-  authenticateRequest,
-  getAdminClient,
-  authenticateAuthUser,
-  enforcePermission,
-  hasAnyPermission,
-  getFunctionBaseUrl,
-  executeSqlStatements,
-  getAppBaseUrl,
-  matchesAuthenticatedUser,
-  ensureCanonicalUserForAuth,
-  getWalletForUser,
-  getVerificationForUser,
-  getDriverForUser,
-  ensureDriverForUser,
-  isApprovedDriver,
-  buildProfilePayload,
-  mapTripRow,
-  mapBookingRow,
-  mapPackageRow,
-  fetchDriverProfiles,
-  authorizeTripOwner,
-  buildTrustStatus,
-  ensureMobilitySeed,
-  handleWalletDispatch,
-  resolveRoute,
-  logUnhandledRouteError,
-  sanitizedUnhandledErrorResponse,
-  const auth = await authenticateRequest( request );
-  if ( 'error' in auth ) return auth.error;
-
-  const { data, error } = await auth.admin
-    .from( 'communication_preferences' )
-    .select( '*' )
-    .eq( 'user_id', auth.canonicalUser.id )
-    .maybeSingle();
-
-  if ( error ) {
-    return json( { error: error.message }, 500 );
-  }
-
-  return json( { preferences: data ?? null } );
-}
-
 async function handlePatchCommunicationPreferences ( request: Request ) {
   const auth = await authenticateRequest( request );
   if ( 'error' in auth ) return auth.error;
