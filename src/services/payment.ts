@@ -184,6 +184,23 @@ class PaymentService {
 
     return status;
   }
+
+  /**
+   * Generates a Jordanian CliQ instant payment payload (JoPACC) with deep link and QR string.
+   */
+  generateCliqPaymentDetails(bookingId: string, amountJod: number, alias: string = 'WASELSMART') {
+    const { generateJordanCliqDeeplink, generateJordanCliqQrPayload } = require('../domain/payments/cliq');
+    const req = {
+      identifierType: 'alias' as const,
+      identifierValue: alias,
+      amountJod,
+      orderOrBookingId: bookingId,
+    };
+    return {
+      deeplink: generateJordanCliqDeeplink(req),
+      qrPayload: generateJordanCliqQrPayload(req),
+    };
+  }
 }
 
 export const paymentService = new PaymentService();
