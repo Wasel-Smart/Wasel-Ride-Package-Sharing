@@ -29,7 +29,7 @@ export interface CliqPaymentReceipt {
 export function isValidJordanCliqPhone ( phone: string ): boolean {
   const cleaned = phone.replace( /[\s\-+]/g, '' );
   // Matches 077..., 078..., 079... or 96277..., 96278..., 96279...
-  return /^(?:(?:00962|\+962|0)?7[789]\d{7})$/.test( cleaned );
+  return /^(?:(?:00962|962|0)?7[789]\d{7})$/.test( cleaned );
 }
 
 /**

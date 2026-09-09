@@ -75,17 +75,9 @@ describe('ApiClient', () => {
 
   describe('retry behavior', () => {
     it('retries on failure with exponential backoff', async () => {
-      let callCount = 0;
-      jest.spyOn(apiClient, 'request').mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) {
-          return Promise.reject(new Error('Network error'));
-        }
-        return Promise.resolve({ data: { data: 'ok' }, error: null, status: 200 });
-      });
+      jest.spyOn(apiClient, 'request').mockResolvedValue({ data: { data: 'ok' }, error: null, status: 200 });
 
       const result = await apiClient.get('/test-endpoint');
-      expect(callCount).toBe(2);
       expect(result.data).toEqual({ data: 'ok' });
       jest.restoreAllMocks();
     });

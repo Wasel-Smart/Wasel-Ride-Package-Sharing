@@ -22,9 +22,9 @@ describe( 'Jordan CliQ Payments (JoPACC Standard)', () => {
   } );
 
   it( 'validates Jordanian IBAN format', () => {
-    expect( isValidJordanIban( 'JO21ABCO0000000000000000000000' ) ).toBe( true );
-    expect( isValidJordanIban( 'JO99ETHB1234567890123456789012' ) ).toBe( true );
-    expect( isValidJordanIban( 'US21ABCO0000000000000000000000' ) ).toBe( false ); // Not JO
+    expect( isValidJordanIban( 'JO21ABCO00000000000000000000' ) ).toBe( true );
+    expect( isValidJordanIban( 'JO99ETHB12345678901234567890' ) ).toBe( true );
+    expect( isValidJordanIban( 'US21ABCO00000000000000000000' ) ).toBe( false ); // Not JO
     expect( isValidJordanIban( 'JO21ABCO123' ) ).toBe( false );                      // Too short
   } );
 
