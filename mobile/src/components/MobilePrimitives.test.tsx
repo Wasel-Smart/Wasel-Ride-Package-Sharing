@@ -1,7 +1,5 @@
 import React from 'react';
-import { Text, View } from 'react-native';
-import TestRenderer from 'react-test-renderer';
-
+import { render, screen } from '@testing-library/react-native';
 import {
   ScreenShell,
   SectionHeader,
@@ -17,65 +15,59 @@ import {
 
 describe('MobilePrimitives', () => {
   it('renders ScreenShell with children', () => {
-    const renderer = TestRenderer.create(<ScreenShell><Text>Hello</Text></ScreenShell>);
-    expect(JSON.stringify(renderer.toJSON())).toContain('Hello');
+    render(<ScreenShell><React.Fragment>Hello</React.Fragment></ScreenShell>);
+    expect(screen.toJSON()).toContain('Hello');
   });
 
   it('renders SectionHeader with title and body', () => {
-    const renderer = TestRenderer.create(<SectionHeader eyebrow="EYEBROW" title="Title" body="Body text" />);
-    const tree = JSON.stringify(renderer.toJSON());
-    expect(tree).toContain('Title');
-    expect(tree).toContain('Body text');
+    render(<SectionHeader eyebrow="EYEBROW" title="Title" body="Body text" />);
+    expect(screen.toJSON()).toContain('Title');
+    expect(screen.toJSON()).toContain('Body text');
   });
 
   it('renders PremiumPanel with children', () => {
-    const renderer = TestRenderer.create(<PremiumPanel><Text>Premium</Text></PremiumPanel>);
-    expect(JSON.stringify(renderer.toJSON())).toContain('Premium');
+    render(<PremiumPanel><React.Fragment>Premium</React.Fragment></PremiumPanel>);
+    expect(screen.toJSON()).toContain('Premium');
   });
 
   it('renders InfoCard with icon, title, and body', () => {
-    const renderer = TestRenderer.create(<InfoCard icon="car" title="Ride" body="Book a ride" />);
-    const tree = JSON.stringify(renderer.toJSON());
-    expect(tree).toContain('Ride');
-    expect(tree).toContain('Book a ride');
+    render(<InfoCard icon="car" title="Ride" body="Book a ride" />);
+    expect(screen.toJSON()).toContain('Ride');
+    expect(screen.toJSON()).toContain('Book a ride');
   });
 
   it('renders MetricTile with label and value', () => {
-    const renderer = TestRenderer.create(<MetricTile label="Distance" value="12 km" />);
-    const tree = JSON.stringify(renderer.toJSON());
-    expect(tree).toContain('Distance');
-    expect(tree).toContain('12 km');
+    render(<MetricTile label="Distance" value="12 km" />);
+    expect(screen.toJSON()).toContain('Distance');
+    expect(screen.toJSON()).toContain('12 km');
   });
 
   it('renders StatusPill with label', () => {
-    const renderer = TestRenderer.create(<StatusPill label="In Progress" />);
-    expect(JSON.stringify(renderer.toJSON())).toContain('In Progress');
+    render(<StatusPill label="In Progress" />);
+    expect(screen.toJSON()).toContain('In Progress');
   });
 
   it('renders StateNotice with loading indicator', () => {
-    const renderer = TestRenderer.create(<StateNotice icon="car" title="Loading..." loading testID="state-notice" />);
-    const tree = JSON.stringify(renderer.toJSON());
-    expect(tree).toContain('state-notice');
+    render(<StateNotice icon="car" title="Loading..." loading testID="state-notice" />);
+    expect(screen.getByTestId('state-notice')).toBeTruthy();
   });
 
   it('renders PrimaryButton with label and icon', () => {
-    const renderer = TestRenderer.create(<PrimaryButton label="Continue" icon="arrow-forward" onPress={() => {}} />);
-    expect(JSON.stringify(renderer.toJSON())).toContain('Continue');
+    render(<PrimaryButton label="Continue" icon="arrow-forward" onPress={() => {}} />);
+    expect(screen.toJSON()).toContain('Continue');
   });
 
   it('renders ActionRow with label and value', () => {
-    const renderer = TestRenderer.create(<ActionRow icon="car" label="Ride" value="2 km" onPress={() => {}} />);
-    const tree = JSON.stringify(renderer.toJSON());
-    expect(tree).toContain('Ride');
-    expect(tree).toContain('2 km');
+    render(<ActionRow icon="car" label="Ride" value="2 km" onPress={() => {}} />);
+    expect(screen.toJSON()).toContain('Ride');
+    expect(screen.toJSON()).toContain('2 km');
   });
 
   it('renders RoutePreview with endpoints and stats', () => {
-    const renderer = TestRenderer.create(<RoutePreview from="Amman" to="Zarqa" eta="25 min" distance="22 km" />);
-    const tree = JSON.stringify(renderer.toJSON());
-    expect(tree).toContain('Amman');
-    expect(tree).toContain('Zarqa');
-    expect(tree).toContain('25 min');
-    expect(tree).toContain('22 km');
+    render(<RoutePreview from="Amman" to="Zarqa" eta="25 min" distance="22 km" />);
+    expect(screen.toJSON()).toContain('Amman');
+    expect(screen.toJSON()).toContain('Zarqa');
+    expect(screen.toJSON()).toContain('25 min');
+    expect(screen.toJSON()).toContain('22 km');
   });
 });

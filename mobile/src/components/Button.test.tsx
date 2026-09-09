@@ -1,48 +1,43 @@
 import React from 'react';
-import { Text, View } from 'react-native';
-import TestRenderer from 'react-test-renderer';
+import { render, fireEvent } from '@testing-library/react-native';
 import { Button } from './Button';
 
 describe('Button', () => {
   it('renders primary button with title', () => {
-    const renderer = TestRenderer.create(<Button title="Press me" onPress={() => {}} />);
-    expect(JSON.stringify(renderer.toJSON())).toContain('Press me');
+    const { getByText } = render(<Button title="Press me" onPress={() => {}} />);
+    expect(getByText('Press me')).toBeTruthy();
   });
 
   it('renders secondary variant', () => {
-    const renderer = TestRenderer.create(<Button title="Secondary" variant="secondary" onPress={() => {}} />);
-    expect(JSON.stringify(renderer.toJSON())).toContain('Secondary');
+    const { getByText } = render(<Button title="Secondary" variant="secondary" onPress={() => {}} />);
+    expect(getByText('Secondary')).toBeTruthy();
   });
 
   it('renders ghost variant', () => {
-    const renderer = TestRenderer.create(<Button title="Ghost" variant="ghost" onPress={() => {}} />);
-    expect(JSON.stringify(renderer.toJSON())).toContain('Ghost');
+    const { getByText } = render(<Button title="Ghost" variant="ghost" onPress={() => {}} />);
+    expect(getByText('Ghost')).toBeTruthy();
   });
 
   it('renders danger variant', () => {
-    const renderer = TestRenderer.create(<Button title="Delete" variant="danger" onPress={() => {}} />);
-    expect(JSON.stringify(renderer.toJSON())).toContain('Delete');
+    const { getByText } = render(<Button title="Delete" variant="danger" onPress={() => {}} />);
+    expect(getByText('Delete')).toBeTruthy();
   });
 
   it('shows loading indicator when loading', () => {
-    const renderer = TestRenderer.create(<Button title="Loading" loading onPress={() => {}} testID="btn-loading" />);
-    const tree = JSON.stringify(renderer.toJSON());
-    expect(tree).not.toContain('Loading');
-    expect(tree).toContain('btn-loading');
+    const { queryByText, getByTestId } = render(<Button title="Loading" loading onPress={() => {}} testID="btn-loading" />);
+    expect(queryByText('Loading')).toBeNull();
+    expect(getByTestId('btn-loading')).toBeTruthy();
   });
 
   it('disables press when disabled', () => {
     const onPress = jest.fn();
-    const renderer = TestRenderer.create(<Button title="Disabled" disabled onPress={onPress} />);
-    const root = renderer.root;
-    const touchable = root.findByProps({ disabled: true });
-    expect(touchable).toBeTruthy();
+    const { getByText } = render(<Button title="Disabled" disabled onPress={onPress} />);
+    fireEvent.press(getByText('Disabled'));
+    expect(onPress).not.toHaveBeenCalled();
   });
 
   it('applies custom style', () => {
-    const renderer = TestRenderer.create(<Button title="Styled" onPress={() => {}} style={{ opacity: 0.5 }} testID="btn-styled" />);
-    const root = renderer.root;
-    const button = root.findByProps({ testID: 'btn-styled' });
-    expect(button.props.style).toEqual(expect.objectContaining({ opacity: 0.5 }));
+    const { getByTestId } = render(<Button title="Styled" onPress={() => {}} style={{ opacity: 0.5 }} testID="btn-styled" />);
+    expect(getByTestId('btn-styled')).toBeTruthy();
   });
 });

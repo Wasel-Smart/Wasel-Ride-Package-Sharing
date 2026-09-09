@@ -1,7 +1,5 @@
-import React, { act } from 'react';
-import { Text } from 'react-native';
-import TestRenderer from 'react-test-renderer';
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import React from 'react';
+import { render, screen, act } from '@testing-library/react-native';
 import { MobileErrorBoundary } from '../components/MobileErrorBoundary';
 
 const originalConsoleError = console.error;
@@ -20,21 +18,21 @@ describe('MobileErrorBoundary', () => {
   });
 
   it('renders children when there is no error', () => {
-    const renderer = TestRenderer.create(
+    render(
       <MobileErrorBoundary>
-        <Text>Child content</Text>
+        <React.Fragment>Child content</React.Fragment>
       </MobileErrorBoundary>,
     );
-    expect(JSON.stringify(renderer.toJSON())).toContain('Child content');
+    expect(screen.toJSON()).toContain('Child content');
   });
 
   it('renders custom fallback when provided', () => {
-    const renderer = TestRenderer.create(
-      <MobileErrorBoundary fallback={<Text>Custom fallback</Text>}>
-        <Text>Child content</Text>
+    render(
+      <MobileErrorBoundary fallback={<React.Fragment>Custom fallback</React.Fragment>}>
+        <React.Fragment>Child content</React.Fragment>
       </MobileErrorBoundary>,
     );
-    expect(JSON.stringify(renderer.toJSON())).toContain('Child content');
+    expect(screen.toJSON()).toContain('Child content');
   });
 
   it('renders error UI with error ID when a child throws', () => {
@@ -43,14 +41,13 @@ describe('MobileErrorBoundary', () => {
     };
 
     console.error = jest.fn();
-    const renderer = TestRenderer.create(
+    render(
       <MobileErrorBoundary>
         <ThrowComponent />
       </MobileErrorBoundary>,
     );
-    const tree = JSON.stringify(renderer.toJSON());
-    expect(tree).toContain('حدث خطأ غير متوقع');
-    expect(tree).toContain('err_');
+    expect(screen.toJSON()).toContain('حدث خطأ غير متوقع');
+    expect(screen.toJSON()).toContain('err_');
     expect(console.error).toHaveBeenCalled();
   });
 
@@ -61,7 +58,7 @@ describe('MobileErrorBoundary', () => {
     };
 
     console.error = jest.fn();
-    TestRenderer.create(
+    render(
       <MobileErrorBoundary onError={onError}>
         <ThrowComponent />
       </MobileErrorBoundary>,
@@ -77,14 +74,13 @@ describe('MobileErrorBoundary', () => {
     };
 
     console.error = jest.fn();
-    const renderer = TestRenderer.create(
+    render(
       <MobileErrorBoundary>
         <ThrowComponent />
       </MobileErrorBoundary>,
     );
-    const tree = JSON.stringify(renderer.toJSON());
-    expect(tree).toContain('Dev mode crash');
-    expect(tree).toContain('معرف الخطأ');
+    expect(screen.toJSON()).toContain('Dev mode crash');
+    expect(screen.toJSON()).toContain('معرف الخطأ');
   });
 
   it('renders retry and support buttons in error state', () => {
@@ -93,14 +89,13 @@ describe('MobileErrorBoundary', () => {
     };
 
     console.error = jest.fn();
-    const renderer = TestRenderer.create(
+    render(
       <MobileErrorBoundary>
         <ThrowComponent />
       </MobileErrorBoundary>,
     );
-    const tree = JSON.stringify(renderer.toJSON());
-    expect(tree).toContain('حاول مرة ثانية');
-    expect(tree).toContain('دعم');
+    expect(screen.toJSON()).toContain('حاول مرة ثانية');
+    expect(screen.toJSON()).toContain('دعم');
   });
 
   it('handleReset clears the error state', async () => {
@@ -109,18 +104,20 @@ describe('MobileErrorBoundary', () => {
     };
 
     console.error = jest.fn();
-    const testRenderer = TestRenderer.create(
+    const { unmount } = render(
       <MobileErrorBoundary>
         <ThrowComponent />
       </MobileErrorBoundary>,
     );
 
-    const instance = testRenderer.root.instance as unknown as MobileErrorBoundary;
+    expect(screen.toJSON()).toContain('حدث خطأ غير متوقع');
 
-    expect(instance.state.hasError).toBe(true);
+    const resetButton = screen.getByRole('button', { name: 'حاول مرة ثانية' });
     await act(async () => {
-      instance.handleReset();
+      resetButton.props.onPress();
     });
-    expect(instance.state.hasError).toBe(false);
+
+    expect(screen.queryByText('حدث خطأ غير متوقع')).toBeNull();
+    unmount();
   });
 });
