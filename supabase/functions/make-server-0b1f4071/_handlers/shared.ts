@@ -14,7 +14,7 @@ import {
   mapTwilioStatusToLifecycle,
   type CommunicationDeliveryRecord,
   type DeliveryProcessorEnv,
-} from './_shared/communication-runtime.ts';
+} from '../_shared/communication-runtime.ts';
 import {
   generateBackupCodes,
   generateQRCode,
@@ -22,12 +22,12 @@ import {
   hashBackupCode,
   hashBackupCodes,
   verifyTwoFactorChallenge,
-} from './_shared/two-factor-runtime.ts';
+} from '../_shared/two-factor-runtime.ts';
 import {
   buildPublicHealthPayload,
   isRuntimeAdminEnabled,
   resolveAllowedOrigin,
-} from './_shared/request-security.ts';
+} from '../_shared/request-security.ts';
 import {
   advanceCorridorAfterBooking,
   buildMobilitySnapshot,
@@ -35,15 +35,15 @@ import {
   EVENT_OUTBOX_SQL,
   type MobilityBookingType,
   type MobilityCorridorRow,
-} from './_shared/mobility-os-runtime.ts';
-import { calculateDirectPrice, toNumber } from './_shared/pricing.ts';
-import { normalizePhoneNumber, isValidE164Phone } from './_shared/phone.ts';
+} from '../_shared/mobility-os-runtime.ts';
+import { calculateDirectPrice, toNumber } from '../_shared/pricing.ts';
+import { normalizePhoneNumber, isValidE164Phone } from '../_shared/phone.ts';
 import {
   AccessRole,
   AccessPermission,
   hasPermission,
   resolveAccessRole,
-} from './_shared/rbac.ts';
+} from '../_shared/rbac.ts';
 
 export const SUPABASE_URL = Deno.env.get( 'SUPABASE_URL' ) ?? '';
 export const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get( 'SUPABASE_SERVICE_ROLE_KEY' ) ?? '';
