@@ -324,7 +324,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const result = await signInWithOAuthProvider(client, provider, returnTo);
 
           if (result.error) {
-            const oauthError = parseOAuthError(result.error, provider as unknown);
+            const oauthError = parseOAuthError(result.error, provider);
             if (oauthError && import.meta.env?.DEV) {
               console.error(`[OAuth ${provider}]`, sanitizeLogMessage(oauthError));
             }

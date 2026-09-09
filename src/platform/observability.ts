@@ -1,6 +1,6 @@
 import { sanitizeLogMessage } from '../utils/sanitization';
 
-export type StructuredLogLevel = 'info' | 'warning' | 'error';
+export type StructuredLogLevel = 'debug' | 'info' | 'warning' | 'error';
 
 export interface StructuredLogEntry {
   level: StructuredLogLevel;

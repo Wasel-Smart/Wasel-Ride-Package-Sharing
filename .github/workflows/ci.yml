@@ -54,6 +54,19 @@ jobs:
           cache: 'npm'
       - run: npm ci --legacy-peer-deps
       - run: npm run test:unit -- --run --coverage
+      - name: Enforce coverage thresholds
+        run: |
+          node -e "
+            const fs = require('fs');
+            const summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            const t = summary.total;
+            const fail = [];
+            if (t.branches.pct < 75)  fail.push('branches ' + t.branches.pct + '% < 75%');
+            if (t.functions.pct < 80) fail.push('functions ' + t.functions.pct + '% < 80%');
+            if (t.lines.pct < 85)     fail.push('lines ' + t.lines.pct + '% < 85%');
+            if (fail.length) { console.error('Coverage gate failed:', fail.join(', ')); process.exit(1); }
+            console.log('Coverage gate passed');
+          "
       - uses: actions/upload-artifact@v4
         if: always()
         with:

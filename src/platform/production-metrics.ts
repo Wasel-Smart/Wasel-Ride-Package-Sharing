@@ -338,8 +338,10 @@ class ProductionMetricsCollector {
   }
 
   async publishMetrics(metrics: ProductionMetrics): Promise<void> {
+    const endpoint = import.meta.env.VITE_METRICS_ENDPOINT as string | undefined;
+    if (!endpoint) {return;}
     try {
-      await fetch('/api/metrics/publish', {
+      await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(metrics),

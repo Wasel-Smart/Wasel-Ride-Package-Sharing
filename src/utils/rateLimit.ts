@@ -134,10 +134,9 @@ export class RateLimiter {
     return { allowed, remaining, resetAt };
   }
 
-  async recordRequest(success: boolean): Promise<void> {
-    if (this.config.skipSuccessfulRequests && success) {return;}
-    if (this.config.skipFailedRequests && !success) {return;}
-    await this.checkLimit();
+  async recordRequest(_success: boolean): Promise<void> {
+    // No-op: checkLimit already increments the counter.
+    // This method exists for API compatibility with skipSuccessfulRequests / skipFailedRequests.
   }
 }
 
@@ -161,14 +160,7 @@ export async function withRateLimit<T>(
     );
   }
 
-  try {
-    const result = await operation();
-    await limiter.recordRequest(true);
-    return result;
-  } catch (error) {
-    await limiter.recordRequest(false);
-    throw error;
-  }
+  return operation();
 }
 
 // Export pre-configured limiters

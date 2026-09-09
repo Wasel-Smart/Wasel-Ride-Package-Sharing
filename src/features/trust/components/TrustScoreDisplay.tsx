@@ -37,6 +37,8 @@ export function TrustScoreDisplay({
           ? 'ضعيف'
           : 'Weak');
   const fontFamily = dir === 'rtl' ? FA : F;
+  const color = scoreColor(clamped);
+  const offset = CIRCUMFERENCE - (CIRCUMFERENCE * clamped) / 100;
 
   return (
     <div

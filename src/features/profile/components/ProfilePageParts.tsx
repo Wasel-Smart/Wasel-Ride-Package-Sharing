@@ -47,7 +47,7 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
       label={label}
       value={value}
       icon={icon}
-      onClick={() => { void onClick(); }}
+      onClick={() => { void onClick?.(); }}
       danger={danger}
       badge={badge}
     />

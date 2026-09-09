@@ -67,25 +67,13 @@ export function StepCard({
         <StatusBadge
           label={
             badgeLabel ??
-              (t
-                ? t(
-                    `trustCenterExpanded.${
-                      state === 'completed'
-                        ? 'completed'
-                        : state === 'in_progress'
-                          ? 'inProgress'
-                          : state === 'failed'
-                            ? 'failed'
-                            : 'notStarted'
-                    }`,
-                  )
-                : state === 'completed'
-                  ? 'Completed'
-                  : state === 'in_progress'
-                    ? 'In progress'
-                    : state === 'failed'
-                      ? 'Failed'
-                      : 'Not started')
+              (state === 'completed'
+                ? 'Completed'
+                : state === 'in_progress'
+                  ? 'In progress'
+                  : state === 'failed'
+                    ? 'Failed'
+                    : 'Not started')
           }
           accent={accent}
         />

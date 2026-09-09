@@ -95,11 +95,11 @@ export abstract class BaseWorker<T = unknown> {
   protected config: WorkerConfig;
   protected isRunning = false;
   protected broker: EventBroker;
+  protected _inFlight = 0;
   private circuitBreakerState: 'closed' | 'open' | 'half-open' = 'closed';
   private failureCount = 0;
   private lastFailureTime = 0;
   private unsubscribers: Array<() => void> = [];
-  private _inFlight = 0;
 
   constructor(config: WorkerConfig, broker: EventBroker = defaultBroker) {
     this.config = config;
@@ -144,7 +144,7 @@ export abstract class BaseWorker<T = unknown> {
     this.unsubscribers.forEach(unsub => unsub());
     this.unsubscribers = [];
     const deadline = Date.now() + timeoutMs;
-    while (this['_inFlight'] > 0 && Date.now() < deadline) {
+    while (this._inFlight > 0 && Date.now() < deadline) {
       await new Promise(resolve => setTimeout(resolve, 50));
     }
     console.info( // nosec CWE-117

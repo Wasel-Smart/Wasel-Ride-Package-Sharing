@@ -95,6 +95,7 @@ export const EVENT_TYPE_TO_TOPIC: Partial<Record<DomainEventType, QueueTopic>> =
   RideRequested: 'rides.requested',
   DriverAssigned: 'rides.assigned',
   RideAccepted: 'rides.assigned',
+  RideStarted: 'rides.requested',
   RideCompleted: 'rides.completed',
   RideCancelled: 'rides.completed',
   PackageCreated: 'packages.created',

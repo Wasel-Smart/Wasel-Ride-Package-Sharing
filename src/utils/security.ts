@@ -167,7 +167,8 @@ export function checkPasswordStrength(password: string): PasswordStrength {
     }
   });
 
-  const finalScore = Math.min(4, Math.floor(score / 2)) as 0 | 1 | 2 | 3 | 4;
+  const clampedScore = Math.min(criteria.length, score);
+  const finalScore = Math.min(4, Math.floor(clampedScore / 2)) as 0 | 1 | 2 | 3 | 4;
   const isValid = finalScore >= 3 && password.length >= 8;
 
   return { score: finalScore, feedback, isValid };

@@ -260,9 +260,13 @@ SLO targets and error-budget rules: [docs/reliability-slos.md](docs/reliability-
 | Integration | Vitest | `npm run test:unit -- tests/integration` |
 | E2E | Playwright | `npm run test:e2e` |
 | Mobile E2E | Detox | `cd mobile && npx detox test` |
-| Load | k6 | `npm run test:load:smoke` |
+| Load — smoke | k6 | `npm run test:load:smoke` |
+| Load — realistic | k6 | `npm run test:load:realistic` |
+| Load — soak (60m) | k6 | `npm run test:load:soak` |
+| Load — production | k6 | `npm run test:load:production` |
+| Contract | Vitest | `npm run test:unit -- tests/unit/queue-contracts.test.ts` |
 
-Coverage thresholds: branches 70%, functions 75%, lines 80%.
+Coverage thresholds: branches 75%, functions 80%, lines 85%.
 Full testing guide: [docs/testing.md](docs/testing.md)
 
 ---

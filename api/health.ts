@@ -100,7 +100,8 @@ async function querySupabaseMetrics(): Promise<HealthResponse['broker']> {
             .eq('status', 'failed'),
           supabase
             .from('dead_letter_messages')
-            .select('topic'),
+            .select('topic')
+            .limit(500),
         ]),
         timeout,
       ]).catch(() => [

@@ -118,7 +118,8 @@ export function resolveAllowedOrigin(
   }
 
   // Support wildcard origins (e.g. 'https://*.vercel.app') for preview deployments
-  if (allowLocalOrigins) {
+  const isDevEnv = Deno.env.get('APP_ENV') === 'development' || Deno.env.get('NODE_ENV') === 'development';
+  if (allowLocalOrigins || isDevEnv) {
     for (const entry of allowed) {
       if (entry.endsWith('*.vercel.app')) {
         const prefix = entry.slice(0, -'*.vercel.app'.length);

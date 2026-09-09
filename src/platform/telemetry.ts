@@ -86,13 +86,15 @@ class TelemetryCollector {
       status: 'ok',
     });
 
-    console.info( // nosec CWE-117
-      createStructuredLogEntry('info', `Span started: ${sanitizeLogMessage(name)}`, 'telemetry', {
-        traceId,
-        spanId,
-        parentSpanId: sanitizeLogMessage(attributes.parentSpanId),
-      }),
-    );
+    if (import.meta.env.DEV) {
+      console.info( // nosec CWE-117
+        JSON.stringify(createStructuredLogEntry('info', `Span started: ${sanitizeLogMessage(name)}`, 'telemetry', {
+          traceId,
+          spanId,
+          parentSpanId: sanitizeLogMessage(attributes.parentSpanId),
+        })),
+      );
+    }
 
     return spanId;
   }
@@ -185,7 +187,7 @@ class TelemetryCollector {
     this.flushTimer = setInterval(() => { void this.flush(); }, this.flushInterval);
 
     window.addEventListener('beforeunload', () => {
-      this.flush();
+      void this.flush();
     });
   }
 

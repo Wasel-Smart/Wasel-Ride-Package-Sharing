@@ -486,8 +486,8 @@ export function measurePerformance(name: string, startMark: string, endMark?: st
     const measure = performance.measure(name, startMark, endMark);
 
     if (import.meta.env.DEV) {
-    console.info(`[perf] ${sanitizeLogMessage(name)}: ${sanitizeLogMessage(measure.duration.toFixed(2))}ms`);
-  }
+      console.info(`[perf] ${sanitizeLogMessage(name)}: ${sanitizeLogMessage(measure.duration.toFixed(2))}ms`);
+    }
 
     // Log slow operations
     if (measure.duration > 1000) {

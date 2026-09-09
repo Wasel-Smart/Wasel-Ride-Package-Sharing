@@ -6,7 +6,6 @@
  */
 import { useAuth } from './AuthContext';
 import type { WaselUser } from './authContextHelpers';
-import { splitFullName } from './auth/helpers';
 
 export type { WaselUser };
 
@@ -54,7 +53,7 @@ export function useLocalAuth(): LocalAuthCtx {
     const result = await auth.signUp(email, password, name, phone ?? '', returnTo);
     return {
       error: result.error ? String(result.error) : null,
-      requiresEmailConfirmation: result.requiresEmailConfirmation,
+      requiresEmailConfirmation: result.requiresEmailConfirmation ?? false,
       email,
     };
   };

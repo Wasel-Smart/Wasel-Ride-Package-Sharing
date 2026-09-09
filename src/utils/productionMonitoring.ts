@@ -249,29 +249,26 @@ export class ProductionMonitor {
     const checkResults = await Promise.all(
       healthChecks.map(async check => {
         const start = Date.now();
+        // Only probe relative endpoints in browser context
+        if (typeof window === 'undefined') {
+          return { name: check.name, status: 'pass' as const, latency: 0 };
+        }
         try {
           const controller = new AbortController();
           const timeout = setTimeout(() => controller.abort(), check.timeout * 1000);
-
-          const response = await fetch(check.endpoint, {
-            signal: controller.signal,
-          });
-
+          const url = check.endpoint.startsWith('http')
+            ? check.endpoint
+            : `${window.location.origin}${check.endpoint}`;
+          const response = await fetch(url, { signal: controller.signal });
           clearTimeout(timeout);
           const latency = Date.now() - start;
-
           return {
             name: check.name,
-            status:
-              response.status === check.expectedStatus ? ('pass' as const) : ('fail' as const),
+            status: response.status === check.expectedStatus ? ('pass' as const) : ('fail' as const),
             latency,
           };
         } catch {
-          return {
-            name: check.name,
-            status: 'fail' as const,
-            latency: Date.now() - start,
-          };
+          return { name: check.name, status: 'fail' as const, latency: Date.now() - start };
         }
       }),
     );

@@ -284,7 +284,7 @@ async function handleWalletRequest(request: Request, path: string) {
       if (recipientUserId === auth.canonicalUser.id) return json({ error: 'Cannot send wallet funds to the same account.' }, 400);
       const { error } = await admin.rpc('app_transfer_wallet_funds', { p_from_user_id: auth.canonicalUser.id, p_to_user_id: recipientUserId, p_amount: amountJod, p_payment_method: 'wallet_balance' });
       if (error) throw new Error('Transfer failed');
-      return json({ success: true, note });
+      return json({ success: true, note: note.slice(0, 200).replace(/[<>"']/g, '') });
     } catch (error) {
       console.error('Send error:', error instanceof Error ? error.message : String(error));
       return json({ error: 'Internal server error' }, 500);

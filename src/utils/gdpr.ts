@@ -146,7 +146,7 @@ class GDPRCompliance {
       )?.error;
       if (firstError) {throw firstError;}
 
-      const downloadUrl = `exports/${userId}/${Date.now()}.json`;
+      const downloadUrl = `exports/${encodeURIComponent(userId)}/${Date.now()}.json`;
 
       const exportJson = JSON.stringify(
         {

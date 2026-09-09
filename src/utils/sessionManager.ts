@@ -8,7 +8,6 @@ import { generateSecureId } from './encryption';
 import { safeStorageGetItem, safeStorageRemoveItem, safeStorageSetItem } from './browserStorage';
 
 const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
-const MAX_CONCURRENT_SESSIONS = 3;
 const ACTIVITY_CHECK_INTERVAL = 60 * 1000; // 1 minute
 const SESSION_ID_KEY = 'wasel_session_id';
 const SESSION_METADATA_KEY = 'wasel_session_metadata';
@@ -48,7 +47,7 @@ class SessionManager {
   constructor(config: Partial<SessionConfig> = {}) {
     this.config = {
       timeoutMs: config.timeoutMs ?? SESSION_TIMEOUT_MS,
-      maxConcurrentSessions: config.maxConcurrentSessions ?? MAX_CONCURRENT_SESSIONS,
+      maxConcurrentSessions: config.maxConcurrentSessions ?? 3,
       onTimeout: config.onTimeout ?? (() => {}),
       onSuspiciousActivity: config.onSuspiciousActivity ?? (() => {}),
     };

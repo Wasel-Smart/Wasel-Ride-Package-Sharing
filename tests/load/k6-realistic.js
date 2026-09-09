@@ -59,7 +59,7 @@ export const options = {
     errors: ['rate<0.05'],
     'http_req_duration{scenario:browser}': ['p(95)<600'],
     'http_req_duration{scenario:booker}': ['p(95)<1000'],
-  };
+  },
 };
 
 // ─── User Journey Functions ───────────────────────────────────────────────────

@@ -35,6 +35,7 @@ export interface DomainEventPayloadMap {
   RideStarted: {
     bookingId: string;
     rideId: string;
+    startedAt: string;
   };
   RideCompleted: {
     bookingId: string;

@@ -1,9 +1,10 @@
-﻿/**
+/**
  * OAuth Configuration Validator
  * Validates that OAuth providers are properly configured before use
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Provider } from '@supabase/auth-js';
 
 export type OAuthProvider = 'google' | 'facebook' | 'microsoft' | 'apple';
 
@@ -41,7 +42,7 @@ export async function validateOAuthProvider(
     // signInWithOAuth with shouldCreateSession=false lets us check config
     // without initiating the full flow
     const { data, error } = await client.auth.signInWithOAuth({
-      provider: provider as unknown,
+      provider: provider as unknown as Provider,
       options: {
         redirectTo: window.location.origin + '/app/auth/callback',
         skipBrowserRedirect: true,

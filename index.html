@@ -1,59 +1,182 @@
 <!DOCTYPE html>
+
 <html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <script src="/initial-locale.js"></script>
-    <!-- theme-color is intentionally omitted here; PWA theme_color in manifest.webmanifest covers all browsers including the install path. -->
-    <meta name="theme-color" content="#071521" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#071521" />
-    <meta name="color-scheme" content="dark" />
-    <meta name="application-name" content="Wasel" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Wasel" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
-    <meta name="supported-color-schemes" content="dark light" />
-    <meta name="apple-touch-fullscreen" content="yes" />
-    <meta name="apple-mobile-web-app-orientation" content="portrait" />
-    <meta name="HandheldFriendly" content="true" />
-    <meta name="MobileOptimized" content="width" />
-    <meta name="apple-itunes-app" content="app-id=com.wasel.smart" />
 
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+```
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+/>
 
-    <!-- iOS PWA startup images (portrait). Replace with actual screenshots
-         matching each device resolution for best results. -->
-    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
-    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
-    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
-    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" />
-    <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
+<!-- Initial locale must run before the application loads -->
+<script src="/initial-locale.js"></script>
 
-    <!-- Preconnect to critical third-party origins -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://zexlxabdcsjefptmjhuq.supabase.co" />
-    <link rel="preconnect" href="https://api.stripe.com" />
-    <link rel="preconnect" href="https://maps.googleapis.com" />
-    <link rel="dns-prefetch" href="https://sentry.io" />
-    <link rel="dns-prefetch" href="https://js.stripe.com" />
+<!-- Theme / application -->
+<meta name="theme-color" content="#071521" />
+<meta name="color-scheme" content="dark light" />
+<meta name="application-name" content="Wasel" />
 
-    <!-- Fonts: load with display=swap so text is visible immediately. -->
-    <link rel="preload" as="image" href="/brand/assets/logos/symbols/symbol-default.webp" imagesizes="280px" fetchpriority="high" />
-    <style>
-      html, body, #root { min-height: 100vh; min-height: 100dvh; }
-      body { margin: 0; background: #071521; }
-    </style>
+<!-- PWA / iOS -->
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta
+  name="apple-mobile-web-app-status-bar-style"
+  content="black-translucent"
+/>
+<meta name="apple-mobile-web-app-title" content="Wasel" />
+<meta name="apple-touch-fullscreen" content="yes" />
+
+<!-- Prevent automatic phone/email/address detection -->
+<meta
+  name="format-detection"
+  content="telephone=no, date=no, email=no, address=no"
+/>
+
+<!-- App Store -->
+<meta name="apple-itunes-app" content="app-id=com.wasel.smart" />
+
+<!-- Favicons -->
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link
+  rel="icon"
+  type="image/png"
+  sizes="32x32"
+  href="/favicon-32x32.png"
+/>
+<link
+  rel="icon"
+  type="image/png"
+  sizes="16x16"
+  href="/favicon-16x16.png"
+/>
+
+<!-- Apple touch icon -->
+<link
+  rel="apple-touch-icon"
+  sizes="180x180"
+  href="/apple-touch-icon.png"
+/>
+
+<!-- PWA manifest -->
+<link
+  rel="manifest"
+  href="/manifest.webmanifest"
+/>
+
+<!-- iOS PWA startup images -->
+<link
+  rel="apple-touch-startup-image"
+  href="/apple-touch-icon.png"
+  media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)"
+/>
+<link
+  rel="apple-touch-startup-image"
+  href="/apple-touch-icon.png"
+  media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)"
+/>
+<link
+  rel="apple-touch-startup-image"
+  href="/apple-touch-icon.png"
+  media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)"
+/>
+<link
+  rel="apple-touch-startup-image"
+  href="/apple-touch-icon.png"
+  media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)"
+/>
+<link
+  rel="apple-touch-startup-image"
+  href="/apple-touch-icon.png"
+  media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)"
+/>
+
+<!-- Critical third-party connection hints -->
+<link
+  rel="preconnect"
+  href="https://fonts.googleapis.com"
+/>
+<link
+  rel="preconnect"
+  href="https://fonts.gstatic.com"
+  crossorigin
+/>
+
+<link
+  rel="preconnect"
+  href="https://zexlxabdcsjefptmjhuq.supabase.co"
+/>
+
+<link
+  rel="preconnect"
+  href="https://api.stripe.com"
+/>
+
+<link
+  rel="preconnect"
+  href="https://maps.googleapis.com"
+/>
+
+<link
+  rel="dns-prefetch"
+  href="https://sentry.io"
+/>
+
+<link
+  rel="dns-prefetch"
+  href="https://js.stripe.com"
+/>
+
+<!-- Preload Wasel brand asset -->
+<link
+  rel="preload"
+  as="image"
+  href="/brand/assets/logos/symbols/symbol-default.webp"
+  sizes="280px"
+  fetchpriority="high"
+/>
+
+<!-- Minimal pre-render styling -->
+<style>
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  html {
+    background: #071521;
+  }
+
+  body {
+    margin: 0;
+    background: #071521;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    width: 100%;
+  }
+</style>
+```
+
   </head>
 
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+
+```
+<!-- Wasel application entry point -->
+<script
+  type="module"
+  src="/src/main.tsx"
+></script>
+```
+
   </body>
 </html>
