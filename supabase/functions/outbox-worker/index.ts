@@ -148,16 +148,19 @@ async function drainOutbox (): Promise<{ processed: number; succeeded: number; f
 }
 
 Deno.serve( async ( request: Request ) => {
-  // Cron invocations arrive as POST with no body from Supabase scheduler.
-  // Manual invocations must supply the worker secret header.
+  // All invocations, including scheduled ones, must prove knowledge of the
+  // secret. Request headers are client-controlled and cannot identify cron.
   if ( request.method !== 'POST' ) {
     return new Response( JSON.stringify( { error: 'Method not allowed' } ), { status: 405 } );
   }
 
-  const isCron = request.headers.get( 'x-supabase-cron' ) === 'true';
   const secret = request.headers.get( 'x-outbox-worker-secret' ) ?? '';
 
-  if ( !isCron && WORKER_SECRET && !constantTimeEqual( secret, WORKER_SECRET ) ) {
+  if ( !WORKER_SECRET ) {
+    return new Response( JSON.stringify( { error: 'Worker is not configured' } ), { status: 503 } );
+  }
+
+  if ( !constantTimeEqual( secret, WORKER_SECRET ) ) {
     return new Response( JSON.stringify( { error: 'Unauthorized' } ), { status: 401 } );
   }
 

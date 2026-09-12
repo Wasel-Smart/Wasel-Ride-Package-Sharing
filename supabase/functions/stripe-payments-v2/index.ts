@@ -25,6 +25,9 @@ const paymentRateLimit = createRateLimitMiddleware(
 );
 const ALLOWED_CURRENCIES = new Set(["jod", "usd"]);
 const MAX_PAYMENT_AMOUNT_MINOR = 500_000;
+const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
+const ALLOWED_PAYMENT_PURPOSES = new Set(['wallet_top_up', 'ride_payment', 'package_payment']);
+const WASEL_PLUS_PRICE_ID = Deno.env.get('STRIPE_WASEL_PLUS_PRICE_ID') ?? '';
 
 function getCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get("origin");
@@ -62,7 +65,9 @@ function isAllowedRedirectUrl(value: unknown): value is string {
   try {
     const url = new URL(value);
     if (url.protocol !== "https:") return false;
-    if (!APP_ORIGIN) return true;
+    // Redirect URLs are a security boundary. Missing configuration must never
+    // widen the policy to every HTTPS site.
+    if (!APP_ORIGIN) return false;
     return url.origin === new URL(APP_ORIGIN).origin;
   } catch {
     return false;
@@ -179,14 +184,12 @@ Deno.serve(async (req: Request) => {
         action,
         amount,
         currency = "usd",
-        customer_id,
         metadata,
         idempotency_key,
       } = body as {
         action?: string;
         amount?: unknown;
         currency?: string;
-        customer_id?: string;
         metadata?: Record<string, string>;
         idempotency_key?: string;
       };
@@ -201,15 +204,21 @@ Deno.serve(async (req: Request) => {
       if (!ALLOWED_CURRENCIES.has(normalizedCurrency)) {
         return jsonResponse({ error: "Invalid currency" }, { status: 400 });
       }
+      if (idempotency_key && !IDEMPOTENCY_KEY_PATTERN.test(idempotency_key)) {
+        return jsonResponse({ error: "Invalid idempotency key" }, { status: 400 });
+      }
+      const purpose = typeof metadata?.purpose === 'string' ? metadata.purpose : undefined;
+      if (purpose && !ALLOWED_PAYMENT_PURPOSES.has(purpose)) {
+        return jsonResponse({ error: "Invalid payment purpose" }, { status: 400 });
+      }
 
       const pi = await stripe.paymentIntents.create(
         {
           amount: normalizedAmount,
           currency: normalizedCurrency,
-          customer: customer_id || undefined,
           // The account receiving any wallet credit is derived from the JWT,
           // never from a client-supplied user ID.
-          metadata: { ...(metadata || {}), user_id: auth.id },
+          metadata: { ...(purpose ? { purpose } : {}), user_id: auth.id },
         },
         idempotency_key ? { idempotencyKey: idempotency_key } : undefined,
       );
@@ -246,24 +255,30 @@ Deno.serve(async (req: Request) => {
       if (auth instanceof Response) return auth;
 
       const body = await req.json() as {
-        line_items?: unknown[];
+        price_id?: unknown;
+        quantity?: unknown;
         mode?: string;
         success_url?: unknown;
         cancel_url?: unknown;
         customer_email?: string;
       };
       const {
-        line_items,
+        price_id,
+        quantity,
         mode = "payment",
         success_url,
         cancel_url,
         customer_email,
       } = body;
+      const normalizedQuantity =
+        typeof quantity === 'number' && Number.isInteger(quantity) ? quantity : null;
       if (
-        !Array.isArray(line_items) || line_items.length === 0 ||
-        line_items.length > 20
+        typeof price_id !== 'string' ||
+        !WASEL_PLUS_PRICE_ID ||
+        price_id !== WASEL_PLUS_PRICE_ID ||
+        normalizedQuantity === null || normalizedQuantity < 1 || normalizedQuantity > 12
       ) {
-        return jsonResponse({ error: "Invalid line items" }, { status: 400 });
+        return jsonResponse({ error: "Invalid checkout item" }, { status: 400 });
       }
       if (
         !isAllowedRedirectUrl(success_url) || !isAllowedRedirectUrl(cancel_url)
@@ -272,7 +287,9 @@ Deno.serve(async (req: Request) => {
       }
 
       const session = await stripe.checkout.sessions.create({
-        line_items: line_items as Stripe.Checkout.SessionCreateParams.LineItem[],
+        // The price is selected from a server-side allowlist. Never forward
+        // client-provided Stripe price_data or arbitrary line items.
+        line_items: [{ price: WASEL_PLUS_PRICE_ID, quantity: normalizedQuantity }],
         mode: mode === 'subscription' ? 'subscription' : 'payment',
         success_url,
         cancel_url,

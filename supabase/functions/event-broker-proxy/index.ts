@@ -64,18 +64,9 @@ function authorized(request: Request): boolean {
   if (EVENT_BROKER_SECRET && constantTimeEqual(secret ?? '', EVENT_BROKER_SECRET)) {
     return true;
   }
-
-  // Browser fallback: allow callers with a valid bearer token (JWT) when no
-  // worker secret is configured. The downstream Supabase client will enforce
-  // RLS on every query, so anonymous/browser access is constrained.
-  const authHeader = request.headers.get('authorization') ?? '';
-  if (authHeader.startsWith('Bearer ')) {
-    const token = authHeader.slice(7).trim();
-    if (token.length > 10) {
-      return true;
-    }
-  }
-
+  // This function uses a service-role client for every operation. A bearer
+  // token must never be treated as authenticated merely because it has the
+  // right shape; browser callers use RLS-backed direct access instead.
   return false;
 }
 
@@ -219,7 +210,7 @@ Deno.serve(async (request: Request) => {
     return json({ ok: true }, 204, request);
   }
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !EVENT_BROKER_SECRET) {
     return json({ error: 'Server misconfigured: missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY' }, 500, request);
   }
 

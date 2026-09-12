@@ -33,7 +33,7 @@ jest.mock('./config', () => ({
   },
 }));
 
-import { apiClient } from '../lib/api';
+import { apiClient, isValidApiUrl } from '../lib/api';
 
 describe('ApiClient', () => {
   beforeEach(() => {
@@ -74,6 +74,15 @@ describe('ApiClient', () => {
   });
 
   describe('retry behavior', () => {
+    it('does not retry a mutation unless it carries an idempotency key', async () => {
+      const fetchMock = jest.spyOn(global, 'fetch').mockRejectedValue(new Error('offline'));
+
+      const result = await apiClient.post('/test-endpoint', { field: 'value' });
+
+      expect(result.status).toBe(0);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
     it('retries on failure with exponential backoff', async () => {
       jest.spyOn(apiClient, 'request').mockResolvedValue({ data: { data: 'ok' }, error: null, status: 200 });
 
@@ -88,6 +97,18 @@ describe('ApiClient', () => {
       const result = await apiClient.request('/test', { timeout: 100, retries: 0 });
       expect(result.error).toBe('Request timeout');
       jest.restoreAllMocks();
+    });
+  });
+
+  describe('endpoint validation', () => {
+    it('requires a hostname boundary for allowlisted domains', () => {
+      expect(isValidApiUrl('https://api.wasel14.online/v1')).toBe(true);
+      expect(isValidApiUrl('https://evilwasel14.online/v1')).toBe(false);
+    });
+
+    it('only permits HTTP for localhost', () => {
+      expect(isValidApiUrl('http://localhost:3000/v1')).toBe(true);
+      expect(isValidApiUrl('http://wasel14.online/v1')).toBe(false);
     });
   });
 });

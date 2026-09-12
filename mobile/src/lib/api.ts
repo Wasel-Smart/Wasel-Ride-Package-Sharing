@@ -10,17 +10,21 @@ const apiBreaker = new CircuitBreaker('mobile-api', 5, 1, 5_000);
 
 const ALLOWED_API_DOMAINS = ['supabase.co', 'supabase.net', 'wasel14.online', 'localhost'];
 
-function isValidApiUrl(url: string): boolean {
+export function isValidApiUrl(url: string): boolean {
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     return false;
   }
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
+    // Cleartext is only appropriate for a local development server.
+    if (parsed.protocol === 'http:' && parsed.hostname !== 'localhost') return false;
     if (parsed.hostname === 'localhost') return true;
     const privateRanges = [/^127\./, /^10\./, /^172\.(1[6-9]|2[0-9]|3[01])\./, /^192\.168\./, /^169\.254\./];
     if (privateRanges.some(p => p.test(parsed.hostname))) return false;
-    return ALLOWED_API_DOMAINS.some(d => parsed.hostname.endsWith(d));
+    return ALLOWED_API_DOMAINS.some(domain =>
+      parsed.hostname === domain || parsed.hostname.endsWith(`.${domain}`),
+    );
   } catch {
     return false;
   }
@@ -88,7 +92,14 @@ class ApiClient {
 async request<T>(path: string, config: ApiRequestConfig = {}): Promise<ApiResponse<T>> {
      const url = `${this.baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
      const timeout = config.timeout ?? this.defaultTimeout;
-     const retries = config.retries ?? 2;
+      const method = config.method ?? 'GET';
+      // Retrying a mutation without a durable idempotency key can duplicate a
+      // booking or payment after a network timeout. Callers may opt in only
+      // when they explicitly supply that key.
+      const hasIdempotencyKey = Boolean(
+        config.headers?.['X-Idempotency-Key'] ?? config.headers?.['x-idempotency-key'],
+      );
+      const retries = config.retries ?? (method === 'GET' || hasIdempotencyKey ? 2 : 0);
 
       if (!isValidApiUrl(url)) {
         return { data: null, error: 'Invalid or unauthorized URL', status: 0 };
@@ -105,7 +116,7 @@ async request<T>(path: string, config: ApiRequestConfig = {}): Promise<ApiRespon
          };
 
          const fetchOptions: RequestInit = {
-           method: config.method ?? 'GET',
+            method,
            headers,
            signal: controller.signal,
          };
