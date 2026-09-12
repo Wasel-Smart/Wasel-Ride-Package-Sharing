@@ -8,7 +8,24 @@ import { CircuitBreaker } from '../utils/circuitBreaker';
 
 const apiBreaker = new CircuitBreaker('mobile-api', 5, 1, 5_000);
 
-const ALLOWED_API_DOMAINS = ['supabase.co', 'supabase.net', 'wasel14.online', 'localhost'];
+const STATIC_ALLOWED_API_HOSTS = new Set(['wasel14.online', 'www.wasel14.online', 'localhost']);
+
+function configuredApiHosts(): Set<string> {
+  const hosts = new Set(STATIC_ALLOWED_API_HOSTS);
+  for (const value of [
+    waselMobileConfig.apiUrl,
+    waselMobileConfig.supabaseFunctionUrl,
+    waselMobileConfig.supabaseUrl,
+  ]) {
+    if (!value) continue;
+    try {
+      hosts.add(new URL(value).hostname);
+    } catch {
+      // Invalid configuration is rejected by isValidApiUrl below.
+    }
+  }
+  return hosts;
+}
 
 export function isValidApiUrl(url: string): boolean {
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -22,9 +39,7 @@ export function isValidApiUrl(url: string): boolean {
     if (parsed.hostname === 'localhost') return true;
     const privateRanges = [/^127\./, /^10\./, /^172\.(1[6-9]|2[0-9]|3[01])\./, /^192\.168\./, /^169\.254\./];
     if (privateRanges.some(p => p.test(parsed.hostname))) return false;
-    return ALLOWED_API_DOMAINS.some(domain =>
-      parsed.hostname === domain || parsed.hostname.endsWith(`.${domain}`),
-    );
+    return configuredApiHosts().has(parsed.hostname);
   } catch {
     return false;
   }

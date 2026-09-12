@@ -17,8 +17,6 @@ jest.mock('expo-constants', () => ({
   },
 }));
 
-jest.mock('react-native-url-polyfill/auto', () => ({}));
-
 jest.mock('../services/auth', () => ({
   mobileAuth: {
     getAccessToken: jest.fn(),
@@ -34,6 +32,9 @@ jest.mock('./config', () => ({
 }));
 
 import { apiClient, isValidApiUrl } from '../lib/api';
+import { setupURLPolyfill } from 'react-native-url-polyfill';
+
+setupURLPolyfill();
 
 describe('ApiClient', () => {
   beforeEach(() => {
@@ -102,7 +103,7 @@ describe('ApiClient', () => {
 
   describe('endpoint validation', () => {
     it('requires a hostname boundary for allowlisted domains', () => {
-      expect(isValidApiUrl('https://api.wasel14.online/v1')).toBe(true);
+      expect(isValidApiUrl('https://wasel14.online/v1')).toBe(true);
       expect(isValidApiUrl('https://evilwasel14.online/v1')).toBe(false);
     });
 

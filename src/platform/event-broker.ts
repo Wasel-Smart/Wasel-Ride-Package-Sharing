@@ -90,6 +90,13 @@ function createBroker(): EventBroker {
     return new InMemoryEventBroker();
   }
 
+  // A browser cannot safely possess the service credential required by the
+  // durable broker. Domain events that mutate backend workflows must be
+  // produced by authenticated server endpoints, never by browser code.
+  if (typeof window !== 'undefined') {
+    return new InMemoryEventBroker();
+  }
+
   const isLocalDev =
     typeof window !== 'undefined' &&
     (() => {

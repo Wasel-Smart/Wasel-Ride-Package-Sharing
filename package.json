@@ -1,4 +1,4 @@
-﻿{
+{
     "name": "wasel-web",
     "private": true,
     "overrides": {
@@ -84,6 +84,7 @@
         "embla-carousel-react": "^8.6.0",
         "facebook-nodejs-business-sdk": "^24.0.1",
         "input-otp": "^1.4.2",
+        "ioredis": "^5.11.1",
         "leaflet": "^1.9.4",
         "lucide-react": "^0.487.0",
         "motion": "^12.0.0",

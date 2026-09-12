@@ -66,7 +66,7 @@ function authorized(request: Request): boolean {
   }
   // This function uses a service-role client for every operation. A bearer
   // token must never be treated as authenticated merely because it has the
-  // right shape; browser callers use RLS-backed direct access instead.
+  // right shape; browser callers must not access this privileged proxy.
   return false;
 }
 
