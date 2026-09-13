@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 function createMockQueryBuilder() {
-  const builder: Record<string, unknown> = {
+  const builder: any = {
     from: vi.fn(),
     select: vi.fn(),
     eq: vi.fn(),
@@ -54,8 +54,8 @@ import { buildUserContext } from '../directSupabase/userContext';
 // vitest mock methods like `.mockImplementation`. Cast to `any` here so the
 // mock's actual (test-only) shape is usable below without re-casting at
 // every call site.
-const mockDb = getDb() as Record<string, unknown>;
-const mockBuildUserContext = buildUserContext as unknown as typeof buildUserContext;
+const mockDb = (getDb as unknown as () => any)() as any;
+const mockBuildUserContext = buildUserContext as any;
 
 describe('Direct Trust Phone Verification', () => {
   beforeEach(() => {

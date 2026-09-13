@@ -96,9 +96,13 @@ describe( 'Double-Entry Cash-on-Delivery (COD) Settlement Ledger', () => {
     } );
 
     expect( postings ).toHaveLength( 1 );
-    expect( postings[ 0 ].debitAccount ).toBe( 'COURIER_CASH_HOLDING' );
-    expect( postings[ 0 ].creditAccount ).toBe( 'PLATFORM_COMMISSION' );
-    expect( postings[ 0 ].amountJod ).toBe( 1.5 );
+    const firstPosting = postings[ 0 ];
+    expect( firstPosting ).toBeDefined();
+    if ( firstPosting ) {
+      expect( firstPosting.debitAccount ).toBe( 'COURIER_CASH_HOLDING' );
+      expect( firstPosting.creditAccount ).toBe( 'PLATFORM_COMMISSION' );
+      expect( firstPosting.amountJod ).toBe( 1.5 );
+    }
     expect( SettlementLedger.verifyZeroSum( postings ) ).toBe( true );
   } );
 } );
