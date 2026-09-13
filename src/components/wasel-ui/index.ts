@@ -15,4 +15,5 @@ export * from './WaselInput';
 export * from './WaselLogo';
 export * from './WaselPagePrimitives';
 export * from './WaselSelect';
+export * from './WaselSkeleton';
 export * from './OAuthStatus';

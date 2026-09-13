@@ -1,10 +1,35 @@
 /**
  * WaselButton - primary interactive element.
+ * Hover/active states are driven by CSS classes injected once into the document,
+ * eliminating the fragile e.currentTarget.style mutation pattern.
  */
 
 import { Loader2 } from 'lucide-react';
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
 import { ANIM, C, F, GRAD, GRAD_GOLD, R, SH, TYPE } from '../../utils/wasel-ds';
+
+const STYLE_ID = 'wasel-btn-css';
+const BTN_CSS = `
+  .wbtn { position: relative; overflow: hidden; transition: transform 160ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 160ms ease, border-color 160ms ease, background 160ms ease, opacity 160ms ease; }
+  .wbtn::after { content:''; position:absolute; inset:0; background:linear-gradient(to right, transparent 0%, rgba(255,255,255,0.13) 50%, transparent 100%); transform:translateX(-110%); transition:transform 0.55s ease; pointer-events:none; border-radius:inherit; }
+  .wbtn:not(:disabled):hover::after { transform:translateX(110%); }
+  .wbtn:not(:disabled):hover { transform: translateY(-2px) scale(1.015); }
+  .wbtn:not(:disabled):active { transform: scale(0.97) !important; }
+  .wbtn[data-variant='primary']:not(:disabled):hover { box-shadow: 0 14px 36px rgba(0,229,255,0.38), 0 1px 0 rgba(255,255,255,0.18) inset; }
+  .wbtn[data-variant='outline']:not(:disabled):hover { background: rgba(0,229,255,0.1) !important; border-color: rgba(0,229,255,0.5) !important; box-shadow: 0 0 22px rgba(0,229,255,0.16); }
+  .wbtn[data-variant='ghost']:not(:disabled):hover { background: rgba(255,255,255,0.07) !important; color: #F8FBFF !important; }
+  .wbtn[data-variant='gold']:not(:disabled):hover { box-shadow: 0 14px 36px rgba(255,138,11,0.38); }
+  .wbtn[data-variant='danger']:not(:disabled):hover { background: rgba(255,124,139,0.22) !important; }
+  @keyframes wbtn-spin { to { transform: rotate(360deg); } }
+  .wbtn-spinner { animation: wbtn-spin 0.9s linear infinite; }
+`;
+
+if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
+  const el = document.createElement('style');
+  el.id = STYLE_ID;
+  el.textContent = BTN_CSS;
+  document.head.appendChild(el);
+}
 
 type ButtonVariant = 'primary' | 'outline' | 'ghost' | 'gold' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -81,8 +106,7 @@ export function WaselButton({
   children,
   disabled,
   style,
-  onMouseEnter,
-  onMouseLeave,
+  className,
   ...rest
 }: WaselButtonProps) {
   const v = variantStyles[variant];
@@ -108,7 +132,6 @@ export function WaselButton({
     boxShadow: v.boxShadow,
     cursor: isDisabled ? 'not-allowed' : 'pointer',
     opacity: isDisabled ? 0.6 : 1,
-    transition: `transform ${ANIM.dur.normal} ${ANIM.ease.default}, box-shadow ${ANIM.dur.normal} ${ANIM.ease.default}, border-color ${ANIM.dur.normal} ${ANIM.ease.default}, background ${ANIM.dur.normal} ${ANIM.ease.default}`,
     userSelect: 'none',
     WebkitUserSelect: 'none',
     outline: 'none',
@@ -122,41 +145,12 @@ export function WaselButton({
       {...rest}
       dir={dir}
       disabled={isDisabled}
+      data-variant={variant}
+      className={`wbtn${className ? ` ${className}` : ''}`}
       style={baseStyle}
-      onMouseEnter={e => {
-        if (!isDisabled) {
-          e.currentTarget.style.transform = 'translateY(-1px)';
-          e.currentTarget.style.boxShadow = v.hoverShadow;
-          if (variant === 'outline') {
-            e.currentTarget.style.borderColor = C.borderHov;
-            e.currentTarget.style.background = C.cyanDim;
-          }
-          if (variant === 'ghost') {
-            e.currentTarget.style.background = C.elevated;
-            e.currentTarget.style.color = C.text;
-          }
-        }
-        onMouseEnter?.(e);
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = '';
-        e.currentTarget.style.boxShadow = v.boxShadow;
-        e.currentTarget.style.borderColor = '';
-        e.currentTarget.style.background = v.background;
-        e.currentTarget.style.color = v.color;
-        onMouseLeave?.(e);
-      }}
-      onMouseDown={e => {
-        if (!isDisabled) {e.currentTarget.style.transform = 'scale(0.98)';}
-        rest.onMouseDown?.(e);
-      }}
-      onMouseUp={e => {
-        if (!isDisabled) {e.currentTarget.style.transform = '';}
-        rest.onMouseUp?.(e);
-      }}
     >
       {loading ? (
-        <Loader2 size={size === 'sm' ? 14 : 16} style={{ animation: 'spin 1s linear infinite' }} />
+        <Loader2 size={size === 'sm' ? 14 : 16} className="wbtn-spinner" />
       ) : (
         icon
       )}
