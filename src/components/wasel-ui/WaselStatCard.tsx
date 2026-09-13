@@ -74,8 +74,6 @@ export function WaselStatCard ({
   );
 }
 
-const ANIM_DUR = '160ms';
-
 interface WaselGradientTextProps {
   children: ReactNode;
   accent?: string;
