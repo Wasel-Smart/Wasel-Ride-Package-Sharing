@@ -19,11 +19,11 @@ import {
   UserMenu,
 } from './waselRootParts';
 
-const AvailabilityBanner = lazy(() => import('../components/system/AvailabilityBanner'));
-const MobileBottomNav = lazy(async () => {
-  const module = await import('../components/MobileBottomNav');
+const AvailabilityBanner = lazy( () => import( '../components/system/AvailabilityBanner' ) );
+const MobileBottomNav = lazy( async () => {
+  const module = await import( '../components/MobileBottomNav' );
   return { default: module.MobileBottomNav };
-});
+} );
 
 const HEADER_STYLE: React.CSSProperties = {
   position: 'sticky',
@@ -61,16 +61,16 @@ const BACKGROUND_OVERLAY_STYLE: React.CSSProperties = {
 const GLOBAL_HEADER_STYLES = `
   .wrl-header {
     background: linear-gradient(180deg, rgba(7,21,33,0.9), rgba(7,21,33,0.84));
-    border-bottom: 1px solid ${C.border};
+    border-bottom: 1px solid ${ C.border };
     box-shadow: 0 6px 18px rgba(0,0,0,0.14);
   }
   .wrl-header.scrolled {
     background: linear-gradient(180deg, rgba(7,21,33,0.98), rgba(7,21,33,0.95));
-    border-bottom: 1px solid ${C.borderHov};
+    border-bottom: 1px solid ${ C.borderHov };
     box-shadow: 0 12px 34px rgba(0,0,0,0.28);
   }
   .wrl-dropdown-item:hover {
-    background: ${C.cardSolid};
+    background: ${ C.cardSolid };
     transform: translateY(-1px);
   }
   @media (max-width: 639px) {
@@ -101,110 +101,110 @@ const ShellCopyAr = {
   mainContent: 'المحتوى الرئيسي',
 } as const;
 
-const WaselRootInner = memo(() => {
+const WaselRootInner = memo( () => {
   const { user, signOut } = useLocalAuth();
   const { language } = useLanguage();
   const nav = useIframeSafeNavigate();
   const location = useLocation();
   const ar = language === 'ar';
 
-  const navRef = useRef<HTMLElement>(null);
+  const navRef = useRef<HTMLElement>( null );
   const isDriverMode = user?.role === 'driver' || user?.role === 'both';
 
-  const shellCopy = useMemo(() => (ar ? ShellCopyAr : ShellCopy), [ar]);
+  const shellCopy = useMemo( () => ( ar ? ShellCopyAr : ShellCopy ), [ ar ] );
 
-  const navigate = useCallback((path: string) => nav(path), [nav]);
+  const navigate = useCallback( ( path: string ) => nav( path ), [ nav ] );
 
-  const meta = getRouteMeta(location.pathname);
+  const meta = getRouteMeta( location.pathname );
 
   const seoMeta = useMemo(
     () =>
       meta
         ? {
-            title: meta.title,
-            titleAr: meta.titleAr,
-            description: meta.description,
-            descriptionAr: meta.descriptionAr,
-            canonical: `https://wasel14.online${meta.path}`,
-          }
+          title: meta.title,
+          titleAr: meta.titleAr,
+          description: meta.description,
+          descriptionAr: meta.descriptionAr,
+          canonical: `https://wasel14.online${ meta.path }`,
+        }
         : undefined,
-    [meta],
+    [ meta ],
   );
 
-  useSeo(seoMeta);
+  useSeo( seoMeta );
 
-  useEffect(() => {
+  useEffect( () => {
     const isPwa =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (navigator as Navigator & { standalone?: boolean }).standalone === true;
-    const scrollEl = isPwa ? (document.getElementById('root') ?? window) : window;
+      window.matchMedia( '(display-mode: standalone)' ).matches ||
+      ( navigator as Navigator & { standalone?: boolean } ).standalone === true;
+    const scrollEl = isPwa ? ( document.getElementById( 'root' ) ?? window ) : window;
 
     const onScroll = () => {
-      if (!navRef.current) {return;}
+      if ( !navRef.current ) { return; }
       const scrollTop =
-        scrollEl instanceof Window ? window.scrollY : (scrollEl as HTMLElement).scrollTop;
-      navRef.current.classList.toggle('scrolled', scrollTop > 8);
+        scrollEl instanceof Window ? window.scrollY : ( scrollEl as HTMLElement ).scrollTop;
+      navRef.current.classList.toggle( 'scrolled', scrollTop > 8 );
     };
 
     const onResize = () => onScroll();
 
-    scrollEl.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onResize, { passive: true });
+    scrollEl.addEventListener( 'scroll', onScroll, { passive: true } );
+    window.addEventListener( 'resize', onResize, { passive: true } );
     onScroll();
 
     return () => {
-      scrollEl.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onResize);
+      scrollEl.removeEventListener( 'scroll', onScroll );
+      window.removeEventListener( 'resize', onResize );
     };
-  }, []);
+  }, [] );
 
-  useEffect(() => {
+  useEffect( () => {
     resetBodyScrollLock();
 
     const isPwa =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (navigator as Navigator & { standalone?: boolean }).standalone === true;
+      window.matchMedia( '(display-mode: standalone)' ).matches ||
+      ( navigator as Navigator & { standalone?: boolean } ).standalone === true;
 
-    if (isPwa) {
-      const root = document.getElementById('root');
-      if (root) {root.scrollTop = 0;}
+    if ( isPwa ) {
+      const root = document.getElementById( 'root' );
+      if ( root ) { root.scrollTop = 0; }
     } else {
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      window.scrollTo( { top: 0, left: 0, behavior: 'instant' } );
     }
 
-    if (meta?.analyticsKey) {
-      trackPageView(meta.analyticsKey);
+    if ( meta?.analyticsKey ) {
+      trackPageView( meta.analyticsKey );
     }
-  }, [location.pathname, meta]);
+  }, [ location.pathname, meta ] );
 
   useRoutePrefetch();
 
   return (
     <>
-      <style>{GLOBAL_STYLES}</style>
+      <style>{ GLOBAL_STYLES }</style>
       <OrganizationJsonLd />
       <WebSiteJsonLd />
 
       <div
-        style={{
+        style={ {
           minHeight: '100vh',
           background: C.bg,
           fontFamily: ar ? FA : F,
           direction: ar ? 'rtl' : 'ltr',
-        }}
+        } }
       >
         <SkipToContent targetId="main-content" />
-        <style>{GLOBAL_HEADER_STYLES}</style>
+        <style>{ GLOBAL_HEADER_STYLES }</style>
 
         <header
-          ref={navRef}
+          ref={ navRef }
           className="wrl-header"
-          style={HEADER_STYLE}
+          style={ HEADER_STYLE }
         >
-          <div style={HEADER_INNER_STYLE}>
+          <div style={ HEADER_INNER_STYLE }>
             <button
-              onClick={() => { void navigate('/app'); }}
-              style={{
+              onClick={ () => { void navigate( '/app' ); } }
+              style={ {
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
@@ -213,59 +213,59 @@ const WaselRootInner = memo(() => {
                 alignItems: 'center',
                 flexShrink: 0,
                 transition: 'opacity 0.15s',
-              }}
+              } }
             >
-              <WaselLogo size={56} theme="light" variant="full" />
+              <WaselLogo size={ 56 } theme="light" variant="full" />
             </button>
 
             <div
               className="wrl-desk-actions"
-              style={{
+              style={ {
                 display: 'flex',
                 gap: 8,
                 alignItems: 'center',
                 flexShrink: 0,
                 paddingInlineStart: 10,
-                borderInlineStart: `1px solid ${C.borderFaint}`,
-              }}
+                borderInlineStart: `1px solid ${ C.borderFaint }`,
+              } }
             >
               <LangToggle />
-              {user ? <CurrencySwitcher ar={ar} /> : null}
-              {user && isDriverMode ? <OnlineToggle ar={ar} /> : null}
+              { user ? <CurrencySwitcher ar={ ar } /> : null }
+              { user && isDriverMode ? <OnlineToggle ar={ ar } /> : null }
 
-              {user ? (
+              { user ? (
                 <>
                   <button
-                    onClick={() => { void navigate('/app/notifications'); }}
-                    title={shellCopy.notifications}
-                    aria-label={shellCopy.notifications}
-                    style={{
+                    onClick={ () => { void navigate( '/app/notifications' ); } }
+                    title={ shellCopy.notifications }
+                    aria-label={ shellCopy.notifications }
+                    style={ {
                       position: 'relative',
                       width: 38,
                       height: 38,
                       borderRadius: R.md,
                       background: C.card,
-                      border: `1px solid ${C.border}`,
+                      border: `1px solid ${ C.border }`,
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       transition: 'all 0.14s',
-                    }}
+                    } }
                   >
                     <svg
                       width="15"
                       height="15"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke={C.textSub}
+                      stroke={ C.textSub }
                       strokeWidth="2"
                       strokeLinecap="round"
                     >
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
                     </svg>
                     <div
-                      style={{
+                      style={ {
                         position: 'absolute',
                         top: 6,
                         insetInlineEnd: 6,
@@ -273,62 +273,62 @@ const WaselRootInner = memo(() => {
                         height: 7,
                         borderRadius: '50%',
                         background: C.error,
-                        border: `1.5px solid ${C.bg}`,
-                      }}
+                        border: `1.5px solid ${ C.bg }`,
+                      } }
                     />
                   </button>
-                  <UserMenu user={user} onSignOut={signOut} ar={ar} />
+                  <UserMenu user={ user } onSignOut={ signOut } ar={ ar } />
                 </>
               ) : (
                 <>
                   <WaselButton
                     variant="ghost"
                     size="sm"
-                    onClick={() => { void navigate('/app/auth'); }}
-                    style={{ fontFamily: ar ? FA : F }}
+                    onClick={ () => { void navigate( '/app/auth' ); } }
+                    style={ { fontFamily: ar ? FA : F } }
                   >
-                    {shellCopy.signIn}
+                    { shellCopy.signIn }
                   </WaselButton>
                   <WaselButton
                     variant="primary"
                     size="sm"
-                    onClick={() => { void navigate('/app/auth'); }}
-                    style={{ fontFamily: ar ? FA : F }}
+                    onClick={ () => { void navigate( '/app/auth' ); } }
+                    style={ { fontFamily: ar ? FA : F } }
                   >
-                    {shellCopy.getStarted}
+                    { shellCopy.getStarted }
                   </WaselButton>
                 </>
-              )}
+              ) }
             </div>
           </div>
         </header>
 
-        <Suspense fallback={null}>
-          <AvailabilityBanner ar={ar} />
+        <Suspense fallback={ null }>
+          <AvailabilityBanner ar={ ar } />
         </Suspense>
 
         <div className="wrl-main-content content-visibility-auto">
           <main
             id="main-content"
             role="main"
-            aria-label={shellCopy.mainContent}
-            tabIndex={-1}
-            style={MAIN_CONTENT_STYLE}
+            aria-label={ shellCopy.mainContent }
+            tabIndex={ -1 }
+            style={ MAIN_CONTENT_STYLE }
           >
             <div
               aria-hidden="true"
-              style={BACKGROUND_OVERLAY_STYLE}
+              style={ BACKGROUND_OVERLAY_STYLE }
             />
             <Outlet />
           </main>
 
-          <Suspense fallback={null}>
-            <MobileBottomNav language={language} />
+          <Suspense fallback={ null }>
+            <MobileBottomNav language={ language } />
           </Suspense>
         </div>
       </div>
     </>
   );
-});
+} );
 
-export default memo(() => <WaselRootInner />);
+export default memo( () => <WaselRootInner /> );
