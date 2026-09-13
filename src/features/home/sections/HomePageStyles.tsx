@@ -1,8 +1,8 @@
 import { F } from '../HomePageShared';
 
-export function HomePageStyles() {
+export function HomePageStyles () {
   return (
-    <style>{`
+    <style>{ `
       :root { color-scheme: dark; }
 
       @keyframes shimmer {
@@ -113,7 +113,7 @@ export function HomePageStyles() {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        font-family: ${F};
+        font-family: ${ F };
         transition: background 160ms ease, border-color 160ms ease;
       }
 
@@ -283,7 +283,7 @@ export function HomePageStyles() {
         border: 1px solid;
         cursor: pointer;
         text-align: left;
-        font-family: ${F};
+        font-family: ${ F };
         background: transparent;
         transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
       }
@@ -309,7 +309,7 @@ export function HomePageStyles() {
         border: 1px solid rgba(20,127,228,0.14);
         cursor: pointer;
         text-align: left;
-        font-family: ${F};
+        font-family: ${ F };
         transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
       }
 
@@ -396,7 +396,7 @@ export function HomePageStyles() {
         border: 1px solid rgba(20,127,228,0.14);
         cursor: pointer;
         text-align: left;
-        font-family: ${F};
+        font-family: ${ F };
         transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
       }
 
@@ -1219,7 +1219,7 @@ export function HomePageStyles() {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        font-family: ${F};
+        font-family: ${ F };
         transition: background 160ms ease, border-color 160ms ease;
       }
 
@@ -1429,11 +1429,26 @@ export function HomePageStyles() {
         }
 
         .wasel-home-map-frame canvas {
-          min-height: 300px !important;
+          min-height: 280px !important;
         }
 
         .wasel-home-proof-item {
           min-height: auto;
+          padding: 12px 14px !important;
+        }
+
+        .wasel-home-proof-metrics {
+          display: grid !important;
+          grid-template-columns: repeat(2, 1fr) !important;
+          gap: 10px !important;
+        }
+
+        .wasel-home-container {
+          padding: 16px 14px 48px !important;
+        }
+
+        .wasel-home-section {
+          margin-top: 24px !important;
         }
       }
 
