@@ -62,45 +62,45 @@ export interface RideBookingRecord {
 const BOOKING_CACHE_KEY = 'wasel-ride-booking-cache-v2';
 const CACHE_MAX = 100;
 
-function readCache(): RideBookingRecord[] {
-  if (typeof window === 'undefined') {return [];}
+function readCache (): RideBookingRecord[] {
+  if ( typeof window === 'undefined' ) { return []; }
   try {
-    const raw = window.localStorage.getItem(BOOKING_CACHE_KEY);
-    const parsed = raw ? (JSON.parse(raw) as RideBookingRecord[]) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    const raw = window.localStorage.getItem( BOOKING_CACHE_KEY );
+    const parsed = raw ? ( JSON.parse( raw ) as RideBookingRecord[] ) : [];
+    return Array.isArray( parsed ) ? parsed : [];
   } catch {
     return [];
   }
 }
 
-function writeCache(bookings: RideBookingRecord[]): void {
-  if (typeof window === 'undefined') {return;}
+function writeCache ( bookings: RideBookingRecord[] ): void {
+  if ( typeof window === 'undefined' ) { return; }
   try {
-    const sorted = [...bookings].sort(
-      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    const sorted = [ ...bookings ].sort(
+      ( a, b ) => new Date( b.updatedAt ).getTime() - new Date( a.updatedAt ).getTime(),
     );
-    window.localStorage.setItem(BOOKING_CACHE_KEY, JSON.stringify(sorted.slice(0, CACHE_MAX)));
+    window.localStorage.setItem( BOOKING_CACHE_KEY, JSON.stringify( sorted.slice( 0, CACHE_MAX ) ) );
   } catch {
     // Storage quota exceeded or private mode — silently skip cache write.
   }
 }
 
-function upsertCache(records: RideBookingRecord[]): void {
-  const map = new Map(readCache().map(b => [b.id, b]));
-  records.forEach(r => map.set(r.id, r));
-  writeCache(Array.from(map.values()));
+function upsertCache ( records: RideBookingRecord[] ): void {
+  const map = new Map( readCache().map( b => [ b.id, b ] ) );
+  records.forEach( r => map.set( r.id, r ) );
+  writeCache( Array.from( map.values() ) );
 }
 
 // ── Ticket code ───────────────────────────────────────────────────────────────
 
-function makeTicketCode(): string {
+function makeTicketCode (): string {
   return crypto.randomUUID();
 }
 
 // ── Domain event publishing ───────────────────────────────────────────────────
 
-function publishLifecycleEvent(booking: RideBookingRecord): void {
-  switch (booking.lifecycleStatus) {
+function publishLifecycleEvent ( booking: RideBookingRecord ): void {
+  switch ( booking.lifecycleStatus ) {
     case 'requested':
       domainEventBus.publish(
         createDomainEvent(
@@ -138,7 +138,7 @@ function publishLifecycleEvent(booking: RideBookingRecord): void {
       domainEventBus.publish(
         createDomainEvent(
           'RideStarted',
-          { bookingId: booking.id, rideId: booking.rideId },
+          { bookingId: booking.id, rideId: booking.rideId, startedAt: new Date().toISOString() },
           'rideLifecycle',
         ),
       );
@@ -166,14 +166,14 @@ function publishLifecycleEvent(booking: RideBookingRecord): void {
   }
 }
 
-function resolveLifecycleStatus(
+function resolveLifecycleStatus (
   current: RideLifecycleState,
   nextStatus: RideBookingStatus,
 ): RideLifecycleState {
-  return projectRideLifecycleState(current, mapBookingStatusToRideLifecycleState(nextStatus));
+  return projectRideLifecycleState( current, mapBookingStatusToRideLifecycleState( nextStatus ) );
 }
 
-function resolveRemoteStatus(
+function resolveRemoteStatus (
   persistedStatus: string | null | undefined,
   persistedId: string,
   routeMode: 'live_post' | 'network_inventory',
@@ -185,12 +185,12 @@ function resolveRemoteStatus(
   ) {
     return persistedStatus;
   }
-  if (persistedStatus === 'accepted') {return 'confirmed';}
-  if (persistedId) {return routeMode === 'live_post' ? 'pending_driver' : 'confirmed';}
+  if ( persistedStatus === 'accepted' ) { return 'confirmed'; }
+  if ( persistedId ) { return routeMode === 'live_post' ? 'pending_driver' : 'confirmed'; }
   return 'pending_driver';
 }
 
-function resolveBookingStatus(statusRaw: string): RideBookingStatus {
+function resolveBookingStatus ( statusRaw: string ): RideBookingStatus {
   if (
     statusRaw === 'completed' ||
     statusRaw === 'cancelled' ||
@@ -199,27 +199,27 @@ function resolveBookingStatus(statusRaw: string): RideBookingStatus {
   ) {
     return statusRaw;
   }
-  if (statusRaw === 'accepted') {return 'confirmed';}
+  if ( statusRaw === 'accepted' ) { return 'confirmed'; }
   return 'pending_driver';
 }
 
-function resolvePaymentStatus(statusRaw: string): RidePaymentStatus {
-  if (statusRaw === 'completed') {return 'captured';}
-  if (statusRaw === 'cancelled' || statusRaw === 'rejected') {return 'failed';}
+function resolvePaymentStatus ( statusRaw: string ): RidePaymentStatus {
+  if ( statusRaw === 'completed' ) { return 'captured'; }
+  if ( statusRaw === 'cancelled' || statusRaw === 'rejected' ) { return 'failed'; }
   return 'authorized';
 }
 
-function resolveBookingDate(ride: PostedRide | undefined, raw: Record<string, unknown>): string {
-  if (ride?.date) {return ride.date;}
-  return new Date(String(raw.created_at ?? new Date().toISOString())).toISOString().slice(0, 10);
+function resolveBookingDate ( ride: PostedRide | undefined, raw: Record<string, unknown> ): string {
+  if ( ride?.date ) { return ride.date; }
+  return new Date( String( raw.created_at ?? new Date().toISOString() ) ).toISOString().slice( 0, 10 );
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /** Returns cached bookings for instant UI render. Call hydrateRideBookings to refresh. */
-export function getRideBookings(): RideBookingRecord[] {
-  return [...readCache()].sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+export function getRideBookings (): RideBookingRecord[] {
+  return [ ...readCache() ].sort(
+    ( a, b ) => new Date( b.updatedAt ).getTime() - new Date( a.updatedAt ).getTime(),
   );
 }
 
@@ -230,7 +230,7 @@ export function getRideBookings(): RideBookingRecord[] {
  * Throws on Supabase failure — callers must handle the error and surface it
  * to the user rather than silently continuing with browser-only state.
  */
-export async function createRideBooking(input: {
+export async function createRideBooking ( input: {
   rideId: string;
   ownerId?: string;
   passengerId?: string;
@@ -243,18 +243,18 @@ export async function createRideBooking(input: {
   seatsRequested?: number;
   pricePerSeatJod?: number;
   routeMode: 'live_post' | 'network_inventory';
-}): Promise<RideBookingRecord> {
+} ): Promise<RideBookingRecord> {
   const now = new Date().toISOString();
-  const seatsRequested = Math.max(1, input.seatsRequested ?? 1);
+  const seatsRequested = Math.max( 1, input.seatsRequested ?? 1 );
 
-  if (!input.passengerId) {
-    throw new Error('passengerId is required — unauthenticated bookings are not permitted.');
+  if ( !input.passengerId ) {
+    throw new Error( 'passengerId is required — unauthenticated bookings are not permitted.' );
   }
 
   // ── 1. Write to Supabase (primary store) ──────────────────────────────────
   let persisted: { booking_id?: string; id?: string; status?: string | null } | null = null;
   try {
-    const result = await createDirectBooking({
+    const result = await createDirectBooking( {
       tripId: input.rideId,
       userId: input.passengerId,
       seatsRequested,
@@ -264,18 +264,18 @@ export async function createRideBooking(input: {
       metadata: {
         total_price: input.pricePerSeatJod ? seatsRequested * input.pricePerSeatJod : seatsRequested,
       },
-    });
+    } );
     persisted = result.booking;
-  } catch (error) {
+  } catch ( error ) {
     throw new Error(
-      `Booking could not be created: ${error instanceof Error ? error.message : String(error)}`,
+      `Booking could not be created: ${ error instanceof Error ? error.message : String( error ) }`,
     );
   }
 
   // ── 2. Build canonical record using the persisted ID (or local fallback) ───
-  const persistedId = String(persisted?.booking_id ?? persisted?.id ?? '');
+  const persistedId = String( persisted?.booking_id ?? persisted?.id ?? '' );
   const persistedStatus = persisted?.status;
-  const remoteStatus: RideBookingStatus = resolveRemoteStatus(persistedStatus, persistedId, input.routeMode);
+  const remoteStatus: RideBookingStatus = resolveRemoteStatus( persistedStatus, persistedId, input.routeMode );
 
   const booking: RideBookingRecord = {
     id: persistedId || makeTicketCode(),
@@ -290,7 +290,7 @@ export async function createRideBooking(input: {
     passengerName: input.passengerName,
     seatsRequested,
     status: remoteStatus,
-    lifecycleStatus: mapBookingStatusToRideLifecycleState(remoteStatus),
+    lifecycleStatus: mapBookingStatusToRideLifecycleState( remoteStatus ),
     paymentStatus: remoteStatus === 'confirmed' ? 'authorized' : 'pending',
     routeMode: input.routeMode,
     supportThreadOpen: false,
@@ -302,10 +302,10 @@ export async function createRideBooking(input: {
   };
 
   // ── 3. Populate cache AFTER successful write ──────────────────────────────
-  upsertCache([booking]);
-  publishLifecycleEvent(booking);
+  upsertCache( [ booking ] );
+  publishLifecycleEvent( booking );
 
-  void trackGrowthEvent({
+  void trackGrowthEvent( {
     userId: input.passengerId,
     eventName: 'ride_booking_started',
     funnelStage: booking.status === 'pending_driver' ? 'selected' : 'booked',
@@ -313,7 +313,7 @@ export async function createRideBooking(input: {
     from: input.from,
     to: input.to,
     valueJod: input.pricePerSeatJod
-      ? Number((seatsRequested * input.pricePerSeatJod).toFixed(2))
+      ? Number( ( seatsRequested * input.pricePerSeatJod ).toFixed( 2 ) )
       : undefined,
     metadata: {
       rideId: input.rideId,
@@ -322,47 +322,47 @@ export async function createRideBooking(input: {
       pricePerSeatJod: input.pricePerSeatJod,
       lifecycleStatus: booking.lifecycleStatus,
     },
-  });
+  } );
 
   return booking;
 }
 
-export function getBookingsForRide(rideId: string): RideBookingRecord[] {
-  return getRideBookings().filter(b => b.rideId === rideId);
+export function getBookingsForRide ( rideId: string ): RideBookingRecord[] {
+  return getRideBookings().filter( b => b.rideId === rideId );
 }
 
-export function getBookingsForDriver(userId: string, rides: PostedRide[]): RideBookingRecord[] {
-  const rideIds = new Set(rides.filter(r => r.ownerId === userId).map(r => r.id));
-  return getRideBookings().filter(b => b.ownerId === userId || rideIds.has(b.rideId));
+export function getBookingsForDriver ( userId: string, rides: PostedRide[] ): RideBookingRecord[] {
+  const rideIds = new Set( rides.filter( r => r.ownerId === userId ).map( r => r.id ) );
+  return getRideBookings().filter( b => b.ownerId === userId || rideIds.has( b.rideId ) );
 }
 
-export function getBookingsForPassenger(passengerId: string): RideBookingRecord[] {
-  return getRideBookings().filter(b => b.passengerId === passengerId);
+export function getBookingsForPassenger ( passengerId: string ): RideBookingRecord[] {
+  return getRideBookings().filter( b => b.passengerId === passengerId );
 }
 
 /**
  * Update a booking status.
  * Writes to Supabase first, updates cache on success.
  */
-export async function updateRideBooking(
+export async function updateRideBooking (
   bookingId: string,
   updates: Partial<Pick<RideBookingRecord, 'status' | 'paymentStatus' | 'supportThreadOpen'>>,
 ): Promise<RideBookingRecord | null> {
   const cached = readCache();
-  const target = cached.find(b => b.id === bookingId);
-  if (!target) {return null;}
+  const target = cached.find( b => b.id === bookingId );
+  if ( !target ) { return null; }
 
   const lifecycleStatus = updates.status
-    ? resolveLifecycleStatus(target.lifecycleStatus, updates.status)
+    ? resolveLifecycleStatus( target.lifecycleStatus, updates.status )
     : target.lifecycleStatus;
 
   // Sync to Supabase when we have a canonical backend ID and a status change.
   if (
     target.backendBookingId &&
     updates.status &&
-    (updates.status === 'rejected' ||
+    ( updates.status === 'rejected' ||
       updates.status === 'cancelled' ||
-      updates.status === 'confirmed')
+      updates.status === 'confirmed' )
   ) {
     const directStatus = updates.status === 'confirmed' ? 'accepted' : updates.status;
     await updateDirectBookingStatus(
@@ -379,10 +379,10 @@ export async function updateRideBooking(
     updatedAt: new Date().toISOString(),
   };
 
-  upsertCache([updated]);
+  upsertCache( [ updated ] );
 
-  if (updates.status) {
-    if (updates.status === 'confirmed' && target.lifecycleStatus === 'requested') {
+  if ( updates.status ) {
+    if ( updates.status === 'confirmed' && target.lifecycleStatus === 'requested' ) {
       domainEventBus.publish(
         createDomainEvent(
           'DriverAssigned',
@@ -391,9 +391,9 @@ export async function updateRideBooking(
         ),
       );
     }
-    publishLifecycleEvent(updated);
+    publishLifecycleEvent( updated );
 
-    void trackGrowthEvent({
+    void trackGrowthEvent( {
       eventName: 'ride_booking_updated',
       funnelStage:
         updates.status === 'completed'
@@ -409,7 +409,7 @@ export async function updateRideBooking(
         paymentStatus: updated.paymentStatus,
         lifecycleStatus: updated.lifecycleStatus,
       },
-    });
+    } );
   }
 
   return updated;
@@ -419,18 +419,18 @@ export async function updateRideBooking(
  * Authoritative sync: pulls from Supabase and overwrites the local cache.
  * Should be called on app load and after auth state changes.
  */
-async function resolvePassengerNames(passengerIds: string[]): Promise<Map<string, string>> {
+async function resolvePassengerNames ( passengerIds: string[] ): Promise<Map<string, string>> {
   const nameMap = new Map<string, string>();
   try {
-    const { supabase: db } = await import('../utils/supabase/client');
-    if (db) {
+    const { supabase: db } = await import( '../utils/supabase/client' );
+    if ( db ) {
       const { data: profiles } = await db
-        .from('profiles')
-        .select('id, full_name, email')
-        .in('id', passengerIds);
-      if (Array.isArray(profiles)) {
-        for (const u of profiles as { id: string; full_name?: string; email?: string }[]) {
-          nameMap.set(String(u.id), u.full_name?.trim() || u.email?.split('@')[0] || 'Passenger');
+        .from( 'profiles' )
+        .select( 'id, full_name, email' )
+        .in( 'id', passengerIds );
+      if ( Array.isArray( profiles ) ) {
+        for ( const u of profiles as { id: string; full_name?: string; email?: string }[] ) {
+          nameMap.set( String( u.id ), u.full_name?.trim() || u.email?.split( '@' )[ 0 ] || 'Passenger' );
         }
       }
     }
@@ -440,66 +440,66 @@ async function resolvePassengerNames(passengerIds: string[]): Promise<Map<string
   return nameMap;
 }
 
-export async function hydrateRideBookings(
+export async function hydrateRideBookings (
   userId: string,
   rides: PostedRide[] = [],
 ): Promise<RideBookingRecord[]> {
-  const [passengerResult, driverResult] = await Promise.allSettled([
-    getDirectUserBookings(userId),
-    getDirectDriverBookings(userId),
-  ]);
+  const [ passengerResult, driverResult ] = await Promise.allSettled( [
+    getDirectUserBookings( userId ),
+    getDirectDriverBookings( userId ),
+  ] );
 
-  const knownRides = new Map(rides.map(r => [r.id, r]));
+  const knownRides = new Map( rides.map( r => [ r.id, r ] ) );
 
   // Resolve passenger names in one batch query.
   const allRaw = [
-    ...(passengerResult.status === 'fulfilled' ? passengerResult.value : []),
-    ...(driverResult.status === 'fulfilled' ? driverResult.value : []),
+    ...( passengerResult.status === 'fulfilled' ? passengerResult.value : [] ),
+    ...( driverResult.status === 'fulfilled' ? driverResult.value : [] ),
   ] as Record<string, unknown>[];
 
   const passengerIds = Array.from(
-    new Set(allRaw.map(r => String(r.passenger_id ?? r.user_id ?? '')).filter(Boolean)),
+    new Set( allRaw.map( r => String( r.passenger_id ?? r.user_id ?? '' ) ).filter( Boolean ) ),
   );
 
-  const nameMap = passengerIds.length > 0 ? await resolvePassengerNames(passengerIds) : new Map<string, string>();
+  const nameMap = passengerIds.length > 0 ? await resolvePassengerNames( passengerIds ) : new Map<string, string>();
 
-  const normalize = (raw: Record<string, unknown>): RideBookingRecord => {
-    const rideId = String(raw.trip_id ?? '');
-    const ride = knownRides.get(rideId);
-    const statusRaw = String(raw.status ?? raw.booking_status ?? 'pending');
-    const status = resolveBookingStatus(statusRaw);
-    const id = String(raw.booking_id ?? raw.id ?? '');
+  const normalize = ( raw: Record<string, unknown> ): RideBookingRecord => {
+    const rideId = String( raw.trip_id ?? '' );
+    const ride = knownRides.get( rideId );
+    const statusRaw = String( raw.status ?? raw.booking_status ?? 'pending' );
+    const status = resolveBookingStatus( statusRaw );
+    const id = String( raw.booking_id ?? raw.id ?? '' );
     return {
       id,
       backendBookingId: id,
       rideId,
       ownerId: ride?.ownerId,
-      passengerId: String(raw.passenger_id ?? raw.user_id ?? ''),
-      from: String(raw.pickup_location ?? ride?.from ?? ''),
-      to: String(raw.dropoff_location ?? ride?.to ?? ''),
-      date: resolveBookingDate(ride, raw),
+      passengerId: String( raw.passenger_id ?? raw.user_id ?? '' ),
+      from: String( raw.pickup_location ?? ride?.from ?? '' ),
+      to: String( raw.dropoff_location ?? ride?.to ?? '' ),
+      date: resolveBookingDate( ride, raw ),
       time: ride?.time ?? '08:00',
       driverName: ride ? ride.carModel || 'Wasel Captain' : 'Wasel Captain',
-      passengerName: nameMap.get(String(raw.passenger_id ?? raw.user_id ?? '')) ?? 'Passenger',
-      seatsRequested: Number(raw.seats_requested ?? 1) || 1,
+      passengerName: nameMap.get( String( raw.passenger_id ?? raw.user_id ?? '' ) ) ?? 'Passenger',
+      seatsRequested: Number( raw.seats_requested ?? 1 ) || 1,
       status,
-      lifecycleStatus: mapBookingStatusToRideLifecycleState(status),
-      paymentStatus: resolvePaymentStatus(statusRaw),
+      lifecycleStatus: mapBookingStatusToRideLifecycleState( status ),
+      paymentStatus: resolvePaymentStatus( statusRaw ),
       routeMode: ride ? 'live_post' : 'network_inventory',
       supportThreadOpen: false,
-      ticketCode: `RIDE-${id.slice(-6).toUpperCase() || 'SYNCED'}`,
-      createdAt: String(raw.created_at ?? new Date().toISOString()),
-      updatedAt: String(raw.updated_at ?? raw.created_at ?? new Date().toISOString()),
+      ticketCode: `RIDE-${ id.slice( -6 ).toUpperCase() || 'SYNCED' }`,
+      createdAt: String( raw.created_at ?? new Date().toISOString() ),
+      updatedAt: String( raw.updated_at ?? raw.created_at ?? new Date().toISOString() ),
       syncedAt: new Date().toISOString(),
     };
   };
 
   const remote = allRaw
-    .map(item => normalize(item as Record<string, unknown>))
-    .filter(item => item.id);
+    .map( item => normalize( item as Record<string, unknown> ) )
+    .filter( item => item.id );
 
-  if (remote.length > 0) {
-    upsertCache(remote);
+  if ( remote.length > 0 ) {
+    upsertCache( remote );
   }
 
   return getRideBookings();
@@ -511,35 +511,35 @@ export async function hydrateRideBookings(
  * 2 hours in the past (server-side grace window) to prevent clock manipulation.
  * The authoritative completion path is the ops worker via RideCompleted event.
  */
-export function syncRideBookingCompletion(referenceDate = Date.now()): RideBookingRecord[] {
+export function syncRideBookingCompletion ( referenceDate = Date.now() ): RideBookingRecord[] {
   const bookings = readCache();
   const toUpdate: RideBookingRecord[] = [];
   // Require at least 2 hours past departure before auto-completing client-side.
   const GRACE_MS = 2 * 60 * 60 * 1000;
 
-  const next = bookings.map(booking => {
-    if (booking.status !== 'confirmed') {return booking;}
-    const tripTime = new Date(`${booking.date}T${booking.time || '00:00'}`).getTime();
-    if (!Number.isFinite(tripTime) || tripTime + GRACE_MS > referenceDate) {return booking;}
+  const next = bookings.map( booking => {
+    if ( booking.status !== 'confirmed' ) { return booking; }
+    const tripTime = new Date( `${ booking.date }T${ booking.time || '00:00' }` ).getTime();
+    if ( !Number.isFinite( tripTime ) || tripTime + GRACE_MS > referenceDate ) { return booking; }
 
     const updated: RideBookingRecord = {
       ...booking,
       status: 'completed',
       lifecycleStatus: 'completed',
       paymentStatus: booking.paymentStatus === 'authorized' ? 'captured' : booking.paymentStatus,
-      updatedAt: new Date(referenceDate).toISOString(),
+      updatedAt: new Date( referenceDate ).toISOString(),
     };
-    toUpdate.push(updated);
+    toUpdate.push( updated );
     return updated;
-  });
+  } );
 
-  writeCache(next);
+  writeCache( next );
 
-  toUpdate.forEach(b => {
-    publishLifecycleEvent(b);
-  });
+  toUpdate.forEach( b => {
+    publishLifecycleEvent( b );
+  } );
 
-  return [...next].sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+  return [ ...next ].sort(
+    ( a, b ) => new Date( b.updatedAt ).getTime() - new Date( a.updatedAt ).getTime(),
   );
 }
