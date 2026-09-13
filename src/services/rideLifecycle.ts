@@ -129,7 +129,7 @@ function publishLifecycleEvent(booking: RideBookingRecord): void {
       domainEventBus.publish(
         createDomainEvent(
           'RideAccepted',
-          { bookingId: booking.id, rideId: booking.rideId, startedAt: new Date().toISOString() },
+          { bookingId: booking.id, rideId: booking.rideId },
           'rideLifecycle',
         ),
       );

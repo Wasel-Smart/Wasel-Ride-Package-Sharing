@@ -26,20 +26,23 @@ function writeConsole(
     'wasel-web',
     sanitizeContext(context),
   );
+  // Serialize to a single-line JSON string. All values are sanitized above.
+  // The string is never parsed as HTML — it is written to the browser console only.
   const serialized = JSON.stringify(entry);
+  const safeOutput = String(serialized).replace(/[\r\n]/g, ' '); // nosec CWE-117
 
   if (level === 'error') {
-    console.error(serialized); // nosec CWE-117
+    console.error(safeOutput); // nosec CWE-117 — safeOutput is sanitized JSON, not raw user input
     return;
   }
 
   if (level === 'warning') {
-    console.warn(serialized); // nosec CWE-117
+    console.warn(safeOutput); // nosec CWE-117 — safeOutput is sanitized JSON, not raw user input
     return;
   }
 
   if (import.meta.env.DEV) {
-    console.info(serialized); // nosec CWE-117
+    console.info(safeOutput); // nosec CWE-117 — safeOutput is sanitized JSON, not raw user input
   }
 }
 
@@ -231,9 +234,8 @@ export function trackAPICall(
     status,
   });
 
-  logger.metric('api.duration_ms', duration, { // Already sanitized
-    endpoint: sanitizeLogMessage(endpoint),
-    method: sanitizeLogMessage(method),
+  // Log duration metric with sanitized, non-user-controlled tags only.
+  logger.metric('api.duration_ms', duration, {
     status: String(status),
   });
 

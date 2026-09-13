@@ -213,7 +213,7 @@ export function WaselSelect({
         defaultValue={defaultValue}
         placeholder={placeholder}
         options={options}
-        onChange={event => { onChange?.(event.target.value); }}
+        onChange={onChange}
         rest={rest}
         onFocus={e => {
           setFocused(true);

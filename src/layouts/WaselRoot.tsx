@@ -202,7 +202,7 @@ const WaselRootInner = memo(() => {
         >
           <div style={HEADER_INNER_STYLE}>
             <button
-              onClick={() => { void navigate(); }}
+              onClick={() => { void navigate('/app'); }}
               style={{
                 background: 'none',
                 border: 'none',
@@ -235,7 +235,7 @@ const WaselRootInner = memo(() => {
               {user ? (
                 <>
                   <button
-                    onClick={() => { void navigate(); }}
+                    onClick={() => { void navigate('/app/notifications'); }}
                     title={shellCopy.notifications}
                     aria-label={shellCopy.notifications}
                     style={{
@@ -281,7 +281,7 @@ const WaselRootInner = memo(() => {
               ) : (
                 <>
                   <button
-                    onClick={() => { void navigate(); }}
+                    onClick={() => { void navigate('/app/auth'); }}
                     style={{
                       height: 38,
                       padding: '0 16px',
@@ -300,7 +300,7 @@ const WaselRootInner = memo(() => {
                     {shellCopy.signIn}
                   </button>
                   <button
-                    onClick={() => { void navigate(); }}
+                    onClick={() => { void navigate('/app/auth'); }}
                     style={{
                       height: 40,
                       padding: '0 18px',

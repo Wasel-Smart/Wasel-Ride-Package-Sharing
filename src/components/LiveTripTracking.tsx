@@ -709,7 +709,7 @@ export function LiveTripTracking() {
           </p>
           <Button
             className="mt-6 h-11 rounded-xl px-5 font-semibold"
-            onClick={() => { void navigate(); }}
+            onClick={() => { void navigate('/app/my-trips'); }}
           >
             {tx('liveTripTracking.open_my_trips')}
           </Button>

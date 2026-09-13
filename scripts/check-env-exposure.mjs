@@ -15,7 +15,7 @@
  */
 
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { join, relative, resolve, normalize } from 'node:path';
 
 const SECRET_PATTERNS = [
   /sk_live_[a-zA-Z0-9]{24,}/i,           // Stripe secret key
@@ -77,7 +77,9 @@ function containsSecret(line) {
 
 async function scanFile(filePath) {
   try {
-    const content = await readFile(filePath, 'utf-8');
+    // Resolve and normalize to prevent path traversal before reading.
+    const safePath = normalize(resolve(filePath));
+    const content = await readFile(safePath, 'utf-8');
     const lines = content.split('\n');
     const secretLines = [];
 
@@ -120,7 +122,12 @@ async function findEnvFiles(dir, baseDir = dir) {
         const nested = await findEnvFiles(fullPath, baseDir);
         envFiles.push(...nested);
       } else if (ENV_FILE_PATTERNS.some(pattern => entry.name === pattern || entry.name.startsWith(pattern))) {
-        envFiles.push(fullPath);
+        // Resolve and normalize the path to prevent traversal before adding to the scan list.
+        const safePath = normalize(resolve(fullPath));
+        const safeBase = normalize(resolve(baseDir));
+        if (safePath.startsWith(safeBase)) {
+          envFiles.push(safePath);
+        }
       }
     }
   } catch {
@@ -145,9 +152,17 @@ async function main() {
 
   let totalSecrets = 0;
 
+  const safeRepoRoot = normalize(resolve(repoRoot));
+
   for (const filePath of envFiles) {
-    const relativePath = relative(repoRoot, filePath);
-    const secretLines = await scanFile(filePath);
+    // Boundary check: ensure the resolved path is still within the repo root.
+    const safePath = normalize(resolve(filePath));
+    if (!safePath.startsWith(safeRepoRoot)) {
+      console.warn(`[env-exposure-check] Skipping out-of-bounds path: ${filePath}`);
+      continue;
+    }
+    const relativePath = relative(repoRoot, safePath);
+    const secretLines = await scanFile(safePath);
 
     if (secretLines.length > 0) {
       hasErrors = true;

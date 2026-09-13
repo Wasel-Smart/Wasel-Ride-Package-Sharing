@@ -21,7 +21,7 @@ export function CorridorsSection({ corridorCards, onNavigate }: CorridorsSection
             {tx('homeSections.corridorsReadyNow')}
           </h2>
         </div>
-        <button type="button" className="wasel-home-section-action" onClick={() => { void onNavigate(); }}>
+        <button type="button" className="wasel-home-section-action" onClick={() => { void onNavigate('/app/find-ride', 'corridors_browse_all'); }}>
           {tx('homeSections.browseRides')}
           <ChevronRight size={12} color={C.cyan} />
         </button>

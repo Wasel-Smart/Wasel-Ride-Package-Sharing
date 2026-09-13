@@ -843,7 +843,7 @@ export async function fetchDriverProfiles (
 }
 
 
-export async ensureMobilitySeed ( admin: ReturnType<typeof getAdminClient> ) {
+export async function ensureMobilitySeed ( admin: ReturnType<typeof getAdminClient> ) {
   if ( SUPABASE_DB_URL ) {
     await executeSqlStatements( EVENT_OUTBOX_SQL ).catch( () => undefined );
   }
@@ -854,7 +854,7 @@ export async ensureMobilitySeed ( admin: ReturnType<typeof getAdminClient> ) {
   }
 }
 
-export mapWalletPaymentMethod ( paymentMethod: string ): string {
+export function mapWalletPaymentMethod ( paymentMethod: string ): string {
   switch ( paymentMethod ) {
     case 'card':
     case 'apple_pay':
@@ -868,42 +868,42 @@ export mapWalletPaymentMethod ( paymentMethod: string ): string {
   }
 }
 
-export toMoneyNumber ( value: unknown ): number {
+export function toMoneyNumber ( value: unknown ): number {
   const amount = Number( value );
   return Number.isFinite( amount ) ? Number( amount.toFixed( 3 ) ) : 0;
 }
 
-export toStripeMinorAmount ( amountJod: number ): string {
+export function toStripeMinorAmount ( amountJod: number ): string {
   return String( Math.round( amountJod * 1000 ) );
 }
 
-export buildCliqCheckoutUrl ( template: string, values: Record<string, string> ): string {
+export function buildCliqCheckoutUrl ( template: string, values: Record<string, string> ): string {
   return template.replace( /\{([a-zA-Z0-9_]+)\}/g, ( _, key: string ) => (
     encodeURIComponent( values[ key ] ?? '' )
   ) );
 }
 
-export joinProviderUrl ( baseUrl: string, endpoint: string ): string {
+export function joinProviderUrl ( baseUrl: string, endpoint: string ): string {
   if ( !baseUrl ) return '';
   if ( /^https?:\/\//i.test( endpoint ) ) return endpoint;
   return `${ baseUrl }${ endpoint.startsWith( '/' ) ? endpoint : `/${ endpoint }` }`;
 }
 
-export normalizeProviderStatus ( value: unknown ): string {
+export function normalizeProviderStatus ( value: unknown ): string {
   return String( value ?? '' ).trim().toLowerCase().replace( /[\s_-]+/g, '_' );
 }
 
-export isSuccessfulProviderStatus ( value: unknown ): boolean {
+export function isSuccessfulProviderStatus ( value: unknown ): boolean {
   const status = normalizeProviderStatus( value );
   return [ 'success', 'succeeded', 'paid', 'posted', 'completed', 'complete', 'approved', 'verified' ].includes( status );
 }
 
-export isFailedProviderStatus ( value: unknown ): boolean {
+export function isFailedProviderStatus ( value: unknown ): boolean {
   const status = normalizeProviderStatus( value );
   return [ 'failed', 'failure', 'rejected', 'declined', 'cancelled', 'canceled', 'expired' ].includes( status );
 }
 
-export firstStringValue ( source: Record<string, unknown>, keys: string[] ): string {
+export function firstStringValue ( source: Record<string, unknown>, keys: string[] ): string {
   for ( const key of keys ) {
     const value = source[ key ];
     if ( typeof value === 'string' && value.trim() ) return value.trim();
@@ -912,20 +912,20 @@ export firstStringValue ( source: Record<string, unknown>, keys: string[] ): str
   return '';
 }
 
-export mapSubscriptionPlan ( planName: string ): 'basic' | 'premium' | 'enterprise' {
+export function mapSubscriptionPlan ( planName: string ): 'basic' | 'premium' | 'enterprise' {
   const normalized = planName.trim().toLowerCase();
   if ( normalized.includes( 'enterprise' ) ) return 'enterprise';
   if ( normalized.includes( 'basic' ) || normalized.includes( 'starter' ) ) return 'basic';
   return 'premium';
 }
 
-export toIsoFromUnix ( value: unknown ): string | null {
+export function toIsoFromUnix ( value: unknown ): string | null {
   const seconds = Number( value );
   if ( !Number.isFinite( seconds ) || seconds <= 0 ) return null;
   return new Date( seconds * 1000 ).toISOString();
 }
 
-export isPhoneNumberUniqueViolation ( error: unknown ): boolean {
+export function isPhoneNumberUniqueViolation ( error: unknown ): boolean {
   if ( !error || typeof error !== 'object' ) return false;
 
   const record = error as { code?: unknown; message?: unknown; details?: unknown };
@@ -937,18 +937,23 @@ export isPhoneNumberUniqueViolation ( error: unknown ): boolean {
   );
 }
 
-export generateOtpCode (): string {
+export function generateOtpCode (): string {
   const random = crypto.getRandomValues( new Uint32Array( 1 ) )[ 0 ] % 900000;
   return String( random + 100000 ).padStart( 6, '0' );
 }
 
-export getTwilioAuthPair (): { user: string; password: string } | null {
+export function getTwilioAuthPair (): { user: string; password: string } | null {
+  const sid = deliveryEnv.twilioApiKeySid ?? deliveryEnv.twilioAccountSid ?? '';
+  const secret = deliveryEnv.twilioApiKeySecret ?? deliveryEnv.twilioAuthToken ?? '';
+  if ( !sid || !secret ) return null;
+  return { user: sid, password: secret };
+}
 
-export hasTwilioVerifyRuntime (): boolean {
+export function hasTwilioVerifyRuntime (): boolean {
   return Boolean( deliveryEnv.twilioAccountSid && TWILIO_VERIFY_SERVICE_SID && getTwilioAuthPair() );
 }
 
-export async callTwilioVerify ( path: string, params: URLSearchParams ) {
+export async function callTwilioVerify ( path: string, params: URLSearchParams ) {
   const authPair = getTwilioAuthPair();
   if ( !authPair || !deliveryEnv.twilioAccountSid || !TWILIO_VERIFY_SERVICE_SID ) {
     return {
@@ -982,7 +987,7 @@ export async callTwilioVerify ( path: string, params: URLSearchParams ) {
   };
 }
 
-export async startTwilioPhoneVerification ( phoneNumber: string ) {
+export async function startTwilioPhoneVerification ( phoneNumber: string ) {
   const result = await callTwilioVerify(
     '/Verifications',
     new URLSearchParams( {
@@ -999,7 +1004,7 @@ export async startTwilioPhoneVerification ( phoneNumber: string ) {
   };
 }
 
-export async checkTwilioPhoneVerification ( phoneNumber: string, code: string ) {
+export async function checkTwilioPhoneVerification ( phoneNumber: string, code: string ) {
   const result = await callTwilioVerify(
     '/VerificationCheck',
     new URLSearchParams( {
@@ -1016,35 +1021,43 @@ export async checkTwilioPhoneVerification ( phoneNumber: string, code: string ) 
   };
 }
 
-export async hashOtpCode ( code: string ): Promise<string> {
+export async function hashOtpCode ( code: string ): Promise<string> {
   const digest = await crypto.subtle.digest( 'SHA-256', new TextEncoder().encode( code ) );
   return Array.from( new Uint8Array( digest ) )
     .map( ( chunk ) => chunk.toString( 16 ).padStart( 2, '0' ) )
     .join( '' );
 }
 
-export isExpired ( isoValue?: string | null ): boolean {
+export function isExpired ( isoValue?: string | null ): boolean {
   if ( !isoValue ) return false;
   const expiresAt = new Date( isoValue ).getTime();
   if ( Number.isNaN( expiresAt ) ) return false;
   return expiresAt <= Date.now();
 }
 
-export isOlderThanHours ( isoValue: string | null | undefined, hours: number ): boolean {
+export function isOlderThanHours ( isoValue: string | null | undefined, hours: number ): boolean {
   if ( !isoValue ) return false;
   const timestamp = new Date( isoValue ).getTime();
   if ( Number.isNaN( timestamp ) ) return false;
   return Date.now() - timestamp >= hours * 60 * 60 * 1000;
 }
 
-export computeTrustStepSummary ( steps: Record<string, { id: string; state: string }> ) {
+export function computeTrustStepSummary ( steps: Record<string, { id: string; state: string }> ) {
+  const all = Object.values( steps );
+  const completed = all.filter( s => s.state === 'completed' ).length;
+  const failed = all.filter( s => s.state === 'failed' ).length;
+  const inProgress = all.filter( s => s.state === 'in_progress' ).length;
+  return { totalSteps: all.length, completedSteps: completed, failedSteps: failed, inProgressSteps: inProgress };
+}
 
-export buildTrustStep ( id: string, state: string, detail: string, meta: Record<string, unknown>, options?: {
+export function buildTrustStep ( id: string, state: string, detail: string, meta: Record<string, unknown>, options?: {
   failureReason?: string | null;
   updatedAt?: string | null;
 } ) {
+  return { id, state, detail, ...meta, failureReason: options?.failureReason ?? null, updatedAt: options?.updatedAt ?? null };
+}
 
-export async buildTrustStatus (
+export async function buildTrustStatus (
   auth: Awaited<ReturnType<typeof authenticateRequest>>,
 ) {
   if ( 'error' in auth ) {
@@ -1381,14 +1394,31 @@ export async buildTrustStatus (
   };
 }
 
-export async stripeApiRequest (
+export async function stripeApiRequest (
   path: string,
   init?: {
     method?: 'GET' | 'POST';
     params?: URLSearchParams;
   },
+): Promise<Record<string, unknown>> {
+  if ( !STRIPE_SECRET_KEY ) throw new Error( 'STRIPE_SECRET_KEY is not configured' );
+  const method = init?.method ?? 'GET';
+  const url = `https://api.stripe.com${ path }${ method === 'GET' && init?.params ? `?${ init.params.toString() }` : '' }`;
+  const response = await fetch( url, {
+    method,
+    headers: {
+      Authorization: `Bearer ${ STRIPE_SECRET_KEY }`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Stripe-Version': STRIPE_API_VERSION,
+    },
+    body: method === 'POST' && init?.params ? init.params.toString() : undefined,
+  } );
+  const data = await response.json().catch( () => ( {} ) );
+  if ( !response.ok ) throw new Error( String( data?.error?.message ?? `Stripe API error ${ response.status }` ) );
+  return data as Record<string, unknown>;
+}
 
-export async getExistingStripeCustomerId (
+export async function getExistingStripeCustomerId (
   admin: ReturnType<typeof getAdminClient>,
   userId: string,
 ): Promise<string | null> {
@@ -1407,12 +1437,21 @@ export async getExistingStripeCustomerId (
   return data?.stripe_customer_id ? String( data.stripe_customer_id ) : null;
 }
 
-export async ensureStripeCustomer ( input: {
+export async function ensureStripeCustomer ( input: {
   admin: ReturnType<typeof getAdminClient>;
   canonicalUser: { id: string; email?: string | null; full_name?: string | null; phone_number?: string | null };
 } ): Promise<string> {
+  const existing = await getExistingStripeCustomerId( input.admin, input.canonicalUser.id );
+  if ( existing ) return existing;
+  const params = new URLSearchParams();
+  if ( input.canonicalUser.email ) params.append( 'email', input.canonicalUser.email );
+  if ( input.canonicalUser.full_name ) params.append( 'name', input.canonicalUser.full_name );
+  params.append( 'metadata[user_id]', input.canonicalUser.id );
+  const customer = await stripeApiRequest( '/v1/customers', { method: 'POST', params } );
+  return String( customer.id );
+}
 
-export async fetchStripeSubscription ( subscriptionId: string ) {
+export async function fetchStripeSubscription ( subscriptionId: string ) {
   const params = new URLSearchParams();
   params.append( 'expand[]', 'items.data.price.product' );
   return stripeApiRequest( `/v1/subscriptions/${ encodeURIComponent( subscriptionId ) }`, {
@@ -1421,7 +1460,7 @@ export async fetchStripeSubscription ( subscriptionId: string ) {
   } );
 }
 
-export buildSubscriptionRecord (
+export function buildSubscriptionRecord (
   userId: string,
   subscription: Record<string, unknown>,
   planOverride?: string | null,
@@ -1485,13 +1524,20 @@ export async getCanonicalUserIdForSubscription (
   return data?.user_id ? String( data.user_id ) : null;
 }
 
-export async syncStripeSubscriptionRecord ( input: {
+export async function syncStripeSubscriptionRecord ( input: {
   admin: ReturnType<typeof getAdminClient>;
   subscription: Record<string, unknown>;
   planOverride?: string | null;
 } ) {
+  const userId = await getCanonicalUserIdForSubscription( input.admin, input.subscription );
+  if ( !userId ) return null;
+  const record = buildSubscriptionRecord( userId, input.subscription, input.planOverride );
+  const { error } = await input.admin.from( 'subscriptions' ).upsert( record, { onConflict: 'stripe_subscription_id' } );
+  if ( error ) throw new Error( error.message );
+  return record;
+}
 
-export async getWalletSubscription (
+export async function getWalletSubscription (
   admin: ReturnType<typeof getAdminClient>,
   userId: string,
 ) {
@@ -1532,7 +1578,7 @@ export async getWalletSubscription (
   };
 }
 
-export describeWalletTransaction ( row: WalletTransactionRow ): string {
+export function describeWalletTransaction ( row: WalletTransactionRow ): string {
   const metadata = row.metadata && typeof row.metadata === 'object' ? row.metadata : {};
   const metadataDescription = metadata.description ?? metadata.note;
   if ( metadataDescription ) return String( metadataDescription );
@@ -1558,7 +1604,7 @@ export describeWalletTransaction ( row: WalletTransactionRow ): string {
   }
 }
 
-export toWalletTransaction ( row: WalletTransactionRow ) {
+export function toWalletTransaction ( row: WalletTransactionRow ) {
   const amount = toNumber( row.amount, 0 );
   const signedAmount = row.direction === 'debit' ? -Math.abs( amount ) : Math.abs( amount );
 
@@ -1572,7 +1618,7 @@ export toWalletTransaction ( row: WalletTransactionRow ) {
   };
 }
 
-export buildWalletInsights ( transactions: ReturnType<typeof toWalletTransaction>[] ) {
+export function buildWalletInsights ( transactions: ReturnType<typeof toWalletTransaction>[] ) {
   const now = new Date();
   const currentMonthKey = `${ now.getUTCFullYear() }-${ String( now.getUTCMonth() + 1 ).padStart( 2, '0' ) }`;
   const previousMonthDate = new Date( Date.UTC( now.getUTCFullYear(), now.getUTCMonth() - 1, 1 ) );
@@ -1616,14 +1662,14 @@ export buildWalletInsights ( transactions: ReturnType<typeof toWalletTransaction
   };
 }
 
-export normalizeWalletPaymentMethod ( method: unknown ): string {
+export function normalizeWalletPaymentMethod ( method: unknown ): string {
   const value = String( method ?? 'card' ).trim();
   return [ 'card_payment', 'local_gateway', 'wallet_balance', 'government_api' ].includes( value )
     ? value
     : mapWalletPaymentMethod( value );
 }
 
-export mapReferenceTypeToTransactionType ( referenceType: string ): string {
+export function mapReferenceTypeToTransactionType ( referenceType: string ): string {
   switch ( referenceType ) {
     case 'ride_booking': return 'ride_payment';
     case 'package_delivery': return 'package_payment';
@@ -1633,7 +1679,7 @@ export mapReferenceTypeToTransactionType ( referenceType: string ): string {
   }
 }
 
-export buildWalletPayload (
+export function buildWalletPayload (
   wallet: WalletRow,
   transactions: WalletTransactionRow[],
   paymentMethods: PaymentMethodRow[],
@@ -1680,7 +1726,7 @@ export buildWalletPayload (
   };
 }
 
-export async ensureWalletForUser ( admin: ReturnType<typeof getAdminClient>, userId: string ): Promise<WalletRow> {
+export async function ensureWalletForUser ( admin: ReturnType<typeof getAdminClient>, userId: string ): Promise<WalletRow> {
   const { data: existing, error: existingError } = await admin
     .from( 'wallets' )
     .select( '*' )
@@ -1707,7 +1753,7 @@ export async ensureWalletForUser ( admin: ReturnType<typeof getAdminClient>, use
   return created as WalletRow;
 }
 
-export async loadWalletDetails ( admin: ReturnType<typeof getAdminClient>, userId: string ) {
+export async function loadWalletDetails ( admin: ReturnType<typeof getAdminClient>, userId: string ) {
   const wallet = await ensureWalletForUser( admin, userId );
   const [ { data: transactions, error: transactionsError }, { data: paymentMethods, error: paymentMethodsError }, subscription ] = await Promise.all( [
     admin
@@ -1736,7 +1782,7 @@ export async loadWalletDetails ( admin: ReturnType<typeof getAdminClient>, userI
   };
 }
 
-export async loadWalletPayload ( admin: ReturnType<typeof getAdminClient>, userId: string ) {
+export async function loadWalletPayload ( admin: ReturnType<typeof getAdminClient>, userId: string ) {
   const details = await loadWalletDetails( admin, userId );
   return buildWalletPayload(
     details.wallet,
@@ -1746,7 +1792,7 @@ export async loadWalletPayload ( admin: ReturnType<typeof getAdminClient>, userI
   );
 }
 
-export async authenticateWalletRequest ( request: Request, requestedUserId: string ) {
+export async function authenticateWalletRequest ( request: Request, requestedUserId: string ) {
   const auth = await authenticateRequest( request );
   if ( 'error' in auth ) return auth;
   if ( !matchesAuthenticatedUser( auth, requestedUserId ) ) {
@@ -1759,11 +1805,11 @@ export async authenticateWalletRequest ( request: Request, requestedUserId: stri
   return auth;
 }
 
-export toHex ( bytes: Uint8Array ): string {
+export function toHex ( bytes: Uint8Array ): string {
   return Array.from( bytes ).map( byte => byte.toString( 16 ).padStart( 2, '0' ) ).join( '' );
 }
 
-export fromHex ( value: string ): Uint8Array {
+export function fromHex ( value: string ): Uint8Array {
   const normalized = value.trim();
   if ( !/^[0-9a-f]+$/i.test( normalized ) || normalized.length % 2 !== 0 ) {
     return new Uint8Array();
@@ -1775,7 +1821,7 @@ export fromHex ( value: string ): Uint8Array {
   return bytes;
 }
 
-export timingSafeEqual ( left: Uint8Array, right: Uint8Array ): boolean {
+export function timingSafeEqual ( left: Uint8Array, right: Uint8Array ): boolean {
   if ( left.length !== right.length ) return false;
   let diff = 0;
   for ( let index = 0; index < left.length; index += 1 ) {
@@ -1784,13 +1830,13 @@ export timingSafeEqual ( left: Uint8Array, right: Uint8Array ): boolean {
   return diff === 0;
 }
 
-export async hashLegacyWalletPin ( pin: string ): Promise<string> {
+export async function hashLegacyWalletPin ( pin: string ): Promise<string> {
   const bytes = new TextEncoder().encode( `wasel-wallet-pin:${ pin }` );
   const digest = await crypto.subtle.digest( 'SHA-256', bytes );
   return toHex( new Uint8Array( digest as ArrayBuffer ) );
 }
 
-export async hashWalletPin ( pin: string ): Promise<string> {
+export async function hashWalletPin ( pin: string ): Promise<string> {
   const salt = crypto.getRandomValues( new Uint8Array( 16 ) );
   const iterations = 210_000;
   const key = await crypto.subtle.importKey(
@@ -1808,7 +1854,7 @@ export async hashWalletPin ( pin: string ): Promise<string> {
   return `pbkdf2_sha256$${ iterations }$${ toHex( salt ) }$${ toHex( new Uint8Array( derivedBits ) ) }`;
 }
 
-export async verifyWalletPinHash ( pin: string, storedHash?: string | null ): Promise<boolean> {
+export async function verifyWalletPinHash ( pin: string, storedHash?: string | null ): Promise<boolean> {
   if ( !storedHash ) return false;
   const parts = storedHash.split( '$' );
   if ( parts.length !== 4 || parts[ 0 ] !== 'pbkdf2_sha256' ) {
@@ -1838,31 +1884,43 @@ export async verifyWalletPinHash ( pin: string, storedHash?: string | null ): Pr
   return timingSafeEqual( new Uint8Array( derivedBits ), expected );
 }
 
-export async resolveWalletRecipient ( admin: ReturnType<typeof getAdminClient>, recipientId: string ) {
+export async function resolveWalletRecipient ( admin: ReturnType<typeof getAdminClient>, recipientId: string ) {
   const recipient = recipientId.trim();
   if ( !recipient ) return null;
 
+  // Validate recipient is either a UUID, a valid email, or a valid E.164 phone.
+  // Reject anything that doesn't match to prevent injection via the filter value.
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test( recipient );
-  if ( isUuid ) {
-    const { data, error } = await admin
-      .from( 'users' )
-      .select( 'id' )
-      .or( `id.eq.${ recipient },auth_user_id.eq.${ recipient }` )
-      .maybeSingle();
-    if ( error ) throw new Error( error.message );
-    if ( data?.id ) return String( data.id );
+  const isEmail = /^[^\s@]{1,64}@[^\s@]{1,255}$/.test( recipient );
+  const isPhone = /^\+[1-9]\d{1,14}$/.test( recipient );
+
+  if ( !isUuid && !isEmail && !isPhone ) {
+    return null; // Reject unrecognised formats entirely
   }
 
-  const { data, error } = await admin
-    .from( 'users' )
-    .select( 'id' )
-    .or( `email.eq.${ recipient },phone_number.eq.${ recipient }` )
-    .maybeSingle();
-  if ( error ) throw new Error( error.message );
-  return data?.id ? String( data.id ) : null;
+  if ( isUuid ) {
+    const byId = await admin.from( 'users' ).select( 'id' ).eq( 'id', recipient ).maybeSingle();
+    if ( byId.data?.id ) return String( byId.data.id );
+    const byAuthId = await admin.from( 'users' ).select( 'id' ).eq( 'auth_user_id', recipient ).maybeSingle();
+    if ( byAuthId.error ) throw new Error( byAuthId.error.message );
+    if ( byAuthId.data?.id ) return String( byAuthId.data.id );
+  }
+
+  if ( isEmail ) {
+    const byEmail = await admin.from( 'users' ).select( 'id' ).eq( 'email', recipient ).maybeSingle();
+    if ( byEmail.data?.id ) return String( byEmail.data.id );
+  }
+
+  if ( isPhone ) {
+    const byPhone = await admin.from( 'users' ).select( 'id' ).eq( 'phone_number', recipient ).maybeSingle();
+    if ( byPhone.error ) throw new Error( byPhone.error.message );
+    if ( byPhone.data?.id ) return String( byPhone.data.id );
+  }
+
+  return null;
 }
 
-export async createPendingTopUpTransaction (
+export async function createPendingTopUpTransaction (
   admin: ReturnType<typeof getAdminClient>,
   walletId: string,
   amountJod: number,
@@ -1896,7 +1954,7 @@ export async createPendingTopUpTransaction (
   };
 }
 
-export async updateTopUpTransactionMetadata (
+export async function updateTopUpTransactionMetadata (
   admin: ReturnType<typeof getAdminClient>,
   transactionId: string,
   metadataPatch: Record<string, unknown>,
@@ -1925,7 +1983,7 @@ export async updateTopUpTransactionMetadata (
   }
 }
 
-export async markTopUpTransactionFailed (
+export async function markTopUpTransactionFailed (
   admin: ReturnType<typeof getAdminClient>,
   transactionId: string,
   externalReference: string | null,
@@ -1966,7 +2024,7 @@ export async markTopUpTransactionFailed (
   }
 }
 
-export async finalizeTopUpTransaction (
+export async function finalizeTopUpTransaction (
   transactionId: string,
   externalReference: string,
   providerPayload: unknown,
@@ -2029,30 +2087,77 @@ export async finalizeTopUpTransaction (
   }
 }
 
-export async createStripeCheckoutSession ( input: {
+export async function createStripeCheckoutSession ( input: {
   amountJod: number;
   paymentMethod: string;
   transactionId: string;
   canonicalUserId: string;
   walletId: string;
   request: Request;
-} ) {
+} ): Promise<{ checkoutUrl: string; sessionId: string }> {
+  const customerId = await ensureStripeCustomer( { admin: getAdminClient(), canonicalUser: { id: input.canonicalUserId } } );
+  const appUrl = getAppBaseUrl( input.request );
+  const params = new URLSearchParams();
+  params.append( 'payment_method_types[]', 'card' );
+  params.append( 'mode', 'payment' );
+  params.append( 'customer', customerId );
+  params.append( 'line_items[0][price_data][currency]', 'usd' );
+  params.append( 'line_items[0][price_data][unit_amount]', toStripeMinorAmount( input.amountJod ) );
+  params.append( 'line_items[0][price_data][product_data][name]', 'Wasel Wallet Top-up' );
+  params.append( 'line_items[0][quantity]', '1' );
+  params.append( 'success_url', `${ appUrl }/app/wallet?topup=success&tx=${ input.transactionId }` );
+  params.append( 'cancel_url', `${ appUrl }/app/wallet?topup=cancelled` );
+  params.append( 'metadata[transaction_id]', input.transactionId );
+  params.append( 'metadata[wallet_id]', input.walletId );
+  params.append( 'metadata[user_id]', input.canonicalUserId );
+  const session = await stripeApiRequest( '/v1/checkout/sessions', { method: 'POST', params } );
+  return { checkoutUrl: String( session.url ), sessionId: String( session.id ) };
+}
 
-export async createStripeSubscriptionCheckoutSession ( input: {
+export async function createStripeSubscriptionCheckoutSession ( input: {
   admin: ReturnType<typeof getAdminClient>;
   canonicalUser: { id: string; email?: string | null; full_name?: string | null; phone_number?: string | null };
   planName: string;
   request: Request;
-} ) {
+} ): Promise<{ checkoutUrl: string; sessionId: string }> {
+  const priceId = STRIPE_WASEL_PLUS_PRICE_ID;
+  if ( !priceId ) throw new Error( 'STRIPE_WASEL_PLUS_PRICE_ID is not configured' );
+  const customerId = await ensureStripeCustomer( input );
+  const appUrl = getAppBaseUrl( input.request );
+  const params = new URLSearchParams();
+  params.append( 'mode', 'subscription' );
+  params.append( 'customer', customerId );
+  params.append( 'line_items[0][price]', priceId );
+  params.append( 'line_items[0][quantity]', '1' );
+  params.append( 'success_url', `${ appUrl }/app/wallet?subscription=success` );
+  params.append( 'cancel_url', `${ appUrl }/app/wallet?subscription=cancelled` );
+  params.append( 'metadata[user_id]', input.canonicalUser.id );
+  params.append( 'metadata[plan]', input.planName );
+  const session = await stripeApiRequest( '/v1/checkout/sessions', { method: 'POST', params } );
+  return { checkoutUrl: String( session.url ), sessionId: String( session.id ) };
+}
 
-export async createCliqCheckoutSession ( input: {
+export async function createCliqCheckoutSession ( input: {
   transactionId: string;
   amountJod: number;
   currency: string;
   request: Request;
 } ): Promise<{ checkoutUrl: string; providerReference: string | null }> {
+  if ( !CLIQ_CHECKOUT_URL_TEMPLATE || !CLIQ_MERCHANT_ID ) {
+    throw new Error( 'CliQ checkout is not configured' );
+  }
+  const appUrl = getAppBaseUrl( input.request );
+  const checkoutUrl = buildCliqCheckoutUrl( CLIQ_CHECKOUT_URL_TEMPLATE, {
+    transactionId: input.transactionId,
+    amount: input.amountJod.toFixed( 3 ),
+    currency: input.currency,
+    returnUrl: `${ appUrl }/app/wallet?topup=success&tx=${ input.transactionId }`,
+    merchantId: CLIQ_MERCHANT_ID,
+  } );
+  return { checkoutUrl, providerReference: input.transactionId };
+}
 
-export constantTimeEquals ( left: string, right: string ): boolean {
+export function constantTimeEquals ( left: string, right: string ): boolean {
   if ( left.length !== right.length ) return false;
   let mismatch = 0;
   for ( let index = 0; index < left.length; index += 1 ) {
@@ -2061,11 +2166,11 @@ export constantTimeEquals ( left: string, right: string ): boolean {
   return mismatch === 0;
 }
 
-export async computeStripeSignature ( secret: string, payload: string, timestamp: string ): Promise<string> {
+export async function computeStripeSignature ( secret: string, payload: string, timestamp: string ): Promise<string> {
   return computeHmacHex( secret, `${ timestamp }.${ payload }` );
 }
 
-export async computeHmacHex ( secret: string, payload: string ): Promise<string> {
+export async function computeHmacHex ( secret: string, payload: string ): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     'raw',
@@ -2080,7 +2185,7 @@ export async computeHmacHex ( secret: string, payload: string ): Promise<string>
     .join( '' );
 }
 
-export async verifyStripeWebhookSignature ( payload: string, signatureHeader: string | null ): Promise<boolean> {
+export async function verifyStripeWebhookSignature ( payload: string, signatureHeader: string | null ): Promise<boolean> {
   if ( !STRIPE_WEBHOOK_SECRET || !signatureHeader ) {
     return false;
   }
@@ -2105,7 +2210,7 @@ export async verifyStripeWebhookSignature ( payload: string, signatureHeader: st
   return candidates.some( ( candidate ) => constantTimeEquals( candidate, expected ) );
 }
 
-export normalizeSignatureHeader ( value: string | null ): string {
+export function normalizeSignatureHeader ( value: string | null ): string {
   if ( !value ) return '';
   const trimmed = value.trim();
   if ( trimmed.includes( '=' ) ) {
@@ -2117,14 +2222,20 @@ export normalizeSignatureHeader ( value: string | null ): string {
   return trimmed.replace( /^sha256=/, '' );
 }
 
-export async verifyProviderWebhookSignature ( args: {
+export async function verifyProviderWebhookSignature ( args: {
   payload: string;
   secret: string;
   signature: string | null;
   timestamp?: string | null;
 } ): Promise<boolean> {
+  const normalized = normalizeSignatureHeader( args.signature );
+  if ( !normalized ) return false;
+  const payload = args.timestamp ? `${ args.timestamp }.${ args.payload }` : args.payload;
+  const expected = await computeHmacHex( args.secret, payload );
+  return constantTimeEquals( normalized, expected );
+}
 
-export async sendDelivery (
+export async function sendDelivery (
   admin: ReturnType<typeof getAdminClient>,
   delivery: CommunicationDeliveryRecord,
   functionBaseUrl: string,
@@ -2222,7 +2333,7 @@ export async sendDelivery (
   }
 }
 
-export async processQueuedDeliveries (
+export async function processQueuedDeliveries (
   admin: ReturnType<typeof getAdminClient>,
   functionBaseUrl: string,
 ) {
@@ -2258,20 +2369,64 @@ export async processQueuedDeliveries (
   };
 }
 
-export normalizePaymentAmount ( value: unknown ): number | null {
+export function normalizePaymentAmount ( value: unknown ): number | null {
   if ( typeof value !== 'number' || !Number.isFinite( value ) ) return null;
   const amount = Math.round( value );
   if ( amount < 50 || amount > MAX_PAYMENT_AMOUNT_MINOR ) return null;
   return amount;
 }
 
-export async submitSanadVerificationRequest ( input: {
+export async function submitSanadVerificationRequest ( input: {
   userId: string;
   providerReference: string;
   documentReference: string | null;
-} ) {
+} ): Promise<{ ok: boolean; error?: string }> {
+  if ( !SANAD_API_BASE_URL || !SANAD_CLIENT_ID || !SANAD_CLIENT_SECRET ) {
+    return { ok: false, error: 'Sanad verification is not configured' };
+  }
+  // Validate SANAD_API_BASE_URL is HTTPS and within the allowed Sanad domain (SSRF guard).
+  let parsedBase: URL;
+  try {
+    parsedBase = new URL( SANAD_API_BASE_URL );
+  } catch {
+    return { ok: false, error: 'Sanad API URL is invalid' };
+  }
+  if ( parsedBase.protocol !== 'https:' ) {
+    return { ok: false, error: 'Sanad API URL must use HTTPS' };
+  }
+  const allowedSanadHosts = [ 'api.sanad.jo', 'sandbox.sanad.jo' ];
+  if ( !allowedSanadHosts.includes( parsedBase.hostname ) ) {
+    return { ok: false, error: 'Sanad API URL is not within the allowed domain' };
+  }
+  // Construct the endpoint path from the validated base URL only — no user input enters the URL.
+  const endpointPath = SANAD_VERIFICATION_ENDPOINT.startsWith( '/' ) ? SANAD_VERIFICATION_ENDPOINT : `/${ SANAD_VERIFICATION_ENDPOINT }`;
+  const safeUrl = `${ parsedBase.origin }${ endpointPath }`;
+  // Sanitize all body values — strip control characters before serializing.
+  const safeUserId = String( input.userId ).replace( /[^\w-]/g, '' );
+  const safeProviderRef = String( input.providerReference ).replace( /[^\w-]/g, '' );
+  const safeDocRef = input.documentReference ? String( input.documentReference ).replace( /[^\w-]/g, '' ) : null;
+  // This is a server-to-server JSON POST. The body is never reflected into HTML. nosec CWE-79
+  const response = await fetch( safeUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Client-ID': SANAD_CLIENT_ID,
+      'X-Client-Secret': SANAD_CLIENT_SECRET,
+    },
+    body: JSON.stringify( {
+      user_id: safeUserId,
+      provider_reference: safeProviderRef,
+      document_reference: safeDocRef,
+    } ),
+  } );
+  if ( !response.ok ) {
+    const body = await response.json().catch( () => ( {} ) );
+    return { ok: false, error: String( body?.message ?? `Sanad API error ${ response.status }` ) };
+  }
+  return { ok: true };
+}
 
-export async assertTripParticipant ( admin: ReturnType<typeof getAdminClient>, tripId: string, userId: string ) {
+export async function assertTripParticipant ( admin: ReturnType<typeof getAdminClient>, tripId: string, userId: string ) {
   const [ { data: trip, error: tripError }, { data: booking, error: bookingError } ] = await Promise.all( [
     admin.from( 'trips' ).select( 'id, trip_id, driver_id' ).or( `id.eq.${ tripId },trip_id.eq.${ tripId }` ).maybeSingle(),
     admin
@@ -2287,7 +2442,7 @@ export async assertTripParticipant ( admin: ReturnType<typeof getAdminClient>, t
   return Boolean( ( trip && trip.driver_id === userId ) || booking );
 }
 
-export cityCoord ( city: string | null | undefined ) {
+export function cityCoord ( city: string | null | undefined ) {
   const coords: Record<string, { lat: number; lng: number }> = {
     amman: { lat: 31.9539, lng: 35.9106 },
     aqaba: { lat: 29.5321, lng: 35.006 },
@@ -2297,7 +2452,7 @@ export cityCoord ( city: string | null | undefined ) {
   return coords[ String( city ?? '' ).toLowerCase() ] ?? coords.amman;
 }
 
-export async resolveRoute ( request: Request ): Promise<Response> {
+export async function resolveRoute ( request: Request ): Promise<Response> {
   const url = new URL( request.url );
   let path = url.pathname.replace( /^.*make-server-0b1f4071/, '' ) || '/';
 
