@@ -26,17 +26,13 @@ describe('parseOAuthError', () => {
   });
 
   it('classifies access_denied from URL params', () => {
-    vi.callOriginal(() => {
-      history.pushState(null, '', '?error=access_denied&error_description=User+rejected');
-    });
+    history.pushState(null, '', '?error=access_denied&error_description=User+rejected');
     const result = parseOAuthError(null, 'google');
     expect(result).not.toBeNull();
     expect(result!.code).toBe('access_denied');
     expect(result!.userMessage).toContain('cancelled');
     expect(result!.recoveryAction).toBe('Click the button again to sign in');
-    vi.callOriginal(() => {
-      history.pushState(null, '', '');
-    });
+    history.pushState(null, '', '');
   });
 
   it('classifies invalid_client from URL params', () => {
@@ -91,8 +87,7 @@ describe('parseOAuthError', () => {
     const result = parseOAuthError(null, 'microsoft');
     expect(result).not.toBeNull();
     expect(result!.code).toBe('some_random_error');
-    expect(result!.userMessage).toContain('Microsoft');
-    expect(result!.userMessage).toContain('some_random_error');
+    expect(result!.userMessage).toBe('Microsoft sign-in failed. Please try again.');
     history.pushState(null, '', '');
   });
 
