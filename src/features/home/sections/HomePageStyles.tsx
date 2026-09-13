@@ -28,7 +28,10 @@ export function HomePageStyles () {
         overflow-x: hidden;
         overflow-y: visible;
         background:
-          linear-gradient(180deg, #081d39 0%, #0a1f3a 34%, #0e2240 100%);
+          radial-gradient(ellipse 90% 60% at 50% -15%, rgba(0,229,255,0.12), transparent 70%),
+          radial-gradient(ellipse 60% 50% at 90% 40%, rgba(255,138,11,0.06), transparent 70%),
+          radial-gradient(ellipse 60% 50% at 10% 70%, rgba(114,199,13,0.06), transparent 70%),
+          linear-gradient(180deg, #050B12 0%, #081D39 22%, #0A1F3A 60%, #050B12 100%);
       }
 
       .wasel-home-shell::before {
@@ -37,10 +40,10 @@ export function HomePageStyles () {
         inset: 0;
         pointer-events: none;
         background-image:
-          linear-gradient(rgba(20,127,228,0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(20,127,228,0.04) 1px, transparent 1px);
-        background-size: 88px 88px;
-        mask-image: linear-gradient(180deg, black 0%, black 68%, transparent 100%);
+          linear-gradient(rgba(0,229,255,0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0,229,255,0.035) 1px, transparent 1px);
+        background-size: 64px 64px;
+        mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 20%, transparent 85%);
       }
 
       .wasel-home-shell::after {
@@ -49,8 +52,38 @@ export function HomePageStyles () {
         inset: 0;
         pointer-events: none;
         background:
-          linear-gradient(115deg, rgba(20,127,228,0.1), transparent 22%, transparent 68%, rgba(255,138,11,0.06)),
-          linear-gradient(180deg, transparent 0%, rgba(8,29,57,0.45) 88%);
+          linear-gradient(115deg, rgba(0,229,255,0.08), transparent 30%, transparent 70%, rgba(255,138,11,0.05)),
+          linear-gradient(180deg, transparent 0%, rgba(5,11,18,0.65) 92%);
+      }
+
+      .wasel-home-aurora {
+        position: absolute;
+        border-radius: 50%;
+        pointer-events: none;
+        filter: blur(140px);
+        opacity: 0.18;
+        z-index: 0;
+      }
+      .wasel-home-aurora-cyan {
+        width: 650px;
+        height: 650px;
+        top: -80px;
+        right: -100px;
+        background: radial-gradient(circle, #00E5FF 0%, rgba(0,229,255,0) 70%);
+      }
+      .wasel-home-aurora-green {
+        width: 550px;
+        height: 550px;
+        top: 38%;
+        left: -120px;
+        background: radial-gradient(circle, #72C70D 0%, rgba(114,199,13,0) 70%);
+      }
+      .wasel-home-aurora-orange {
+        width: 580px;
+        height: 580px;
+        top: 72%;
+        right: -100px;
+        background: radial-gradient(circle, #FF8A0B 0%, rgba(255,138,11,0) 70%);
       }
 
       .wasel-home-container {

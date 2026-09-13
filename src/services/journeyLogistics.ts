@@ -154,25 +154,88 @@ function buildTimeline (
   ];
 }
 
+function pickString ( values: unknown[], fallback = '' ): string {
+  for ( const v of values ) {
+    if ( v !== undefined && v !== null && String( v ).trim() !== '' ) {
+      return String( v ).trim();
+    }
+  }
+  return fallback;
+}
+
+function pickNumber ( values: unknown[], fallback = 0 ): number {
+  for ( const v of values ) {
+    if ( v !== undefined && v !== null && !Number.isNaN( Number( v ) ) ) {
+      return Number( v );
+    }
+  }
+  return fallback;
+}
+
+function resolveRideStatus ( status: unknown, fallback?: string ): PostedRide['status'] {
+  if ( status === 'cancelled' || status === 'completed' ) {
+    return status;
+  }
+  return ( fallback as PostedRide['status'] ) ?? 'active';
+}
+
+function resolvePackageVerification (
+  raw: Record<string, unknown>,
+  fallback?: PackageVerification,
+): PackageVerification {
+  const senderCodeSharedAt =
+    pickString( [
+      raw.sender_code_shared_at,
+      raw.senderCodeSharedAt,
+      fallback?.senderCodeSharedAt,
+    ] ) || undefined;
+
+  const riderPickupConfirmedAt =
+    pickString( [
+      raw.rider_pickup_confirmed_at,
+      raw.riderPickupConfirmedAt,
+      fallback?.riderPickupConfirmedAt,
+    ] ) || undefined;
+
+  const receiverDeliveryConfirmedAt =
+    pickString( [
+      raw.receiver_delivery_confirmed_at,
+      raw.receiverDeliveryConfirmedAt,
+      fallback?.receiverDeliveryConfirmedAt,
+    ] ) || undefined;
+
+  return { senderCodeSharedAt, riderPickupConfirmedAt, receiverDeliveryConfirmedAt };
+}
+
 function normalizeServerRide ( raw: Record<string, unknown>, fallback: PostedRide ): PostedRide {
+  const id = pickString( [ raw.id ], String( fallback.id ) );
+  const from = pickString( [ raw.from_location, raw.from ], fallback.from );
+  const to = pickString( [ raw.to_location, raw.to ], fallback.to );
+  const date = pickString( [ raw.departure_date, raw.date ], fallback.date );
+  const time = pickString( [ raw.departure_time, raw.time ], fallback.time );
+  const seats = pickNumber( [ raw.available_seats, raw.total_seats, raw.seats ], fallback.seats );
+  const price = pickNumber( [ raw.price_per_seat, raw.price ], fallback.price );
+  const carModel = pickString( [ raw.vehicle_model, raw.carModel ], fallback.carModel );
+  const note = pickString( [ raw.notes, raw.note ], fallback.note );
+  const createdAt = pickString( [ raw.created_at ], fallback.createdAt );
+  const ownerId =
+    pickString( [ raw.owner_id, raw.ownerId ], fallback.ownerId || '' ) || fallback.ownerId;
+  const status = resolveRideStatus( raw.status, fallback.status );
+
   return {
     ...fallback,
-    id: String( raw.id ?? fallback.id ),
-    from: String( raw.from_location ?? raw.from ?? fallback.from ),
-    to: String( raw.to_location ?? raw.to ?? fallback.to ),
-    date: String( raw.departure_date ?? raw.date ?? fallback.date ),
-    time: String( raw.departure_time ?? raw.time ?? fallback.time ),
-    seats: Number( raw.available_seats ?? raw.total_seats ?? raw.seats ?? fallback.seats ),
-    price: Number( raw.price_per_seat ?? raw.price ?? fallback.price ),
-    carModel: String( raw.vehicle_model ?? raw.carModel ?? fallback.carModel ),
-    note: String( raw.notes ?? raw.note ?? fallback.note ),
-    createdAt: String( raw.created_at ?? fallback.createdAt ),
-    ownerId:
-      String( raw.owner_id ?? raw.ownerId ?? fallback.ownerId ?? '' ).trim() || fallback.ownerId,
-    status:
-      raw.status === 'cancelled' || raw.status === 'completed'
-        ? raw.status
-        : ( fallback.status ?? 'active' ),
+    id,
+    from,
+    to,
+    date,
+    time,
+    seats,
+    price,
+    carModel,
+    note,
+    createdAt,
+    ownerId,
+    status,
   };
 }
 
@@ -181,6 +244,11 @@ function normalizeLocalRide ( raw: Partial<PostedRide> ): PostedRide | null {
   const from = String( raw.from ?? '' ).trim();
   const to = String( raw.to ?? '' ).trim();
   if ( !id || !from || !to ) { return null; }
+
+  const packageCapacity =
+    raw.packageCapacity === 'large' || raw.packageCapacity === 'small'
+      ? raw.packageCapacity
+      : 'medium';
 
   return {
     id,
@@ -195,14 +263,11 @@ function normalizeLocalRide ( raw: Partial<PostedRide> ): PostedRide | null {
     carModel: String( raw.carModel ?? '' ),
     note: String( raw.note ?? '' ),
     acceptsPackages: Boolean( raw.acceptsPackages ),
-    packageCapacity:
-      raw.packageCapacity === 'large' || raw.packageCapacity === 'small'
-        ? raw.packageCapacity
-        : 'medium',
+    packageCapacity,
     packageNote: String( raw.packageNote ?? '' ),
     createdAt: String( raw.createdAt ?? new Date().toISOString() ),
     ownerId: String( raw.ownerId ?? '' ).trim() || undefined,
-    status: raw.status === 'cancelled' || raw.status === 'completed' ? raw.status : 'active',
+    status: resolveRideStatus( raw.status, 'active' ),
   };
 }
 
@@ -211,85 +276,42 @@ function normalizeServerPackage (
   fallback: PackageRequest,
 ): PackageRequest {
   const matchedRideId =
-    String( raw.trip_id ?? raw.matchedRideId ?? fallback.matchedRideId ?? '' ).trim() || undefined;
+    pickString( [ raw.trip_id, raw.matchedRideId, fallback.matchedRideId ] ) || undefined;
   const status = normalizeStatus( raw.status, matchedRideId );
   const handoffCode =
-    String( raw.handoff_code ?? raw.handoffCode ?? fallback.handoffCode ?? '' )
-      .trim()
-      .toUpperCase() ||
-    fallback.handoffCode ||
+    pickString( [ raw.handoff_code, raw.handoffCode, fallback.handoffCode ] ).toUpperCase() ||
     generateHandoffCode();
+  const verification = resolvePackageVerification( raw, fallback.verification );
+  const timeline = buildTimeline( status, matchedRideId, verification );
 
   return {
     ...fallback,
-    id: String( raw.id ?? fallback.id ),
-    trackingId: String( raw.tracking_code ?? raw.trackingId ?? fallback.trackingId )
-      .trim()
-      .toUpperCase(),
+    id: pickString( [ raw.id ], String( fallback.id ) ),
+    trackingId: pickString( [
+      raw.tracking_code,
+      raw.trackingId,
+      fallback.trackingId,
+    ] ).toUpperCase(),
     handoffCode,
-    from: String( raw.from ?? fallback.from ),
-    to: String( raw.to ?? fallback.to ),
-    weight: sanitizeWeight( String( raw.weight ?? fallback.weight ) ),
-    note: String( raw.description ?? raw.note ?? fallback.note ),
+    from: pickString( [ raw.from ], fallback.from ),
+    to: pickString( [ raw.to ], fallback.to ),
+    weight: sanitizeWeight( pickString( [ raw.weight ], fallback.weight ) ),
+    note: pickString( [ raw.description, raw.note ], fallback.note ),
     packageType: raw.packageType === 'return' ? 'return' : fallback.packageType,
     recipientName:
-      String( raw.recipient_name ?? raw.recipientName ?? fallback.recipientName ?? '' ).trim() ||
+      pickString( [ raw.recipient_name, raw.recipientName, fallback.recipientName ] ) ||
       undefined,
     recipientPhone: sanitizePhone(
-      String( raw.recipient_phone ?? raw.recipientPhone ?? fallback.recipientPhone ?? '' ),
+      pickString( [ raw.recipient_phone, raw.recipientPhone, fallback.recipientPhone ] ),
     ),
     matchedRideId,
     matchedDriver:
-      String( raw.driver_name ?? raw.matchedDriver ?? fallback.matchedDriver ?? '' ).trim() ||
+      pickString( [ raw.driver_name, raw.matchedDriver, fallback.matchedDriver ] ) ||
       fallback.matchedDriver,
     status,
-    createdAt: String( raw.created_at ?? fallback.createdAt ),
-    verification: {
-      senderCodeSharedAt:
-        String(
-          raw.sender_code_shared_at ??
-          raw.senderCodeSharedAt ??
-          fallback.verification?.senderCodeSharedAt ??
-          '',
-        ).trim() || undefined,
-      riderPickupConfirmedAt:
-        String(
-          raw.rider_pickup_confirmed_at ??
-          raw.riderPickupConfirmedAt ??
-          fallback.verification?.riderPickupConfirmedAt ??
-          '',
-        ).trim() || undefined,
-      receiverDeliveryConfirmedAt:
-        String(
-          raw.receiver_delivery_confirmed_at ??
-          raw.receiverDeliveryConfirmedAt ??
-          fallback.verification?.receiverDeliveryConfirmedAt ??
-          '',
-        ).trim() || undefined,
-    },
-    timeline: buildTimeline( status, matchedRideId, {
-      senderCodeSharedAt:
-        String(
-          raw.sender_code_shared_at ??
-          raw.senderCodeSharedAt ??
-          fallback.verification?.senderCodeSharedAt ??
-          '',
-        ).trim() || undefined,
-      riderPickupConfirmedAt:
-        String(
-          raw.rider_pickup_confirmed_at ??
-          raw.riderPickupConfirmedAt ??
-          fallback.verification?.riderPickupConfirmedAt ??
-          '',
-        ).trim() || undefined,
-      receiverDeliveryConfirmedAt:
-        String(
-          raw.receiver_delivery_confirmed_at ??
-          raw.receiverDeliveryConfirmedAt ??
-          fallback.verification?.receiverDeliveryConfirmedAt ??
-          '',
-        ).trim() || undefined,
-    } ),
+    createdAt: pickString( [ raw.created_at ], fallback.createdAt ),
+    verification,
+    timeline,
   };
 }
 
@@ -308,6 +330,22 @@ function normalizeLocalPackage ( raw: Partial<PackageRequest> ): PackageRequest 
       .trim()
       .toUpperCase() || generateHandoffCode();
 
+  const verification: PackageVerification = {
+    senderCodeSharedAt: String( raw.verification?.senderCodeSharedAt ?? '' ).trim() || undefined,
+    riderPickupConfirmedAt:
+      String( raw.verification?.riderPickupConfirmedAt ?? '' ).trim() || undefined,
+    receiverDeliveryConfirmedAt:
+      String( raw.verification?.receiverDeliveryConfirmedAt ?? '' ).trim() || undefined,
+  };
+
+  const timeline =
+    Array.isArray( raw.timeline ) && raw.timeline.length > 0
+      ? raw.timeline.map( step => ( {
+        label: String( step.label ?? '' ),
+        complete: Boolean( step.complete ),
+      } ) )
+      : buildTimeline( status, matchedRideId, verification );
+
   return {
     id: String( raw.id ?? makeId( 'pkg' ) ),
     trackingId,
@@ -323,27 +361,8 @@ function normalizeLocalPackage ( raw: Partial<PackageRequest> ): PackageRequest 
     matchedDriver: String( raw.matchedDriver ?? '' ).trim() || undefined,
     status,
     createdAt: String( raw.createdAt ?? new Date().toISOString() ),
-    verification: {
-      senderCodeSharedAt: String( raw.verification?.senderCodeSharedAt ?? '' ).trim() || undefined,
-      riderPickupConfirmedAt:
-        String( raw.verification?.riderPickupConfirmedAt ?? '' ).trim() || undefined,
-      receiverDeliveryConfirmedAt:
-        String( raw.verification?.receiverDeliveryConfirmedAt ?? '' ).trim() || undefined,
-    },
-    timeline:
-      Array.isArray( raw.timeline ) && raw.timeline.length > 0
-        ? raw.timeline.map( step => ( {
-          label: String( step.label ?? '' ),
-          complete: Boolean( step.complete ),
-        } ) )
-        : buildTimeline( status, matchedRideId, {
-          senderCodeSharedAt:
-            String( raw.verification?.senderCodeSharedAt ?? '' ).trim() || undefined,
-          riderPickupConfirmedAt:
-            String( raw.verification?.riderPickupConfirmedAt ?? '' ).trim() || undefined,
-          receiverDeliveryConfirmedAt:
-            String( raw.verification?.receiverDeliveryConfirmedAt ?? '' ).trim() || undefined,
-        } ),
+    verification,
+    timeline,
   };
 }
 
@@ -627,6 +646,64 @@ export async function createConnectedPackage ( input: {
   return fallbackPackage;
 }
 
+async function fetchRemotePackageRecord (
+  normalizedTrackingId: string,
+): Promise<Record<string, unknown> | null> {
+  if ( API_URL ) {
+    const response = await fetchWithRetry(
+      `${ API_URL }/packages/track/${ encodeURIComponent( normalizedTrackingId ) }`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+    if ( !response.ok ) { return null; }
+    return ( await response.json() ) as Record<string, unknown>;
+  }
+
+  const direct = await getDirectPackageByTrackingId( normalizedTrackingId );
+  if ( !direct ) { return null; }
+  return {
+    ...direct,
+    id: direct.id,
+    tracking_code: direct.tracking_number,
+    from: direct.origin_name ?? direct.origin_location,
+    to: direct.destination_name ?? direct.destination_location,
+    weight: direct.weight_kg,
+    description: direct.description,
+    recipient_name: direct.receiver_name,
+    recipient_phone: direct.receiver_phone,
+  };
+}
+
+function buildFallbackPackage (
+  server: Record<string, unknown>,
+  trackingId: string,
+): PackageRequest {
+  const tripId = String( server.trip_id ?? '' ).trim() || undefined;
+  const status = normalizeStatus( server.status, tripId );
+
+  return {
+    id: String( server.id ?? makeId( 'pkg' ) ),
+    trackingId,
+    handoffCode: generateHandoffCode(),
+    from: String( server.from ?? '' ),
+    to: String( server.to ?? '' ),
+    weight: sanitizeWeight( String( server.weight ?? '<1 kg' ) ),
+    note: String( server.description ?? '' ),
+    packageType: 'delivery',
+    recipientName: String( server.recipient_name ?? '' ).trim() || undefined,
+    recipientPhone: sanitizePhone( String( server.recipient_phone ?? '' ) ),
+    matchedRideId: tripId,
+    matchedDriver: String( server.driver_name ?? '' ).trim() || undefined,
+    status,
+    createdAt: String( server.created_at ?? new Date().toISOString() ),
+    verification: {},
+    timeline: buildTimeline( status, tripId, {} ),
+  };
+}
+
 export async function getPackageByTrackingId ( trackingId: string ): Promise<PackageRequest | null> {
   const normalizedTrackingId = trackingId.trim().toUpperCase();
   if ( !normalizedTrackingId ) { return null; }
@@ -636,60 +713,11 @@ export async function getPackageByTrackingId ( trackingId: string ): Promise<Pac
   if ( local ) { return local; }
 
   try {
-    let server: Record<string, unknown> | null = null;
-
-    if ( API_URL ) {
-      const response = await fetchWithRetry(
-        `${ API_URL }/packages/track/${ encodeURIComponent( normalizedTrackingId ) }`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-      if ( !response.ok ) { return null; }
-      server = await response.json();
-    } else {
-      const direct = await getDirectPackageByTrackingId( normalizedTrackingId );
-      if ( !direct ) { return null; }
-      server = {
-        ...direct,
-        id: direct.id,
-        tracking_code: direct.tracking_number,
-        from: direct.origin_name ?? direct.origin_location,
-        to: direct.destination_name ?? direct.destination_location,
-        weight: direct.weight_kg,
-        description: direct.description,
-        recipient_name: direct.receiver_name,
-        recipient_phone: direct.receiver_phone,
-      };
-    }
-
+    const server = await fetchRemotePackageRecord( normalizedTrackingId );
     if ( !server ) { return null; }
 
-    const fallback: PackageRequest = {
-      id: String( server.id ?? makeId( 'pkg' ) ),
-      trackingId: normalizedTrackingId,
-      handoffCode: generateHandoffCode(),
-      from: String( server.from ?? '' ),
-      to: String( server.to ?? '' ),
-      weight: sanitizeWeight( String( server.weight ?? '<1 kg' ) ),
-      note: String( server.description ?? '' ),
-      packageType: 'delivery',
-      recipientName: String( server.recipient_name ?? '' ).trim() || undefined,
-      recipientPhone: sanitizePhone( String( server.recipient_phone ?? '' ) ),
-      matchedRideId: String( server.trip_id ?? '' ).trim() || undefined,
-      matchedDriver: String( server.driver_name ?? '' ).trim() || undefined,
-      status: normalizeStatus( server.status, String( server.trip_id ?? '' ).trim() || undefined ),
-      createdAt: String( server.created_at ?? new Date().toISOString() ),
-      verification: {},
-      timeline: buildTimeline(
-        normalizeStatus( server.status, String( server.trip_id ?? '' ).trim() || undefined ),
-        String( server.trip_id ?? '' ).trim() || undefined,
-        {},
-      ),
-    };
-    const normalizedPkg = normalizeServerPackage( server as Record<string, unknown>, fallback );
+    const fallback = buildFallbackPackage( server, normalizedTrackingId );
+    const normalizedPkg = normalizeServerPackage( server, fallback );
     savePackages( [ normalizedPkg ], getConnectedPackages() );
     return normalizedPkg;
   } catch {
