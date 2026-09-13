@@ -28,7 +28,6 @@ export function HomePageStyles () {
         overflow-x: hidden;
         overflow-y: visible;
         background:
-          linear-gradient(180deg, #081d39 0%, #0a1f3a 34%, #0e2240 100%);
           radial-gradient(ellipse 90% 60% at 50% -15%, rgba(0,229,255,0.12), transparent 70%),
           radial-gradient(ellipse 60% 50% at 90% 40%, rgba(255,138,11,0.06), transparent 70%),
           radial-gradient(ellipse 60% 50% at 10% 70%, rgba(114,199,13,0.06), transparent 70%),
@@ -41,10 +40,6 @@ export function HomePageStyles () {
         inset: 0;
         pointer-events: none;
         background-image:
-          linear-gradient(rgba(20,127,228,0.04) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(20,127,228,0.04) 1px, transparent 1px);
-        background-size: 88px 88px;
-        mask-image: linear-gradient(180deg, black 0%, black 68%, transparent 100%);
           linear-gradient(rgba(0,229,255,0.035) 1px, transparent 1px),
           linear-gradient(90deg, rgba(0,229,255,0.035) 1px, transparent 1px);
         background-size: 64px 64px;
@@ -57,8 +52,6 @@ export function HomePageStyles () {
         inset: 0;
         pointer-events: none;
         background:
-          linear-gradient(115deg, rgba(20,127,228,0.1), transparent 22%, transparent 68%, rgba(255,138,11,0.06)),
-          linear-gradient(180deg, transparent 0%, rgba(8,29,57,0.45) 88%);
           linear-gradient(115deg, rgba(0,229,255,0.08), transparent 30%, transparent 70%, rgba(255,138,11,0.05)),
           linear-gradient(180deg, transparent 0%, rgba(5,11,18,0.65) 92%);
       }
@@ -207,24 +200,12 @@ export function HomePageStyles () {
         z-index: 1;
         margin: 30px 0 0;
         max-width: 720px;
-        margin: 28px 0 0;
-        max-width: 760px;
         color: #f8fbff;
         font-size: clamp(3.2rem, 4.8vw, 4.8rem);
         line-height: 1.05;
         letter-spacing: 0;
-        font-size: clamp(2.8rem, 4.6vw, 4.4rem);
-        line-height: 1.08;
-        letter-spacing: -0.02em;
         font-weight: 900;
         text-wrap: balance;
-      }
-
-      .wasel-home-title-accent {
-        background: linear-gradient(135deg, #00E5FF 0%, #58DDFF 50%, #9AF1CF 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        display: inline-block;
       }
 
       .wasel-home-lead {
@@ -235,10 +216,6 @@ export function HomePageStyles () {
         color: rgba(196,220,238,0.78);
         font-size: 1rem;
         line-height: 1.68;
-        margin: 18px 0 0;
-        color: rgba(196,220,238,0.85);
-        font-size: 1.05rem;
-        line-height: 1.72;
       }
 
       .wasel-home-hero-actions {
@@ -247,7 +224,6 @@ export function HomePageStyles () {
         display: flex;
         flex-wrap: wrap;
         gap: 12px;
-        gap: 14px;
         margin-top: 24px;
       }
 
@@ -258,8 +234,6 @@ export function HomePageStyles () {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 16px;
         margin-top: 28px;
-        gap: 14px;
-        margin-top: 24px;
       }
 
       .wasel-home-proof-pill {
@@ -271,141 +245,20 @@ export function HomePageStyles () {
         background: rgba(255,255,255,0.04);
         border: 1px solid rgba(20,127,228,0.12);
         transition: background 160ms ease, border-color 160ms ease;
-        gap: 12px;
-        padding: 14px 16px;
-        border-radius: 16px;
-        background: rgba(8,29,57,0.65);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(20,127,228,0.18);
-        box-shadow: 0 1px 0 rgba(0,229,255,0.15) inset, 0 8px 24px rgba(8,29,57,0.3);
-        transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
       }
 
       .wasel-home-proof-pill:hover {
         background: rgba(255,255,255,0.06);
         border-color: rgba(20,127,228,0.22);
-        transform: translateY(-1px);
-        border-color: rgba(0,229,255,0.32);
-        box-shadow: 0 1px 0 rgba(0,229,255,0.25) inset, 0 12px 28px rgba(8,29,57,0.4);
       }
 
       .wasel-home-proof-pill-icon {
         width: 32px;
         height: 32px;
-        width: 34px;
-        height: 34px;
         display: grid;
         place-items: center;
         border-radius: 8px;
-        border-radius: 10px;
         flex: 0 0 auto;
-      }
-
-      /* Interactive Route Planner Widget in Hero */
-      .wasel-home-route-planner {
-        position: relative;
-        z-index: 2;
-        margin-top: 26px;
-        padding: 20px;
-        border-radius: 20px;
-        background: rgba(8, 29, 57, 0.78);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(0, 229, 255, 0.22);
-        box-shadow: 0 1px 0 rgba(0, 229, 255, 0.25) inset, 0 16px 48px rgba(5, 11, 18, 0.55);
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .wasel-home-planner-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-
-      .wasel-home-planner-tabs {
-        display: inline-flex;
-        background: rgba(4, 10, 18, 0.6);
-        border: 1px solid rgba(20, 127, 228, 0.16);
-        border-radius: 10px;
-        padding: 3px;
-        gap: 2px;
-      }
-
-      .wasel-home-planner-tab {
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 0.78rem;
-        font-weight: 700;
-        color: rgba(196, 220, 238, 0.75);
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        transition: background 150ms ease, color 150ms ease;
-      }
-
-      .wasel-home-planner-tab.active {
-        background: rgba(0, 229, 255, 0.16);
-        color: #00E5FF;
-        box-shadow: 0 1px 3px rgba(0, 229, 255, 0.15);
-      }
-
-      .wasel-home-planner-inputs {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-        gap: 8px;
-        align-items: center;
-      }
-
-      .wasel-home-planner-node {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        background: rgba(4, 10, 18, 0.5);
-        border: 1px solid rgba(20, 127, 228, 0.18);
-        border-radius: 12px;
-        padding: 8px 12px;
-        cursor: pointer;
-        transition: border-color 150ms ease, background 150ms ease;
-      }
-
-      .wasel-home-planner-node:hover {
-        border-color: rgba(0, 229, 255, 0.35);
-        background: rgba(4, 10, 18, 0.7);
-      }
-
-      .wasel-home-planner-swap {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: grid;
-        place-items: center;
-        background: rgba(0, 229, 255, 0.12);
-        border: 1px solid rgba(0, 229, 255, 0.28);
-        color: #00E5FF;
-        cursor: pointer;
-        transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), background 150ms ease;
-        flex-shrink: 0;
-      }
-
-      .wasel-home-planner-swap:hover {
-        transform: rotate(180deg) scale(1.08);
-        background: rgba(0, 229, 255, 0.2);
-      }
-
-      .wasel-home-planner-estimate {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 10px 14px;
-        border-radius: 12px;
-        background: rgba(0, 229, 255, 0.06);
-        border: 1px solid rgba(0, 229, 255, 0.16);
       }
 
       .wasel-home-start-panel {
@@ -463,7 +316,6 @@ export function HomePageStyles () {
         border: 1px solid;
         cursor: pointer;
         text-align: left;
-        text-align: start;
         font-family: ${ F };
         background: transparent;
         transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
@@ -486,29 +338,18 @@ export function HomePageStyles () {
         gap: 12px;
         padding: 18px;
         border-radius: 16px;
-        padding: 20px;
-        border-radius: 18px;
         background: rgba(8,29,57,0.72);
         border: 1px solid rgba(20,127,228,0.14);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        border: 1px solid rgba(20,127,228,0.16);
-        box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 8px 24px rgba(8,29,57,0.3);
         cursor: pointer;
         text-align: left;
-        text-align: start;
         font-family: ${ F };
         transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-        transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease, box-shadow 180ms ease;
       }
 
       .wasel-home-action-card:hover {
         transform: translateY(-2px);
         border-color: rgba(20,127,228,0.28);
         box-shadow: 0 8px 24px rgba(8,29,57,0.28);
-        transform: translateY(-3px);
-        border-color: rgba(0,229,255,0.35);
-        box-shadow: 0 1px 0 rgba(0,229,255,0.2) inset, 0 16px 36px rgba(8,29,57,0.45);
       }
 
       .wasel-home-action-card-header {
@@ -521,8 +362,6 @@ export function HomePageStyles () {
       .wasel-home-action-icon {
         width: 42px;
         height: 42px;
-        width: 44px;
-        height: 44px;
         border-radius: 12px;
         display: grid;
         place-items: center;
@@ -548,7 +387,6 @@ export function HomePageStyles () {
       .wasel-home-action-title {
         color: #f8fbff;
         font-size: 1rem;
-        font-size: 1.05rem;
         font-weight: 850;
         line-height: 1.25;
       }
@@ -556,16 +394,12 @@ export function HomePageStyles () {
       .wasel-home-action-desc {
         color: rgba(196,220,238,0.66);
         font-size: 0.84rem;
-        color: rgba(196,220,238,0.7);
-        font-size: 0.85rem;
         line-height: 1.6;
       }
 
       .wasel-home-action-outcome {
         color: rgba(196,220,238,0.78);
         font-size: 0.78rem;
-        color: rgba(196,220,238,0.85);
-        font-size: 0.8rem;
         line-height: 1.55;
       }
 
@@ -573,11 +407,9 @@ export function HomePageStyles () {
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        gap: 6px;
         margin-top: 4px;
         font-weight: 800;
         font-size: 0.78rem;
-        font-size: 0.8rem;
       }
 
       .wasel-home-corridors {
@@ -593,26 +425,12 @@ export function HomePageStyles () {
         gap: 10px;
         padding: 18px;
         border-radius: 16px;
-        padding: 20px;
-        border-radius: 18px;
         background: rgba(8,29,57,0.72);
         border: 1px solid rgba(20,127,228,0.14);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-        border: 1px solid rgba(20,127,228,0.16);
-        box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 8px 24px rgba(8,29,57,0.3);
         cursor: pointer;
         text-align: left;
-        text-align: start;
         font-family: ${ F };
         transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-        transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease, box-shadow 180ms ease;
-      }
-
-      .wasel-home-corridor:hover {
-        transform: translateY(-3px);
-        border-color: rgba(0,229,255,0.35);
-        box-shadow: 0 1px 0 rgba(0,229,255,0.2) inset, 0 16px 36px rgba(8,29,57,0.45);
       }
 
       .wasel-home-corridor:hover {
