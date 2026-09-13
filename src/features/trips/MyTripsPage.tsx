@@ -1091,7 +1091,7 @@ export default function MyTripsPage() {
                 {t('myTripsPage.bookings_route_matches_or_settlements_that_still_need_a_decision')}
               </div>
               <WaselButton
-                onClick={() => { void setFilter(); }}
+                onClick={() => { setFilter('attention'); }}
                 variant="gold"
                 size="sm"
                 style={{ marginTop: 'auto' }}

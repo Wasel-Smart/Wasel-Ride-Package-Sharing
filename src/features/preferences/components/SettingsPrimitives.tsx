@@ -49,7 +49,7 @@ export function ToggleRow({
         <div className={styles.settingsRowTitle}>{label}</div>
         {sub ? <div className={styles.settingsRowSub}>{sub}</div> : null}
       </div>
-      <Toggle value={value} onChange={() => { void onChange(); }} />
+      <Toggle value={value} onChange={() => { onChange(!value); }} />
     </div>
   );
 }
@@ -73,7 +73,7 @@ export function SelectRow({
           aria-label={label}
           options={options}
           value={value}
-          onChange={() => { void onChange(); }}
+          onChange={onChange}
           containerStyle={{ gap: 0 }}
           style={{ minHeight: 38, fontSize: TYPE.size.sm }}
         />
@@ -145,5 +145,5 @@ export function FormField({
   type?: string;
   placeholder?: string;
 }) {
-  return <WaselInput type={type} value={value} onChange={() => { void onChange(); }} placeholder={placeholder} />;
+  return <WaselInput type={type} value={value} onChange={event => onChange(event.target.value)} placeholder={placeholder} />;
 }

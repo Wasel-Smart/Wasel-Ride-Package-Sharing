@@ -367,7 +367,7 @@ export function WalletDashboard() {
                       <p className="text-muted-foreground text-sm">{t.noRewards}</p>
                       <p className="text-xs text-muted-foreground mt-1">{t.rewardsEmptyHint}</p>
                       <button
-                        onClick={() => { void setTab(); }}
+                        onClick={() => { setTab('overview'); }}
                         style={{
                           marginTop: 12,
                           padding: '8px 18px',

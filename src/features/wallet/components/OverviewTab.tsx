@@ -246,7 +246,7 @@ export function OverviewTab({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => { void onSetTab(); }}
+              onClick={() => { onSetTab('transactions'); }}
               className="text-xs text-primary"
             >
               {t.viewAll} <ChevronRight className="w-3 h-3 ml-1" />

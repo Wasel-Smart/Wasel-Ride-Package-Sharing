@@ -97,27 +97,6 @@ function createBroker(): EventBroker {
     return new InMemoryEventBroker();
   }
 
-  const isLocalDev =
-    typeof window !== 'undefined' &&
-    (() => {
-      try {
-        const { hostname, protocol } = new URL(window.location.origin);
-        return protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1');
-      } catch {
-        return false;
-      }
-    })();
-
-  if (isLocalDev && brokerEnv !== 'supabase') {
-    if (import.meta.env.DEV) {
-      console.info(
-        '[broker] local dev — using InMemoryEventBroker. ' +
-        'Set VITE_EVENT_BROKER=supabase to test the durable pipeline.',
-      );
-    }
-    return new InMemoryEventBroker();
-  }
-
   if (isSupabaseConfigured && defaultSupabase) {
     if (import.meta.env.DEV) {
       console.info('[broker] using SupabaseEventBroker (optimized)');

@@ -100,7 +100,7 @@ export function CorporatePage() {
               </p>
             </div>
           ) : (
-            <form onSubmit={() => { void handleSubmit(); }}>
+            <form onSubmit={handleSubmit}>
               <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, color: '#fff' }}>
                 {ar ? 'اطلب استشارة أو عرض أسعار' : 'Request Corporate Quote & Demo'}
               </h2>

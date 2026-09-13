@@ -6,11 +6,12 @@
  * Exits 0 when balanced, 1 when drift is detected.
  */
 
-import { readFileSync, writeFileSync, unlinkSync } from 'fs';
+import { writeFileSync, unlinkSync } from 'fs';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import os from 'os';
 import { createRequire } from 'module';
+import { buildSync } from 'esbuild';
 
 const requireModule = createRequire(import.meta.url);
 
@@ -23,12 +24,15 @@ function extractModuleExports(filePath) {
   if (!resolvedPath.startsWith(PROJECT_ROOT)) {
     throw new Error(`Path traversal detected: ${filePath} resolves outside project root`);
   }
-  let src = readFileSync(resolvedPath, 'utf8');
-  src = src.replace(/export type [^=;]+=[^;]+;/g, '');
-  src = src.replace(/export type Language[^;]*;/g, '');
-  src = src.replace(/export const translations:[^=]+=/, 'module.exports =');
-  src = src.replace(/export const translations =/, 'module.exports =');
-  src = src.replace(/export default/g, '// export default');
+  const build = buildSync({
+    entryPoints: [resolvedPath],
+    bundle: true,
+    format: 'cjs',
+    platform: 'node',
+    write: false,
+  });
+  const src = build.outputFiles[0]?.text;
+  if (!src) throw new Error('Unable to bundle translations');
 
   const tmpFile = join(os.tmpdir(), `wasel-translations-${Date.now()}.cjs`);
   writeFileSync(tmpFile, src, 'utf8');
@@ -52,7 +56,8 @@ function flatten(obj, prefix = '', out = {}) {
 }
 
 function main() {
-  const translations = extractModuleExports(TRANSLATIONS);
+  const moduleExports = extractModuleExports(TRANSLATIONS);
+  const translations = moduleExports.translations ?? moduleExports;
   const en = flatten(translations.en ?? {});
   const ar = flatten(translations.ar ?? {});
 

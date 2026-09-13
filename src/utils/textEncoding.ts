@@ -2,8 +2,6 @@ let mojibakePattern: RegExp | undefined;
 let utf8Decoder: TextDecoder | undefined;
 let windows1252ByteByChar: Map<string, number> | undefined;
 
-type UnknownRecord = Record<string, unknown>;
-
 function escapeForRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

@@ -1,6 +1,5 @@
 import {
   useNavigate as useRouterNavigate,
-  type NavigateFunction,
   type NavigateOptions,
   type To,
 } from 'react-router';
@@ -66,17 +65,19 @@ function normalizeTo(to: To): To {
  * Normalizes legacy bare app routes like `/my-trips` to the mounted `/app/...`
  * namespace so older call sites continue to work after the route consolidation.
  */
-export function useIframeSafeNavigate(): NavigateFunction {
+export type SafeNavigate = (to?: To | number, options?: NavigateOptions) => void;
+
+export function useIframeSafeNavigate(): SafeNavigate {
   const navigate = useRouterNavigate();
 
-  return ((to: To | number, options?: NavigateOptions) => {
+  return ((to: To | number = '/home', options?: NavigateOptions) => {
     if (typeof to === 'number') {
       navigate(to);
       return;
     }
 
     navigate(normalizeTo(to), options);
-  }) as NavigateFunction;
+  }) as SafeNavigate;
 }
 
 export { useIframeSafeNavigate as useNavigate };

@@ -181,7 +181,7 @@ function ProfilePageContent({
           ref={photoInputRef}
           type="file"
           accept="image/*"
-          onChange={() => { void handlePhotoSelection(); }}
+          onChange={handlePhotoSelection}
           style={{ display: 'none' }}
         />
 

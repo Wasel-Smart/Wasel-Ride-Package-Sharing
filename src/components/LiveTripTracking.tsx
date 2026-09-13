@@ -1085,7 +1085,7 @@ export function LiveTripTracking() {
         driverImg={trip.driver.img}
         driverInitials={trip.driver.initials}
         fare={trip.price.toFixed(3)}
-        onSubmit={() => { void handleRatingSubmit(); }}
+        onSubmit={(stars, comment) => { void handleRatingSubmit(stars, comment); }}
         onSkip={handleRatingSkip}
       />
     </div>

@@ -368,7 +368,7 @@ export function PackageTrackPanel({
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 18 }}>
             <button
-              onClick={() => { void onVerificationAction(); }}
+              onClick={() => { onVerificationAction('share_code'); }}
               disabled={Boolean(trackedPackage.verification.senderCodeSharedAt)}
               style={{
                 padding: '10px 16px',
@@ -391,7 +391,7 @@ export function PackageTrackPanel({
                   : 'Share OTP handoff'}
             </button>
             <button
-              onClick={() => { void onVerificationAction(); }}
+              onClick={() => { onVerificationAction('confirm_pickup'); }}
               disabled={
                 !trackedPackage.verification.senderCodeSharedAt ||
                 Boolean(trackedPackage.verification.riderPickupConfirmedAt)
@@ -427,7 +427,7 @@ export function PackageTrackPanel({
                   : 'Confirm rider pickup'}
             </button>
             <button
-              onClick={() => { void onVerificationAction(); }}
+              onClick={() => { onVerificationAction('confirm_delivery'); }}
               disabled={
                 !trackedPackage.verification.riderPickupConfirmedAt ||
                 Boolean(trackedPackage.verification.receiverDeliveryConfirmedAt)
