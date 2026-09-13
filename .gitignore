@@ -4,8 +4,8 @@
 # NOTE: a few original one-off entries referenced files that
 # didn't exist at root at time of cleanup — kept anyway since
 # removing a pattern is riskier than an unused line.
-# FLAG: "Dockerfile.*" below would match a tracked Dockerfile.dev
-# on a fresh clone. Confirm this is intended before relying on it.
+# FIXED 2026-09-13: "Dockerfile.*" below previously matched the tracked
+# Dockerfile.dev on a fresh clone. Added an explicit negation for it.
 # ============================================================
 
 # ---- Build output ----
@@ -236,8 +236,9 @@ _CLEANUP_REVIEW_DELETE_ME/
 # ---- Vercel ----
 .vercel
 
-# ---- Docker (see FLAG at top of file) ----
+# ---- Docker ----
 Dockerfile.*
+!Dockerfile.dev
 docker-compose.*.local
 
 # ---- Expo / Android build artifacts ----

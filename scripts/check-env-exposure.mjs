@@ -29,7 +29,6 @@ const SECRET_PATTERNS = [
   /key-[a-zA-Z0-9]{32,}/i,               // Various API keys
   /(?:supabase|postgres|postgresql):\/\/[^:]+:[^@]+@[^\/]+\/[^?]+/i, // Database URLs
   /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i, // Private keys
-  /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i, // UUIDs (potential keys)
 ];
 
 const PLACEHOLDER_PATTERNS = [
@@ -64,23 +63,23 @@ const ENV_FILE_PATTERNS = [
 
 let hasErrors = false;
 
-function isPlaceholderLine(line: string): boolean {
+function isPlaceholderLine(line) {
   const trimmed = line.trim();
   if (!trimmed || trimmed.startsWith('#')) return true;
   return PLACEHOLDER_PATTERNS.some(pattern => pattern.test(trimmed));
 }
 
-function containsSecret(line: string): boolean {
+function containsSecret(line) {
   const trimmed = line.trim();
   if (!trimmed || trimmed.startsWith('#')) return false;
   return SECRET_PATTERNS.some(pattern => pattern.test(trimmed));
 }
 
-async function scanFile(filePath: string): Promise<string[]> {
+async function scanFile(filePath) {
   try {
     const content = await readFile(filePath, 'utf-8');
     const lines = content.split('\n');
-    const secretLines: string[] = [];
+    const secretLines = [];
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -96,8 +95,8 @@ async function scanFile(filePath: string): Promise<string[]> {
   }
 }
 
-async function findEnvFiles(dir: string, baseDir: string = dir): Promise<string[]> {
-  const envFiles: string[] = [];
+async function findEnvFiles(dir, baseDir = dir) {
+  const envFiles = [];
 
   try {
     const entries = await readdir(dir, { withFileTypes: true });

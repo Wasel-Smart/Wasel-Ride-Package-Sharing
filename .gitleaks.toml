@@ -5,6 +5,20 @@
     ".env",
     ".env.local",
   ]
+  # Placeholder strings in the committed template — not real secrets.
+  regexes = [
+    "PASTE_YOUR_.*_HERE",
+    "YOUR-PROJECT-REF",
+    "sk_live_PASTE_",
+    "pk_live_PASTE_",
+    "whsec_PASTE_",
+    "re_live_PASTE_",
+    "SG\.PASTE_",
+    "AC_PASTE_",
+    "VA_PASTE_",
+    "MG_PASTE_",
+    "sb_publishable_YOUR_",
+  ]
 
 # NOTE: .env.production is intentionally NOT allowlisted.
 # It must never contain real secrets. All secrets must use SET_IN_SECRET_MANAGER
