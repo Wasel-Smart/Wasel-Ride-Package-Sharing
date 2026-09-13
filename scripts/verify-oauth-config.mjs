@@ -1,391 +1,240 @@
 #!/usr/bin/env node
-/**
- * OAuth Configuration Verification Script
- * Validates that Google and Facebook OAuth are properly configured
- */
 
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
-const ALLOWED_OAUTH_DOMAINS = [ 'accounts.google.com', 'facebook.com', 'localhost' ];
-const ALLOWED_OAUTH_DOMAINS = [ 'accounts.google.com', 'facebook.com', 'localhost' ];
+const ALLOWED_OAUTH_DOMAINS = ['accounts.google.com', 'facebook.com', 'localhost'];
 
-function isValidOAuthUrl ( url ) {
-  function isValidOAuthUrl ( url ) {
-    try {
-      const parsed = new URL( url );
-      if ( parsed.protocol !== 'https:' && parsed.protocol !== 'http:' ) return false;
-      if ( parsed.hostname === 'localhost' ) return true;
-      return ALLOWED_OAUTH_DOMAINS.some( d => parsed.hostname === d || parsed.hostname.endsWith( `.${ d }` ) );
-      const parsed = new URL( url );
-      if ( parsed.protocol !== 'https:' && parsed.protocol !== 'http:' ) return false;
-      if ( parsed.hostname === 'localhost' ) return true;
-      return ALLOWED_OAUTH_DOMAINS.some( d => parsed.hostname === d || parsed.hostname.endsWith( `.${ d }` ) );
-    } catch {
-      return false;
+function isValidOAuthUrl(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') { return false; }
+    if (parsed.hostname === 'localhost') { return true; }
+    return ALLOWED_OAUTH_DOMAINS.some(d => parsed.hostname === d || parsed.hostname.endsWith(`.${d}`));
+  } catch {
+    return false;
+  }
+}
+
+const REQUIRED_ENV_VARS = {
+  client: [
+    'VITE_GOOGLE_CLIENT_ID',
+    'VITE_FACEBOOK_APP_ID',
+    'VITE_AUTH_CALLBACK_PATH',
+  ],
+  server: [
+    'SUPABASE_AUTH_GOOGLE_CLIENT_ID',
+    'SUPABASE_AUTH_GOOGLE_CLIENT_SECRET',
+    'SUPABASE_AUTH_FACEBOOK_CLIENT_ID',
+    'SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET',
+  ],
+};
+
+const COLORS = {
+  reset: '\x1b[0m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  cyan: '\x1b[36m',
+};
+
+function log(message, color = 'reset') {
+  console.log(`${COLORS[color]}${message}${COLORS.reset}`);
+}
+
+function checkEnvFile() {
+  log('\n📋 Checking .env file...', 'cyan');
+
+  const envPath = join(process.cwd(), '.env');
+  if (!existsSync(envPath)) {
+    log('❌ .env file not found', 'red');
+    log('   Create .env from .env.example', 'yellow');
+    return false;
+  }
+
+  log('✅ .env file exists', 'green');
+
+  const envContent = readFileSync(envPath, 'utf-8');
+  const envVars = {};
+  for (const line of envContent.split('\n')) {
+    const match = line.match(/^([^=]+)=(.*)$/);
+    if (match) {
+      envVars[match[1].trim()] = match[2].trim();
     }
   }
 
-  const REQUIRED_ENV_VARS = {
-    client: [
-      'VITE_GOOGLE_CLIENT_ID',
-      'VITE_FACEBOOK_APP_ID',
-      'VITE_AUTH_CALLBACK_PATH',
-    ],
-    server: [
-      'SUPABASE_AUTH_GOOGLE_CLIENT_ID',
-      'SUPABASE_AUTH_GOOGLE_CLIENT_SECRET',
-      'SUPABASE_AUTH_FACEBOOK_CLIENT_ID',
-      'SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET',
-    ],
-  };
+  let allValid = true;
 
-  const COLORS = {
-    reset: '\x1b[0m',
-    red: '\x1b[31m',
-    green: '\x1b[32m',
-    yellow: '\x1b[33m',
-    blue: '\x1b[34m',
-    cyan: '\x1b[36m',
-  };
-
-  function log ( message, color = 'reset' ) {
-    console.log( `${ COLORS[ color ] }${ message }${ COLORS.reset }` );
-    function log ( message, color = 'reset' ) {
-      console.log( `${ COLORS[ color ] }${ message }${ COLORS.reset }` );
+  log('\n🔍 Checking client-side OAuth variables:', 'cyan');
+  for (const varName of REQUIRED_ENV_VARS.client) {
+    const value = envVars[varName];
+    const isSet = value && value !== '' && !value.startsWith('your-') && !value.includes('PASTE_YOUR');
+    if (isSet) {
+      log(`✅ ${varName}`, 'green');
+    } else {
+      log(`❌ ${varName} - Not configured`, 'red');
+      allValid = false;
     }
+  }
 
-    function checkEnvFile () {
-      log( '\n📋 Checking .env file...', 'cyan' );
-      function checkEnvFile () {
-        log( '\n📋 Checking .env file...', 'cyan' );
+  log('\n🔒 Checking server-side OAuth secrets:', 'cyan');
+  for (const varName of REQUIRED_ENV_VARS.server) {
+    const value = envVars[varName];
+    const isSet = value && value !== '' && !value.startsWith('your-') && !value.includes('PASTE_YOUR');
+    if (isSet) {
+      log(`✅ ${varName}`, 'green');
+    } else {
+      log(`❌ ${varName} - Not configured`, 'red');
+      allValid = false;
+    }
+  }
 
-        const envPath = join( process.cwd(), '.env' );
-        const envPath = join( process.cwd(), '.env' );
+  return allValid;
+}
 
-        if ( !existsSync( envPath ) ) {
-          log( '❌ .env file not found', 'red' );
-          log( '   Create .env from .env.example', 'yellow' );
-          if ( !existsSync( envPath ) ) {
-            log( '❌ .env file not found', 'red' );
-            log( '   Create .env from .env.example', 'yellow' );
-            return false;
-          }
+function checkSupabaseConfig() {
+  log('\n📋 Checking Supabase config.toml...', 'cyan');
 
-          log( '✅ .env file exists', 'green' );
-          log( '✅ .env file exists', 'green' );
+  const configPath = join(process.cwd(), 'supabase', 'config.toml');
+  if (!existsSync(configPath)) {
+    log('❌ supabase/config.toml not found', 'red');
+    return false;
+  }
 
-          const envContent = readFileSync( envPath, 'utf-8' );
-          const envContent = readFileSync( envPath, 'utf-8' );
-          const envVars = {};
+  log('✅ config.toml exists', 'green');
 
-          envContent.split( '\n' ).forEach( line => {
-            const match = line.match( /^([^=]+)=(.*)$/ );
-            if ( match ) {
-              envVars[ match[ 1 ].trim() ] = match[ 2 ].trim();
-              envContent.split( '\n' ).forEach( line => {
-                const match = line.match( /^([^=]+)=(.*)$/ );
-                if ( match ) {
-                  envVars[ match[ 1 ].trim() ] = match[ 2 ].trim();
-                }
-              } );
-            } );
+  const configContent = readFileSync(configPath, 'utf-8');
+  const hasGoogleConfig = configContent.includes('[auth.external.google]');
+  const hasFacebookConfig = configContent.includes('[auth.external.facebook]');
+  const googleEnabled = configContent.match(/\[auth\.external\.google\][^[]*enabled\s*=\s*true/);
+  const facebookEnabled = configContent.match(/\[auth\.external\.facebook\][^[]*enabled\s*=\s*true/);
 
-          let allValid = true;
+  log('\n🔍 Checking OAuth provider configuration:', 'cyan');
 
-          log( '\n🔍 Checking client-side OAuth variables:', 'cyan' );
-          REQUIRED_ENV_VARS.client.forEach( varName => {
-            const value = envVars[ varName ];
-            const isSet = value && value !== '' && !value.startsWith( 'your-' );
-            log( '\n🔍 Checking client-side OAuth variables:', 'cyan' );
-            REQUIRED_ENV_VARS.client.forEach( varName => {
-              const value = envVars[ varName ];
-              const isSet = value && value !== '' && !value.startsWith( 'your-' );
+  if (hasGoogleConfig && googleEnabled) {
+    log('✅ Google OAuth enabled', 'green');
+  } else if (hasGoogleConfig) {
+    log('⚠️  Google OAuth configured but not enabled', 'yellow');
+  } else {
+    log('❌ Google OAuth not configured', 'red');
+  }
 
-              if ( isSet ) {
-                log( `✅ ${ varName }`, 'green' );
-                if ( isSet ) {
-                  log( `✅ ${ varName }`, 'green' );
-                } else {
-                  log( `❌ ${ varName } - Not configured`, 'red' );
-                  log( `❌ ${ varName } - Not configured`, 'red' );
-                  allValid = false;
-                }
-              });
-          } );
+  if (hasFacebookConfig && facebookEnabled) {
+    log('✅ Facebook OAuth enabled', 'green');
+  } else if (hasFacebookConfig) {
+    log('⚠️  Facebook OAuth configured but not enabled', 'yellow');
+  } else {
+    log('❌ Facebook OAuth not configured', 'red');
+  }
 
-          log( '\n🔒 Checking server-side OAuth secrets:', 'cyan' );
-          REQUIRED_ENV_VARS.server.forEach( varName => {
-            const value = envVars[ varName ];
-            const isSet = value && value !== '' && !value.startsWith( 'your-' );
-            log( '\n🔒 Checking server-side OAuth secrets:', 'cyan' );
-            REQUIRED_ENV_VARS.server.forEach( varName => {
-              const value = envVars[ varName ];
-              const isSet = value && value !== '' && !value.startsWith( 'your-' );
+  return (hasGoogleConfig && googleEnabled) || (hasFacebookConfig && facebookEnabled);
+}
 
-              if ( isSet ) {
-                log( `✅ ${ varName }`, 'green' );
-                if ( isSet ) {
-                  log( `✅ ${ varName }`, 'green' );
-                } else {
-                  log( `❌ ${ varName } - Not configured`, 'red' );
-                  log( `❌ ${ varName } - Not configured`, 'red' );
-                  allValid = false;
-                }
-              });
-          } );
+function checkAuthFiles() {
+  log('\n📋 Checking authentication files...', 'cyan');
 
-          return allValid;
-        }
+  const files = [
+    'src/contexts/AuthContext.tsx',
+    'src/pages/WaselAuth.tsx',
+    'src/utils/oauthErrors.ts',
+  ];
 
-        function checkSupabaseConfig () {
-          log( '\n📋 Checking Supabase config.toml...', 'cyan' );
-          function checkSupabaseConfig () {
-            log( '\n📋 Checking Supabase config.toml...', 'cyan' );
+  let allExist = true;
+  for (const file of files) {
+    const filePath = join(process.cwd(), file);
+    if (existsSync(filePath)) {
+      log(`✅ ${file}`, 'green');
+    } else {
+      log(`❌ ${file} - Missing`, 'red');
+      allExist = false;
+    }
+  }
 
-            const configPath = join( process.cwd(), 'supabase', 'config.toml' );
-            const configPath = join( process.cwd(), 'supabase', 'config.toml' );
+  return allExist;
+}
 
-            if ( !existsSync( configPath ) ) {
-              log( '❌ supabase/config.toml not found', 'red' );
-              if ( !existsSync( configPath ) ) {
-                log( '❌ supabase/config.toml not found', 'red' );
-                return false;
-              }
+function checkOAuthImplementation() {
+  log('\n📋 Checking OAuth implementation...', 'cyan');
 
-              log( '✅ config.toml exists', 'green' );
-              log( '✅ config.toml exists', 'green' );
+  const authContextPath = join(process.cwd(), 'src/contexts/auth/AuthContext.tsx');
+  const legacyAuthContextPath = join(process.cwd(), 'src/contexts/AuthContext.tsx');
+  const authContextPathToUse = existsSync(authContextPath) ? authContextPath : legacyAuthContextPath;
 
-              const configContent = readFileSync( configPath, 'utf-8' );
-              const configContent = readFileSync( configPath, 'utf-8' );
+  if (!existsSync(authContextPathToUse)) {
+    log('❌ AuthContext.tsx not found', 'red');
+    return false;
+  }
 
-              const hasGoogleConfig = configContent.includes( '[auth.external.google]' );
-              const hasFacebookConfig = configContent.includes( '[auth.external.facebook]' );
-              const googleEnabled = configContent.match( /\[auth\.external\.google\][^[]*enabled\s*=\s*true/ );
-              const facebookEnabled = configContent.match( /\[auth\.external\.facebook\][^[]*enabled\s*=\s*true/ );
-              const hasGoogleConfig = configContent.includes( '[auth.external.google]' );
-              const hasFacebookConfig = configContent.includes( '[auth.external.facebook]' );
-              const googleEnabled = configContent.match( /\[auth\.external\.google\][^[]*enabled\s*=\s*true/ );
-              const facebookEnabled = configContent.match( /\[auth\.external\.facebook\][^[]*enabled\s*=\s*true/ );
+  const authContent = readFileSync(authContextPathToUse, 'utf-8');
 
-              log( '\n🔍 Checking OAuth provider configuration:', 'cyan' );
-              log( '\n🔍 Checking OAuth provider configuration:', 'cyan' );
+  const checks = [
+    { name: 'Google sign-in method', check: authContent.includes('signInWithGoogle') },
+    { name: 'Facebook sign-in method', check: authContent.includes('signInWithFacebook') },
+    { name: 'OAuth helper function', check: authContent.includes('signInWithOAuthProvider') },
+    { name: 'Enhanced OAuth error handling', check: authContent.includes('parseOAuthError') },
+  ];
 
-              if ( hasGoogleConfig && googleEnabled ) {
-                log( '✅ Google OAuth enabled', 'green' );
-              } else if ( hasGoogleConfig ) {
-                log( '⚠️  Google OAuth configured but not enabled', 'yellow' );
-                if ( hasGoogleConfig && googleEnabled ) {
-                  log( '✅ Google OAuth enabled', 'green' );
-                } else if ( hasGoogleConfig ) {
-                  log( '⚠️  Google OAuth configured but not enabled', 'yellow' );
-                } else {
-                  log( '❌ Google OAuth not configured', 'red' );
-                  log( '❌ Google OAuth not configured', 'red' );
-                }
+  let allPassed = true;
+  for (const { name, check } of checks) {
+    if (check) {
+      log(`✅ ${name}`, 'green');
+    } else {
+      log(`❌ ${name}`, 'red');
+      allPassed = false;
+    }
+  }
 
-                if ( hasFacebookConfig && facebookEnabled ) {
-                  log( '✅ Facebook OAuth enabled', 'green' );
-                } else if ( hasFacebookConfig ) {
-                  log( '⚠️  Facebook OAuth configured but not enabled', 'yellow' );
-                  if ( hasFacebookConfig && facebookEnabled ) {
-                    log( '✅ Facebook OAuth enabled', 'green' );
-                  } else if ( hasFacebookConfig ) {
-                    log( '⚠️  Facebook OAuth configured but not enabled', 'yellow' );
-                  } else {
-                    log( '❌ Facebook OAuth not configured', 'red' );
-                    log( '❌ Facebook OAuth not configured', 'red' );
-                  }
+  void isValidOAuthUrl;
+  return allPassed;
+}
 
-                  return ( hasGoogleConfig && googleEnabled ) || ( hasFacebookConfig && facebookEnabled );
-                  return ( hasGoogleConfig && googleEnabled ) || ( hasFacebookConfig && facebookEnabled );
-                }
+function printSummary(results) {
+  log('\n' + '='.repeat(60), 'cyan');
+  log('📊 OAuth Configuration Summary', 'cyan');
+  log('='.repeat(60), 'cyan');
 
-                function checkAuthFiles () {
-                  log( '\n📋 Checking authentication files...', 'cyan' );
-                  function checkAuthFiles () {
-                    log( '\n📋 Checking authentication files...', 'cyan' );
+  const allPassed = Object.values(results).every(r => r);
+  for (const [check, passed] of Object.entries(results)) {
+    const status = passed ? '✅' : '❌';
+    const color = passed ? 'green' : 'red';
+    log(`${status} ${check}`, color);
+  }
 
-                    const files = [
-                      'src/contexts/AuthContext.tsx',
-                      'src/pages/WaselAuth.tsx',
-                      'src/utils/oauthErrors.ts',
-                      'docs/oauth-setup-guide.md',
-                    ];
+  log('\n' + '='.repeat(60), 'cyan');
+  if (allPassed) {
+    log('🎉 All OAuth checks passed!', 'green');
+    log('   Your OAuth configuration is ready for use.', 'green');
+    log('\n📚 Next steps:', 'cyan');
+    log('   1. Start your dev server: npm run dev', 'blue');
+    log('   2. Test Google sign-in at /app/auth', 'blue');
+    log('   3. Test Facebook sign-in at /app/auth', 'blue');
+    log('   4. Run OAuth tests: npm run test:e2e:oauth', 'blue');
+  } else {
+    log('⚠️  Some OAuth checks failed', 'yellow');
+    log('   Review the errors above and fix configuration.', 'yellow');
+    log('\n📚 Resources:', 'cyan');
+    log('   • Setup guide: docs/oauth-setup-guide.md', 'blue');
+    log('   • Environment example: .env.example', 'blue');
+    log('   • Supabase config: supabase/config.toml', 'blue');
+  }
+  log('='.repeat(60) + '\n', 'cyan');
 
-                    let allExist = true;
+  return allPassed;
+}
 
-                    files.forEach( file => {
-                      const filePath = join( process.cwd(), file );
-                      if ( existsSync( filePath ) ) {
-                        log( `✅ ${ file }`, 'green' );
-                        files.forEach( file => {
-                          const filePath = join( process.cwd(), file );
-                          if ( existsSync( filePath ) ) {
-                            log( `✅ ${ file }`, 'green' );
-                          } else {
-                            log( `❌ ${ file } - Missing`, 'red' );
-                            log( `❌ ${ file } - Missing`, 'red' );
-                            allExist = false;
-                          }
-                        } );
-                      } );
+function main() {
+  log('\n🔐 Wasel OAuth Configuration Verification', 'cyan');
+  log('='.repeat(60) + '\n', 'cyan');
 
-                    return allExist;
-                  }
+  const results = {
+    'Environment Variables': checkEnvFile(),
+    'Supabase Configuration': checkSupabaseConfig(),
+    'Authentication Files': checkAuthFiles(),
+    'OAuth Implementation': checkOAuthImplementation(),
+  };
 
-                  function checkOAuthImplementation () {
-                    log( '\n📋 Checking OAuth implementation...', 'cyan' );
-                    function checkOAuthImplementation () {
-                      log( '\n📋 Checking OAuth implementation...', 'cyan' );
+  const allPassed = printSummary(results);
+  process.exit(allPassed ? 0 : 1);
+}
 
-                      const authContextPath = join( process.cwd(), 'src/contexts/AuthContext.tsx' );
-                      const authContextPath = join( process.cwd(), 'src/contexts/AuthContext.tsx' );
-                      const modularAuthContextPath = join( process.cwd(), 'src/contexts/auth/AuthContext.tsx' );
-                      const legacyAuthContextPath = join( process.cwd(), 'src/contexts/AuthContext.tsx' );
-                      const authContextPath = existsSync( modularAuthContextPath ) ? modularAuthContextPath : legacyAuthContextPath;
-
-                      if ( !existsSync( authContextPath ) ) {
-                        log( '❌ AuthContext.tsx not found', 'red' );
-                        if ( !existsSync( authContextPath ) ) {
-                          log( '❌ AuthContext.tsx not found', 'red' );
-                          return false;
-                        }
-
-                        const authContent = readFileSync( authContextPath, 'utf-8' );
-                        const authContent = readFileSync( authContextPath, 'utf-8' );
-
-                        const hasGoogleMethod = authContent.includes( 'signInWithGoogle' );
-                        const hasFacebookMethod = authContent.includes( 'signInWithFacebook' );
-                        const hasOAuthHelper = authContent.includes( 'signInWithOAuthProvider' );
-                        const hasErrorHandling = authContent.includes( 'parseOAuthError' ) || authContent.includes( 'handleOAuthError' );
-                        const hasGoogleMethod = authContent.includes( 'signInWithGoogle' );
-                        const hasFacebookMethod = authContent.includes( 'signInWithFacebook' );
-                        const hasOAuthHelper = authContent.includes( 'signInWithOAuthProvider' );
-                        const hasErrorHandling = authContent.includes( 'parseOAuthError' ) || authContent.includes( 'handleOAuthError' );
-
-                        if ( hasGoogleMethod ) {
-                          log( '✅ Google sign-in method implemented', 'green' );
-                          if ( hasGoogleMethod ) {
-                            log( '✅ Google sign-in method implemented', 'green' );
-                          } else {
-                            log( '❌ Google sign-in method missing', 'red' );
-                            log( '❌ Google sign-in method missing', 'red' );
-                          }
-
-                          if ( hasFacebookMethod ) {
-                            log( '✅ Facebook sign-in method implemented', 'green' );
-                            if ( hasFacebookMethod ) {
-                              log( '✅ Facebook sign-in method implemented', 'green' );
-                            } else {
-                              log( '❌ Facebook sign-in method missing', 'red' );
-                              log( '❌ Facebook sign-in method missing', 'red' );
-                            }
-
-                            if ( hasOAuthHelper ) {
-                              log( '✅ OAuth helper function present', 'green' );
-                              if ( hasOAuthHelper ) {
-                                log( '✅ OAuth helper function present', 'green' );
-                              } else {
-                                log( '❌ OAuth helper function missing', 'red' );
-                                log( '❌ OAuth helper function missing', 'red' );
-                              }
-
-                              if ( hasErrorHandling ) {
-                                log( '✅ Enhanced OAuth error handling present', 'green' );
-                                if ( hasErrorHandling ) {
-                                  log( '✅ Enhanced OAuth error handling present', 'green' );
-                                } else {
-                                  log( '⚠️  Basic error handling only', 'yellow' );
-                                  log( '⚠️  Basic error handling only', 'yellow' );
-                                }
-
-                                return hasGoogleMethod && hasFacebookMethod && hasOAuthHelper;
-                              }
-
-                              // isValidOAuthUrl is available for future use in URL validation checks
-                              void isValidOAuthUrl;
-
-                              function printSummary ( results ) {
-                                log( '\n' + '='.repeat( 60 ), 'cyan' );
-                                log( '📊 OAuth Configuration Summary', 'cyan' );
-                                log( '='.repeat( 60 ), 'cyan' );
-                                function printSummary ( results ) {
-                                  log( '\n' + '='.repeat( 60 ), 'cyan' );
-                                  log( '📊 OAuth Configuration Summary', 'cyan' );
-                                  log( '='.repeat( 60 ), 'cyan' );
-
-                                  const allPassed = Object.values( results ).every( r => r );
-                                  const allPassed = Object.values( results ).every( r => r );
-
-                                  Object.entries( results ).forEach( ( [ check, passed ] ) => {
-                                    Object.entries( results ).forEach( ( [ check, passed ] ) => {
-                                      const status = passed ? '✅' : '❌';
-                                      const color = passed ? 'green' : 'red';
-                                      log( `${ status } ${ check }`, color );
-                                    } );
-                                    log( `${ status } ${ check }`, color );
-                                  } );
-
-                                  log( '\n' + '='.repeat( 60 ), 'cyan' );
-                                  log( '\n' + '='.repeat( 60 ), 'cyan' );
-
-                                  if ( allPassed ) {
-                                    log( '🎉 All OAuth checks passed!', 'green' );
-                                    log( '   Your OAuth configuration is ready for use.', 'green' );
-                                    log( '\n📚 Next steps:', 'cyan' );
-                                    log( '   1. Start your dev server: npm run dev', 'blue' );
-                                    log( '   2. Test Google sign-in at /auth', 'blue' );
-                                    log( '   3. Test Facebook sign-in at /auth', 'blue' );
-                                    log( '   4. Run OAuth tests: npm run test:e2e:oauth', 'blue' );
-                                    if ( allPassed ) {
-                                      log( '🎉 All OAuth checks passed!', 'green' );
-                                      log( '   Your OAuth configuration is ready for use.', 'green' );
-                                      log( '\n📚 Next steps:', 'cyan' );
-                                      log( '   1. Start your dev server: npm run dev', 'blue' );
-                                      log( '   2. Test Google sign-in at /auth', 'blue' );
-                                      log( '   3. Test Facebook sign-in at /auth', 'blue' );
-                                      log( '   4. Run OAuth tests: npm run test:e2e:oauth', 'blue' );
-                                    } else {
-                                      log( '⚠️  Some OAuth checks failed', 'yellow' );
-                                      log( '   Review the errors above and fix configuration.', 'yellow' );
-                                      log( '\n📚 Resources:', 'cyan' );
-                                      log( '   • Setup guide: docs/oauth-setup-guide.md', 'blue' );
-                                      log( '   • Environment example: .env.example', 'blue' );
-                                      log( '   • Supabase config: supabase/config.toml', 'blue' );
-                                      log( '⚠️  Some OAuth checks failed', 'yellow' );
-                                      log( '   Review the errors above and fix configuration.', 'yellow' );
-                                      log( '\n📚 Resources:', 'cyan' );
-                                      log( '   • Setup guide: docs/oauth-setup-guide.md', 'blue' );
-                                      log( '   • Environment example: .env.example', 'blue' );
-                                      log( '   • Supabase config: supabase/config.toml', 'blue' );
-                                    }
-
-                                    log( '='.repeat( 60 ) + '\n', 'cyan' );
-                                    log( '='.repeat( 60 ) + '\n', 'cyan' );
-
-                                    return allPassed;
-                                  }
-
-                                  function main () {
-                                    log( '\n🔐 Wasel OAuth Configuration Verification', 'cyan' );
-                                    log( '='.repeat( 60 ) + '\n', 'cyan' );
-                                    function main () {
-                                      log( '\n🔐 Wasel OAuth Configuration Verification', 'cyan' );
-                                      log( '='.repeat( 60 ) + '\n', 'cyan' );
-
-                                      const results = {
-                                        'Environment Variables': checkEnvFile(),
-                                        'Supabase Configuration': checkSupabaseConfig(),
-                                        'Authentication Files': checkAuthFiles(),
-                                        'OAuth Implementation': checkOAuthImplementation(),
-                                      };
-
-                                      const allPassed = printSummary( results );
-                                      const allPassed = printSummary( results );
-
-                                      process.exit( allPassed ? 0 : 1 );
-                                      process.exit( allPassed ? 0 : 1 );
-                                    }
-
-                                    main();
+main();
