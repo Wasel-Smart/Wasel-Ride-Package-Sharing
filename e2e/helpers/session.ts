@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 
-// Must match the STORAGE_KEY constant in src/contexts/LocalAuth.tsx
+// Must match the LOCAL_AUTH_USER_KEY fallback in src/services/wallet/walletLocalStorage.ts
 const STORAGE_KEY = process.env.VITE_LOCAL_AUTH_STORAGE_KEY ?? 'wasel_user_session';
 
 export const demoUser = {

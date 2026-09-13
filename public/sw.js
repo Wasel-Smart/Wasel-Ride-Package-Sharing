@@ -287,13 +287,6 @@ async function staleWhileRevalidate(request) {
   return cached || networkPromise || new Response('Unavailable', { status: 503, statusText: 'Unavailable' });
 }
 
-async function trimRuntimeCache(cache) {
-  const keys = await cache.keys();
-  const overflow = keys.length - MAX_RUNTIME_CACHE_ENTRIES;
-  if (overflow <= 0) return;
-  await Promise.all(keys.slice(0, overflow).map((key) => cache.delete(key)));
-}
-
 async function networkOnly(request) {
   try {
     if (!isSafeUrl(request.url)) return new Response('Offline', { status: 503, statusText: 'Offline' });
