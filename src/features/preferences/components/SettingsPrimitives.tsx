@@ -145,5 +145,5 @@ export function FormField({
   type?: string;
   placeholder?: string;
 }) {
-  return <WaselInput type={type} value={value} onChange={event => onChange(event.target.value)} placeholder={placeholder} />;
+  return <WaselInput type={type} value={value} onChange={onChange} placeholder={placeholder} />;
 }
