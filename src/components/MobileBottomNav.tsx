@@ -7,7 +7,7 @@ import { Bus, Clock, Network, Package, PlusCircle, Search } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router';
 import { CORE_NAV_ITEMS } from '../config/user-navigation';
 import { useLanguage } from '../contexts/LanguageContext';
-import { C, F, GRAD_GOLD } from '../utils/wasel-ds';
+import { C, F, GRAD_GOLD, TYPE } from '../utils/wasel-ds';
 
 const BG = 'rgba(6,19,31,0.96)';
 const CYAN = C.cyan;
@@ -68,12 +68,12 @@ function NavItem({ item, isActive, isArabic, navigate }: {
           style={{
             position: 'absolute',
             top: 0,
-            left: '25%',
-            right: '25%',
+            left: '20%',
+            right: '20%',
             height: 2,
-            borderRadius: '0 0 2px 2px',
-            background: itemColor,
-            boxShadow: `0 2px 8px ${itemColor}80`,
+            borderRadius: '0 0 3px 3px',
+            background: `linear-gradient(90deg, transparent, ${itemColor}, transparent)`,
+            boxShadow: `0 2px 10px ${itemColor}90`,
           }}
         />
       )}
@@ -127,8 +127,8 @@ function NavItem({ item, isActive, isArabic, navigate }: {
 
       <span
         style={{
-          fontSize: 10,
-          fontWeight: isActive ? 700 : 500,
+          fontSize: TYPE.size.xs,
+          fontWeight: isActive ? TYPE.weight.bold : TYPE.weight.medium,
           color: isActive ? (isPost ? GOLD : itemColor) : INACTIVE,
           fontFamily: F,
           lineHeight: 1,

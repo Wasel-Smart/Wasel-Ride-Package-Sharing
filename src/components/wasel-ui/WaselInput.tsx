@@ -116,7 +116,7 @@ export function WaselInput({
       >
         {icon && (
           <span
-            style={{ flexShrink: 0, color: C.textMuted, display: 'inline-flex', fontSize: '16px' }}
+            style={{ flexShrink: 0, color: C.textMuted, display: 'inline-flex', fontSize: TYPE.size.base }}
           >
             {icon}
           </span>

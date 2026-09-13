@@ -2,11 +2,12 @@ import React, { memo, Suspense, lazy, useCallback, useEffect, useMemo, useRef } 
 import { Outlet, useLocation } from 'react-router';
 import { SkipToContent } from '../components/SkipToContent';
 import { WaselLogo } from '../components/wasel-ui/WaselLogo';
+import { WaselButton } from '../components/wasel-ui/WaselButton';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { useRoutePrefetch } from '../hooks/useRoutePrefetch';
-import { C, F, FA, GLOBAL_STYLES, GRAD, R, Z } from '../utils/wasel-ds';
+import { C, F, FA, GLOBAL_STYLES, GRAD, R, TYPE, Z } from '../utils/wasel-ds';
 import { trackPageView } from '../platform/telemetry';
 import { getRouteMeta } from '../router/routeMeta';
 import { resetBodyScrollLock } from '../utils/bodyScrollLock';
@@ -280,45 +281,22 @@ const WaselRootInner = memo(() => {
                 </>
               ) : (
                 <>
-                  <button
+                  <WaselButton
+                    variant="ghost"
+                    size="sm"
                     onClick={() => { void navigate('/app/auth'); }}
-                    style={{
-                      height: 38,
-                      padding: '0 16px',
-                      borderRadius: R.md,
-                      fontSize: '0.82rem',
-                      fontWeight: 600,
-                      background: 'transparent',
-                      border: `1.5px solid ${C.border}`,
-                      color: C.text,
-                      fontFamily: ar ? FA : F,
-                      cursor: 'pointer',
-                      transition: 'all 0.14s',
-                      whiteSpace: 'nowrap',
-                    }}
+                    style={{ fontFamily: ar ? FA : F }}
                   >
                     {shellCopy.signIn}
-                  </button>
-                  <button
+                  </WaselButton>
+                  <WaselButton
+                    variant="primary"
+                    size="sm"
                     onClick={() => { void navigate('/app/auth'); }}
-                    style={{
-                      height: 40,
-                      padding: '0 18px',
-                      borderRadius: R.md,
-                      fontSize: '0.82rem',
-                      fontWeight: 800,
-                      background: GRAD,
-                      border: 'none',
-                      color: C.bg,
-                      fontFamily: ar ? FA : F,
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      transition: 'all 0.14s',
-                      boxShadow: '0 10px 24px rgba(56,190,255,0.22)',
-                    }}
+                    style={{ fontFamily: ar ? FA : F }}
                   >
                     {shellCopy.getStarted}
-                  </button>
+                  </WaselButton>
                 </>
               )}
             </div>

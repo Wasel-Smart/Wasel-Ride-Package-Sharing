@@ -1,9 +1,32 @@
 /**
  * WaselCard - design-system surface container.
+ * Hover lift is CSS-class driven — no e.currentTarget.style mutations.
  */
 
 import type { CSSProperties, HTMLAttributes, ReactNode } from 'react';
-import { ANIM, C, F, R, SH } from '../../utils/wasel-ds';
+import { C, F, R, SH } from '../../utils/wasel-ds';
+
+const CARD_STYLE_ID = 'wasel-card-css';
+if (typeof document !== 'undefined' && !document.getElementById(CARD_STYLE_ID)) {
+  const el = document.createElement('style');
+  el.id = CARD_STYLE_ID;
+  el.textContent = `
+    .wcard-hover {
+      transition: transform 250ms cubic-bezier(0.34,1.56,0.64,1),
+                  box-shadow 250ms ease,
+                  border-color 250ms ease;
+    }
+    .wcard-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 14px 32px rgba(8,29,57,0.32);
+      border-color: rgba(20,127,228,0.28) !important;
+    }
+    .wcard-hover:active {
+      transform: translateY(-1px) scale(0.99);
+    }
+  `;
+  document.head.appendChild(el);
+}
 
 type CardVariant = 'default' | 'solid' | 'brand' | 'elevated';
 
@@ -50,8 +73,7 @@ export function WaselCard({
   hover = false,
   children,
   style,
-  onMouseEnter,
-  onMouseLeave,
+  className,
   ...rest
 }: WaselCardProps) {
   const base: CSSProperties = {
@@ -59,9 +81,6 @@ export function WaselCard({
     borderRadius: radius,
     padding,
     fontFamily: F,
-    transition: hover
-      ? `transform ${ANIM.dur.slow} ${ANIM.ease.spring}, box-shadow ${ANIM.dur.slow} ${ANIM.ease.default}, border-color ${ANIM.dur.slow} ${ANIM.ease.default}`
-      : undefined,
     ...variantMap[variant],
     ...style,
   };
@@ -69,23 +88,8 @@ export function WaselCard({
   return (
     <div
       {...rest}
+      className={`${hover ? 'wcard-hover' : ''}${className ? ` ${className}` : ''}`}
       style={base}
-      onMouseEnter={e => {
-        if (hover) {
-          e.currentTarget.style.transform = 'translateY(-3px)';
-          e.currentTarget.style.boxShadow = SH.md;
-          e.currentTarget.style.borderColor = C.borderHov;
-        }
-        onMouseEnter?.(e);
-      }}
-      onMouseLeave={e => {
-        if (hover) {
-          e.currentTarget.style.transform = '';
-          e.currentTarget.style.boxShadow = (variantMap[variant].boxShadow as string) ?? '';
-          e.currentTarget.style.borderColor = '';
-        }
-        onMouseLeave?.(e);
-      }}
     >
       {children}
     </div>

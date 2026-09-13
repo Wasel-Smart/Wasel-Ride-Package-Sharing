@@ -6,7 +6,7 @@
 
 import { Loader2 } from 'lucide-react';
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
-import { ANIM, C, F, GRAD, GRAD_GOLD, R, SH, TYPE } from '../../utils/wasel-ds';
+import { C, F, GRAD, GRAD_GOLD, R, SH, TYPE } from '../../utils/wasel-ds';
 
 const STYLE_ID = 'wasel-btn-css';
 const BTN_CSS = `
@@ -24,11 +24,11 @@ const BTN_CSS = `
   .wbtn-spinner { animation: wbtn-spin 0.9s linear infinite; }
 `;
 
-if (typeof document !== 'undefined' && !document.getElementById(STYLE_ID)) {
-  const el = document.createElement('style');
+if ( typeof document !== 'undefined' && !document.getElementById( STYLE_ID ) ) {
+  const el = document.createElement( 'style' );
   el.id = STYLE_ID;
   el.textContent = BTN_CSS;
-  document.head.appendChild(el);
+  document.head.appendChild( el );
 }
 
 type ButtonVariant = 'primary' | 'outline' | 'ghost' | 'gold' | 'danger';
@@ -59,7 +59,7 @@ const variantStyles: Record<
   outline: {
     background: 'transparent',
     color: C.cyan,
-    border: `1px solid ${C.border}`,
+    border: `1px solid ${ C.border }`,
     boxShadow: 'none',
     hoverShadow: SH.blue,
   },
@@ -80,7 +80,7 @@ const variantStyles: Record<
   danger: {
     background: C.errorDim,
     color: C.error,
-    border: `1px solid ${C.errorDim}`,
+    border: `1px solid ${ C.errorDim }`,
     boxShadow: 'none',
     hoverShadow: SH.sm,
   },
@@ -95,7 +95,7 @@ const sizeStyles: Record<
   lg: { height: '54px', padding: '0 28px', fontSize: TYPE.size.md, borderRadius: R.xl },
 };
 
-export function WaselButton({
+export function WaselButton ( {
   variant = 'primary',
   size = 'md',
   loading = false,
@@ -108,9 +108,9 @@ export function WaselButton({
   style,
   className,
   ...rest
-}: WaselButtonProps) {
-  const v = variantStyles[variant];
-  const s = sizeStyles[size];
+}: WaselButtonProps ) {
+  const v = variantStyles[ variant ];
+  const s = sizeStyles[ size ];
   const isDisabled = disabled || loading;
 
   const baseStyle: CSSProperties = {
@@ -142,20 +142,20 @@ export function WaselButton({
 
   return (
     <button
-      {...rest}
-      dir={dir}
-      disabled={isDisabled}
-      data-variant={variant}
-      className={`wbtn${className ? ` ${className}` : ''}`}
-      style={baseStyle}
+      { ...rest }
+      dir={ dir }
+      disabled={ isDisabled }
+      data-variant={ variant }
+      className={ `wbtn${ className ? ` ${ className }` : '' }` }
+      style={ baseStyle }
     >
-      {loading ? (
-        <Loader2 size={size === 'sm' ? 14 : 16} className="wbtn-spinner" />
+      { loading ? (
+        <Loader2 size={ size === 'sm' ? 14 : 16 } className="wbtn-spinner" />
       ) : (
         icon
-      )}
-      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{children}</span>
-      {!loading && iconEnd}
+      ) }
+      <span style={ { overflow: 'hidden', textOverflow: 'ellipsis' } }>{ children }</span>
+      { !loading && iconEnd }
     </button>
   );
 }
