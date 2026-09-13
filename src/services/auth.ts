@@ -148,21 +148,20 @@ function mergeVerificationIntoProfile(
 }
 
 /**
- * A helper to get a valid Supabase session, trying to refresh it if it's expired.
- * Throws an error if no valid session can be obtained.
+ * Get a valid session, propagating any getSession error and refreshing if expired.
  */
 async function getRefreshedSession() {
   const client = await requireSupabase();
 
-  // First, try to get the current session.
-  const { data: { session: initialSession } } = await client.auth.getSession();
+  const { data: { session: initialSession }, error: sessionError } = await client.auth.getSession();
+  if (sessionError) {
+    throw sessionError;
+  }
   if (initialSession) {
     return initialSession;
   }
 
-  // If no session, try to refresh it. This can happen on the first load after login.
   const { data: { session: refreshedSession }, error: refreshError } = await client.auth.refreshSession();
-
   if (refreshError || !refreshedSession) {
     throw new Error('Session expired or invalid. Please log in again.');
   }
@@ -171,7 +170,8 @@ async function getRefreshedSession() {
 }
 
 /**
- * A wrapper for fetch that automatically handles token refresh on 401 errors.
+ * Fetch wrapper that retries once with a refreshed token on 401.
+ * Throws a typed error if the retry also returns 401.
  */
 async function fetchWithAuth(url: string, options: RequestInit): Promise<Response> {
   const response = await fetchWithRetry(url, options);
@@ -181,8 +181,15 @@ async function fetchWithAuth(url: string, options: RequestInit): Promise<Respons
     const existingHeaders = options.headers instanceof Headers
       ? Object.fromEntries((options.headers as Headers).entries())
       : (options.headers as Record<string, string> ?? {});
-    const newOptions: RequestInit = { ...options, headers: { ...existingHeaders, Authorization: `Bearer ${newSession.access_token}` } };
-    return fetchWithRetry(url, newOptions);
+    const newOptions: RequestInit = {
+      ...options,
+      headers: { ...existingHeaders, Authorization: `Bearer ${newSession.access_token}` },
+    };
+    const retryResponse = await fetchWithRetry(url, newOptions);
+    if (retryResponse.status === 401) {
+      throw new Error('Session is no longer valid. Please sign in again.');
+    }
+    return retryResponse;
   }
 
   return response;
@@ -234,7 +241,6 @@ export const authAPI = {
         emailRedirectTo: redirectTo,
         data: {
           full_name: `${firstName} ${lastName}`.trim(),
-          // Only include phone if it's a non-empty string
           ...(phone ? { phone } : {}),
         },
       },
@@ -247,7 +253,7 @@ export const authAPI = {
     return data;
   },
 
-   async createProfile(userId: string, email: string, firstName: string, lastName: string) {
+  async createProfile(userId: string, email: string, firstName: string, lastName: string) {
     if (!hasConfiguredEdgeTransport('required')) {
       if (!getConfig().allowDirectSupabaseFallback) {
         throw getDirectFallbackError('Profile creation');
@@ -326,7 +332,7 @@ export const authAPI = {
         return loadProfileViaFallback(context.userId);
       }
 
-       try {
+      try {
         const data = await requestEdgeJson<Record<string, unknown>>({
           path: `/v1/profile/${context.userId}`,
           authMode: 'required',
@@ -341,7 +347,16 @@ export const authAPI = {
         }
         throw edgeError;
       }
-    } catch {
+    } catch (error) {
+      // Only swallow not-found states; log real errors in DEV
+      const message = error instanceof Error ? error.message.toLowerCase() : '';
+      const isNotFound =
+        message.includes('not found') ||
+        message.includes('no rows') ||
+        message.includes('pgrst116');
+      if (!isNotFound && import.meta.env?.DEV) {
+        console.warn('[auth.getProfile] error:', error instanceof Error ? error.message : String(error));
+      }
       return { profile: null };
     }
   },

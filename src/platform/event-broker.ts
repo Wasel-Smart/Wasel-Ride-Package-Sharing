@@ -11,7 +11,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { DomainEventEnvelope, DomainEventType } from '../domain/events';
-import { EVENT_TYPE_TO_TOPIC, type QueueTopic } from './queue-contracts';
+import { EVENT_TYPE_TO_TOPIC, getQueueContract, type QueueTopic } from './queue-contracts';
 import { isSupabaseConfigured, supabase as defaultSupabase } from '../utils/supabase/client';
 import { sanitizeLogMessage } from '../utils/sanitization';
 
@@ -576,7 +576,9 @@ class OptimizedSupabaseEventBroker implements EventBroker {
       }
     } else {
       const nextAttempts = attempts + 1;
-      const nextStatus = nextAttempts >= 5 ? 'failed' : 'pending';
+      const contract = getQueueContract(message.topic as QueueTopic);
+      const maxAttempts = contract?.retryPolicy.maxAttempts ?? 5;
+      const nextStatus = nextAttempts >= maxAttempts ? 'failed' : 'pending';
 
       if (this.proxyAvailable) {
         await proxyFetch('/fail', { id: message.id, attempts: nextAttempts });

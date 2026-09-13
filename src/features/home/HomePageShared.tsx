@@ -9,6 +9,8 @@ export const C = {
   s3: TOKENS.card2,
   red: TOKENS.error,
   redDim: TOKENS.errorDim,
+  cardSolid: TOKENS.cardSolid,
+  bgDeep: TOKENS.bgDeep,
 } as const;
 
 export const F = FONT_SANS;

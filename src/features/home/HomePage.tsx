@@ -643,25 +643,54 @@ function TestimonialsSection() {
         </div>
       </div>
       <div className="wasel-home-testimonials">
-        {testimonials.map((item, index) => (
-          <div key={index} className="wasel-home-testimonial">
-            <div className="wasel-home-testimonial-stars">
-              {Array.from({ length: item.stars }).map((_, i) => (
-                <Star key={i} size={14} fill={C.brandOrange} color={C.brandOrange} />
-              ))}
-            </div>
-            <div className="wasel-home-testimonial-text">"{item.text}"</div>
-            <div className="wasel-home-testimonial-author">
-              <div className="wasel-home-testimonial-avatar">
-                {item.name.charAt(0)}
+        {testimonials.map((item, index) => {
+          const AVATAR_GRADIENTS = [
+            'linear-gradient(135deg, #00E5FF 0%, #32D8A6 100%)',
+            'linear-gradient(135deg, #FFBE5C 0%, #FF8A0B 100%)',
+            'linear-gradient(135deg, #72C70D 0%, #34D8A7 100%)',
+          ];
+          const AVATAR_GLOWS = [
+            'rgba(0,229,255,0.35)',
+            'rgba(255,190,92,0.35)',
+            'rgba(114,199,13,0.35)',
+          ];
+          const grad = AVATAR_GRADIENTS[index % 3];
+          const glow = AVATAR_GLOWS[index % 3];
+          return (
+            <div key={index} className="wasel-home-testimonial">
+              <div className="wasel-home-testimonial-stars">
+                {Array.from({ length: item.stars }).map((_, i) => (
+                  <Star key={i} size={14} fill={C.brandOrange} color={C.brandOrange} />
+                ))}
               </div>
-              <div>
-                <div className="wasel-home-testimonial-name">{item.name}</div>
-                <div className="wasel-home-testimonial-role">{item.role}</div>
+              <div className="wasel-home-testimonial-text">"{item.text}"</div>
+              <div className="wasel-home-testimonial-author">
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    background: grad,
+                    boxShadow: `0 0 0 2px ${C.cardSolid}, 0 0 0 4px ${glow}, 0 4px 14px ${glow}`,
+                    display: 'grid',
+                    placeItems: 'center',
+                    color: C.bgDeep,
+                    fontSize: TYPE.size.base,
+                    fontWeight: TYPE.weight.ultra,
+                    flexShrink: 0,
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  {item.name.charAt(0)}
+                </div>
+                <div>
+                  <div className="wasel-home-testimonial-name">{item.name}</div>
+                  <div className="wasel-home-testimonial-role">{item.role}</div>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </motion.section>
   );

@@ -558,35 +558,23 @@ export function HomePageStyles() {
       .wasel-home-testimonial-author {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         margin-top: auto;
-        padding-top: 12px;
+        padding-top: 14px;
         border-top: 1px solid rgba(20,127,228,0.1);
-      }
-
-      .wasel-home-testimonial-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: rgba(20,127,228,0.12);
-        border: 1px solid rgba(20,127,228,0.16);
-        display: grid;
-        place-items: center;
-        color: #00E5FF;
-        font-size: 0.85rem;
-        font-weight: 700;
-        flex-shrink: 0;
       }
 
       .wasel-home-testimonial-name {
         color: #f8fbff;
-        font-size: 0.88rem;
-        font-weight: 700;
+        font-size: 0.9rem;
+        font-weight: 800;
+        line-height: 1.3;
       }
 
       .wasel-home-testimonial-role {
         color: rgba(196,220,238,0.56);
         font-size: 0.75rem;
+        margin-top: 2px;
       }
 
       .wasel-home-cta-banner {
