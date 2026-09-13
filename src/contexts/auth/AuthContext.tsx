@@ -1,4 +1,4 @@
-﻿import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AuthChangeEvent, Session, User } from '@supabase/auth-js';
 import { getAuthCallbackUrl, resolveAuthRedirectOrigin } from '../../utils/env';
 import { sanitizeLogMessage } from '../../utils/sanitization';
@@ -27,6 +27,7 @@ export interface AuthContextType {
   profile: Profile | null;
   session: Session | null;
   loading: boolean;
+  isSubmitting: boolean;
   isBackendConnected: boolean;
   waselUser: WaselUser | null;
   signUp: (
@@ -54,6 +55,7 @@ export const AuthContext = createContext<AuthContextType>({
   profile: null,
   session: null,
   loading: true,
+  isSubmitting: false,
   isBackendConnected: false,
   waselUser: null,
   signUp: async () => ({ error: null }),
@@ -62,10 +64,10 @@ export const AuthContext = createContext<AuthContextType>({
   signInWithFacebook: async () => ({ error: null }),
   signInWithMicrosoft: async () => ({ error: null }),
   signInWithApple: async () => ({ error: null }),
-  signOut: async () => { },
+  signOut: async () => {},
   updateProfile: async () => ({ error: null }),
-  updateUser: async () => { },
-  refreshProfile: async () => { },
+  updateUser: async () => {},
+  refreshProfile: async () => {},
   resetPassword: async () => ({ error: null }),
   changePassword: async () => ({ error: null }),
 });
@@ -80,7 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [initializing, setInitializing] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [waselUser, setWaselUser] = useState<WaselUser | null>(null);
   const optimisticRef = useRef<Partial<WaselUser> | null>(null);
@@ -140,7 +142,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
           if (!nextSession?.user) {
             setProfile(null);
-            setInitializing(false);
+            if (mounted) {setInitializing(false);}
             sessionManager.endSession();
             return;
           }
@@ -158,7 +160,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             event === 'TOKEN_REFRESHED';
 
           if (!shouldRefreshProfile) {
-            setInitializing(false);
+            if (mounted) {setInitializing(false);}
             return;
           }
 
@@ -184,6 +186,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (event.origin !== window.location.origin) {return;}
           if (!event.data || typeof event.data !== 'object') {return;}
           if (event.data.type !== 'wasel-auth-complete') {return;}
+
+          // Verify the one-time nonce to ensure this message came from our
+          // own OAuth callback page and not from another same-origin script.
+          const expectedNonce = sessionStorage.getItem('wasel_oauth_nonce');
+          if (!expectedNonce || event.data.nonce !== expectedNonce) {return;}
+          sessionStorage.removeItem('wasel_oauth_nonce');
 
           try {
             const { data, error } = await client.auth.getSession();
@@ -255,7 +263,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const { firstName, lastName } = splitFullName(fullName);
 
-      setBusy(true);
+      setIsSubmitting(true);
       try {
         const { authAPI } = await import('../../services/auth');
         const data = await authAPI.signUp({
@@ -281,7 +289,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } catch (error: unknown) {
         return { error: normalizeOperationError(error, 'Signup failed') };
       } finally {
-        setBusy(false);
+        setIsSubmitting(false);
       }
     },
     [fetchProfile],
@@ -289,7 +297,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const signIn = useCallback(
     async (email: string, password: string): Promise<{ error: AuthOperationError }> => {
-      setBusy(true);
+      setIsSubmitting(true);
       try {
         const { authAPI } = await import('../../services/auth');
         const data = await authAPI.signIn(email, password);
@@ -305,7 +313,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } catch (error: unknown) {
         return { error: normalizeOperationError(error, 'Login failed') };
       } finally {
-        setBusy(false);
+        setIsSubmitting(false);
       }
     },
     [fetchProfile],
@@ -314,12 +322,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const createOAuthSignIn = useCallback(
     (provider: 'google' | 'facebook' | 'microsoft' | 'apple') =>
       async (returnTo?: string): Promise<{ error: AuthOperationError }> => {
-        const client = await getSupabaseClient();
+        const client = getSupabaseClient();
         if (!client) {
           return { error: new Error('Backend not configured') };
         }
 
-        setBusy(true);
+        setIsSubmitting(true);
         try {
           const result = await signInWithOAuthProvider(client, provider, returnTo);
 
@@ -334,18 +342,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
             return { error: errorToReturn as AuthOperationError };
           }
 
-          // Supabase JS will navigate away via window.location on success, but
-          // if for any reason the navigation doesn't fire we still want the
-          // button to look interactive again. Reset busy on next tick.
-          queueMicrotask(() => setBusy(false));
           return result;
         } catch (error: unknown) {
           const providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
           return { error: normalizeOperationError(error, `${providerName} sign-in failed`) };
         } finally {
-          // If the redirect happened, this is a no-op; if it didn't, this
-          // re-enables the UI.
-          setBusy(false);
+          setIsSubmitting(false);
         }
       },
     [],
@@ -357,7 +359,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signInWithApple = useMemo(() => createOAuthSignIn('apple'), [createOAuthSignIn]);
 
   const signOut = useCallback(async () => {
-    setBusy(true);
+    setIsSubmitting(true);
     try {
       const { authAPI } = await import('../../services/auth');
       await authAPI.signOut();
@@ -370,7 +372,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         console.error('Sign out error:', sanitizeLogMessage(String(error)));
       }
     } finally {
-      setBusy(false);
+      setIsSubmitting(false);
     }
   }, []);
 
@@ -380,13 +382,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return { error: new Error('No user logged in') };
       }
 
-      setBusy(true);
+      setIsSubmitting(true);
       try {
         const { authAPI } = await import('../../services/auth');
         const result = await authAPI.updateProfile(updates);
         if (result.success) {
           setProfile(prev => (prev ? { ...prev, ...updates } : prev));
-          fetchProfile(false, user).catch(() => { });
+          fetchProfile(false, user).catch(error => {
+            if (import.meta.env?.DEV) {
+              console.warn('[Auth] Background profile refresh failed:', sanitizeLogMessage(String(error)));
+            }
+          });
           return { error: null };
         }
 
@@ -398,7 +404,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } catch (error: unknown) {
         return { error: normalizeOperationError(error, 'Update failed') };
       } finally {
-        setBusy(false);
+        setIsSubmitting(false);
       }
     },
     [fetchProfile, user],
@@ -466,14 +472,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const client = getSupabaseClient();
       if (!client) {return { error: new Error('Backend not configured') };}
 
-      setBusy(true);
+      setIsSubmitting(true);
       try {
         const { error } = await client.auth.updateUser({ password: nextPassword });
         return { error: error ?? null };
       } catch (error: unknown) {
         return { error: normalizeOperationError(error, 'Password update failed') };
       } finally {
-        setBusy(false);
+        setIsSubmitting(false);
       }
     },
     [],
@@ -484,7 +490,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       user,
       profile,
       session,
-      loading: initializing || busy,
+      loading: initializing,
+      isSubmitting,
       isBackendConnected,
       waselUser,
       signUp,
@@ -501,7 +508,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       changePassword,
     }),
     [
-      busy,
+      isSubmitting,
       changePassword,
       initializing,
       isBackendConnected,
@@ -525,5 +532,3 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
-
-

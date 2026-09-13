@@ -1,4 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Profile } from '../authContextHelpers';
 import { supabase } from '../../utils/supabase/client';
 

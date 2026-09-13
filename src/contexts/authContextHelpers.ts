@@ -4,8 +4,7 @@ import type {
   Session,
   User,
 } from '@supabase/auth-js';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { authAPI } from '../services/auth';
+import type { Provider, SupabaseClient } from '@supabase/supabase-js';
 import { getAuthCallbackUrl, resolveAuthRedirectOrigin } from '../utils/env';
 import { deriveAccountTrustScore } from '../domain/trust/score';
 
@@ -91,11 +90,6 @@ export function shouldIgnoreProfileError(error: Error): boolean {
   return error.message?.includes('aborted') || error.message?.includes('not found');
 }
 
-export async function loadProfile(): Promise<Profile | null> {
-  const profileData = await authAPI.getProfile();
-  return (profileData?.profile as Profile | null) || null;
-}
-
 export function normalizeOperationError(error: unknown, fallback: string): Error {
   return error instanceof Error ? error : new Error(fallback);
 }
@@ -125,7 +119,7 @@ export async function signInWithOAuthProvider(
             : 'openid profile email';
 
     const { error } = await client.auth.signInWithOAuth({
-      provider: provider as any,
+      provider: provider as Provider,
       options: {
         redirectTo,
         scopes,
@@ -238,7 +232,7 @@ export function mapBackendProfile({
   const walletStatus = resolveWalletStatus(profile?.wallet_status);
 
   const baseUser: WaselUser = {
-    id: authUser?.id || `user-${Date.now()}`,
+    id: authUser.id,
     name,
     email: authUser?.email || profile?.email || '',
     phone,

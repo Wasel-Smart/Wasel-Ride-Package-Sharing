@@ -15,6 +15,7 @@ import { API_URL } from '../../services/core';
 import { WaselErrorBoundary } from '../../components/ErrorBoundary';
 import { ActiveTripsBanner } from '../../components/TripProgressCard';
 import { C, F, POPULAR_ROUTES } from './HomePageShared';
+import { TYPE } from '../../utils/wasel-ds';
 import {
   CorridorsSection,
   CorridorBetaFocusSection,
@@ -339,7 +340,7 @@ export function HomePage() {
               right: 0,
               background: C.glass,
               color: C.text,
-              padding: '14px 20px calc(14px + env(safe-area-inset-bottom))',
+              padding: `${TYPE.size.sm} 20px calc(14px + env(safe-area-inset-bottom))`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -355,7 +356,7 @@ export function HomePage() {
           >
             <span
               style={{
-                fontSize: '0.84rem',
+                fontSize: TYPE.size.sm,
                 fontFamily: F,
                 flex: 1,
                 minWidth: 200,
@@ -365,84 +366,50 @@ export function HomePage() {
               {t('cookies.description')}{' '}
               <a
                 href="/app/privacy"
-                style={{ color: C.cyan, textDecoration: 'underline', fontSize: '0.8rem' }}
+                style={{ color: C.cyan, textDecoration: 'underline', fontSize: TYPE.size.xs }}
               >
                 {t('cookies.privacy_policy')}
               </a>
             </span>
             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-              <button
+              <WaselButton
+                variant="ghost"
+                size="sm"
                 onClick={() => { void declineCookies(); }}
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: 10,
-                  background: 'transparent',
-                  color: C.textMuted,
-                  border: `1px solid ${C.border}`,
-                  fontWeight: 600,
-                  fontFamily: F,
-                  cursor: 'pointer',
-                  fontSize: '0.82rem',
-                }}
               >
                 {t('cookies.reject_all')}
-              </button>
-              <button
+              </WaselButton>
+              <WaselButton
+                variant="primary"
+                size="sm"
                 onClick={() => { void acceptCookies(); }}
-                style={{
-                  padding: '8px 18px',
-                  borderRadius: 10,
-                  background: C.brandBlue,
-                  color: C.text,
-                  border: 'none',
-                  fontWeight: 800,
-                  fontFamily: F,
-                  cursor: 'pointer',
-                  fontSize: '0.82rem',
-                }}
               >
                 {t('cookies.accept_all')}
-              </button>
+              </WaselButton>
             </div>
           </div>
         )}
 
         {/* Sticky mobile CTA */}
         <div className="wasel-home-sticky-cta">
-          <button
+          <WaselButton
             type="button"
+            variant="primary"
+            size="md"
+            fullWidth
             onClick={() => { void handleNavigate(primaryTripPath, 'sticky_find'); }}
-            style={{
-              height: 48,
-              borderRadius: 12,
-              border: 'none',
-              background: C.brandBlue,
-              color: C.text,
-              fontWeight: 800,
-              fontFamily: F,
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-            }}
           >
             {t('homeSections.findRideCTA')}
-          </button>
-          <button
+          </WaselButton>
+          <WaselButton
             type="button"
+            variant="outline"
+            size="md"
+            fullWidth
             onClick={() => { void handleNavigate('/offer-ride', 'sticky_offer'); }}
-            style={{
-              height: 48,
-              borderRadius: 12,
-              border: `1px solid ${C.border}`,
-              background: C.elevated,
-              color: C.text,
-              fontWeight: 700,
-              fontFamily: F,
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-            }}
           >
             {t('homeSections.offerRideCTA')}
-          </button>
+          </WaselButton>
         </div>
 
         <div className="wasel-home-container relative z-10">
@@ -485,14 +452,14 @@ export function HomePage() {
                   color: C.text,
                   display: 'grid',
                   placeItems: 'center',
-                  fontWeight: 800,
-                  fontSize: '0.85rem',
+                  fontWeight: TYPE.weight.black,
+                  fontSize: TYPE.size.sm,
                 }}
               >
                 {role === 'admin' ? 'A' : role === 'driver' ? 'D' : role === 'both' ? 'B' : 'R'}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: C.text }}>
+                <div style={{ fontWeight: TYPE.weight.black, fontSize: TYPE.size.base, color: C.text }}>
                   {role === 'admin'
                     ? t('homeSections.roleBannerAdmin')
                     : role === 'driver'
@@ -501,7 +468,7 @@ export function HomePage() {
                         ? t('homeSections.roleBannerBoth')
                         : t('homeSections.roleBannerRider')}
                 </div>
-                <div style={{ fontSize: '0.78rem', color: C.textMuted, marginTop: 2 }}>
+                <div style={{ fontSize: TYPE.size.xs, color: C.textMuted, marginTop: 2 }}>
                   {role === 'admin'
                     ? t('homeSections.roleBannerAdminDesc')
                     : role === 'driver'
