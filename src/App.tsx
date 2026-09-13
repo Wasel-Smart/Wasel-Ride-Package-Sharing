@@ -13,7 +13,7 @@ import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import { waselRouter } from './router';
 import { initSentry, logger as monitoringLogger, trackDomainEvent } from './utils/monitoring';
 import { initPerformanceMonitoring } from './utils/performance';
-import { warmUpServer, startAvailabilityPolling } from './services/core';
+import { warmUpServer } from './services/core';
 import { domainEventBus } from './platform/event-bus';
 
 function scheduleWhenIdle(callback: () => void): () => void {
@@ -84,14 +84,11 @@ function AppRuntimeCoordinator() {
 
               warmUpServer();
 
-              const stopPolling = startAvailabilityPolling();
-
               const stopEvents = domainEventBus.subscribeAll(event => {
                 trackDomainEvent(event);
               });
 
               cleanup = () => {
-                stopPolling?.();
                 stopEvents?.();
               };
             } catch (e) {
