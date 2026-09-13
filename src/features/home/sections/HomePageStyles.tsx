@@ -28,6 +28,7 @@ export function HomePageStyles () {
         overflow-x: hidden;
         overflow-y: visible;
         background:
+          linear-gradient(180deg, #081d39 0%, #0a1f3a 34%, #0e2240 100%);
           radial-gradient(ellipse 90% 60% at 50% -15%, rgba(0,229,255,0.12), transparent 70%),
           radial-gradient(ellipse 60% 50% at 90% 40%, rgba(255,138,11,0.06), transparent 70%),
           radial-gradient(ellipse 60% 50% at 10% 70%, rgba(114,199,13,0.06), transparent 70%),
@@ -40,6 +41,10 @@ export function HomePageStyles () {
         inset: 0;
         pointer-events: none;
         background-image:
+          linear-gradient(rgba(20,127,228,0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(20,127,228,0.04) 1px, transparent 1px);
+        background-size: 88px 88px;
+        mask-image: linear-gradient(180deg, black 0%, black 68%, transparent 100%);
           linear-gradient(rgba(0,229,255,0.035) 1px, transparent 1px),
           linear-gradient(90deg, rgba(0,229,255,0.035) 1px, transparent 1px);
         background-size: 64px 64px;
@@ -52,6 +57,8 @@ export function HomePageStyles () {
         inset: 0;
         pointer-events: none;
         background:
+          linear-gradient(115deg, rgba(20,127,228,0.1), transparent 22%, transparent 68%, rgba(255,138,11,0.06)),
+          linear-gradient(180deg, transparent 0%, rgba(8,29,57,0.45) 88%);
           linear-gradient(115deg, rgba(0,229,255,0.08), transparent 30%, transparent 70%, rgba(255,138,11,0.05)),
           linear-gradient(180deg, transparent 0%, rgba(5,11,18,0.65) 92%);
       }
@@ -198,9 +205,14 @@ export function HomePageStyles () {
       .wasel-home-title {
         position: relative;
         z-index: 1;
+        margin: 30px 0 0;
+        max-width: 720px;
         margin: 28px 0 0;
         max-width: 760px;
         color: #f8fbff;
+        font-size: clamp(3.2rem, 4.8vw, 4.8rem);
+        line-height: 1.05;
+        letter-spacing: 0;
         font-size: clamp(2.8rem, 4.6vw, 4.4rem);
         line-height: 1.08;
         letter-spacing: -0.02em;
@@ -219,6 +231,10 @@ export function HomePageStyles () {
         position: relative;
         z-index: 1;
         max-width: 650px;
+        margin: 16px 0 0;
+        color: rgba(196,220,238,0.78);
+        font-size: 1rem;
+        line-height: 1.68;
         margin: 18px 0 0;
         color: rgba(196,220,238,0.85);
         font-size: 1.05rem;
@@ -230,6 +246,7 @@ export function HomePageStyles () {
         z-index: 1;
         display: flex;
         flex-wrap: wrap;
+        gap: 12px;
         gap: 14px;
         margin-top: 24px;
       }
@@ -239,6 +256,8 @@ export function HomePageStyles () {
         z-index: 1;
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 28px;
         gap: 14px;
         margin-top: 24px;
       }
@@ -246,6 +265,12 @@ export function HomePageStyles () {
       .wasel-home-proof-pill {
         display: flex;
         align-items: flex-start;
+        gap: 10px;
+        padding: 14px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(20,127,228,0.12);
+        transition: background 160ms ease, border-color 160ms ease;
         gap: 12px;
         padding: 14px 16px;
         border-radius: 16px;
@@ -258,16 +283,21 @@ export function HomePageStyles () {
       }
 
       .wasel-home-proof-pill:hover {
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(20,127,228,0.22);
         transform: translateY(-1px);
         border-color: rgba(0,229,255,0.32);
         box-shadow: 0 1px 0 rgba(0,229,255,0.25) inset, 0 12px 28px rgba(8,29,57,0.4);
       }
 
       .wasel-home-proof-pill-icon {
+        width: 32px;
+        height: 32px;
         width: 34px;
         height: 34px;
         display: grid;
         place-items: center;
+        border-radius: 8px;
         border-radius: 10px;
         flex: 0 0 auto;
       }
@@ -432,6 +462,7 @@ export function HomePageStyles () {
         border-radius: 12px;
         border: 1px solid;
         cursor: pointer;
+        text-align: left;
         text-align: start;
         font-family: ${ F };
         background: transparent;
@@ -453,20 +484,28 @@ export function HomePageStyles () {
         display: flex;
         flex-direction: column;
         gap: 12px;
+        padding: 18px;
+        border-radius: 16px;
         padding: 20px;
         border-radius: 18px;
         background: rgba(8,29,57,0.72);
+        border: 1px solid rgba(20,127,228,0.14);
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
         border: 1px solid rgba(20,127,228,0.16);
         box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 8px 24px rgba(8,29,57,0.3);
         cursor: pointer;
+        text-align: left;
         text-align: start;
         font-family: ${ F };
+        transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
         transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease, box-shadow 180ms ease;
       }
 
       .wasel-home-action-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(20,127,228,0.28);
+        box-shadow: 0 8px 24px rgba(8,29,57,0.28);
         transform: translateY(-3px);
         border-color: rgba(0,229,255,0.35);
         box-shadow: 0 1px 0 rgba(0,229,255,0.2) inset, 0 16px 36px rgba(8,29,57,0.45);
@@ -480,6 +519,8 @@ export function HomePageStyles () {
       }
 
       .wasel-home-action-icon {
+        width: 42px;
+        height: 42px;
         width: 44px;
         height: 44px;
         border-radius: 12px;
@@ -506,18 +547,23 @@ export function HomePageStyles () {
 
       .wasel-home-action-title {
         color: #f8fbff;
+        font-size: 1rem;
         font-size: 1.05rem;
         font-weight: 850;
         line-height: 1.25;
       }
 
       .wasel-home-action-desc {
+        color: rgba(196,220,238,0.66);
+        font-size: 0.84rem;
         color: rgba(196,220,238,0.7);
         font-size: 0.85rem;
         line-height: 1.6;
       }
 
       .wasel-home-action-outcome {
+        color: rgba(196,220,238,0.78);
+        font-size: 0.78rem;
         color: rgba(196,220,238,0.85);
         font-size: 0.8rem;
         line-height: 1.55;
@@ -526,9 +572,11 @@ export function HomePageStyles () {
       .wasel-home-action-cta {
         display: inline-flex;
         align-items: center;
+        gap: 5px;
         gap: 6px;
         margin-top: 4px;
         font-weight: 800;
+        font-size: 0.78rem;
         font-size: 0.8rem;
       }
 
@@ -543,16 +591,21 @@ export function HomePageStyles () {
         display: flex;
         flex-direction: column;
         gap: 10px;
+        padding: 18px;
+        border-radius: 16px;
         padding: 20px;
         border-radius: 18px;
         background: rgba(8,29,57,0.72);
+        border: 1px solid rgba(20,127,228,0.14);
         backdrop-filter: blur(18px);
         -webkit-backdrop-filter: blur(18px);
         border: 1px solid rgba(20,127,228,0.16);
         box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 8px 24px rgba(8,29,57,0.3);
         cursor: pointer;
+        text-align: left;
         text-align: start;
         font-family: ${ F };
+        transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
         transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease, box-shadow 180ms ease;
       }
 
