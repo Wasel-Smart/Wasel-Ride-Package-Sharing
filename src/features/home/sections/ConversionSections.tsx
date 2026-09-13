@@ -1,4 +1,4 @@
-﻿import { motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ArrowRight,
   ArrowLeft,
@@ -325,7 +325,7 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
               minHeight: 210,
               display: 'flex',
               flexDirection: 'column',
-              textAlign: 'left',
+                textAlign: 'start',
               borderRadius: R.xl,
               padding: '20px',
               background: `linear-gradient(180deg, ${C.card}, ${C.elevated})`,
@@ -445,7 +445,7 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
                 onClick={() => { void onNavigate(card.path, 'outcome_corridor'); }}
                 style={{
                   minHeight: 72,
-                  textAlign: 'left',
+                    textAlign: 'start',
                   borderRadius: R.lg,
                   padding: '10px 12px',
                   background: C.card2,
@@ -488,7 +488,7 @@ export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
                 minHeight: 172,
                 display: 'flex',
                 flexDirection: 'column',
-                textAlign: 'left',
+                  textAlign: 'start',
                 borderRadius: R.xl,
                 padding: '18px',
                 background: C.card,
