@@ -127,6 +127,35 @@ async function resolveSessionToken(): Promise<string | undefined> {
   return data.session?.access_token ?? undefined;
 }
 
+function parseApiErrorPayload (
+  payload: unknown,
+  statusText: string,
+): { message: string; code?: string; details?: unknown } {
+  if ( typeof payload === 'object' && payload !== null ) {
+    const obj = payload as { error?: string; message?: string; code?: string; details?: unknown };
+    const message = String( obj.error || obj.message || statusText ) || 'Request failed';
+    return { message, code: obj.code, details: obj.details };
+  }
+  return {
+    message: String( payload || statusText || 'Request failed' ),
+    code: undefined,
+    details: undefined,
+  };
+}
+
+function isFatalClientError ( error: Error ): boolean {
+  return (
+    error instanceof APIError &&
+    error.statusCode >= 400 &&
+    error.statusCode < 500 &&
+    error.statusCode !== 429
+  );
+}
+
+function isRetryableRuntimeError ( error: Error ): boolean {
+  return error instanceof NetworkError || error instanceof TimeoutError;
+}
+
 export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {},
@@ -165,23 +194,7 @@ export async function apiRequest<T = unknown>(
         return unwrapApiEnvelope<T>(payload as T);
       }
 
-      const normalizedError =
-        typeof payload === 'object' && payload !== null
-          ? {
-            message:
-              String(
-                (payload as { error?: string; message?: string }).error ||
-                (payload as { message?: string }).message ||
-                response.statusText,
-              ) || 'Request failed',
-            code: (payload as { code?: string }).code,
-            details: (payload as { details?: unknown }).details,
-          }
-          : {
-            message: String(payload || response.statusText || 'Request failed'),
-            code: undefined,
-            details: undefined,
-          };
+      const normalizedError = parseApiErrorPayload(payload, response.statusText);
 
       if (isRetryable(response.status) && attempt < retries) {
         const delay = RETRY_CONFIG.retryDelay * Math.pow(2, attempt);
@@ -205,19 +218,11 @@ export async function apiRequest<T = unknown>(
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
-      const retryableRuntimeError =
-        lastError instanceof NetworkError || lastError instanceof TimeoutError;
-
-      if (
-        lastError instanceof APIError &&
-        lastError.statusCode >= 400 &&
-        lastError.statusCode < 500 &&
-        lastError.statusCode !== 429
-      ) {
+      if (isFatalClientError(lastError)) {
         throw lastError;
       }
 
-      if (attempt >= retries || !retryableRuntimeError) {
+      if (attempt >= retries || !isRetryableRuntimeError(lastError)) {
         if (!(lastError instanceof APIError)) {
           logger.error('API request failed', lastError, {
             endpoint: sanitizeString(endpoint),

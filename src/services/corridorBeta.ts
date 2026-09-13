@@ -196,6 +196,59 @@ export function evaluateCorridorExpansion(input: ExpansionGateInput): ExpansionG
   return { stage: 'narrow', decision: 'narrow', blockers };
 }
 
+function resolveSavingsPercent (
+  route: CityRoute,
+  marketRow: ReturnType<typeof marketRowForRoute>,
+): number {
+  return marketRow?.savingsPercent ?? (route.packageEnabled ? 28 : 22);
+}
+
+function resolveBetaReason ( hasMetric: boolean, blockers: string[] ): string {
+  if ( hasMetric && blockers.length === 0 ) {
+    return 'Observed ride data clears the corridor expansion gate.';
+  }
+  if ( hasMetric ) {
+    return `Observed data is still narrowing the beta until ${ blockers.join( ', ' ) } are stronger.`;
+  }
+  if ( blockers.length === 0 ) {
+    return 'This corridor is ready for controlled expansion because rides, repeat behavior, and supply are all stable.';
+  }
+  return `Narrow the beta until ${ blockers.join( ', ' ) } are stronger.`;
+}
+
+function resolveBetaNextAction ( hasMetric: boolean, stage: string ): string {
+  if ( hasMetric && stage === 'expand' ) {
+    return 'Observed rides, repeat behavior, supply, and consistency are strong enough to expand.';
+  }
+  if ( stage === 'expand' ) {
+    return 'Open the next corridor only after the same three-week gate passes.';
+  }
+  if ( stage === 'prove' ) {
+    return 'Keep supply fixed and push repeat riders until the consistency gate clears.';
+  }
+  return 'Run one route, one pickup node, and one rider segment until demand concentrates.';
+}
+
+function calculateCorridorProofScore (
+  metric: CorridorBetaMetricCorridor | undefined,
+  weeklyRides: number,
+  repeatRideRate: number,
+  supplyReliability: number,
+  savingsPercent: number,
+  signal: ReturnType<typeof signalForRoute>,
+): number {
+  if ( metric?.proofScore !== undefined ) {
+    return metric.proofScore;
+  }
+  return calculateProofScore( {
+    weeklyRides,
+    repeatRideRate,
+    supplyReliability,
+    savingsPercent,
+    signal,
+  } );
+}
+
 function buildBetaCorridor(
   route: CityRoute,
   marketSnapshot: ReturnType<typeof buildCorridorMarketSnapshot>,
@@ -208,15 +261,15 @@ function buildBetaCorridor(
   const weeklyRides = metric?.weeklyRides ?? calculateWeeklyRides(signal);
   const repeatRideRate = metric?.repeatRideRate ?? calculateRepeatRideRate(route, signal);
   const supplyReliability = metric?.supplyReliability ?? calculateSupplyReliability(signal);
-  const proofScore =
-    metric?.proofScore ??
-    calculateProofScore({
-      weeklyRides,
-      repeatRideRate,
-      supplyReliability,
-      savingsPercent: (marketRow?.savingsPercent ?? route.packageEnabled) ? 28 : 22,
-      signal,
-    });
+  const savingsPercent = resolveSavingsPercent(route, marketRow);
+  const proofScore = calculateCorridorProofScore(
+    metric,
+    weeklyRides,
+    repeatRideRate,
+    supplyReliability,
+    savingsPercent,
+    signal,
+  );
   const weeksAtTarget =
     metric?.weeksAtTarget ?? calculateWeeksAtTarget(weeklyRides, repeatRideRate, proofScore);
   const gate = evaluateCorridorExpansion({
@@ -228,22 +281,8 @@ function buildBetaCorridor(
     supplyReliabilityGoal: metric?.supplyReliabilityGoal ?? SUPPLY_RELIABILITY_GOAL,
     weeksAtTarget,
   });
-  const reason =
-    metric && gate.blockers.length === 0
-      ? 'Observed ride data clears the corridor expansion gate.'
-      : metric
-        ? `Observed data is still narrowing the beta until ${gate.blockers.join(', ')} are stronger.`
-        : gate.blockers.length === 0
-          ? 'This corridor is ready for controlled expansion because rides, repeat behavior, and supply are all stable.'
-          : `Narrow the beta until ${gate.blockers.join(', ')} are stronger.`;
-  const nextAction =
-    metric && gate.stage === 'expand'
-      ? 'Observed rides, repeat behavior, supply, and consistency are strong enough to expand.'
-      : gate.stage === 'expand'
-        ? 'Open the next corridor only after the same three-week gate passes.'
-        : gate.stage === 'prove'
-          ? 'Keep supply fixed and push repeat riders until the consistency gate clears.'
-          : 'Run one route, one pickup node, and one rider segment until demand concentrates.';
+  const reason = resolveBetaReason(Boolean(metric), gate.blockers);
+  const nextAction = resolveBetaNextAction(Boolean(metric), gate.stage);
 
   return {
     routeId: route.id,
