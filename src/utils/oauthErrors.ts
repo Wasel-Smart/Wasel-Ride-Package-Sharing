@@ -19,7 +19,7 @@ export interface OAuthError {
 /**
  * Common OAuth error codes and their meanings
  */
-const OAUTH_ERROR_CODES = {
+export const OAUTH_ERROR_CODES = {
   // User-initiated cancellations
   access_denied: 'User denied access',
   user_cancelled: 'User cancelled the sign-in',
