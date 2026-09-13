@@ -107,6 +107,5 @@ export const onboarding = {
       allow: 'السماح',
       skip_for_now: 'تخطي الآن',
     },
-  }
+  },
 } as const;
-
