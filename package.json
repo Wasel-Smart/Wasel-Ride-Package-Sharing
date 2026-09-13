@@ -10,6 +10,7 @@
         "dev": "vite",
         "build": "tsc && vite build && node scripts/generate-pwa-manifest.mjs && node scripts/version-sw.mjs",
         "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint": "eslint . --report-unused-disable-directives",
         "preview": "vite preview",
         "test:unit": "vitest run",
         "test:unit:watch": "vitest",

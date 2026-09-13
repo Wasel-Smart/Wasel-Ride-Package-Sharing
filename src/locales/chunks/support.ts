@@ -33,6 +33,7 @@ export const support = {
       reportProblem: 'إبلاغ عن مشكلة',
       lostItem: 'عنصر مفقود',
       accountHelp: 'مساعدة في الحساب',
+      technicalIssues: 'مشاكل تقنية',
       feedbackAndSuggestions: 'الملاحظات والاقتراحات',
       livechat: 'دردشة مباشرة',
   }

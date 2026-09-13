@@ -7,7 +7,7 @@ import { useLocalAuth } from '../contexts/LocalAuth';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { useRoutePrefetch } from '../hooks/useRoutePrefetch';
-import { C, F, FA, GLOBAL_STYLES, GRAD, R, TYPE, Z } from '../utils/wasel-ds';
+import { C, F, FA, GLOBAL_STYLES, R, Z } from '../utils/wasel-ds';
 import { trackPageView } from '../platform/telemetry';
 import { getRouteMeta } from '../router/routeMeta';
 import { resetBodyScrollLock } from '../utils/bodyScrollLock';
