@@ -573,7 +573,7 @@ export function SupportPage() {
               </button>
             </div>
           ) : (
-            <form onSubmit={() => { void handleSubmit(); }} style={{ display: 'grid', gap: 12 }}>
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
               <input
                 required
                 type="email"

@@ -590,7 +590,7 @@ export function FindRidePage() {
                   <WaselInput
                     type="date"
                     value={date}
-                    onChange={event => setDate(event.target.value)}
+                    onChange={setDate}
                     min={new Date().toISOString().split('T')[0]}
                     icon={<Calendar size={15} color={DS.muted} />}
                     style={{ height: 46, colorScheme: 'dark' }}
