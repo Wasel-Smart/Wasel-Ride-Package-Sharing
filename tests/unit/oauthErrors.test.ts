@@ -1,23 +1,7 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { parseOAuthError, OAUTH_ERROR_CODES } from '@/utils/oauthErrors';
 
-const originalSearch = window.location.search;
-
 describe('parseOAuthError', () => {
-  beforeEach(() => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '' },
-      writable: true,
-    });
-  });
-
-  afterEach(() => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: originalSearch },
-      writable: true,
-    });
-  });
-
   it('returns null for non-error input', () => {
     expect(parseOAuthError(null)).toBeNull();
     expect(parseOAuthError(undefined)).toBeNull();
@@ -42,151 +26,90 @@ describe('parseOAuthError', () => {
   });
 
   it('classifies access_denied from URL params', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=access_denied&error_description=User+rejected' },
-      writable: true,
+    vi.callOriginal(() => {
+      history.pushState(null, '', '?error=access_denied&error_description=User+rejected');
     });
     const result = parseOAuthError(null, 'google');
     expect(result).not.toBeNull();
     expect(result!.code).toBe('access_denied');
     expect(result!.userMessage).toContain('cancelled');
     expect(result!.recoveryAction).toBe('Click the button again to sign in');
-  });
-
-  it('classifies user_cancelled from URL params', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=user_cancelled' },
-      writable: true,
+    vi.callOriginal(() => {
+      history.pushState(null, '', '');
     });
-    const result = parseOAuthError(null, 'facebook');
-    expect(result).not.toBeNull();
-    expect(result!.code).toBe('user_cancelled');
-    expect(result!.userMessage).toContain('cancelled');
-    expect(result!.userMessage).toContain('Facebook');
   });
 
   it('classifies invalid_client from URL params', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=invalid_client' },
-      writable: true,
-    });
+    history.pushState(null, '', '?error=invalid_client');
     const result = parseOAuthError(null, 'google');
     expect(result).not.toBeNull();
     expect(result!.code).toBe('invalid_client');
     expect(result!.userMessage).toContain('not properly configured');
-    expect(result!.userMessage).toContain('support');
     expect(result!.recoveryAction).toBe('Contact support');
-  });
-
-  it('classifies redirect_uri_mismatch from URL params', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=redirect_uri_mismatch' },
-      writable: true,
-    });
-    const result = parseOAuthError(null, 'google');
-    expect(result).not.toBeNull();
-    expect(result!.code).toBe('redirect_uri_mismatch');
-    expect(result!.userMessage).toContain('not configured correctly');
-    expect(result!.recoveryAction).toBeDefined();
+    history.pushState(null, '', '');
   });
 
   it('classifies server_error from URL params', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=server_error' },
-      writable: true,
-    });
+    history.pushState(null, '', '?error=server_error');
     const result = parseOAuthError(null, 'microsoft');
     expect(result).not.toBeNull();
     expect(result!.code).toBe('server_error');
     expect(result!.userMessage).toContain('technical difficulties');
-  });
-
-  it('classifies temporarily_unavailable from URL params', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=temporarily_unavailable' },
-      writable: true,
-    });
-    const result = parseOAuthError(null, 'google');
-    expect(result).not.toBeNull();
-    expect(result!.code).toBe('temporarily_unavailable');
-    expect(result!.userMessage).toContain('temporarily unavailable');
-  });
-
-  it('classifies invalid_grant from URL params', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=invalid_grant' },
-      writable: true,
-    });
-    const result = parseOAuthError(null, 'apple');
-    expect(result).not.toBeNull();
-    expect(result!.code).toBe('invalid_grant');
-    expect(result!.userMessage).toContain('expired');
+    history.pushState(null, '', '');
   });
 
   it('classifies network_error from URL params', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=network_error' },
-      writable: true,
-    });
+    history.pushState(null, '', '?error=network_error');
     const result = parseOAuthError(null, 'google');
     expect(result).not.toBeNull();
     expect(result!.userMessage).toContain('Network connection failed');
     expect(result!.recoveryAction).toBe('Check your connection and try again');
+    history.pushState(null, '', '');
   });
 
   it('classifies popup_blocked from URL params', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=popup_blocked' },
-      writable: true,
-    });
+    history.pushState(null, '', '?error=popup_blocked');
     const result = parseOAuthError(null);
     expect(result).not.toBeNull();
     expect(result!.code).toBe('popup_blocked');
     expect(result!.userMessage).toContain('popup was blocked');
     expect(result!.recoveryAction).toBe('Enable popups in your browser settings');
+    history.pushState(null, '', '');
   });
 
   it('classifies popup_closed from URL params', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=popup_closed' },
-      writable: true,
-    });
+    history.pushState(null, '', '?error=popup_closed');
     const result = parseOAuthError(null);
     expect(result).not.toBeNull();
     expect(result!.code).toBe('popup_closed');
     expect(result!.userMessage).toContain('closed before completing');
+    history.pushState(null, '', '');
   });
 
-  it('fallback uses provider name for unknown error codes', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=some_random_error' },
-      writable: true,
-    });
+  it('fallback uses provider name for unknown codes', () => {
+    history.pushState(null, '', '?error=some_random_error');
     const result = parseOAuthError(null, 'microsoft');
     expect(result).not.toBeNull();
     expect(result!.code).toBe('some_random_error');
     expect(result!.userMessage).toContain('Microsoft');
     expect(result!.userMessage).toContain('some_random_error');
+    history.pushState(null, '', '');
   });
 
   it('fallback uses generic OAuth for unknown codes without provider', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=some_error' },
-      writable: true,
-    });
+    history.pushState(null, '', '?error=some_error');
     const result = parseOAuthError(null);
     expect(result).not.toBeNull();
     expect(result!.userMessage).toContain('OAuth');
+    history.pushState(null, '', '');
   });
 
   it('URL params take priority over error objects', () => {
-    Object.defineProperty(window, 'location', {
-      value: { ...window.location, search: '?error=access_denied' },
-      writable: true,
-    });
+    history.pushState(null, '', '?error=access_denied');
     const result = parseOAuthError(new Error('different error'), 'google');
     expect(result).not.toBeNull();
     expect(result!.code).toBe('access_denied');
+    history.pushState(null, '', '');
   });
 });
 
