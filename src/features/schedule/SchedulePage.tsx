@@ -558,7 +558,7 @@ export function SchedulePage() {
                       width: 36,
                       height: 36,
                       borderRadius: 12,
-                      background: `${typeColor(item.item_type)}10`,
+                      background: `${typeCol}10`,
                       display: 'grid',
                       placeItems: 'center',
                       color: C.textDim,
@@ -593,9 +593,9 @@ export function SchedulePage() {
                         style={{
                           padding: '2px 8px',
                           borderRadius: 99,
-                          background: `${(STATUS_CONFIG[item.status]?.color ?? C.cyan)}14`,
-                          border: `1px solid ${(STATUS_CONFIG[item.status]?.color ?? C.cyan)}28`,
-                          color: STATUS_CONFIG[item.status]?.color ?? C.cyan,
+                          background: `${statusColor}14`,
+                          border: `1px solid ${statusColor}28`,
+                          color: statusColor,
                           fontSize: TYPE.size.xs,
                           fontWeight: TYPE.weight.bold,
                         }}
