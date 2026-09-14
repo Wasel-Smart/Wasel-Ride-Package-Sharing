@@ -14,6 +14,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { C, F, R, TYPE } from '../../utils/wasel-ds';
 import { PageShell, SectionCard } from '../../components/wasel-ui/WaselPagePrimitives';
+import { WaselEmptyState } from '../../components/wasel-ui/WaselEmptyState';
 import { ScheduleItemCard } from './ScheduleItemCard';
 
 export type ScheduleItem = {
@@ -525,17 +526,11 @@ export function SchedulePage() {
           </div>
         </SectionCard>
       ) : !loading ? (
-        <SectionCard
+        <WaselEmptyState
+          icon={<Calendar size={32} />}
           title={t('scheduleExpanded.scheduling')}
-          subtitle={t('scheduleExpanded.noScheduledItemsYet')}
-        >
-          <div style={{ textAlign: 'center', padding: '40px 20px', color: C.textMuted }}>
-            <Calendar size={32} color={C.textDim} />
-            <div style={{ marginTop: 12, fontFamily: F, fontSize: TYPE.size.base }}>
-              {t('scheduleExpanded.noScheduledRidesOrDeliveries')}
-            </div>
-          </div>
-        </SectionCard>
+          description={t('scheduleExpanded.noScheduledRidesOrDeliveries')}
+        />
       ) : null}
 
       {/* ── Past ── */}
