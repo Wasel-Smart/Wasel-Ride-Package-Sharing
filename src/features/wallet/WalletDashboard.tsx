@@ -1,4 +1,4 @@
-﻿/**
+/**
  * WalletDashboard
  *
  * Render-focused wallet screen. Runtime mode selection, demo/live data
@@ -104,9 +104,9 @@ export function WalletDashboard() {
   const loadingDescription = t.loadingDescription ?? 'Fetching balance, movements, and rewards.';
   const walletUnavailableTitle = t.walletUnavailableTitle ?? 'Wallet unavailable';
   const jodLabel = t.jod ?? 'JOD';
-  const refreshLabel = isRTL ? 'تحديث' : 'Refresh';
+  const refreshLabel = isRTL ? '?????' : 'Refresh';
   const heroDescription = isRTL
-    ? `الرصيد والتحويلات والمكافآت تظهر في سطح واحد واضح. ${walletData?.currency || 'JOD'}`
+    ? `?????? ?????????? ????????? ???? ?? ??? ???? ????. ${walletData?.currency || 'JOD'}`
     : `Balance, transfers, and rewards in one clear surface. ${walletData?.currency || 'JOD'}`;
   const insightsFallback = (
     <Card className="rounded-xl">
@@ -161,9 +161,9 @@ export function WalletDashboard() {
     <PageShell maxWidth={1120} dir={isRTL ? 'rtl' : 'ltr'}>
       <div style={{ paddingInline: SPACE[4] }}>
         <PageHero
-          eyebrow={isRTL ? 'المدفوعات' : 'Payments'}
+          eyebrow={isRTL ? '?????????' : 'Payments'}
           icon={<StatusBadge label={activeLabel} accent={C.green} />}
-          title={isRTL ? 'محفظة واصل' : 'Wasel Wallet'}
+          title={isRTL ? '????? ????' : 'Wasel Wallet'}
           description={heroDescription}
           accent={C.cyan}
           actions={
@@ -195,10 +195,10 @@ export function WalletDashboard() {
                   label={
                     autoTopUpEnabled
                       ? isRTL
-                        ? 'شحن تلقائي'
+                        ? '??? ??????'
                         : 'Auto top-up on'
                       : isRTL
-                        ? 'شحن يدوي'
+                        ? '??? ????'
                         : 'Manual top-up'
                   }
                   accent={autoTopUpEnabled ? C.green : C.gold}
@@ -206,7 +206,7 @@ export function WalletDashboard() {
               </div>
               <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7 }}>
                 {isRTL
-                  ? 'الرصيد والتحويلات والمكافآت في سطح واحد واضح.'
+                  ? '?????? ?????????? ????????? ?? ??? ???? ????.'
                   : 'Balance, transfers, and rewards in one clear surface.'}
               </div>
             </div>
@@ -217,30 +217,30 @@ export function WalletDashboard() {
           stats={[
             {
               value: `JOD ${bal.toFixed(2)}`,
-              label: isRTL ? 'الرصيد المتاح' : 'Available',
+              label: isRTL ? '?????? ??????' : 'Available',
               icon: <Wallet size={18} />,
               sublabel: walletSubtitle,
               accent: C.cyan,
             },
             {
               value: `JOD ${pending.toFixed(2)}`,
-              label: isRTL ? 'المعلق' : 'Pending',
+              label: isRTL ? '??????' : 'Pending',
               icon: <RefreshCw size={18} />,
-              sublabel: isRTL ? 'أموال تنتظر التسوية أو السحب.' : 'Funds waiting for settlement or withdrawal.',
+              sublabel: isRTL ? '????? ????? ??????? ?? ?????.' : 'Funds waiting for settlement or withdrawal.',
               accent: C.gold,
             },
             {
               value: `JOD ${rewardsBal.toFixed(2)}`,
-              label: isRTL ? 'المكافآت' : 'Rewards',
+              label: isRTL ? '????????' : 'Rewards',
               icon: <Gift size={18} />,
-              sublabel: isRTL ? 'مكافآت متاحة داخل الدورة الحالية.' : 'Reward value available in the current cycle.',
+              sublabel: isRTL ? '?????? ????? ???? ?????? ???????.' : 'Reward value available in the current cycle.',
               accent: C.green,
             },
             {
               value: transactionCount,
-              label: isRTL ? 'الحركات' : 'Transactions',
+              label: isRTL ? '???????' : 'Transactions',
               icon: <Activity size={18} />,
-              sublabel: isRTL ? 'عدد الحركات الظاهرة حالياً.' : 'Visible transaction count right now.',
+              sublabel: isRTL ? '??? ??????? ??????? ??????.' : 'Visible transaction count right now.',
               accent: C.blue,
             },
           ]}
@@ -303,7 +303,7 @@ export function WalletDashboard() {
                       type="search"
                       value={txSearch}
                       onChange={e => setTxSearch(e.target.value)}
-                      placeholder={isRTL ? 'ابحث في الحركات...' : 'Search transactions...'}
+                      placeholder={isRTL ? '???? ?? ???????...' : 'Search transactions...'}
                       style={{
                         width: '100%',
                         padding: '8px 12px',
@@ -372,7 +372,7 @@ export function WalletDashboard() {
                           size="sm"
                           onClick={() => { setTab('overview'); }}
                         >
-                          {isRTL ? 'ابدأ رحلة لكسب مكافآت' : 'Book a ride to earn rewards'}
+                          {isRTL ? '???? ???? ???? ??????' : 'Book a ride to earn rewards'}
                         </WaselButton>
                       }
                       accent={C.orange}

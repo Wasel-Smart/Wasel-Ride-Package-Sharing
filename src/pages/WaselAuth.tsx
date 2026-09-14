@@ -20,7 +20,8 @@ import { WaselHeroMark, WaselLogo } from '../components/wasel-ui/WaselLogo';
 import { WaselButton } from '../components/wasel-ui/WaselButton';
 import { WaselInput } from '../components/wasel-ui/WaselInput';
 import { WaselCard } from '../components/wasel-ui/WaselCard';
-import { WaselStatCard, WaselAmbientGlow } from '../components/wasel-ui/WaselStatCard';
+import { WaselAmbientGlow } from '../components/wasel-ui/WaselStatCard';
+import { WaselStatsGrid } from '../components/wasel-ui';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
@@ -57,13 +58,13 @@ const BRAND_METRICS = [
   { value: '3', label: 'mobility surfaces', accent: C.cyan },
   { value: '1', label: 'trusted account', accent: C.gold },
   { value: 'Live', label: 'route intelligence', accent: C.green },
-] as const;
+];
 
 const BRAND_METRICS_AR = [
   { value: '٣', label: 'أسطح تنقل', accent: C.cyan },
   { value: '١', label: 'حساب موثوق', accent: C.gold },
   { value: 'مباشر', label: 'ذكاء المسار', accent: C.green },
-] as const;
+];
 
 const BRAND_PILLS = [ 'Verified', 'Fast', 'Clear' ] as const;
 const BRAND_PILLS_AR = [ 'موثّق', 'سريع', 'واضح' ] as const;
@@ -173,23 +174,7 @@ function BrandPanel () {
           { tx( 'waselAuth.rides_parcels_buses_trust_and_support_stay_under_one_clear_account' ) }
         </p>
 
-        <div
-          style={ {
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-            gap: SPACE[ 3 ],
-            marginBottom: SPACE[ 6 ],
-          } }
-        >
-          { metrics.map( item => (
-            <WaselStatCard
-              key={ item.label }
-              value={ item.value }
-              label={ item.label }
-              accent={ item.accent }
-            />
-          ) ) }
-        </div>
+        <WaselStatsGrid stats={metrics} />
 
         <div style={ { display: 'flex', flexDirection: 'column', gap: SPACE[ 3 ], textAlign: 'left' } }>
           { features.map( item => (

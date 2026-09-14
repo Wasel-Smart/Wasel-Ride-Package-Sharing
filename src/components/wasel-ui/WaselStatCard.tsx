@@ -22,7 +22,7 @@ export function WaselStatCard ({
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      transition={{ duration: ANIM_DUR }}
+      transition={{ duration: 0.2 }}
       style={{
         borderRadius: R.xl,
         border: `1px solid ${accent}24`,
