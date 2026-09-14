@@ -10,6 +10,7 @@ import { useRoutePrefetch } from '../hooks/useRoutePrefetch';
 import { C, F, FA, GLOBAL_STYLES, R, Z } from '../utils/wasel-ds';
 import { trackPageView } from '../platform/telemetry';
 import { getRouteMeta } from '../router/routeMeta';
+import { WaselRouteTransition } from '../components/wasel-ui/WaselPageTransition';
 import { resetBodyScrollLock } from '../utils/bodyScrollLock';
 import { useSeo, OrganizationJsonLd, WebSiteJsonLd } from '../utils/seo';
 import {
@@ -319,7 +320,9 @@ const WaselRootInner = memo( () => {
               aria-hidden="true"
               style={ BACKGROUND_OVERLAY_STYLE }
             />
-            <Outlet />
+            <WaselRouteTransition>
+              <Outlet />
+            </WaselRouteTransition>
           </main>
 
           <Suspense fallback={ null }>

@@ -20,6 +20,7 @@ import { WaselHeroMark, WaselLogo } from '../components/wasel-ui/WaselLogo';
 import { WaselButton } from '../components/wasel-ui/WaselButton';
 import { WaselInput } from '../components/wasel-ui/WaselInput';
 import { WaselCard } from '../components/wasel-ui/WaselCard';
+import { WaselStatCard, WaselAmbientGlow } from '../components/wasel-ui/WaselStatCard';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
@@ -92,33 +93,8 @@ function BrandPanel () {
         overflow: 'hidden',
       } }
     >
-      {/* Ambient glows */ }
-      <div
-        style={ {
-          position: 'absolute',
-          top: -110,
-          right: -80,
-          width: 460,
-          height: 460,
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${ C.cyanGlow }, transparent 66%)`,
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-        } }
-      />
-      <div
-        style={ {
-          position: 'absolute',
-          bottom: -100,
-          left: -80,
-          width: 420,
-          height: 420,
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${ C.blueDim }cc, transparent 66%)`,
-          filter: 'blur(80px)',
-          pointerEvents: 'none',
-        } }
-      />
+      <WaselAmbientGlow position="top-right" color={C.cyanGlow} size={460} />
+      <WaselAmbientGlow position="bottom-left" color={C.blueDim} size={420} />
 
       <div style={ { position: 'relative', zIndex: 1, textAlign: 'center', maxWidth: 380 } }>
         <div
@@ -206,38 +182,12 @@ function BrandPanel () {
           } }
         >
           { metrics.map( item => (
-            <div
+            <WaselStatCard
               key={ item.label }
-              style={ {
-                borderRadius: R.xl,
-                border: `1px solid ${ item.accent }24`,
-                background: `${ item.accent }12`,
-                padding: `${ SPACE[ 3 ] } ${ SPACE[ 4 ] }`,
-                textAlign: 'left',
-              } }
-            >
-              <div
-                style={ {
-                  color: C.text,
-                  fontSize: TYPE.size.lg,
-                  fontWeight: TYPE.weight.ultra,
-                  lineHeight: TYPE.lineHeight.tight,
-                } }
-              >
-                { item.value }
-              </div>
-              <div
-                style={ {
-                  marginTop: 4,
-                  color: C.textMuted,
-                  fontSize: TYPE.size.xs,
-                  textTransform: 'uppercase',
-                  letterSpacing: TYPE.letterSpacing.wide,
-                } }
-              >
-                { item.label }
-              </div>
-            </div>
+              value={ item.value }
+              label={ item.label }
+              accent={ item.accent }
+            />
           ) ) }
         </div>
 

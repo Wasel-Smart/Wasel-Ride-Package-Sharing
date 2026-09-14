@@ -22,7 +22,7 @@ import {
   SectionCard,
   StatusBadge as PageStatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
-import { WaselButton } from '../../components/wasel-ui';
+import { WaselButton, WaselEmptyState } from '../../components/wasel-ui';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -1217,46 +1217,37 @@ export default function MyTripsPage() {
           {supportLoading ? (
             <ListSkeleton count={3} />
           ) : filtered.length === 0 ? (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '72px 0',
-                color: DIM,
-                background: CARD,
-                border: `1px solid ${BORDER}`,
-                borderRadius: 18,
-              }}
-            >
-              {tab === 'rides' ? (
-                <Car size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
-              ) : tab === 'packages' ? (
-                <Package size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
-              ) : (
-                <Bus size={42} style={{ marginBottom: 12, opacity: 0.35 }} />
-              )}
-              <p style={{ fontFamily: FONT, fontSize: '0.94rem', margin: 0 }}>
-                {t('common.no')} {tripKindLabel(tab, language)}{' '}
-                {t('myTripsPage.match_this_lifecycle_filter_yet')}
-              </p>
-              <WaselButton
-                onClick={() => { void nav(createPath); }}
-                variant="outline"
-                style={{ marginTop: 16 }}
-                iconEnd={<ArrowRight size={14} />}
-              >
-                {tab === 'rides'
-                  ? isRTL
-                    ? 'أنشئ رحلة'
-                    : 'Create ride'
+            <WaselEmptyState
+              icon={
+                tab === 'rides'
+                  ? <Car size={42} color={C.textDim} />
                   : tab === 'packages'
+                    ? <Package size={42} color={C.textDim} />
+                    : <Bus size={42} color={C.textDim} />
+              }
+              title={`${t('common.no')} ${tripKindLabel(tab, language)}`}
+              description={t('myTripsPage.match_this_lifecycle_filter_yet')}
+              action={
+                <WaselButton
+                  onClick={() => { void nav(createPath); }}
+                  variant="outline"
+                  iconEnd={<ArrowRight size={14} />}
+                >
+                  {tab === 'rides'
                     ? isRTL
-                      ? 'أنشئ طلب طرد'
-                      : 'Create package request'
-                    : isRTL
-                      ? 'ابحث عن باص'
-                      : 'Find a bus'}
-              </WaselButton>
-            </div>
+                      ? 'أنشئ رحلة'
+                      : 'Create ride'
+                    : tab === 'packages'
+                      ? isRTL
+                        ? 'أنشئ طلب طرد'
+                        : 'Create package request'
+                      : isRTL
+                        ? 'ابحث عن باص'
+                        : 'Find a bus'}
+                </WaselButton>
+              }
+              accent={C.textDim}
+            />
           ) : (
             filtered.map(trip => (
               <TripCard

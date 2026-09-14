@@ -1,10 +1,12 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router';
 import type { ReactNode } from 'react';
 import { ANIM } from '@/utils/wasel-ds';
 
 interface WaselPageTransitionProps {
   children: ReactNode;
   mode?: 'wait' | 'sync';
+  keys?: string;
   transition?: {
     initial?: { opacity?: number; y?: number };
     animate?: { opacity?: number; y?: number };
@@ -16,6 +18,7 @@ interface WaselPageTransitionProps {
 export function WaselPageTransition ({
   children,
   mode = 'wait',
+  keys,
   transition = {
     initial: { opacity: 0, y: 12 },
     animate: { opacity: 1, y: 0 },
@@ -25,7 +28,7 @@ export function WaselPageTransition ({
 }: WaselPageTransitionProps) {
   return (
     <motion.div
-      key="page"
+      key={keys ?? 'page'}
       initial={transition.initial}
       animate={transition.animate}
       exit={transition.exit}
@@ -107,5 +110,24 @@ export function WaselStaggerItem () {
         },
       }}
     />
+  );
+}
+
+export function WaselRouteTransition ({
+  children,
+  mode = 'wait',
+  transition,
+}: {
+  children: ReactNode;
+  mode?: 'wait' | 'sync';
+  transition?: WaselPageTransitionProps['transition'];
+}) {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode={mode}>
+      <WaselPageTransition keys={location.pathname} mode={mode} transition={transition}>
+        {children}
+      </WaselPageTransition>
+    </AnimatePresence>
   );
 }

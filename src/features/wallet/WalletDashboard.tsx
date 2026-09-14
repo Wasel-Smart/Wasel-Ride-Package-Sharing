@@ -12,6 +12,8 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { WaselStateCard } from '../../components/system/WaselStateCard';
+import { WaselEmptyState } from '../../components/wasel-ui/WaselEmptyState';
+import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import type { WalletTransaction, RewardItem } from '../../services/walletApi';
 import {
   MetricCard,
@@ -328,11 +330,23 @@ export function WalletDashboard() {
                       }}
                     />
                   </div>
-                  {!walletData?.transactions || walletData.transactions.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground text-sm">
-                      {t.noTransactions}
-                    </div>
-                  ) : (
+                    {!walletData?.transactions || walletData.transactions.length === 0 ? (
+                      <WaselEmptyState
+                        icon={<Wallet size={32} />}
+                        title={t.noTransactions}
+                        description="Your transaction history will appear here once you start using your wallet."
+                        action={
+                          <WaselButton
+                            variant="primary"
+                            size="sm"
+                            onClick={() => { void setShowTopUp(true); }}
+                          >
+                            {t.topUp ?? 'Top Up'}
+                          </WaselButton>
+                        }
+                        accent={C.cyan}
+                      />
+                    ) : (
                     walletData.transactions
                       .filter(
                         (tx: WalletTransaction) =>
@@ -362,27 +376,21 @@ export function WalletDashboard() {
                 </CardHeader>
                 <CardContent>
                   {!walletData?.activeRewards || walletData.activeRewards.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Gift className="w-12 h-12 mx-auto mb-3 text-muted-foreground/30" />
-                      <p className="text-muted-foreground text-sm">{t.noRewards}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{t.rewardsEmptyHint}</p>
-                      <button
-                        onClick={() => { setTab('overview'); }}
-                        style={{
-                          marginTop: 12,
-                          padding: '8px 18px',
-                          borderRadius: 999,
-                          background: C.cyan,
-                          border: 'none',
-                          color: C.bg,
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          fontSize: '0.82rem',
-                        }}
-                      >
-                        {isRTL ? 'ابدأ رحلة لكسب مكافآت' : 'Book a ride to earn rewards'}
-                      </button>
-                    </div>
+                    <WaselEmptyState
+                      icon={<Gift size={32} />}
+                      title={t.noRewards}
+                      description={t.rewardsEmptyHint}
+                      action={
+                        <WaselButton
+                          variant="primary"
+                          size="sm"
+                          onClick={() => { setTab('overview'); }}
+                        >
+                          {isRTL ? 'ابدأ رحلة لكسب مكافآت' : 'Book a ride to earn rewards'}
+                        </WaselButton>
+                      }
+                      accent={C.orange}
+                    />
                   ) : (
                     <>
                       {!walletCapabilities.rewardClaim ? (
