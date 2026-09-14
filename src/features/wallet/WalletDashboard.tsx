@@ -333,7 +333,7 @@ export function WalletDashboard() {
                     {!walletData?.transactions || walletData.transactions.length === 0 ? (
                       <WaselEmptyState
                         icon={<Wallet size={32} />}
-                        title={t.noTransactions}
+                          title={t.noTransactions ?? 'No transactions'}
                         description="Your transaction history will appear here once you start using your wallet."
                         action={
                           <WaselButton
@@ -378,7 +378,7 @@ export function WalletDashboard() {
                   {!walletData?.activeRewards || walletData.activeRewards.length === 0 ? (
                     <WaselEmptyState
                       icon={<Gift size={32} />}
-                      title={t.noRewards}
+                      title={t.noRewards ?? 'No rewards'}
                       description={t.rewardsEmptyHint}
                       action={
                         <WaselButton

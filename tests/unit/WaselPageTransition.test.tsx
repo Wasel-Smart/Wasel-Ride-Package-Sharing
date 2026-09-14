@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { WaselPageTransition, WaselPageTransitionWrap, WaselStaggerContainer } from '@/components/wasel-ui/WaselPageTransition';
+import { WaselPageTransition, WaselPageTransitionWrap, WaselStaggerContainer, WaselRouteTransition } from '@/components/wasel-ui/WaselPageTransition';
 import { render } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 
 describe('WaselPageTransition', () => {
   it('renders children', () => {
@@ -12,15 +13,6 @@ describe('WaselPageTransition', () => {
     expect(container.textContent).toContain('Hello');
   });
 
-  it('renders with sync mode', () => {
-    const { container } = render(
-      <WaselPageTransition mode="sync">
-        <div>Sync</div>
-      </WaselPageTransition>,
-    );
-    expect(container.textContent).toContain('Sync');
-  });
-
   it('supports custom transition duration', () => {
     const { container } = render(
       <WaselPageTransition transition={{ duration: 0.5 }}>
@@ -28,6 +20,19 @@ describe('WaselPageTransition', () => {
       </WaselPageTransition>,
     );
     expect(container.textContent).toContain('Slow');
+  });
+});
+
+describe('WaselRouteTransition', () => {
+  it('renders children within router', () => {
+    const { container } = render(
+      <MemoryRouter>
+        <WaselRouteTransition>
+          <div>Route</div>
+        </WaselRouteTransition>
+      </MemoryRouter>,
+    );
+    expect(container.textContent).toContain('Route');
   });
 });
 

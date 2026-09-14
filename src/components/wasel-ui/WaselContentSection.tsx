@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import { PageShell, SectionCard } from './WaselPagePrimitives';
-import { C, SPACE } from '@/utils/wasel-ds';
 
 interface WaselContentSectionProps {
   icon: ReactNode;

@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { WaselStatCard } from './WaselStatCard';
 import { C, SPACE } from '@/utils/wasel-ds';
 

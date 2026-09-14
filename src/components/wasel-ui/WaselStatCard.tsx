@@ -10,7 +10,7 @@ interface WaselStatCardProps {
   sublabel?: string;
 }
 
-const ANIM_DUR = '160ms';
+const ANIM_DUR = 0.16;
 
 export function WaselStatCard ({
   value,

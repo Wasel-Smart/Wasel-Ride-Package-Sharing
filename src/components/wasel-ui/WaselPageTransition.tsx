@@ -5,7 +5,6 @@ import { ANIM } from '@/utils/wasel-ds';
 
 interface WaselPageTransitionProps {
   children: ReactNode;
-  mode?: 'wait' | 'sync';
   keys?: string;
   transition?: {
     initial?: { opacity?: number; y?: number };
@@ -17,7 +16,6 @@ interface WaselPageTransitionProps {
 
 export function WaselPageTransition ({
   children,
-  mode = 'wait',
   keys,
   transition = {
     initial: { opacity: 0, y: 12 },
@@ -33,8 +31,8 @@ export function WaselPageTransition ({
       animate={transition.animate}
       exit={transition.exit}
       transition={{
-        duration: ANIM.dur.page / 1000,
-        ease: ANIM.ease.default,
+        duration: parseFloat(ANIM.dur.page) / 1000,
+        ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
         ...transition,
       }}
       style={{ width: '100%' }}
@@ -57,8 +55,8 @@ export function WaselPageTransitionWrap ({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{
-        duration: 0.4,
-        ease: ANIM.ease.default,
+        duration: parseFloat(ANIM.dur.normal) / 1000,
+        ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
       }}
       style={{ width: '100%' }}
     >
@@ -104,8 +102,8 @@ export function WaselStaggerItem () {
           opacity: 1,
           y: 0,
           transition: {
-            duration: ANIM.dur.normal / 1000,
-            ease: ANIM.ease.default,
+            duration: parseFloat(ANIM.dur.normal) / 1000,
+            ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number],
           },
         },
       }}
@@ -115,17 +113,15 @@ export function WaselStaggerItem () {
 
 export function WaselRouteTransition ({
   children,
-  mode = 'wait',
   transition,
 }: {
   children: ReactNode;
-  mode?: 'wait' | 'sync';
   transition?: WaselPageTransitionProps['transition'];
 }) {
   const location = useLocation();
   return (
-    <AnimatePresence mode={mode}>
-      <WaselPageTransition keys={location.pathname} mode={mode} transition={transition}>
+    <AnimatePresence>
+      <WaselPageTransition keys={location.pathname} transition={transition}>
         {children}
       </WaselPageTransition>
     </AnimatePresence>

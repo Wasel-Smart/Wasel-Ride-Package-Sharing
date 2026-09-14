@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { ArrowRight, Calendar, Car, Clock, MapPin, Package, Trash2 } from 'lucide-react';
 import type { ScheduleItem } from './SchedulePage';
 import { C, F, R, TYPE } from '@/utils/wasel-ds';
@@ -9,7 +8,6 @@ interface ScheduleItemCardProps {
   isCancelling: boolean;
   onToggleCancel: () => void;
   onConfirmCancel: (id: string) => void;
-  onCancel: () => void;
   onDismissCancel: () => void;
   t: (key: string) => string;
 }
@@ -40,7 +38,6 @@ export function ScheduleItemCard ({
   isCancelling,
   onToggleCancel,
   onConfirmCancel,
-  onCancel,
   onDismissCancel,
   t,
 }: ScheduleItemCardProps) {

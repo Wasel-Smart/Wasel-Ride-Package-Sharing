@@ -509,16 +509,6 @@ export function SchedulePage() {
         <SectionCard title={t('scheduleExpanded.upcoming')} contentPadding="0">
           <div style={{ display: 'grid', gap: 0 }}>
             {upcoming.map(item => {
-              const typeCol = typeColor(item.item_type);
-              const statusEntry = STATUS_LABEL[item.status];
-              const statusLabel = statusEntry
-                ? ar
-                  ? statusEntry.ar
-                  : statusEntry.en
-                : item.status;
-              const statusColor = statusEntry?.color ?? C.cyan;
-              const isCancelling = cancellingId === item.id;
-
               return (
                 <ScheduleItemCard
                   key={item.id}

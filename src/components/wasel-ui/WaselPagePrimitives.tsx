@@ -29,7 +29,7 @@ interface SectionCardProps {
   contentPadding?: string;
 }
 
-interface MetricCardProps {
+export interface MetricCardProps {
   label: string;
   value: string | number;
   detail?: string;

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { parseOAuthError, OAUTH_ERROR_CODES } from '@/utils/oauthErrors';
 
 describe('parseOAuthError', () => {

@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { C, R, TYPE, SPACE } from '@/utils/wasel-ds';
 
 interface WaselEmptyStateProps {

@@ -1,6 +1,6 @@
-import type { CSSProperties, ReactNode } from 'react';
-import { PageShell, PageHero, MetricCard, type MetricCardProps } from './WaselPagePrimitives';
-import { C, SPACE, R, TYPE } from '@/utils/wasel-ds';
+import type { ReactNode } from 'react';
+import { PageShell, PageHero, MetricCard } from './WaselPagePrimitives';
+import { C, SPACE } from '@/utils/wasel-ds';
 
 interface WaselDashboardPageProps {
   icon: ReactNode;
@@ -9,7 +9,7 @@ interface WaselDashboardPageProps {
   description: string;
   accent?: string;
   actions?: ReactNode;
-  metrics: Array<Omit<MetricCardProps, 'icon'>>;
+  metrics: Array<{ label: string; value: string | number; detail?: string; accent?: string }>;
   children: ReactNode;
   maxWidth?: number;
 }
