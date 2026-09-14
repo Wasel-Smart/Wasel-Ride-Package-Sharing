@@ -19,7 +19,7 @@ import { useLocalAuth } from '../../contexts/LocalAuth';
 import { C, F, R, TYPE } from '../../utils/wasel-ds';
 import { PageShell, SectionCard } from '../../components/wasel-ui/WaselPagePrimitives';
 
-type ScheduleItem = {
+export type ScheduleItem = {
   id: string;
   item_type: 'ride' | 'package_delivery' | 'package_return';
   status: string;
