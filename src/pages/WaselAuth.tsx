@@ -1112,3 +1112,5 @@ export default function WaselAuth () {
     </div>
   );
 }
+
+
