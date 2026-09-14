@@ -12,11 +12,10 @@ import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { WaselStateCard } from '../../components/system/WaselStateCard';
-import { WaselEmptyState } from '../../components/wasel-ui/WaselEmptyState';
+import { WaselEmptyState, WaselStatsGrid } from '../../components/wasel-ui';
 import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import type { WalletTransaction, RewardItem } from '../../services/walletApi';
 import {
-  MetricCard,
   PageHero,
   PageShell,
   StatusBadge,

@@ -6,6 +6,8 @@ interface WaselStatsGridProps {
     value: string | number;
     label: string;
     accent?: string;
+    icon?: ReactNode;
+    sublabel?: string;
   }>;
   accent?: string;
   title?: string;
@@ -37,6 +39,8 @@ export function WaselStatsGrid ({
             value={stat.value}
             label={stat.label}
             accent={stat.accent ?? accent}
+            icon={stat.icon}
+            sublabel={stat.sublabel}
           />
         ))}
       </div>
