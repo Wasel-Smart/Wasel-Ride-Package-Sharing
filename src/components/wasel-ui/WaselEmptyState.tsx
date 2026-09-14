@@ -1,6 +1,4 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { LucideIcon } from 'lucide-react';
-import { tx } from '@/locales/tx';
 import { C, R, TYPE, SPACE } from '@/utils/wasel-ds';
 
 interface WaselEmptyStateProps {
