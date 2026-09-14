@@ -213,51 +213,38 @@ export function WalletDashboard() {
           }
         />
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
-            gap: SPACE[4],
-            marginBottom: SPACE[6],
-          }}
-        >
-          <MetricCard
-            label={isRTL ? 'الرصيد المتاح' : 'Available'}
-            value={`JOD ${bal.toFixed(2)}`}
-            detail={walletSubtitle}
-            icon={<Wallet size={18} />}
-            accent={C.cyan}
-          />
-          <MetricCard
-            label={isRTL ? 'المعلق' : 'Pending'}
-            value={`JOD ${pending.toFixed(2)}`}
-            detail={
-              isRTL
-                ? 'أموال تنتظر التسوية أو السحب.'
-                : 'Funds waiting for settlement or withdrawal.'
-            }
-            icon={<RefreshCw size={18} />}
-            accent={C.gold}
-          />
-          <MetricCard
-            label={isRTL ? 'المكافآت' : 'Rewards'}
-            value={`JOD ${rewardsBal.toFixed(2)}`}
-            detail={
-              isRTL
-                ? 'مكافآت متاحة داخل الدورة الحالية.'
-                : 'Reward value available in the current cycle.'
-            }
-            icon={<Gift size={18} />}
-            accent={C.green}
-          />
-          <MetricCard
-            label={isRTL ? 'الحركات' : 'Transactions'}
-            value={transactionCount}
-            detail={isRTL ? 'عدد الحركات الظاهرة حالياً.' : 'Visible transaction count right now.'}
-            icon={<Activity size={18} />}
-            accent={C.blue}
-          />
-        </div>
+        <WaselStatsGrid
+          stats={[
+            {
+              value: `JOD ${bal.toFixed(2)}`,
+              label: isRTL ? 'الرصيد المتاح' : 'Available',
+              icon: <Wallet size={18} />,
+              sublabel: walletSubtitle,
+              accent: C.cyan,
+            },
+            {
+              value: `JOD ${pending.toFixed(2)}`,
+              label: isRTL ? 'المعلق' : 'Pending',
+              icon: <RefreshCw size={18} />,
+              sublabel: isRTL ? 'أموال تنتظر التسوية أو السحب.' : 'Funds waiting for settlement or withdrawal.',
+              accent: C.gold,
+            },
+            {
+              value: `JOD ${rewardsBal.toFixed(2)}`,
+              label: isRTL ? 'المكافآت' : 'Rewards',
+              icon: <Gift size={18} />,
+              sublabel: isRTL ? 'مكافآت متاحة داخل الدورة الحالية.' : 'Reward value available in the current cycle.',
+              accent: C.green,
+            },
+            {
+              value: transactionCount,
+              label: isRTL ? 'الحركات' : 'Transactions',
+              icon: <Activity size={18} />,
+              sublabel: isRTL ? 'عدد الحركات الظاهرة حالياً.' : 'Visible transaction count right now.',
+              accent: C.blue,
+            },
+          ]}
+        />
 
         <div className="space-y-6 pb-8" dir={isRTL ? 'rtl' : 'ltr'}>
           <WalletHeroCard
