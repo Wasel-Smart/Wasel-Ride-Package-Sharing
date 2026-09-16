@@ -83,6 +83,7 @@ export function createLocalAuthProfile(localUser: WaselUser): Profile {
     phone_verified: localUser.phoneVerified,
     email_verified: localUser.emailVerified,
     two_factor_enabled: localUser.twoFactorEnabled,
+    role: localUser.role,
   };
 }
 

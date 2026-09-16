@@ -171,6 +171,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (!mounted) {return;}
 
         if (!client) {
+          if (isE2ELocalAuthEnabled()) {
+            bootstrapLocalE2ESession({
+              setUser,
+              setProfile,
+              setSession,
+              setIsBackendConnected,
+              setInitializing,
+            });
+            return;
+          }
           setUser(null);
           setProfile(null);
           setSession(null);
