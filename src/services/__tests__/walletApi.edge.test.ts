@@ -102,8 +102,8 @@ describe('walletApi — edge transport configured', () => {
 
       const wallet = await walletApi.getWallet('user-123');
 
-      expect(wallet.transactions[0].description).toBe('&lt;img src=x onerror=alert(1)&gt;');
-      expect(wallet.activeRewards[0].description).toBe('&lt;b&gt;bonus&lt;/b&gt;');
+      expect(wallet.transactions[0]!.description).toBe('&lt;img src=x onerror=alert(1)&gt;');
+      expect(wallet.activeRewards[0]!.description).toBe('&lt;b&gt;bonus&lt;/b&gt;');
     });
 
     it('keeps the base wallet payload if the subscription lookup fails', async () => {

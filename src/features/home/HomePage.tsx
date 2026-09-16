@@ -362,10 +362,10 @@ function useHomeQuickActions ( role: string | undefined, t: ( key: string ) => s
     ];
 
     if ( role === 'driver' || role === 'both' ) {
-      return [ base[ 1 ], base[ 0 ], base[ 2 ], base[ 3 ], base[ 4 ] ];
+      return [ base[ 1 ]!, base[ 0 ]!, base[ 2 ]!, base[ 3 ]!, base[ 4 ]! ];
     }
     if ( role === 'admin' ) {
-      return [ base[ 0 ], base[ 2 ], base[ 1 ], base[ 3 ], base[ 4 ] ];
+      return [ base[ 0 ]!, base[ 2 ]!, base[ 1 ]!, base[ 3 ]!, base[ 4 ]! ];
     }
     return base;
   }, [ role, t ] );
