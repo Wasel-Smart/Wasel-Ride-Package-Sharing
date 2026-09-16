@@ -95,6 +95,7 @@ Icon?
 $RECYCLE.BIN/
 
 # ---- OneDrive sync artifacts ----
+OneDrive/
 *.oneDrive
 *.onedrive
 *.conflict*

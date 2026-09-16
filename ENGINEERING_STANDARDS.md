@@ -3,10 +3,10 @@
 ## Testing Requirements
 
 ### Test Coverage Thresholds
-- **Branches**: 70%
-- **Functions**: 75%
-- **Lines**: 80%
-- **Statements**: 80%
+- **Branches**: 75%
+- **Functions**: 80%
+- **Lines**: 85%
+- **Statements**: 85%
 
 ### Unit Tests
 Every utility function and pure module must have unit tests covering:

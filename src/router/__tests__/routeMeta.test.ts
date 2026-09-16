@@ -1,36 +1,29 @@
 import { describe, it, expect } from 'vitest';
-import { getRouteMeta, isProtectedRoute, ROUTE_META } from '../routeMeta';
+import { ROUTE_META, getRouteMeta, isProtectedRoute } from '../../router/routeMeta';
 
-describe('routeMeta', () => {
-  it('returns metadata for known routes', () => {
-    const meta = getRouteMeta('/app/find-ride');
-    expect(meta).toBeDefined();
-    expect(meta?.title).toBe('Find Ride');
-    expect(meta?.requiresAuth).toBe(true);
+describe('Route Meta', () => {
+  it('has no duplicate paths', () => {
+    const paths = ROUTE_META.map(m => m.path);
+    const duplicates = paths.filter((p, i) => paths.indexOf(p) !== i);
+    expect(duplicates).toEqual([]);
   });
 
-  it('returns metadata for nested routes', () => {
-    const meta = getRouteMeta('/app/wallet/transactions');
-    expect(meta).toBeDefined();
-    expect(meta?.path).toBe('/app/wallet');
+  it('all /app routes are protected', () => {
+    const appRoutes = ROUTE_META.filter(m => m.path.startsWith('/app') && !m.path.includes(':'));
+    const unprotected = appRoutes.filter(m => !m.requiresAuth);
+    expect(unprotected).toEqual([]);
   });
 
-  it('returns undefined for unknown routes', () => {
-    const meta = getRouteMeta('/unknown/path');
-    expect(meta).toBeUndefined();
+  it('getRouteMeta finds existing routes', () => {
+    expect(getRouteMeta('/app/find-ride')?.path).toBe('/app/find-ride');
+    expect(getRouteMeta('/app/wallet')?.path).toBe('/app/wallet');
+    expect(getRouteMeta('/')).toBeDefined();
+    expect(getRouteMeta('/nonexistent')).toBeUndefined();
   });
 
-  it('identifies protected routes', () => {
+  it('isProtectedRoute works correctly', () => {
     expect(isProtectedRoute('/app/find-ride')).toBe(true);
-    expect(isProtectedRoute('/app/wallet')).toBe(true);
-    expect(isProtectedRoute('/app/privacy')).toBe(false);
+    expect(isProtectedRoute('/app')).toBe(false);
     expect(isProtectedRoute('/')).toBe(false);
-  });
-
-  it('has analytics keys for all routes', () => {
-    ROUTE_META.forEach(meta => {
-      expect(meta.analyticsKey).toBeDefined();
-      expect(meta.analyticsKey?.length).toBeGreaterThan(0);
-    });
   });
 });

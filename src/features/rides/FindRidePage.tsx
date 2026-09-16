@@ -46,7 +46,7 @@ import {
   updateRideBooking,
   type RideBookingRecord,
 } from '../../services/rideLifecycle';
-import { walletApi } from '../../services/walletApi';
+import { walletApi } from '../../services/wallet/walletApi';
 import { getCorridorOpportunity, getMarketplaceNodes } from '../../config/wasel-movement-network';
 import {
   CITIES,

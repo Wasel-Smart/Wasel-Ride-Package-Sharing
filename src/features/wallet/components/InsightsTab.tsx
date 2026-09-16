@@ -7,7 +7,7 @@ import { ArrowUpRight, ArrowDownLeft, TrendingUp, TrendingDown, Zap } from 'luci
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
 import { WaselColors } from '../../../tokens/wasel-tokens';
 import { PIE_COLORS } from './WalletShared';
-import type { InsightsData } from '../../../services/walletApi';
+import type { InsightsData } from '../../../services/wallet/walletTypes';
 import { C } from '../../../utils/wasel-ds';
 import { tx } from '../../../locales/tx';
 

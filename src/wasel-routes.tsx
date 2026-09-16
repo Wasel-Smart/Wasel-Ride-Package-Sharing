@@ -295,7 +295,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  } as any,
+  } as unknown as RouteObject,
   {
     Component: ProtectedOutlet,
     require: 'school:read',
@@ -305,7 +305,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  } as any,
+  } as unknown as RouteObject,
   {
     Component: ProtectedOutlet,
     require: 'operations:read',
@@ -320,7 +320,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  } as any,
+  } as unknown as RouteObject,
   {
     Component: ProtectedOutlet,
     require: 'analytics:read',
@@ -330,7 +330,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  } as any,
+  } as unknown as RouteObject,
   {
     Component: ProtectedOutlet,
     require: 'trust:moderate',
@@ -340,8 +340,8 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/operations/OperationsOverviewPage')),
       },
     ],
-  } as any,
-  // ── Admin ────────────────────────────────────────────────────────────────
+  } as unknown as RouteObject,
+  // ── Admin ────────────────────────────────────────────────────────
   {
     Component: ProtectedOutlet,
     require: 'config:write',
@@ -351,7 +351,7 @@ const buildMainChildren = (): RouteObject[] => [
         lazy: lazy(() => import('./features/admin/AdminDashboardPage')),
       },
     ],
-  } as any,
+  } as unknown as RouteObject,
 
   // ── Wallet ────────────────────────────────────────────────────────────────
   {

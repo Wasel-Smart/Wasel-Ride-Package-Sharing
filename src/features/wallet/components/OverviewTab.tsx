@@ -18,7 +18,7 @@ import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { WaselColors } from '../../../tokens/wasel-tokens';
 import { TransactionRow } from './WalletShared';
-import type { WalletData } from '../../../services/walletApi';
+import type { WalletData } from '../../../services/wallet/walletTypes';
 import { tx } from '../../../locales/tx';
 
 interface OverviewTabProps {

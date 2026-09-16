@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Checking for secrets..."
+npm run secrets:check
+
+echo "Verifying OAuth config..."
+npm run verify:oauth
+
+echo "Running typecheck..."
+npm run type-check

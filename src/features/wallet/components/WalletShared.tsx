@@ -24,7 +24,7 @@ import {
 import { WaselColors } from '../../../tokens/wasel-tokens';
 import { C } from '../../../utils/wasel-ds';
 import { tx as translate } from '../../../locales/tx';
-import type { WalletTransaction } from '../../../services/walletApi';
+import type { WalletTransaction } from '../../../services/wallet/walletTypes';
 
 interface TxIconConfig {
   icon: LucideIcon;

@@ -10,7 +10,7 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Switch } from '../../../components/ui/switch';
-import type { WalletData } from '../../../services/walletApi';
+import type { WalletData } from '../../../services/wallet/walletTypes';
 
 interface SettingsTabProps {
   walletData: WalletData | null;

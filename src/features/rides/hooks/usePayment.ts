@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { walletApi } from '../../../services/walletApi';
+import { walletApi } from '../../../services/wallet/walletApi';
 import { logger } from '../../../utils/monitoring';
 import { sanitizeLogMessage } from '../../../utils/sanitization';
 

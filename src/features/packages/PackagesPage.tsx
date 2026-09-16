@@ -25,7 +25,7 @@ import {
 import { notificationsAPI } from '../../services/notifications.js';
 import { recordMovementActivity } from '../../services/movementMembership';
 import { createSupportTicket } from '../../services/supportInbox';
-import { walletApi } from '../../services/walletApi';
+import { walletApi } from '../../services/wallet/walletApi';
 import { calculateDirectPrice } from '../../shared/pricing/priceCalculator';
 import {
   getCorridorOpportunity,

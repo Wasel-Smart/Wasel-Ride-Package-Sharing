@@ -1,21 +1,5 @@
 ﻿import { C } from '../../../utils/wasel-ds';
-import { tx } from '../../../locales/tx';
 import type { CorridorBetaPlan } from '../../../services/corridorBeta';
-
-export type CorridorStage = CorridorBetaPlan['focusCorridors'][number]['stage'];
-
-export function stageLabel(stage: CorridorStage, ar: boolean): string {
-  if (stage === 'expand') {return ar ? tx('homePage.corridor_beta_ready_to_expand') : tx('homePage.corridor_beta_ready_to_expand');}
-  if (stage === 'prove') {return ar ? tx('homePage.corridor_beta_prove_repeat') : tx('homePage.corridor_beta_prove_repeat');}
-  return ar ? tx('homePage.corridor_beta_narrow_focus') : tx('homePage.corridor_beta_narrow_focus');
-}
-
-export function metricLabel(label: string, ar: boolean): string {
-  if (label === 'weekly rides') {return ar ? tx('homePage.corridor_beta_rides_week') : tx('homePage.corridor_beta_rides_week');}
-  if (label === 'repeat ride rate') {return ar ? tx('homePage.corridor_beta_repeat') : tx('homePage.corridor_beta_repeat');}
-  if (label === 'supply reliability') {return ar ? tx('homePage.corridor_beta_three_week') : tx('homePage.corridor_beta_three_week');}
-  return ar ? tx('homePage.corridor_beta_three_week') : tx('homePage.corridor_beta_three_week');
-}
 
 const CITY_LABELS_AR: Record<string, string> = {
   Amman: 'عمّان',
@@ -30,6 +14,23 @@ const CITY_LABELS_AR: Record<string, string> = {
   Mafraq: 'المفرق',
   Salt: import.meta.env.VITE_CORRIDOR_SALT_LABEL || 'السلط',
 };
+
+export function stageLabel(
+  stage: CorridorBetaPlan['focusCorridors'][number]['stage'],
+  ar: boolean,
+): string {
+  if (stage === 'expand') {return ar ? 'جاهز للتوسع' : 'Ready to expand';}
+  if (stage === 'prove') {return ar ? 'اثبت التكرار' : 'Prove repeat rides';}
+  return ar ? 'ضيّق التركيز' : 'Narrow focus';
+}
+
+export function stageColor(
+  stage: CorridorBetaPlan['focusCorridors'][number]['stage'],
+): string {
+  if (stage === 'expand') {return C.green;}
+  if (stage === 'prove') {return C.gold;}
+  return C.cyan;
+}
 
 export function corridorLabel(label: string, ar: boolean): string {
   if (!ar) {return label;}
@@ -69,14 +70,9 @@ export function corridorNextAction(label: string, ar: boolean): string {
   return label;
 }
 
-export function stageColor(stage: CorridorStage): string {
-  switch (stage) {
-    case 'expand':
-      return C.green;
-    case 'prove':
-      return C.gold;
-    case 'narrow':
-    default:
-      return C.cyan;
-  }
+export function metricLabel(label: string, ar: boolean): string {
+  if (label === 'weekly rides') {return ar ? 'رحلات أسبوعية' : 'weekly rides';}
+  if (label === 'repeat ride rate') {return ar ? 'نسبة التكرار' : 'repeat ride rate';}
+  if (label === 'supply reliability') {return ar ? 'ثبات العرض' : 'supply reliability';}
+  return ar ? 'ثبات ثلاث أسابيع' : 'three-week consistency';
 }

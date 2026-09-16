@@ -47,18 +47,6 @@ The following issues identified in the previous audit have been resolved:
 | Event-broker `persist()` never retried proxy after transient failure | Added `proxyRetryAt` check at top of `persist()` to re-enable proxy after timeout |
 | Duplicate `dns-prefetch` entries in `index.html` | Removed duplicates for `sentry.io` and `js.stripe.com` |
 | Missing `theme-color` meta tag | Added dark `theme-color` meta tags to `index.html` |
-| `startAvailabilityPolling` ran even when tab was hidden | Now skips probe when `document.visibilityState === 'hidden'`; re-probes on `visibilitychange` |
-| `setLanguage` wrote to `localStorage` synchronously inside state setter | Deferred to `setTimeout(0)` to avoid blocking render in Safari private mode |
-| `useLiveUserStats` fired parallel wallet requests on rapid auth state changes | Added `fetchingRef` guard; resets on dep change |
-| Sticky mobile CTA buttons had no `type="button"` | Added `type="button"` to both buttons |
-| Cookie banner lacked focus trap and Escape-key dismissal | Added `useEffect` with Tab focus trap and Escape → `declineCookies`; added `aria-modal="true"` |
-| `StatsStrip`, `HowItWorksSection`, `TestimonialsSection`, `FinalCtaBanner` 100% hardcoded | Migrated to `t()` via new `homeSections` translation keys (EN + AR) |
-| Duplicate root-level `*` catch-all route | Removed; `NotFound` is already handled inside `/app/*` children |
-| `/schedule` quick action path had no route definition | Added `schedule` route to protected children and legacy aliases |
-| Event-broker `persist()` never retried proxy after transient failure | Added `proxyRetryAt` check at top of `persist()` to re-enable proxy after timeout |
-| Duplicate `dns-prefetch` entries in `index.html` | Removed duplicates for `sentry.io` and `js.stripe.com` |
-| Missing `theme-color` meta tag | Added dark `theme-color` meta tags to `index.html` |
-
 ## Verification commands
 
 Run these in order to confirm the current state:

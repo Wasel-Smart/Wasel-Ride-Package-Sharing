@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { WaselStateCard } from '../../components/system/WaselStateCard';
 import { WaselEmptyState, WaselStatsGrid } from '../../components/wasel-ui';
 import { WaselButton } from '../../components/wasel-ui/WaselButton';
-import type { WalletTransaction, RewardItem } from '../../services/walletApi';
+import type { WalletTransaction, RewardItem } from '../../services/wallet/walletTypes';
 import {
   PageHero,
   PageShell,
