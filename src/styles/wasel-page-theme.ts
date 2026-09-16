@@ -1,4 +1,4 @@
-import { C, F, FA, GRAD, GRAD_GOLD, GRAD_GREEN, GRAD_HERO, GRAD_NAVY } from '../utils/wasel-ds';
+import { C, F, FA, GRAD, GRAD_GOLD, GRAD_GREEN, GRAD_HERO, GRAD_NAVY, R } from '../utils/wasel-ds';
 
 export const PAGE_DS = {
   bg: C.bg,
@@ -30,4 +30,17 @@ export const PAGE_DS = {
   gradHero: GRAD_HERO,
 } as const;
 
-export const PAGE_RADIUS = { sm: 8, md: 10, lg: 12, xl: 16, xxl: 20, full: 9999 } as const;
+// Radius scale now aliases the single wasel-ds source of truth (R) so that
+// service pages (Find Ride, Offer Ride, Bus, Packages, Driver) render the
+// exact same corner geometry as the rest of the app (Wallet, Trust Center,
+// Settings, etc.), which use WaselPagePrimitives / R directly. Previously
+// this scale hardcoded its own values (e.g. xl: 16) that drifted from R.xl
+// (18px), producing a visible 2px inconsistency between page clusters.
+export const PAGE_RADIUS = {
+  sm: Number.parseInt(R.sm, 10),
+  md: Number.parseInt(R.md, 10),
+  lg: Number.parseInt(R.lg, 10),
+  xl: Number.parseInt(R.xl, 10),
+  xxl: Number.parseInt(R.xxl, 10),
+  full: 9999,
+} as const;

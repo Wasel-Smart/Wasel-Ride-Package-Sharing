@@ -478,7 +478,7 @@ export function FindRidePage() {
         <SectionHead
           emoji={<Search size={24} />}
           title="Book a Ride"
-          titleAr="Ø§Ø­Ø¬Ø² Ù…Ø´ÙˆØ§Ø±"
+          titleAr="احجز مشوار"
           sub="Compare verified routes, live demand, and route-level price clarity."
           action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
         />
@@ -677,7 +677,7 @@ export function FindRidePage() {
                     </p>
                     <p style={{ color: DS.sub, fontSize: '0.8rem', margin: 0 }}>
                       {selectedSignal
-                        ? `${selectedSignal.liveSearches} people searching Â· ${selectedSignal.liveBookings} booked Â· ${selectedSignal.activeDemandAlerts} watching`
+                        ? `${selectedSignal.liveSearches} people searching · ${selectedSignal.liveBookings} booked · ${selectedSignal.activeDemandAlerts} watching`
                         : 'Select a route above to see live demand.'}
                     </p>
                   </div>
@@ -811,12 +811,12 @@ export function FindRidePage() {
             >
               <h2 style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>
                 {searched
-                  ? `${from} â†’ ${to} Â· ${results.length} ride${results.length !== 1 ? 's' : ''} found`
-                  : `Popular routes Â· ${results.length} departures`}
+                  ? `${from} → ${to} · ${results.length} ride${results.length !== 1 ? 's' : ''} found`
+                  : `Popular routes · ${results.length} departures`}
               </h2>
               {selectedSignal ? (
                 <div style={{ color: DS.muted, fontSize: '0.74rem' }}>
-                  Best price {selectedSignal.priceQuote.finalPriceJod} JOD Â· Next departure {selectedSignal.nextWaveWindow}
+                  Best price {selectedSignal.priceQuote.finalPriceJod} JOD · Next departure {selectedSignal.nextWaveWindow}
                 </div>
               ) : null}
               <div className="sp-sort-bar" style={{ display: 'flex', gap: 6 }}>
