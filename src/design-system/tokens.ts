@@ -1,5 +1,4 @@
-export { C } from '../utils/wasel-ds';
-export { DS } from '../utils/wasel-ds';
+export { C as DS } from '../utils/wasel-ds';
 export { TYPE } from '../utils/wasel-ds';
 export { R } from '../utils/wasel-ds';
 export { SH } from '../utils/wasel-ds';

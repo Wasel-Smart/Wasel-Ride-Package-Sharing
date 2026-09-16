@@ -1,5 +1,6 @@
 import { MapPin } from 'lucide-react';
-import { C, DS, TYPE, R } from '../../../utils/wasel-ds';
+import { C, TYPE, R } from '../../../utils/wasel-ds';
+import { DS } from '../../../features/shared/pageShared';
 import { WaselButton } from '../../../components/wasel-ui';
 
 interface PackageTrackingProps {
@@ -19,7 +20,7 @@ export function PackageTrackPanel({ trackingCode }: PackageTrackingProps) {
             style={{
               flex: 1,
               padding: '10px 12px',
-              borderRadius: r.lg,
+              borderRadius: R.lg,
               border: `1px solid ${DS.border}`,
               background: DS.card,
               color: C.text,
@@ -43,7 +44,7 @@ export function PackageTrackPanel({ trackingCode }: PackageTrackingProps) {
               alignItems: 'center',
               gap: 12,
               padding: '12px 16px',
-              borderRadius: r.lg,
+              borderRadius: R.lg,
               border: `1px solid ${DS.border}`,
               background: DS.card2,
             }}
@@ -52,7 +53,7 @@ export function PackageTrackPanel({ trackingCode }: PackageTrackingProps) {
               style={{
                 width: 32,
                 height: 32,
-                borderRadius: r.full,
+                borderRadius: R.full,
                 background: `${DS.green}20`,
                 display: 'grid',
                 placeItems: 'center',
