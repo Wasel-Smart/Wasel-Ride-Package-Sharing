@@ -602,7 +602,12 @@ export async function ensureCanonicalUserForAuth (
       authUser.phone ??
       'Wasel User'
     ).trim() || 'Wasel User';
-  const phoneNumber = String( body.phone_number ?? body.phone ?? '' ).trim() || null;
+  const phoneNumber = String(
+    body.phone_number ??
+      body.phone ??
+      ( authUser.user_metadata as Record<string, unknown> | undefined )?.phone ??
+      '',
+  ).trim() || null;
 
   const { data: existing, error: selectError } = await admin
     .from( 'users' )

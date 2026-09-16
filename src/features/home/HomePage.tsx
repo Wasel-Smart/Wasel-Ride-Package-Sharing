@@ -892,7 +892,7 @@ function FinalCtaBanner ( { ar, onNavigate }: { ar: boolean; onNavigate: ( path:
             variant="outline"
             size="lg"
             icon={ <Globe2 size={ 17 } /> }
-            onClick={ () => { void onNavigate( '/auth?tab=register', 'final_cta_register' ); } }
+            onClick={ () => { void onNavigate( '/app/auth?tab=register', 'final_cta_register' ); } }
             style={ { background: C.elevated, color: C.text, border: `1px solid ${ C.border }` } }
           >
             { t( 'homeSections.finalCtaRegister' ) }

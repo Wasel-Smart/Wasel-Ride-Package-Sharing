@@ -182,7 +182,7 @@ export function SignedOutCtaSection({ onNavigate }: SignedOutCtaSectionProps) {
         >
           <WaselButton
             type="button"
-            onClick={() => { void onNavigate('/auth?tab=register', 'signed_out_register'); }}
+            onClick={() => { void onNavigate('/app/auth?tab=register', 'signed_out_register'); }}
             variant="primary"
             size="lg"
             style={{

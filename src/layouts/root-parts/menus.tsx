@@ -637,7 +637,7 @@ export function MobileDrawer({
               </button>
               <button
                 onClick={() => {
-                  onNavigate('/auth?tab=register');
+                  onNavigate('/app/auth?tab=register');
                   onClose();
                 }}
                 style={{

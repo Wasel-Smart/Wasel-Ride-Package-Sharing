@@ -1,5 +1,6 @@
-import { API_URL, fetchWithRetry, getAuthDetails } from './core';
+import { fetchWithRetry, getAuthDetails } from './core';
 import {
+  BackendRequestError,
   getSecureBackendFallbackError,
   hasConfiguredEdgeTransport,
   requestEdgeJson,
@@ -253,47 +254,49 @@ export const authAPI = {
     return data;
   },
 
-  async createProfile(userId: string, email: string, firstName: string, lastName: string) {
+  async createProfile(
+    userId: string,
+    email: string,
+    firstName: string,
+    lastName: string,
+    phone?: string,
+  ) {
+    const fullName = `${firstName} ${lastName}`.trim();
+    const directUpdates: Record<string, unknown> = { email, full_name: fullName };
+    if (phone) {directUpdates.phone_number = phone;}
+
     if (!hasConfiguredEdgeTransport('required')) {
       if (!getConfig().allowDirectSupabaseFallback) {
         throw getDirectFallbackError('Profile creation');
       }
 
-      return updateDirectProfile(userId, {
-        email,
-        full_name: `${firstName} ${lastName}`.trim(),
-      });
+      return updateDirectProfile(userId, directUpdates);
     }
 
     try {
       const session = await getRefreshedSession();
-      const response = await fetchWithAuth(`${API_URL}/profile`, {
+      const data = await requestEdgeJson<Record<string, unknown>>({
+        path: '/v1/profile',
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
+        authMode: 'required',
+        context: { token: session.access_token, userId: session.user.id },
+        body: {
+          userId,
+          email,
+          fullName,
+          ...(phone ? { phone } : {}),
         },
-        body: JSON.stringify({
-          fullName: `${firstName} ${lastName}`.trim(),
-        }),
+        operation: 'Failed to create profile',
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        const errorMessage = errorData.error || `Failed to create profile: ${response.status}`;
-
-        if (response.status === 404 && getConfig().allowDirectSupabaseFallback) {
-          return updateDirectProfile(userId, {
-            email,
-            full_name: `${firstName} ${lastName}`.trim(),
-          });
-        }
-
-        throw new Error(errorMessage);
-      }
-
-      return await response.json();
+      return data;
     } catch (error) {
+      if (
+        error instanceof BackendRequestError &&
+        error.status === 404 &&
+        getConfig().allowDirectSupabaseFallback
+      ) {
+        return updateDirectProfile(userId, directUpdates);
+      }
       throw error instanceof Error ? error : new Error('Failed to create profile');
     }
   },

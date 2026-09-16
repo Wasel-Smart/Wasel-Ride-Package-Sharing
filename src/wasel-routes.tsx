@@ -399,7 +399,7 @@ const buildMainChildren = (): RouteObject[] => [
 const buildLegacyAliases = () =>
   LEGACY_APP_ALIASES.map(path => ({
     path,
-    Component: () => <RedirectTo to={`/app${path}`} />,
+    Component: () => <RedirectToPreserveQuery to={`/app${path}`} />,
   }));
 
 // ── Router ────────────────────────────────────────────────────────────────────

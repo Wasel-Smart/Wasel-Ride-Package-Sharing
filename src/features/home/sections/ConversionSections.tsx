@@ -144,7 +144,7 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
               type="button"
               variant="primary"
               iconEnd={ar ? <ArrowLeft size={15} /> : <ArrowRight size={15} />}
-              onClick={() => { void onNavigate('/auth?tab=register', 'proof_register'); }}
+              onClick={() => { void onNavigate('/app/auth?tab=register', 'proof_register'); }}
             >
               {ar ? 'أنشئ حسابا موثوقا' : 'Create trusted account'}
             </WaselButton>

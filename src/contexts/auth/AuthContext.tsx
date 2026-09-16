@@ -112,10 +112,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     if (!nextProfile && forceCreate) {
       const { firstName, lastName } = getProfileDisplayName(activeUser);
+      const phone = String(
+        activeUser.user_metadata?.phone ?? activeUser.phone ?? '',
+      ).trim();
 
       try {
         const { authAPI } = await import('../../services/auth');
-        await authAPI.createProfile(activeUser.id, activeUser.email ?? '', firstName, lastName);
+        await authAPI.createProfile(
+          activeUser.id,
+          activeUser.email ?? '',
+          firstName,
+          lastName,
+          phone || undefined,
+        );
         nextProfile = await loadProfileFromBackend();
       } catch (error) {
         if (import.meta.env?.DEV) {
