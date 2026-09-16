@@ -1,5 +1,15 @@
 # Wasel Production-Hardening Report
 
+> **This is a dated snapshot of one session's work (2026-08-09), not the current
+> state of the project.** The "Current Grade: 9/10" at the bottom of this document
+> predates the credential-exposure findings in `SECURITY_CHECKLIST.md` and
+> `docs/HONEST_AUDIT_REPORT.md`, which as of this note still have unrotated live
+> secrets and an unconfirmed git-history scrub outstanding. A codebase with live,
+> unrotated production credentials is not a 9/10 on security regardless of what
+> else this pass fixed. For the current state, read `docs/HONEST_AUDIT_REPORT.md`
+> and `docs/implementation-status.md` first; treat everything below as "what was
+> true and fixed as of August 9", not as today's grade.
+
 **Date:** 2026-08-09
 **Scope:** Full production-hardening pass on Wasel codebase
 **Starting Grade:** 7.8/10

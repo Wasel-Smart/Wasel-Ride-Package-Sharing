@@ -14,7 +14,11 @@
 
 **Time: 2 minutes**
 
-1. Open https://app.supabase.com/project/zexlxabdcsjefptmjhuq/editor
+1. Open https://app.supabase.com/project/YOUR-PROJECT-REF/editor
+   (redacted 2026-09-16: this doc still had the real project ref hardcoded, contradicting
+   `SECURITY_CHECKLIST.md`/`HONEST_AUDIT_REPORT.md`'s claim that it was replaced
+   "in all three occurrences" — this was a fourth, missed occurrence. Replace
+   `YOUR-PROJECT-REF` with your actual ref locally; don't commit the real value.)
 2. Click **SQL Editor** in the left sidebar
 3. Click **New query**
 4. Copy and paste the contents of `docs/RUN_MIGRATION.sql`

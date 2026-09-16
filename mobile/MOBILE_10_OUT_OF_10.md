@@ -1,4 +1,18 @@
-# Wasel Mobile — Engineering Rating: 9 / 10
+# Wasel Mobile — Engineering Rating: 9 / 10 (SUPERSEDED — see note)
+
+> **This score is contradicted by later findings and should not be cited.**
+> `mobile/HONEST_AUDIT_REPORT.md` and `docs/implementation-status.md`
+> ("Correction — this pass") found that the Detox e2e spec this document cites as
+> "all passing" (`e2e/rideFlow.test.ts`) asserted against testIDs and screens
+> (`login-button`, `packages-tab`, `package-form-screen`, `phone-auth-screen`, etc.)
+> that did not exist in `mobile/src` — meaning the verification run below could not
+> have exercised the real app as claimed. Treat this file as historical record of
+> what one pass *believed* it verified, not as a current, trustworthy score. Do not
+> reuse the "9/10 / release-ready" framing until someone has re-run the checklist in
+> `mobile/HONEST_AUDIT_REPORT.md` against a real device build and pasted the actual
+> output.
+
+---
 
 > Verdict: The mobile app is now **release-ready**. It installs cleanly from a fresh
 > checkout, type-checks, lints with zero warnings, and ships unit tests that pass.
