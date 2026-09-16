@@ -465,10 +465,10 @@ export async function createConnectedRide (
     } );
     return created;
   } catch ( error ) {
-    if ( import.meta?.env?.VITE_E2E_LOCAL_AUTH !== 'true' ) {
+    if ( supabase ) {
       throw error instanceof Error ? error : new Error( 'Ride could not be published.' );
     }
-    // In E2E local auth mode, save the ride locally instead of failing.
+    // No Supabase backend configured (E2E local mode) — persist locally.
     saveRides( [ ride ], getConnectedRides() );
     void trackGrowthEvent( {
       userId: input.ownerId,

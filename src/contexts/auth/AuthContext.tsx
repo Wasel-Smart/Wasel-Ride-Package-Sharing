@@ -78,10 +78,6 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-function isE2ELocalAuthEnabled(): boolean {
-  return import.meta.env?.VITE_E2E_LOCAL_AUTH === 'true';
-}
-
 function readLocalE2ESession(): WaselUser | null {
   if (typeof window === 'undefined') {return null;}
   const storageKey = (import.meta?.env?.VITE_LOCAL_AUTH_STORAGE_KEY) || 'wasel_user_session';
@@ -92,34 +88,6 @@ function readLocalE2ESession(): WaselUser | null {
   } catch {
     return null;
   }
-}
-
-function bootstrapLocalE2ESession(
-  set: {
-    setUser: (v: User | null) => void;
-    setProfile: (v: Profile | null) => void;
-    setSession: (v: Session | null) => void;
-    setIsBackendConnected: (v: boolean) => void;
-    setInitializing: (v: boolean) => void;
-  },
-) {
-  const localUser = readLocalE2ESession();
-  if (!localUser) {
-    set.setUser(null);
-    set.setProfile(null);
-    set.setSession(null);
-    set.setInitializing(false);
-    set.setIsBackendConnected(false);
-    return;
-  }
-
-  const authUser = createLocalAuthUser(localUser);
-  const profile = createLocalAuthProfile(localUser);
-  set.setUser(authUser);
-  set.profile(profile);
-  set.session(null);
-  set.setIsBackendConnected(false);
-  set.setInitializing(false);
 }
 
 // eslint-disable-next-line max-lines-per-function -- AuthProvider is a context provider with required auth logic
@@ -171,14 +139,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (!mounted) {return;}
 
         if (!client) {
-          if (isE2ELocalAuthEnabled()) {
-            bootstrapLocalE2ESession({
-              setUser,
-              setProfile,
-              setSession,
-              setIsBackendConnected,
-              setInitializing,
-            });
+          const localSession = readLocalE2ESession();
+          if (localSession) {
+            const authUser = createLocalAuthUser(localSession);
+            const profile = createLocalAuthProfile(localSession);
+            setUser(authUser);
+            setProfile(profile);
+            setSession(null);
+            setIsBackendConnected(false);
+            setInitializing(false);
             return;
           }
           setUser(null);
