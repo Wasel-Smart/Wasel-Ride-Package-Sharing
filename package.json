@@ -14,6 +14,7 @@
         "test:unit": "vitest run",
         "test:unit:watch": "vitest",
         "test:e2e": "playwright test",
+        "test:e2e:smoke": "playwright test --grep @smoke",
         "test:e2e:oauth": "playwright test --grep @oauth",
         "test:visual": "playwright test --grep @visual",
         "test:visual:update": "playwright test --grep @visual --update-snapshots",

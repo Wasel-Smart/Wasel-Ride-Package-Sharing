@@ -5,19 +5,19 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('wasel-language', 'en'));
 });
 
-test('landing page loads and contains Wasel branding', async ({ page }) => {
+test('landing page loads and contains Wasel branding @smoke', async ({ page }) => {
   await page.goto('/');
   const title = await page.title();
   expect(title.toLowerCase()).toContain('wasel');
 });
 
-test('unauthenticated /app renders the public landing surface', async ({ page }) => {
+test('unauthenticated /app renders the public landing surface @smoke', async ({ page }) => {
   await page.goto('/app');
   await expect(page.getByRole('heading', { name: /move across jordan for less/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
 });
 
-test('auth page renders email and password fields', async ({ page }) => {
+test('auth page renders email and password fields @smoke', async ({ page }) => {
   await page.goto('/app/auth');
   await expect(page.getByLabel(/email/i)).toBeVisible();
   // Use textbox role to avoid matching the "Show password" toggle button
@@ -36,7 +36,7 @@ test('register tab renders create account button', async ({ page }) => {
   await expect(page.getByRole('button', { name: /submit sign up/i })).toBeVisible();
 });
 
-test('authenticated user receives the signed-in landing surface', async ({ page }) => {
+test('authenticated user receives the signed-in landing surface @smoke', async ({ page }) => {
   await seedDemoSession(page, 'en');
   await page.goto('/app');
   await expect(page.getByRole('heading', { name: /move across jordan for less/i })).toBeVisible();

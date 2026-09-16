@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   await seedDemoSession(page, 'en');
 });
 
-test('find ride confirms the local-fallback booking outcome clearly', async ({ page }) => {
+test('find ride confirms the local-fallback booking outcome clearly @smoke', async ({ page }) => {
   await page.goto('/app/find-ride');
   await expect(page.getByTestId('find-ride-search')).toBeVisible();
   await page.getByTestId('find-ride-search').click();
@@ -16,7 +16,7 @@ test('find ride confirms the local-fallback booking outcome clearly', async ({ p
   await expect(page.getByRole('heading', { name: /trip details/i })).not.toBeVisible();
 });
 
-test('offer ride posts a connected trip', async ({ page }) => {
+test('offer ride posts a connected trip @smoke', async ({ page }) => {
   await page.goto('/app/offer-ride');
   await expect(page.getByTestId('offer-ride-step-1')).toBeVisible();
   await page.locator('input[type="date"]').fill('2026-05-01');
@@ -36,7 +36,7 @@ test('bus flow reports an unavailable secure reservation clearly', async ({ page
   ).toBeVisible();
 });
 
-test('packages flow creates tracking', async ({ page }) => {
+test('packages flow creates tracking @smoke', async ({ page }) => {
   await page.goto('/app/packages');
   await page.getByTestId('package-recipient-name').fill('Receiver Test');
   await page.getByTestId('package-recipient-phone').fill('+962790000888');
@@ -46,7 +46,7 @@ test('packages flow creates tracking', async ({ page }) => {
   await expect(page.getByText('Handoff code', { exact: true })).toBeVisible();
 });
 
-test('wallet stays available in local fallback mode', async ({ page }) => {
+test('wallet stays available in local fallback mode @smoke', async ({ page }) => {
   await page.goto('/app/wallet');
   await expect(page.getByText(/wallet unavailable/i)).toHaveCount(0);
   await expect(page.getByRole('heading', { name: /wasel wallet/i })).toBeVisible();
