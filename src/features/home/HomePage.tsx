@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, ArrowLeft, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
@@ -18,7 +18,6 @@ import { C, F, POPULAR_ROUTES } from './HomePageShared';
 import { TYPE } from '../../utils/wasel-ds';
 import {
   CorridorsSection,
-  CorridorGlobeSection,
   CorridorBetaFocusSection,
   HomeHeroSection,
   HomePageStyles,
@@ -32,6 +31,10 @@ import {
   type QuickAction,
   type TripMode,
 } from './HomePageSections';
+
+const CorridorGlobeSection = lazy(() =>
+  import('./sections/CorridorGlobeSection').then(m => ({ default: m.CorridorGlobeSection })),
+);
 
 interface LiveCorridor {
   id: string;
@@ -492,7 +495,9 @@ export function HomePage () {
           {/* Single corridor section — OutcomesSection removed to eliminate redundancy */ }
           <CorridorsSection corridorCards={ corridorCards } onNavigate={ handleNavigate } />
 
-          <CorridorGlobeSection ar={ ar } />
+          <Suspense fallback={null}>
+            <CorridorGlobeSection ar={ ar } />
+          </Suspense>
 
           <TrustPagesSection ar={ ar } onNavigate={ handleNavigate } />
 
