@@ -23,6 +23,8 @@ export default tseslint.config(
       '*.config.js',
       '*.config.mjs',
       '*.config.ts',
+      '.kilo',
+      '.kilo/**',
     ]
   },
   {

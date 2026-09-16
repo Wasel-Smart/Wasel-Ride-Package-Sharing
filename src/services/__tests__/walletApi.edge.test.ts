@@ -11,18 +11,22 @@ vi.mock('../core', () => ({
   API_URL: 'https://api.wasel14.online',
 }));
 
-class MockBackendRequestError extends Error {
-  status?: number;
-  constructor(message: string, status?: number) {
-    super(message);
-    this.status = status;
+const backendWorkflowMocks = vi.hoisted(() => {
+  class MockBackendRequestError extends Error {
+    status?: number;
+    constructor(message: string, status?: number) {
+      super(message);
+      this.status = status;
+    }
   }
-}
-
-const requestEdgeJsonMock = vi.fn();
+  return {
+    requestEdgeJson: vi.fn(),
+    MockBackendRequestError,
+  };
+});
 vi.mock('../backendWorkflow', () => ({
-  requestEdgeJson: (...args: unknown[]) => requestEdgeJsonMock(...args),
-  BackendRequestError: MockBackendRequestError,
+  requestEdgeJson: (...args: unknown[]) => backendWorkflowMocks.requestEdgeJson(...args),
+  BackendRequestError: backendWorkflowMocks.MockBackendRequestError,
 }));
 
 const getConfigMock = vi.fn();
