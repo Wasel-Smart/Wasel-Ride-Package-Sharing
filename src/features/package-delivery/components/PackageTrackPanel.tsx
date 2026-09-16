@@ -1,6 +1,6 @@
-import { MapPin, Clock } from 'lucide-react';
-import { C, DS, r, TYPE } from '../../utils/wasel-ds';
-import { WaselButton } from '../../components/wasel-ui';
+import { MapPin } from 'lucide-react';
+import { C, DS, TYPE, r } from '../../../utils/wasel-ds';
+import { WaselButton } from '../../../components/wasel-ui';
 
 interface PackageTrackingProps {
   trackingCode?: string;

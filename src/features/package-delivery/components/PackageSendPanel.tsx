@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Send, MapPin, Clock, Package } from 'lucide-react';
-import { C, DS, r, TYPE } from '../../utils/wasel-ds';
-import { PageShell, SectionCard } from '../../wasel-ui/WaselPagePrimitives';
-import { WaselButton, WaselInput, WaselSelect } from '../../components/wasel-ui';
+import { Package } from 'lucide-react';
+import { DS } from '../../../utils/wasel-ds';
+import { SectionCard } from '../../../components/wasel-ui/WaselPagePrimitives';
+import { WaselButton, WaselInput, WaselSelect } from '../../../components/wasel-ui';
 
 export function PackageSendPanel({ onSubmit }: { onSubmit?: (data: PackageSendData) => void }) {
   const [from, setFrom] = useState('');
