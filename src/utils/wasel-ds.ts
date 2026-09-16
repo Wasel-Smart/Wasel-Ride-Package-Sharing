@@ -40,12 +40,14 @@ export const C = {
   green: '#72C70D',
   greenDark: '#5a6b08',
   greenDim: 'rgba(114,199,13,0.12)',
+  greenGlow: 'rgba(114,199,13,0.2)',
 
   // True brand gold (BRAND_GUIDELINES.md "Supporting accents"). Distinct from journey
   // orange below — use for premium badges, rewards, Wasel Plus. `orange` stays the
   // primary CTA/journey colour and is intentionally left pointing at brandOrange.
   gold: '#FFBE5C',
   goldDim: 'rgba(255,190,92,0.14)',
+  goldGlow: 'rgba(255,190,92,0.22)',
   bronze: '#FFBE5C',
   bronzeDim: 'rgba(255,190,92,0.14)',
 

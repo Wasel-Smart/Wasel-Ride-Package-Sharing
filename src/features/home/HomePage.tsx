@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, ArrowLeft, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import type { Language } from '../../locales/translations';
@@ -16,6 +16,7 @@ import { WaselErrorBoundary } from '../../components/ErrorBoundary';
 import { ActiveTripsBanner } from '../../components/TripProgressCard';
 import { C, F, POPULAR_ROUTES } from './HomePageShared';
 import { TYPE } from '../../utils/wasel-ds';
+import { homeSectionIconGlow } from './sections/styleHelpers';
 import {
   CorridorsSection,
   CorridorBetaFocusSection,
@@ -31,6 +32,19 @@ import {
   type QuickAction,
   type TripMode,
 } from './HomePageSections';
+
+// BRAND_GUIDELINES.md motion rules: 150/200/280ms durations, standard easing
+// cubic-bezier(0.4, 0, 0.2, 1), opacity/position only (no glow animation).
+// Applied via whileInView so sections settle in once as they scroll into
+// view, and skipped outright for prefers-reduced-motion via useReducedMotion
+// below — previously these were framer-motion components with no motion at
+// all (`initial={false}`, no animate/whileInView), which cost bundle weight
+// and a wrapper element for zero visible effect.
+const sectionRiseVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: { opacity: 1, y: 0 },
+};
+const sectionRiseTransition = { duration: 0.28, ease: [0.4, 0, 0.2, 1] as const };
 
 const CorridorGlobeSection = lazy( () =>
   import( './sections/CorridorGlobeSection' ).then( m => ( { default: m.CorridorGlobeSection } ) ),
@@ -227,6 +241,7 @@ interface RoleBannerProps {
 }
 
 function RoleBanner ( { role, t }: RoleBannerProps ) {
+  const reduceMotion = useReducedMotion();
   const roleLetter = role === 'admin' ? 'A' : role === 'driver' ? 'D' : role === 'both' ? 'B' : 'R';
   const roleTitleKey = role === 'admin'
     ? 'homeSections.roleBannerAdmin'
@@ -245,8 +260,9 @@ function RoleBanner ( { role, t }: RoleBannerProps ) {
 
   return (
     <motion.div
-      initial={ { opacity: 0, y: 8 } }
+      initial={ reduceMotion ? false : { opacity: 0, y: 8 } }
       animate={ { opacity: 1, y: 0 } }
+      transition={ sectionRiseTransition }
       className="wasel-home-section"
       style={ {
         display: 'flex',
@@ -579,25 +595,34 @@ export function HomePage () {
 
 function StatsStrip () {
   const { t } = useLanguage();
+  const reduceMotion = useReducedMotion();
   const stats = [
-    { value: '4', label: t( 'homeSections.statCoreFlows' ), color: '#00E5FF' },
-    { value: '5', label: t( 'homeSections.statTrustChecks' ), color: '#72C70D' },
-    { value: '0', label: t( 'homeSections.statDataResale' ), color: '#FFBE5C' },
-    { value: t( 'homeSections.statUxSignalsValue' ), label: t( 'homeSections.statUxSignals' ), color: '#58DDFF' },
+    { value: '4', label: t( 'homeSections.statCoreFlows' ), color: C.cyan },
+    { value: '5', label: t( 'homeSections.statTrustChecks' ), color: C.green },
+    { value: '0', label: t( 'homeSections.statDataResale' ), color: C.gold },
+    { value: t( 'homeSections.statUxSignalsValue' ), label: t( 'homeSections.statUxSignals' ), color: C.teal },
   ];
 
   return (
-    <motion.section initial={ false } className="wasel-home-section" aria-label={ t( 'homeSections.statsTitle' ) }>
+    <motion.section
+      initial={ reduceMotion ? false : 'hidden' }
+      whileInView={ reduceMotion ? undefined : 'visible' }
+      viewport={ { once: true, margin: '-80px' } }
+      variants={ sectionRiseVariants }
+      transition={ sectionRiseTransition }
+      className="wasel-home-section"
+      aria-label={ t( 'homeSections.statsTitle' ) }
+    >
       <div className="wasel-home-stats-strip">
         { stats.map( stat => (
           <div
             key={ stat.label }
             className="wasel-home-stat-item"
             style={ {
-              background: 'rgba(8, 29, 57, 0.72)',
+              background: C.card,
               backdropFilter: 'blur(16px)',
               WebkitBackdropFilter: 'blur(16px)',
-              border: '1px solid rgba(20, 127, 228, 0.16)',
+              border: `1px solid ${ C.border }`,
               borderTop: `1px solid ${ stat.color }45`,
               boxShadow: '0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 8px 24px rgba(8, 29, 57, 0.35)',
             } }
@@ -617,46 +642,49 @@ function StatsStrip () {
 
 function HowItWorksSection () {
   const { language, t } = useLanguage();
+  const reduceMotion = useReducedMotion();
   const ar = language === 'ar';
   const steps = [
     {
       icon: Route,
       title: t( 'homeSections.howStep1Title' ),
       detail: t( 'homeSections.howStep1Detail' ),
-      accent: '#00E5FF',
+      accent: C.cyan,
     },
     {
       icon: BarChart3,
       title: t( 'homeSections.howStep2Title' ),
       detail: t( 'homeSections.howStep2Detail' ),
-      accent: '#72C70D',
+      accent: C.green,
     },
     {
       icon: BadgeCheck,
       title: t( 'homeSections.howStep3Title' ),
       detail: t( 'homeSections.howStep3Detail' ),
-      accent: '#FFBE5C',
+      accent: C.gold,
     },
     {
       icon: Headphones,
       title: t( 'homeSections.howStep4Title' ),
       detail: t( 'homeSections.howStep4Detail' ),
-      accent: '#58DDFF',
+      accent: C.teal,
     },
   ];
 
   return (
-    <motion.section initial={ false } className="wasel-home-section">
+    <motion.section
+      initial={ reduceMotion ? false : 'hidden' }
+      whileInView={ reduceMotion ? undefined : 'visible' }
+      viewport={ { once: true, margin: '-80px' } }
+      variants={ sectionRiseVariants }
+      transition={ sectionRiseTransition }
+      className="wasel-home-section"
+    >
       <div className="wasel-home-section-header">
         <div style={ { display: 'flex', alignItems: 'center', gap: 12 } }>
           <div
             className="wasel-home-section-icon"
-            style={ {
-              background: 'rgba(0, 229, 255, 0.12)',
-              border: '1px solid rgba(0, 229, 255, 0.25)',
-              color: '#00E5FF',
-              boxShadow: '0 0 16px rgba(0, 229, 255, 0.15)',
-            } }
+            style={ homeSectionIconGlow( C.cyan, C.cyanDim, C.cyanGlow ) }
           >
             <Play size={ 16 } />
           </div>
@@ -667,7 +695,7 @@ function HowItWorksSection () {
                 fontWeight: 800,
                 letterSpacing: '0.04em',
                 textTransform: 'uppercase',
-                color: '#00E5FF',
+                color: C.cyan,
               } }
             >
               { ar ? 'خطوات بسيطة وسريعة' : 'Effortless 4 Steps' }
@@ -686,10 +714,10 @@ function HowItWorksSection () {
               key={ step.title }
               className="wasel-home-step"
               style={ {
-                background: 'rgba(8, 29, 57, 0.72)',
+                background: C.card,
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
-                border: '1px solid rgba(20, 127, 228, 0.16)',
+                border: `1px solid ${ C.border }`,
                 borderTop: `1px solid ${ step.accent }50`,
                 boxShadow: '0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 8px 24px rgba(8, 29, 57, 0.3)',
                 padding: '22px 18px',
@@ -746,6 +774,7 @@ function HowItWorksSection () {
 // eslint-disable-next-line max-lines-per-function
 function TestimonialsSection () {
   const { language, t } = useLanguage();
+  const reduceMotion = useReducedMotion();
   const ar = language === 'ar';
   const testimonials = [
     {
@@ -775,17 +804,19 @@ function TestimonialsSection () {
   ];
 
   return (
-    <motion.section initial={ false } className="wasel-home-section">
+    <motion.section
+      initial={ reduceMotion ? false : 'hidden' }
+      whileInView={ reduceMotion ? undefined : 'visible' }
+      viewport={ { once: true, margin: '-80px' } }
+      variants={ sectionRiseVariants }
+      transition={ sectionRiseTransition }
+      className="wasel-home-section"
+    >
       <div className="wasel-home-section-header">
         <div style={ { display: 'flex', alignItems: 'center', gap: 12 } }>
           <div
             className="wasel-home-section-icon"
-            style={ {
-              background: 'rgba(0, 229, 255, 0.12)',
-              border: '1px solid rgba(0, 229, 255, 0.25)',
-              color: '#00E5FF',
-              boxShadow: '0 0 16px rgba(0, 229, 255, 0.15)',
-            } }
+            style={ homeSectionIconGlow( C.cyan, C.cyanDim, C.cyanGlow ) }
           >
             <MessageSquareQuote size={ 16 } />
           </div>
@@ -796,7 +827,7 @@ function TestimonialsSection () {
                 fontWeight: 800,
                 letterSpacing: '0.04em',
                 textTransform: 'uppercase',
-                color: '#00E5FF',
+                color: C.cyan,
               } }
             >
               { ar ? 'تجارب مستخدمي واصل' : 'Jordanian Community Stories' }
@@ -826,11 +857,11 @@ function TestimonialsSection () {
               key={ index }
               className="wasel-home-testimonial"
               style={ {
-                background: 'rgba(8, 29, 57, 0.72)',
+                background: C.card,
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
-                border: '1px solid rgba(20, 127, 228, 0.16)',
-                borderTop: '1px solid rgba(0, 229, 255, 0.3)',
+                border: `1px solid ${ C.border }`,
+                borderTop: `1px solid ${ C.cyanGlow }`,
                 boxShadow: '0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 10px 28px rgba(8, 29, 57, 0.35)',
                 borderRadius: 18,
                 padding: '22px',
@@ -848,9 +879,9 @@ function TestimonialsSection () {
                     fontWeight: 750,
                     padding: '3px 8px',
                     borderRadius: 9999,
-                    background: 'rgba(0, 229, 255, 0.1)',
-                    border: '1px solid rgba(0, 229, 255, 0.2)',
-                    color: '#00E5FF',
+                    background: C.cyanDim,
+                    border: `1px solid ${ C.cyanGlow }`,
+                    color: C.cyan,
                   } }
                 >
                   { ar ? item.routeAr : item.routeEn }
@@ -892,7 +923,7 @@ function TestimonialsSection () {
                       style={ {
                         fontSize: '0.68rem',
                         fontWeight: 700,
-                        color: '#72C70D',
+                        color: C.green,
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: 2,

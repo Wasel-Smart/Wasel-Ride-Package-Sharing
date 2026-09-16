@@ -108,6 +108,22 @@ export function homeButtonStyle({
   };
 }
 
+/**
+ * The glowing variant of `.wasel-home-section-icon` (used by section headers
+ * that want an accent-colored halo, e.g. stats, how-it-works, testimonials).
+ * Takes the color/dim/glow token triad already defined in wasel-ds.ts rather
+ * than a raw hex, so every glowing header stays in sync with the brand tokens
+ * instead of drifting section by section.
+ */
+export function homeSectionIconGlow(color: string, dim: string, glow: string): CSSProperties {
+  return {
+    background: dim,
+    border: `1px solid ${glow}`,
+    color,
+    boxShadow: `0 0 16px ${glow}`,
+  };
+}
+
 export function homeAccentLink(color: string): CSSProperties {
   return {
     marginTop: 14,
