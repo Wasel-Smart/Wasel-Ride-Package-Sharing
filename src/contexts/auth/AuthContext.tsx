@@ -106,8 +106,8 @@ function bootstrapLocalE2ESession(
   const localUser = readLocalE2ESession();
   if (!localUser) {
     set.setUser(null);
-    set.profile(null);
-    set.session(null);
+    set.setProfile(null);
+    set.setSession(null);
     set.setInitializing(false);
     set.setIsBackendConnected(false);
     return;
