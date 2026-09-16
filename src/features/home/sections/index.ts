@@ -4,5 +4,6 @@ export * from './HomeHeroSection';
 export * from './QuickActionsSection';
 export * from './CorridorBetaFocusSection';
 export * from './CorridorsSection';
+export * from './CorridorGlobeSection';
 export * from './ConversionSections';
 export * from './UtilitySections';

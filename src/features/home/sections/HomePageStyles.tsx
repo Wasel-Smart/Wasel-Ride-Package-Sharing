@@ -418,6 +418,17 @@ export function HomePageStyles () {
         gap: 14px;
       }
 
+      .wasel-home-globe-panel {
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        align-items: center;
+      }
+
+      .wasel-home-globe-canvas {
+        height: 320px;
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
       .wasel-home-corridor {
         position: relative;
         display: flex;
@@ -1193,8 +1204,9 @@ export function HomePageStyles () {
       .wasel-home-actions,
       .wasel-home-steps,
       .wasel-home-testimonials,
-      .wasel-home-stats-strip {
-        display: grid;
+      .wasel-home-stats-strip,
+      .wasel-home-globe-panel {
+      display: grid;
         gap: 14px;
       }
 
@@ -1384,7 +1396,8 @@ export function HomePageStyles () {
         .wasel-home-actions,
         .wasel-home-steps,
         .wasel-home-testimonials,
-        .wasel-home-stats-strip {
+        .wasel-home-stats-strip,
+        .wasel-home-globe-panel {
           grid-template-columns: 1fr !important;
         }
 
@@ -1482,6 +1495,10 @@ export function HomePageStyles () {
 
         .wasel-home-section {
           margin-top: 24px !important;
+        }
+
+        .wasel-home-globe-canvas {
+          height: 240px !important;
         }
       }
 

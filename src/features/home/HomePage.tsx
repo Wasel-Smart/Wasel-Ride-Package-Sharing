@@ -18,6 +18,7 @@ import { C, F, POPULAR_ROUTES } from './HomePageShared';
 import { TYPE } from '../../utils/wasel-ds';
 import {
   CorridorsSection,
+  CorridorGlobeSection,
   CorridorBetaFocusSection,
   HomeHeroSection,
   HomePageStyles,
@@ -490,6 +491,8 @@ export function HomePage () {
 
           {/* Single corridor section — OutcomesSection removed to eliminate redundancy */ }
           <CorridorsSection corridorCards={ corridorCards } onNavigate={ handleNavigate } />
+
+          <CorridorGlobeSection ar={ ar } />
 
           <TrustPagesSection ar={ ar } onNavigate={ handleNavigate } />
 
