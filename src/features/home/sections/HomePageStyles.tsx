@@ -1206,7 +1206,7 @@ export function HomePageStyles () {
       .wasel-home-testimonials,
       .wasel-home-stats-strip,
       .wasel-home-globe-panel {
-      display: grid;
+        display: grid;
         gap: 14px;
       }
 

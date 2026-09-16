@@ -132,6 +132,15 @@ export default defineConfig(({ mode }) => ({
 
             if (id.includes('/node_modules/@stripe/')) return 'payments';
 
+            // Three.js/react-three-fiber are only reachable via the lazy
+            // `import('./CorridorGlobeScene')` on the homepage — give them
+            // their own chunk so they stay out of the eager 'vendor' bundle
+            // that ships on every page.
+            if (
+              id.includes('/node_modules/three/') ||
+              id.includes('/node_modules/@react-three/')
+            ) return 'three-3d';
+
             return 'vendor';
         },
         compact: true,
