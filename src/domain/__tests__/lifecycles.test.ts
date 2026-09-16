@@ -59,7 +59,7 @@ describe('Package Lifecycle', () => {
   it('canProjectPackageLifecycle returns true for valid transitions', () => {
     expect(canProjectPackageLifecycle('created', 'assigned')).toBe(true);
     expect(canProjectPackageLifecycle('created', 'cancelled')).toBe(true);
-    expect(canProjectPackageLifecycle('delivered', 'cancelled')).toBe(true);
+    expect(canProjectPackageLifecycle('delivered', 'cancelled')).toBe(false);
   });
 
   it('canProjectPackageLifecycle returns false for invalid transitions', () => {

@@ -185,7 +185,7 @@ async function proxyFetch(
 
 // ─── In-memory broker (default) ──────────────────────────────────────────────
 
-class InMemoryEventBroker implements EventBroker {
+export class InMemoryEventBroker implements EventBroker {
   readonly kind = 'memory' as const;
   private listeners = new Map<string, Set<BrokerMessageHandler>>();
   private anyListeners = new Set<BrokerMessageHandler>();

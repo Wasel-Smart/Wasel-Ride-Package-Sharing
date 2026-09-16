@@ -8,10 +8,10 @@ describe('Route Meta', () => {
     expect(duplicates).toEqual([]);
   });
 
-  it('all /app routes are protected', () => {
+  it('all /app routes are protected or intentionally public', () => {
     const appRoutes = ROUTE_META.filter(m => m.path.startsWith('/app') && !m.path.includes(':'));
-    const unprotected = appRoutes.filter(m => !m.requiresAuth);
-    expect(unprotected).toEqual([]);
+    const unprotected = appRoutes.filter(m => !m.requiresAuth).map(m => m.path);
+    expect(unprotected).toEqual(['/app/privacy', '/app/terms', '/app/security', '/app/support']);
   });
 
   it('getRouteMeta finds existing routes', () => {

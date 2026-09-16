@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { RotateCcw } from 'lucide-react';
-import { C, TYPE, R } from '../../../utils/wasel-ds';
 import { DS } from '../../../features/shared/pageShared';
 import { SectionCard } from '../../../components/wasel-ui/WaselPagePrimitives';
 import { WaselButton, WaselInput, WaselSelect } from '../../../components/wasel-ui';

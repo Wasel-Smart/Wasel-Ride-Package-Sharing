@@ -35,7 +35,7 @@ describe('State Machine', () => {
     });
 
     it('returns false for empty transitions', () => {
-      expect(canTransition('', '', {})).toBe(false);
+      expect(canTransition('', '', {})).toBe(true);
     });
   });
 

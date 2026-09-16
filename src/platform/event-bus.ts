@@ -31,7 +31,7 @@ export function createDomainEvent<TType extends DomainEventType>(
   };
 }
 
-class InMemoryDomainEventBus {
+export class InMemoryDomainEventBus {
   private listeners = new Map<DomainEventType, Set<AnyListener>>();
   private anyListeners = new Set<AnyListener>();
   private history: DomainEventEnvelope[] = [];
