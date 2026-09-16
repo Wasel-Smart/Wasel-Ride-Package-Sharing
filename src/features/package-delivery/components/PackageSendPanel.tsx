@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Package } from 'lucide-react';
-import { DS } from '../../../utils/wasel-ds';
+import { C as DS } from '../../../utils/wasel-ds';
 import { SectionCard } from '../../../components/wasel-ui/WaselPagePrimitives';
 import { WaselButton, WaselInput, WaselSelect } from '../../../components/wasel-ui';
 
@@ -48,7 +48,7 @@ export function PackageSendPanel({ onSubmit }: { onSubmit?: (data: PackageSendDa
             <WaselSelect
               value={weight}
               onChange={setWeight}
-              options={['<1 kg', '1-5 kg', '5-10 kg', '10+ kg']}
+              options={[{ value: '<1 kg', label: '<1 kg' }, { value: '1-5 kg', label: '1-5 kg' }, { value: '5-10 kg', label: '5-10 kg' }, { value: '10+ kg', label: '10+ kg' }]}
             />
           </div>
           <div>

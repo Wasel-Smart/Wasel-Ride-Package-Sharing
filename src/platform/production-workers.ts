@@ -366,7 +366,7 @@ const opsWorker = createWorker<AnyRecord>(
         const client = supabase;
         if (!client) {return;}
         const metricDate = new Date().toISOString().slice(0, 10);
-        await client.rpc('increment_ops_aggregate', {
+        await client.rpc('increment_ops_aggregate' as any, {
           p_metric_date: metricDate,
           p_metric_name: 'revenue_captured',
           p_dimension: (payload.entityType as string) ?? 'unknown',
