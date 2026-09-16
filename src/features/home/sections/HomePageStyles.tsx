@@ -92,140 +92,11 @@ export function HomePageStyles () {
         padding: 28px 28px 64px;
       }
 
-      .wasel-home-section {
-        margin-top: 36px;
-        content-visibility: auto;
-        contain-intrinsic-size: auto 400px;
-      }
-
-      .wasel-home-section:first-child {
-        margin-top: 0;
-      }
-
-      .wasel-home-section-header {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 18px;
-      }
-
-      .wasel-home-section-icon {
-        width: 30px;
-        height: 30px;
-        border-radius: 10px;
-        display: grid;
-        place-items: center;
-        background: rgba(20,127,228,0.1);
-        border: 1px solid rgba(20,127,228,0.08);
-        color: #00E5FF;
-        font-size: 0.72rem;
-        font-weight: 800;
-        flex-shrink: 0;
-      }
-
-      .wasel-home-section-title {
-        font-weight: 900;
-        color: #f8fbff;
-        font-size: 1.12rem;
-        letter-spacing: 0;
-        margin: 0;
-        line-height: 1.3;
-      }
-
-      .wasel-home-section-action {
-        height: 36px;
-        padding: 0 14px;
-        border-radius: 9999px;
-        background: rgba(255,255,255,0.06);
-        border: 1px solid rgba(20,127,228,0.16);
-        cursor: pointer;
-        color: rgba(196,220,238,0.86);
-        font-size: 0.8125rem;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-family: ${ F };
-        transition: background 160ms ease, border-color 160ms ease;
-      }
-
-      .wasel-home-section-action:hover {
-        background: rgba(255,255,255,0.1);
-        border-color: rgba(20,127,228,0.28);
-      }
-
-      .wasel-home-nav {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-      }
-
-      .wasel-home-nav-left {
-        display: flex;
-        align-items: center;
-      }
-
-      .wasel-home-nav-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .wasel-home-brand-stack {
-        display: grid;
-        gap: 12px;
-      }
-
-      .wasel-home-eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        width: fit-content;
-        min-height: 30px;
-        padding: 0 11px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.055);
-        border: 1px solid rgba(20,127,228,0.12);
-        color: rgba(196,220,238,0.82);
-        font-size: 0.7rem;
-        font-weight: 800;
-        letter-spacing: 0;
-        text-transform: uppercase;
-      }
-
-      .wasel-home-title {
-        position: relative;
-        z-index: 1;
-        margin: 30px 0 0;
-        max-width: 720px;
-        color: #f8fbff;
-        font-size: clamp(3.2rem, 4.8vw, 4.8rem);
-        line-height: 1.05;
-        letter-spacing: 0;
-        font-weight: 900;
-        text-wrap: balance;
-      }
-
-      .wasel-home-lead {
-        position: relative;
-        z-index: 1;
-        max-width: 650px;
-        margin: 16px 0 0;
-        color: rgba(196,220,238,0.78);
-        font-size: 1rem;
-        line-height: 1.68;
-      }
-
-      .wasel-home-hero-actions {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: 24px;
-      }
+      /* NOTE: .wasel-home-section / -header / -icon / -title / -action and the
+         nav, brand-stack, eyebrow, title, lead and hero-actions rules that
+         followed were previously declared twice in this file. The second copy
+         won the cascade, so the duplicates here have been removed and the
+         surviving definitions live further down — search "single definition". */
 
       .wasel-home-proof-row {
         position: relative;
@@ -621,42 +492,8 @@ export function HomePageStyles () {
         margin-top: 2px;
       }
 
-      .wasel-home-cta-banner {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 14px;
-        padding: 40px 28px;
-        border-radius: 24px;
-        background: linear-gradient(180deg, rgba(20,127,228,0.08), rgba(8,29,57,0.88));
-        border: 1px solid rgba(20,127,228,0.2);
-      }
-
-      .wasel-home-cta-title {
-        color: #f8fbff;
-        font-size: 2rem;
-        font-weight: 900;
-        line-height: 1.1;
-        max-width: 640px;
-        margin: 0;
-      }
-
-      .wasel-home-cta-subtitle {
-        color: rgba(196,220,238,0.72);
-        font-size: 1rem;
-        line-height: 1.7;
-        max-width: 580px;
-        margin: 0;
-      }
-
-      .wasel-home-cta-actions {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        justify-content: center;
-        margin-top: 8px;
-      }
+      /* .wasel-home-cta-banner / -title / -subtitle / -actions: single
+         definition now lives with the utility-card rules below. */
 
       .wasel-home-primary-actions {
         display: flex;
@@ -1210,6 +1047,8 @@ export function HomePageStyles () {
         gap: 14px;
       }
 
+      /* single definition — section, nav, hero and CTA rules. Do not re-declare
+         these earlier in this file; duplicates silently override each other. */
       .wasel-home-section {
         margin-top: 36px;
         content-visibility: auto;

@@ -2,9 +2,17 @@ import { useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, QuadraticBezierLine } from '@react-three/drei';
 import * as THREE from 'three';
+import { C } from '../../../utils/wasel-ds';
 import { POPULAR_ROUTES } from '../HomePageShared';
 
 const GLOBE_RADIUS = 1.6;
+
+// Brand tokens, not hardcoded hex. wasel-ds.ts is the single source of truth
+// (docs/BRAND_GUIDELINES.md). Per the token file's own guidance, info/map/
+// data-viz surfaces reference `teal` rather than the `cyan` compatibility alias.
+const GLOBE_SHELL_COLOR = C.teal;
+const GLOBE_CORE_COLOR = C.navyMid;
+const HUB_COLOR = C.gold;
 
 // Approximate real-world coordinates for the Jordanian destinations in
 // POPULAR_ROUTES. This isn't a literal map — just enough geographic
@@ -40,6 +48,8 @@ interface CorridorArc {
   to: THREE.Vector3;
   mid: THREE.Vector3;
   color: string;
+  /** Stable per-arc pulse speed, derived once so it survives re-renders. */
+  speed: number;
 }
 
 function CorridorPulse({ arc, speed }: { arc: CorridorArc; speed: number }) {
@@ -60,16 +70,37 @@ function CorridorPulse({ arc, speed }: { arc: CorridorArc; speed: number }) {
   );
 }
 
-function Marker({ position, color, size = 0.045 }: { position: THREE.Vector3; color: string; size?: number }) {
-  const ref = useRef<THREE.Mesh>(null);
+function Marker({
+  position,
+  color,
+  size = 0.045,
+  reduceMotion,
+}: {
+  position: THREE.Vector3;
+  color: string;
+  size?: number;
+  reduceMotion: boolean;
+}) {
+  const materialRef = useRef<THREE.MeshBasicMaterial>(null);
+
+  // BRAND_GUIDELINES.md — "Pulse animations are opacity-only — no glow".
+  // Previously this scaled the mesh, which also made markers visibly swell
+  // against the globe surface. Opacity keeps the footprint constant.
   useFrame(({ clock }) => {
-    if (!ref.current) {return;}
-    ref.current.scale.setScalar(1 + Math.sin(clock.getElapsedTime() * 2.4) * 0.12);
+    if (!materialRef.current) {return;}
+    if (reduceMotion) {
+      // Reset rather than bail, so toggling the OS setting mid-animation can't
+      // strand a marker at a dim phase of the sine.
+      materialRef.current.opacity = 1;
+      return;
+    }
+    materialRef.current.opacity = 0.72 + Math.sin(clock.getElapsedTime() * 2.4) * 0.28;
   });
+
   return (
-    <mesh ref={ref} position={position}>
+    <mesh position={position}>
       <sphereGeometry args={[size, 12, 12]} />
-      <meshBasicMaterial color={color} toneMapped={false} />
+      <meshBasicMaterial ref={materialRef} color={color} toneMapped={false} transparent opacity={1} />
     </mesh>
   );
 }
@@ -96,22 +127,28 @@ function GlobeCore({ reduceMotion }: { reduceMotion: boolean }) {
         to: destVec,
         mid: arcMidpoint(hubVec, destVec, 0.55),
         color: route.color,
+        // Deterministic: longer corridors move slightly slower, so the speed is
+        // stable across re-renders and reads as distance rather than noise.
+        speed: 0.26 - Math.min(route.dist, 350) / 350 * 0.1,
       };
     });
   }, []);
 
   return (
     <group ref={groupRef}>
-      {/* Inner glow sphere */}
+      {/* Solid inner body. Opaque on purpose: it writes depth, so corridors on
+          the far side are occluded instead of bleeding through the front. Lit
+          (standard, not basic) so the sphere reads as a volume rather than a
+          flat disc. */}
       <mesh>
         <sphereGeometry args={[GLOBE_RADIUS * 0.985, 48, 48]} />
-        <meshBasicMaterial color="#0a2540" transparent opacity={0.55} />
+        <meshStandardMaterial color={GLOBE_CORE_COLOR} roughness={0.85} metalness={0.05} />
       </mesh>
       {/* Wireframe shell — abstracted, not a literal map texture, to match
           the app's dark/glass/neon design system rather than a stock globe. */}
       <mesh>
         <icosahedronGeometry args={[GLOBE_RADIUS, 3]} />
-        <meshBasicMaterial color="#147FE4" wireframe transparent opacity={0.28} />
+        <meshBasicMaterial color={GLOBE_SHELL_COLOR} wireframe transparent opacity={0.28} />
       </mesh>
 
       {arcs.map(arc => (
@@ -125,17 +162,18 @@ function GlobeCore({ reduceMotion }: { reduceMotion: boolean }) {
             transparent
             opacity={0.55}
           />
-          {!reduceMotion && <CorridorPulse arc={arc} speed={0.18 + Math.random() * 0.1} />}
+          {!reduceMotion && <CorridorPulse arc={arc} speed={arc.speed} />}
         </group>
       ))}
 
       <Marker
         position={latLngToVector3(CITY_COORDS.Amman!.lat, CITY_COORDS.Amman!.lng, GLOBE_RADIUS)}
-        color="#FFBE5C"
+        color={HUB_COLOR}
         size={0.06}
+        reduceMotion={reduceMotion}
       />
       {arcs.map(arc => (
-        <Marker key={`marker-${arc.key}`} position={arc.to} color={arc.color} />
+        <Marker key={`marker-${arc.key}`} position={arc.to} color={arc.color} reduceMotion={reduceMotion} />
       ))}
     </group>
   );
@@ -144,7 +182,12 @@ function GlobeCore({ reduceMotion }: { reduceMotion: boolean }) {
 export default function CorridorGlobeScene({ reduceMotion }: { reduceMotion: boolean }) {
   return (
     <Canvas camera={{ position: [0, 0.4, 4.2], fov: 42 }} dpr={[1, 1.75]} gl={{ antialias: true, alpha: true }}>
-      <ambientLight intensity={0.6} />
+      {/* Ambient alone is flat. The key light sits front-right of camera so the
+          globe has a terminator and reads as a sphere; the cool rim separates
+          its silhouette from the navy page background behind the canvas. */}
+      <ambientLight intensity={0.55} />
+      <directionalLight position={[3, 2.5, 4]} intensity={1.15} />
+      <directionalLight position={[-4, -1, -3]} intensity={0.35} color={C.teal} />
       <GlobeCore reduceMotion={reduceMotion} />
       <OrbitControls
         enableZoom={false}
