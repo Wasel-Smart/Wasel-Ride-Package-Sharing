@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { createDomainEvent, InMemoryDomainEventBus, domainEventBus } from '../event-bus';
-import type { DomainEventType } from '../../domain/events';
 
 describe('Event Bus', () => {
   it('creates an event envelope with all required fields', () => {

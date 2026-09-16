@@ -118,13 +118,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       try {
         const { authAPI } = await import('../../services/auth');
-        await authAPI.createProfile(
-          activeUser.id,
-          activeUser.email ?? '',
+        await authAPI.createProfile({
+          userId: activeUser.id,
+          email: activeUser.email ?? '',
           firstName,
           lastName,
-          phone || undefined,
-        );
+          phone: phone || undefined,
+        });
         nextProfile = await loadProfileFromBackend();
       } catch (error) {
         if (import.meta.env?.DEV) {

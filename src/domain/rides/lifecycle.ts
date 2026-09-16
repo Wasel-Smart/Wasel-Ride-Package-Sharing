@@ -4,7 +4,12 @@ export type RideLifecycleState =
   'requested' | 'matched' | 'accepted' | 'in_progress' | 'completed' | 'cancelled';
 
 export type LegacyRideBookingStatus =
-  'pending_driver' | 'confirmed' | 'rejected' | 'cancelled' | 'completed';
+  | 'pending_driver'
+  | 'confirmed'
+  | 'rejected'
+  | 'cancelled'
+  | 'completed'
+  | 'unknown';
 
 export const RIDE_LIFECYCLE_TRANSITIONS: TransitionMap<RideLifecycleState> = {
   requested: ['matched', 'cancelled'],

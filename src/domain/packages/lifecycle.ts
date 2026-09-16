@@ -12,7 +12,8 @@ export type LegacyPackageStatus =
   | 'near_destination'
   | 'delivered'
   | 'cancelled'
-  | 'disputed';
+  | 'disputed'
+  | 'unknown';
 
 export const PACKAGE_LIFECYCLE_TRANSITIONS: TransitionMap<PackageLifecycleState> = {
   created: ['assigned', 'cancelled'],

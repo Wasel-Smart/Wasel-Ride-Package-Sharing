@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { eventBroker, publishDomainEvent } from '../event-broker';
 import { InMemoryEventBroker } from '../event-broker';
 
@@ -14,7 +14,7 @@ describe('Event Broker', () => {
     const broker = new InMemoryEventBroker();
     const received: unknown[] = [];
     broker.subscribe('test', msg => { received.push(msg); });
-    await broker.publish({ id: '1', topic: 'test', payload: { hello: true }, producer: 'test', traceId: 't1', attemptedAt: Date.now(), attempts: 0 });
+    await broker.publish({ id: '1', topic: 'test', payload: { hello: true }, producer: 'test', traceId: 't1', occurredAt: new Date().toISOString(), attempts: 0 });
     expect(received.length).toBe(1);
     await broker.stop();
   });

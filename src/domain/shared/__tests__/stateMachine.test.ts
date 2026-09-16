@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { canTransition, assertTransition, transitionState } from '../stateMachine';
 
 describe('State Machine', () => {
@@ -35,7 +35,7 @@ describe('State Machine', () => {
     });
 
     it('returns false for empty transitions', () => {
-      expect(canTransition('', '', {})).toBe(true);
+      expect(canTransition('', '', {} as Record<string, readonly string[]>)).toBe(true);
     });
   });
 

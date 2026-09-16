@@ -1,4 +1,4 @@
-import { fetchWithRetry, getAuthDetails } from './core';
+import { getAuthDetails } from './core';
 import {
   BackendRequestError,
   getSecureBackendFallbackError,
@@ -170,32 +170,6 @@ async function getRefreshedSession() {
   return refreshedSession;
 }
 
-/**
- * Fetch wrapper that retries once with a refreshed token on 401.
- * Throws a typed error if the retry also returns 401.
- */
-async function fetchWithAuth(url: string, options: RequestInit): Promise<Response> {
-  const response = await fetchWithRetry(url, options);
-
-  if (response.status === 401) {
-    const newSession = await getRefreshedSession();
-    const existingHeaders = options.headers instanceof Headers
-      ? Object.fromEntries((options.headers as Headers).entries())
-      : (options.headers as Record<string, string> ?? {});
-    const newOptions: RequestInit = {
-      ...options,
-      headers: { ...existingHeaders, Authorization: `Bearer ${newSession.access_token}` },
-    };
-    const retryResponse = await fetchWithRetry(url, newOptions);
-    if (retryResponse.status === 401) {
-      throw new Error('Session is no longer valid. Please sign in again.');
-    }
-    return retryResponse;
-  }
-
-  return response;
-}
-
 async function enrichProfileWithVerification(
   userId: string,
   profile: Record<string, unknown> | null,
@@ -254,13 +228,14 @@ export const authAPI = {
     return data;
   },
 
-  async createProfile(
-    userId: string,
-    email: string,
-    firstName: string,
-    lastName: string,
-    phone?: string,
-  ) {
+  async createProfile(input: {
+    userId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone?: string;
+  }) {
+    const { userId, email, firstName, lastName, phone } = input;
     const fullName = `${firstName} ${lastName}`.trim();
     const directUpdates: Record<string, unknown> = { email, full_name: fullName };
     if (phone) {directUpdates.phone_number = phone;}
