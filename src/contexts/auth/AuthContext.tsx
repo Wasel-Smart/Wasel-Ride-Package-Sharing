@@ -78,6 +78,50 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+function isE2ELocalAuthEnabled(): boolean {
+  return import.meta.env?.VITE_E2E_LOCAL_AUTH === 'true';
+}
+
+function readLocalE2ESession(): WaselUser | null {
+  if (typeof window === 'undefined') {return null;}
+  const storageKey = (import.meta?.env?.VITE_LOCAL_AUTH_STORAGE_KEY) || 'wasel_user_session';
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) {return null;}
+    return JSON.parse(raw) as WaselUser;
+  } catch {
+    return null;
+  }
+}
+
+function bootstrapLocalE2ESession(
+  set: {
+    setUser: (v: User | null) => void;
+    setProfile: (v: Profile | null) => void;
+    setSession: (v: Session | null) => void;
+    setIsBackendConnected: (v: boolean) => void;
+    setInitializing: (v: boolean) => void;
+  },
+) {
+  const localUser = readLocalE2ESession();
+  if (!localUser) {
+    set.setUser(null);
+    set.profile(null);
+    set.session(null);
+    set.setInitializing(false);
+    set.setIsBackendConnected(false);
+    return;
+  }
+
+  const authUser = createLocalAuthUser(localUser);
+  const profile = createLocalAuthProfile(localUser);
+  set.setUser(authUser);
+  set.profile(profile);
+  set.session(null);
+  set.setIsBackendConnected(false);
+  set.setInitializing(false);
+}
+
 // eslint-disable-next-line max-lines-per-function -- AuthProvider is a context provider with required auth logic
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
