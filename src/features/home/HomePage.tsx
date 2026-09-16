@@ -32,8 +32,8 @@ import {
   type TripMode,
 } from './HomePageSections';
 
-const CorridorGlobeSection = lazy(() =>
-  import('./sections/CorridorGlobeSection').then(m => ({ default: m.CorridorGlobeSection })),
+const CorridorGlobeSection = lazy( () =>
+  import( './sections/CorridorGlobeSection' ).then( m => ( { default: m.CorridorGlobeSection } ) ),
 );
 
 interface LiveCorridor {
@@ -495,7 +495,7 @@ export function HomePage () {
           {/* Single corridor section — OutcomesSection removed to eliminate redundancy */ }
           <CorridorsSection corridorCards={ corridorCards } onNavigate={ handleNavigate } />
 
-          <Suspense fallback={null}>
+          <Suspense fallback={ null }>
             <CorridorGlobeSection ar={ ar } />
           </Suspense>
 

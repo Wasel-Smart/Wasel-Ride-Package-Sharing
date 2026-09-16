@@ -9,13 +9,17 @@ import path from 'path';
 // inside the Vitest worker context, crashing every test suite with:
 //   TypeError: Cannot read properties of undefined (reading 'config')
 // CSS is irrelevant for unit/integration tests so the plugin is simply omitted.
-export default defineConfig({
-  plugins: [react()],
+export default defineConfig( {
+  plugins: [ react() ],
+
+  optimizeDeps: {
+    noDiscovery: true,
+  },
 
   resolve: {
     alias: [
-      { find: '@', replacement: path.resolve(__dirname, './src') },
-      { find: '$deno', replacement: path.resolve(__dirname, './supabase/functions') },
+      { find: '@', replacement: path.resolve( __dirname, './src' ) },
+      { find: '$deno', replacement: path.resolve( __dirname, './supabase/functions' ) },
     ],
   },
 
@@ -59,8 +63,8 @@ export default defineConfig({
     },
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
-      include: ['src/**/*.{ts,tsx}'],
+      reporter: [ 'text', 'json', 'html', 'lcov' ],
+      include: [ 'src/**/*.{ts,tsx}' ],
       exclude: [
         'src/**/*.d.ts',
         'src/**/*.test.{ts,tsx}',
@@ -78,4 +82,4 @@ export default defineConfig({
       },
     },
   },
-});
+} );
