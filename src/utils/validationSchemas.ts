@@ -300,10 +300,9 @@ export function validate<T>(schema: z.ZodSchema<T>, data: unknown): ValidationRe
   const errors: Record<string, string[]> = {};
   result.error.errors.forEach(error => {
     const path = error.path.join('.');
-    if (!errors[path]) {
-      errors[path] = [];
-    }
-    errors[path].push(error.message);
+    const messages = errors[path] ?? [];
+    errors[path] = messages;
+    messages.push(error.message);
   });
 
   return { success: false, errors };

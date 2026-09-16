@@ -12,9 +12,8 @@
  */
 
 import { readdirSync, readFileSync, statSync } from 'fs';
-import { join, relative, extname } from 'path';
+import { join, relative, extname, resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const SRC = join(__dir, '../src');
@@ -28,6 +27,9 @@ const ALLOWLIST = [
   'wasel-tokens.ts',
   'wasel-design-system.ts',
   'wasel-page-theme.ts',
+  'wasel-email-templates.ts',
+  'wasel-sms-templates.ts',
+  'seo.tsx',
   'globals.css',
   'index.css',
   'vite-env.d.ts',
