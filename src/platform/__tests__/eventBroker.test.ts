@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { eventBroker, publishDomainEvent } from '../event-broker';
-import { InMemoryEventBroker } from '../event-broker';
+import { eventBroker, publishDomainEvent, InMemoryEventBroker } from '../event-broker';
 
 describe('Event Broker', () => {
   it('InMemoryEventBroker starts and stops without error', async () => {
