@@ -1,4 +1,5 @@
 import { API_URL, fetchWithRetry, getAuthDetails } from './core';
+import { supabase } from '../utils/supabase/client';
 import {
   createDirectPackage,
   getDirectPackageByTrackingId,
