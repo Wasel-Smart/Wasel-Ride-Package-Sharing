@@ -12,7 +12,7 @@
  */
 import React, { memo, Suspense, useEffect } from 'react';
 import { AlertTriangle, LoaderCircle, SearchX } from 'lucide-react';
-import { createBrowserRouter, isRouteErrorResponse, Navigate, useRouteError, type RouteObject } from 'react-router';
+import { createBrowserRouter, isRouteErrorResponse, Navigate, useLocation, useRouteError, type RouteObject } from 'react-router';
 import { Button } from './components/ui/button';
 import { WaselStateCard } from './components/system/WaselStateCard';
 import { useLanguage } from './contexts/LanguageContext';
@@ -60,6 +60,12 @@ function lazy(
 
 // ── Utility redirects ─────────────────────────────────────────────────────────
 const RedirectTo = memo(({ to }: { to: string }) => <Navigate to={to} replace />);
+
+const RedirectToPreserveQuery = memo(({ to }: { to: string }) => {
+  const location = useLocation();
+  const preservedSearch = location.search ? `${to}${location.search}` : to;
+  return <Navigate to={preservedSearch} replace />;
+});
 
 const NotFound = memo(() => {
   const { language } = useLanguage();
