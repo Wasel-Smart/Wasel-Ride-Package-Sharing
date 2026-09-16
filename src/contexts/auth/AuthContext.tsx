@@ -12,6 +12,8 @@ import {
   type WaselUser,
   mapBackendProfile,
   applyUserUpdates,
+  createLocalAuthUser,
+  createLocalAuthProfile,
 } from '../authContextHelpers';
 import { getSupabaseClient, loadProfileFromBackend } from './auth-service';
 import { getProfileDisplayName, splitFullName } from './helpers';
