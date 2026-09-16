@@ -34,8 +34,12 @@ export function wMarkPath(format: BrandFormat = 'png', size?: number): string {
 }
 
 export function iconPath(name: 'app-icon' | 'favicon', variant?: BrandVariant, format: BrandFormat = 'svg'): string {
+  // NOTE: favicons are served from the public root (see index.html <link rel="icon">),
+  // not from /brand/assets/icons/ — that folder doesn't exist. Pointing here instead
+  // of at a 404. If a dedicated icons/ folder under brand/assets is added later,
+  // update this (and index.html) together so both stay in sync.
   if (name === 'favicon') {
-    return `${BASE}/icons/favicon.svg`;
+    return '/favicon.ico';
   }
   if (variant && variant !== 'default') {
     return `${BASE}/icons/${name}-${variant}.${format}`;
