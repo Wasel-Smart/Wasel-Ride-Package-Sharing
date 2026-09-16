@@ -84,6 +84,7 @@ export function createLocalAuthProfile(localUser: WaselUser): Profile {
     email_verified: localUser.emailVerified,
     two_factor_enabled: localUser.twoFactorEnabled,
     role: localUser.role,
+    driver_status: localUser.driverStatus ?? null,
   };
 }
 

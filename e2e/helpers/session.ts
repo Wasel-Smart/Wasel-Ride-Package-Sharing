@@ -16,12 +16,13 @@ export const demoUser = {
   sanadVerified: true,
   verificationLevel: 'level_3',
   walletStatus: 'active',
+  driverStatus: 'approved',
   joinedAt: '2026-03-01',
   emailVerified: true,
   phoneVerified: true,
   twoFactorEnabled: false,
   trustScore: 92,
-  backendMode: 'supabase',
+  backendMode: 'local',
 };
 
 export async function seedDemoSession(page: Page, language?: 'ar' | 'en') {
