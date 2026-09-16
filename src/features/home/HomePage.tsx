@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { Search, Car, Package, Bus, Calendar, Route, BarChart3, BadgeCheck, Headphones, Play, ArrowRight, ArrowLeft, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
+import { Search, Car, Package, Bus, Calendar, Route, ArrowRight, ArrowLeft, MessageSquareQuote, Star, Globe2 } from 'lucide-react';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
@@ -560,10 +560,22 @@ export function HomePage () {
 
           <TrustPagesSection ar={ ar } onNavigate={ handleNavigate } />
 
-          <StatsStrip />
-          <HowItWorksSection />
-          <TestimonialsSection />
-          <FinalCtaBanner ar={ ar } onNavigate={ handleNavigate } />
+          { /* HowItWorksSection previously restated OnboardingDemoSection's
+               4-step flow (same icons, same order) and StatsStrip restated
+               ProofSection's proof metrics (same 4/5/0/Live figures) — both
+               already run earlier in the page for signed-out visitors, with
+               real CTAs the restatements lacked. Removed rather than hidden,
+               since the duplication existed for signed-out visitors too, not
+               just signed-in ones. TestimonialsSection and FinalCtaBanner
+               don't have that duplicate, but FinalCtaBanner's second button is
+               a "Register" CTA — wrong to show a signed-in user — so both stay
+               scoped to !user. */ }
+          { !user && (
+            <>
+              <TestimonialsSection />
+              <FinalCtaBanner ar={ ar } onNavigate={ handleNavigate } />
+            </>
+          ) }
 
           { user ? (
             <SignedInUtilitySection
@@ -590,184 +602,6 @@ export function HomePage () {
         </div>
       </div>
     </WaselErrorBoundary>
-  );
-}
-
-function StatsStrip () {
-  const { t } = useLanguage();
-  const reduceMotion = useReducedMotion();
-  const stats = [
-    { value: '4', label: t( 'homeSections.statCoreFlows' ), color: C.cyan },
-    { value: '5', label: t( 'homeSections.statTrustChecks' ), color: C.green },
-    { value: '0', label: t( 'homeSections.statDataResale' ), color: C.gold },
-    { value: t( 'homeSections.statUxSignalsValue' ), label: t( 'homeSections.statUxSignals' ), color: C.teal },
-  ];
-
-  return (
-    <motion.section
-      initial={ reduceMotion ? false : 'hidden' }
-      whileInView={ reduceMotion ? undefined : 'visible' }
-      viewport={ { once: true, margin: '-80px' } }
-      variants={ sectionRiseVariants }
-      transition={ sectionRiseTransition }
-      className="wasel-home-section"
-      aria-label={ t( 'homeSections.statsTitle' ) }
-    >
-      <div className="wasel-home-stats-strip">
-        { stats.map( stat => (
-          <div
-            key={ stat.label }
-            className="wasel-home-stat-item"
-            style={ {
-              background: C.card,
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: `1px solid ${ C.border }`,
-              borderTop: `1px solid ${ stat.color }45`,
-              boxShadow: '0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 8px 24px rgba(8, 29, 57, 0.35)',
-            } }
-          >
-            <div className="wasel-home-stat-value" style={ { color: stat.color, fontSize: '1.85rem' } }>
-              { stat.value }
-            </div>
-            <div className="wasel-home-stat-label" style={ { marginTop: 4, color: C.textSub, fontWeight: 700 } }>
-              { stat.label }
-            </div>
-          </div>
-        ) ) }
-      </div>
-    </motion.section>
-  );
-}
-
-function HowItWorksSection () {
-  const { language, t } = useLanguage();
-  const reduceMotion = useReducedMotion();
-  const ar = language === 'ar';
-  const steps = [
-    {
-      icon: Route,
-      title: t( 'homeSections.howStep1Title' ),
-      detail: t( 'homeSections.howStep1Detail' ),
-      accent: C.cyan,
-    },
-    {
-      icon: BarChart3,
-      title: t( 'homeSections.howStep2Title' ),
-      detail: t( 'homeSections.howStep2Detail' ),
-      accent: C.green,
-    },
-    {
-      icon: BadgeCheck,
-      title: t( 'homeSections.howStep3Title' ),
-      detail: t( 'homeSections.howStep3Detail' ),
-      accent: C.gold,
-    },
-    {
-      icon: Headphones,
-      title: t( 'homeSections.howStep4Title' ),
-      detail: t( 'homeSections.howStep4Detail' ),
-      accent: C.teal,
-    },
-  ];
-
-  return (
-    <motion.section
-      initial={ reduceMotion ? false : 'hidden' }
-      whileInView={ reduceMotion ? undefined : 'visible' }
-      viewport={ { once: true, margin: '-80px' } }
-      variants={ sectionRiseVariants }
-      transition={ sectionRiseTransition }
-      className="wasel-home-section"
-    >
-      <div className="wasel-home-section-header">
-        <div style={ { display: 'flex', alignItems: 'center', gap: 12 } }>
-          <div
-            className="wasel-home-section-icon"
-            style={ homeSectionIconGlow( C.cyan, C.cyanDim, C.cyanGlow ) }
-          >
-            <Play size={ 16 } />
-          </div>
-          <div>
-            <div
-              style={ {
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                letterSpacing: '0.04em',
-                textTransform: 'uppercase',
-                color: C.cyan,
-              } }
-            >
-              { ar ? 'خطوات بسيطة وسريعة' : 'Effortless 4 Steps' }
-            </div>
-            <h2 className="wasel-home-section-title" style={ { marginTop: 2 } }>
-              { t( 'homeSections.howItWorksTitle' ) }
-            </h2>
-          </div>
-        </div>
-      </div>
-      <div className="wasel-home-steps">
-        { steps.map( ( step, index ) => {
-          const Icon = step.icon;
-          return (
-            <div
-              key={ step.title }
-              className="wasel-home-step"
-              style={ {
-                background: C.card,
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                border: `1px solid ${ C.border }`,
-                borderTop: `1px solid ${ step.accent }50`,
-                boxShadow: '0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 8px 24px rgba(8, 29, 57, 0.3)',
-                padding: '22px 18px',
-                borderRadius: 18,
-              } }
-            >
-              <div
-                className="wasel-home-step-number"
-                style={ {
-                  color: step.accent,
-                  fontSize: '0.8rem',
-                  fontWeight: 900,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                } }
-              >
-                <span>0{ index + 1 }</span>
-                <span
-                  style={ {
-                    width: 38,
-                    height: 38,
-                    display: 'grid',
-                    placeItems: 'center',
-                    borderRadius: 12,
-                    background: `${ step.accent }14`,
-                    border: `1px solid ${ step.accent }30`,
-                    color: step.accent,
-                  } }
-                >
-                  <Icon size={ 19 } />
-                </span>
-              </div>
-              <div
-                className="wasel-home-step-title"
-                style={ { fontSize: '1.05rem', fontWeight: 850, marginTop: 10, color: '#f8fbff' } }
-              >
-                { step.title }
-              </div>
-              <div
-                className="wasel-home-step-desc"
-                style={ { fontSize: '0.84rem', color: C.textMuted, lineHeight: 1.65 } }
-              >
-                { step.detail }
-              </div>
-            </div>
-          );
-        } ) }
-      </div>
-    </motion.section>
   );
 }
 
@@ -890,7 +724,7 @@ function TestimonialsSection () {
 
               <div
                 className="wasel-home-testimonial-text"
-                style={ { fontSize: '0.94rem', color: '#f8fbff', lineHeight: 1.7, marginTop: 10 } }
+                style={ { fontSize: '0.94rem', color: C.text, lineHeight: 1.7, marginTop: 10 } }
               >
                 "{ item.text }"
               </div>
@@ -947,8 +781,16 @@ function TestimonialsSection () {
 
 function FinalCtaBanner ( { ar, onNavigate }: { ar: boolean; onNavigate: ( path: string, source?: string ) => void } ) {
   const { t } = useLanguage();
+  const reduceMotion = useReducedMotion();
   return (
-    <motion.section initial={ false } className="wasel-home-section">
+    <motion.section
+      initial={ reduceMotion ? false : 'hidden' }
+      whileInView={ reduceMotion ? undefined : 'visible' }
+      viewport={ { once: true, margin: '-80px' } }
+      variants={ sectionRiseVariants }
+      transition={ sectionRiseTransition }
+      className="wasel-home-section"
+    >
       <div className="wasel-home-cta-banner">
         <h2 className="wasel-home-cta-title">
           { t( 'homeSections.finalCtaTitle' ) }
