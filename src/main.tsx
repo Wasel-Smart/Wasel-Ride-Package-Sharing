@@ -332,13 +332,7 @@ if (environmentIsValid) {
 
       const onControllerChange = () => {
         navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
-        // Always reload when the SW controller changes — a new SW means a new
-        // deploy with potentially different chunk URLs.  Stale module caches
-        // from the old SW can cause "Invalid hook call" if a mix of old and
-        // new chunks end up loaded.
-        if (navigator.serviceWorker.controller) {
-          window.location.reload();
-        }
+        reloadAfterServiceWorkerUpdate();
       };
 
       navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then((registration) => {
@@ -352,9 +346,13 @@ if (environmentIsValid) {
 
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.postMessage({ type: 'SKIP_WAITING' });
-          }
+          if (!newWorker) return;
+
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed') {
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
         });
       }).catch((error) => {
         console.warn('[Wasel] Service Worker registration failed:', sanitizeLogMessage(String(error)));
