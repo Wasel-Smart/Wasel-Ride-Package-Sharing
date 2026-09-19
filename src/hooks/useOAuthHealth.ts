@@ -116,7 +116,7 @@ export function useOAuthProviderEnabled (
             setEnabled( true );
           }
         }
-      } catch ( ) {
+      } catch {
         if ( !cancelled ) {
           // Assume enabled on network errors
           setEnabled( true );
