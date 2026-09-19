@@ -94,7 +94,9 @@ self.addEventListener('install', (event) => {
         if (manifest && Array.isArray(manifest.urls)) {
           const extraUrls = manifest.urls.filter((url) => !PRECACHE_STATIC.includes(url));
           if (extraUrls.length > 0) {
-            return caches.open(PRECACHE).then((cache) => cache.addAll(extraUrls));
+            return caches.open(PRECACHE).then((cache) =>
+              Promise.all(extraUrls.map((url) => cache.add(url).catch(() => {}))),
+            );
           }
         }
       })
@@ -105,22 +107,17 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    // First, clear ALL caches — including stale ones from previous
-    // CACHE_VERSIONs — so that no old chunk with a mismatched React
-    // module graph can ever be served after we take control.
-    caches
-      .keys()
-      .then((names) =>
-        Promise.all(names.map((name) => caches.delete(name))),
-      )
-      .then(() => self.clients.claim())
-      .then(() => {
-        // Tell every open client to reload so the fresh shell + chunks
-        // are picked up atomically.
-        return self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-      })
-      .then((clients) => {
+    self.clients
+      .claim()
+      .then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      .then(async (clients) => {
+        // Let the fresh shell start loading before removing caches used by an
+        // old controller. Once clients reload, no stale chunk can be mixed
+        // with the new module graph.
         clients.forEach((client) => client.postMessage({ type: 'SW_UPDATED' }));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const names = await caches.keys();
+        await Promise.all(names.map((name) => caches.delete(name)));
       })
       .catch(() => self.clients.claim()),
   );
@@ -169,7 +166,11 @@ self.addEventListener('fetch', (event) => {
 
 async function handleNavigation(request) {
   try {
-    if (!isSafeUrl(request.url)) return (await caches.match(request)) || caches.match('/offline.html');
+    if (!isSafeUrl(request.url)) {
+      const cachedPage = (await caches.match(request, { cacheName: RUNTIME }))
+        || (await caches.match(request, { cacheName: PRECACHE }));
+      return cachedPage || caches.match('/offline.html', { cacheName: PRECACHE });
+    }
 
     const response = await fetchWithTimeout(request);
 

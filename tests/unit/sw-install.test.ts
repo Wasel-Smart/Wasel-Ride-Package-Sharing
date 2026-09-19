@@ -14,6 +14,8 @@ describe('service worker install path', () => {
     expect(code).toContain('skipWaiting');
     expect(code).toContain('caches.open');
     expect(code).toContain('cache.addAll');
+    expect(code).toContain('precache-manifest.json');
+    expect(code).toContain('SW_UPDATED');
   });
 
   it('should precache required static assets', () => {
@@ -29,5 +31,19 @@ describe('service worker install path', () => {
     const code = fs.readFileSync(mainPath, 'utf-8');
     expect(code).toContain("navigator.serviceWorker.register('/sw.js',");
     expect(code).toContain('import.meta.env.PROD');
+    expect(code).toContain('updateViaCache: \'none\'');
+    expect(code).toContain('unhandledrejection');
+    expect(code).toContain('sessionStorage');
+  });
+
+  it('should revalidate shell resources and allow service workers', () => {
+    const config = JSON.parse(fs.readFileSync(path.resolve('vercel.json'), 'utf-8'));
+    const allHeaders = config.headers.flatMap((header: { headers: Array<{ key: string; value: string }> }) => header.headers);
+    const indexHeaders = config.headers.find((header: { source: string }) => header.source === '/index.html');
+    const cacheControl = indexHeaders?.headers.find((header: { key: string }) => header.key === 'Cache-Control');
+    const csp = allHeaders.find((header: { key: string }) => header.key === 'Content-Security-Policy');
+
+    expect(cacheControl?.value).toContain('no-store');
+    expect(csp?.value).toContain("worker-src 'self' blob:");
   });
 });
