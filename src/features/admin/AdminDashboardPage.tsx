@@ -29,43 +29,57 @@ export function AdminDashboardPage() {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [range, setRange] = useState<Range>('1d');
+const [range, setRange] = useState<Range>('1d');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
 
-  async function fetchMetrics(r: Range) {
-    setLoading(true);
-    try {
-      const token = session?.access_token;
-      if (!token) {throw new Error('Missing admin session token');}
-
-      const response = await apiRequest<AdminApiResponse<AdminMetrics>>(
-        `/v1/admin/dashboard/metrics?range=${r}`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!response.success || !response.data) {
-        throw new Error(response.error?.message ?? 'Failed to fetch metrics');
-      }
-
-      setMetrics(response.data);
-      setLastUpdated(new Date());
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard');
-    } finally {
-      setLoading(false);
+useEffect(() => {
+    if (!user || user.role !== 'admin') {
+      return;
     }
-  }
 
-  useEffect(() => {
-    if (user?.role === 'admin') {void fetchMetrics(range);}
-    else {setLoading(false);}
-  }, [range, session?.access_token, user?.role]);
+    let cancelled = false;
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const token = session?.access_token;
+        if (!token) {throw new Error('Missing admin session token');}
+
+        const response = await apiRequest<AdminApiResponse<AdminMetrics>>(
+          `/v1/admin/dashboard/metrics?range=${range}`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (cancelled) {return;}
+
+        if (!response.success || !response.data) {
+          throw new Error(response.error?.message ?? 'Failed to fetch metrics');
+        }
+
+        setMetrics(response.data);
+        setLastUpdated(new Date());
+        setError(null);
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => { cancelled = true; };
+  }, [range, session?.access_token, user?.role, refetchTrigger]);
 
   if (!user || user.role !== 'admin') {
     return (
@@ -160,7 +174,7 @@ export function AdminDashboardPage() {
             </div>
 
             <button
-              onClick={() => void fetchMetrics(range)}
+              onClick={() => setRefetchTrigger(t => t + 1)}
               disabled={loading}
               style={{
                 display: 'flex',

@@ -27,45 +27,55 @@ export interface UseOAuthHealthResult {
  *   </button>
  * ))}
  */
-export function useOAuthHealth(
+export function useOAuthHealth (
   client: SupabaseClient | null,
-  providers: OAuthProvider[] = ['google', 'facebook'],
+  providers: OAuthProvider[] = [ 'google', 'facebook' ],
 ): UseOAuthHealthResult {
-  const [statuses, setStatuses] = useState<OAuthProviderStatus[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [ statuses, setStatuses ] = useState<OAuthProviderStatus[]>( [] );
+  const [ loading, setLoading ] = useState( true );
+  const [ error, setError ] = useState<string | null>( null );
 
-  const checkHealth = useCallback(async () => {
-    if (!client) {
-      setLoading(false);
+  const [ trigger, setTrigger ] = useState( 0 );
+
+  useEffect( () => {
+    if ( !client ) {
+      setLoading( false );
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    let cancelled = false;
 
-    try {
-      const results = await Promise.all(
-        providers.map(provider => validateOAuthProvider(client, provider)),
-      );
-      setStatuses(results);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to check OAuth status';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [client, providers]);
+    setLoading( true );
+    setError( null );
 
-  useEffect(() => {
-    void checkHealth();
-  }, [checkHealth]);
+    Promise.all(
+      providers.map( provider => validateOAuthProvider( client, provider ) ),
+    )
+      .then( results => {
+        if ( !cancelled ) { setStatuses( results ); }
+      } )
+      .catch( err => {
+        if ( !cancelled ) {
+          const message = err instanceof Error ? err.message : 'Failed to check OAuth status';
+          setError( message );
+        }
+      } )
+      .finally( () => {
+        if ( !cancelled ) { setLoading( false ); }
+      } );
+
+    return () => { cancelled = true; };
+  }, [ client, providers, trigger ] );
+
+  const refetch = useCallback( async () => {
+    setTrigger( t => t + 1 );
+  }, [] );
 
   return {
     providers: statuses,
     loading,
     error,
-    refetch: checkHealth,
+    refetch,
   };
 }
 
@@ -73,44 +83,49 @@ export function useOAuthHealth(
  * Lightweight check that just verifies if a provider is enabled
  * Uses a simple heuristic based on Supabase's error patterns
  */
-export function useOAuthProviderEnabled(
+export function useOAuthProviderEnabled (
   client: SupabaseClient | null,
   provider: 'google' | 'facebook',
 ): { enabled: boolean; loading: boolean } {
-  const [enabled, setEnabled] = useState(true); // Optimistically assume enabled
-  const [loading, setLoading] = useState(false);
+  const [ enabled, setEnabled ] = useState( true ); // Optimistically assume enabled
+  const [ loading, setLoading ] = useState( false );
 
-  const checkEnabled = useCallback(async () => {
-    if (!client) {return;}
+  useEffect( () => {
+    if ( !client || !import.meta.env.DEV ) { return; }
 
-    setLoading(true);
-    try {
-      const { error } = await client.auth.signInWithOAuth({
-        provider,
-        options: {
-          skipBrowserRedirect: true,
-        },
-      });
+    let cancelled = false;
 
-      // If we get a redirect_uri error, the provider IS enabled but misconfigured
-      // If we get "provider not enabled", it's disabled
-      if (error?.message?.toLowerCase().includes('not enabled')) {
-        setEnabled(false);
-      }
-    } catch {
-      // Assume enabled on network errors
-      setEnabled(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [client, provider]);
+    setLoading( true );
 
-  // Only check in development mode
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      void checkEnabled();
-    }
-  }, [checkEnabled]);
+    client.auth.signInWithOAuth( {
+      provider,
+      options: {
+        skipBrowserRedirect: true,
+      },
+    } )
+      .then( ( { error } ) => {
+        if ( !cancelled ) {
+          // If we get a redirect_uri error, the provider IS enabled but misconfigured
+          // If we get "provider not enabled", it's disabled
+          if ( error?.message?.toLowerCase().includes( 'not enabled' ) ) {
+            setEnabled( false );
+          } else {
+            setEnabled( true );
+          }
+        }
+      } )
+      .catch( () => {
+        if ( !cancelled ) {
+          // Assume enabled on network errors
+          setEnabled( true );
+        }
+      } )
+      .finally( () => {
+        if ( !cancelled ) { setLoading( false ); }
+      } );
+
+    return () => { cancelled = true; };
+  }, [ client, provider ] );
 
   return { enabled, loading };
 }

@@ -75,14 +75,6 @@ export function useNotifications() {
     readArchivedNotificationIds(effectiveUserId),
   );
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {return;}
-    const stored = readArchivedNotificationIds(effectiveUserId);
-    if (stored.length > 0 || effectiveUserId) {
-      setArchivedIds(stored);
-    }
-  }, [effectiveUserId]);
-
   const {
     data: notifications = [],
     isLoading: loading,

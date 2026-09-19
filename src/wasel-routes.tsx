@@ -1,14 +1,13 @@
 /**
- * Wasel Router v7.2 — WaselServicePage monolith split into feature files.
+ * Wasel Router v7.3 — WaselServicePage monolith fully split into feature files.
  *
- * Changes from v7.1:
- *  - FindRidePage   → src/features/rides/FindRidePage.tsx   (re-exported from WaselServicePage for compatibility)
- *  - OfferRidePage  → src/features/rides/OfferRidePage.tsx  (re-exported)
+ * Changes from v7.2:
+ *  - FindRidePage   → src/features/rides/FindRidePage.tsx   (fully migrated)
+ *  - OfferRidePage  → src/features/rides/OfferRidePage.tsx  (fully migrated)
  *  - BusPage        → src/features/bus/BusPage.tsx
- *  - PackagesPage   → src/features/packages/PackagesPage.tsx (re-exported)
+ *  - PackagesPage   → src/features/packages/PackagesPage.tsx (fully migrated)
  *  - Shared primitives extracted to src/features/shared/pageShared.tsx
- *  - WaselServicePage.tsx retained as the source of truth for FindRide, OfferRide, Packages
- *    until those are individually migrated; BusPage is now fully standalone.
+ *  - WaselServicePage.tsx now a compatibility barrel only (re-exports from feature files)
  */
 import React, { memo, Suspense, useEffect } from 'react';
 import { AlertTriangle, LoaderCircle, SearchX } from 'lucide-react';
@@ -257,9 +256,7 @@ const buildMainChildren = (): RouteObject[] => [
     ],
   },
 
-  // ── Rides — FindRidePage & OfferRidePage still live in WaselServicePage
-  //            until they are individually migrated (they share type Ride and
-  //            a lot of internal state logic that benefits from a separate pass).
+// ── Rides — FindRidePage & OfferRidePage fully migrated to feature files
 
   // ── My Trips ──────────────────────────────────────────────────────────────
 
@@ -284,7 +281,7 @@ const buildMainChildren = (): RouteObject[] => [
 
   // ── Bus — now its own dedicated file ─────────────────────────────────────
 
-  // ── Packages / Awasel — still in WaselServicePage pending migration ───────
+  // ── Packages / Awasel — fully migrated to feature files
 
   // ── Raje3 Returns ─────────────────────────────────────────────────────────
 

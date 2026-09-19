@@ -6,7 +6,7 @@
  * ALL_RIDES seed data only when the database returns nothing, so the UI is
  * never empty during development.
  */
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { searchDirectTrips } from '../../services/directSupabase/trips';
 import { getConnectedRides } from '../../services/journeyLogistics';
 import {
@@ -30,25 +30,25 @@ interface UseRideInventoryResult {
   error: string | null;
 }
 
-export function useRideInventory({
+export function useRideInventory ( {
   from,
   to,
   date,
   searched,
-}: UseRideInventoryOptions): UseRideInventoryResult {
-  const [rides, setRides] = useState<Ride[]>(() => [
-    ...getConnectedRides().map(buildRideFromPostedRide),
+}: UseRideInventoryOptions ): UseRideInventoryResult {
+  const [ rides, setRides ] = useState<Ride[]>( () => [
+    ...getConnectedRides().map( buildRideFromPostedRide ),
     ...ALL_RIDES,
-  ]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
+  ] );
+  const [ loading, setLoading ] = useState( false );
+  const [ error, setError ] = useState<string | null>( null );
+  const abortRef = useRef<AbortController | null>( null );
 
-  const fetchRides = useCallback(() => {
-    const localRides = getConnectedRides().map(buildRideFromPostedRide);
+  useEffect( () => {
+    const localRides = getConnectedRides().map( buildRideFromPostedRide );
 
-    if (!searched) {
-      setRides([...localRides, ...ALL_RIDES]);
+    if ( !searched ) {
+      setRides( [ ...localRides, ...ALL_RIDES ] );
       return;
     }
 
@@ -56,40 +56,38 @@ export function useRideInventory({
     const controller = new AbortController();
     abortRef.current = controller;
 
-    setLoading(true);
-    setError(null);
+    setLoading( true );
+    setError( null );
 
-    searchDirectTrips(from || undefined, to || undefined, date || undefined)
-      .then(results => {
-        if (controller.signal.aborted) {return;}
-        const dbRides = results.map(buildRideFromTripSearchResult);
-        const merged = deduplicateRides([...localRides, ...dbRides, ...ALL_RIDES]);
-        setRides(merged);
-      })
-      .catch(err => {
-        if (controller.signal.aborted) {return;}
-        console.warn('[useRideInventory] DB fetch failed, using local+static:', sanitizeLogMessage(err));
-        setError(null);
-        setRides([...localRides, ...ALL_RIDES]);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {setLoading(false);}
-      });
+    searchDirectTrips( from || undefined, to || undefined, date || undefined )
+      .then( results => {
+        if ( controller.signal.aborted ) { return; }
+        const dbRides = results.map( buildRideFromTripSearchResult );
+        const merged = deduplicateRides( [ ...localRides, ...dbRides, ...ALL_RIDES ] );
+        setRides( merged );
+      } )
+      .catch( err => {
+        if ( controller.signal.aborted ) { return; }
+        console.warn( '[useRideInventory] DB fetch failed, using local+static:', sanitizeLogMessage( err ) );
+        setError( null );
+        setRides( [ ...localRides, ...ALL_RIDES ] );
+      } )
+      .finally( () => {
+        if ( !controller.signal.aborted ) { setLoading( false ); }
+      } );
 
     return () => { controller.abort(); };
-  }, [from, to, date, searched]);
-
-  useEffect(() => { fetchRides(); }, [fetchRides]);
+  }, [ from, to, date, searched ] );
 
   return { rides, loading, error };
 }
 
 /** Deduplicate by id, preferring earlier entries (db > static). */
-function deduplicateRides(rides: Ride[]): Ride[] {
+function deduplicateRides ( rides: Ride[] ): Ride[] {
   const seen = new Set<string>();
-  return rides.filter(ride => {
-    if (!ride.id || seen.has(ride.id)) {return false;}
-    seen.add(ride.id);
+  return rides.filter( ride => {
+    if ( !ride.id || seen.has( ride.id ) ) { return false; }
+    seen.add( ride.id );
     return true;
-  });
+  } );
 }

@@ -17,7 +17,7 @@
  * ✅ Returns `isSupported` so callers can gracefully degrade
  */
 
-import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { API_URL, fetchWithRetry, getAuthDetails } from '../services/core';
 import { sanitizeHtml } from '../utils/sanitization';
 
@@ -39,70 +39,70 @@ const DEFAULT_ICON = '/icon-192.png';
 const DEFAULT_BADGE = '/favicon-32x32.png';
 const DEFAULT_CLOSE_MS = 8_000;
 
-export function usePushNotifications() {
+export function usePushNotifications () {
   const NotificationApi =
-    (typeof window !== 'undefined' ? window.Notification : undefined) ??
-    (globalThis as typeof globalThis & { Notification?: typeof Notification }).Notification;
+    ( typeof window !== 'undefined' ? window.Notification : undefined ) ??
+    ( globalThis as typeof globalThis & { Notification?: typeof Notification } ).Notification;
 
   const isSupported = typeof NotificationApi !== 'undefined';
 
-  const [permission, setPermission] = useState<NotifPermission>(
-    (NotificationApi?.permission ?? 'default') as NotifPermission,
+  const [ permission, setPermission ] = useState<NotifPermission>(
+    ( NotificationApi?.permission ?? 'default' ) as NotifPermission,
   );
 
   // Track active notification so we can close it on unmount
-  const activeNotif = useRef<Notification | null>(null);
+  const activeNotif = useRef<Notification | null>( null );
 
   // Keep permission state in sync with actual browser value
-  useLayoutEffect(() => {
-    if (!isSupported) {return;}
-    setPermission(NotificationApi.permission as NotifPermission);
-  }, [isSupported, NotificationApi]);
+  useEffect( () => {
+    if ( !isSupported ) { return; }
+    setPermission( NotificationApi.permission as NotifPermission );
+  }, [ isSupported, NotificationApi ] );
 
   // Cleanup on unmount
-  useEffect(() => () => {
-      activeNotif.current?.close();
-    }, []);
+  useEffect( () => () => {
+    activeNotif.current?.close();
+  }, [] );
 
   /** Ask the user for notification permission. */
-  const requestPermission = useCallback(async (): Promise<NotifPermission> => {
-    if (!isSupported) {return 'denied';}
+  const requestPermission = useCallback( async (): Promise<NotifPermission> => {
+    if ( !isSupported ) { return 'denied'; }
 
     const result = await NotificationApi.requestPermission();
     const perm = result as NotifPermission;
-    setPermission(perm);
+    setPermission( perm );
 
     // Persist preference to server (fire-and-forget)
     try {
       const { token } = await getAuthDetails();
-      fetchWithRetry(`${API_URL}/notifications/push-pref`, {
+      fetchWithRetry( `${ API_URL }/notifications/push-pref`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${ token }`,
         },
-        body: JSON.stringify({ enabled: perm === 'granted' }),
-      }).catch(() => {}); // intentionally fire-and-forget
+        body: JSON.stringify( { enabled: perm === 'granted' } ),
+      } ).catch( () => { } ); // intentionally fire-and-forget
     } catch {
       // Not critical — ignore silently
     }
 
     return perm;
-  }, [isSupported, NotificationApi]);
+  }, [ isSupported, NotificationApi ] );
 
   /** Low-level — fire a native browser notification. */
   const notify = useCallback(
-    (options: NotifyOptions): Notification | null => {
-      if (!isSupported || permission !== 'granted') {return null;}
+    ( options: NotifyOptions ): Notification | null => {
+      if ( !isSupported || permission !== 'granted' ) { return null; }
 
       // Close any existing notification with the same tag to prevent stacking
-      if (options.tag && activeNotif.current?.tag === options.tag) {
+      if ( options.tag && activeNotif.current?.tag === options.tag ) {
         activeNotif.current.close();
       }
 
       const createNotification = () => {
         const Ctor = NotificationApi as typeof Notification;
-        const _body = typeof options.body === 'string' ? sanitizeHtml(options.body) : options.body;
+        const _body = typeof options.body === 'string' ? sanitizeHtml( options.body ) : options.body;
         const init = {
           body: _body,
           icon: options.icon ?? DEFAULT_ICON,
@@ -115,19 +115,19 @@ export function usePushNotifications() {
         // Some test environments stub Notification with a non-constructible function.
         // Prefer `new`, but gracefully fall back to direct invocation.
         try {
-          return new Ctor(sanitizeHtml(options.title), init) as Notification;
+          return new Ctor( sanitizeHtml( options.title ), init ) as Notification;
         } catch {
           const callableCtor = Ctor as unknown as (
             title: string,
             options?: NotificationOptions,
           ) => Notification;
-          return callableCtor(sanitizeHtml(options.title), init);
+          return callableCtor( sanitizeHtml( options.title ), init );
         }
       };
 
       const notif = createNotification();
 
-      if (options.onClick) {
+      if ( options.onClick ) {
         notif.onclick = () => {
           window.focus();
           options.onClick?.();
@@ -136,70 +136,70 @@ export function usePushNotifications() {
       }
 
       const closeMs = options.autoCloseMs ?? DEFAULT_CLOSE_MS;
-      const timer = setTimeout(() => notif.close(), closeMs);
-      notif.onclose = () => clearTimeout(timer);
+      const timer = setTimeout( () => notif.close(), closeMs );
+      notif.onclose = () => clearTimeout( timer );
 
       activeNotif.current = notif;
       return notif;
     },
-    [isSupported, permission, NotificationApi],
+    [ isSupported, permission, NotificationApi ],
   );
 
   // ── Trip-event helpers ─────────────────────────────────────────────────────
 
   const notifyTripConfirmed = useCallback(
-    (driverName: string, eta: string) =>
-      notify({
+    ( driverName: string, eta: string ) =>
+      notify( {
         title:
           '\u{1F697} Ride Confirmed! \u00B7 \u062A\u0645 \u062A\u0623\u0643\u064A\u062F \u0627\u0644\u0631\u062D\u0644\u0629',
-        body: `${driverName} is ${eta} away. Open Wasel to track live.`,
+        body: `${ driverName } is ${ eta } away. Open Wasel to track live.`,
         tag: 'trip-confirmed',
-      }),
-    [notify],
+      } ),
+    [ notify ],
   );
 
   const notifyDriverApproaching = useCallback(
-    (driverName: string) =>
-      notify({
+    ( driverName: string ) =>
+      notify( {
         title:
           '\u{1F4CD} Driver Approaching \u00B7 \u0627\u0644\u0633\u0627\u0626\u0642 \u064A\u0642\u062A\u0631\u0628',
-        body: `${driverName} is almost at your pickup location.`,
+        body: `${ driverName } is almost at your pickup location.`,
         tag: 'driver-approaching',
-      }),
-    [notify],
+      } ),
+    [ notify ],
   );
 
   const notifyDriverArrived = useCallback(
-    (driverName: string) =>
-      notify({
+    ( driverName: string ) =>
+      notify( {
         title:
           '\u{1F3C1} Driver Arrived \u00B7 \u0648\u0635\u0644 \u0627\u0644\u0633\u0627\u0626\u0642',
-        body: `${driverName} is waiting at your pickup point.`,
+        body: `${ driverName } is waiting at your pickup point.`,
         tag: 'driver-arrived',
-      }),
-    [notify],
+      } ),
+    [ notify ],
   );
 
   const notifyTripStarted = useCallback(
     () =>
-      notify({
+      notify( {
         title:
           '\u25B6\uFE0F Trip Started \u00B7 \u0628\u062F\u0623\u062A \u0627\u0644\u0631\u062D\u0644\u0629',
         body: 'Your Wasel trip is underway. Enjoy the journey!',
         tag: 'trip-started',
-      }),
-    [notify],
+      } ),
+    [ notify ],
   );
 
   const notifyTripCompleted = useCallback(
-    (price: string) =>
-      notify({
+    ( price: string ) =>
+      notify( {
         title:
           '\u2705 Trip Complete \u00B7 \u0627\u0643\u062A\u0645\u0644\u062A \u0627\u0644\u0631\u062D\u0644\u0629',
-        body: `You've arrived! Total: ${price} JOD. Rate your driver?`,
+        body: `You've arrived! Total: ${ price } JOD. Rate your driver?`,
         tag: 'trip-completed',
-      }),
-    [notify],
+      } ),
+    [ notify ],
   );
 
   return {
