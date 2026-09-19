@@ -36,10 +36,6 @@
           "location",
           "fetch"
         ]
-        "UIBackgroundModes": [
-          "location",
-          "fetch"
-        ]
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": []
