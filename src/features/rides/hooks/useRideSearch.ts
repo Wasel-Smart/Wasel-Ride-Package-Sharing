@@ -28,6 +28,7 @@ export function useRideSearch() {
   );
 
   // Sync URL params → state when the URL changes (e.g. back/forward navigation)
+  // eslint-disable-next-line react-hooks/exhaustive-deps — sync URL to state on navigation
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const nextFrom = params.get('from') ?? '';

@@ -15,6 +15,10 @@ if (!fs.existsSync(distDir)) {
 
 const indexPath = path.join(distDir, 'index.html');
 const html = fs.readFileSync(indexPath, 'utf8');
+const buildTimeMatch = html.match(/<meta name="build-time" content="([^"]+)"/);
+const buildVersion = buildTimeMatch
+  ? `wasel-${buildTimeMatch[1].replace(/[^a-zA-Z0-9_-]/g, '')}`
+  : `wasel-${Date.now()}`;
 
 const assetUrls = new Set();
 
@@ -65,7 +69,7 @@ for (const url of staticAssets) {
 // the runtime cache once visited.
 
 const manifest = {
-  version: `wasel-${Date.now()}`,
+  version: buildVersion,
   urls: Array.from(assetUrls).sort(),
 };
 

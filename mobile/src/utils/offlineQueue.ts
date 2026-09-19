@@ -20,7 +20,25 @@ export function createOfflineAction<TPayload>(
   options: { now?: number; random?: () => string } = {},
 ): OfflineAction<TPayload> {
   const now = options.now ?? Date.now();
-  const randomPart = (options.random ?? (() => crypto.randomUUID().replace(/-/g, '').slice(0, 9)))();
+  // Hermes (React Native's JS engine) ships no `crypto` global at all unless
+  // a polyfill (react-native-get-random-values, expo-crypto, etc.) is
+  // installed — this project has none, so calling crypto.randomUUID()
+  // unconditionally would throw the first time any offline action is queued.
+  // This id is only used as a local dedup/idempotency key, not for anything
+  // security-sensitive, so a Math.random()-based fallback is safe and keeps
+  // offline queueing working without adding a new native dependency.
+  const randomPart = (
+    options.random ??
+    (() => {
+      const hasCryptoRandomUUID =
+        typeof globalThis.crypto !== 'undefined' &&
+        typeof globalThis.crypto.randomUUID === 'function';
+      if (hasCryptoRandomUUID) {
+        return globalThis.crypto.randomUUID().replace(/-/g, '').slice(0, 9);
+      }
+      return Math.random().toString(36).slice(2, 11);
+    })
+  )();
 
   return {
     ...action,

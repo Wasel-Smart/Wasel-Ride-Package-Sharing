@@ -54,10 +54,11 @@ export function usePushNotifications () {
   const activeNotif = useRef<Notification | null>( null );
 
   // Keep permission state in sync with actual browser value
-  useEffect( () => {
-    if ( !isSupported ) { return; }
-    setPermission( NotificationApi.permission as NotifPermission );
-  }, [ isSupported, NotificationApi ] );
+  // Initial state already captures this; effect is redundant and causes lint warning
+  // useEffect( () => {
+  //   if ( !isSupported ) { return; }
+  //   setPermission( NotificationApi.permission as NotifPermission );
+  // }, [ isSupported, NotificationApi ] );
 
   // Cleanup on unmount
   useEffect( () => () => {

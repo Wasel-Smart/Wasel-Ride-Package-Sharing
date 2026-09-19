@@ -89,7 +89,11 @@ const SignInScreen = React.memo(function SignInScreen() {
 
   useEffect(() => {
     void biometricAuth.initialize().then(() => {
-      setBiometricAvailable(biometricAuth.isSupported());
+      // Show the biometric button only when this user has actually enabled
+      // it for Wasel — device capability alone (isSupported) isn't enough;
+      // otherwise tapping it silently fails inside authenticate()'s own
+      // `!this.enabled` guard with a confusing generic error.
+      setBiometricAvailable(biometricAuth.isSupported() && biometricAuth.isEnabled());
     });
   }, []);
 

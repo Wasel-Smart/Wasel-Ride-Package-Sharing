@@ -95,7 +95,7 @@ if (!fs.existsSync(swPath)) {
   if (sw.includes('__CACHE_VERSION__')) {
     errors.push('dist/sw.js still contains __CACHE_VERSION__ placeholder — stamping failed');
   }
-  if (/CACHE_VERSION = 'wasel-[a-f0-9]+'/.test(sw)) {
+  if (/CACHE_VERSION = 'wasel-[a-zA-Z0-9_-]+'/.test(sw)) {
     console.log('dist/sw.js CACHE_VERSION stamped OK');
   } else {
     errors.push('dist/sw.js CACHE_VERSION does not match expected wasel-<hash> pattern');

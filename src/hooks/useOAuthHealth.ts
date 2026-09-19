@@ -45,24 +45,26 @@ export function useOAuthHealth (
 
     let cancelled = false;
 
-    setLoading( true );
-    setError( null );
+    const checkHealth = async () => {
+      setLoading( true );
+      setError( null );
 
-    Promise.all(
-      providers.map( provider => validateOAuthProvider( client, provider ) ),
-    )
-      .then( results => {
+      try {
+        const results = await Promise.all(
+          providers.map( provider => validateOAuthProvider( client, provider ) ),
+        );
         if ( !cancelled ) { setStatuses( results ); }
-      } )
-      .catch( err => {
+      } catch ( err ) {
         if ( !cancelled ) {
           const message = err instanceof Error ? err.message : 'Failed to check OAuth status';
           setError( message );
         }
-      } )
-      .finally( () => {
+      } finally {
         if ( !cancelled ) { setLoading( false ); }
-      } );
+      }
+    };
+
+    checkHealth();
 
     return () => { cancelled = true; };
   }, [ client, providers, trigger ] );
@@ -95,15 +97,16 @@ export function useOAuthProviderEnabled (
 
     let cancelled = false;
 
-    setLoading( true );
+    const checkProvider = async () => {
+      setLoading( true );
 
-    client.auth.signInWithOAuth( {
-      provider,
-      options: {
-        skipBrowserRedirect: true,
-      },
-    } )
-      .then( ( { error } ) => {
+      try {
+        const { error } = await client.auth.signInWithOAuth( {
+          provider,
+          options: {
+            skipBrowserRedirect: true,
+          },
+        } );
         if ( !cancelled ) {
           // If we get a redirect_uri error, the provider IS enabled but misconfigured
           // If we get "provider not enabled", it's disabled
@@ -113,16 +116,17 @@ export function useOAuthProviderEnabled (
             setEnabled( true );
           }
         }
-      } )
-      .catch( () => {
+      } catch ( ) {
         if ( !cancelled ) {
           // Assume enabled on network errors
           setEnabled( true );
         }
-      } )
-      .finally( () => {
+      } finally {
         if ( !cancelled ) { setLoading( false ); }
-      } );
+      }
+    };
+
+    checkProvider();
 
     return () => { cancelled = true; };
   }, [ client, provider ] );

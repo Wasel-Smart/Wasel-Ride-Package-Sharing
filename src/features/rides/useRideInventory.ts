@@ -48,7 +48,7 @@ export function useRideInventory ( {
     const localRides = getConnectedRides().map( buildRideFromPostedRide );
 
     if ( !searched ) {
-      setRides( [ ...localRides, ...ALL_RIDES ] );
+      // Initial state already includes localRides + ALL_RIDES
       return;
     }
 

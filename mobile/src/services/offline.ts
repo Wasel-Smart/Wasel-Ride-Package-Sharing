@@ -209,19 +209,11 @@ export class OfflineService {
 
       // Only clear dedup cache for successfully synced actions
       if (failed.length < queue.length) {
-        const remainingIds = new Set(failed.map(a => a.id));
-        const dedup = this.loadDedupCache();
-        // Rebuild dedup from remaining failed actions only
+        // Rebuild dedup from remaining failed actions only — anything that
+        // synced successfully should no longer block a legitimate retry.
         const newDedup = new Set<string>();
         for (const action of failed) {
           newDedup.add(`${action.type}:${JSON.stringify(action.payload)}`);
-        }
-        // Preserve any entries not related to this sync batch
-        for (const entry of dedup) {
-          const matchesFailed = failed.some(a =>
-            entry === `${a.type}:${JSON.stringify(a.payload)}`
-          );
-          if (matchesFailed) newDedup.add(entry);
         }
         this.saveDedupCache(newDedup);
       }
