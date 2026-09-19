@@ -208,7 +208,11 @@ export async function createMobilePaymentSheet(request: MobilePaymentSheetReques
   );
 
   if (!result.success) {
-    return { clientSecret: '', paymentIntentId: '' };
+    // Surface the real reason (invalid amount, not authenticated, backend
+    // error, etc.) instead of silently returning an empty client secret —
+    // an empty secret just produces a confusing generic Stripe SDK error
+    // in WalletScreen instead of the actionable message from addFunds().
+    throw new Error(result.error ?? 'Payment could not be started.');
   }
 
   return {
