@@ -104,10 +104,7 @@ class RootErrorBoundary extends React.Component<React.PropsWithChildren, { hasEr
       /importing a module script failed/i.test(message) ||
       /Invalid hook call/i.test(message);
     if (isChunkError) {
-      const hardRecover = (window as unknown as { waselHardRecover?: () => void }).waselHardRecover;
-      if (typeof hardRecover === 'function') {
-        hardRecover();
-      }
+      void waselHardRecover();
     }
   }
 
@@ -162,6 +159,81 @@ const environmentIsValid = (() => {
 
 if (!rootElement) {
   throw new Error('[Wasel] Root element #root not found. Check index.html.');
+}
+
+const CHUNK_RECOVERY_KEY_PREFIX = 'wasel-chunk-recovery:';
+let chunkRecoveryInProgress = false;
+let serviceWorkerReloadScheduled = false;
+
+function getBuildVersion(): string {
+  return document.querySelector('meta[name="build-time"]')?.getAttribute('content') || 'unknown';
+}
+
+function getChunkRecoveryKey(): string {
+  return `${CHUNK_RECOVERY_KEY_PREFIX}${getBuildVersion()}:${window.location.pathname}`;
+}
+
+function isChunkLoadFailure(value: unknown): boolean {
+  let message = '';
+  if (value instanceof Error) {
+    message = value.message;
+  } else if (typeof value === 'string') {
+    message = value;
+  } else if (value && typeof value === 'object') {
+    const candidate = value as { message?: unknown };
+    message = typeof candidate.message === 'string' ? candidate.message : '';
+  }
+
+  return /loading chunk|failed to fetch dynamically imported module|importing a module script failed|chunkloaderror|invalid hook call/i.test(message);
+}
+
+function reloadAfterServiceWorkerUpdate(): void {
+  if (serviceWorkerReloadScheduled) return;
+  serviceWorkerReloadScheduled = true;
+  window.location.reload();
+}
+
+async function waselHardRecover(): Promise<void> {
+  if (chunkRecoveryInProgress) return;
+  chunkRecoveryInProgress = true;
+
+  try {
+    const recoveryKey = getChunkRecoveryKey();
+    if (window.sessionStorage.getItem(recoveryKey)) return;
+    window.sessionStorage.setItem(recoveryKey, '1');
+  } catch {
+    // Storage can be unavailable in hardened browser contexts.
+  }
+
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(key => caches.delete(key)));
+    }
+    if ('serviceWorker' in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(registration => registration.unregister()));
+    }
+  } catch {
+    // Recovery must continue even if cache or registration cleanup is blocked.
+  }
+
+  window.location.replace(window.location.href);
+}
+
+(window as unknown as { waselHardRecover?: () => Promise<void> }).waselHardRecover = waselHardRecover;
+
+if (import.meta.env.PROD && import.meta.env.MODE !== 'test') {
+  window.addEventListener('unhandledrejection', (event) => {
+    if (!isChunkLoadFailure(event.reason)) return;
+    event.preventDefault();
+    void waselHardRecover();
+  });
+
+  window.addEventListener('error', (event) => {
+    if (!isChunkLoadFailure(event.message)) return;
+    void waselHardRecover();
+  });
 }
 
 if (environmentIsValid) {
