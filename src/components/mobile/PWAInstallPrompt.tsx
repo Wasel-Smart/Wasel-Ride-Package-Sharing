@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Download, X } from 'lucide-react';
 import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 import { WaselButton } from '../wasel-ui/WaselButton';
@@ -14,7 +14,7 @@ interface BeforeInstallPromptEvent extends Event {
 export function PWAInstallPrompt() {
   const [state, setState] = useState<InstallPromptState>('idle');
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const isStandaloneRef = useRef(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') {return;}
@@ -23,7 +23,9 @@ export function PWAInstallPrompt() {
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
-    isStandaloneRef.current = isStandaloneMode;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync standalone state on mount
+    setIsStandalone(isStandaloneMode);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync installed state on mount
     if (isStandaloneMode) {
       setState('installed');
     }
@@ -81,20 +83,21 @@ export function PWAInstallPrompt() {
     }
   }, []);
 
-  const wasRecentlyDismissed = (() => {
+  const wasRecentlyDismissed = useMemo(() => {
     try {
       const dismissed = sessionStorage.getItem('wasel-pwa-install-dismissed');
       if (!dismissed) {return false;}
       const dismissedTime = parseInt(dismissed, 10);
       const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      // eslint-disable-next-line react-hooks/purity -- Date.now() in memo is acceptable here
       const now = Date.now();
       return now - dismissedTime < sevenDays;
     } catch {
       return false;
     }
-  })();
+  }, []);
 
-  if (state !== 'available' || isStandaloneRef.current) {
+  if (state !== 'available' || isStandalone) {
     return null;
   }
 

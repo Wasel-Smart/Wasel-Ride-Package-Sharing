@@ -8,9 +8,6 @@
       "DOM.Iterable",
       "ESNext"
     ],
-    "types": [
-      "node"
-    ],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -37,6 +34,12 @@
     "alwaysStrict": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
+    "types": [
+      "node",
+      "react",
+      "react-dom",
+      "vite/client"
+    ],
     "paths": {
       "@/*": [
         "./src/*"

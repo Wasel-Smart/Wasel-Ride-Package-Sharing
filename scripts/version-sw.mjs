@@ -46,16 +46,23 @@ function getBuildVersion() {
 }
 
 let sw = fs.readFileSync(swPath, 'utf8');
+const version = getBuildVersion();
 if (!sw.includes('__CACHE_VERSION__')) {
-  if (!/const CACHE_VERSION = 'wasel-[^']+';/.test(sw)) {
+  const currentVersion = sw.match(/const CACHE_VERSION = '([^']+)';/)?.[1];
+  if (currentVersion === version) {
+    console.log('dist/sw.js already matches the current build version.');
+    process.exit(0);
+  }
+  if (!currentVersion) {
     console.error('dist/sw.js is missing a valid CACHE_VERSION.');
     process.exit(1);
   }
-  console.log('dist/sw.js already versioned; skipping post-build stamp.');
+  sw = sw.replace(/const CACHE_VERSION = '[^']+';/, `const CACHE_VERSION = '${version}';`);
+  fs.writeFileSync(swPath, sw);
+  console.log(`Re-stamped dist/sw.js from ${currentVersion} to ${version}.`);
   process.exit(0);
 }
 
-const version = getBuildVersion();
 sw = sw.replaceAll('__CACHE_VERSION__', version);
 fs.writeFileSync(swPath, sw);
 
