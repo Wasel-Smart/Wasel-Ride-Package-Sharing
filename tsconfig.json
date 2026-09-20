@@ -35,10 +35,7 @@
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
     "types": [
-      "node",
-      "react",
-      "react-dom",
-      "vite/client"
+      "node"
     ],
     "paths": {
       "@/*": [
