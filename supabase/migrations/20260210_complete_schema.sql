@@ -5,9 +5,15 @@
 -- ============================================================================
 
 -- Enable necessary extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- For text search
-CREATE EXTENSION IF NOT EXISTS "postgis"; -- For geospatial queries
+-- Supabase auto-installs uuid-ossp into the "extensions" schema on new
+-- projects, which breaks bare (unqualified) calls like uuid_generate_v4()
+-- used throughout these migrations. IF NOT EXISTS would silently skip and
+-- leave it there, so we drop and recreate it in public explicitly — safe
+-- here since this is the first migration on a fresh database.
+DROP EXTENSION IF EXISTS "uuid-ossp";
+CREATE EXTENSION "uuid-ossp" WITH SCHEMA public;
+CREATE EXTENSION IF NOT EXISTS "pg_trgm" WITH SCHEMA public; -- For text search
+CREATE EXTENSION IF NOT EXISTS "postgis" WITH SCHEMA public; -- For geospatial queries
 
 -- ============================================================================
 -- 1. USER PROFILES TABLE

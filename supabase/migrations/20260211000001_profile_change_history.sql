@@ -6,12 +6,12 @@
 -- Create profile_change_history table
 CREATE TABLE IF NOT EXISTS public.profile_change_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   field_name TEXT NOT NULL,
   old_value TEXT,
   new_value TEXT,
   changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  changed_by UUID NOT NULL REFERENCES public.users(id),
+  changed_by UUID NOT NULL REFERENCES public.profiles(id),
   ip_address TEXT,
   user_agent TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -60,9 +60,9 @@ BEGIN
       VALUES (NEW.id, 'email', OLD.email, NEW.email, NEW.id);
     END IF;
     
-    IF (OLD.phone_number IS DISTINCT FROM NEW.phone_number) THEN
+    IF (OLD.phone IS DISTINCT FROM NEW.phone) THEN
       INSERT INTO public.profile_change_history (user_id, field_name, old_value, new_value, changed_by)
-      VALUES (NEW.id, 'phone_number', OLD.phone_number, NEW.phone_number, NEW.id);
+      VALUES (NEW.id, 'phone', OLD.phone, NEW.phone, NEW.id);
     END IF;
     
     IF (OLD.avatar_url IS DISTINCT FROM NEW.avatar_url) THEN
@@ -75,10 +75,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create trigger on users table
-DROP TRIGGER IF EXISTS trigger_log_profile_change ON public.users;
+-- Create trigger on profiles table
+DROP TRIGGER IF EXISTS trigger_log_profile_change ON public.profiles;
 CREATE TRIGGER trigger_log_profile_change
-  AFTER UPDATE ON public.users
+  AFTER UPDATE ON public.profiles
   FOR EACH ROW
   EXECUTE FUNCTION public.log_profile_change();
 

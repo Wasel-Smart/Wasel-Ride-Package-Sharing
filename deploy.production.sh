@@ -20,6 +20,7 @@ mkdir deploy
 cp -r ./dist ./deploy/dist
 cp -r ./package.json ./deploy/package.json
 cp -r ./package-lock.json ./deploy/package-lock.json
+cp -r ./vercel.json ./deploy/vercel.json
 # .env.production is consumed at build time by Vite (production mode); copy it
 # into the deploy payload only when it exists so the script does not fail.
 if [ -f .env.production ]; then
@@ -34,7 +35,7 @@ git commit -m 'deploy'
 echo '====================================================================================='
 echo '==================================...PUSHING GIT...=================================='
 echo '====================================================================================='
-git push -f "${DEPLOY_REMOTE:-origin}" master
+git push -f "${DEPLOY_REMOTE:-master}" master
 cd -
 
 rm -rf deploy
