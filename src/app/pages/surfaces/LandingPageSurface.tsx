@@ -37,27 +37,13 @@ const SUPPORT_PHONE_DISPLAY = '+962 79 000 0000';
 
 function LandingBrandBadge({ size = 46 }: { size?: number }) {
   return (
-    <svg
-      aria-hidden="true"
+    <img
+      alt="Wasel"
       className="landing-page__brand-badge"
-      viewBox="0 0 56 56"
-      width={size}
       height={size}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect
-        x="4"
-        y="4"
-        width="48"
-        height="48"
-        rx="14"
-        fill="var(--wasel-brand-gradient-end)"
-      />
-      <path
-        d="M18 36.5L28.7 20.2C30 18.2 32.2 17 34.6 17H38.2L27.4 33.4C26.1 35.4 23.9 36.5 21.5 36.5H18ZM35 20.4C35 21.7 36 22.7 37.3 22.7C38.6 22.7 39.6 21.7 39.6 20.4C39.6 19.1 38.6 18.1 37.3 18.1C36 18.1 35 19.1 35 20.4Z"
-        fill="var(--wasel-copy-primary)"
-      />
-    </svg>
+      src="/brand/wasel-main-network-logo.svg"
+      width={size}
+    />
   );
 }
 
