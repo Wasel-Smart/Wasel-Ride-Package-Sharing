@@ -82,7 +82,6 @@ function NetworkMapHero() {
           className="landing-page__network-map-image"
           decoding="async"
           draggable={false}
-          fetchPriority="low"
           loading="lazy"
           src={landingMapReference}
         />

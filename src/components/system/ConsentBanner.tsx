@@ -15,7 +15,7 @@
  * `getConsentDecision()` before initialising Sentry / Vercel Analytics.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
   getConsentDecision,
@@ -28,6 +28,7 @@ export function ConsentBanner() {
   const { language } = useLanguage();
   const ar = language === 'ar';
   const [visible, setVisible] = useState(false);
+  const acceptButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     // Only show if the user hasn't decided yet
@@ -38,6 +39,20 @@ export function ConsentBanner() {
     }
     return undefined;
   }, []);
+
+  useEffect(() => {
+    if (!visible) return undefined;
+
+    acceptButtonRef.current?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        recordConsentDecision('declined');
+        setVisible(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible]);
 
   if (!visible) return null;
 
@@ -55,6 +70,8 @@ export function ConsentBanner() {
     <div
       role="dialog"
       aria-modal="false"
+      aria-labelledby="consent-title"
+      aria-describedby="consent-description"
       aria-label={ar ? 'إشعار ملفات تعريف الارتباط' : 'Cookie consent notice'}
       dir={ar ? 'rtl' : 'ltr'}
       style={{
@@ -91,6 +108,7 @@ export function ConsentBanner() {
 
       <div>
         <p
+          id="consent-title"
           style={{
             margin: 0,
             fontSize: '0.84rem',
@@ -102,6 +120,7 @@ export function ConsentBanner() {
           {ar ? 'واصل يستخدم ملفات تعريف الارتباط' : 'Wasel uses cookies'}
         </p>
         <p
+          id="consent-description"
           style={{
             margin: 0,
             fontSize: '0.78rem',
@@ -117,6 +136,7 @@ export function ConsentBanner() {
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <button
+          ref={acceptButtonRef}
           type="button"
           onClick={handleAccept}
           style={{
