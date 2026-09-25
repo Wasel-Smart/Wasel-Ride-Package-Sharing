@@ -29,6 +29,7 @@ import { useIframeSafeNavigate } from '../../../hooks/useIframeSafeNavigate';
 import { APP_ROUTES } from '../../../router/paths';
 import { LANDING_SUPPORT_EMAIL, LANDING_SUPPORT_PHONE } from './pageTypes';
 import { scheduleDeferredTask } from '../../../utils/runtimeScheduling';
+import { WaselLogo } from '../../../components/wasel-ds/WaselLogo';
 import '../LandingPage.css';
 
 type LandingMode = 'ride' | 'package';
@@ -36,15 +37,7 @@ type LandingMode = 'ride' | 'package';
 const SUPPORT_PHONE_DISPLAY = '+962 79 000 0000';
 
 function LandingBrandBadge({ size = 46 }: { size?: number }) {
-  return (
-    <img
-      alt="Wasel"
-      className="landing-page__brand-badge"
-      height={size}
-      src="/brand/wasel-main-network-logo.svg"
-      width={size}
-    />
-  );
+  return <WaselLogo size={size} showWordmark={false} theme="dark" />;
 }
 
 function NetworkMapHero() {

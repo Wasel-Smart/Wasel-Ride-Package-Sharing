@@ -2,9 +2,9 @@
   min-height: 100vh;
   padding: clamp(10px, 1.5vw, 18px);
   background:
-    radial-gradient(circle at 18% 0%, rgba(255, 156, 66, 0.08), transparent 24%),
-    radial-gradient(circle at 100% 100%, rgba(255, 156, 66, 0.1), transparent 26%),
-    linear-gradient(180deg, #060709 0%, #07090b 48%, #090806 100%);
+    radial-gradient(circle at 18% 0%, color-mix(in srgb, #16c7f2 12%, transparent), transparent 24%),
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, #c7ff1a 8%, transparent), transparent 26%),
+    linear-gradient(180deg, #061726 0%, #082033 48%, #061726 100%);
 }
 
 .landing-page {
