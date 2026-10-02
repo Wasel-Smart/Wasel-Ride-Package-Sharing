@@ -131,12 +131,17 @@ window.addEventListener(CONSENT_DECISION_EVENT, (event) => {
   if (detail?.accepted) initializeTelemetry();
 });
 
+// Service Worker registration
+// Guard registration behind mode and navigator checks to avoid errors in test/SSR environments
 if (
   import.meta.env.PROD &&
   import.meta.env.MODE !== 'test' &&
+  typeof window !== 'undefined' &&
   'serviceWorker' in navigator
 ) {
+  // Defer registration until page load to avoid blocking critical rendering
   window.addEventListener('load', () => {
+    // Use BASE_URL if set (e.g., deployed to subdirectory), otherwise root
     const basePath = import.meta.env.BASE_URL || '/';
     const swPath = `${basePath}sw.js`;
 
