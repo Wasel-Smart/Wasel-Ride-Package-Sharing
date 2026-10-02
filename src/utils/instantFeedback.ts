@@ -4,6 +4,8 @@
  * OPTIMIZED: Minimal blocking to reduce FID
  */
 
+import { scheduleIdleTask } from './idleScheduler';
+
 type FeedbackType = 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error';
 
 interface FeedbackOptions {
@@ -25,22 +27,9 @@ class InstantFeedbackEngine {
   constructor() {
     // DEFER INITIALIZATION to avoid blocking FID
     if (typeof window !== 'undefined') {
-      const scheduleIdle =
-        typeof window.requestIdleCallback === 'function'
-          ? window.requestIdleCallback.bind(window)
-          : (callback: IdleRequestCallback) =>
-              window.setTimeout(
-                () =>
-                  callback({
-                    didTimeout: false,
-                    timeRemaining: () => 0,
-                  } as IdleDeadline),
-                1,
-              );
-
-      scheduleIdle(() => {
+      scheduleIdleTask(() => {
         this.lazyInit();
-      });
+      }, 1500);
     }
   }
 

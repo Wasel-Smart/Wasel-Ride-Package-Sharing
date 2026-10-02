@@ -1,12 +1,11 @@
-type ScheduledHandle = number;
+/**
+ * Runtime task scheduling.
+ *
+ * Defers execution of non-critical tasks using requestIdleCallback (when available)
+ * or setTimeout (fallback for Safari/iOS).
+ */
 
-type WindowWithIdleCallback = Window & {
-  requestIdleCallback?: (
-    callback: (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void,
-    options?: { timeout: number },
-  ) => ScheduledHandle;
-  cancelIdleCallback?: (handle: ScheduledHandle) => void;
-};
+import { scheduleIdleTask } from './idleScheduler';
 
 export function scheduleDeferredTask(
   task: () => void | Promise<void>,
@@ -17,22 +16,7 @@ export function scheduleDeferredTask(
     return () => undefined;
   }
 
-  const runtimeWindow = window as WindowWithIdleCallback;
-  if (typeof runtimeWindow.requestIdleCallback === 'function') {
-    const handle = runtimeWindow.requestIdleCallback(() => {
-      void task();
-    }, { timeout });
-
-    return () => {
-      runtimeWindow.cancelIdleCallback?.(handle);
-    };
-  }
-
-  const handle = window.setTimeout(() => {
+  return scheduleIdleTask(() => {
     void task();
-  }, Math.min(timeout, 2_000));
-
-  return () => {
-    window.clearTimeout(handle);
-  };
+  }, timeout);
 }
