@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { API_URL, fetchWithRetry } from '@/services/core';
+import { fetchWithRetry, getAuthDetails, getEdgeFunctionUrl } from '@/services/core';
 
 interface PhoneVerificationProps {
   onVerified: () => void;
@@ -33,10 +33,18 @@ export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps
 
     try {
       const formatted = formatPhoneNumber(phoneNumber);
-      
-      const response = await fetchWithRetry(`${API_URL}/sms-verification/send-code`, {
+      const { token } = await getAuthDetails();
+      const endpoint = getEdgeFunctionUrl('sms-verification');
+      if (!endpoint || !token) {
+        throw new Error('Phone verification is temporarily unavailable. Please sign in and try again.');
+      }
+
+      const response = await fetchWithRetry(`${endpoint}/send-code`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ phone_number: formatted }),
       });
 
@@ -61,10 +69,18 @@ export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps
 
     try {
       const formatted = formatPhoneNumber(phoneNumber);
-      
-      const response = await fetchWithRetry(`${API_URL}/sms-verification/verify-code`, {
+      const { token } = await getAuthDetails();
+      const endpoint = getEdgeFunctionUrl('sms-verification');
+      if (!endpoint || !token) {
+        throw new Error('Phone verification is temporarily unavailable. Please sign in and try again.');
+      }
+
+      const response = await fetchWithRetry(`${endpoint}/verify-code`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ phone_number: formatted, code }),
       });
 
