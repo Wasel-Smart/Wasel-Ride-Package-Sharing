@@ -176,6 +176,16 @@ function normalizeString(value: unknown): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
+function toProfileResponse(user: Record<string, unknown>) {
+  return {
+    ...user,
+    phone_verified: Boolean(user.phone_verified_at),
+    email_verified: Boolean(user.email),
+    sanad_verified: user.sanad_verified_status === 'verified',
+    verified: user.sanad_verified_status === 'verified',
+  };
+}
+
 function normalizeBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === 'boolean' ? value : fallback;
 }
@@ -2105,16 +2115,19 @@ serve(async (req) => {
     if (routeMatches(path, '/profile') && req.method === 'POST') {
       const body = await readJsonBody(req);
       const { data, error } = await auth.admin
-        .from('profiles')
-        .upsert({
-          id: auth.authUser.id,
+        // The `users` table is the canonical account record used by the
+        // runtime. Writing the legacy `profiles` table made successful saves
+        // invisible to subsequent account reads.
+        .from('users')
+        .update({
           full_name:
             normalizeString(body.fullName) ||
             [normalizeString(body.firstName), normalizeString(body.lastName)].filter(Boolean).join(' ') ||
             auth.canonicalUser.full_name ||
             'Wasel User',
           email: normalizeString(body.email) ?? auth.authUser.email ?? auth.canonicalUser.email ?? null,
-        }, { onConflict: 'id' })
+        })
+        .eq('id', auth.canonicalUser.id)
         .select()
         .single();
 
@@ -2122,7 +2135,7 @@ serve(async (req) => {
         return jsonResponse({ error: error.message }, 400);
       }
 
-      return jsonResponse(data);
+      return jsonResponse(toProfileResponse(data as Record<string, unknown>));
     }
 
     if (routeStartsWith(path, '/profile/') && req.method === 'GET') {
@@ -2132,28 +2145,48 @@ serve(async (req) => {
       }
 
       const { data, error } = await auth.admin
-        .from('profiles')
+        .from('users')
         .select('*')
-        .eq('id', auth.authUser.id)
+        .eq('id', auth.canonicalUser.id)
         .maybeSingle();
 
       if (error) {
         return jsonResponse({ error: error.message }, 404);
       }
 
-      return jsonResponse(data ?? null);
+      return jsonResponse(data ? toProfileResponse(data as Record<string, unknown>) : null);
     }
 
     if (routeStartsWith(path, '/profile/') && req.method === 'PATCH') {
       const updates = await readJsonBody(req);
-      if ('wallet_balance' in updates) {
-        delete updates.wallet_balance;
+      const profilePatch: Record<string, unknown> = {};
+      const fullName = normalizeString(updates.full_name);
+      const email = normalizeString(updates.email);
+      const hasPhoneUpdate =
+        Object.hasOwn(updates, 'phone_number') || Object.hasOwn(updates, 'phone');
+      const phoneNumber =
+        updates.phone_number === null || updates.phone === null
+          ? null
+          : normalizeString(updates.phone_number) ?? normalizeString(updates.phone);
+      const avatarUrl = normalizeString(updates.avatar_url);
+
+      if (fullName) {profilePatch.full_name = fullName;}
+      if (email) {profilePatch.email = email;}
+      if (hasPhoneUpdate) {
+        profilePatch.phone_number = phoneNumber;
+        // A changed number must be verified again before it can be trusted.
+        profilePatch.phone_verified_at = null;
+      }
+      if (avatarUrl) {profilePatch.avatar_url = avatarUrl;}
+
+      if (Object.keys(profilePatch).length === 0) {
+        return jsonResponse({ error: 'No supported profile fields were provided.' }, 400);
       }
 
       const { data, error } = await auth.admin
-        .from('profiles')
-        .update(updates)
-        .eq('id', auth.authUser.id)
+        .from('users')
+        .update(profilePatch)
+        .eq('id', auth.canonicalUser.id)
         .select()
         .single();
 
@@ -2161,7 +2194,7 @@ serve(async (req) => {
         return jsonResponse({ error: error.message }, 400);
       }
 
-      return jsonResponse(data);
+      return jsonResponse(toProfileResponse(data as Record<string, unknown>));
     }
 
     if (routeMatches(path, '/admin/drivers/pending') && req.method === 'GET') {
