@@ -51,9 +51,16 @@ const WALLET_MUTATION_RATE_LIMIT = { maxRequests: 20, windowMs: 10 * 60_000 };
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? '';
 const LOCAL_GATEWAY_WEBHOOK_SECRET = Deno.env.get('LOCAL_GATEWAY_WEBHOOK_SECRET') ?? '';
-const WALLET_STEP_UP_SECRET = Deno.env.get('WALLET_STEP_UP_SECRET')
-  ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  ?? 'wallet-step-up-development-secret';
+const WALLET_STEP_UP_SECRET = Deno.env.get('WALLET_STEP_UP_SECRET') ?? '';
+
+function getWalletStepUpSecret(): string {
+  // Step-up tokens and PIN hashes must never fall back to a public/default secret
+  // or reuse the Supabase service-role key for a separate security boundary.
+  if (WALLET_STEP_UP_SECRET.length < 32) {
+    throw new Error('Wallet step-up security is not configured. Contact support.');
+  }
+  return WALLET_STEP_UP_SECRET;
+}
 
 function readJsonBody(request: Request): Promise<Record<string, unknown>> {
   return request.json()
@@ -398,7 +405,7 @@ async function resolveRecipientUser(admin: SupabaseClient, recipient: string) {
 
 async function setWalletPin(admin: SupabaseClient, userId: string, pin: string) {
   const now = new Date().toISOString();
-  const pinHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${pin}`);
+  const pinHash = await sha256Hex(`${getWalletStepUpSecret()}:${pin}`);
   const { error } = await admin
     .schema('private')
     .from('wallet_pin_secrets')
@@ -522,7 +529,7 @@ async function createStepUpChallenge(
   }
 
   const otpCode = String(Math.floor(100000 + Math.random() * 900000));
-  const otpHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
+  const otpHash = await sha256Hex(`${getWalletStepUpSecret()}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
   const expiresAt = new Date(Date.now() + OTP_TTL_MS).toISOString();
 
   const { data, error } = await admin
@@ -564,7 +571,7 @@ async function createStepUpChallenge(
 
 async function issueStepUpToken(admin: SupabaseClient, userId: string, purpose: StepUpPurpose) {
   const rawToken = `${crypto.randomUUID()}.${crypto.randomUUID()}`;
-  const tokenHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${rawToken}`);
+  const tokenHash = await sha256Hex(`${getWalletStepUpSecret()}:${rawToken}`);
   const expiresAt = new Date(Date.now() + STEP_UP_TOKEN_TTL_MS).toISOString();
 
   const { error } = await admin
@@ -591,7 +598,7 @@ async function consumeStepUpToken(
   purpose: StepUpPurpose,
   verificationToken: string,
 ) {
-  const tokenHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${verificationToken}`);
+  const tokenHash = await sha256Hex(`${getWalletStepUpSecret()}:${verificationToken}`);
   const now = new Date().toISOString();
   const { data, error } = await admin
     .schema('private')
@@ -1612,7 +1619,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         return runtime.json({ error: 'Wallet PIN is temporarily locked. Please wait and try again.' }, 429);
       }
 
-      const expectedHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${pin}`);
+      const expectedHash = await sha256Hex(`${getWalletStepUpSecret()}:${pin}`);
       if (!timingSafeEqual(String(pinSecret.pin_hash), expectedHash)) {
         await recordPinFailure(auth.admin, auth.canonicalUser.id, toNumber(pinSecret.failed_attempts));
         return runtime.json({ error: 'Wallet PIN verification failed.' }, 401);
@@ -1658,7 +1665,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         return runtime.json({ error: 'This verification challenge has expired.' }, 400);
       }
 
-      const otpHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
+      const otpHash = await sha256Hex(`${getWalletStepUpSecret()}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
       if (!timingSafeEqual(String(challenge.otp_hash), otpHash)) {
         await auth.admin
           .schema('private')
