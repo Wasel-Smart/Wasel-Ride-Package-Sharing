@@ -1,0 +1,43 @@
+name: One-time dependency remediation
+on:
+  push:
+    branches:
+      - codex/dependency-remediation
+    paths:
+      - .github/workflows/dependency-remediation.yml
+permissions:
+  contents: write
+concurrency:
+  group: wasel-dependency-remediation
+  cancel-in-progress: false
+jobs:
+  update-lockfile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout remediation branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/dependency-remediation
+          persist-credentials: true
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install existing locked dependencies
+        run: npm ci
+      - name: Apply non-breaking npm audit fixes
+        run: |
+          npm audit fix || echo "Some findings may require manual or breaking-version remediation; retaining any non-breaking fixes that npm applied."
+      - name: Commit dependency manifest and lockfile updates
+        run: |
+          if git diff --quiet -- package.json package-lock.json; then
+            echo "No dependency changes were produced."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "fix: apply non-breaking dependency security updates"
+          git push origin HEAD:codex/dependency-remediation
