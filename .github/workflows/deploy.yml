@@ -45,7 +45,7 @@ jobs:
           NODE_ENV: production
           APP_ENV: production
           VITE_APP_ENV: production
-          VITE_APP_URL: https://example.invalid
+          VITE_APP_URL: https://www.wasel14.online
           VITE_SUPABASE_URL: https://ci-project.supabase.co
           VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjaSIsImF1ZCI6ImF1dGhlbnRpY2F0ZWQifQ.signature
           VITE_ENABLE_SYNTHETIC_DATA: 'false'
@@ -68,7 +68,7 @@ jobs:
         run: npm run build:optimized
         env:
           VITE_APP_ENV: production
-          VITE_APP_URL: https://example.invalid
+          VITE_APP_URL: https://www.wasel14.online
           VITE_SUPABASE_URL: https://ci-project.supabase.co
           VITE_SUPABASE_ANON_KEY: ci-anon-key
           VITE_SUPABASE_PUBLISHABLE_KEY: ci-anon-key
