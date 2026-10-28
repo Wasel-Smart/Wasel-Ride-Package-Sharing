@@ -9,8 +9,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { createCommunicationHandlers } from './communications-handlers.ts';
+import { createAutomationHandlers } from './automation-handlers.ts';
 import { createWalletHandlers } from './wallet-handlers.ts';
-import { getClientIp } from './_shared/security-runtime.ts';
+import { getClientIp, timingSafeEqual } from './_shared/security-runtime.ts';
 
 const FUNCTION_NAME = 'make-server-0b1f4071';
 
@@ -549,7 +550,15 @@ function createModuleRuntime(request: Request) {
         return false;
       }
       const provided = candidateRequest.headers.get('x-communication-worker-secret') ?? '';
-      return provided === expected;
+      return timingSafeEqual(provided, expected);
+    },
+    hasAutomationWorkerAccess: (candidateRequest: Request) => {
+      const expected = Deno.env.get('AUTOMATION_WORKER_SECRET') ?? '';
+      if (!expected || expected.length < 32) {
+        return false;
+      }
+      const provided = candidateRequest.headers.get('x-automation-worker-secret') ?? '';
+      return timingSafeEqual(provided, expected);
     },
     json: (data: unknown, status = 200) => jsonResponse(data, status),
   };
@@ -1887,6 +1896,16 @@ serve(async (req) => {
       communicationsRuntimeSql: '',
       communicationsOperationsSql: '',
     });
+    const automationHandlers = createAutomationHandlers({
+      executeSqlStatements: runtime.executeSqlStatements,
+      getAdminClient: runtime.getAdminClient,
+      getFunctionBaseUrl: runtime.getFunctionBaseUrl,
+      hasAutomationWorkerAccess: runtime.hasAutomationWorkerAccess,
+      json: runtime.json,
+      processQueuedDeliveries: communicationHandlers.processQueuedDeliveries,
+    }, {
+      automationRuntimeSql: '',
+    });
 
     if (routeMatches(path, '/health')) {
       return jsonResponse({ status: 'healthy', timestamp: new Date().toISOString() });
@@ -1902,6 +1921,10 @@ serve(async (req) => {
 
     if (routeMatches(path, '/communications/webhooks/twilio') && req.method === 'POST') {
       return communicationHandlers.handleTwilioWebhook(req);
+    }
+
+    if (routeMatches(path, '/automation/process') && req.method === 'POST') {
+      return automationHandlers.handleProcessAutomationQueue(req);
     }
 
     if (routeMatches(path, '/communications/process') && req.method === 'POST') {
