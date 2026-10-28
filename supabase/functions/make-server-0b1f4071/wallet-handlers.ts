@@ -747,21 +747,31 @@ async function verifyStripeWebhookSignature(payload: string, signatureHeader: st
     throw new Error('Missing Stripe signature header.');
   }
 
-  const elements = Object.fromEntries(
-    signatureHeader.split(',').map((part) => {
-      const [key, value] = part.split('=');
-      return [key, value];
-    }),
-  );
+  const parts = signatureHeader.split(',').map((part) => {
+    const separator = part.indexOf('=');
+    return separator < 0
+      ? ['', '']
+      : [part.slice(0, separator).trim(), part.slice(separator + 1).trim()];
+  });
+  const timestamp = parts.find(([key]) => key === 't')?.[1];
+  const signatures = parts
+    .filter(([key, value]) => key === 'v1' && value)
+    .map(([, value]) => value);
 
-  const timestamp = elements.t;
-  const signed = elements.v1;
-  if (!timestamp || !signed) {
+  if (!timestamp || signatures.length === 0 || !/^\d+$/.test(timestamp)) {
     throw new Error('Invalid Stripe signature header.');
   }
 
+  // Reject stale signed payloads to limit replay attacks. Stripe's standard
+  // tolerance is five minutes; clock synchronization is required on workers.
+  const timestampSeconds = Number(timestamp);
+  if (!Number.isSafeInteger(timestampSeconds) ||
+      Math.abs(Math.floor(Date.now() / 1000) - timestampSeconds) > 300) {
+    throw new Error('Stripe webhook timestamp is outside the allowed tolerance.');
+  }
+
   const expected = await hmacSha256Hex(STRIPE_WEBHOOK_SECRET, `${timestamp}.${payload}`);
-  if (!timingSafeEqual(expected, signed)) {
+  if (!signatures.some((signature) => timingSafeEqual(expected, signature))) {
     throw new Error('Stripe webhook signature verification failed.');
   }
 }
