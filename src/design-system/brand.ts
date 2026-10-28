@@ -10,7 +10,7 @@
  * Keep new UI work aligned to these tokens instead of page-local values.
  */
 
-const BRAND_ASSET_VERSION = '20260422-premium';
+const BRAND_ASSET_VERSION = '20261028-color-route-pin';
 
 export const BRAND = {
   name: 'Wasel',
