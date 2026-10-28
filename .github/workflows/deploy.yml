@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: production-deploy-${{ github.ref }}
+  group: wasel-production-deploy
   cancel-in-progress: false
 
 jobs:
@@ -79,6 +79,7 @@ jobs:
 
   deploy:
     name: Deploy production to Vercel
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     needs: verify
     runs-on: ubuntu-latest
     environment: production
