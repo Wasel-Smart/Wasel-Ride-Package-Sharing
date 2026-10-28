@@ -10,7 +10,7 @@
 
 import { readFileSync } from 'node:fs';
 
-const PLACEHOLDER = /^(?:|change[-_ ]?me|replace[-_ ].*|your[-_ ].*|xxx+|<.*>|.*(?:\.\.\.|\bexample\b|\bplaceholder\b).*)$/i;
+const PLACEHOLDER = /^(?:|change[-_ ]?me|replace[-_ ].*|your[-_ ].*|xxx+|<.*>|.*(?:\.\.\.|\bplaceholder\b|example\.(?:com|invalid)|\byour-project\b).*)$/i;
 const TRUE = 'true';
 const FALSE = 'false';
 
@@ -36,7 +36,7 @@ const optionalPublic = {
     description: 'Supabase anon/publishable key',
   },
   VITE_SUPABASE_PUBLISHABLE_KEY: {
-    pattern: /^(?:eyJ[A-Za-z0-9._-]+|sb_publishable_[A-Za-z0-9_-]+)$/,
+    pattern: /^(?:eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+|sb_publishable_[A-Za-z0-9_-]{20,})$/,
     description: 'Supabase publishable key',
   },
   VITE_STRIPE_PUBLISHABLE_KEY: {
