@@ -13,7 +13,7 @@ concurrency:
 jobs:
   update-lockfile:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout remediation branch
         uses: actions/checkout@v4
@@ -25,6 +25,8 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - name: Upgrade npm to current supported major
+        run: npm install --global npm@11
       - name: Install existing locked dependencies
         run: npm ci
       - name: Apply non-breaking npm audit fixes
