@@ -5,6 +5,7 @@ on:
       - codex/dependency-remediation
     paths:
       - .github/workflows/dependency-remediation.yml
+      - package.json
 permissions:
   contents: write
 concurrency:
@@ -27,13 +28,15 @@ jobs:
           cache: npm
       - name: Upgrade npm
         run: npm install --global npm@11
-      - name: Install locked dependencies
+      - name: Regenerate lockfile from reviewed manifest changes
+        run: npm install --package-lock-only --ignore-scripts
+      - name: Install resolved dependencies
         run: npm ci
       - name: Update dependencies within declared semver ranges
         run: npm update
       - name: Apply compatible audit fixes
         run: |
-          npm audit fix || echo "Some findings remain; no breaking upgrades were forced."
+          npm audit fix || echo "Some findings remain; no additional breaking upgrades were forced."
       - name: Commit dependency manifest and lockfile updates
         run: |
           if git diff --quiet -- package.json package-lock.json; then
@@ -43,5 +46,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package.json package-lock.json
-          git commit -m "fix: refresh compatible dependency security patches"
+          git commit -m "fix: remediate vulnerable dependency versions"
           git push origin HEAD:codex/dependency-remediation
