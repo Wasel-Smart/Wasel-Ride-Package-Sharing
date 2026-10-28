@@ -10,7 +10,7 @@
 
 import { readFileSync } from 'node:fs';
 
-const PLACEHOLDER = /^(?:|change[-_ ]?me|replace[-_ ].*|your[-_ ].*|xxx+|<.*>|$\{.*\})$/i;
+const PLACEHOLDER = /^(?:|change[-_ ]?me|replace[-_ ].*|your[-_ ].*|xxx+|<.*>)$/i;
 const TRUE = 'true';
 const FALSE = 'false';
 
@@ -125,10 +125,10 @@ function loadEnvFile(path) {
 }
 
 function isPlaceholder(value) {
-  return PLACEHOLDER.test(String(value ?? '').trim()) ||
-    /^(?:your[-_ ]|replace[-_ ]|example\.|changeme|placeholder)/i.test(String(value ?? '').trim());
+  const candidate = String(value ?? '').trim();
+  return PLACEHOLDER.test(candidate) || /^\$\{.*\}$/.test(candidate) ||
+    /^(?:your[-_ ]|replace[-_ ]|example\.|changeme|placeholder)/i.test(candidate);
 }
-
 function checkSchema(env, schema, { required = false, label }) {
   for (const [key, rule] of Object.entries(schema)) {
     const value = env[key];
