@@ -81,36 +81,6 @@ function resolveLogoVariant(
   return surface === 'dark' ? 'BrandLogoPrimaryDark' : 'BrandLogoStandardLight';
 }
 
-function WordmarkInitial({
-  color,
-  fontSize,
-}: {
-  color: string;
-  fontSize: number;
-}) {
-  const width = Math.max(12, Math.round(fontSize * 0.94));
-  const height = Math.max(12, Math.round(fontSize * 0.82));
-
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 96 72"
-      width={width}
-      height={height}
-      fill="none"
-      style={{ display: 'block', flexShrink: 0 }}
-    >
-      <path
-        d="M10 11C14 24 19 46 28 58C32 63 38 61 42 52L48 30L54 52C58 61 64 63 68 58C77 46 82 24 86 11"
-        stroke={color}
-        strokeWidth="9.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function BrandLogo({
   size = 'md',
   style,
@@ -176,7 +146,6 @@ export function BrandWordmark({
           whiteSpace: 'nowrap',
         }}
       >
-        <WordmarkInitial color={tone.text} fontSize={wordmarkSize} />
         <span
           style={{
             color: tone.text,
