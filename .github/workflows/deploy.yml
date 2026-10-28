@@ -3,9 +3,7 @@ name: Deploy to Vercel
 on:
   push:
     branches:
-      - main
       - master
-  workflow_dispatch:
 
 permissions:
   contents: read
