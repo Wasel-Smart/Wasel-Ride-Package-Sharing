@@ -10,7 +10,7 @@
 
 import { readFileSync } from 'node:fs';
 
-const PLACEHOLDER = /^(?:|change[-_ ]?me|replace[-_ ].*|your[-_ ].*|xxx+|<.*>)$/i;
+const PLACEHOLDER = /^(?:|change[-_ ]?me|replace[-_ ].*|your[-_ ].*|xxx+|<.*>|.*(?:\.\.\.|\bexample\b|\bplaceholder\b).*)$/i;
 const TRUE = 'true';
 const FALSE = 'false';
 
@@ -32,7 +32,7 @@ const requiredPublic = {
 
 const optionalPublic = {
   VITE_SUPABASE_ANON_KEY: {
-    pattern: /^(?:eyJ[A-Za-z0-9._-]+|sb_publishable_[A-Za-z0-9_-]+)$/,
+    pattern: /^(?:eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+|sb_publishable_[A-Za-z0-9_-]{20,})$/,
     description: 'Supabase anon/publishable key',
   },
   VITE_SUPABASE_PUBLISHABLE_KEY: {
@@ -142,6 +142,7 @@ function loadEnvFile(path) {
 function isPlaceholder(value) {
   const candidate = String(value ?? '').trim();
   return PLACEHOLDER.test(candidate) || /^\$\{.*\}$/.test(candidate) ||
+    /(?:your-project|your[-_ ]supabase|your[-_ ]anon|replace[-_ ]with|example\.com)/i.test(candidate) ||
     /^(?:your[-_ ]|replace[-_ ]|example\.|changeme|placeholder)/i.test(candidate);
 }
 function checkSchema(env, schema, { required = false, label }) {
@@ -187,6 +188,9 @@ function main() {
     issues.push('Set a valid VITE_SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY.');
   }
   checkSchema(env, optionalPublic, { required: false, label: 'optional public integrations' });
+  if (env.WASEL_REQUIRE_GOOGLE_OAUTH === TRUE && env.VITE_ENABLE_GOOGLE_AUTH !== TRUE) {
+    issues.push('VITE_ENABLE_GOOGLE_AUTH must be true when WASEL_REQUIRE_GOOGLE_OAUTH=true.');
+  }
   checkSchema(env, serverSecrets, { required: false, label: 'server-only secrets' });
 
   // These requirement switches are themselves explicit security contracts.
