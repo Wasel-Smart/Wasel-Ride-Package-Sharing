@@ -45,7 +45,7 @@ jobs:
       - name: Production build
         run: npm run build:optimized
         env:
-          VITE_APP_ENV: test
+          VITE_APP_ENV: production
           VITE_APP_URL: https://example.invalid
           VITE_SUPABASE_URL: https://ci-project.supabase.co
           VITE_SUPABASE_ANON_KEY: ci-anon-key
