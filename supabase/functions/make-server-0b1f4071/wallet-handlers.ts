@@ -1954,10 +1954,10 @@ export function createWalletHandlers(runtime: WalletRuntime) {
 
       const providerEventId = normalizeString(eventBody.id)
         ?? normalizeString(eventBody.providerEventId)
-        ?? crypto.randomUUID();
+        ?? await sha256Hex(rawPayload);
 
       const admin = runtime.getAdminClient();
-      const { error: eventInsertError } = await admin
+      const { data: insertedEvents, error: eventInsertError } = await admin
         .from('payment_webhook_events')
         .upsert({
           provider_name: provider,
@@ -1965,10 +1965,29 @@ export function createWalletHandlers(runtime: WalletRuntime) {
           signature: request.headers.get('stripe-signature') ?? request.headers.get('x-wallet-signature'),
           payload: eventBody,
           created_at: new Date().toISOString(),
-        }, { onConflict: 'provider_name,provider_event_id' });
+        }, { onConflict: 'provider_name,provider_event_id', ignoreDuplicates: true })
+        .select('provider_event_id');
 
       if (eventInsertError) {
         throw new Error(eventInsertError.message);
+      }
+
+      // Process a previously unseen event once. An unprocessed record is allowed
+      // to retry after a transient failure; already processed events are no-ops.
+      if (!Array.isArray(insertedEvents) || insertedEvents.length === 0) {
+        const { data: existingEvent, error: existingEventError } = await admin
+          .from('payment_webhook_events')
+          .select('processed_at')
+          .eq('provider_name', provider)
+          .eq('provider_event_id', providerEventId)
+          .maybeSingle();
+
+        if (existingEventError) {
+          throw new Error(existingEventError.message);
+        }
+        if (existingEvent?.processed_at) {
+          return runtime.json({ ok: true, duplicate: true });
+        }
       }
 
       let intent: Record<string, unknown> | null = null;
