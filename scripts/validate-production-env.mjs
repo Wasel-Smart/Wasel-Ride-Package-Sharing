@@ -168,6 +168,9 @@ function main() {
   }
 
   checkSchema(env, requiredPublic, { required: true, label: 'required public configuration' });
+  if (![env.VITE_SUPABASE_ANON_KEY, env.VITE_SUPABASE_PUBLISHABLE_KEY].some(value => value && !isPlaceholder(value))) {
+    issues.push('Set a valid VITE_SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY.');
+  }
   checkSchema(env, optionalPublic, { required: false, label: 'optional public integrations' });
   checkSchema(env, serverSecrets, { required: false, label: 'server-only secrets' });
 
