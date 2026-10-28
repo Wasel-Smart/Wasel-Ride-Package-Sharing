@@ -1,37 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 392 288" fill="none" role="img" aria-labelledby="title desc" preserveAspectRatio="xMidYMid meet">
-  <title id="title">Wasel route W symbol</title>
-  <desc id="desc">A flat premium W mark with a hub node, two endpoint nodes, and warm amber route strokes.</desc>
-  
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path
-      d="M84 86C97 129 112 188 142 242C148 253 159 256 166 245L196 145L226 245C233 256 244 253 250 242C280 188 295 129 308 86"
-      stroke="#E59C36"
-      stroke-width="30"
-    />
-    <path
-      d="M84 86C97 129 112 188 142 242C148 253 159 256 166 245L196 145L226 245C233 256 244 253 250 242C280 188 295 129 308 86"
-      stroke="#FFD39A"
-      stroke-opacity="0.72"
-      stroke-width="10"
-    />
-    <path d="M76 64L84 86M196 108L196 130M316 64L308 86" stroke="#28323D" stroke-width="7" />
-  </g>
-
-  <g transform="translate(76 52)">
-    <circle r="12.5" fill="#28323D" />
-    <circle r="7.7" fill="#FFF7EA" />
-    <circle r="2.6" fill="#E59C36" />
-  </g>
-
-  <g transform="translate(196 96)">
-    <circle r="15.5" fill="#28323D" />
-    <circle r="9.6" fill="#FFF7EA" />
-    <circle r="4.2" fill="#E59C36" />
-  </g>
-
-  <g transform="translate(316 52)">
-    <circle r="12.5" fill="#28323D" />
-    <circle r="7.7" fill="#FFF7EA" />
-    <circle r="2.6" fill="#E59C36" />
+  <title id="title">Wasel blue green route W with location pin</title>
+  <desc id="desc">A vibrant blue and green interwoven route mark with an orange location pin and white endpoint nodes.</desc>
+  <defs>
+    <linearGradient id="blue" x1="50" y1="55" x2="175" y2="270" gradientUnits="userSpaceOnUse"><stop stop-color="#20C7F4"/><stop offset=".48" stop-color="#0877F9"/><stop offset="1" stop-color="#1547D9"/></linearGradient>
+    <linearGradient id="green" x1="225" y1="52" x2="345" y2="270" gradientUnits="userSpaceOnUse"><stop stop-color="#79E51E"/><stop offset=".5" stop-color="#28C34B"/><stop offset="1" stop-color="#07875D"/></linearGradient>
+    <linearGradient id="orange" x1="140" y1="35" x2="250" y2="205" gradientUnits="userSpaceOnUse"><stop stop-color="#FFC928"/><stop offset=".45" stop-color="#FF8A00"/><stop offset="1" stop-color="#F04432"/></linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFFFFF" stop-opacity=".62"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+    <filter id="softShadow" x="10" y="10" width="372" height="270" color-interpolation-filters="sRGB"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#071521" flood-opacity=".22"/></filter>
+  </defs>
+  <g filter="url(#softShadow)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M76 76C80 120 98 186 133 225C151 246 174 246 190 225L218 181" stroke="url(#blue)" stroke-width="38"/>
+    <path d="M76 76C80 120 98 186 133 225C151 246 174 246 190 225L218 181" stroke="url(#shine)" stroke-width="7" opacity=".55"/>
+    <path d="M316 76C312 120 294 186 259 225C241 246 218 246 202 225L174 181" stroke="url(#green)" stroke-width="38"/>
+    <path d="M316 76C312 120 294 186 259 225C241 246 218 246 202 225L174 181" stroke="url(#shine)" stroke-width="7" opacity=".42"/>
+    <path d="M196 35C157 35 128 64 128 101C128 127 145 146 166 170L196 204L226 170C247 146 264 127 264 101C264 64 235 35 196 35Z" stroke="url(#orange)" stroke-width="30" fill="#FF8A00" fill-opacity=".08"/>
+    <path d="M196 66C176 66 160 82 160 102C160 117 174 132 196 158C218 132 232 117 232 102C232 82 216 66 196 66Z" stroke="url(#orange)" stroke-width="18"/>
+    <circle cx="76" cy="70" r="22" fill="#F9FCFF"/><circle cx="76" cy="70" r="15" fill="#FFFFFF"/>
+    <circle cx="316" cy="70" r="22" fill="#F9FCFF"/><circle cx="316" cy="70" r="15" fill="#FFFFFF"/>
+    <circle cx="196" cy="101" r="12" fill="#FFB51B"/><circle cx="196" cy="101" r="6" fill="#FFF0C2"/>
   </g>
 </svg>
