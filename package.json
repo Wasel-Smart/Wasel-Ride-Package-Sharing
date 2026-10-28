@@ -107,7 +107,6 @@
       "tmp": "^0.2.5"
     },
     "basic-ftp": "6.2.1",
-    "extract-zip": "2.0.2",
     "nanoid": "5.1.16"
   },
   "scripts": {
