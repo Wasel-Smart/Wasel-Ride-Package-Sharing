@@ -5,7 +5,7 @@
   "type": "module",
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.215.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
     "@opentelemetry/resources": "^2.7.0",
     "@opentelemetry/sdk-trace-web": "^2.7.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",
@@ -63,7 +63,7 @@
     "tw-animate-css": "^1.3.8",
     "vaul": "^1.1.2",
     "web-vitals": "^5.2.0",
-    "zod": "^3.23.8"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
@@ -105,7 +105,10 @@
     },
     "external-editor": {
       "tmp": "^0.2.5"
-    }
+    },
+    "basic-ftp": "6.2.1",
+    "extract-zip": "2.0.2",
+    "nanoid": "5.1.16"
   },
   "scripts": {
     "dev": "vite",
