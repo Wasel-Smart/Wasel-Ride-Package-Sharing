@@ -89,6 +89,21 @@ const serverSecrets = {
     description: 'Resend API key',
     requiredWhen: 'WASEL_REQUIRE_RESEND',
   },
+  AUTOMATION_WORKER_SECRET: {
+    pattern: /^[a-f0-9]{64}$/i,
+    description: '32-byte automation worker secret encoded as 64 hexadecimal characters',
+    requiredWhen: 'WASEL_REQUIRE_AUTOMATION',
+  },
+  COMMUNICATION_WORKER_SECRET: {
+    pattern: /^[a-f0-9]{64}$/i,
+    description: '32-byte communications worker secret encoded as 64 hexadecimal characters',
+    requiredWhen: 'WASEL_REQUIRE_COMMUNICATIONS_WORKER',
+  },
+  WALLET_STEP_UP_SECRET: {
+    pattern: /^[a-f0-9]{64}$/i,
+    description: '32-byte wallet step-up secret encoded as 64 hexadecimal characters',
+    requiredWhen: 'WASEL_REQUIRE_WALLET',
+  },
 };
 
 const issues = [];
@@ -181,6 +196,9 @@ function main() {
     'WASEL_REQUIRE_GOOGLE_MAPS',
     'WASEL_REQUIRE_GOOGLE_OAUTH',
     'WASEL_REQUIRE_SUPABASE_SERVICE_ROLE',
+    'WASEL_REQUIRE_AUTOMATION',
+    'WASEL_REQUIRE_COMMUNICATIONS_WORKER',
+    'WASEL_REQUIRE_WALLET',
   ]) {
     if (env[key] != null && env[key] !== TRUE && env[key] !== FALSE) {
       issues.push(`${key} must be exactly true or false.`);
