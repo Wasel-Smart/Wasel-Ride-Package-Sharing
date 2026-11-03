@@ -27,6 +27,16 @@ export const API_URL = configuredApiUrl
     ? `${resolvedFunctionsBaseUrl.replace(/\/$/, '')}/${resolvedFunctionName}`
     : '';
 
+/** Build a URL for an independently deployed Supabase Edge Function. */
+export function getEdgeFunctionUrl(functionName: string): string {
+  const normalizedName = functionName.trim().replace(/^\/+|\/+$/g, '');
+  if (!normalizedName || !resolvedFunctionsBaseUrl) {
+    return '';
+  }
+
+  return `${resolvedFunctionsBaseUrl.replace(/\/$/, '')}/${normalizedName}`;
+}
+
 export type BackendStatus = 'unknown' | 'healthy' | 'degraded' | 'offline';
 
 export interface AvailabilitySnapshot {

@@ -19,6 +19,20 @@ function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+async function getCanonicalUserId(supabaseAdmin: ReturnType<typeof createClient>, authUserId: string) {
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .select('id')
+    .eq('auth_user_id', authUserId)
+    .maybeSingle();
+
+  if (error || !data?.id) {
+    throw new Error('Canonical user record could not be found.');
+  }
+
+  return String(data.id);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -68,13 +82,16 @@ serve(async (req) => {
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       );
 
-      await supabaseAdmin.from('phone_verifications').insert({
+      const { error: insertError } = await supabaseAdmin.from('phone_verifications').insert({
         user_id: user.id,
         phone_number,
         code,
         expires_at: expiresAt.toISOString(),
         attempts: 0,
       });
+      if (insertError) {
+        throw new Error(insertError.message);
+      }
 
       const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
       const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
@@ -142,22 +159,22 @@ serve(async (req) => {
         );
       }
 
-      await supabaseAdmin
+      const { error: verificationUpdateError } = await supabaseAdmin
         .from('phone_verifications')
         .update({ verified: true, verified_at: new Date().toISOString() })
         .eq('id', verification.id);
+      if (verificationUpdateError) {
+        throw new Error(verificationUpdateError.message);
+      }
 
-      await supabaseAdmin
-        .from('profiles')
-        .update({ phone_number, phone_verified: true })
-        .eq('id', user.id);
-
-      await supabaseAdmin.from('user_verifications').insert({
-        user_id: user.id,
-        verification_type: 'phone',
-        status: 'verified',
-        verified_at: new Date().toISOString(),
-      });
+      const canonicalUserId = await getCanonicalUserId(supabaseAdmin, user.id);
+      const { error: userUpdateError } = await supabaseAdmin
+        .from('users')
+        .update({ phone_number, phone_verified_at: new Date().toISOString() })
+        .eq('id', canonicalUserId);
+      if (userUpdateError) {
+        throw new Error(userUpdateError.message);
+      }
 
       return new Response(
         JSON.stringify({ success: true, message: 'Phone verified successfully' }),

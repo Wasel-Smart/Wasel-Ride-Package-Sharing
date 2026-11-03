@@ -5,9 +5,10 @@ type CoreModule = typeof CoreService;
 
 let core: CoreModule;
 
-async function loadCoreModule() {
+async function loadCoreModule(functionsBaseUrl = '') {
   vi.resetModules();
   vi.stubEnv('VITE_API_URL', 'https://api.test.com');
+  vi.stubEnv('VITE_EDGE_FUNCTIONS_BASE_URL', functionsBaseUrl);
   vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'test-anon-key');
   vi.stubEnv('VITE_SUPABASE_URL', '');
   global.fetch = vi.fn();
@@ -52,6 +53,14 @@ describe('Core Service', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.useRealTimers();
+  });
+
+  it('builds URLs for separately deployed Edge Functions', async () => {
+    await loadCoreModule('https://project.supabase.co/functions/v1/');
+
+    expect(core.getEdgeFunctionUrl('sms-verification')).toBe(
+      'https://project.supabase.co/functions/v1/sms-verification',
+    );
   });
 
   describe('fetchWithRetry', () => {
