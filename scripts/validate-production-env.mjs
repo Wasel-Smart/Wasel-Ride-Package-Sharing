@@ -1,271 +1,234 @@
 #!/usr/bin/env node
 
 /**
- * Production Environment Validation Script
- * Validates all required environment variables before deployment
+ * Fail-closed production environment validation.
+ *
+ * Validate public Vite settings separately from server-side secrets. Never print
+ * secret values. Optional integrations are validated when configured; production
+ * owners can make an integration mandatory with WASEL_REQUIRE_* flags.
  */
 
-import { readFileSync } from 'fs';
-import { exit } from 'process';
+import { readFileSync } from 'node:fs';
 
-const REQUIRED_VARS = {
-  // Supabase
+const PLACEHOLDER = /^(?:|change[-_ ]?me|replace[-_ ].*|your[-_ ].*|xxx+|<.*>|.*(?:\.\.\.|\bplaceholder\b|example\.(?:com|invalid)|\byour-project\b).*)$/i;
+const TRUE = 'true';
+const FALSE = 'false';
+
+const requiredPublic = {
   VITE_SUPABASE_URL: {
-    required: true,
-    pattern: /^https:\/\/.+\.supabase\.co$/,
-    description: 'Supabase project URL',
+    pattern: /^https:\/\/[a-z0-9-]+\.supabase\.co$/i,
+    description: 'HTTPS Supabase project URL',
   },
-  VITE_SUPABASE_ANON_KEY: {
-    required: true,
-    pattern: /^eyJ/,
-    description: 'Supabase publishable anon key (starts with eyJ)',
-  },
-
-  // Stripe
-  VITE_STRIPE_PUBLISHABLE_KEY: {
-    required: true,
-    pattern: /^pk_live_/,
-    description: 'Stripe LIVE publishable key (must start with pk_live_)',
-  },
-
-  // Sentry
-  VITE_SENTRY_DSN: {
-    required: true,
-    pattern: /^https:\/\/[a-f0-9]+@[a-z0-9]+\.ingest\.sentry\.io\/\d+$/,
-    description: 'Sentry DSN for error tracking',
-  },
-
-  // App Configuration
   VITE_APP_URL: {
-    required: true,
-    pattern: /^https:\/\/.+$/,
-    description: 'Production app URL (must be HTTPS)',
+    pattern: /^https:\/\/[a-z0-9.-]+(?::\d+)?(?:\/.*)?$/i,
+    description: 'HTTPS production app URL',
   },
-  VITE_APP_ENV: {
-    required: true,
-    pattern: /^production$/,
-    description: 'Must be "production"',
-  },
+  VITE_APP_ENV: { exact: 'production', description: 'must equal production' },
+  VITE_ENABLE_SYNTHETIC_DATA: { exact: FALSE, description: 'must be false in production' },
+  VITE_ENABLE_SYNTHETIC_TRIPS: { exact: FALSE, description: 'must be false in production' },
+  VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: { exact: FALSE, description: 'must be false in production' },
+  VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: { exact: FALSE, description: 'must be false in production' },
+};
 
-  // Google Maps
+const optionalPublic = {
+  VITE_SUPABASE_ANON_KEY: {
+    pattern: /^(?:eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+|sb_publishable_[A-Za-z0-9_-]{20,})$/,
+    description: 'Supabase anon/publishable key',
+  },
+  VITE_SUPABASE_PUBLISHABLE_KEY: {
+    pattern: /^(?:eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+|sb_publishable_[A-Za-z0-9_-]{20,})$/,
+    description: 'Supabase publishable key',
+  },
+  VITE_STRIPE_PUBLISHABLE_KEY: {
+    pattern: /^pk_live_[A-Za-z0-9]+$/,
+    description: 'Stripe live publishable key',
+    requiredWhen: 'WASEL_REQUIRE_STRIPE',
+  },
+  VITE_SENTRY_DSN: {
+    pattern: /^https:\/\/[a-f0-9]+@[a-z0-9.-]+\.ingest\.sentry\.io\/\d+$/i,
+    description: 'Sentry DSN',
+  },
   VITE_GOOGLE_MAPS_API_KEY: {
-    required: true,
-    pattern: /^AIza/,
-    description: 'Google Maps API key',
+    pattern: /^AIza[A-Za-z0-9_-]{20,}$/,
+    description: 'Google Maps browser API key',
+    requiredWhen: 'WASEL_REQUIRE_GOOGLE_MAPS',
   },
   VITE_GOOGLE_CLIENT_ID: {
-    required: true,
-    pattern: /\.apps\.googleusercontent\.com$/,
+    pattern: /^[A-Za-z0-9-]+\.apps\.googleusercontent\.com$/,
     description: 'Google OAuth client ID',
-  },
-
-  // Support Contact
-  VITE_SUPPORT_WHATSAPP_NUMBER: {
-    required: true,
-    pattern: /^962\d{9}$/,
-    description: 'Jordan WhatsApp number (format: 962XXXXXXXXX)',
+    requiredWhen: 'WASEL_REQUIRE_GOOGLE_OAUTH',
   },
   VITE_SUPPORT_EMAIL: {
-    required: true,
     pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    description: 'Support email address',
+    description: 'support email address',
   },
-
-  // Feature Flags
-  VITE_ENABLE_SYNTHETIC_DATA: {
-    required: true,
-    pattern: /^false$/,
-    description: 'Must be "false" in production',
-  },
-  VITE_ENABLE_SYNTHETIC_TRIPS: {
-    required: true,
-    pattern: /^false$/,
-    description: 'Must be "false" in production',
-  },
-  VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: {
-    required: true,
-    pattern: /^false$/,
-    description: 'Must be "false" in production',
-  },
-  VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: {
-    required: true,
-    pattern: /^false$/,
-    description: 'Must be "false" in production',
+  VITE_SUPPORT_WHATSAPP_NUMBER: {
+    pattern: /^\+?\d{8,15}$/,
+    description: 'support WhatsApp number in international format',
   },
 };
 
-const BACKEND_REQUIRED_VARS = {
+const serverSecrets = {
   SUPABASE_SERVICE_ROLE_KEY: {
-    required: true,
-    pattern: /^eyJ/,
-    description: 'Supabase service role key (backend only)',
+    pattern: /^(?:eyJ[A-Za-z0-9._-]+|sb_secret_[A-Za-z0-9_-]+)$/,
+    description: 'Supabase server-only service-role/secret key',
+    requiredWhen: 'WASEL_REQUIRE_SUPABASE_SERVICE_ROLE',
   },
   STRIPE_SECRET_KEY: {
-    required: true,
-    pattern: /^sk_live_/,
-    description: 'Stripe LIVE secret key',
+    pattern: /^sk_live_[A-Za-z0-9]+$/,
+    description: 'Stripe live secret key',
+    requiredWhen: 'WASEL_REQUIRE_STRIPE',
   },
   STRIPE_WEBHOOK_SECRET: {
-    required: true,
-    pattern: /^whsec_/,
+    pattern: /^whsec_[A-Za-z0-9]+$/,
     description: 'Stripe webhook signing secret',
+    requiredWhen: 'WASEL_REQUIRE_STRIPE',
   },
   RESEND_API_KEY: {
-    required: true,
-    pattern: /^re_/,
-    description: 'Resend API key for emails',
+    pattern: /^re_[A-Za-z0-9_-]+$/,
+    description: 'Resend API key',
+    requiredWhen: 'WASEL_REQUIRE_RESEND',
+  },
+  AUTOMATION_WORKER_SECRET: {
+    pattern: /^[a-f0-9]{64}$/i,
+    description: '32-byte automation worker secret encoded as 64 hexadecimal characters',
+    requiredWhen: 'WASEL_REQUIRE_AUTOMATION',
+  },
+  COMMUNICATION_WORKER_SECRET: {
+    pattern: /^[a-f0-9]{64}$/i,
+    description: '32-byte communications worker secret encoded as 64 hexadecimal characters',
+    requiredWhen: 'WASEL_REQUIRE_COMMUNICATIONS_WORKER',
+  },
+  WALLET_STEP_UP_SECRET: {
+    pattern: /^[a-f0-9]{64}$/i,
+    description: '32-byte wallet step-up secret encoded as 64 hexadecimal characters',
+    requiredWhen: 'WASEL_REQUIRE_WALLET',
   },
 };
 
-function validateEnvironment(envVars, schema) {
-  const errors = [];
-  const warnings = [];
-
-  for (const [key, config] of Object.entries(schema)) {
-    const value = envVars[key];
-
-    // Check if required variable exists
-    if (config.required && !value) {
-      errors.push(`❌ ${key} is required but not set. ${config.description}`);
-      continue;
-    }
-
-    // Check pattern if value exists
-    if (value && config.pattern && !config.pattern.test(value)) {
-      errors.push(`❌ ${key} has invalid format. ${config.description}`);
-      continue;
-    }
-
-    // Warn about test keys in production
-    if (value && (value.includes('test') || value.includes('_test_'))) {
-      warnings.push(`⚠️  ${key} appears to contain test credentials`);
-    }
-  }
-
-  return {
-    valid: errors.length === 0,
-    errors,
-    warnings,
-  };
-}
+const issues = [];
+const warnings = [];
 
 function loadEnvFile(path) {
+  let source;
   try {
-    const content = readFileSync(path, 'utf-8');
-    const vars = {};
-
-    content.split('\n').forEach(line => {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) return;
-
-      const [key, ...valueParts] = trimmed.split('=');
-      if (key && valueParts.length > 0) {
-        vars[key.trim()] = valueParts
-          .join('=')
-          .trim()
-          .replace(/^["']|["']$/g, '');
-      }
-    });
-
-    return vars;
+    source = readFileSync(path, 'utf8');
   } catch (error) {
-    console.error(`Failed to load ${path}:`, error);
+    if (error?.code !== 'ENOENT') issues.push(`Unable to read ${path}.`);
     return {};
+  }
+
+  const vars = {};
+  const seen = new Set();
+  for (const [index, rawLine] of source.split(/\r?\n/).entries()) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const match = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if (!match) {
+      issues.push(`.env.production line ${index + 1} is not a valid KEY=VALUE assignment.`);
+      continue;
+    }
+    const [, key] = match;
+    let value = match[2].trim();
+    if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+    else if (value.startsWith("'") && value.endsWith("'")) value = value.slice(1, -1);
+    if (seen.has(key)) issues.push(`.env.production contains duplicate key ${key}.`);
+    seen.add(key);
+    vars[key] = value;
+  }
+  return vars;
+}
+
+function isPlaceholder(value) {
+  const candidate = String(value ?? '').trim();
+  return PLACEHOLDER.test(candidate) || /^\$\{.*\}$/.test(candidate) ||
+    /(?:your-project|your[-_ ]supabase|your[-_ ]anon|replace[-_ ]with|example\.com)/i.test(candidate) ||
+    /^(?:your[-_ ]|replace[-_ ]|example\.|changeme|placeholder)/i.test(candidate);
+}
+function checkSchema(env, schema, { required = false, label }) {
+  for (const [key, rule] of Object.entries(schema)) {
+    const value = env[key];
+    const mustExist = required || (rule.requiredWhen && env[rule.requiredWhen] === TRUE);
+    if (value == null || value === '') {
+      if (mustExist) issues.push(`${key} is required (${rule.description}).`);
+      continue;
+    }
+    if (isPlaceholder(value)) {
+      issues.push(`${key} still contains a placeholder value.`);
+      continue;
+    }
+    if (rule.exact && value !== rule.exact) {
+      issues.push(`${key} ${rule.description}.`);
+      continue;
+    }
+    if (rule.pattern && !rule.pattern.test(value)) {
+      issues.push(`${key} has an invalid format (${rule.description}).`);
+      continue;
+    }
+    if (key.includes('STRIPE') && /(?:pk|sk)_(?:test)_/i.test(value)) {
+      issues.push(`${key} uses a Stripe test credential in production.`);
+    }
   }
 }
 
 function main() {
-  console.log('🔍 Validating Production Environment...\n');
+  const fileVars = loadEnvFile('.env.production');
+  // Real process environment intentionally takes precedence over file values.
+  const env = { ...fileVars, ...process.env };
 
-  // Load .env.production if it exists
-  const envVars = loadEnvFile('.env.production');
-
-  // Also check process.env for CI/CD environments
-  const allVars = { ...envVars, ...process.env };
-
-  // Validate frontend variables
-  console.log('📱 Frontend Variables:');
-  const frontendResult = validateEnvironment(allVars, REQUIRED_VARS);
-
-  if (frontendResult.errors.length > 0) {
-    console.log('\nErrors:');
-    frontendResult.errors.forEach(err => console.log(err));
+  if (env.APP_ENV && env.APP_ENV !== 'production') {
+    issues.push('APP_ENV must be production when set.');
+  }
+  if (env.NODE_ENV && env.NODE_ENV !== 'production') {
+    issues.push('NODE_ENV must be production when set.');
   }
 
-  if (frontendResult.warnings.length > 0) {
-    console.log('\nWarnings:');
-    frontendResult.warnings.forEach(warn => console.log(warn));
+  checkSchema(env, requiredPublic, { required: true, label: 'required public configuration' });
+  if (![env.VITE_SUPABASE_ANON_KEY, env.VITE_SUPABASE_PUBLISHABLE_KEY].some(value => value && !isPlaceholder(value))) {
+    issues.push('Set a valid VITE_SUPABASE_ANON_KEY or VITE_SUPABASE_PUBLISHABLE_KEY.');
+  }
+  checkSchema(env, optionalPublic, { required: false, label: 'optional public integrations' });
+  if (env.WASEL_REQUIRE_GOOGLE_OAUTH === TRUE && env.VITE_ENABLE_GOOGLE_AUTH !== TRUE) {
+    issues.push('VITE_ENABLE_GOOGLE_AUTH must be true when WASEL_REQUIRE_GOOGLE_OAUTH=true.');
+  }
+  checkSchema(env, serverSecrets, { required: false, label: 'server-only secrets' });
+
+  // These requirement switches are themselves explicit security contracts.
+  for (const key of [
+    'WASEL_REQUIRE_STRIPE',
+    'WASEL_REQUIRE_RESEND',
+    'WASEL_REQUIRE_GOOGLE_MAPS',
+    'WASEL_REQUIRE_GOOGLE_OAUTH',
+    'WASEL_REQUIRE_SUPABASE_SERVICE_ROLE',
+    'WASEL_REQUIRE_AUTOMATION',
+    'WASEL_REQUIRE_COMMUNICATIONS_WORKER',
+    'WASEL_REQUIRE_WALLET',
+  ]) {
+    if (env[key] != null && env[key] !== TRUE && env[key] !== FALSE) {
+      issues.push(`${key} must be exactly true or false.`);
+    }
   }
 
-  if (frontendResult.valid && frontendResult.warnings.length === 0) {
-    console.log('✅ All frontend variables valid\n');
+  // Public Vite-prefixed values are embedded in client bundles. Block common
+  // server-secret names if someone accidentally assigns them a VITE_ prefix.
+  for (const key of Object.keys(env)) {
+    if (/^VITE_.*(?:SERVICE_ROLE|SECRET_KEY|WEBHOOK_SECRET|PRIVATE_KEY|ACCESS_TOKEN|AUTH_TOKEN)/i.test(key)) {
+      issues.push(`${key} appears to expose a server secret through the client bundle; remove the VITE_ prefix and keep it server-side.`);
+    }
   }
 
-  // Validate backend variables
-  console.log('\n🔧 Backend Variables (Edge Functions):');
-  const backendResult = validateEnvironment(allVars, BACKEND_REQUIRED_VARS);
-
-  if (backendResult.errors.length > 0) {
-    console.log('\nErrors:');
-    backendResult.errors.forEach(err => console.log(err));
+  if (issues.length) {
+    console.error('\nPRODUCTION ENVIRONMENT VALIDATION FAILED');
+    for (const issue of issues) console.error(`- ${issue}`);
+    if (warnings.length) for (const warning of warnings) console.error(`- Warning: ${warning}`);
+    console.error('\nFix every reported issue before deploying. Secret values are never printed.\n');
+    process.exitCode = 1;
+    return;
   }
 
-  if (backendResult.warnings.length > 0) {
-    console.log('\nWarnings:');
-    backendResult.warnings.forEach(warn => console.log(warn));
-  }
-
-  if (backendResult.valid && backendResult.warnings.length === 0) {
-    console.log('✅ All backend variables valid\n');
-  }
-
-  // Security checks
-  console.log('\n🔒 Security Checks:');
-  const securityIssues = [];
-
-  if (allVars.VITE_SUPABASE_URL?.includes('localhost')) {
-    securityIssues.push('❌ VITE_SUPABASE_URL points to localhost');
-  }
-
-  if (allVars.VITE_APP_URL?.startsWith('http://')) {
-    securityIssues.push('❌ VITE_APP_URL must use HTTPS in production');
-  }
-
-  if (allVars.VITE_STRIPE_PUBLISHABLE_KEY?.startsWith('pk_test_')) {
-    securityIssues.push('❌ Using Stripe TEST key in production');
-  }
-
-  if (allVars.STRIPE_SECRET_KEY?.startsWith('sk_test_')) {
-    securityIssues.push('❌ Using Stripe TEST secret key in production');
-  }
-
-  if (securityIssues.length > 0) {
-    console.log('\nSecurity Issues:');
-    securityIssues.forEach(issue => console.log(issue));
-  } else {
-    console.log('✅ No security issues detected\n');
-  }
-
-  // Final verdict
-  const allValid = frontendResult.valid && backendResult.valid && securityIssues.length === 0;
-  const hasWarnings = frontendResult.warnings.length > 0 || backendResult.warnings.length > 0;
-
-  console.log('\n' + '='.repeat(60));
-  if (allValid && !hasWarnings) {
-    console.log('✅ PRODUCTION ENVIRONMENT VALIDATION PASSED');
-    console.log('='.repeat(60));
-    exit(0);
-  } else if (allValid && hasWarnings) {
-    console.log('⚠️  PRODUCTION ENVIRONMENT VALIDATION PASSED WITH WARNINGS');
-    console.log('='.repeat(60));
-    console.log('\nPlease review warnings before deploying to production.');
-    exit(0);
-  } else {
-    console.log('❌ PRODUCTION ENVIRONMENT VALIDATION FAILED');
-    console.log('='.repeat(60));
-    console.log('\nFix all errors before deploying to production.');
-    exit(1);
-  }
+  console.log('Production environment validation passed.');
+  console.log('Required core settings are valid; optional integrations are checked when configured.');
+  console.log('Confirm WASEL_REQUIRE_* flags match every integration enabled for the release.');
 }
 
 main();
