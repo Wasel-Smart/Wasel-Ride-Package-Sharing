@@ -170,8 +170,8 @@ export class MobileAuthService {
   }
 
   async signInWithPhone(phone: string): Promise<{ error?: AuthError }> {
-    const normalized = normalizePhone(phone);
-    if (!isValidE164Phone(normalized)) {
+    const normalized = this.tryNormalizePhone(phone);
+    if (!normalized) {
       return { error: new Error('Please enter a valid phone number.') as AuthError };
     }
 
@@ -262,9 +262,28 @@ export class MobileAuthService {
     return this.signInWithOAuth('facebook');
   }
 
+  /**
+   * normalizePhone() throws on input it cannot parse, and a user may type spaces or a leading 0
+   * (the screen's own hint is "+962 79 123 4567"). Returns the E.164 number, or null if invalid.
+   */
+  private tryNormalizePhone(phone: string): string | null {
+    try {
+      const normalized = normalizePhone(phone);
+      return isValidE164Phone(normalized) ? normalized : null;
+    } catch {
+      return null;
+    }
+  }
+
   async verifyOtp(phone: string, token: string): Promise<{ error?: AuthError }> {
+    // Must match the number the OTP was requested for: signInWithPhone sends the normalized form.
+    const normalized = this.tryNormalizePhone(phone);
+    if (!normalized) {
+      return { error: new Error('Please enter a valid phone number.') as AuthError };
+    }
+
     const { error } = await this.supabase.auth.verifyOtp({
-      phone,
+      phone: normalized,
       token,
       type: 'sms',
     });

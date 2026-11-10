@@ -31,6 +31,7 @@ function installFetch() {
       id: authId, auth_user_id: authId, email: 'rider@example.test', full_name: 'Test Rider', role: 'passenger',
     });}
     if (url.pathname === '/rest/v1/trips') {return Response.json({ id: tripId, trip_id: tripId, driver_id: authId });}
+    if (url.pathname === '/rest/v1/drivers') {return Response.json({ id: authId, driver_id: authId, user_id: authId });}
     if (url.pathname === '/rest/v1/bookings') {return Response.json(null);}
     if (url.pathname === '/rest/v1/conversations' && method === 'GET') {return Response.json({ conversation_id: conversationId });}
     if (url.pathname === '/rest/v1/conversation_members' && method === 'GET') {return Response.json({ last_read_at: null });}

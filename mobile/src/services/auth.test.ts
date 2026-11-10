@@ -187,12 +187,10 @@ describe('MobileAuthService', () => {
   });
 
   describe('signInWithPhone', () => {
-    it('rejects an unparsable phone number instead of returning a friendly error', async () => {
-      // normalizePhone() throws synchronously for input it can't recognize, and
-      // signInWithPhone has no try/catch around that call — so this currently
-      // rejects the promise rather than resolving to { error }. Worth checking
-      // whether every caller (e.g. PhoneAuthScreen) wraps this call in try/catch.
-      await expect(mobileAuth.signInWithPhone('123')).rejects.toThrow('Invalid phone number provided.');
+    it('returns a friendly error (does not throw) for an unparsable phone number', async () => {
+      const result = await mobileAuth.signInWithPhone('123');
+
+      expect(result.error?.message).toBe('Please enter a valid phone number.');
       expect(mockSupabaseAuth.signInWithOtp).not.toHaveBeenCalled();
     });
 
@@ -211,6 +209,36 @@ describe('MobileAuthService', () => {
       const result = await mobileAuth.signInWithPhone('0791234567');
 
       expect(result.error).toEqual({ message: 'Rate limited' });
+    });
+  });
+
+  describe('verifyOtp', () => {
+    it('verifies against the same normalized number the OTP was sent to', async () => {
+      mockSupabaseAuth.verifyOtp.mockResolvedValue({ error: null });
+
+      const result = await mobileAuth.verifyOtp('+962 79 123 4567', '123456');
+
+      expect(result.error).toBeUndefined();
+      expect(mockSupabaseAuth.verifyOtp).toHaveBeenCalledWith({
+        phone: '+962791234567',
+        token: '123456',
+        type: 'sms',
+      });
+    });
+
+    it('returns a friendly error without calling Supabase for an invalid number', async () => {
+      const result = await mobileAuth.verifyOtp('123', '123456');
+
+      expect(result.error?.message).toBe('Please enter a valid phone number.');
+      expect(mockSupabaseAuth.verifyOtp).not.toHaveBeenCalled();
+    });
+
+    it('passes through a supabase error', async () => {
+      mockSupabaseAuth.verifyOtp.mockResolvedValue({ error: { message: 'Token has expired' } });
+
+      const result = await mobileAuth.verifyOtp('0791234567', '000000');
+
+      expect(result.error).toEqual({ message: 'Token has expired' });
     });
   });
 

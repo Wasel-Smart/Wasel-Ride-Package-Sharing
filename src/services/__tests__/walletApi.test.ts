@@ -407,7 +407,7 @@ describe('walletApi — edge transport NOT configured (read-only/local tiers)', 
       );
 
       const wallet = await walletApi.getWallet('user-123');
-      expect(wallet.activeRewards[0]?.description).toBe('<img src=x onerror=alert(1)>');
+      expect(wallet.activeRewards[0]?.description).toBe('&lt;img src=x onerror=alert(1)&gt;');
     });
 
     it('handles missing transactions array gracefully', async () => {

@@ -101,12 +101,8 @@ class RootErrorBoundary extends React.Component<React.PropsWithChildren, { hasEr
       diagnostics,
     );
 
-    const isChunkError =
-      /loading chunk/i.test( message ) ||
-      /failed to fetch dynamically imported module/i.test( message ) ||
-      /importing a module script failed/i.test( message ) ||
-      /Invalid hook call/i.test( message );
-    if ( isChunkError ) {
+    // Single source of truth for chunk-load detection (declared below, hoisted).
+    if ( isChunkLoadFailure( message ) ) {
       void waselHardRecover();
     }
   }
