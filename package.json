@@ -137,7 +137,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.0.0",
     "embla-carousel-react": "^8.6.0",
-    "framer-motion": "^11.18.2",
+    "framer-motion": "^14.11.1",
     "input-otp": "^1.4.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.54.0",
