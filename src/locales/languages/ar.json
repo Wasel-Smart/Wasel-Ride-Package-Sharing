@@ -1468,6 +1468,8 @@
   "hero_lead_user": "أهلين {name}! اختار مسارك، وشوف السعر، ويلا على الطريق.",
   "first_only_badge": "الأولى والوحيدة في الشرق الأوسط وأفريقيا",
   "ticker_live_label": "مسارات مباشرة",
+  "ticker_pause": "إيقاف التمرير",
+  "ticker_resume": "متابعة التمرير",
   "timeline_seat_price_label": "سعر المقعد",
   "timeline_driver_trust_label": "ثقة السواق",
   "timeline_parcel_option_label": "مكان للطرد",

@@ -7,7 +7,9 @@ import {
   CircleDollarSign,
   Clock,
   MapPinned,
+  Pause,
   PackageCheck,
+  Play,
   Route,
   Shield,
   ShieldCheck,
@@ -45,16 +47,28 @@ export interface HeroTickerItem {
  *  translateX(±50%) loop has an exact copy to land on. */
 function CorridorTicker ( { items, ar }: { items: HeroTickerItem[]; ar: boolean } ) {
   const { t } = useLanguage();
+  const [ isPaused, setIsPaused ] = useState( false );
   if ( items.length === 0 ) { return null; }
   const loop = [ ...items, ...items ];
+  const pauseLabel = t( isPaused ? 'homeHeroSection.ticker_resume' : 'homeHeroSection.ticker_pause' );
   return (
-    <div className="wasel-ticker" aria-label={ t( 'homeHeroSection.ticker_live_label' ) }>
+    <div className="wasel-ticker" role="region" aria-label={ t( 'homeHeroSection.ticker_live_label' ) }>
       <span className="wasel-ticker-label">
         <span aria-hidden="true" />
         { t( 'homeHeroSection.ticker_live_label' ) }
       </span>
+      <button
+        type="button"
+        className="wasel-ticker-toggle"
+        aria-pressed={ isPaused }
+        aria-label={ pauseLabel }
+        onClick={ () => setIsPaused( paused => !paused ) }
+      >
+        { isPaused ? <Play size={ 14 } aria-hidden="true" /> : <Pause size={ 14 } aria-hidden="true" /> }
+        <span>{ pauseLabel }</span>
+      </button>
       <div className="wasel-ticker-viewport">
-        <div className="wasel-ticker-track">
+        <div className={ `wasel-ticker-track${ isPaused ? ' is-paused' : '' }` }>
           { loop.map( ( item, index ) => (
             <span
               key={ `${ item.key }-${ index }` }

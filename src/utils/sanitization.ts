@@ -74,6 +74,7 @@ export function validateApiUrl(url: string, allowedDomains: string[]): boolean {
       domain =>
         hostname === domain ||
         hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
         hostname.endsWith(`.${domain}`),
     );
   } catch {
@@ -103,7 +104,7 @@ export function sanitizeHtml(input: string): string {
 export function sanitizeLogMessage(message: unknown): string {
   if (message === null || message === undefined) {return String(message);}
   const str = String(message);
-  return str.replace(/[^\x20-\x7e]/g, '').replace(/\r?\n|\r/g, ' ').trim();
+  return str.replace(/\r?\n|\r/g, ' ').replace(/[^\x20-\x7e]/g, '').trim();
 }
 
 /* ===========================================================================

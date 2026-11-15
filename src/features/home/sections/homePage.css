@@ -454,10 +454,18 @@ a.wasel-home-section-action {
   background: rgba(8,29,57,0.92); border-inline-end: 1px solid rgba(114,199,13,0.28);
 }
 .wasel-ticker-label span { width: 7px; height: 7px; border-radius: 50%; background: #72c70d; }
-.wasel-ticker-viewport { overflow: hidden; padding-inline-start: 118px; }
+.wasel-ticker-toggle {
+  position: absolute; inset-inline-end: 8px; top: 50%; z-index: 3; transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; padding: 0 10px;
+  border: 1px solid rgba(0,229,255,0.28); border-radius: 999px; background: #081d39; color: #e2f7ff;
+  font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer;
+}
+.wasel-ticker-toggle:hover { background: #10315a; }
+.wasel-ticker-toggle:focus-visible { outline: 2px solid #00e5ff; outline-offset: 2px; }
+.wasel-ticker-viewport { overflow: hidden; padding-inline-start: 118px; padding-inline-end: 116px; }
 .wasel-ticker-track { display: flex; width: max-content; animation: wasel-marquee 36s linear infinite; }
+.wasel-ticker-track.is-paused { animation-play-state: paused; }
 [dir='rtl'] .wasel-ticker-track { animation-name: wasel-marquee-rtl; }
-.wasel-ticker:hover .wasel-ticker-track { animation-play-state: paused; }
 .wasel-ticker-item { display: inline-flex; align-items: center; gap: 9px; padding: 13px 22px; font-size: 0.85rem; font-weight: 700; color: rgba(248,251,255,0.88); white-space: nowrap; }
 .wasel-ticker-item small { color: rgba(196,220,238,0.7); font-weight: 600; font-size: 0.8125rem; }
 .wasel-ticker-item .wasel-ticker-route { color: #8debff; font-weight: 800; }
@@ -548,11 +556,13 @@ a.wasel-home-section-action {
   .wasel-bento { grid-template-columns: minmax(0, 1fr); }
   .wasel-bento-tile--hero { grid-column: span 1; grid-row: span 1; }
   .wasel-coverage { padding: 32px 22px 28px; }
-  .wasel-ticker-viewport { padding-inline-start: 104px; }
+  .wasel-ticker-viewport { padding-inline-start: 104px; padding-inline-end: 102px; }
 }
 @media (max-width: 560px) {
-  .wasel-ticker-viewport { padding-inline-start: 92px; }
+  .wasel-ticker-viewport { padding-inline-start: 92px; padding-inline-end: 46px; }
   .wasel-ticker-item { padding: 12px 16px; font-size: 0.8125rem; }
+  .wasel-ticker-toggle { width: 34px; padding: 0; }
+  .wasel-ticker-toggle span { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
   .wasel-scenery { height: 96px; }
 }
 

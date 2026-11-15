@@ -201,7 +201,17 @@ function resolveBookingStatus ( statusRaw: string ): RideBookingStatus {
   return 'pending_driver';
 }
 
-function resolvePaymentStatus ( statusRaw: string ): RidePaymentStatus {
+/**
+ * Prefer the server's own payment_status. The booking status alone says nothing
+ * about money, so it is only used as a fallback for rows that predate the column.
+ */
+function resolvePaymentStatus ( statusRaw: string, serverPaymentStatus?: unknown ): RidePaymentStatus {
+  const server = typeof serverPaymentStatus === 'string' ? serverPaymentStatus.trim().toLowerCase() : '';
+  if ( server === 'paid' || server === 'completed' || server === 'settled' || server === 'captured' ) { return 'captured'; }
+  if ( server === 'refunded' ) { return 'refunded'; }
+  if ( server === 'failed' ) { return 'failed'; }
+  if ( server === 'authorized' ) { return 'authorized'; }
+  if ( server === 'pending' || server === 'unpaid' ) { return 'pending'; }
   if ( statusRaw === 'completed' ) { return 'captured'; }
   if ( statusRaw === 'cancelled' || statusRaw === 'rejected' ) { return 'failed'; }
   return 'authorized';
@@ -480,7 +490,7 @@ export async function hydrateRideBookings (
       seatsRequested: Number( raw.seats_requested ?? 1 ) || 1,
       status,
       lifecycleStatus: mapBookingStatusToRideLifecycleState( status ),
-      paymentStatus: resolvePaymentStatus( statusRaw ),
+      paymentStatus: resolvePaymentStatus( statusRaw, raw.payment_status ),
       routeMode: ride ? 'live_post' : 'network_inventory',
       supportThreadOpen: false,
       ticketCode: `RIDE-${ id.slice( -6 ).toUpperCase() || 'SYNCED' }`,
@@ -522,7 +532,9 @@ export function syncRideBookingCompletion ( referenceDate = Date.now() ): RideBo
       ...booking,
       status: 'completed',
       lifecycleStatus: 'completed',
-      paymentStatus: booking.paymentStatus === 'authorized' ? 'captured' : booking.paymentStatus,
+      // Local wall-clock completion is only a display/lifecycle hint. Capture is
+      // confirmed by the payment provider and persisted by the server webhook.
+      paymentStatus: booking.paymentStatus,
       updatedAt: new Date( referenceDate ).toISOString(),
     };
     toUpdate.push( updated );

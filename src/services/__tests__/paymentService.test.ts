@@ -31,7 +31,7 @@ vi.mock('../../domain/payments/cliq', () => ({
   generateJordanCliqQrPayload: vi.fn(() => 'QR_PAYLOAD'),
 }));
 
-import { paymentService } from '../payment';
+import { paymentService, extractPaymentStatus } from '../payment';
 import { requestEdgeJson } from '../backendWorkflow';
 import { getAuthDetails } from '../core';
 
@@ -119,7 +119,7 @@ describe('paymentService', () => {
       ).rejects.toMatchObject({ name: 'BackendRequestError', status: 401 });
     });
 
-    it('aborts previous pending request for same booking', async () => {
+    it('shares one in-flight request for a repeated call on the same booking and amount', async () => {
       mockRequestEdge.mockResolvedValueOnce({
         clientSecret: 'pi_secret_1',
         paymentIntentId: 'pi_1',
@@ -128,8 +128,45 @@ describe('paymentService', () => {
       const promise1 = paymentService.createPaymentIntent({ amount: 10, bookingId: 'same-booking' });
       const promise2 = paymentService.createPaymentIntent({ amount: 10, bookingId: 'same-booking' });
 
-      await Promise.allSettled([promise1, promise2]);
-      // Both should complete without throwing (second aborts first)
+      const [first, second] = await Promise.all([promise1, promise2]);
+
+      expect(first).toEqual({ clientSecret: 'pi_secret_1', paymentIntentId: 'pi_1' });
+      expect(second).toEqual(first);
+      expect(mockRequestEdge).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not share a request when the amount differs', async () => {
+      mockRequestEdge
+        .mockResolvedValueOnce({ clientSecret: 's_a', paymentIntentId: 'pi_a' })
+        .mockResolvedValueOnce({ clientSecret: 's_b', paymentIntentId: 'pi_b' });
+
+      await Promise.all([
+        paymentService.createPaymentIntent({ amount: 10, bookingId: 'diff-booking' }),
+        paymentService.createPaymentIntent({ amount: 12, bookingId: 'diff-booking' }),
+      ]);
+
+      expect(mockRequestEdge).toHaveBeenCalledTimes(2);
+    });
+
+    it('allows a new request after the previous one settled (including after a failure)', async () => {
+      mockRequestEdge.mockRejectedValueOnce(new Error('boom'));
+      await expect(
+        paymentService.createPaymentIntent({ amount: 10, bookingId: 'retry-booking' }),
+      ).rejects.toThrow('boom');
+
+      mockRequestEdge.mockResolvedValueOnce({ clientSecret: 's', paymentIntentId: 'pi_retry' });
+      const result = await paymentService.createPaymentIntent({ amount: 10, bookingId: 'retry-booking' });
+      expect(result.paymentIntentId).toBe('pi_retry');
+    });
+
+    it('does not leave a stale in-flight entry when validation fails', async () => {
+      await expect(
+        paymentService.createPaymentIntent({ amount: 0.1, bookingId: 'invalid-booking' }),
+      ).rejects.toThrow('Payment amount must be at least 0.50');
+
+      mockRequestEdge.mockResolvedValueOnce({ clientSecret: 's', paymentIntentId: 'pi_ok' });
+      const result = await paymentService.createPaymentIntent({ amount: 5, bookingId: 'invalid-booking' });
+      expect(result.paymentIntentId).toBe('pi_ok');
     });
 
     it('includes idempotency key in request body', async () => {
@@ -194,6 +231,43 @@ describe('paymentService', () => {
 
       const status = await paymentService.confirmPayment('booking-1');
       expect(status).toBe('failed');
+    });
+
+    // Regression: the edge handler (payments.ts -> handleGetPaymentStatus) answers
+    // { paymentStatus }, not a bare string. The client used to compare the whole
+    // object to 'succeeded', so it always polled the full 30s and reported pending.
+    it('reads the { paymentStatus } object the edge function actually returns', async () => {
+      mockRequestEdge.mockResolvedValueOnce({ paymentStatus: 'succeeded' });
+
+      const status = await paymentService.confirmPayment('booking-1');
+      expect(status).toBe('succeeded');
+      expect(mockRequestEdge).toHaveBeenCalledTimes(1);
+    });
+
+    it('maps paid and completed to succeeded, and canceled to failed', async () => {
+      mockRequestEdge.mockResolvedValueOnce({ paymentStatus: 'paid' });
+      expect(await paymentService.confirmPayment('b-paid')).toBe('succeeded');
+
+      mockRequestEdge.mockResolvedValueOnce({ paymentStatus: 'completed' });
+      expect(await paymentService.confirmPayment('b-completed')).toBe('succeeded');
+
+      mockRequestEdge.mockResolvedValueOnce({ paymentStatus: 'canceled' });
+      expect(await paymentService.confirmPayment('b-canceled')).toBe('failed');
+    });
+
+    it('keeps polling on { paymentStatus: "pending" } until it succeeds', async () => {
+      vi.useFakeTimers();
+      mockRequestEdge
+        .mockResolvedValueOnce({ paymentStatus: 'pending' })
+        .mockResolvedValueOnce({ paymentStatus: 'succeeded' });
+
+      const promise = paymentService.confirmPayment('booking-1');
+      await vi.advanceTimersByTimeAsync(2_000);
+      const status = await promise;
+
+      expect(status).toBe('succeeded');
+      expect(mockRequestEdge).toHaveBeenCalledTimes(2);
+      vi.useRealTimers();
     });
 
     it('returns pending after max poll duration', async () => {
@@ -290,12 +364,40 @@ describe('paymentService', () => {
       expect(status).toBe('succeeded');
     });
 
+    it('unwraps the { paymentStatus } object returned by the edge function', async () => {
+      mockRequestEdge.mockResolvedValueOnce({ paymentStatus: 'succeeded' });
+      const status = await paymentService.getPaymentStatus('booking-1');
+      expect(status).toBe('succeeded');
+    });
+
     it('URL-encodes the bookingId in the path', async () => {
       mockRequestEdge.mockResolvedValueOnce('pending');
       await paymentService.getPaymentStatus('booking/with/slashes');
       expect(mockRequestEdge).toHaveBeenCalledWith(
         expect.objectContaining({ path: expect.stringContaining('booking%2Fwith%2Fslashes') }),
       );
+    });
+  });
+
+  // ── extractPaymentStatus ─────────────────────────────────────────────────
+
+  describe('extractPaymentStatus', () => {
+    it('reads paymentStatus, payment_status and status keys', () => {
+      expect(extractPaymentStatus({ paymentStatus: 'succeeded' })).toBe('succeeded');
+      expect(extractPaymentStatus({ payment_status: 'failed' })).toBe('failed');
+      expect(extractPaymentStatus({ status: 'pending' })).toBe('pending');
+    });
+
+    it('accepts a bare string and normalises case and whitespace', () => {
+      expect(extractPaymentStatus('  Succeeded ')).toBe('succeeded');
+    });
+
+    it('falls back to unknown for anything unusable', () => {
+      expect(extractPaymentStatus(undefined)).toBe('unknown');
+      expect(extractPaymentStatus(null)).toBe('unknown');
+      expect(extractPaymentStatus({})).toBe('unknown');
+      expect(extractPaymentStatus({ paymentStatus: 42 })).toBe('unknown');
+      expect(extractPaymentStatus('')).toBe('unknown');
     });
   });
 

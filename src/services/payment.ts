@@ -35,12 +35,40 @@ const PAYMENT_TIMEOUT_MS = 15_000;
 const PAYMENT_POLL_INTERVAL = 2_000;
 const PAYMENT_POLL_MAX_DURATION = 30_000;
 
-interface PendingPaymentRequest {
-  controller: AbortController;
-  timestamp: number;
+/** Provider/booking statuses that mean the money has been captured. */
+const PAYMENT_SUCCESS_STATUSES = new Set( [ 'succeeded', 'paid', 'completed' ] );
+/** Statuses that mean the payment will not complete without a new attempt. */
+const PAYMENT_FAILURE_STATUSES = new Set( [ 'failed', 'canceled', 'cancelled' ] );
+
+/**
+ * Reads the payment status out of the `/booking/:id/payment-status` response.
+ *
+ * The edge handler answers `{ paymentStatus: '<status>' }`. This client used to
+ * treat the whole body as a string, so `status === 'succeeded'` could never be
+ * true and `confirmPayment` always polled for the full 30 seconds before
+ * reporting "pending". A bare string is still accepted so older mocks and any
+ * proxy that unwraps the envelope keep working.
+ */
+export function extractPaymentStatus ( raw: unknown ): string {
+  if ( typeof raw === 'string' ) {
+    return raw.trim().toLowerCase() || 'unknown';
+  }
+
+  if ( raw && typeof raw === 'object' ) {
+    const body = raw as Record<string, unknown>;
+    const candidate = body.paymentStatus ?? body.payment_status ?? body.status;
+    if ( typeof candidate === 'string' && candidate.trim() ) {
+      return candidate.trim().toLowerCase();
+    }
+  }
+
+  return 'unknown';
 }
 
-const pendingPaymentRequests = new Map<string, PendingPaymentRequest>();
+// One in-flight PaymentIntent request per user/booking/amount. A double tap or a
+// re-render returns the same promise instead of firing a second request. The
+// edge function is idempotent as well, so this only saves a round trip.
+const inFlightPaymentIntents = new Map<string, Promise<PaymentIntentResponse>>();
 
 class PaymentService {
   async createPaymentIntent ( request: PaymentIntentRequest ): Promise<PaymentIntentResponse> {
@@ -55,56 +83,61 @@ class PaymentService {
       throw new BackendRequestError( 'Not authenticated', { status: 401, recoverable: true } );
     }
 
-    const existing = pendingPaymentRequests.get( request.bookingId );
-    if ( existing ) {
-      const age = Date.now() - existing.timestamp;
-      if ( age < 10_000 ) {
-        existing.controller.abort();
-      }
-    }
-
-    const controller = new AbortController();
-    pendingPaymentRequests.set( request.bookingId, { controller, timestamp: Date.now() } );
-
-    const amountMinor = toMinorUnits( request.amount, request.currency ?? 'jod' );
+    const currency = request.currency ?? 'jod';
+    const amountMinor = toMinorUnits( request.amount, currency );
     if ( !Number.isSafeInteger( amountMinor ) || amountMinor < 50 ) {
       throw new Error( 'Payment amount must be at least 0.50' );
     }
 
-    try {
-      const { token } = await getAuthDetails();
-
-      const data = await requestEdgeJson<{
-        clientSecret?: string;
-        paymentIntentId?: string;
-        client_secret?: string;
-      }>( {
-        path: '/payment/create-intent',
-        operation: 'createPaymentIntent',
-        authMode: 'required',
-        context: { token, userId: user.id },
-        method: 'POST',
-        body: {
-          action: 'create-payment-intent',
-          amount: amountMinor,
-          currency: request.currency ?? 'jod',
-          booking_id: request.bookingId,
-          metadata: { ...request.metadata, booking_id: request.bookingId, user_id: user.id },
-          idempotency_key: `booking:${ request.bookingId }`,
-        },
-        timeout: PAYMENT_TIMEOUT_MS,
-        retries: 1,
-      } );
-
-      const clientSecret = data.clientSecret ?? data.client_secret;
-      if ( !clientSecret || !data.paymentIntentId ) {
-        throw new BackendRequestError( 'Invalid payment response', { status: 502 } );
-      }
-
-      return { clientSecret, paymentIntentId: data.paymentIntentId };
-    } finally {
-      pendingPaymentRequests.delete( request.bookingId );
+    const flightKey = `${ user.id }:${ request.bookingId }:${ currency.toLowerCase() }:${ amountMinor }`;
+    const inFlight = inFlightPaymentIntents.get( flightKey );
+    if ( inFlight ) {
+      return inFlight;
     }
+
+    const pending = this.requestPaymentIntent( request, user.id, currency, amountMinor ).finally( () => {
+      inFlightPaymentIntents.delete( flightKey );
+    } );
+    inFlightPaymentIntents.set( flightKey, pending );
+    return pending;
+  }
+
+  private async requestPaymentIntent (
+    request: PaymentIntentRequest,
+    userId: string,
+    currency: string,
+    amountMinor: number,
+  ): Promise<PaymentIntentResponse> {
+    const { token } = await getAuthDetails();
+
+    const data = await requestEdgeJson<{
+      clientSecret?: string;
+      paymentIntentId?: string;
+      client_secret?: string;
+    }>( {
+      path: '/payment/create-intent',
+      operation: 'createPaymentIntent',
+      authMode: 'required',
+      context: { token, userId },
+      method: 'POST',
+      body: {
+        action: 'create-payment-intent',
+        amount: amountMinor,
+        currency,
+        booking_id: request.bookingId,
+        metadata: { ...request.metadata, booking_id: request.bookingId, user_id: userId },
+        idempotency_key: `booking:${ request.bookingId }`,
+      },
+      timeout: PAYMENT_TIMEOUT_MS,
+      retries: 1,
+    } );
+
+    const clientSecret = data.clientSecret ?? data.client_secret;
+    if ( !clientSecret || !data.paymentIntentId ) {
+      throw new BackendRequestError( 'Invalid payment response', { status: 502 } );
+    }
+
+    return { clientSecret, paymentIntentId: data.paymentIntentId };
   }
 
   async confirmPayment ( bookingId: string ): Promise<'succeeded' | 'failed' | 'pending'> {
@@ -112,7 +145,7 @@ class PaymentService {
 
     const startTime = Date.now();
     while ( Date.now() - startTime < PAYMENT_POLL_MAX_DURATION ) {
-      const status = await requestEdgeJson<string>( {
+      const raw = await requestEdgeJson<unknown>( {
         path: `/booking/${ encodeURIComponent( bookingId ) }/payment-status`,
         operation: 'getPaymentStatus',
         authMode: 'required',
@@ -121,8 +154,12 @@ class PaymentService {
         timeout: 10_000,
       } );
 
-      if ( status === 'succeeded' || status === 'failed' ) {
-        return status;
+      const status = extractPaymentStatus( raw );
+      if ( PAYMENT_SUCCESS_STATUSES.has( status ) ) {
+        return 'succeeded';
+      }
+      if ( PAYMENT_FAILURE_STATUSES.has( status ) ) {
+        return 'failed';
       }
 
       await new Promise( ( resolve ) => setTimeout( resolve, PAYMENT_POLL_INTERVAL ) );
@@ -174,7 +211,7 @@ class PaymentService {
   async getPaymentStatus ( bookingId: string ): Promise<string> {
     const { token, userId } = await getAuthDetails();
 
-    const status = await requestEdgeJson<string>( {
+    const raw = await requestEdgeJson<unknown>( {
       path: `/booking/${ encodeURIComponent( bookingId ) }/payment-status`,
       operation: 'getPaymentStatus',
       authMode: 'required',
@@ -183,7 +220,7 @@ class PaymentService {
       timeout: 10_000,
     } );
 
-    return status;
+    return extractPaymentStatus( raw );
   }
 
   /**

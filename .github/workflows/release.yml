@@ -2,6 +2,11 @@
 
 name: 1. Create Release PR
 
+# Opens a release PR; needs to push a branch and open a PR, nothing else.
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   push:
     branches:
@@ -31,7 +36,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies

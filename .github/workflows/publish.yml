@@ -1,6 +1,10 @@
 # .github/workflows/publish.yml
 name: 2. Publish Release
 
+# Creating a release and its tag needs contents: write; nothing else.
+permissions:
+  contents: write
+
 on:
   push:
     branches:
@@ -33,10 +37,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # actions/create-release@v1 is archived and unmaintained.
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: "v${{ steps.package.outputs.current-version}}"
-          release_name: "🚀 Release v${{ steps.package.outputs.current-version}}"
+          name: "🚀 Release v${{ steps.package.outputs.current-version}}"
           body: ${{ steps.changelog.outputs.changelog }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

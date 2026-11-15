@@ -134,7 +134,7 @@ jobs:
       - name: Deploy main edge function
         if: steps.creds.outputs.ready == 'true'
         run: supabase functions deploy make-server-0b1f4071 --project-ref "$SUPABASE_PROJECT_REF"
-      - name: Retire legacy Stripe payment function
+      - name: Deploy Stripe payments function
         if: steps.creds.outputs.ready == 'true'
         run: supabase functions deploy stripe-payments-v2 --project-ref "$SUPABASE_PROJECT_REF"
 

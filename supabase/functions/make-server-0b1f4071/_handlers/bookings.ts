@@ -16,6 +16,24 @@ import {
 
 type BookingAuth = Extract<Awaited<ReturnType<typeof authenticateRequest>>, { admin: unknown }>;
 
+// A passenger's own booking list is bounded so one heavy account cannot return an
+// unbounded payload; the app only renders recent bookings.
+const MAX_PASSENGER_BOOKINGS = 200;
+
+/**
+ * Logs the database/RPC detail server-side and returns an opaque error with a request id.
+ * Raw PostgREST/Postgres messages name tables, columns and constraints, so they are never
+ * echoed to the client.
+ */
+function bookingServerError ( scope: string, error: unknown ): Response {
+  const requestId = crypto.randomUUID();
+  const detail = error && typeof error === 'object' && 'message' in error
+    ? String( ( error as { message?: unknown } ).message ?? '' )
+    : String( error );
+  console.error( `[bookings] ${ scope } failed`, { requestId, detail } );
+  return json( { error: 'Something went wrong. Please try again.', code: 'internal_error', requestId }, 500 );
+}
+
 export async function handleBookingRequest ( request: Request, path: string ) {
   const auth = await authenticateRequest( request );
   if ( 'error' in auth ) {return auth.error;}
@@ -116,8 +134,9 @@ async function listPassengerBookings ( auth: BookingAuth, requestedUserId: strin
     .from( 'bookings' )
     .select( '*' )
     .eq( 'passenger_id', auth.canonicalUser.id )
-    .order( 'created_at', { ascending: false } );
-  if ( error ) {return json( { error: error.message }, 500 );}
+    .order( 'created_at', { ascending: false } )
+    .limit( MAX_PASSENGER_BOOKINGS );
+  if ( error ) {return bookingServerError( 'list-passenger-bookings', error );}
   return json( ( Array.isArray( data ) ? data : [] ).map( mapBookingRow ) );
 }
 
@@ -157,7 +176,7 @@ async function updateBooking ( request: Request, auth: BookingAuth, bookingId: s
     .select( 'booking_id, passenger_id, trip_id, booking_status' )
     .eq( 'booking_id', bookingId )
     .maybeSingle();
-  if ( bookingErr ) {return json( { error: bookingErr.message }, 500 );}
+  if ( bookingErr ) {return bookingServerError( 'update-booking-lookup', bookingErr );}
   if ( !bookingRow ) {return json( { error: 'Booking not found' }, 404 );}
   const isPassenger = bookingRow.passenger_id === auth.canonicalUser.id;
   const isDriver = await isTripDriver( auth, bookingRow.trip_id, auth.canonicalUser.id );
@@ -186,7 +205,7 @@ async function updateBooking ( request: Request, auth: BookingAuth, bookingId: s
       // The caller has already passed passenger/driver/admin authorization above.
       p_can_cancel_any: isDriver || canManage,
     } );
-    if ( cancellationError ) {return json( { error: cancellationError.message }, 500 );}
+    if ( cancellationError ) {return bookingServerError( 'update-booking-cancel', cancellationError );}
     const result = ( Array.isArray( cancellation ) ? cancellation[ 0 ] : cancellation ) as Record<string, unknown> | null;
     if ( !result?.ok ) {
       const code = String( result?.code ?? 'unknown' );
@@ -205,7 +224,7 @@ async function updateBooking ( request: Request, auth: BookingAuth, bookingId: s
     .eq( 'booking_status', currentStatus )
     .select( '*' )
     .maybeSingle();
-  if ( error ) {return json( { error: error.message }, 500 );}
+  if ( error ) {return bookingServerError( 'update-booking-status', error );}
   if ( !data ) {return json( { error: 'Booking status changed; reload and try again.' }, 409 );}
   return json( mapBookingRow( data ) );
 }
@@ -238,7 +257,7 @@ export async function handleSubmitRating ( request: Request ) {
     .eq( 'booking_id', bookingId )
     .maybeSingle();
 
-  if ( bookingError ) {return json( { error: bookingError.message }, 500 );}
+  if ( bookingError ) {return bookingServerError( 'rating-booking-lookup', bookingError );}
   if ( !booking ) {return json( { error: 'Booking not found' }, 404 );}
   if ( !canModerateRatings && booking.passenger_id !== canonicalUser.id ) {return json( { error: 'Unauthorized' }, 403 );}
   if ( booking.booking_status !== 'completed' ) {return json( { error: 'Can only rate completed trips' }, 409 );}
@@ -254,7 +273,7 @@ export async function handleSubmitRating ( request: Request ) {
     .select( 'user_id' )
     .eq( 'driver_id', driverId )
     .maybeSingle();
-  if ( driverError ) {return json( { error: driverError.message }, 500 );}
+  if ( driverError ) {return bookingServerError( 'rating-driver-lookup', driverError );}
   if ( !driver?.user_id ) {return json( { error: 'Unable to resolve driver account for rating' }, 409 );}
 
   const { data: existingRating, error: existingError } = await admin
@@ -264,7 +283,7 @@ export async function handleSubmitRating ( request: Request ) {
     .eq( 'rider_id', canonicalUser.id )
     .maybeSingle();
 
-  if ( existingError ) {return json( { error: existingError.message }, 500 );}
+  if ( existingError ) {return bookingServerError( 'rating-existing-lookup', existingError );}
   if ( existingRating ) {return json( { error: 'You have already rated this trip' }, 409 );}
 
   const allowedTags = new Set( [ 'punctual', 'clean_car', 'friendly', 'safe_driving', 'good_communication', 'professional' ] );
@@ -293,13 +312,18 @@ export async function handleSubmitRating ( request: Request ) {
     return json( { error: 'Rating could not be submitted. Please try again.' }, 500 );
   }
 
-  await admin.from( 'notifications' ).insert( {
+  // The rating is already stored; a failed notification must not turn a successful
+  // submission into an error, but it should not vanish silently either.
+  const { error: notifyError } = await admin.from( 'notifications' ).insert( {
     user_id: driver.user_id,
     type: 'rating_received',
     title: 'New Rating',
     body: `You received a ${ rating }-star rating`,
     data: { bookingId, tripId, rating },
   } );
+  if ( notifyError ) {
+    console.warn( '[ratings] driver notification failed', { code: notifyError.code ?? 'unknown' } );
+  }
 
   return json( { ok: true }, 201 );
 }
@@ -311,7 +335,7 @@ export async function handleGetDriverRating ( request: Request, path: string ) {
   const driverId = decodeURIComponent( path.split( '/' )[ 3 ] ?? '' );
   if ( !driverId ) {return json( { error: 'Driver ID is required' }, 400 );}
   const { data, error } = await auth.admin.rpc( 'app_get_driver_rating', { p_driver_id: driverId } );
-  if ( error ) {return json( { error: error.message }, 500 );}
+  if ( error ) {return bookingServerError( 'driver-rating', error );}
   const summary = ( Array.isArray( data ) ? data[ 0 ] : data ) as Record<string, unknown> | null;
   const reviews = Array.isArray( summary?.recentReviews ) ? summary.recentReviews : [];
   return json( {
@@ -342,7 +366,7 @@ export async function handleCanRateBooking ( request: Request, path: string ) {
     .eq( 'booking_id', bookingId )
     .maybeSingle();
 
-  if ( error ) {return json( { error: error.message }, 500 );}
+  if ( error ) {return bookingServerError( 'can-rate-lookup', error );}
   if ( !booking ) {return json( { canRate: false, reason: 'Booking not found' } );}
   if ( booking.passenger_id !== canonicalUser.id ) {return json( { canRate: false, reason: 'Not your booking' } );}
   if ( booking.booking_status !== 'completed' ) {return json( { canRate: false, reason: 'Trip not completed' } );}
@@ -354,7 +378,7 @@ export async function handleCanRateBooking ( request: Request, path: string ) {
     .eq( 'rider_id', canonicalUser.id )
     .maybeSingle();
 
-  if ( ratingError ) {return json( { error: ratingError.message }, 500 );}
+  if ( ratingError ) {return bookingServerError( 'can-rate-existing', ratingError );}
   if ( existingRating ) {return json( { canRate: false, reason: 'Already rated' } );}
 
   return json( { canRate: true } );
@@ -383,7 +407,7 @@ export async function handleCancelBooking ( request: Request ) {
     p_reason: reason,
     p_can_cancel_any: canCancelAny,
   } );
-  if ( error ) {return json( { error: error.message }, 500 );}
+  if ( error ) {return bookingServerError( 'cancel-booking', error );}
   const result = ( Array.isArray( data ) ? data[ 0 ] : data ) as Record<string, unknown> | null;
   if ( !result?.ok ) {
     const code = String( result?.code ?? 'unknown' );
@@ -401,13 +425,17 @@ export async function handleCancelBooking ( request: Request ) {
     const { data: driver } = await auth.admin.from( 'drivers' )
       .select( 'user_id' ).eq( 'driver_id', driverId ).maybeSingle();
     if ( driver?.user_id ) {
-      await auth.admin.from( 'notifications' ).insert( {
+      // The cancellation is already committed; a failed notification is logged, not surfaced.
+      const { error: notifyError } = await auth.admin.from( 'notifications' ).insert( {
         user_id: driver.user_id,
         type: 'booking_cancelled',
         title: 'Booking Cancelled',
         body: 'A passenger cancelled their booking.',
         data: { bookingId, tripId: result.trip_id },
       } );
+      if ( notifyError ) {
+        console.warn( '[bookings] cancellation notification failed', { code: notifyError.code ?? 'unknown' } );
+      }
     }
   }
 
@@ -427,7 +455,7 @@ export async function handleCanCancelBooking ( request: Request, path: string ) 
     .eq( 'booking_id', bookingId )
     .maybeSingle();
 
-  if ( error ) {return json( { error: error.message }, 500 );}
+  if ( error ) {return bookingServerError( 'can-cancel-lookup', error );}
   if ( !booking ) {return json( { canCancel: false, reason: 'Booking not found' } );}
   if ( !canCancelAny && booking.passenger_id !== auth.canonicalUser.id ) {
     return json( { canCancel: false, reason: 'Not your booking' } );

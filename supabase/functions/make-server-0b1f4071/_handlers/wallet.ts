@@ -114,11 +114,40 @@ const PIN_LOCKOUT_SECONDS = 15 * 60;
 // stolen session may move only a small amount per request; larger transfers and
 // withdrawals require the owner to set a PIN first.
 const MAX_NO_PIN_MONEY_OUT_JOD = 25;
+// New and existing PINs may be 4 or 6 digits. Existing 4-digit PINs keep working;
+// 6 digits raises the guess space 100x for users who opt in.
+const PIN_PATTERN = /^\d{4}(?:\d{2})?$/;
+const IDEMPOTENCY_KEY_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
 const PAYMENT_PROVIDER_PATTERN = /^[a-z0-9_-]{2,32}$/i;
 const PAYMENT_TOKEN_PATTERN = /^[A-Za-z0-9_.:-]{1,128}$/;
 
 function pinAttemptKey ( userId: string ): string {
   return `wallet-pin:${ userId }`;
+}
+
+export type IdempotencyKeyResult =
+  | { ok: true; key: string | null }
+  | { ok: false; response: Response };
+
+/**
+ * Reads the client's idempotency key for a money-out request.
+ *
+ * The key travels in the JSON body (not a header) so it needs no CORS allow-list
+ * change. A missing key is tolerated until WALLET_REQUIRE_IDEMPOTENCY_KEY=true is
+ * set, which lets older clients keep working while the rollout completes; a
+ * malformed key is always rejected.
+ */
+export function parseWalletIdempotencyKey ( raw: unknown, required = false ): IdempotencyKeyResult {
+  if ( raw === undefined || raw === null || raw === '' ) {
+    return required
+      ? { ok: false, response: json( { error: 'An idempotency key is required for this request.', code: 'IDEMPOTENCY_KEY_REQUIRED' }, 400 ) }
+      : { ok: true, key: null };
+  }
+  const key = typeof raw === 'string' ? raw.trim() : '';
+  if ( !IDEMPOTENCY_KEY_PATTERN.test( key ) ) {
+    return { ok: false, response: json( { error: 'The idempotency key is malformed.', code: 'IDEMPOTENCY_KEY_INVALID' }, 400 ) };
+  }
+  return { ok: true, key };
 }
 
 /**
@@ -181,7 +210,7 @@ export async function enforceWalletPin (
   }
 
   const pin = typeof rawPin === 'string' ? rawPin.trim() : '';
-  if ( !/^\d{4}$/.test( pin ) ) {
+  if ( !PIN_PATTERN.test( pin ) ) {
     return json( { error: 'Wallet PIN is required.', code: 'PIN_REQUIRED' }, 403 );
   }
 
@@ -227,6 +256,11 @@ export async function handleWalletSend ( request: Request, requestedUserId: stri
   if ( amountJod > MAX_WALLET_SEND_JOD ) {
     return json( { error: `Transfers are limited to JOD ${ MAX_WALLET_SEND_JOD } per request.` }, 400 );
   }
+  const idempotency = parseWalletIdempotencyKey(
+    body.idempotencyKey,
+    Deno.env.get( 'WALLET_REQUIRE_IDEMPOTENCY_KEY' ) === 'true',
+  );
+  if ( !idempotency.ok ) {return idempotency.response;}
 
   const throttled = await consumeRateLimit( auth.admin, `wallet-send:${ auth.canonicalUser.id }`, 20, { windowSeconds: 3600, failClosed: true } );
   if ( throttled ) {return throttled;}
@@ -242,15 +276,38 @@ export async function handleWalletSend ( request: Request, requestedUserId: stri
       return json( { error: 'Cannot send wallet funds to the same account.' }, 400 );
     }
 
-    const { error } = await auth.admin.rpc( 'app_transfer_wallet_funds', {
-      p_from_user_id: auth.canonicalUser.id,
-      p_to_user_id: recipientUserId,
-      p_amount: amountJod,
-      p_payment_method: 'wallet_balance',
-    } );
-    if ( error ) {throw new Error( error.message );}
+    let replayed = false;
+    if ( idempotency.key ) {
+      // Claim and transfer commit together in one database transaction, so a retried
+      // request either replays the first outcome or is rejected; it can never move
+      // the money twice.
+      const { data, error } = await auth.admin.rpc( 'app_transfer_wallet_funds_idempotent', {
+        p_from_user_id: auth.canonicalUser.id,
+        p_to_user_id: recipientUserId,
+        p_amount: amountJod,
+        p_payment_method: 'wallet_balance',
+        p_idempotency_key: idempotency.key,
+        p_fingerprint: `${ recipientUserId }|${ amountJod.toFixed( 3 ) }`,
+      } );
+      if ( error ) {
+        if ( String( error.message ?? '' ).toLowerCase().includes( 'reused with a different request' ) ) {
+          return json( { error: 'This idempotency key was already used for a different transfer.', code: 'IDEMPOTENCY_KEY_REUSED' }, 422 );
+        }
+        throw new Error( error.message );
+      }
+      const row = Array.isArray( data ) ? data[ 0 ] : data;
+      replayed = Boolean( row?.replayed );
+    } else {
+      const { error } = await auth.admin.rpc( 'app_transfer_wallet_funds', {
+        p_from_user_id: auth.canonicalUser.id,
+        p_to_user_id: recipientUserId,
+        p_amount: amountJod,
+        p_payment_method: 'wallet_balance',
+      } );
+      if ( error ) {throw new Error( error.message );}
+    }
 
-    return json( { success: true, note, wallet: await loadWalletPayload( auth.admin, auth.canonicalUser.id ) } );
+    return json( { success: true, replayed, note, wallet: await loadWalletPayload( auth.admin, auth.canonicalUser.id ) } );
   } catch ( error ) {
     return walletOperationFailed( 'send', error );
   }
@@ -262,7 +319,7 @@ export async function handleSetWalletPin ( request: Request, requestedUserId: st
 
   const body = await request.json().catch( () => ( {} ) );
   const pin = String( body.pin ?? '' ).trim();
-  if ( !/^\d{4}$/.test( pin ) ) {return json( { error: 'Wallet PIN must be four digits.' }, 400 );}
+  if ( !PIN_PATTERN.test( pin ) ) {return json( { error: 'Wallet PIN must be four or six digits.' }, 400 );}
 
   try {
     // Replacing an existing PIN must prove knowledge of the current one (same

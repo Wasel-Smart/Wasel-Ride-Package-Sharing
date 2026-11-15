@@ -12,6 +12,7 @@ import {
   resolveSupabaseUrl,
   trimConfiguredValue,
 } from './resolvers';
+import { validateObservabilityConfig } from '../observability-config';
 
 const issue = (
   key: string,
@@ -145,6 +146,7 @@ export function getRuntimeConfigIssues(
   if (!isProd && isTruthy(envSource.VITE_E2E_LOCAL_AUTH)) { return []; }
 
   const hasApiTransport = Boolean(apiUrl) || Boolean(supabaseUrl && publicKey);
+  const obsIssues = validateObservabilityConfig(envSource, isProd);
   return [
     ...appUrlIssues(appUrl, isProd, isBuildTime),
     ...requiredSupabaseIssues(supabaseUrl, publicKey),
@@ -154,6 +156,7 @@ export function getRuntimeConfigIssues(
     ...environmentFeatureIssues(envSource, isProd, sentryDsn),
     ...notificationIssues(envSource),
     ...twoFactorIssues(envSource, hasApiTransport),
+    ...obsIssues.map(i => ({ key: i.key, message: i.message, severity: i.severity })),
   ];
 }
 

@@ -192,8 +192,8 @@ describe('Sanitization', () => {
   it('sanitizeLogMessage removes control chars and newlines', async () => {
     const { sanitizeLogMessage } = await import('../../src/utils/sanitization');
 
-    // First removes non-printable chars, then replaces newlines with spaces
-    expect(sanitizeLogMessage('line1\nline2\rline3')).toBe('line1line2line3');
+    // First replaces newlines with spaces, then removes remaining non-printable chars
+    expect(sanitizeLogMessage('line1\nline2\rline3')).toBe('line1 line2 line3');
     expect(sanitizeLogMessage('hello\x00world')).toBe('helloworld');
   });
 

@@ -8,6 +8,8 @@ const validEnv: EnvSource = {
   VITE_API_URL: 'https://api.wasel14.online',
   VITE_SUPABASE_URL: 'https://project.supabase.co',
   VITE_SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test',
+  VITE_SENTRY_DSN: 'https://abc@sentry.io/123',
+  VITE_APP_INSIGHTS_CONNECTION_STRING: 'InstrumentationKey=abc123-def456',
 };
 
 describe('runtime environment validation', () => {
@@ -42,6 +44,7 @@ describe('runtime environment validation', () => {
       MODE: 'production',
       VITE_APP_URL: 'http://wasel14.online',
       VITE_SUPABASE_URL: 'http://project.supabase.co',
+      VITE_SENTRY_DSN: undefined,
       VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'true',
       VITE_ENABLE_EMAIL_NOTIFICATIONS: 'true',
       VITE_ENABLE_SMS_NOTIFICATIONS: 'true',

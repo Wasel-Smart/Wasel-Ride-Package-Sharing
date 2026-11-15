@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, AppState, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import {
   InfoCard,
@@ -21,7 +21,7 @@ const WalletScreen = React.memo(function WalletScreen() {
   const { t, language } = useLanguage();
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<{ kind: 'info' | 'error'; message: string } | null>(null);
 
   const userId = mobileAuth.getUser()?.id ?? '';
   const numericAmount = Number(amount);
@@ -41,6 +41,15 @@ const WalletScreen = React.memo(function WalletScreen() {
 
   useEffect(() => {
     void loadBalance();
+  }, [loadBalance]);
+
+  // Checkout happens in the system browser and settles server-side, so the balance on
+  // screen goes stale. Re-read it whenever the app returns to the foreground.
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') void loadBalance();
+    });
+    return () => subscription.remove();
   }, [loadBalance]);
 
   const startPayment = useCallback(async () => {
@@ -64,11 +73,12 @@ const WalletScreen = React.memo(function WalletScreen() {
         throw new Error('No checkout URL returned');
       }
 
+      // createTopUpSession has already handed the URL to the system browser.
       const message = t('wallet.openingCheckout');
-      setStatus(message);
+      setStatus({ kind: 'info', message });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      setStatus(message);
+      setStatus({ kind: 'error', message });
       Alert.alert(t('wallet.paymentFailed'), message);
     } finally {
       setLoading(false);
@@ -127,10 +137,10 @@ const WalletScreen = React.memo(function WalletScreen() {
 
         {status ? (
           <StateNotice
-            icon={status.includes('completed') ? 'checkmark-circle' : 'warning'}
+            icon={status.kind === 'info' ? 'checkmark-circle' : 'warning'}
             title={t('wallet.paymentStatus')}
-            body={status}
-            tone={status.includes('completed') || status.includes('checkout') ? colors.green : colors.red}
+            body={status.message}
+            tone={status.kind === 'info' ? colors.green : colors.red}
           />
         ) : null}
 

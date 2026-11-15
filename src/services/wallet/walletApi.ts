@@ -206,17 +206,22 @@ export const walletApi = {
     return runSecureWalletOperation(() => { throw new Error('Withdrawals are temporarily unavailable until a payout provider is configured.'); });
   },
 
-  async sendMoney(userId: string, recipientId: string, amount: number, optsOrNote?: { note?: string; pin?: string } | string) {
+  async sendMoney(userId: string, recipientId: string, amount: number, optsOrNote?: { note?: string; pin?: string; idempotencyKey?: string } | string) {
     let note: string | undefined;
     let pin: string | undefined;
+    let idempotencyKey: string | undefined;
     if (typeof optsOrNote === 'string') {
       note = optsOrNote;
     } else if (optsOrNote && typeof optsOrNote === 'object') {
       note = optsOrNote.note;
       pin = optsOrNote.pin;
+      idempotencyKey = optsOrNote.idempotencyKey;
     }
+    // One key per user action, generated before the first attempt so every HTTP retry of
+    // this call carries the same key and the server can collapse them into one transfer.
+    const requestKey = idempotencyKey ?? crypto.randomUUID();
     return runSecureWalletOperation(
-      () => requestWalletJson<{ success: boolean; note?: string; wallet: WalletData }>(userId, '/send', 'Send wallet funds', { method: 'POST', body: { recipientId, amount, note, ...(pin ? { pin } : {}) } }),
+      () => requestWalletJson<{ success: boolean; replayed?: boolean; note?: string; wallet: WalletData }>(userId, '/send', 'Send wallet funds', { method: 'POST', body: { recipientId, amount, note, idempotencyKey: requestKey, ...(pin ? { pin } : {}) } }),
     );
   },
 

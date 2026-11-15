@@ -184,6 +184,17 @@ for (const f of mustBeIgnored) {
   }
 }
 
+// ─── 9. CliQ configuration ────────────────────────────────────────────────────
+console.log('\n[9/9] CliQ payment configuration');
+const cliqAmountUnit = getEnvValue('CLIQ_WEBHOOK_AMOUNT_UNIT');
+if (!cliqAmountUnit) {
+  warn('CLIQ_WEBHOOK_AMOUNT_UNIT is not set — CliQ webhook amount conversion will fail closed.');
+} else if (cliqAmountUnit === 'jod' || cliqAmountUnit === 'fils') {
+  pass(`CLIQ_WEBHOOK_AMOUNT_UNIT=${cliqAmountUnit} is set.`);
+} else {
+  fail(`CLIQ_WEBHOOK_AMOUNT_UNIT="${cliqAmountUnit}" must be "jod" or "fils".`);
+}
+
 // ─── Summary ──────────────────────────────────────────────────────────────────
 console.log('\n' + '─'.repeat(60));
 console.log('PRODUCTION PRE-FLIGHT SUMMARY');
