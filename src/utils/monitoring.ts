@@ -1,16 +1,13 @@
 import type { DomainEventEnvelope } from '../domain/events';
-import {
-  init as sentryInit,
-  addBreadcrumb,
-  captureException,
-  captureMessage,
-  startInactiveSpan,
-} from '@sentry/react';
+import type * as SentryModule from '@sentry/react';
 import { createCorrelationId, createStructuredLogEntry } from '../platform/observability';
 import { sanitizeLogMessage } from './sanitization';
 
+type SentrySdk = typeof SentryModule;
+
 let sentryInitialized = false;
 let sentryInitializationStarted = false;
+let sentrySdk: SentrySdk | null = null;
 
 function sanitizeContext(context?: Record<string, unknown>): Record<string, unknown> | undefined {
   if (!context) { return undefined; }
@@ -67,7 +64,8 @@ export async function initSentry(): Promise<void> {
   sentryInitializationStarted = true;
 
   try {
-    sentryInit({
+    const sdk = await import('@sentry/react');
+    sdk.init({
       dsn,
       environment,
       tracesSampleRate: 0,
@@ -126,10 +124,12 @@ export async function initSentry(): Promise<void> {
       },
     });
 
+    sentrySdk = sdk;
     sentryInitialized = true;
     writeConsole('info', 'Sentry initialized.');
 
   } catch (error) {
+    sentrySdk = null;
     sentryInitializationStarted = false;
     if (import.meta.env.DEV) {
       writeConsole('warning', 'Sentry initialization failed.', { error: sanitizeLogMessage(String(error)) }); // nosec CWE-117
@@ -141,8 +141,8 @@ export const logger = {
   error(message: string, error?: unknown, context?: Record<string, unknown>): void {
     const safeMessage = sanitizeLogMessage(message);
     writeConsole('error', safeMessage, context);
-    if (sentryInitialized) {
-      captureException(error || new Error(safeMessage), {
+    if (sentryInitialized && sentrySdk) {
+      sentrySdk.captureException(error || new Error(safeMessage), {
         level: 'error',
         tags: { type: 'application_error' },
         extra: context,
@@ -152,8 +152,8 @@ export const logger = {
 
   warning(message: string, context?: Record<string, unknown>): void {
     writeConsole('warning', sanitizeLogMessage(message), context);
-    if (import.meta.env.PROD && sentryInitialized) {
-      captureMessage(sanitizeLogMessage(message), {
+    if (import.meta.env.PROD && sentryInitialized && sentrySdk) {
+      sentrySdk.captureMessage(sanitizeLogMessage(message), {
         level: 'warning',
         tags: { type: 'application_warning' },
         extra: context,
@@ -163,8 +163,8 @@ export const logger = {
 
   info(message: string, context?: Record<string, unknown>): void {
     writeConsole('info', sanitizeLogMessage(message), context);
-    if (import.meta.env.PROD && context?.important && sentryInitialized) {
-      captureMessage(sanitizeLogMessage(message), {
+    if (import.meta.env.PROD && context?.important && sentryInitialized && sentrySdk) {
+      sentrySdk.captureMessage(sanitizeLogMessage(message), {
         level: 'info',
         tags: { type: 'application_info' },
         extra: context,
@@ -175,8 +175,8 @@ export const logger = {
   metric(name: string, value: number, tags?: Record<string, string>): void {
     const safeName = sanitizeLogMessage(name);
     writeConsole('info', `metric:${safeName}`, { value, tags });
-    if (sentryInitialized) {
-      addBreadcrumb({
+    if (sentryInitialized && sentrySdk) {
+      sentrySdk.addBreadcrumb({
         category: 'metric',
         message: safeName,
         level: 'info',
@@ -189,8 +189,8 @@ export const logger = {
     const requestId = createCorrelationId('txn');
     const startTime = Date.now();
     logger.addBreadcrumb(`Transaction:${sanitizeLogMessage(name)}`, 'performance', { op, requestId });
-    if (sentryInitialized) {
-      const span = startInactiveSpan({ name: sanitizeLogMessage(name), op });
+    if (sentryInitialized && sentrySdk) {
+      const span = sentrySdk.startInactiveSpan({ name: sanitizeLogMessage(name), op });
       return {
         finish: () => {
           span.end();
@@ -202,8 +202,8 @@ export const logger = {
   },
 
   addBreadcrumb(message: string, category: string, data?: Record<string, unknown>): void {
-    if (sentryInitialized) {
-      addBreadcrumb({ message, category, level: 'info', data });
+    if (sentryInitialized && sentrySdk) {
+      sentrySdk.addBreadcrumb({ message, category, level: 'info', data });
     }
   },
 };

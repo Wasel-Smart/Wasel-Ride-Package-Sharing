@@ -75,6 +75,9 @@ export default defineConfig(({ mode }) => ({
         // three.js / react-three-fiber inside the lazy globe chunk.
         compact: true,
         experimentalMinChunkSize: 15000,
+        // Avoid Rollup's small-chunk merger on the browser entry: it folds
+        // unrelated shared modules back into the initial download. Keep the
+        // default graph splits and let route-level dynamic imports stay lazy.
         assetFileNames: (assetInfo) => {
           if (assetInfo.name?.endsWith('.css')) return 'assets/css/[name]-[hash][extname]';
           if (
