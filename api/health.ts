@@ -108,7 +108,7 @@ async function querySupabaseMetrics(): Promise<HealthResponse['broker']> {
             .eq('status', 'failed'),
           supabase
             .from('dead_letter_messages')
-            .select('topic')
+            .select('original_topic')
             .limit(500),
         ]),
         timeout,
@@ -120,9 +120,9 @@ async function querySupabaseMetrics(): Promise<HealthResponse['broker']> {
       ]);
 
     const deadLetterByTopic: DLQTopicCounts = {};
-    const dlqRows = (dlqTopicsResult as { data: Array<{ topic?: string }> | null }).data ?? [];
+    const dlqRows = (dlqTopicsResult as { data: Array<{ original_topic?: string; topic?: string }> | null }).data ?? [];
     for (const row of dlqRows) {
-      const topic = row.topic ?? 'unknown';
+      const topic = row.original_topic ?? row.topic ?? 'unknown';
       deadLetterByTopic[topic] = (deadLetterByTopic[topic] ?? 0) + 1;
     }
 
