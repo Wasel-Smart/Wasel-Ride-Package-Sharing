@@ -63,29 +63,9 @@ function getBrowserStorage(kind: 'localStorage' | 'sessionStorage'): Storage | u
   }
 }
 
-// ── Request queue (used only if a request fires while offline) ────────────────
-const requestQueue: Array<{
-  fn: () => Promise<unknown>;
-  resolve: (value: unknown) => void;
-  reject: (error: unknown) => void;
-}> = [];
-
 function getIsOnline(): boolean {
   if (typeof navigator === 'undefined') {return true;}
   return navigator.onLine;
-}
-
-async function processRequestQueue(): Promise<void> {
-  while (requestQueue.length > 0 && getIsOnline()) {
-    const item = requestQueue.shift();
-    if (!item) {break;}
-    const { fn, resolve, reject } = item;
-    try {
-      resolve(await fn());
-    } catch (err) {
-      reject(err instanceof Error ? err : new Error(String(err)));
-    }
-  }
 }
 
 // ── Retry wrapper ─────────────────────────────────────────────────────────────
@@ -117,15 +97,6 @@ async function retryWithBackoff<T>(
     }
   }
   throw lastError;
-}
-
-function queueIfOffline<T>(fn: () => Promise<T>): Promise<T> {
-  if (!getIsOnline()) {
-    return new Promise<T>((resolve, reject) => {
-      requestQueue.push({ fn, resolve: value => resolve(value as T), reject });
-    });
-  }
-  return fn();
 }
 
 // ── Supabase singleton ────────────────────────────────────────────────────────
@@ -202,19 +173,12 @@ export function initSupabaseListeners(): () => void {
   if (listenersInitialised || typeof window === 'undefined') {return () => {};}
   listenersInitialised = true;
 
-  const onOnline = () => {
-    processRequestQueue();
-  };
-
-  window.addEventListener('online', onOnline, { passive: true });
-
   healthCheckTimer = setInterval(() => {
     if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {return;}
     checkSupabaseConnection(false).catch(() => {});
   }, HEALTH_CHECK_INTERVAL);
 
   return () => {
-    window.removeEventListener('online', onOnline);
     if (healthCheckTimer) {
       clearInterval(healthCheckTimer);
       healthCheckTimer = null;
@@ -243,7 +207,14 @@ export async function optimizedQuery<T>(
     }
   }
 
-  const result = await queueIfOffline(() => retryWithBackoff(queryFn));
+  // Do not defer arbitrary Supabase operations until connectivity returns. The
+  // closure may contain a booking/payment mutation and can run much later with
+  // stale auth, changed form data, or after the user has navigated away. Callers
+  // that support offline writes must persist an explicit, idempotent command.
+  if (!getIsOnline()) {
+    throw new Error('You are offline. Reconnect and try again.');
+  }
+  const result = await retryWithBackoff(queryFn);
 
   if (cache && cacheKey) {
     try {
@@ -270,10 +241,15 @@ export async function checkSupabaseConnection(force = false): Promise<boolean> {
 
   try {
     const sessionPromise = supabase.auth.getSession();
-    const timeout = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('timeout')), 5000),
-    );
-    await Promise.race([sessionPromise, timeout]);
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('timeout')), 5000);
+      });
+      await Promise.race([sessionPromise, timeout]);
+    } finally {
+      if (timeoutId) {clearTimeout(timeoutId);}
+    }
     connectionHealthy = true;
     lastHealthCheck = Date.now();
     return true;
@@ -287,7 +263,7 @@ export function getConnectionMetrics() {
   return {
     isOnline: getIsOnline(),
     connectionHealthy,
-    queuedRequests: requestQueue.length,
+    queuedRequests: 0,
     lastHealthCheck: lastHealthCheck ? new Date(lastHealthCheck).toISOString() : 'never',
   };
 }
