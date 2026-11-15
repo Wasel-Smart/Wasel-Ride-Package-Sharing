@@ -1,8 +1,14 @@
+import { lazy, Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router';
-import { ProtectedPagePreview } from '../components/system/ProtectedPagePreview';
 import { useLocalAuth } from '../contexts/LocalAuth';
 import { tx } from '../locales/tx';
 import { type AccessPermission, userHasPermission } from '../platform/rbac';
+
+const ProtectedPagePreview = lazy(() =>
+  import('../components/system/ProtectedPagePreview').then(module => ({
+    default: module.ProtectedPagePreview,
+  })),
+);
 
 function LoadingState() {
   return (
@@ -51,11 +57,19 @@ export default function ProtectedOutlet({ require: requiredPermission }: Protect
   }
 
   if (!user) {
-    return <ProtectedPagePreview pathname={location.pathname} />;
+    return (
+      <Suspense fallback={<LoadingState />}>
+        <ProtectedPagePreview pathname={location.pathname} />
+      </Suspense>
+    );
   }
 
   if (requiredPermission && !userHasPermission(user.role, requiredPermission)) {
-    return <ProtectedPagePreview pathname={location.pathname} />;
+    return (
+      <Suspense fallback={<LoadingState />}>
+        <ProtectedPagePreview pathname={location.pathname} />
+      </Suspense>
+    );
   }
 
   return <Outlet />;
