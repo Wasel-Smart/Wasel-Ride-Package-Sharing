@@ -104,6 +104,9 @@ a.wasel-home-section-action {
   background: rgba(255,255,255,0.04); border: 1px solid rgba(0,229,255,0.12);
   transition: background 150ms var(--wasel-ease), border-color 150ms var(--wasel-ease);
 }
+.wasel-home-proof-pill strong,
+.wasel-home-proof-pill small { display: block; }
+.wasel-home-proof-pill small { margin-top: 4px; line-height: 1.55; }
 .wasel-home-proof-pill:hover { background: rgba(255,255,255,0.06); border-color: rgba(0,229,255,0.24); }
 .wasel-home-proof-pill-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 8px; flex: 0 0 auto; }
 

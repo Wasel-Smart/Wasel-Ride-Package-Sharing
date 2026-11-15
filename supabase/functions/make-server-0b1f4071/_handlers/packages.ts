@@ -8,7 +8,7 @@ import {
 
 import { hasPermission, resolveAccessRole } from '../_shared/rbac.ts';
 import { toNumber } from '../_shared/pricing.ts';
-import { calculatePackageDeliveryFee } from '../../_shared/package-pricing.ts';
+import { calculatePackageDeliveryFee } from '../_shared/package-pricing.ts';
 
 
 export async function handlePackageRequest ( request: Request, path: string ) {

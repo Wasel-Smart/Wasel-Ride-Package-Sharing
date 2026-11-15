@@ -379,7 +379,10 @@ export async function handleResendWebhook ( request: Request ) {
     .eq( 'external_reference', externalReference )
     .eq( 'provider_name', 'resend' );
 
-  if ( error ) {return json( { error: error.message }, 500 );}
+  if ( error ) {
+    console.error( '[webhooks] resend delivery update failed', error.message );
+    return json( { error: 'Delivery update failed' }, 500 );
+  }
   return json( { received: true, status } );
 }
 
@@ -434,7 +437,10 @@ export async function handleTwilioWebhook ( request: Request ) {
     .eq( 'external_reference', externalReference )
     .eq( 'provider_name', 'twilio' );
 
-  if ( error ) {return json( { error: error.message }, 500 );}
+  if ( error ) {
+    console.error( '[webhooks] twilio delivery update failed', error.message );
+    return json( { error: 'Delivery update failed' }, 500 );
+  }
   return json( { received: true, status } );
 }
 

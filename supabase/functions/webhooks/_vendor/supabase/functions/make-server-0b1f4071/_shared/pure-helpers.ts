@@ -111,7 +111,8 @@ export function mapPackageRow ( row: Record<string, unknown> ) {
     package_id: String( row.package_id ?? row.id ?? '' ),
     tracking_number: String( row.tracking_number ?? '' ),
     status: String( row.status ?? 'posted' ),
-    delivery_fee: toNumber( row.delivery_fee, 0 ),
+    delivery_fee: toNumber( row.delivery_fee ?? row.fee_amount, 0 ),
+    fee_amount: toNumber( row.fee_amount ?? row.delivery_fee, 0 ),
   };
 }
 
