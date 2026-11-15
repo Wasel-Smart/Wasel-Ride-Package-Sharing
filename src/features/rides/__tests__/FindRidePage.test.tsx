@@ -6,11 +6,14 @@ import { FindRidePage } from '../FindRidePage';
 vi.mock('../../../services/rideLifecycle', () => ({
   createRideBooking: vi.fn(),
   getRideBookings: vi.fn(() => []),
+  updateRideBooking: vi.fn(),
 }));
 
-vi.mock('../../../services/walletApi', () => ({
+// FindRidePage imports the wallet client from services/wallet/walletApi.
+vi.mock('../../../services/wallet/walletApi', () => ({
   walletApi: {
     getBalance: vi.fn(() => Promise.resolve(10)),
+    getWalletData: vi.fn(() => Promise.resolve(null)),
   },
 }));
 

@@ -6,7 +6,9 @@ vi.mock('./CorridorGlobeScene', () => ({ default: () => null }));
 describe('CorridorGlobeSection', () => {
   it('loads WebGL only after the visitor asks to open the 3D view', async () => {
     vi.stubGlobal('WebGLRenderingContext', class {});
-    const getContext = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({} as GPUCanvasContext);
+    const getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockReturnValue({} as unknown as WebGL2RenderingContext);
     const { container, unmount } = render(<CorridorGlobeSection ar={false} />);
 
     expect(container.querySelector('section')).not.toBeNull();
