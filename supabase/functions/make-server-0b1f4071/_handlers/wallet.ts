@@ -774,7 +774,7 @@ type PayableAmount =
  * moves.
  */
 // eslint-disable-next-line complexity
-async function resolvePayableAmount (
+export async function resolvePayableAmount (
   admin: ReturnType<typeof getAdminClient>,
   referenceType: string,
   referenceId: string,
@@ -820,7 +820,7 @@ async function resolvePayableAmount (
   if ( referenceType === 'package_delivery' ) {
     const { data, error } = await admin
       .from( 'packages' )
-      .select( 'id, price, sender_id, recipient_id, status' )
+      .select( '*' )
       .eq( 'id', referenceId )
       .maybeSingle();
 
@@ -829,11 +829,15 @@ async function resolvePayableAmount (
     if ( data.sender_id !== callerUserId ) {
       return { error: json( { error: 'This package does not belong to you.' }, 403 ) };
     }
-    if ( NON_PAYABLE_STATUSES.has( String( data.status ?? '' ).toLowerCase() ) ) {
+    const packageStatuses = [ data.status, data.package_status ]
+      .map( status => String( status ?? '' ).toLowerCase() );
+    if ( packageStatuses.some( status =>
+      NON_PAYABLE_STATUSES.has( status ) || [ 'in_transit', 'delivered', 'disputed' ].includes( status ),
+    ) ) {
       return { error: json( { error: 'This package is not payable (already paid or cancelled).' }, 409 ) };
     }
 
-    const amountJod = toMoneyNumber( data.price );
+    const amountJod = toMoneyNumber( data.fee_amount ?? data.delivery_fee );
     if ( amountJod <= 0 ) {
       return { error: json( { error: 'This package has no payable amount.' }, 409 ) };
     }

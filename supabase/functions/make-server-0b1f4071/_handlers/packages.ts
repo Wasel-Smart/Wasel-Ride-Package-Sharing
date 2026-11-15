@@ -7,10 +7,8 @@ import {
 } from './shared.ts';
 
 import { hasPermission, resolveAccessRole } from '../_shared/rbac.ts';
-import {
-  calculateDirectPrice,
-  toNumber,
-} from '../_shared/pricing.ts';
+import { toNumber } from '../_shared/pricing.ts';
+import { calculatePackageDeliveryFee } from '../../_shared/package-pricing.ts';
 
 
 export async function handlePackageRequest ( request: Request, path: string ) {
@@ -19,6 +17,7 @@ export async function handlePackageRequest ( request: Request, path: string ) {
 
   if ( request.method === 'POST' && path === '/packages' ) {
     const body = await request.json().catch( () => ( {} ) );
+    const packageFee = calculatePackageDeliveryFee( body.weight );
     const trackingNumber = `WSL-PKG-${ crypto.randomUUID().split( '-' )[ 0 ].slice( 0, 8 ).toUpperCase() }`;
     const { data, error } = await auth.admin
       .from( 'packages' )
@@ -37,7 +36,8 @@ export async function handlePackageRequest ( request: Request, path: string ) {
         description: String( body.description ?? '' ),
         declared_value: toNumber( body.declared_value, 0 ),
         fragile: Boolean( body.fragile ),
-        delivery_fee: calculateDirectPrice( 'package', toNumber( body.weight, 0 ), 0, toNumber( body.base_price, 5 ) ).breakdown.base,
+        delivery_fee: packageFee,
+        fee_amount: packageFee,
         status: 'posted',
       } )
       .select( '*' )

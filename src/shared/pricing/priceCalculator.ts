@@ -19,7 +19,8 @@ export function calculateDirectPrice(
   const resolvedBase = Math.max(1, toNumber(basePrice, type === 'package' ? 3.5 : 2.5));
   const packageSurcharge = type === 'package' ? Math.max(0, toNumber(weight, 0.5) - 1) * 0.35 : 0;
   const distanceCharge = resolvedDistance * (type === 'package' ? 0.22 : 0.18);
-  const price = Number((resolvedBase + distanceCharge + packageSurcharge).toFixed(3));
+  const precision = type === 'package' ? 2 : 3;
+  const price = Number((resolvedBase + distanceCharge + packageSurcharge).toFixed(precision));
   return {
     price,
     currency: 'JOD',

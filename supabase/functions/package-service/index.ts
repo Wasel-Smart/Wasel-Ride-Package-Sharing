@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { calculatePackageDeliveryFee } from '../_shared/package-pricing.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -211,17 +212,9 @@ function mapPackageRow(row: Record<string, unknown>) {
     package_id: String(row.package_id ?? row.id ?? ''),
     tracking_number: String(row.tracking_number ?? ''),
     status: String(row.status ?? 'posted'),
-    delivery_fee: toNumber(row.delivery_fee, 0),
+    delivery_fee: toNumber(row.delivery_fee ?? row.fee_amount, 0),
+    fee_amount: toNumber(row.fee_amount ?? row.delivery_fee, 0),
   };
-}
-
-function calculateDirectPrice(weight?: number, distanceKm?: number, basePrice = 5): { total: number; breakdown: { base: number; distance: number; weight: number } } {
-  const distance = distanceKm ?? 0;
-  const w = weight ?? 0;
-  const distanceFee = Number((distance * 0.5).toFixed(2));
-  const weightFee = Number((w * 0.2).toFixed(2));
-  const total = Number((basePrice + distanceFee + weightFee).toFixed(2));
-  return { total, breakdown: { base: basePrice, distance: distanceFee, weight: weightFee } };
 }
 
 function parseEntityRoute(path: string, prefix: string) {
@@ -238,6 +231,7 @@ async function handlePackageRequest(request: Request, path: string) {
 
   if (request.method === 'POST' && path === '/packages') {
     const body = await request.json().catch(() => ({}));
+    const packageFee = calculatePackageDeliveryFee(body.weight);
     const trackingNumber = `WSL-PKG-${crypto.randomUUID().split('-')[0].slice(0, 8).toUpperCase()}`;
     const { data, error } = await auth.admin.from('packages').insert({
       tracking_number: trackingNumber, qr_code: trackingNumber,
@@ -252,7 +246,8 @@ async function handlePackageRequest(request: Request, path: string) {
       description: String(body.description ?? ''),
       declared_value: toNumber(body.declared_value, 0),
       fragile: Boolean(body.fragile),
-      delivery_fee: calculateDirectPrice(toNumber(body.weight, 0), 0, toNumber(body.base_price, 5)).breakdown.base,
+      delivery_fee: packageFee,
+      fee_amount: packageFee,
       status: 'posted',
     }).select('*').single();
     if (error) {return json({ error: error.message }, 500);}

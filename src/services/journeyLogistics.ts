@@ -554,7 +554,6 @@ function buildServerPackagePayload (
     to: pkg.to,
     weight: parseWeight( pkg.weight ),
     description: pkg.note,
-    price: 5,
     handoffCode: pkg.handoffCode,
     ...( pkg.recipientName ? { recipientName: pkg.recipientName } : {} ),
     ...( pkg.recipientPhone ? { recipientPhone: pkg.recipientPhone } : {} ),

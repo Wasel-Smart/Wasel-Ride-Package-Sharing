@@ -3,6 +3,7 @@
 import { getDb, packageSizeFromWeight } from './helpers.js';
 import { buildUserContext } from './userContext';
 import { sanitizeHtml } from '../../utils/sanitization';
+import { calculateDirectPrice } from '../../shared/pricing/priceCalculator';
 import type {
   RawCommunicationDelivery,
   RawCommunicationPreferences,
@@ -24,6 +25,7 @@ export async function createDirectPackage(input: {
 }) {
   const sender = await buildUserContext(input.userId);
   const db = getDb();
+  const deliveryFee = calculateDirectPrice('package', input.weightKg, 8).price;
   const { data, error } = await db
     .from('packages')
     .insert({
@@ -40,8 +42,8 @@ export async function createDirectPackage(input: {
       size: packageSizeFromWeight(input.weightKg),
       weight_kg: input.weightKg,
       description: input.description,
-      fee_amount: 5,
-      delivery_fee: 5,
+      fee_amount: deliveryFee,
+      delivery_fee: deliveryFee,
       package_status: 'created',
       status: 'requested',
     })

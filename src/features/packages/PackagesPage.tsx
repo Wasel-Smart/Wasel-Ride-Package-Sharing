@@ -149,8 +149,8 @@ export function PackagesPage() {
           console.error('[Wallet] package payment failed:', paymentError);
           setTrackingMessage(
             ar
-              ? `التتبع مباشر: ${created.trackingId}. سيتم تسوية الدفع عند التسليم.`
-              : `Tracking live: ${created.trackingId}. Payment will be settled on delivery.`,
+              ? `تم إنشاء طلب الطرد لكن الدفع لم يكتمل. لا تسلّم الطرد قبل تأكيد الدفع.`
+              : `Package request created, but payment did not complete. Do not hand over the package until payment is confirmed.`,
           );
         }
       }
