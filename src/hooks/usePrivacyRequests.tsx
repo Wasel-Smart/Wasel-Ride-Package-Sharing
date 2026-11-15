@@ -10,9 +10,13 @@ import {
 export function useDataExportRequest() {
   return useMutation({
     mutationFn: requestDataExport,
-    onSuccess: () => {
-      toast.success('Data export requested', {
-        description: 'You will receive an email with your data within 24 hours.',
+    onSuccess: result => {
+      toast.success('Your data export is ready', {
+        description: (
+          <a href={result.downloadUrl} target="_blank" rel="noopener noreferrer" className="underline">
+            Download your data (link expires in 10 minutes)
+          </a>
+        ),
       });
     },
   });

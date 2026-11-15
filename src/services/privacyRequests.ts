@@ -1,51 +1,44 @@
-import { supabase } from '@/services/core';
+import { API_URL, fetchWithRetry, getAuthDetails, supabase } from '@/services/core';
 
-type PrivacyRequestType = 'data_export' | 'account_deletion';
-
-function requireUserId(userId: string | undefined): string {
-  if (!userId?.trim()) {
-    throw new Error('You must be signed in to submit this request.');
-  }
-
-  return userId;
-}
-
-async function getCurrentUserId(): Promise<string> {
-  if (!supabase) {
-    throw new Error('Supabase is not configured.');
-  }
-
-  const { data, error } = await supabase.auth.getUser();
-  if (error) {
-    throw error;
-  }
-
-  return requireUserId(data.user?.id);
-}
-
-async function requestPrivacyAction(type: PrivacyRequestType): Promise<void> {
-  if (!supabase) {
-    throw new Error('Supabase is not configured.');
-  }
-
-  const userId = await getCurrentUserId();
-  const rpcName = type === 'data_export' ? 'request_data_export' : 'request_account_deletion';
-
-  const { error } = await supabase.rpc(rpcName, {
-    p_user_id: userId,
+async function postPrivacyRequest(path: string): Promise<Response> {
+  if (!supabase) {throw new Error('Supabase is not configured.');}
+  const { token } = await getAuthDetails();
+  return fetchWithRetry(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
   });
-
-  if (error) {
-    throw error;
-  }
 }
 
-export function requestDataExport(): Promise<void> {
-  return requestPrivacyAction('data_export');
+async function readPrivacyRequestError(response: Response, fallback: string): Promise<never> {
+  const payload = await response.json().catch(() => ({}));
+  throw new Error(typeof payload.error === 'string' ? payload.error : fallback);
+}
+
+export function requestDataExport(): Promise<DataExportLink> {
+  return requestPrivacyDataExport();
+}
+
+export type DataExportLink = { downloadUrl: string; expiresAt: number };
+
+async function requestPrivacyDataExport(): Promise<DataExportLink> {
+  const response = await postPrivacyRequest('/gdpr/data-exports');
+  if (!response.ok) {
+    return readPrivacyRequestError(response, 'Data export could not be created.');
+  }
+  const payload = await response.json() as Partial<DataExportLink>;
+  if (typeof payload.downloadUrl !== 'string' || !Number.isFinite(payload.expiresAt)) {
+    throw new Error('The export was created, but its download link is unavailable.');
+  }
+  return { downloadUrl: payload.downloadUrl, expiresAt: payload.expiresAt as number };
 }
 
 export function requestAccountDeletion(): Promise<void> {
-  return requestPrivacyAction('account_deletion');
+  return postPrivacyRequest('/gdpr/deletions').then(async response => {
+    if (!response.ok) {
+      await readPrivacyRequestError(response, 'Account deletion could not be requested.');
+    }
+  });
 }
 
 export async function signOutAfterAccountDeletion(): Promise<void> {

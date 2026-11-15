@@ -200,7 +200,8 @@ export function sanitizeFilename(filename: string): string {
   if (safe.startsWith('.')) {safe = `_${safe}`;}
 
   // Detect whether the cleaned result differs from the original (invalid chars were present).
-  const hadInvalid = safe !== filename.replace(/[\\/]/g, '_');
+  const slashNormalized = filename.replace(/[\\/]/g, '_');
+  const hadInvalid = slashNormalized.replace(/[^a-zA-Z0-9._-]/g, '_') !== slashNormalized;
 
   const dot = safe.lastIndexOf('.');
   const base = dot > 0 ? safe.slice(0, dot) : safe;

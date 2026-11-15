@@ -99,9 +99,13 @@ export class CircuitBreaker {
         logger.info(`Circuit breaker ${sanitizeLogMessage(this.name)} closed after recovery`);
       }
     }
-    // In CLOSED state, do not reset the failure counter on success.
-    // Failures within the monitoring window should accumulate until the
-    // window expires (handled in onFailure), not be wiped by a single success.
+    else {
+      // In CLOSED state the threshold counts consecutive failures. A successful
+      // request proves the dependency recovered, so clear prior failures.
+      this.failures = 0;
+      this.windowStart = Date.now();
+      this.lastFailureTime = 0;
+    }
   }
 
   /**

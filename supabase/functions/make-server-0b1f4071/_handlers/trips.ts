@@ -192,6 +192,23 @@ export async function handleTripRequest ( request: Request, path: string ) {
 export async function handleBookingCollectionForTrip ( request: Request, tripId: string ) {
   const auth = await authenticateRequest( request );
   if ( 'error' in auth ) {return auth.error;}
+  // Booking rows contain passenger identifiers and payment state. Authentication
+  // alone is not sufficient: only the trip's driver or a rides manager may list
+  // every booking for a trip.
+  const { data: trip, error: tripError } = await auth.admin
+    .from( 'trips' )
+    .select( 'trip_id, driver_id' )
+    .eq( 'trip_id', tripId )
+    .maybeSingle();
+  if ( tripError ) {return json( { error: 'Unable to verify trip access.' }, 500 );}
+  if ( !trip ) {return json( { error: 'Trip not found.' }, 404 );}
+  const driver = await getDriverForUser( auth.admin, auth.canonicalUser.id );
+  const isTripOwner = Boolean( driver?.driver_id ) && String( driver.driver_id ) === String( trip.driver_id );
+  const canManageTrips = hasPermission( resolveAccessRole( auth.canonicalUser.role ), 'rides:assign' );
+  if ( !isTripOwner && !canManageTrips ) {
+    return json( { error: 'Not authorized to view bookings for this trip.' }, 403 );
+  }
+
   const { data, error } = await auth.admin
     .from( 'bookings' )
     .select( '*' )
@@ -208,10 +225,15 @@ export async function handleCancelTrip ( request: Request ) {
   const role = resolveAccessRole( auth.canonicalUser.role );
   const canCancelAny = hasPermission( role, 'rides:cancel_any' ) || hasPermission( role, 'packages:cancel_any' );
 
-  const body = await request.json();
+  const body = await request.json().catch( () => null );
+  if ( !body || typeof body !== 'object' || Array.isArray( body ) ) {
+    return json( { error: 'A valid trip cancellation request is required.' }, 400 );
+  }
   const tripId = String( body.tripId ?? '' );
   const reason = String( body.reason ?? '' ).trim();
-  if ( !tripId || !reason ) {return json( { error: 'tripId and reason are required' }, 400 );}
+  if ( !tripId || tripId.length > 128 || reason.length < 2 || reason.length > 500 ) {
+    return json( { error: 'A trip ID and a reason between 2 and 500 characters are required.' }, 400 );
+  }
 
   const { admin, canonicalUser } = auth;
   const { data: trip, error: fetchError } = await admin
@@ -222,7 +244,9 @@ export async function handleCancelTrip ( request: Request ) {
 
   if ( fetchError ) {return json( { error: fetchError.message }, 500 );}
   if ( !trip ) {return json( { error: 'Trip not found' }, 404 );}
-  if ( !canCancelAny && trip.driver_id !== canonicalUser.id ) {return json( { error: 'Unauthorized' }, 403 );}
+  const driver = await getDriverForUser( admin, canonicalUser.id );
+  const isTripDriver = Boolean( driver?.driver_id ) && String( trip.driver_id ) === String( driver.driver_id );
+  if ( !canCancelAny && !isTripDriver ) {return json( { error: 'Unauthorized' }, 403 );}
   if ( trip.status === 'cancelled' ) {return json( { error: 'Trip already cancelled' }, 409 );}
   if ( trip.status === 'completed' ) {return json( { error: 'Cannot cancel completed trip' }, 409 );}
 
@@ -234,12 +258,16 @@ export async function handleCancelTrip ( request: Request ) {
 
   if ( bookingsError ) {return json( { error: bookingsError.message }, 500 );}
 
-  const { error: tripUpdateError } = await admin
+  const { data: cancelledTrip, error: tripUpdateError } = await admin
     .from( 'trips' )
     .update( { status: 'cancelled', cancelled_at: new Date().toISOString() } )
-    .eq( 'id', tripId );
+    .eq( 'id', tripId )
+    .eq( 'status', trip.status )
+    .select( 'id' )
+    .maybeSingle();
 
   if ( tripUpdateError ) {return json( { error: tripUpdateError.message }, 500 );}
+  if ( !cancelledTrip ) {return json( { error: 'Trip state changed; reload and try again.' }, 409 );}
 
   const activeBookings = bookings ?? [];
   if ( activeBookings.length > 0 ) {

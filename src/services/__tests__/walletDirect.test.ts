@@ -6,18 +6,29 @@ import { describe, it, expect, vi, beforeEach, type MockInstance } from 'vitest'
 // src/services/core — the same module. We mock it here so the real DB is
 // never touched.
 
-const makeQueryBuilder = (overrides: Record<string, unknown> = {}) => ({
-  select: vi.fn().mockReturnThis(),
-  eq: vi.fn().mockReturnThis(),
-  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-  single: vi.fn().mockResolvedValue({ data: null, error: null }),
-  insert: vi.fn().mockReturnThis(),
-  delete: vi.fn().mockReturnThis(),
-  order: vi.fn().mockResolvedValue({ data: [], error: null }),
-  ...overrides,
-});
-
-const mockFrom = vi.fn(() => makeQueryBuilder());
+const { makeQueryBuilder, mockFrom } = vi.hoisted( () => {
+  const createQueryBuilder = ( overrides: Record<string, unknown> = {} ) => {
+    const { select: selectOverride, order: orderOverride, ...rest } = overrides;
+    const queryResult = selectOverride ?? orderOverride;
+    return {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue( { data: null, error: null } ),
+      single: vi.fn().mockResolvedValue( { data: null, error: null } ),
+      insert: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      then: ( resolve: ( value: unknown ) => unknown, reject?: ( reason: unknown ) => unknown ) => {
+        const result = typeof queryResult === 'function'
+          ? ( queryResult as () => Promise<unknown> )()
+          : Promise.resolve( { data: [], error: null } );
+        return Promise.resolve( result ).then( resolve, reject );
+      },
+      ...rest,
+    };
+  };
+  return { makeQueryBuilder: createQueryBuilder, mockFrom: vi.fn( () => createQueryBuilder() ) };
+} );
 
 vi.mock('../core', () => ({
   supabase: { from: mockFrom },
@@ -26,7 +37,14 @@ vi.mock('../core', () => ({
 
 vi.mock('../wallet/walletLocalStorage', () => ({
   toNumber: vi.fn((v: unknown, fb = 0) => (v === null || v === undefined ? fb : Number(v))),
-  toWalletTransaction: vi.fn((row: unknown) => row),
+  toWalletTransaction: vi.fn((row: Record<string, unknown>) => ({
+    id: String(row.transaction_id ?? 'transaction'),
+    type: String(row.transaction_type ?? 'wallet'),
+    description: String((row.metadata as Record<string, unknown> | null)?.description ?? ''),
+    amount: row.direction === 'debit' ? -Math.abs(Number(row.amount ?? 0)) : Math.abs(Number(row.amount ?? 0)),
+    createdAt: String(row.created_at ?? ''),
+    status: String(row.transaction_status ?? ''),
+  })),
 }));
 
 import {

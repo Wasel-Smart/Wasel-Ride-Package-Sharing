@@ -59,7 +59,7 @@ api_url = "http://127.0.0.1"
 # EMAIL TESTING
 # ============================================================
 
-[local_smtp]
+[inbucket]
 enabled = true
 port = 54324
 

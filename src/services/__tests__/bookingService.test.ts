@@ -23,7 +23,12 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('../backendWorkflow', async (importOriginal) => {
   const actual = await importOriginal<typeof BackendWorkflowModule>();
-  return { ...actual, requestEdgeJson: mocks.mockRequestEdgeJson, BackendRequestError: mocks.mockBackendRequestError };
+  return {
+    ...actual,
+    requestEdgeJson: mocks.mockRequestEdgeJson,
+    runBackendWorkflow: mocks.mockRunBackendWorkflow,
+    BackendRequestError: mocks.mockBackendRequestError,
+  };
 });
 
 vi.mock('../directSupabase', async (importOriginal) => {
@@ -170,9 +175,7 @@ describe('bookingsAPI', () => {
     });
 
     it('falls back to direct Supabase when edge fails', async () => {
-      mocks.mockRunBackendWorkflow.mockImplementationOnce(async ({ edge, fallback }) => {
-        await edge({}).catch(() => fallback({}));
-      });
+      mocks.mockRequestEdgeJson.mockRejectedValueOnce(new Error('Edge unavailable'));
       mocks.mockGetDirectUserBookings.mockResolvedValueOnce([
         { booking_id: 'direct-1', trip_id: 'trip-1', status: 'confirmed', passenger_id: 'user-1' },
       ]);
@@ -183,14 +186,11 @@ describe('bookingsAPI', () => {
       expect(result.bookings![0]!.booking_id).toBe('direct-1');
     });
 
-    it('returns empty bookings when both edge and direct fail', async () => {
-      mocks.mockRunBackendWorkflow.mockImplementationOnce(async ({ edge, fallback }) => {
-        try { return await edge({}); } catch { return fallback({}); }
-      });
+    it('surfaces the error when both edge and direct fail', async () => {
+      mocks.mockRequestEdgeJson.mockRejectedValueOnce(new Error('Edge unavailable'));
       mocks.mockGetDirectUserBookings.mockRejectedValueOnce(new Error('DB error'));
 
-      const result = await bookingsAPI.getUserBookings();
-      expect(result.bookings).toEqual([]);
+      await expect(bookingsAPI.getUserBookings()).rejects.toThrow('DB error');
     });
   });
 
@@ -204,9 +204,7 @@ describe('bookingsAPI', () => {
     });
 
     it('falls back to direct Supabase for trip bookings', async () => {
-      mocks.mockRunBackendWorkflow.mockImplementationOnce(async ({ edge, fallback }) => {
-        await edge({}).catch(() => fallback({}));
-      });
+      mocks.mockRequestEdgeJson.mockRejectedValueOnce(new Error('Edge unavailable'));
       mocks.mockGetDirectTripBookings.mockResolvedValueOnce([
         { booking_id: 'direct-trip-1', trip_id: 'trip-1', status: 'pending' },
       ]);

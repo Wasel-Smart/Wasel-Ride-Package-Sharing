@@ -214,10 +214,14 @@ export async function handleSubmitRating ( request: Request ) {
   const auth = await authenticateRequest( request );
   if ( 'error' in auth ) {return auth.error;}
 
+  const parsedBody: unknown = await request.json().catch( () => null );
+  if ( !parsedBody || typeof parsedBody !== 'object' || Array.isArray( parsedBody ) ) {
+    return json( { error: 'A valid rating request is required.' }, 400 );
+  }
+  const body = parsedBody as Record<string, unknown>;
   const role = resolveAccessRole( auth.canonicalUser.role );
   const canModerateRatings = hasPermission( role, 'trust:moderate' );
 
-  const body = await request.json();
   const rating = Number( body.rating );
   if ( !Number.isFinite( rating ) || rating < 1 || rating > 5 ) {
     return json( { error: 'Rating must be between 1 and 5' }, 400 );
@@ -225,6 +229,9 @@ export async function handleSubmitRating ( request: Request ) {
 
   const { admin, canonicalUser } = auth;
   const bookingId = String( body.bookingId ?? '' );
+  if ( !bookingId || bookingId.length > 128 ) {
+    return json( { error: 'A valid booking ID is required.' }, 400 );
+  }
   const { data: booking, error: bookingError } = await admin
     .from( 'bookings' )
     .select( 'booking_id, passenger_id, booking_status, trip_id, trips(driver_id)' )
@@ -260,6 +267,12 @@ export async function handleSubmitRating ( request: Request ) {
   if ( existingError ) {return json( { error: existingError.message }, 500 );}
   if ( existingRating ) {return json( { error: 'You have already rated this trip' }, 409 );}
 
+  const allowedTags = new Set( [ 'punctual', 'clean_car', 'friendly', 'safe_driving', 'good_communication', 'professional' ] );
+  const tags = Array.isArray( body.tags )
+    ? Array.from( new Set( body.tags.filter( ( tag ): tag is string => typeof tag === 'string' && allowedTags.has( tag ) ) ) ).slice( 0, 6 )
+    : [];
+  const review = typeof body.review === 'string' ? body.review.trim().slice( 0, 1000 ) : '';
+
   const { error: insertError } = await admin
     .from( 'ratings' )
     .insert( {
@@ -268,11 +281,17 @@ export async function handleSubmitRating ( request: Request ) {
       rider_id: canonicalUser.id,
       driver_id: driverId,
       rating,
-      review: typeof body.review === 'string' ? body.review : null,
-      tags: Array.isArray( body.tags ) ? body.tags : [],
+      review: review || null,
+      tags,
     } );
 
-  if ( insertError ) {return json( { error: insertError.message }, 500 );}
+  if ( insertError ) {
+    // The read above improves the user-facing duplicate response, while this
+    // unique constraint handles two concurrent submissions safely.
+    if ( insertError.code === '23505' ) {return json( { error: 'You have already rated this trip' }, 409 );}
+    console.error( '[ratings] rating insert failed', { code: insertError.code ?? 'unknown' } );
+    return json( { error: 'Rating could not be submitted. Please try again.' }, 500 );
+  }
 
   await admin.from( 'notifications' ).insert( {
     user_id: driver.user_id,

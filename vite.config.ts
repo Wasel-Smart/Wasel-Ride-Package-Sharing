@@ -41,6 +41,11 @@ export default defineConfig(({ mode }) => ({
 
   resolve: {
     alias: [
+      // react-router's package export map points Vite's `import` condition at
+      // its development build even for production bundles. Resolve the package's
+      // supported production entry explicitly to keep invariant/debug code out
+      // of the initial client chunk.
+      { find: /^react-router$/, replacement: path.resolve(__dirname, 'node_modules/react-router/dist/production/index.mjs') },
       { find: '@', replacement: path.resolve(__dirname, './src') },
       { find: '@wasel/rbac', replacement: path.resolve(__dirname, './packages/rbac/src/index.ts') },
     ],

@@ -5,8 +5,8 @@
  * and circuit-breaker patterns. Workers subscribe to the active `EventBroker`
  * (see ./event-broker) — no Redis or external infrastructure required.
  *
- * Dead letters are persisted to the `dead_letter_messages` Supabase table when
- * a broker is available, with an in-memory log fallback otherwise.
+ * Dead letters are persisted by the trusted broker proxy when configured.
+ * Browser clients never write directly to the server-only dead-letter table.
  */
 
 import {
@@ -15,7 +15,6 @@ import {
   type BrokerMessageHandler,
   type EventBroker,
 } from './event-broker';
-import { isSupabaseConfigured, supabase as defaultSupabase } from '../utils/supabase/client';
 import { createStructuredLogEntry } from './observability';
 import { telemetry } from './telemetry';
 import { sanitizeLogMessage } from '../utils/sanitization';
@@ -287,18 +286,8 @@ export abstract class BaseWorker<T = unknown> {
     });
 
     const proxyOk = await proxyWriteDeadLetter(dlqPayload);
-    if (proxyOk) {return;}
-
-    if (isSupabaseConfigured && defaultSupabase) {
-      void Promise.resolve(defaultSupabase.from('dead_letter_messages').insert(dlqPayload))
-        .then(({ error: insertError }) => {
-          if (insertError) {
-            console.error('[dlq] failed to persist dead letter', sanitizeLogMessage(insertError.message));
-          }
-        })
-        .catch((dlqError: unknown) => {
-          console.error('[dlq] persist threw', sanitizeLogMessage(dlqError));
-        });
+    if (!proxyOk) {
+      console.warn('[dlq] durable server storage is unavailable; failure is recorded in telemetry only');
     }
   }
 }
