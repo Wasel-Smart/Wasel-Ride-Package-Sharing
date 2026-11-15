@@ -13,7 +13,6 @@ import { C, F } from './utils/wasel-ds';
 import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
 import * as monitoring from './utils/monitoring';
-import { warmUpServer } from './services/core';
 import { waselRouter } from './router';
 
 function scheduleWhenIdle(callback: () => void): () => void {
@@ -110,11 +109,13 @@ function AppRuntimeCoordinator() {
                     }
                   });
 
-                  void warmUpServer().catch(error => {
-                    if (import.meta.env.DEV) {
-                      console.warn('[Runtime backend warmup failed]', error);
-                    }
-                  });
+                  void import('./services/core')
+                    .then(({ warmUpServer }) => warmUpServer())
+                    .catch(error => {
+                      if (import.meta.env.DEV) {
+                        console.warn('[Runtime backend warmup failed]', error);
+                      }
+                    });
 
                   const stopEvents = events.domainEventBus.subscribeAll(event => {
                     monitoring.trackDomainEvent(event);

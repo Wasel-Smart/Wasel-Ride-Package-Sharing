@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { getMovementPriceQuote } from '@/services/movementPricing';
+import { getMovementPriceQuote as quoteFare } from '@/services/movementPricing';
 
-type Membership = NonNullable<Parameters<typeof getMovementPriceQuote>[0]['membership']>;
+type QuoteArgs = Parameters<typeof quoteFare>[0];
+type Membership = NonNullable<QuoteArgs['membership']>;
+
+// The discount maths is exercised with discounts explicitly enabled. By default no
+// client-side discount is applied (see the "server-authoritative" suite below).
+const getMovementPriceQuote = (args: QuoteArgs) => quoteFare({ applyDiscounts: true, ...args });
 
 function membership(overrides: Record<string, unknown> = {}): Membership {
   return {
@@ -12,6 +17,25 @@ function membership(overrides: Record<string, unknown> = {}): Membership {
     ...overrides,
   } as unknown as Membership;
 }
+
+describe('movementPricing: server-authoritative default', () => {
+  it('applies no discount unless applyDiscounts is set, whatever the local membership says', () => {
+    const quote = quoteFare({
+      basePriceJod: 10,
+      corridorId: 'amman-irbid',
+      forecastDemandScore: 100,
+      membership: membership({
+        plusActive: true,
+        commuterPassRoute: { id: 'amman-irbid' },
+        movementCredits: 5000,
+      }),
+    });
+    expect(quote.finalPriceJod).toBe(10);
+    expect(quote.discountJod).toBe(0);
+    expect(quote.totalDiscountPercent).toBe(0);
+    expect(quote.explanation).toBe('Standard fare');
+  });
+});
 
 describe('movementPricing: getMovementPriceQuote', () => {
   it('applies only the minimum loyalty-credit discount with no other perks', () => {

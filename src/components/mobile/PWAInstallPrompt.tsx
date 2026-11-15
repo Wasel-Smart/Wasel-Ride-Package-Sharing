@@ -86,21 +86,24 @@ export function PWAInstallPrompt() {
     }
   }, []);
 
-  if (state !== 'available' || isStandalone) {
+  if (isStandalone || wasRecentlyDismissed || state === 'installed') {
     return null;
   }
 
-  if (wasRecentlyDismissed || state !== 'available') {
-    return null;
-  }
-
-  return <PWAInstallPromptCard onDismiss={ handleDismiss } onInstall={() => { void handleInstall(); }} />;
+  return (
+    <PWAInstallPromptCard
+      visible={ state === 'available' }
+      onDismiss={ handleDismiss }
+      onInstall={() => { void handleInstall(); }}
+    />
+  );
 }
 
-function PWAInstallPromptCard ( props: { onDismiss: () => void; onInstall: () => void } ) {
-  const { onDismiss, onInstall } = props;
+function PWAInstallPromptCard ( props: { visible: boolean; onDismiss: () => void; onInstall: () => void } ) {
+  const { visible, onDismiss, onInstall } = props;
   return (
     <div
+      aria-hidden={ !visible }
       style={{
         position: 'fixed',
         bottom: SPACE[5],
@@ -110,6 +113,8 @@ function PWAInstallPromptCard ( props: { onDismiss: () => void; onInstall: () =>
         display: 'flex',
         flexDirection: 'column',
         gap: SPACE[2],
+        visibility: visible ? 'visible' : 'hidden',
+        pointerEvents: visible ? 'auto' : 'none',
       }}
     >
       <div

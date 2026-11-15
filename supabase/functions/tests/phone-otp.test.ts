@@ -27,12 +27,14 @@ Deno.env.set('SUPABASE_SERVICE_ROLE_KEY', 'test-service-role-key');
 Deno.env.set('TWILIO_ACCOUNT_SID', `AC${'0'.repeat(32)}`);
 Deno.env.set('TWILIO_API_KEY_SID', `SK${'0'.repeat(32)}`);
 Deno.env.set('TWILIO_API_KEY_SECRET', 'test-api-key-secret');
+Deno.env.set('TWILIO_AUTH_TOKEN', 'test-account-auth-token');
 Deno.env.set('TWILIO_MESSAGING_SERVICE_SID', `MG${'0'.repeat(32)}`);
 Deno.env.set('TWILIO_VERIFY_SERVICE_SID', `VA${'0'.repeat(32)}`);
 
 const {
   callTwilioVerify,
   checkTwilioPhoneVerification,
+  getTwilioAuthPairs,
   sendTwilioOtpSms,
   startTwilioPhoneVerification,
 } = await import('../make-server-0b1f4071/_handlers/shared.ts');
@@ -53,6 +55,78 @@ function withStubbedFetch(stub: typeof globalThis.fetch, run: () => Promise<void
 const throwingFetch = () => {
   throw new TypeError('error sending request for url (https://api.twilio.com/...)');
 };
+
+Deno.test('Twilio credential pairs stay correctly paired and API-key auth is preferred', () => {
+  assertEquals(getTwilioAuthPairs(), [
+    { user: `SK${'0'.repeat(32)}`, password: 'test-api-key-secret' },
+    { user: `AC${'0'.repeat(32)}`, password: 'test-account-auth-token' },
+  ]);
+});
+
+Deno.test(
+  'Verify retries account credentials only after API-key authentication fails',
+  () => {
+    const authHeaders: string[] = [];
+    return withStubbedFetch(async (_input, init) => {
+      authHeaders.push(new Headers(init?.headers).get('Authorization') ?? '');
+      const isFirstCall = authHeaders.length === 1;
+      return new Response(
+        JSON.stringify(isFirstCall ? { message: 'Unauthorized' } : { status: 'pending' }),
+        { status: isFirstCall ? 401 : 200, headers: { 'Content-Type': 'application/json' } },
+      );
+    }, async () => {
+      const result = await callTwilioVerify(
+        '/Verifications',
+        new URLSearchParams({ To: '+962791234567' }),
+      );
+
+      assertEquals(result.ok, true);
+      assertEquals(authHeaders, [
+        `Basic ${btoa(`SK${'0'.repeat(32)}:test-api-key-secret`)}`,
+        `Basic ${btoa(`AC${'0'.repeat(32)}:test-account-auth-token`)}`,
+      ]);
+    })();
+  },
+);
+
+Deno.test(
+  'invalid Twilio credentials are not reported as an incorrect user code',
+  () => {
+    let calls = 0;
+    return withStubbedFetch(async () => {
+      calls += 1;
+      return new Response(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
+    }, async () => {
+      const result = await callTwilioVerify(
+        '/VerificationCheck',
+        new URLSearchParams({ To: '+962791234567', Code: '123456' }),
+      );
+
+      assertEquals(calls, 2);
+      assertEquals(result.ok, false);
+      assertEquals(result.retryable, false);
+    })();
+  },
+);
+
+Deno.test(
+  'Verify does not retry a provider error that could create a duplicate code',
+  () => {
+    let calls = 0;
+    return withStubbedFetch(async () => {
+      calls += 1;
+      return new Response(JSON.stringify({ message: 'Provider unavailable' }), { status: 503 });
+    }, async () => {
+      const result = await callTwilioVerify(
+        '/Verifications',
+        new URLSearchParams({ To: '+962791234567' }),
+      );
+
+      assertEquals(result.ok, false);
+      assertEquals(calls, 1);
+    })();
+  },
+);
 
 Deno.test(
   'sendTwilioOtpSms returns a typed failure instead of throwing when the provider is unreachable',

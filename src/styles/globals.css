@@ -2367,3 +2367,17 @@ nav,
     overscroll-behavior: none;
   }
 }
+
+/* Keep the initial route animation-free for faster LCP; animate only navigation. */
+@keyframes wasel-route-enter {
+  from { opacity: 0.92; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.wasel-route-enter {
+  animation: wasel-route-enter 180ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wasel-route-enter { animation: none; }
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "url": "http://127.0.0.1:4173/",
+    "isRepresentativeRun": false,
+    "htmlPath": "C:\\Users\\user\\Wasel14.online\\127_0_0_1--2026_11_15_15_46_14.report.html",
+    "jsonPath": "C:\\Users\\user\\Wasel14.online\\127_0_0_1--2026_11_15_15_46_14.report.json",
+    "summary": {
+      "performance": 0.22,
+      "accessibility": 0.96,
+      "best-practices": 0.96,
+      "seo": 1
+    }
+  },
+  {
+    "url": "http://127.0.0.1:4173/",
+    "isRepresentativeRun": false,
+    "htmlPath": "C:\\Users\\user\\Wasel14.online\\127_0_0_1--2026_11_15_15_47_21.report.html",
+    "jsonPath": "C:\\Users\\user\\Wasel14.online\\127_0_0_1--2026_11_15_15_47_21.report.json",
+    "summary": {
+      "performance": 0.22,
+      "accessibility": 0.96,
+      "best-practices": 0.96,
+      "seo": 1
+    }
+  },
+  {
+    "url": "http://127.0.0.1:4173/",
+    "isRepresentativeRun": true,
+    "htmlPath": "C:\\Users\\user\\Wasel14.online\\127_0_0_1--2026_11_15_15_46_48.report.html",
+    "jsonPath": "C:\\Users\\user\\Wasel14.online\\127_0_0_1--2026_11_15_15_46_48.report.json",
+    "summary": {
+      "performance": 0.23,
+      "accessibility": 0.96,
+      "best-practices": 0.96,
+      "seo": 1
+    }
+  }
+]

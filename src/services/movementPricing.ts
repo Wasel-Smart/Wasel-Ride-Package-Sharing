@@ -31,20 +31,34 @@ function getCreditDiscountPercent(credits: number) {
   return Math.min(10, Math.max(1.5, Math.round((credits / 120) * 10) / 10));
 }
 
+/**
+ * Quote a fare.
+ *
+ * The server charges the trip's own price: `app_create_ride_booking` ignores any
+ * client-supplied total. Plus status, loyalty credits and commuter passes live in
+ * localStorage and demand scores are computed from the browser's own cache, so none
+ * of them can be honoured at checkout. Showing them as a discount would quote a price
+ * the rider is never charged.
+ *
+ * Discounts are therefore OFF unless the caller sets `applyDiscounts: true`, which
+ * must only be done once the entitlements are verified server-side.
+ */
 export function getMovementPriceQuote(args: {
   basePriceJod: number;
   corridorId?: string | null;
   forecastDemandScore?: number;
   membership?: ReturnType<typeof getMovementMembershipSnapshot>;
+  applyDiscounts?: boolean;
 }) {
   const membership = args.membership ?? getMovementMembershipSnapshot();
+  const applyDiscounts = args.applyDiscounts === true;
   const basePriceJod = Math.max(0, args.basePriceJod);
   const forecastDemandScore = Math.max(0, Math.min(100, args.forecastDemandScore ?? 0));
-  const densityDiscountPercent = getDensityDiscountPercent(forecastDemandScore);
-  const plusDiscountPercent = membership.plusActive ? 6 : 0;
+  const densityDiscountPercent = applyDiscounts ? getDensityDiscountPercent(forecastDemandScore) : 0;
+  const plusDiscountPercent = applyDiscounts && membership.plusActive ? 6 : 0;
   const commuterDiscountPercent =
-    args.corridorId && membership.commuterPassRoute?.id === args.corridorId ? 8 : 0;
-  const creditDiscountPercent = getCreditDiscountPercent(membership.movementCredits);
+    applyDiscounts && args.corridorId && membership.commuterPassRoute?.id === args.corridorId ? 8 : 0;
+  const creditDiscountPercent = applyDiscounts ? getCreditDiscountPercent(membership.movementCredits) : 0;
   const totalDiscountPercent = Math.min(
     24,
     densityDiscountPercent + plusDiscountPercent + commuterDiscountPercent + creditDiscountPercent,
@@ -56,7 +70,7 @@ export function getMovementPriceQuote(args: {
     densityDiscountPercent > 0 ? `${densityDiscountPercent}% route-density discount` : null,
     plusDiscountPercent > 0 ? `${plusDiscountPercent}% Plus discount` : null,
     commuterDiscountPercent > 0 ? `${commuterDiscountPercent}% commuter-pass discount` : null,
-    `${creditDiscountPercent}% loyalty-credit pricing`,
+    creditDiscountPercent > 0 ? `${creditDiscountPercent}% loyalty-credit pricing` : null,
   ].filter(Boolean);
 
   return {
@@ -69,6 +83,6 @@ export function getMovementPriceQuote(args: {
     commuterDiscountPercent: roundMoney(commuterDiscountPercent),
     creditDiscountPercent: roundMoney(creditDiscountPercent),
     loyaltyTier: membership.loyaltyTier,
-    explanation: explanationBits.join(' + '),
+    explanation: explanationBits.length > 0 ? explanationBits.join(' + ') : 'Standard fare',
   } satisfies MovementPriceQuote;
 }

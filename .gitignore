@@ -61,6 +61,10 @@ tests/e2e/screenshots/
 tests/e2e/visual-report/
 .playwright-mcp/
 .playwright/
+# Lighthouse CLI default output (<host>-<timestamp>.report.html/json) dropped in the repo root
+/*.report.html
+/*.report.json
+.lighthouseci/
 
 # ---- Logs ----
 *.log

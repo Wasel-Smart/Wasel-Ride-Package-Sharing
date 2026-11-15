@@ -8,7 +8,6 @@ import { safeStorageGetItem, safeStorageRemoveItem, safeStorageSetItem } from '.
 import { ANALYTICS_CONSENT_CHANGED, hasAnalyticsConsent } from './utils/analyticsConsent';
 import { initializeCsrfProtection } from './utils/csrf';
 import { initializeSessionManagement } from './utils/session';
-import { verifyBackendConnection, startHealthCheckMonitoring } from './utils/healthCheck';
 import { clearMasterKey } from './utils/encryption';
 import { installBenignRuntimeErrorFilter } from './components/system/ErrorBoundary';
 import { initPerformanceMonitoring, scheduleIdleTask, detectLongTasks } from './utils/performance';
@@ -350,25 +349,27 @@ if ( environmentIsValid ) {
         initPerformanceMonitoring();
         detectLongTasks();
 
-        verifyBackendConnection()
-          .then( result => {
-            if ( result.connected ) {
-              if ( import.meta.env.DEV ) {
-                console.info( '[Wasel] ✓ Backend connected:', sanitizeLogMessage( result.message ) );
+        void import( './utils/healthCheck' )
+          .then( ( { verifyBackendConnection, startHealthCheckMonitoring } ) =>
+            verifyBackendConnection().then( result => {
+              if ( result.connected ) {
+                if ( import.meta.env.DEV ) {
+                  console.info( '[Wasel] ✓ Backend connected:', sanitizeLogMessage( result.message ) );
+                }
+                startHealthCheckMonitoring( 60_000 );
+              } else {
+                if ( import.meta.env.DEV ) {
+                  console.warn( '[Wasel] ⚠ Backend connection issue:', sanitizeLogMessage( result.message ) );
+                }
+                startHealthCheckMonitoring( 5 * 60_000 );
               }
-              startHealthCheckMonitoring( 60_000 );
-            } else {
+            } ),
+          )
+          .catch( error => {
             if ( import.meta.env.DEV ) {
-              console.warn( '[Wasel] ⚠ Backend connection issue:', sanitizeLogMessage( result.message ) );
+              console.warn( '[Wasel] Backend health check skipped:', sanitizeLogMessage( String( error ) ) );
             }
-            startHealthCheckMonitoring( 5 * 60_000 );
-          }
-        } )
-        .catch( error => {
-          if ( import.meta.env.DEV ) {
-            console.warn( '[Wasel] Backend health check skipped:', sanitizeLogMessage( String( error ) ) );
-          }
-        } );
+          } );
 
       window.addEventListener( 'storage', e => {
         if ( e.key === 'wasel-auth-state' && !e.newValue ) {

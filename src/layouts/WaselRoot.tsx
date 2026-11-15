@@ -13,7 +13,7 @@ import { useRoutePrefetch } from '../hooks/useRoutePrefetch';
 import { C, F, FA, GLOBAL_STYLES, R, Z } from '../utils/wasel-ds';
 import { trackPageView } from '../platform/telemetry';
 import { getRouteMeta } from '../router/routeMeta';
-import { WaselRouteTransition } from '../components/wasel-ui/WaselPageTransition';
+import { WaselRouteTransition } from '../components/wasel-ui/WaselRouteTransition';
 import { resetBodyScrollLock } from '../utils/bodyScrollLock';
 import { useSeo, OrganizationJsonLd, WebSiteJsonLd } from '../utils/seo';
 import { CurrencySwitcher, LangToggle, OnlineToggle } from './waselRootParts';

@@ -143,13 +143,11 @@
     />
 
     <!-- Brand fonts: Plus Jakarta Sans covers Latin; Cairo/Tajawal cover Arabic.
-         Loaded as a plain stylesheet: the previous media="print" + inline onload
-         trick is blocked by the CSP (script-src 'self'), which left the fonts
-         permanently unapplied in production. display=swap keeps text visible.
-         TODO: self-host under /public/fonts for offline/PWA (see brand/FONTS.md). -->
+         Optional avoids late font swaps that move the hero and destabilize CLS
+         on slow mobile connections. Self-hosting remains the offline/PWA target. -->
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=optional"
     />
 
     <!-- Critical pre-render styles (extracted to avoid Vite 6 html-proxy conflict) -->

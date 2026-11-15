@@ -46,6 +46,11 @@ interface CacheEntry {
 
 const IN_PROCESS_CACHE = new Map<string, CacheEntry | 'in_flight'>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+// An in-flight marker is only valid while its handler can still be running. If the
+// handler throws without calling release(), the marker used to stay for the life of
+// the isolate and every retry answered 409 forever.
+const IN_FLIGHT_TTL_MS = 2 * 60 * 1000;
+const IN_FLIGHT_STARTED = new Map<string, number>();
 
 // ── Redis client (optional — used when REDIS_URL is set) ─────────────────────
 
@@ -120,7 +125,15 @@ export const idempotencyMiddleware = {
     }
 
     // Check in-process cache
-    const inProcess = IN_PROCESS_CACHE.get(cacheKey);
+    let inProcess = IN_PROCESS_CACHE.get(cacheKey);
+    if (inProcess === 'in_flight') {
+      const startedAt = IN_FLIGHT_STARTED.get(cacheKey) ?? 0;
+      if (Date.now() - startedAt > IN_FLIGHT_TTL_MS) {
+        IN_PROCESS_CACHE.delete(cacheKey);
+        IN_FLIGHT_STARTED.delete(cacheKey);
+        inProcess = undefined;
+      }
+    }
     if (inProcess === 'in_flight') {
       return new Response(
         JSON.stringify({ error: 'Request with this idempotency key is already being processed' }),
@@ -140,6 +153,7 @@ export const idempotencyMiddleware = {
 
     // Mark as in-flight to block concurrent duplicates
     IN_PROCESS_CACHE.set(cacheKey, 'in_flight');
+    IN_FLIGHT_STARTED.set(cacheKey, Date.now());
     return null;
   },
 
@@ -158,6 +172,7 @@ export const idempotencyMiddleware = {
     if (response.status < 200 || response.status >= 300) {
       const cacheKey = buildCacheKey(userId, key);
       IN_PROCESS_CACHE.delete(cacheKey); // release in-flight lock on failure
+      IN_FLIGHT_STARTED.delete(cacheKey);
       return;
     }
 
@@ -177,6 +192,7 @@ export const idempotencyMiddleware = {
 
     // Store in both caches
     IN_PROCESS_CACHE.set(cacheKey, entry);
+    IN_FLIGHT_STARTED.delete(cacheKey);
     await redisSet(cacheKey, JSON.stringify(entry), Math.floor(CACHE_TTL_MS / 1000));
 
     // Evict expired in-process entries periodically
@@ -192,6 +208,7 @@ export const idempotencyMiddleware = {
     const cacheKey = buildCacheKey(userId, key);
     if (IN_PROCESS_CACHE.get(cacheKey) === 'in_flight') {
       IN_PROCESS_CACHE.delete(cacheKey);
+      IN_FLIGHT_STARTED.delete(cacheKey);
     }
   },
 };

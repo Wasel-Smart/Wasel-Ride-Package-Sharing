@@ -24,7 +24,7 @@ const buildTimePlugin = {
 };
 
 export default defineConfig(({ mode }) => ({
-  envDir: path.resolve(__dirname, process.env.WASEL_ENV_DIR || '.'),
+  envDir: path.resolve(import.meta.dirname, process.env.WASEL_ENV_DIR || '.'),
   plugins: [
     react(),
     tailwindcss(),
@@ -45,9 +45,9 @@ export default defineConfig(({ mode }) => ({
       // its development build even for production bundles. Resolve the package's
       // supported production entry explicitly to keep invariant/debug code out
       // of the initial client chunk.
-      { find: /^react-router$/, replacement: path.resolve(__dirname, 'node_modules/react-router/dist/production/index.mjs') },
-      { find: '@', replacement: path.resolve(__dirname, './src') },
-      { find: '@wasel/rbac', replacement: path.resolve(__dirname, './packages/rbac/src/index.ts') },
+      { find: /^react-router$/, replacement: path.resolve(import.meta.dirname, 'node_modules/react-router/dist/production/index.mjs') },
+      { find: '@', replacement: path.resolve(import.meta.dirname, './src') },
+      { find: '@wasel/rbac', replacement: path.resolve(import.meta.dirname, './packages/rbac/src/index.ts') },
     ],
   },
 
@@ -59,7 +59,7 @@ export default defineConfig(({ mode }) => ({
     cssCodeSplit: true,
     reportCompressedSize: true,
     chunkSizeWarningLimit: 400,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         // NOTE: there is intentionally NO `manualChunks` here.
         //
@@ -73,19 +73,6 @@ export default defineConfig(({ mode }) => ({
         //
         // Rollup's default chunking does not produce that cycle and keeps
         // three.js / react-three-fiber inside the lazy globe chunk.
-        compact: true,
-        experimentalMinChunkSize: 15000,
-        manualChunks(id) {
-          // Keep the shared backend SDK out of the browser entry chunk. Auth
-          // still initializes during startup, but downloading its implementation
-          // can happen as a separate parallel request with better cache reuse.
-          if (
-            id.includes('/node_modules/@supabase/') ||
-            id.includes('/node_modules/iceberg-js/')
-          ) {
-            return 'supabase-vendor';
-          }
-        },
         // Avoid Rollup's small-chunk merger on the browser entry: it folds
         // unrelated shared modules back into the initial download. Keep the
         // default graph splits and let route-level dynamic imports stay lazy.
@@ -107,7 +94,6 @@ export default defineConfig(({ mode }) => ({
       treeshake: {
         moduleSideEffects: false,
         propertyReadSideEffects: false,
-        tryCatchDeoptimization: false,
       },
     },
     esbuildOptions: {

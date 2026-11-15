@@ -44,6 +44,14 @@ function hasAnyEnv(names: string[]): boolean {
   return names.some(name => Boolean(getEnv(name)));
 }
 
+function isTwilioVerifyConfigured(): boolean {
+  const accountSid = Boolean(getEnv('TWILIO_ACCOUNT_SID'));
+  const verifyServiceSid = Boolean(getEnv('TWILIO_VERIFY_SERVICE_SID'));
+  const hasApiKeyPair = Boolean(getEnv('TWILIO_API_KEY_SID') && getEnv('TWILIO_API_KEY_SECRET'));
+  const hasAuthToken = Boolean(getEnv('TWILIO_AUTH_TOKEN'));
+  return accountSid && verifyServiceSid && (hasApiKeyPair || hasAuthToken);
+}
+
 function createTraceId(): string {
   return `wasel-${randomUUID()}`;
 }
@@ -154,11 +162,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       'SUPABASE_URL',
       'NEXT_PUBLIC_SUPABASE_URL',
     ]),
-    twilioConfigured: hasAnyEnv([
-      'TWILIO_ACCOUNT_SID',
-      'TWILIO_API_KEY_SID',
-      'TWILIO_VERIFY_SERVICE_SID',
-    ]),
+    twilioConfigured: isTwilioVerifyConfigured(),
     sentryConfigured: hasAnyEnv(['VITE_SENTRY_DSN', 'SENTRY_DSN']),
     stripeConfigured: hasAnyEnv(['STRIPE_SECRET_KEY', 'VITE_STRIPE_PUBLISHABLE_KEY']),
   };

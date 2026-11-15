@@ -8,6 +8,7 @@ import {
   TWILIO_VERIFY_SERVICE_SID,
   checkTwilioPhoneVerification,
   constantTimeEqual,
+  consumeRateLimit,
   generateOtpCode,
   hasTwilioVerifyRuntime,
   hashOtpCode,
@@ -43,6 +44,13 @@ function phoneActionUnavailable ( route: string, error: unknown ): Response {
   logPhoneActionFailure( route, error );
 
   return json( { error: PHONE_ACTION_UNAVAILABLE_MESSAGE }, 502 );
+}
+
+/** Log the database detail server-side; never echo raw DB/PostgREST text to the client. */
+function phoneServerError ( route: string, error: { message?: string } | null | undefined ): Response {
+  logPhoneActionFailure( route, error?.message ?? error );
+
+  return json( { error: 'Something went wrong. Please try again.', code: 'internal_error' }, 500 );
 }
 
 /**
@@ -102,6 +110,14 @@ async function startPhoneVerification ( request: Request ) {
     return json( { error: 'Enter a valid E.164 phone number such as +962791234567.' }, 400 );
   }
 
+  const rateLimited = await consumeRateLimit(
+    auth.admin,
+    `phone-verify-send:${ auth.canonicalUser.id }`,
+    3,
+    { windowSeconds: 15 * 60, failClosed: true },
+  );
+  if ( rateLimited ) {return rateLimited;}
+
   const { data: existingPhoneOwner, error: phoneOwnerError } = await auth.admin
     .from( 'users' )
     .select( 'id' )
@@ -109,7 +125,7 @@ async function startPhoneVerification ( request: Request ) {
     .neq( 'id', auth.canonicalUser.id )
     .maybeSingle();
   if ( phoneOwnerError ) {
-    return json( { error: phoneOwnerError.message }, 500 );
+    return phoneServerError( 'trust/phone/start:owner-lookup', phoneOwnerError );
   }
   if ( existingPhoneOwner ) {
     return json( { error: PHONE_NUMBER_IN_USE_MESSAGE }, 409 );
@@ -130,7 +146,7 @@ async function startPhoneVerification ( request: Request ) {
     .eq( 'purpose', 'driver_action' )
     .is( 'consumed_at', null );
   if ( invalidateError ) {
-    return json( { error: invalidateError.message }, 500 );
+    return phoneServerError( 'trust/phone/start:invalidate-otp', invalidateError );
   }
 
   const previousPhoneNumber = auth.canonicalUser.phone_number;
@@ -148,7 +164,7 @@ async function startPhoneVerification ( request: Request ) {
       return json( { error: PHONE_NUMBER_IN_USE_MESSAGE }, 409 );
     }
 
-    return json( { error: userError.message }, 500 );
+    return phoneServerError( 'trust/phone/start:update-user', userError );
   }
 
   const { data: otpSession, error: otpError } = await auth.admin
@@ -165,7 +181,7 @@ async function startPhoneVerification ( request: Request ) {
     .select( 'otp_session_id' )
     .single();
   if ( otpError ) {
-    return json( { error: otpError.message }, 500 );
+    return phoneServerError( 'trust/phone/start:insert-otp', otpError );
   }
 
   if ( useTwilioVerify ) {
@@ -204,6 +220,14 @@ async function startPhoneVerification ( request: Request ) {
   const smsResult = await sendTwilioOtpSms( phoneNumber, code ?? '' );
   if ( !smsResult.ok ) {
     await auth.admin.from( 'otp_sessions' ).delete().eq( 'otp_session_id', otpSession.otp_session_id );
+    // Same rollback as the Twilio Verify path: a failed send must not leave the user's
+    // previously verified number overwritten by the unverified one.
+    await restorePhoneAfterFailedDelivery(
+      auth.admin,
+      auth.canonicalUser.id,
+      previousPhoneNumber,
+      previousPhoneVerifiedAt,
+    );
     return json(
       {
         error:
@@ -236,6 +260,14 @@ export async function handleConfirmPhoneVerification ( request: Request ) {
     return json( { error: 'Enter the 6-digit verification code.' }, 400 );
   }
 
+  const rateLimited = await consumeRateLimit(
+    auth.admin,
+    `phone-verify-check:${ auth.canonicalUser.id }`,
+    5,
+    { windowSeconds: 15 * 60, failClosed: true },
+  );
+  if ( rateLimited ) {return rateLimited;}
+
   const { data: otpSession, error: otpError } = await auth.admin
     .from( 'otp_sessions' )
     .select(
@@ -247,7 +279,7 @@ export async function handleConfirmPhoneVerification ( request: Request ) {
     .limit( 1 )
     .maybeSingle();
   if ( otpError ) {
-    return json( { error: otpError.message }, 500 );
+    return phoneServerError( 'trust/phone/confirm:load-otp', otpError );
   }
   if ( !otpSession || otpSession.consumed_at ) {
     return json( { error: 'Start phone verification before entering a code.' }, 400 );
@@ -286,7 +318,7 @@ export async function handleConfirmPhoneVerification ( request: Request ) {
       .update( { attempts: nextAttempts } )
       .eq( 'otp_session_id', otpSession.otp_session_id );
     if ( attemptError ) {
-      return json( { error: attemptError.message }, 500 );
+      return phoneServerError( 'trust/phone/confirm:record-attempt', attemptError );
     }
 
     return json(
@@ -309,7 +341,7 @@ export async function handleConfirmPhoneVerification ( request: Request ) {
     } )
     .eq( 'otp_session_id', otpSession.otp_session_id );
   if ( consumeError ) {
-    return json( { error: consumeError.message }, 500 );
+    return phoneServerError( 'trust/phone/confirm:consume-otp', consumeError );
   }
 
   const nextVerificationLevel =
@@ -329,7 +361,7 @@ export async function handleConfirmPhoneVerification ( request: Request ) {
       return json( { error: PHONE_NUMBER_IN_USE_MESSAGE }, 409 );
     }
 
-    return json( { error: userError.message }, 500 );
+    return phoneServerError( 'trust/phone/confirm:update-user', userError );
   }
 
   return json( {

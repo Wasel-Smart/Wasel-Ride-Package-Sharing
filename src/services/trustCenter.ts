@@ -3,9 +3,7 @@ import { getAuthCallbackUrl, resolveAuthRedirectOrigin } from '../utils/env';
 import { supabase } from '../utils/supabase/client';
 import { requestEdgeJson, runBackendWorkflow } from './backendWorkflow';
 import {
-  confirmDirectTrustPhoneVerification,
   enableDirectTrustDriverMode,
-  startDirectTrustPhoneVerification,
   submitDirectTrustDriverDocuments,
 } from './directSupabase';
 import { buildFallbackTrustCenterStatus, type ReviewHistoryItem, type TrustCenterStatus } from './trustCenterModel';
@@ -119,7 +117,9 @@ export async function startTrustPhoneVerification ( payload: StartPhoneVerificat
   }>( {
     operation: 'Phone verification start',
     authMode: 'required',
-    fallbackPolicy: 'always',
+    // Phone codes must be sent by the trusted edge function. The direct DB
+    // fallback cannot deliver an SMS and must never create a fake OTP session.
+    fallbackPolicy: 'never',
     operationType: 'write',
     edge: context =>
       requestEdgeJson( {
@@ -130,10 +130,6 @@ export async function startTrustPhoneVerification ( payload: StartPhoneVerificat
         context,
         operation: 'Phone verification start',
       } ),
-    fallback: async () => {
-      const userId = await getTrustUserId();
-      return startDirectTrustPhoneVerification( userId, payload.phoneNumber );
-    },
   } );
 
   return response;
@@ -146,7 +142,8 @@ export async function confirmTrustPhoneVerification ( payload: ConfirmPhoneVerif
   }>( {
     operation: 'Phone verification confirmation',
     authMode: 'required',
-    fallbackPolicy: 'always',
+    // Verification must be checked by the provider or trusted edge service.
+    fallbackPolicy: 'never',
     operationType: 'write',
     edge: context =>
       requestEdgeJson( {
@@ -157,10 +154,6 @@ export async function confirmTrustPhoneVerification ( payload: ConfirmPhoneVerif
         context,
         operation: 'Phone verification confirmation',
       } ),
-    fallback: async () => {
-      const userId = await getTrustUserId();
-      return confirmDirectTrustPhoneVerification( userId, payload.code );
-    },
   } );
 
   return response;

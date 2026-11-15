@@ -3,6 +3,14 @@ import { render, screen, act, waitFor } from '@testing-library/react';
 import { useContext, useEffect } from 'react';
 import { AuthContext, AuthProvider, type AuthContextType } from '@/contexts/auth/AuthContext';
 
+const authApiMocks = vi.hoisted(() => ({
+  signIn: vi.fn(),
+  signUp: vi.fn(),
+  signOut: vi.fn(),
+  updateProfile: vi.fn().mockResolvedValue({ success: true }),
+  createProfile: vi.fn(),
+}));
+
 // ── Supabase client mock ──────────────────────────────────────────────────────
 const mockOnAuthStateChange = vi.fn();
 const mockGetSession = vi.fn();
@@ -27,16 +35,11 @@ const mockSupabaseClient = {
 vi.mock('@/contexts/auth/auth-service', () => ({
   getSupabaseClient: vi.fn(() => mockSupabaseClient),
   loadProfileFromBackend: vi.fn().mockResolvedValue(null),
+  authAPI: authApiMocks,
 }));
 
 vi.mock('@/services/auth', () => ({
-  authAPI: {
-    signIn: vi.fn(),
-    signUp: vi.fn(),
-    signOut: vi.fn(),
-    updateProfile: vi.fn().mockResolvedValue({ success: true }),
-    createProfile: vi.fn(),
-  },
+  authAPI: authApiMocks,
 }));
 
 vi.mock('@/utils/sessionManager', () => ({
@@ -84,6 +87,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.unstubAllEnvs();
   localStorage.removeItem('wasel_user_session');
+  document.cookie = 'wasel-auth-token=; Max-Age=0; path=/';
+  document.cookie = 'wasel-auth-token=test-session; path=/';
 
   // Restore default mock returns cleared by vi.clearAllMocks()
   vi.mocked(getSupabaseClient).mockReturnValue(mockSupabaseClient as never);
@@ -153,9 +158,43 @@ describe('AuthProvider — initialization', () => {
     expect(screen.getByTestId('user').textContent).toBe('null');
     expect(screen.getByTestId('backend').textContent).toBe('false');
   });
+
+  it('skips Supabase initialization for a visitor with no auth cookie', async () => {
+    document.cookie = 'wasel-auth-token=; Max-Age=0; path=/';
+    renderProvider();
+
+    await waitFor(() => expect(screen.getByTestId('loading').textContent).toBe('false'));
+    expect(screen.getByTestId('user').textContent).toBe('null');
+    expect(getSupabaseClient).not.toHaveBeenCalled();
+  });
 });
 
 describe('AuthProvider — signIn', () => {
+  it('subscribes to Supabase when a visitor starts sign-in after lazy guest startup', async () => {
+    document.cookie = 'wasel-auth-token=; Max-Age=0; path=/';
+    const fakeUser = { id: 'u-lazy', email: 'lazy@wasel.jo', user_metadata: {} };
+    const fakeSession = { user: fakeUser, access_token: 'lazy-token' };
+    vi.mocked(authAPI.signIn).mockResolvedValue({ user: fakeUser, session: fakeSession } as never);
+
+    let ctx!: AuthContextType;
+    function Capture() {
+      const value = useContext(AuthContext);
+      useEffect(() => { ctx = value; }, [value]);
+      return null;
+    }
+
+    render(<AuthProvider><Capture /></AuthProvider>);
+    await waitFor(() => expect(ctx.loading).toBe(false));
+    expect(getSupabaseClient).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await ctx.signIn('lazy@wasel.jo', 'password123');
+    });
+
+    expect(mockOnAuthStateChange).toHaveBeenCalled();
+    expect(ctx.user?.email).toBe('lazy@wasel.jo');
+  });
+
   it('returns null error and sets user on success', async () => {
     const fakeUser = { id: 'u2', email: 'driver@wasel.jo', user_metadata: {} };
     const fakeSession = { user: fakeUser, access_token: 'tok2' };

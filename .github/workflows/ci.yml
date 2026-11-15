@@ -330,7 +330,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: 'https://placeholder.supabase.co'
           VITE_SUPABASE_ANON_KEY: 'placeholder'
-      - run: npx @lhci/cli autorun --config=lighthouserc.js
+      - run: npx @lhci/cli autorun --config=lighthouserc.cjs
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 

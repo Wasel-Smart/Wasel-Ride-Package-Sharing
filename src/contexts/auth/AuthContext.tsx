@@ -1,7 +1,7 @@
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AuthChangeEvent, Session, User } from '@supabase/auth-js';
+import type { authAPI, getSupabaseClient, loadProfileFromBackend } from './auth-service';
 import { getAuthCallbackUrl, resolveAuthRedirectOrigin } from '../../utils/env';
-import { authAPI } from '../../services/auth';
 import { sanitizeLogMessage } from '../../utils/sanitization';
 import { parseOAuthError } from '../../utils/oauthErrors';
 import { sessionManager } from '../../utils/sessionManager';
@@ -16,8 +16,19 @@ import {
   createLocalAuthUser,
   createLocalAuthProfile,
 } from '../authContextHelpers';
-import { getSupabaseClient, loadProfileFromBackend } from './auth-service';
 import { getProfileDisplayName, splitFullName } from './helpers';
+
+type AuthRuntime = {
+  authAPI: typeof authAPI;
+  getSupabaseClient: typeof getSupabaseClient;
+  loadProfileFromBackend: typeof loadProfileFromBackend;
+};
+let authRuntimePromise: Promise<AuthRuntime> | null = null;
+
+function loadAuthRuntime(): Promise<AuthRuntime> {
+  authRuntimePromise ??= import('./auth-service');
+  return authRuntimePromise;
+}
 
 export type SignUpResult = {
   error: AuthOperationError;
@@ -79,6 +90,35 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+const AUTH_COOKIE_NAME = 'wasel-auth-token';
+
+function readAuthCookieFingerprint(): string | null | undefined {
+  if (typeof document === 'undefined') {return undefined;}
+  try {
+    const authCookies = document.cookie
+      .split(';')
+      .map(cookie => cookie.trim())
+      .filter(cookie => {
+        const name = cookie.slice(0, cookie.indexOf('='));
+        return name === AUTH_COOKIE_NAME || name.startsWith(`${AUTH_COOKIE_NAME}.`) ||
+          name.startsWith(`${AUTH_COOKIE_NAME}-`);
+      })
+      .sort();
+    return authCookies.length > 0 ? authCookies.join(';') : null;
+  } catch {
+    // If cookie access is unavailable, initialize Supabase so valid sessions
+    // are never hidden by an optimization hint.
+    return undefined;
+  }
+}
+
+function isAuthCallbackNavigation(): boolean {
+  if (typeof window === 'undefined') {return false;}
+  if (/\/auth\/callback\/?$/.test(window.location.pathname)) {return true;}
+  const params = new URLSearchParams(window.location.search);
+  return params.has('code') || params.has('error') || params.has('error_description');
+}
+
 function isE2ELocalAuthMode(): boolean {
   // Set by scripts/start-playwright-dev.mjs for every Playwright run (dev server).
   // Allows E2E tests to seed a localStorage session even when a real
@@ -116,15 +156,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Tracks an in-flight ensure-profile call so signIn()/signUp() and the
   // SIGNED_IN auth event don't both load (and possibly create) the profile.
   const ensureProfileInflightRef = useRef<{ userId: string; promise: Promise<Profile | null> } | null>(null);
+  const initializeAuthRef = useRef<((forceSupabase?: boolean) => Promise<void>) | null>(null);
 
   const loadAndEnsureProfile = useCallback(async (forceCreate = false, authUser?: User | null) => {
-    if (!authUser || !getSupabaseClient()) {
+    if (!authUser) {
       setProfile(null);
       return null;
     }
     const activeUser = authUser;
+    const authRuntime = await loadAuthRuntime();
+    if (!authRuntime.getSupabaseClient()) {
+      setProfile(null);
+      return null;
+    }
 
-    let nextProfile = await loadProfileFromBackend();
+    let nextProfile = await authRuntime.loadProfileFromBackend();
 
     if (!nextProfile && forceCreate) {
       const { firstName, lastName } = getProfileDisplayName(activeUser);
@@ -133,14 +179,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       ).trim();
 
       try {
-        await authAPI.createProfile({
+        await authRuntime.authAPI.createProfile({
           userId: activeUser.id,
           email: activeUser.email ?? '',
           firstName,
           lastName,
           phone: phone || undefined,
         });
-        nextProfile = await loadProfileFromBackend();
+        nextProfile = await authRuntime.loadProfileFromBackend();
       } catch (error) {
         if (import.meta.env?.DEV) {
           console.warn('[Auth] Profile bootstrap skipped:', sanitizeLogMessage(String(error)));
@@ -178,14 +224,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     let mounted = true;
+    let authInitializationInProgress = false;
+    let authSubscriptionReady = false;
+    let lastAuthCookieFingerprint = readAuthCookieFingerprint();
     let unsubscribe: (() => void) | undefined;
     let removeAuthMessageListener: (() => void) | undefined;
 
-    const initializeAuth = async () => {
+    const initializeAuth = async (forceSupabase = false) => {
+      if (authInitializationInProgress || (forceSupabase && authSubscriptionReady)) {return;}
+      authInitializationInProgress = true;
+      unsubscribe?.();
+      unsubscribe = undefined;
+      removeAuthMessageListener?.();
+      removeAuthMessageListener = undefined;
       try {
-        const client = getSupabaseClient();
-        if (!mounted) {return;}
-
         // In E2E mode the test runner seeds a WaselUser into localStorage.
         // Check this BEFORE attempting Supabase so the demo session is always
         // honoured, even when a real Supabase project is configured.
@@ -202,6 +254,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
             return;
           }
         }
+
+        const cookieFingerprint = readAuthCookieFingerprint();
+        if (!forceSupabase && cookieFingerprint === null && !isAuthCallbackNavigation()) {
+          lastAuthCookieFingerprint = null;
+          setUser(null);
+          setProfile(null);
+          setSession(null);
+          setIsBackendConnected(false);
+          setInitializing(false);
+          sessionManager.endSession();
+          return;
+        }
+        if (cookieFingerprint !== undefined) {
+          lastAuthCookieFingerprint = cookieFingerprint;
+        }
+
+        const authRuntime = await loadAuthRuntime();
+        const client = authRuntime.getSupabaseClient();
+        if (!mounted) {return;}
 
         if (!client) {
           const localSession = readLocalE2ESession();
@@ -270,6 +341,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         } = client.auth.onAuthStateChange((event: AuthChangeEvent, nextSession: Session | null) => {
           syncFromSession(event, nextSession);
         });
+        authSubscriptionReady = true;
         unsubscribe = () => subscription.unsubscribe();
 
         const handleAuthMessage = async (event: MessageEvent) => {
@@ -310,15 +382,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setIsBackendConnected(false);
           setInitializing(false);
         }
+      } finally {
+        authInitializationInProgress = false;
       }
     };
 
+    const refreshAuthWhenCookieChanges = () => {
+      if (!mounted || authInitializationInProgress) {return;}
+      const nextFingerprint = readAuthCookieFingerprint();
+      if (nextFingerprint === undefined || nextFingerprint === lastAuthCookieFingerprint) {return;}
+      lastAuthCookieFingerprint = nextFingerprint;
+      setInitializing(true);
+      void initializeAuth();
+    };
+
+    initializeAuthRef.current = initializeAuth;
+    window.addEventListener('focus', refreshAuthWhenCookieChanges);
+    document.addEventListener('visibilitychange', refreshAuthWhenCookieChanges);
     void initializeAuth();
 
     return () => {
       mounted = false;
+      if (initializeAuthRef.current === initializeAuth) {initializeAuthRef.current = null;}
+      window.removeEventListener('focus', refreshAuthWhenCookieChanges);
+      document.removeEventListener('visibilitychange', refreshAuthWhenCookieChanges);
       removeAuthMessageListener?.();
       unsubscribe?.();
+      authSubscriptionReady = false;
     };
   }, [fetchProfile]);
 
@@ -347,7 +437,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       phone?: string,
       returnTo?: string,
     ): Promise<SignUpResult> => {
-      if (!getSupabaseClient()) {
+      await initializeAuthRef.current?.(true);
+      const authRuntime = await loadAuthRuntime();
+      if (!authRuntime.getSupabaseClient()) {
         return { error: new Error('Backend not configured') };
       }
 
@@ -355,7 +447,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setIsSubmitting(true);
       try {
-        const data = await authAPI.signUp({
+        const data = await authRuntime.authAPI.signUp({
           email, password,
           firstName,
           lastName,
@@ -388,7 +480,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     async (email: string, password: string): Promise<{ error: AuthOperationError }> => {
       setIsSubmitting(true);
       try {
-        const data = await authAPI.signIn(email, password);
+        await initializeAuthRef.current?.(true);
+        const authRuntime = await loadAuthRuntime();
+        const data = await authRuntime.authAPI.signIn(email, password);
         const authUser = data.user ?? data.session?.user ?? null;
 
         if (authUser && data.session) {
@@ -410,7 +504,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const createOAuthSignIn = useCallback(
     (provider: 'google' | 'facebook' | 'microsoft' | 'apple') =>
       async (returnTo?: string): Promise<{ error: AuthOperationError }> => {
-        const client = getSupabaseClient();
+        const authRuntime = await loadAuthRuntime();
+        const client = authRuntime.getSupabaseClient();
         if (!client) {
           return { error: new Error('Backend not configured') };
         }
@@ -449,7 +544,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = useCallback(async () => {
     setIsSubmitting(true);
     try {
-      await authAPI.signOut();
+      const authRuntime = await loadAuthRuntime();
+      await authRuntime.authAPI.signOut();
       setUser(null);
       setProfile(null);
       setSession(null);
@@ -471,7 +567,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setIsSubmitting(true);
       try {
-        const result = await authAPI.updateProfile(updates);
+        const authRuntime = await loadAuthRuntime();
+        const result = await authRuntime.authAPI.updateProfile(updates);
         if (result.success) {
           setProfile(prev => (prev ? { ...prev, ...updates } : prev));
           fetchProfile(false, user).catch(error => {
@@ -535,7 +632,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const resetPassword = useCallback(
     async (email: string, returnTo?: string): Promise<{ error: AuthOperationError }> => {
-      const client = getSupabaseClient();
+      const authRuntime = await loadAuthRuntime();
+      const client = authRuntime.getSupabaseClient();
       if (!client) {return { error: new Error('Backend not configured') };}
 
       try {
@@ -557,7 +655,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const changePassword = useCallback(
     async (nextPassword: string): Promise<{ error: AuthOperationError }> => {
-      const client = getSupabaseClient();
+      const authRuntime = await loadAuthRuntime();
+      const client = authRuntime.getSupabaseClient();
       if (!client) {return { error: new Error('Backend not configured') };}
 
       setIsSubmitting(true);

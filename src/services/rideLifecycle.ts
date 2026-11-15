@@ -184,7 +184,10 @@ function resolveRemoteStatus (
     return persistedStatus;
   }
   if ( persistedStatus === 'accepted' ) { return 'confirmed'; }
-  if ( persistedId ) { return routeMode === 'live_post' ? 'pending_driver' : 'confirmed'; }
+  // The server creates every booking as `pending_driver`; only a driver (or staff) can
+  // confirm it, for network-inventory rides too. Never promote it to 'confirmed' here.
+  void persistedId;
+  void routeMode;
   return 'pending_driver';
 }
 
@@ -301,7 +304,9 @@ export async function createRideBooking ( input: {
     seatsRequested,
     status: remoteStatus,
     lifecycleStatus: mapBookingStatusToRideLifecycleState( remoteStatus ),
-    paymentStatus: remoteStatus === 'confirmed' ? 'authorized' : 'pending',
+    // No payment exists at booking time; 'authorized' only comes from the server's
+    // payment_status (see resolvePaymentStatus), never assumed on the client.
+    paymentStatus: 'pending',
     routeMode: input.routeMode,
     supportThreadOpen: false,
     ticketCode: persistedId || localId,

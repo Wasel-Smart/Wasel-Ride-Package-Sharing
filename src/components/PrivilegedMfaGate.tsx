@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/auth-js';
 import { useAuth } from '../contexts/AuthContext';
-import { getSupabaseClient } from '../contexts/auth/auth-service';
+import type { getSupabaseClient } from '../contexts/auth/auth-service';
 import { useLanguage } from '../contexts/LanguageContext';
 import { isHighPrivilegeRole, resolveAccessRole } from '../platform/rbac';
 import { Button } from './ui/button';
@@ -354,6 +354,7 @@ export function PrivilegedMfaGate({ children }: { children: ReactNode }) {
     let active = true;
 
     void (async () => {
+      const { getSupabaseClient } = await import('../contexts/auth/auth-service');
       const client = getSupabaseClient();
       if (!client) {throw new Error('Authentication service is unavailable.');}
       return loadPrivilegedMfaState(client, session.user.id, copy);
@@ -377,6 +378,7 @@ export function PrivilegedMfaGate({ children }: { children: ReactNode }) {
   }, [copy, loading, requiresMfa, retryCount, session]);
 
   const submitCode = async () => {
+    const { getSupabaseClient } = await import('../contexts/auth/auth-service');
     const client = getSupabaseClient();
     if (!client || !session || !currentState.factorId || !/^\d{6}$/.test(code)) {return;}
 

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Radar, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WaselErrorBoundary } from '../../../components/ErrorBoundary';
@@ -24,50 +24,33 @@ interface CorridorGlobeSectionProps {
 }
 
 export function CorridorGlobeSection({ ar }: CorridorGlobeSectionProps) {
-  const sectionRef = useRef<HTMLElement>(null);
   const [canRender3D, setCanRender3D] = useState(false);
+  const [webGlUnavailable, setWebGlUnavailable] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) {return;}
+    if (!canRender3D) {return;}
+    const mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (!mediaQuery) {return;}
 
-    let removeMotionListener = () => {};
-    const initializeGlobe = () => {
-      setCanRender3D(supportsWebGL());
-      const mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
-      if (!mediaQuery) {return;}
+    const handleChange = (event: MediaQueryListEvent) => setReduceMotion(event.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [canRender3D]);
 
-      setReduceMotion(mediaQuery.matches);
-      const handleChange = (event: MediaQueryListEvent) => setReduceMotion(event.matches);
-      mediaQuery.addEventListener('change', handleChange);
-      removeMotionListener = () => mediaQuery.removeEventListener('change', handleChange);
-    };
-
-    if (typeof IntersectionObserver === 'undefined') {
-      const frame = window.requestAnimationFrame(initializeGlobe);
-      return () => {
-        window.cancelAnimationFrame(frame);
-        removeMotionListener();
-      };
+  const activateGlobe = () => {
+    if (!supportsWebGL()) {
+      setWebGlUnavailable(true);
+      return;
     }
-
-    const observer = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) {
-        observer.disconnect();
-        initializeGlobe();
-      }
-    }, { rootMargin: '300px 0px' });
-    observer.observe(section);
-    return () => {
-      observer.disconnect();
-      removeMotionListener();
-    };
-  }, []);
+    const mediaQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (mediaQuery) {setReduceMotion(mediaQuery.matches);}
+    setWebGlUnavailable(false);
+    setCanRender3D(true);
+  };
 
   return (
     <motion.section
-      ref={sectionRef}
       initial={false}
       className="wasel-home-section"
       aria-label={ar ? 'شبكة الممرات الحية' : 'The live corridor network'}
@@ -95,7 +78,7 @@ export function CorridorGlobeSection({ ar }: CorridorGlobeSectionProps) {
               </Suspense>
             </WaselErrorBoundary>
           ) : (
-            <StaticMapFallback ar={ar} />
+            <StaticMapFallback ar={ar} unavailable={webGlUnavailable} onActivate={activateGlobe} />
           )}
         </div>
 
@@ -152,7 +135,15 @@ function GlobeLoading() {
   );
 }
 
-function StaticMapFallback({ ar }: { ar: boolean }) {
+function StaticMapFallback({
+  ar,
+  unavailable = false,
+  onActivate,
+}: {
+  ar: boolean;
+  unavailable?: boolean;
+  onActivate?: () => void;
+}) {
   return (
     <div
       style={{
@@ -190,10 +181,29 @@ function StaticMapFallback({ ar }: { ar: boolean }) {
       >
         <MapPin size={48} color={C.cyan} style={{ opacity: 0.8 }} />
         <p style={{ margin: 0, color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.6 }}>
-          {ar
-            ? 'خريطة تفاعلية للمسارات — تتطلب WebGL'
-            : 'Interactive corridor map — requires WebGL'}
+          {unavailable
+            ? (ar ? 'العرض ثلاثي الأبعاد غير متاح في هذا المتصفح.' : '3D view is not available in this browser.')
+            : onActivate
+              ? (ar ? 'اعرض شبكة المسارات التفاعلية ثلاثية الأبعاد.' : 'Explore the corridor network in interactive 3D.')
+              : (ar ? 'شبكة المسارات الشائعة.' : 'Popular corridor network.')}
         </p>
+        {!unavailable && onActivate && (
+          <button
+            type="button"
+            onClick={onActivate}
+            style={{
+              border: 0,
+              borderRadius: 9999,
+              padding: '10px 16px',
+              background: C.teal,
+              color: C.navy,
+              fontWeight: TYPE.weight.semibold,
+              cursor: 'pointer',
+            }}
+          >
+            {ar ? 'تحميل العرض ثلاثي الأبعاد' : 'Load the 3D view'}
+          </button>
+        )}
         <p style={{ margin: 0, color: C.textSub, fontSize: TYPE.size.xs }}>
           {ar
             ? 'مسارات من عمّان إلى العقبة وإربد والبحر الميت والبتراء ووادي رم والزرقاء'

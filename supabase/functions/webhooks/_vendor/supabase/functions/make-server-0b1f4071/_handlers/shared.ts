@@ -1280,11 +1280,37 @@ async function requestTwilioJson (
   }
 }
 
+export function getTwilioAuthPairs (): Array<{ user: string; password: string }> {
+  const pairs: Array<{ user: string; password: string }> = [];
+  // Keep credentials paired: an API key secret must never be combined with an
+  // account SID or account auth token. Some deployments carry both modes.
+  if ( deliveryEnv.twilioApiKeySid && deliveryEnv.twilioApiKeySecret ) {
+    pairs.push( { user: deliveryEnv.twilioApiKeySid, password: deliveryEnv.twilioApiKeySecret } );
+  }
+  if ( deliveryEnv.twilioAccountSid && deliveryEnv.twilioAuthToken ) {
+    pairs.push( { user: deliveryEnv.twilioAccountSid, password: deliveryEnv.twilioAuthToken } );
+  }
+  return pairs;
+}
+
 export function getTwilioAuthPair (): { user: string; password: string } | null {
-  const sid = deliveryEnv.twilioApiKeySid ?? deliveryEnv.twilioAccountSid ?? '';
-  const secret = deliveryEnv.twilioApiKeySecret ?? deliveryEnv.twilioAuthToken ?? '';
-  if ( !sid || !secret ) {return null;}
-  return { user: sid, password: secret };
+  return getTwilioAuthPairs()[0] ?? null;
+}
+
+async function requestTwilioWithAuthFallback ( url: string, params: URLSearchParams ) {
+  const authPairs = getTwilioAuthPairs();
+  if ( authPairs.length === 0 ) {
+    return { ok: false, status: 0, payload: { message: 'Twilio credentials are not configured.' } as Record<string, unknown> };
+  }
+
+  let result = await requestTwilioJson( url, authPairs[0], params );
+  // Retry only authentication failures. Do not resend a message/verification
+  // request for timeouts or provider errors, which could create duplicate codes.
+  for ( const authPair of authPairs.slice( 1 ) ) {
+    if ( result.status !== 401 ) { break; }
+    result = await requestTwilioJson( url, authPair, params );
+  }
+  return result;
 }
 
 export function hasTwilioVerifyRuntime (): boolean {
@@ -1292,8 +1318,7 @@ export function hasTwilioVerifyRuntime (): boolean {
 }
 
 export async function callTwilioVerify ( path: string, params: URLSearchParams ) {
-  const authPair = getTwilioAuthPair();
-  if ( !authPair || !deliveryEnv.twilioAccountSid || !TWILIO_VERIFY_SERVICE_SID ) {
+  if ( getTwilioAuthPairs().length === 0 || !deliveryEnv.twilioAccountSid || !TWILIO_VERIFY_SERVICE_SID ) {
     return {
       ok: false,
       retryable: false,
@@ -1301,15 +1326,16 @@ export async function callTwilioVerify ( path: string, params: URLSearchParams )
     };
   }
 
-  const result = await requestTwilioJson(
+  const result = await requestTwilioWithAuthFallback(
     `https://verify.twilio.com/v2/Services/${ TWILIO_VERIFY_SERVICE_SID }${ path }`,
-    authPair,
     params,
   );
 
   return {
     ok: result.ok,
-    retryable: result.status >= 400 && result.status < 500,
+    // Provider authentication/permission failures are server configuration
+    // errors, never incorrect user codes.
+    retryable: result.status >= 400 && result.status < 500 && result.status !== 401 && result.status !== 403,
     payload: result.payload,
     error:
       typeof result.payload?.message === 'string'
@@ -1319,8 +1345,7 @@ export async function callTwilioVerify ( path: string, params: URLSearchParams )
 }
 
 export async function sendTwilioOtpSms ( phoneNumber: string, code: string ): Promise<{ ok: boolean; retryable: boolean; error?: string }> {
-  const authPair = getTwilioAuthPair();
-  if ( !authPair || !deliveryEnv.twilioAccountSid ) {
+  if ( getTwilioAuthPairs().length === 0 || !deliveryEnv.twilioAccountSid ) {
     return { ok: false, retryable: false, error: 'Twilio is not configured.' };
   }
 
@@ -1335,9 +1360,8 @@ export async function sendTwilioOtpSms ( phoneNumber: string, code: string ): Pr
     return { ok: false, retryable: false, error: 'TWILIO_MESSAGING_SERVICE_SID or TWILIO_SMS_FROM is required.' };
   }
 
-  const result = await requestTwilioJson(
+  const result = await requestTwilioWithAuthFallback(
     `https://api.twilio.com/2010-04-01/Accounts/${ deliveryEnv.twilioAccountSid }/Messages.json`,
-    authPair,
     params,
   );
 
@@ -1360,7 +1384,7 @@ export async function startTwilioPhoneVerification ( phoneNumber: string, channe
 
   const code = generateOtpCode();
   const result = await sendTwilioOtpSms( phoneNumber, code );
-  return { ok: result.ok, retryable: result.retryable, error: result.error, _code: result.ok ? code : undefined, channel: 'sms' };
+  return { ok: result.ok, retryable: result.retryable, error: result.error, _code: result.ok ? code : undefined, channel: 'sms' as const };
 }
 
 export async function checkTwilioPhoneVerification ( phoneNumber: string, code: string ) {
@@ -3005,7 +3029,10 @@ export async function finalizeBookingPayment ( args: {
     .from( 'bookings' )
     .update( { payment_status: 'succeeded', updated_at: now } )
     .eq( 'booking_id', bookingId )
-    .in( 'payment_status', [ 'pending', 'failed', 'paid', 'completed', 'processing', 'partially_refunded' ] )
+    // 'partially_refunded' is deliberately absent: it is a post-settlement state, so a
+    // replayed or late `payment_intent.succeeded` must never move a refunded booking
+    // back to 'succeeded' and hide the refund.
+    .in( 'payment_status', [ 'pending', 'failed', 'paid', 'completed', 'processing' ] )
     .select( 'booking_id' )
     .maybeSingle();
 
