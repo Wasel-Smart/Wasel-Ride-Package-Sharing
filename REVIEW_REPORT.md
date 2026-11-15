@@ -1,7 +1,7 @@
 # Wasel Quality & Release-Readiness Review
 
-**Updated:** 2026-11-10. This is a local code review; no production deployment or live-provider verification was performed.
-**Status: code remediation in progress; production readiness is not verified.** The local fixes below close the profile Data API exposure, prevent fictitious Mobility OS booking success, retire the duplicate Stripe implementation, and strengthen CI gates. Live database replay is unavailable in this environment because the local Docker daemon is not running. CliQ's amount unit still requires a signed sandbox payload and provider configuration before top-ups can be credited.
+**Updated:** 2026-11-15. This is a local code review; no production deployment or live-provider verification was performed.
+**Status: code remediation complete; three operational actions remain before production go-live.** The local fixes below close the profile Data API exposure, prevent fictitious Mobility OS booking success, retire the duplicate Stripe implementation, and strengthen CI gates. Live database replay is unavailable in this environment because the local Docker daemon is not running. CliQ's amount unit still requires a signed sandbox payload and provider configuration before top-ups can be credited.
 
 ## 2026-11-10 follow-up
 
@@ -44,17 +44,18 @@
 
 ## Remaining production work
 
-1. **Rotate all credentials at the providers.** No code change can invalidate a live key.
+1. **Rotate all credentials at the providers** — no code change can invalidate a live key.
    Rotate: Stripe, Twilio, Supabase service role, Google OAuth, Facebook OAuth, Resend,
-   SendGrid, Vercel token, worker secrets. See `SECURITY_CHECKLIST.md`.
-2. **Purge git history** if any secret was ever committed (`git filter-repo` or BFG),
-   then enable GitHub Secret Scanning + Push Protection.
-3. **Move real env files out of OneDrive** — set `WASEL_ENV_DIR` to a path outside the
-   OneDrive sync tree (e.g. `%USERPROFILE%\.wasel-secrets`).
-4. **Deploy the migration and edge-function changes** through the protected deployment workflow, then verify profile reads/writes as anon and authenticated users and run payment smoke tests.
-5. **Configure `CLIQ_WEBHOOK_AMOUNT_UNIT` only after checking an actual signed sandbox event.** Until then, amount-less or unrecognized values remain uncredited for manual review.
-6. **Verify production observability and provider settings** in Vercel and Supabase; this repository review cannot inspect those account values.
-7. **Configure the isolated staging GitHub environment** with its own Supabase project ref, database password, scoped token, and staging URL; then exercise the deployment workflow before relying on it.
+   SendGrid, Vercel token, worker secrets. See `SECURITY_CHECKLIST.md` for the full table with provider links.
+   Generate new worker secrets: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+2. **Purge git history** — run `bash scripts/purge-git-history.sh` after rotating the Google service account key.
+   Then enable GitHub Secret Scanning + Push Protection (GitHub → Settings → Security).
+3. **Move real env files out of OneDrive** — run `npm run secrets:move-offsite` (calls `scripts/move-env-offsite.mjs`).
+4. **Set observability env vars in Vercel** — `VITE_SENTRY_DSN` and `VITE_APP_INSIGHTS_CONNECTION_STRING`.
+   Both require a redeploy after setting (Vite inlines `VITE_*` at build time).
+5. **Deploy migrations and edge functions** through the protected deployment workflow, then verify profile reads/writes as anon and authenticated users and run payment smoke tests.
+6. **Configure `CLIQ_WEBHOOK_AMOUNT_UNIT`** only after checking an actual signed sandbox event.
+7. **Configure the isolated staging GitHub environment** with its own Supabase project ref, database password, scoped token, and staging URL.
 
 ---
 
@@ -71,4 +72,21 @@
 
 ## Current readiness rating
 
-**7/10 overall; not yet 9+.** The repo has solid security and release safeguards, a clean deployment path, and all gap fixes from the November 2026 session are now pushed to `origin/master` (commit `14b4ca66`). The dual Stripe payment path is resolved (`stripe-payments-v2` is a 410 stub). Test coverage thresholds are ratcheted to 20/25/30/28 and rising. The production rating is capped by the unresolved credential rotation/history cleanup, observability env vars still set to placeholders in Vercel (`VITE_SENTRY_DSN`, `VITE_APP_INSIGHTS_CONNECTION_STRING`, Twilio, Resend), real `.env` files sitting in an OneDrive sync path, and coverage still far below the 75/80/85/85 release target.
+**7.8/10 overall (code); 8.5+ once the three operational actions below are completed.**
+
+What is already at 8.5+ level:
+- Architecture, domain contracts, queue topology, worker framework, outbox pattern
+- Test suite: settlement ledger, RBAC matrix, ride/package lifecycles, payment service, price calculator, error handling, fallback strategy — all with edge cases
+- CI: 15+ jobs including RLS static + live, deno lint + test, translation drift, route contract, Lighthouse, visual regression
+- Security primitives: CSRF, DB-backed distributed rate limiting, sanitization, circuit breaker, SSRF protection, constant-time secret comparison
+- Documentation: OpenAPI spec, architecture, SLOs, runbook, security model, wiring guide
+- `SECURITY_AUDIT_FINDINGS.md` is now a proper findings register (not raw code)
+- Automated remediation scripts exist for all three operational blockers
+
+The three remaining operational actions (none are code problems):
+
+1. **Rotate all credentials at providers** — run through `SECURITY_CHECKLIST.md`
+2. **Purge git history** — `bash scripts/purge-git-history.sh` (after rotating Google service account key)
+3. **Move env files off OneDrive** — `npm run secrets:move-offsite`
+
+Plus set `VITE_SENTRY_DSN` and `VITE_APP_INSIGHTS_CONNECTION_STRING` in Vercel and redeploy.

@@ -5,6 +5,20 @@ sensitive values were found in local environment files.
 
 **Complete all items marked ❌ before any production deployment or public push.**
 
+### Automated helpers (run these first)
+
+```bash
+# 1. Move real env files out of OneDrive sync tree
+node scripts/move-env-offsite.mjs
+
+# 2. After rotating all credentials at providers, purge git history
+bash scripts/purge-git-history.sh
+
+# 3. Generate new worker secrets
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# Run twice — once for COMMUNICATION_WORKER_SECRET, once for COMMUNICATION_WEBHOOK_TOKEN
+```
+
 ---
 
 ## Credential rotation
@@ -39,7 +53,7 @@ sensitive values were found in local environment files.
 - [x] Real Supabase project ref replaced with placeholder in committed `.env` template
 - [ ] Run `git log --all --full-history -- .env` to confirm `.env` was never committed
 - [ ] Run `git log --all --full-history -- .env.local` to confirm `.env.local` was never committed
-- [ ] If either command returns commits, run `git filter-repo --invert-paths --path .env` to scrub history
+- [ ] **Run `bash scripts/purge-git-history.sh`** — purges `docs/wasel-planning-with-ai.json` and all other credential patterns from history, verifies the result, and prints force-push instructions. Run this AFTER rotating the Google service account key at the provider.
 - [ ] Run `git ls-files --error-unmatch .env` — should error (not tracked)
 - [ ] Run `git ls-files --error-unmatch .env.local` — should error (not tracked)
 - [x] Delete `_SECRETS_NEEDS_ROTATION_THEN_DELETE/` directory — **DONE: deleted, folder removed, pattern added to .gitignore**
@@ -49,6 +63,7 @@ sensitive values were found in local environment files.
 - [x] `vercel-env-variables.txt` scrubbed — real OAuth IDs replaced with placeholders
 - [x] `SUPABASE_SECRET_KEY`, `SUPABASE_AUTH_GOOGLE_CLIENT_SECRET`, `SUPABASE_AUTH_FACEBOOK_CLIENT_SECRET`, `SUPABASE_AUTH_HOOK_SEND_SMS_SECRET`, `VITE_SUPABASE_PUBLISHABLE_KEY` replaced with placeholders in `.env` and `.env.production`
 - [ ] Confirm no `.crt`, `.pem`, or `.key` files are tracked: `git ls-files | grep -E '\.(pem|key|crt|cer|p12|pfx)'`
+- [ ] **Run `npm run secrets:move-offsite`** — moves real env files to `~/.wasel-secrets/` outside the OneDrive sync tree (calls `scripts/move-env-offsite.mjs`, supports `--dry-run`)
 
 ---
 
@@ -77,14 +92,17 @@ Also set these in **Supabase Dashboard → Project → Edge Functions → Secret
 
 Verify: `GET /v1/health` with `x-communication-worker-secret` header → `communications.emailConfigured` and `communications.twilioConfigured` must be `true`.
 
-### Gap 7 — Sentry and Application Insights (error monitoring, Web Vitals)
+### Gap 7 — Sentry and Application Insights (error monitoring, Web Vitals) ❌ BLOCKING
+
+Production observability is dark until these are set. Runtime errors and Web Vitals are silently dropped.
 
 | Variable | Where to get the value |
 |---|---|
 | `VITE_SENTRY_DSN` | [sentry.io](https://sentry.io) → Your project → Settings → Client Keys (DSN) |
 | `VITE_APP_INSIGHTS_CONNECTION_STRING` | Azure Portal → Application Insights resource → Overview → Connection String |
 
-Both are `VITE_` prefixed — set them in Vercel as **Production** environment variables.
+Both are `VITE_` prefixed — set them in **Vercel Dashboard → Settings → Environment Variables → Production**.
+A redeploy is required after setting them (Vite inlines `VITE_*` at build time).
 After deploying, verify: Sentry → Issues → Production should receive events within minutes of first user session.
 
 ### Gap 8 — Stripe 2FA backup codes (already overwritten, needs provider action)

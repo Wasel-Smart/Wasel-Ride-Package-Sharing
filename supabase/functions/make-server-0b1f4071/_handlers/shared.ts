@@ -2409,6 +2409,18 @@ export async function finalizeTopUpTransaction ( opts: FinalizeTopUpOptions ) {
       return { applied: false, reason: amountUnverified ? 'amount_unverified' : 'amount_mismatch' };
     }
 
+    // Lock the destination wallet and prove it exists before posting. Without this a
+    // missing wallet made the UPDATE below match zero rows while the transaction was
+    // still marked 'posted': the customer paid, nothing was credited, and the row
+    // looked settled. The throw rolls everything back so the provider retries.
+    const walletLock = await client.queryObject<{ wallet_id: string }>(
+      'select wallet_id from public.wallets where wallet_id = $1 for update',
+      [ transaction.wallet_id ],
+    );
+    if ( walletLock.rows.length !== 1 ) {
+      throw new Error( `Wallet ${ String( transaction.wallet_id ) } for transaction ${ transactionId } was not found` );
+    }
+
     await client.queryObject(
       'update public.wallets set balance = balance + $1, updated_at = timezone(\'utc\', now()) where wallet_id = $2',
       [ transaction.amount, transaction.wallet_id ],

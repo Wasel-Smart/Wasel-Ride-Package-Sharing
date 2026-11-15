@@ -83,3 +83,33 @@ describe('service topology contract', () => {
     }
   });
 });
+
+describe('getQueueContract', () => {
+  it('returns the contract for a known topic', async () => {
+    const { getQueueContract } = await import('@/platform/queue-contracts');
+    const contract = getQueueContract('rides.requested');
+    expect(contract).toBeDefined();
+    expect(contract?.owner).toBe('matching-worker');
+    expect(contract?.deadLetterTopic).toBe('rides.requested.dlq');
+  });
+
+  it('returns undefined for an unknown topic', async () => {
+    const { getQueueContract } = await import('@/platform/queue-contracts');
+    expect(getQueueContract('unknown.topic' as never)).toBeUndefined();
+  });
+});
+
+describe('getServiceDefinition', () => {
+  it('returns the definition for a known service', async () => {
+    const { getServiceDefinition } = await import('@/platform/service-topology');
+    const def = getServiceDefinition('payment-service');
+    expect(def).toBeDefined();
+    expect(def?.boundedContext).toBe('payments');
+    expect(def?.slo.availability).toBe('99.95%');
+  });
+
+  it('returns undefined for an unknown service', async () => {
+    const { getServiceDefinition } = await import('@/platform/service-topology');
+    expect(getServiceDefinition('unknown-service' as never)).toBeUndefined();
+  });
+});

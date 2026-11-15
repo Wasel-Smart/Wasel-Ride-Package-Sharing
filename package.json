@@ -81,7 +81,7 @@
     "verify:wiring": "node scripts/verify-frontend-backend-wiring.mjs",
     "check:routes": "node scripts/check-route-contract.mjs",
     "secrets:migrate": "node scripts/migrate-secrets-offsite.mjs",
-    "secrets:move-offsite": "powershell -ExecutionPolicy Bypass -File scripts/move-env-offsite.ps1",
+    "secrets:move-offsite": "node scripts/move-env-offsite.mjs",
     "env:validate-vercel": "node scripts/validate-vercel-env.mjs",
     "env:validate-vercel:strict": "node scripts/validate-vercel-env.mjs --strict",
     "env:validate-vercel:hints": "node scripts/validate-vercel-env.mjs --fix-hints",

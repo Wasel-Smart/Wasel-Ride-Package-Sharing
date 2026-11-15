@@ -238,6 +238,12 @@ jobs:
           DB_URL="$(supabase status -o env | sed -n 's/^DB_URL=//p' | tr -d '"')"
           ALLOW="$(jq -r 'keys|join(",")' supabase/rls-allowlist.json)"
           psql "$DB_URL" -v ON_ERROR_STOP=1 -v allow="$ALLOW" -f supabase/tests/rls_coverage.sql
+      # Replay protection for Stripe webhooks: claim, concurrent-claim, retry,
+      # duplicate, stale-lock takeover, and who may call the ledger.
+      - name: Stripe webhook event ledger behaves correctly
+        run: |
+          DB_URL="$(supabase status -o env | sed -n 's/^DB_URL=//p' | tr -d '"')"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/stripe_webhook_event_ledger.sql
       - if: always()
         run: supabase stop --no-backup
 

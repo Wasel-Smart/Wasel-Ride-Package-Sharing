@@ -1,6 +1,7 @@
 import {
     json,
     getAdminClient,
+    type AdminClient,
     SUPABASE_AUTH_HOOK_SEND_SMS_SECRET,
     deliveryEnv,
     constantTimeEquals,
@@ -71,8 +72,58 @@ function parseSignedJson ( rawPayload: string ): ReturnType<typeof JSON.parse> |
 }
 
 
+// Event types this handler acts on. Only these go through the event ledger: for
+// anything else there is nothing to protect from a replay, and acknowledging it
+// immediately keeps Stripe's endpoint health clean.
+const STRIPE_LEDGER_EVENT_TYPES: ReadonlySet<string> = new Set( [
+  'checkout.session.completed',
+  'checkout.session.async_payment_succeeded',
+  'checkout.session.expired',
+  'customer.subscription.created',
+  'customer.subscription.updated',
+  'customer.subscription.deleted',
+  'invoice.paid',
+  'invoice.payment_failed',
+  'invoice.created',
+  'payment_intent.payment_failed',
+  'payment_intent.succeeded',
+] );
+
+export type StripeEventClaim = 'claimed' | 'duplicate' | 'in_progress';
+
+export interface StripeEventLedger {
+  claim: ( event: { id: string; type: string; createdAt: string; livemode: boolean } ) => Promise<StripeEventClaim>;
+  complete: ( eventId: string, status: 'processed' | 'failed', error?: string ) => Promise<void>;
+}
+
+// Backed by public.app_claim_stripe_event / app_complete_stripe_event, so the claim is
+// one atomic database operation shared by every edge isolate.
+function createStripeEventLedger ( admin: AdminClient ): StripeEventLedger {
+  return {
+    async claim ( event ) {
+      const { data, error } = await admin.rpc( 'app_claim_stripe_event', {
+        p_event_id: event.id,
+        p_event_type: event.type,
+        p_event_created_at: event.createdAt,
+        p_livemode: event.livemode,
+      } );
+      if ( error ) {throw new Error( error.message );}
+      if ( data === 'claimed' || data === 'duplicate' || data === 'in_progress' ) {return data;}
+      throw new Error( `Unexpected ledger response: ${ String( data ) }` );
+    },
+    async complete ( eventId, status, errorMessage ) {
+      const { error } = await admin.rpc( 'app_complete_stripe_event', {
+        p_event_id: eventId,
+        p_status: status,
+        p_error: errorMessage ?? null,
+      } );
+      if ( error ) {throw new Error( error.message );}
+    },
+  };
+}
+
 // eslint-disable-next-line complexity
-export async function handleStripeWebhook ( request: Request ) {
+export async function handleStripeWebhook ( request: Request, ledger?: StripeEventLedger ) {
   if ( !STRIPE_WEBHOOK_SECRET ) {
     return json( { error: 'Stripe webhook secret is not configured.' }, 503 );
   }
@@ -93,6 +144,61 @@ export async function handleStripeWebhook ( request: Request ) {
   }
   const admin = getAdminClient();
 
+  // Events this handler does nothing with are acknowledged without touching the ledger.
+  const eventType = String( event?.type ?? '' );
+  if ( !STRIPE_LEDGER_EVENT_TYPES.has( eventType ) ) {
+    return json( { received: true, ignored: true } );
+  }
+
+  const eventId = String( event?.id ?? '' ).trim();
+  if ( !eventId ) {
+    return json( { error: 'Stripe event id is missing.' }, 400 );
+  }
+
+  const eventLedger = ledger ?? createStripeEventLedger( admin );
+  const createdSeconds = Number( event?.created );
+  let claim: StripeEventClaim;
+  try {
+    claim = await eventLedger.claim( {
+      id: eventId,
+      type: eventType,
+      createdAt: new Date( ( Number.isFinite( createdSeconds ) && createdSeconds > 0 ? createdSeconds : Date.now() / 1000 ) * 1000 ).toISOString(),
+      livemode: Boolean( event?.livemode ),
+    } );
+  } catch ( error ) {
+    // Without the ledger we cannot prove this event is not a replay. Refuse so Stripe
+    // retries (it keeps retrying for days) instead of processing money unguarded.
+    console.error( '[stripe-webhook] event ledger unavailable', { eventId, message: error instanceof Error ? error.message : String( error ) } );
+    return json( { error: 'Event ledger unavailable.' }, 503 );
+  }
+
+  if ( claim === 'duplicate' ) {
+    return json( { received: true, duplicate: true } );
+  }
+  if ( claim === 'in_progress' ) {
+    // A concurrent delivery of the same event is mid-flight. A non-2xx makes Stripe retry later.
+    return json( { error: 'Event is already being processed.' }, 409 );
+  }
+
+  try {
+    const response = await processStripeEvent( event, admin );
+    const succeeded = response.status < 400;
+    await eventLedger
+      .complete( eventId, succeeded ? 'processed' : 'failed', succeeded ? undefined : `HTTP ${ response.status }` )
+      .catch( ( error: unknown ) => console.error( '[stripe-webhook] could not record outcome', { eventId, message: error instanceof Error ? error.message : String( error ) } ) );
+    return response;
+  } catch ( error ) {
+    const message = error instanceof Error ? error.message : String( error );
+    console.error( '[stripe-webhook] processing failed', { eventId, eventType, message } );
+    await eventLedger
+      .complete( eventId, 'failed', message )
+      .catch( ( completeError: unknown ) => console.error( '[stripe-webhook] could not record failure', { eventId, message: completeError instanceof Error ? completeError.message : String( completeError ) } ) );
+    return json( { error: 'Webhook processing failed.' }, 500 );
+  }
+}
+
+// eslint-disable-next-line complexity
+async function processStripeEvent ( event: ReturnType<typeof JSON.parse>, admin: AdminClient ): Promise<Response> {
   if ( event?.type === 'checkout.session.completed' || event?.type === 'checkout.session.async_payment_succeeded' ) {
     const session = event?.data?.object ?? {};
     if ( String( session?.mode ?? '' ) === 'subscription' ) {
@@ -153,15 +259,28 @@ export async function handleStripeWebhook ( request: Request ) {
   }
 
   if ( event?.type === 'customer.subscription.created' || event?.type === 'customer.subscription.updated' ) {
-    const subscription = event?.data?.object ?? {};
+    const subscriptionId = String( event?.data?.object?.id ?? '' );
+    if ( !subscriptionId ) {
+      return json( { received: true, ignored: true, reason: 'missing_subscription_id' } );
+    }
+    // Stripe does not guarantee delivery order, so a late `updated` event can carry
+    // older state than one already applied. Re-read the subscription instead of
+    // trusting the payload; a failure throws, the event is marked failed, and Stripe retries.
+    const subscription = await fetchStripeSubscription( subscriptionId );
     const synced = await syncStripeSubscriptionRecord( { admin, subscription } );
-    return json( { received: true, subscriptionId: String( subscription?.id ?? '' ), synced } );
+    return json( { received: true, subscriptionId, synced } );
   }
 
   if ( event?.type === 'customer.subscription.deleted' ) {
-    const subscription = event?.data?.object ?? {};
+    const eventSubscription = event?.data?.object ?? {};
+    const subscriptionId = String( eventSubscription?.id ?? '' );
+    // A deleted subscription may no longer be retrievable; its own payload is then the
+    // authoritative terminal state.
+    const subscription = subscriptionId
+      ? await fetchStripeSubscription( subscriptionId ).catch( () => eventSubscription )
+      : eventSubscription;
     const synced = await syncStripeSubscriptionRecord( { admin, subscription } );
-    return json( { received: true, subscriptionId: String( subscription?.id ?? '' ), deleted: true, synced } );
+    return json( { received: true, subscriptionId, deleted: true, synced } );
   }
 
   if ( event?.type === 'invoice.paid' || event?.type === 'invoice.payment_failed' ) {
@@ -210,7 +329,7 @@ export async function handleStripeWebhook ( request: Request ) {
   if ( event?.type === 'payment_intent.succeeded' ) {
     const intent = event?.data?.object ?? {};
     const intentId = String( intent?.id ?? '' );
-    const paidAmount = Number( intent?.amount ?? 0 );
+    const paidAmount = Number( intent?.amount_received ?? intent?.amount ?? 0 );
     const currency = String( intent?.currency ?? '' ).toLowerCase();
     const metadata = ( ( intent?.metadata ?? {} ) as Record<string, unknown> );
     const transactionId = String( metadata.transaction_id ?? '' );

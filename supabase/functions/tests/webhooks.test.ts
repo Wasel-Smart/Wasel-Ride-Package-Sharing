@@ -169,6 +169,128 @@ Deno.test('handleStripeWebhook — 200 on valid signature with unknown event', a
   assertEquals(body.ignored, true);
 });
 
+// ── Stripe event ledger (replay / concurrency protection) ─────────────────────
+
+interface FakeLedgerCalls {
+  claims: string[];
+  completions: Array<{ id: string; status: string; error?: string }>;
+}
+
+function makeLedger(outcome: 'claimed' | 'duplicate' | 'in_progress' | Error) {
+  const calls: FakeLedgerCalls = { claims: [], completions: [] };
+  const ledger = {
+    claim: (event: { id: string }) => {
+      calls.claims.push(event.id);
+      return outcome instanceof Error ? Promise.reject(outcome) : Promise.resolve(outcome);
+    },
+    complete: (id: string, status: 'processed' | 'failed', error?: string) => {
+      calls.completions.push({ id, status, error });
+      return Promise.resolve();
+    },
+  };
+  return { calls, ledger };
+}
+
+async function postStripeEvent(event: Record<string, unknown>, ledger: ReturnType<typeof makeLedger>['ledger']) {
+  const payload = JSON.stringify(event);
+  const signature = await signStripe(payload, STRIPE_SECRET);
+  return handleStripeWebhook(
+    makeRequest('/payments/webhooks/stripe', payload, { 'stripe-signature': signature }),
+    ledger,
+  );
+}
+
+Deno.test('handleStripeWebhook ledger — a replayed event is acknowledged and never reprocessed', async () => {
+  const { calls, ledger } = makeLedger('duplicate');
+  const res = await postStripeEvent(
+    { id: 'evt_replayed_1', type: 'invoice.created', created: 1_700_000_000, data: { object: { id: 'in_1' } } },
+    ledger,
+  );
+  assertEquals(res.status, 200);
+  const body = await res.json();
+  assertEquals(body.duplicate, true);
+  assertEquals(calls.claims, ['evt_replayed_1']);
+  assertEquals(calls.completions.length, 0);
+});
+
+Deno.test('handleStripeWebhook ledger — a concurrent delivery gets a retryable 409 and is not processed', async () => {
+  const { calls, ledger } = makeLedger('in_progress');
+  const res = await postStripeEvent(
+    { id: 'evt_concurrent_1', type: 'invoice.created', created: 1_700_000_000, data: { object: { id: 'in_1' } } },
+    ledger,
+  );
+  assertEquals(res.status, 409);
+  await res.body?.cancel();
+  assertEquals(calls.completions.length, 0);
+});
+
+Deno.test('handleStripeWebhook ledger — fails closed (503) when the ledger is unavailable', async () => {
+  const { calls, ledger } = makeLedger(new Error('database unavailable'));
+  const res = await postStripeEvent(
+    { id: 'evt_ledger_down', type: 'payment_intent.succeeded', created: 1_700_000_000, data: { object: { id: 'pi_1' } } },
+    ledger,
+  );
+  assertEquals(res.status, 503);
+  await res.body?.cancel();
+  assertEquals(calls.claims, ['evt_ledger_down']);
+  assertEquals(calls.completions.length, 0);
+});
+
+Deno.test('handleStripeWebhook ledger — a claimed event is processed and recorded as processed', async () => {
+  const { calls, ledger } = makeLedger('claimed');
+  const res = await postStripeEvent(
+    { id: 'evt_ok_1', type: 'invoice.created', created: 1_700_000_000, data: { object: { id: 'in_ok' } } },
+    ledger,
+  );
+  assertEquals(res.status, 200);
+  const body = await res.json();
+  assertEquals(body.acknowledged, true);
+  assertEquals(calls.completions, [{ id: 'evt_ok_1', status: 'processed', error: undefined }]);
+});
+
+Deno.test('handleStripeWebhook ledger — a processing failure is recorded as failed and answered with a retryable 500', async () => {
+  const { calls, ledger } = makeLedger('claimed');
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => Promise.reject(new Error('stripe down'));
+  try {
+    const res = await postStripeEvent(
+      { id: 'evt_fail_1', type: 'invoice.paid', created: 1_700_000_000, data: { object: { id: 'in_1', subscription: 'sub_123' } } },
+      ledger,
+    );
+    assertEquals(res.status, 500);
+    await res.body?.cancel();
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+  assertEquals(calls.completions.length, 1);
+  assertEquals(calls.completions[0].id, 'evt_fail_1');
+  assertEquals(calls.completions[0].status, 'failed');
+  assertEquals(String(calls.completions[0].error).includes('stripe down'), true);
+});
+
+Deno.test('handleStripeWebhook ledger — event types the handler ignores never touch the ledger', async () => {
+  const { calls, ledger } = makeLedger('claimed');
+  const res = await postStripeEvent(
+    { id: 'evt_ignored_1', type: 'charge.dispute.created', created: 1_700_000_000, data: { object: {} } },
+    ledger,
+  );
+  assertEquals(res.status, 200);
+  const body = await res.json();
+  assertEquals(body.ignored, true);
+  assertEquals(calls.claims.length, 0);
+});
+
+Deno.test('handleStripeWebhook ledger — an actionable event without an id is rejected before any work', async () => {
+  const { calls, ledger } = makeLedger('claimed');
+  const res = await postStripeEvent(
+    { type: 'payment_intent.succeeded', created: 1_700_000_000, data: { object: { id: 'pi_1' } } },
+    ledger,
+  );
+  assertEquals(res.status, 400);
+  await res.body?.cancel();
+  assertEquals(calls.claims.length, 0);
+});
+
 Deno.test('handleStripeWebhook — 400 (not a retryable 500) when a correctly signed body is not JSON', async () => {
   const payload = '{not json';
   const sig = await signStripe(payload, STRIPE_SECRET);
