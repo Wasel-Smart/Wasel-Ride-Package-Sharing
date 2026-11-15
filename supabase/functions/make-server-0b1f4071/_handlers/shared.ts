@@ -1344,19 +1344,19 @@ export async function sendTwilioOtpSms ( phoneNumber: string, code: string ): Pr
   };
 }
 
-export async function startTwilioPhoneVerification ( phoneNumber: string ) {
+export async function startTwilioPhoneVerification ( phoneNumber: string, channel: 'sms' | 'whatsapp' = 'sms' ) {
   // Use Twilio Verify when configured; fall back to direct SMS OTP.
   if ( hasTwilioVerifyRuntime() ) {
     const result = await callTwilioVerify(
       '/Verifications',
-      new URLSearchParams( { To: phoneNumber, Channel: 'sms', Locale: 'en' } ),
+      new URLSearchParams( { To: phoneNumber, Channel: channel, Locale: 'ar' } ),
     );
-    return { ok: result.ok, retryable: result.retryable, error: result.ok ? undefined : result.error };
+    return { ok: result.ok, retryable: result.retryable, error: result.ok ? undefined : result.error, channel };
   }
 
   const code = generateOtpCode();
   const result = await sendTwilioOtpSms( phoneNumber, code );
-  return { ok: result.ok, retryable: result.retryable, error: result.error, _code: result.ok ? code : undefined };
+  return { ok: result.ok, retryable: result.retryable, error: result.error, _code: result.ok ? code : undefined, channel: 'sms' };
 }
 
 export async function checkTwilioPhoneVerification ( phoneNumber: string, code: string ) {

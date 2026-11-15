@@ -97,6 +97,7 @@ async function startPhoneVerification ( request: Request ) {
 
   const body = await request.json().catch( () => ( {} ) );
   const phoneNumber = normalizePhoneNumber( body.phoneNumber );
+  const requestedChannel = body.channel === 'whatsapp' ? 'whatsapp' : 'sms';
   if ( !isValidE164Phone( phoneNumber ) ) {
     return json( { error: 'Enter a valid E.164 phone number such as +962791234567.' }, 400 );
   }
@@ -168,7 +169,7 @@ async function startPhoneVerification ( request: Request ) {
   }
 
   if ( useTwilioVerify ) {
-    const verifyResult = await startTwilioPhoneVerification( phoneNumber );
+    const verifyResult = await startTwilioPhoneVerification( phoneNumber, requestedChannel );
     if ( !verifyResult.ok ) {
       await auth.admin.from( 'otp_sessions' ).delete().eq( 'otp_session_id', otpSession.otp_session_id );
       await restorePhoneAfterFailedDelivery(
@@ -193,6 +194,7 @@ async function startPhoneVerification ( request: Request ) {
         started: true,
         phoneNumber,
         expiresAt,
+        channel: requestedChannel,
         provider: 'twilio_verify',
       },
       202,
