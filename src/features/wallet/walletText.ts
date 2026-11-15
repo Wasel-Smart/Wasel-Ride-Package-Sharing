@@ -71,6 +71,7 @@ const walletTextSource = {
     jod: 'JOD',
     liveStatus: 'Live',
     walletSubtitle: 'Balance and rewards',
+    walletLocalDataWarning: 'Showing saved wallet data. This balance is not confirmed by the server; refresh when online before making payment decisions.',
     redirectingToSignIn: 'Redirecting to sign in...',
     walletUnavailableTitle: 'Wallet unavailable',
     walletUnavailableDescription: 'Complete wallet setup to unlock payments.',
@@ -204,6 +205,7 @@ const walletTextSource = {
     jod: 'دينار',
     liveStatus: 'نشط',
     walletSubtitle: 'المدفوعات والرصيد والمكافآت',
+    walletLocalDataWarning: 'تعرض المحفظة بيانات محفوظة محلياً. لم يؤكد الخادم هذا الرصيد؛ حدّث الصفحة عند الاتصال بالإنترنت قبل اتخاذ قرارات الدفع.',
     redirectingToSignIn: 'جارٍ تحويلك إلى تسجيل الدخول...',
     walletUnavailableTitle: 'المحفظة قيد الإطلاق',
     walletUnavailableDescription:

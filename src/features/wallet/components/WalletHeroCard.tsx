@@ -7,6 +7,8 @@ type WalletHeroCardProps = {
   balance: number;
   balanceVisible: boolean;
   canTopUp: boolean;
+  canSend: boolean;
+  canWithdraw: boolean;
   pendingBalance: number;
   rewardsBalance: number;
   t: Record<string, string>;
@@ -20,6 +22,8 @@ export function WalletHeroCard({
   balance,
   balanceVisible,
   canTopUp,
+  canSend,
+  canWithdraw,
   pendingBalance,
   rewardsBalance,
   t,
@@ -120,6 +124,7 @@ export function WalletHeroCard({
             variant="outline"
             size="md"
             onClick={() => { void onShowWithdraw(); }}
+            disabled={!canWithdraw}
             icon={<ArrowUpRight style={{ width: 16, height: 16 }} />}
           >
             {t.withdraw}
@@ -128,6 +133,7 @@ export function WalletHeroCard({
             variant="outline"
             size="md"
             onClick={() => { void onShowSend(); }}
+            disabled={!canSend}
             icon={<Send style={{ width: 16, height: 16 }} />}
           >
             {t.sendMoney}

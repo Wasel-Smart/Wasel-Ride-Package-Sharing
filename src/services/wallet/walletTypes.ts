@@ -106,6 +106,8 @@ export interface WalletSubscription {
 }
 
 export interface WalletData {
+  /** Identifies whether displayed balances came from the backend or a local cache. */
+  source?: 'server' | 'local';
   wallet: WalletSummary;
   balance: number;
   pendingBalance: number;

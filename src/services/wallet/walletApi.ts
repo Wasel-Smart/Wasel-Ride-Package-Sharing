@@ -157,8 +157,10 @@ export const walletApi = {
       );
     } catch (error) {
       if (!canUseLocalWalletStorage()) {throw error;}
-      return fetchWalletLocal(userId);
+      return { ...await fetchWalletLocal(userId), source: 'local' };
     }
+
+    wallet.source = 'server';
 
     if (canUseEdgeApi()) {
       try { wallet.subscription = await fetchSubscriptionViaBackend(userId); } catch { /* keep direct payload */ }

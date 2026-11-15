@@ -102,6 +102,19 @@ export function WalletDashboard() {
   const pending = walletData?.pendingBalance ?? 0;
   const rewardsBal = walletData?.rewardsBalance ?? 0;
   const transactionCount = walletData?.transactions?.length ?? 0;
+  const walletIsLocal = walletData?.source === 'local';
+  const displayCapabilities = walletIsLocal
+    ? {
+      ...walletCapabilities,
+      topUp: false,
+      rewardClaim: false,
+      subscription: false,
+      pin: false,
+      send: false,
+      withdraw: false,
+      autoTopUp: false,
+    }
+    : walletCapabilities;
   const walletTitle = t.walletTitle ?? 'Wallet';
   const activeLabel = t.activeLabel ?? 'Active';
   const walletUnavailableDescription =
@@ -166,6 +179,14 @@ export function WalletDashboard() {
   return (
     <PageShell maxWidth={1120} dir={isRTL ? 'rtl' : 'ltr'}>
       <div style={{ paddingInline: SPACE[4] }}>
+        {walletIsLocal ? (
+          <Card role="status" className="mb-4 rounded-xl border-amber-500/40 bg-amber-500/10">
+            <CardContent className="flex items-center gap-2 py-4 text-sm text-amber-100">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {t.walletLocalDataWarning ?? 'Showing saved wallet data. This balance is not confirmed by the server; refresh when online before making payment decisions.'}
+            </CardContent>
+          </Card>
+        ) : null}
         {walletError ? (
           <Card className="mb-4 rounded-xl border-destructive/40 bg-destructive/5">
             <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
@@ -193,7 +214,7 @@ export function WalletDashboard() {
           accent={C.cyan}
           actions={
             <>
-              {walletCapabilities.topUp ? (
+              {displayCapabilities.topUp ? (
                 <Button
                   onClick={() => { void setShowTopUp(true); }}
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
@@ -269,7 +290,9 @@ export function WalletDashboard() {
           <WalletHeroCard
             balanceVisible={balanceVisible}
             balance={bal}
-            canTopUp={walletCapabilities.topUp}
+            canTopUp={displayCapabilities.topUp}
+            canSend={displayCapabilities.send}
+            canWithdraw={displayCapabilities.withdraw}
             pendingBalance={pending}
             rewardsBalance={rewardsBal}
             t={t}
@@ -304,7 +327,7 @@ export function WalletDashboard() {
             <TabsContent value="overview" className="mt-4 space-y-4">
               <OverviewTab
                 walletData={walletData}
-                canSubscribe={walletCapabilities.subscription}
+                canSubscribe={displayCapabilities.subscription}
                 isRTL={isRTL}
                 t={t}
                 onSetTab={setTab}
@@ -398,7 +421,7 @@ export function WalletDashboard() {
                     />
                   ) : (
                     <>
-                      {!walletCapabilities.rewardClaim ? (
+                      {!displayCapabilities.rewardClaim ? (
                         <p className="mb-3 text-xs text-muted-foreground">
                           {t.rewardClaimUnavailableHint}
                         </p>
@@ -426,7 +449,7 @@ export function WalletDashboard() {
                               size="sm"
                               variant="outline"
                               onClick={() => { void handleClaimReward(r.id); }}
-                              disabled={!walletCapabilities.rewardClaim}
+                              disabled={!displayCapabilities.rewardClaim}
                               className="text-xs border-purple-500/30 text-purple-400 hover:bg-purple-500/10 disabled:opacity-60"
                             >
                               {t.claim}
@@ -456,7 +479,7 @@ export function WalletDashboard() {
             <TabsContent value="settings" className="mt-4 space-y-4">
               <SettingsTab
                 walletData={walletData}
-                canManagePin={walletCapabilities.pin}
+                canManagePin={displayCapabilities.pin}
                 isRTL={isRTL}
                 t={t}
                 autoTopUpEnabled={autoTopUpEnabled}
@@ -473,7 +496,7 @@ export function WalletDashboard() {
           <WalletActionModals
             actionLoading={actionLoading}
             balance={bal}
-            canWithdraw={walletCapabilities.withdraw}
+            canWithdraw={displayCapabilities.withdraw}
             isRTL={isRTL}
             pinValue={pinValue}
             currentPinValue={currentPinValue}

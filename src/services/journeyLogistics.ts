@@ -448,13 +448,6 @@ export function findRequestedRide (
   return ride && rideCanCarryPackage( ride, input ) ? ride : undefined;
 }
 
-function findBestMatchingRide (
-  rides: PostedRide[],
-  input: { from: string; to: string; weight: string },
-): PostedRide | undefined {
-  return sortByCreatedAtDesc( rides ).find( ride => rideCanCarryPackage( ride, input ) );
-}
-
 export function getConnectedRides (): PostedRide[] {
   const rides = mergeRides( readList<PostedRide>( RIDES_KEY ) );
   writeList( RIDES_KEY, rides );
@@ -714,36 +707,14 @@ export async function createConnectedPackage ( input: {
       } );
       return created;
     }
-  } catch {
-    // Fall back to local storage below.
+  } catch (error) {
+    throw new Error(
+      'Package request could not be submitted. Please check your connection and try again.',
+      { cause: error },
+    );
   }
 
-  const rides = getConnectedRides();
-  const matchedRide = requestedRide ?? findBestMatchingRide( rides, matchInput );
-  const fallbackStatus: PackageStatus = matchedRide ? 'matched' : 'searching';
-  const fallbackPackage: PackageRequest = {
-    ...pkg,
-    matchedRideId: matchedRide?.id,
-    matchedDriver: matchedRide ? pickDriverName( matchedRide.carModel ) : undefined,
-    status: fallbackStatus,
-    timeline: buildTimeline( fallbackStatus, matchedRide?.id, pkg.verification ),
-  };
-
-  savePackages( [ fallbackPackage ], getConnectedPackages() );
-  void trackGrowthEvent( {
-    eventName: 'package_request_created',
-    funnelStage: fallbackPackage.matchedRideId ? 'selected' : 'searched',
-    serviceType: 'package',
-    from: fallbackPackage.from,
-    to: fallbackPackage.to,
-    valueJod: 5,
-    metadata: {
-      trackingId: fallbackPackage.trackingId,
-      packageType: fallbackPackage.packageType,
-      source: 'local',
-    },
-  } );
-  return fallbackPackage;
+  throw new Error('Package request could not be submitted. Please try again.');
 }
 
 async function buildTrackedPackageHeaders (): Promise<Headers> {
