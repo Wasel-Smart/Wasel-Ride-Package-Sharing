@@ -4,6 +4,12 @@
   "framework": "vite",
   "installCommand": "npm ci --include=dev",
   "devCommand": "npm run dev",
+  "crons": [
+    {
+      "path": "/api/cron/gdpr-deletion-scheduler",
+      "schedule": "0 3 * * *"
+    }
+  ],
   "env": {
     "NPM_CONFIG_PRODUCTION": "false"
   },
