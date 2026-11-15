@@ -110,22 +110,32 @@ describe('walletApi — edge transport NOT configured (read-only/local tiers)', 
       );
     });
 
-    it('falls back to local storage as a last resort, but does NOT re-run sanitization on it', async () => {
-      // NOTE: this documents current behavior, not a spec — see chat summary.
-      // getWallet()'s catch-branch returns fetchWalletLocal(userId) directly,
-      // bypassing the sanitizeWalletData() call that the edge/direct tiers get.
-      // walletLocalStorage's own describeTransaction() does call sanitizeHtml
-      // on user-supplied labels, so this isn't a raw XSS hole — but it means
-      // the two tiers are sanitized through two different code paths.
+    it('sanitizes descriptions when falling back to local storage', async () => {
       getConfigMock.mockReturnValue({ allowDirectSupabaseFallback: false });
       walletLocalMocks.canUseLocalWalletStorage.mockReturnValue(true);
-      const localWallet = makeWallet();
+      const localWallet = makeWallet({
+        transactions: [{
+          id: 'local-tx-1', type: 'wallet', description: '<script>alert(1)</script>',
+          amount: 5, createdAt: '2026-01-01',
+        }],
+        activeRewards: [{
+          id: 'local-reward-1', description: '<img src=x onerror=alert(1)>',
+          amount: 10, expirationDate: '2026-12-31',
+        }],
+      });
       walletLocalMocks.fetchWalletLocal.mockResolvedValue(localWallet);
 
       const wallet = await walletApi.getWallet('user-123');
 
       expect(walletLocalMocks.fetchWalletLocal).toHaveBeenCalledWith('user-123');
-      expect(wallet).toBe(localWallet);
+      expect(wallet).not.toBe(localWallet);
+      expect(wallet.source).toBe('local');
+      expect(wallet.transactions[0]?.description).toBe(
+        '&lt;script&gt;alert(1)&lt;&#x2F;script&gt;',
+      );
+      expect(wallet.activeRewards[0]?.description).toBe(
+        '&lt;img src=x onerror=alert(1)&gt;',
+      );
     });
   });
 
@@ -375,11 +385,12 @@ describe('walletApi — edge transport NOT configured (read-only/local tiers)', 
       walletLocalMocks.canUseLocalWalletStorage.mockReturnValue(true);
       walletDirectMocks.fetchWalletDirect.mockRejectedValue(new Error('db error'));
       walletLocalMocks.fetchWalletLocal.mockResolvedValue(
-        makeWallet({ transactions: [{ id: 'local-1', type: 'wallet', description: 'local', amount: 5, createdAt: '2026-01-01' }] }),
+        makeWallet({ transactions: [{ id: 'local-1', type: 'wallet', description: '<script>x</script>', amount: 5, createdAt: '2026-01-01' }] }),
       );
 
-      await walletApi.getTransactions('user-123');
+      const result = await walletApi.getTransactions('user-123');
       expect(walletLocalMocks.fetchWalletLocal).toHaveBeenCalledWith('user-123');
+      expect(result.transactions[0]?.description).toBe('&lt;script&gt;x&lt;&#x2F;script&gt;');
     });
   });
 

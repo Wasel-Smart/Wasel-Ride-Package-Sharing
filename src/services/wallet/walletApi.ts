@@ -157,7 +157,7 @@ export const walletApi = {
       );
     } catch (error) {
       if (!canUseLocalWalletStorage()) {throw error;}
-      return { ...await fetchWalletLocal(userId), source: 'local' };
+      return { ...sanitizeWalletData(await fetchWalletLocal(userId)), source: 'local' };
     }
 
     wallet.source = 'server';
@@ -177,9 +177,9 @@ export const walletApi = {
     };
     const directFn = async () => {
       // The direct tier is sanitized like getWallet() does; the local tier sanitizes in
-      // walletLocalStorage, so it is not sanitized again here (that would double-escape).
+      // the facade as well, so all data sources share the same output contract.
       const wallet = canUseLocalWalletStorage()
-        ? await fetchWalletDirect(userId).then(sanitizeWalletData).catch(() => fetchWalletLocal(userId))
+        ? await fetchWalletDirect(userId).then(sanitizeWalletData).catch(async () => sanitizeWalletData(await fetchWalletLocal(userId)))
         : sanitizeWalletData(await fetchWalletDirect(userId));
       const filtered = type ? wallet.transactions.filter(tx => tx.type === type) : wallet.transactions;
       const start = (page - 1) * limit;

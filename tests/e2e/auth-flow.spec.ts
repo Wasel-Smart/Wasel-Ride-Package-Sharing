@@ -23,6 +23,16 @@ test( 'unauthenticated /app renders the public landing surface @smoke', async ( 
   await page.goto( '/app', GOTO );
   await expect( page.getByRole( 'heading', { name: LANDING_HEADING } ) ).toBeVisible();
   await expect( page.getByRole( 'button', { name: /sign in/i } ).first() ).toBeVisible();
+
+  const proofPill = page.locator( '.wasel-home-proof-pill' ).first();
+  await expect( proofPill ).toBeVisible();
+  await expect( proofPill.locator( 'strong' ) ).toHaveCSS( 'display', 'block' );
+  await expect( proofPill.locator( 'small' ) ).toHaveCSS( 'display', 'block' );
+  await expect( proofPill.locator( 'small' ) ).toHaveCSS( 'margin-top', '4px' );
+
+  await page.setViewportSize( { width: 375, height: 812 } );
+  await expect( proofPill.locator( 'strong' ) ).toHaveCSS( 'display', 'block' );
+  await expect( proofPill.locator( 'small' ) ).toHaveCSS( 'display', 'block' );
 } );
 
 test( 'auth page renders email and password fields @smoke', async ( { page } ) => {

@@ -75,6 +75,17 @@ export default defineConfig(({ mode }) => ({
         // three.js / react-three-fiber inside the lazy globe chunk.
         compact: true,
         experimentalMinChunkSize: 15000,
+        manualChunks(id) {
+          // Keep the shared backend SDK out of the browser entry chunk. Auth
+          // still initializes during startup, but downloading its implementation
+          // can happen as a separate parallel request with better cache reuse.
+          if (
+            id.includes('/node_modules/@supabase/') ||
+            id.includes('/node_modules/iceberg-js/')
+          ) {
+            return 'supabase-vendor';
+          }
+        },
         // Avoid Rollup's small-chunk merger on the browser entry: it folds
         // unrelated shared modules back into the initial download. Keep the
         // default graph splits and let route-level dynamic imports stay lazy.
