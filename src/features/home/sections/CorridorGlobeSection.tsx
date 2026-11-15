@@ -102,8 +102,8 @@ export function CorridorGlobeSection({ ar }: CorridorGlobeSectionProps) {
         <div style={{ display: 'grid', gap: 10 }}>
           <p style={{ fontSize: TYPE.size.sm, color: C.textMuted, margin: 0, lineHeight: 1.6 }}>
             {ar
-              ? 'مسارات مباشرة من عمّان إلى وجهات واصل الأكثر طلبًا، مع حركة حيّة على كل ممر.'
-              : 'Live routes from Amman to Wasel\'s busiest destinations, with real-time movement on every corridor.'}
+              ? 'استكشف المسارات الشائعة من عمّان إلى وجهات في أنحاء الأردن.'
+              : 'Explore popular routes from Amman to destinations across Jordan.'}
           </p>
           <div style={{ display: 'grid', gap: 8 }}>
             {POPULAR_ROUTES.slice(0, 5).map(route => (
@@ -196,8 +196,8 @@ function StaticMapFallback({ ar }: { ar: boolean }) {
         </p>
         <p style={{ margin: 0, color: C.textSub, fontSize: TYPE.size.xs }}>
           {ar
-            ? 'مسارات حية من عمّان إلى العقبة، إربد، البحر الميت، البتراء، وادي رم، الزرقاء'
-            : 'Live routes from Amman to Aqaba, Irbid, Dead Sea, Petra, Wadi Rum, Zarqa'}
+            ? 'مسارات من عمّان إلى العقبة وإربد والبحر الميت والبتراء ووادي رم والزرقاء'
+            : 'Routes from Amman to Aqaba, Irbid, the Dead Sea, Petra, Wadi Rum, and Zarqa'}
         </p>
       </div>
     </div>
