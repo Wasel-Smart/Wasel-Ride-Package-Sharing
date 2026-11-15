@@ -32,12 +32,16 @@ CREATE TABLE IF NOT EXISTS public.data_deletion_requests (
   reason text,
   requested_at timestamptz NOT NULL DEFAULT now(),
   scheduled_for timestamptz NOT NULL,
-  completed_at timestamptz
+  completed_at timestamptz,
+  processing_started_at timestamptz
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS data_deletion_requests_one_pending_per_user_idx
   ON public.data_deletion_requests (user_id)
-  WHERE status = 'pending';
+  WHERE status IN ('pending', 'processing');
+CREATE INDEX IF NOT EXISTS data_deletion_requests_due_idx
+  ON public.data_deletion_requests (scheduled_for)
+  WHERE status IN ('pending', 'processing');
 
 CREATE TABLE IF NOT EXISTS public.dead_letter_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -45,7 +45,7 @@ export function AccountDeletionDialog() {
             <br />
             <br />
             {tx(
-              'accountDeletionDialog.you_will_receive_a_confirmation_email_and_have_30_days_to_cancel_this_request',
+              'accountDeletionDialog.your_request_is_recorded_and_you_can_cancel_it_within_30_days',
             )}
           </AlertDialogDescription>
         </AlertDialogHeader>

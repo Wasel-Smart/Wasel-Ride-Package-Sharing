@@ -1170,7 +1170,7 @@
   "error_id": "معرف الخطأ",
   "delete_account_permanently": "حذف الحساب نهائياً؟",
   "this_action_cannot_be_undone_this_will_permanently_delete_your_account_and_remove_all_your_data_from_our_servers": "لا يمكن التراجع عن هذا الإجراء. سيؤدي إلى حذف حسابك نهائياً وإزالة كل بياناتك من خوادمنا.",
-  "you_will_receive_a_confirmation_email_and_have_30_days_to_cancel_this_request": "ستتلقى بريد تأكيد ولديك 30 يوماً لإلغاء هذا الطلب.",
+  "your_request_is_recorded_and_you_can_cancel_it_within_30_days": "تم تسجيل طلبك. يمكنك إلغاؤه خلال فترة السماح البالغة 30 يوماً.",
   "cookie_consent": "موافقة الكوكيز",
   "we_use_cookies_to_enhance_your_experience_analyze_site_usage_and_provide_personalized_content_by_clicking_accept_you_consent_to_our_use_of_cookies_see_our": "بنستخدم الكوكيز عشان نحسّن تجربتك ونحلل استخدام الموقع ونعرضلك محتوى يناسبك. لما تضغط \"موافق\" فهذا يعني إنك موافق على استخدامنا للكوكيز. شوف",
   "for_details": "للتفاصيل.",

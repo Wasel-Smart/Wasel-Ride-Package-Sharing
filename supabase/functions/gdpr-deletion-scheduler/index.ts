@@ -23,6 +23,14 @@ serve(async (req: Request) => {
   }
 
   try {
+    const staleClaimBefore = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { error: staleClaimError } = await supabaseAdmin
+      .from('data_deletion_requests')
+      .update({ status: 'pending', processing_started_at: null })
+      .eq('status', 'processing')
+      .lte('processing_started_at', staleClaimBefore);
+    if (staleClaimError) {throw staleClaimError;}
+
     const { data: requests, error } = await supabaseAdmin
       .from('data_deletion_requests')
       .select('user_id')
@@ -32,34 +40,67 @@ serve(async (req: Request) => {
     if (error) {throw error;}
 
     if (!requests || requests.length === 0) {
-      return new Response(JSON.stringify({ processed: 0 }), {
+      return new Response(JSON.stringify({ processed: 0, failed: 0 }), {
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
     let processed = 0;
+    let failed = 0;
     for (const request of requests) {
+      const { data: claimed, error: claimError } = await supabaseAdmin
+        .from('data_deletion_requests')
+        .update({ status: 'processing', processing_started_at: new Date().toISOString() })
+        .eq('user_id', request.user_id)
+        .eq('status', 'pending')
+        .select('user_id')
+        .maybeSingle();
+
+      if (claimError) {
+        console.error('[gdpr-scheduler] claim failed', { code: claimError.code ?? 'unknown' });
+        continue;
+      }
+      if (!claimed) {continue;}
+
       try {
         await deleteUserData(request.user_id);
-        await supabaseAdmin
+        const { error: completionError } = await supabaseAdmin
           .from('data_deletion_requests')
           .update({
             status: 'completed',
             completed_at: new Date().toISOString(),
+            processing_started_at: null,
           })
-          .eq('user_id', request.user_id);
+          .eq('user_id', request.user_id)
+          .eq('status', 'processing');
+        if (completionError) {throw completionError;}
         processed++;
-      } catch {
-        // Deletion failure is logged server-side; continue processing remaining users.
+      } catch (deletionError) {
+        failed++;
+        console.error('[gdpr-scheduler] deletion failed', {
+          userId: request.user_id,
+          message: deletionError instanceof Error ? deletionError.message : 'unknown error',
+        });
+        const { error: retryError } = await supabaseAdmin
+          .from('data_deletion_requests')
+          .update({ status: 'pending', processing_started_at: null })
+          .eq('user_id', request.user_id)
+          .eq('status', 'processing');
+        if (retryError) {
+          console.error('[gdpr-scheduler] retry reset failed', { code: retryError.code ?? 'unknown' });
+        }
       }
     }
 
-    return new Response(JSON.stringify({ processed }), {
+    return new Response(JSON.stringify({ processed, failed }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    console.error('[gdpr-scheduler] run failed', {
+      name: error instanceof Error ? error.name : 'unknown',
+    });
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
+      JSON.stringify({ error: 'Scheduled deletion processing failed.' }),
       {
         headers: { 'Content-Type': 'application/json' },
         status: 500,
@@ -69,7 +110,16 @@ serve(async (req: Request) => {
 });
 
 async function deleteUserData(userId: string): Promise<void> {
-  await Promise.all([
+  const { data: profile, error: profileError } = await supabaseAdmin
+    .from('users')
+    .select('auth_user_id')
+    .eq('id', userId)
+    .maybeSingle();
+  if (profileError || !profile) {
+    throw profileError ?? new Error('User profile is unavailable.');
+  }
+
+  const softDeleteResults = await Promise.all([
     supabaseAdmin
       .from('users')
       .update({ deleted_at: new Date().toISOString() })
@@ -87,11 +137,13 @@ async function deleteUserData(userId: string): Promise<void> {
       .update({ deleted_at: new Date().toISOString() })
       .eq('user_id', userId),
   ]);
+  const softDeleteError = softDeleteResults.find(result => result.error)?.error;
+  if (softDeleteError) {throw softDeleteError;}
 
   const anonymousEmail = `deleted-${userId.slice(0, 8)}@wasel.local`;
   const anonymousName = 'Deleted User';
 
-  await supabaseAdmin
+  const { error: anonymizeError } = await supabaseAdmin
     .from('users')
     .update({
       email: anonymousEmail,
@@ -100,4 +152,8 @@ async function deleteUserData(userId: string): Promise<void> {
       avatar_url: null,
     })
     .eq('id', userId);
+  if (anonymizeError) {throw anonymizeError;}
+
+  const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(profile.auth_user_id ?? userId);
+  if (authDeleteError && authDeleteError.status !== 404) {throw authDeleteError;}
 }

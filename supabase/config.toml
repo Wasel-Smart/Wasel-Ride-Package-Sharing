@@ -293,6 +293,11 @@ verify_jwt = true
 [functions.stripe-setup]
 verify_jwt = true
 
+# The GDPR scheduler authenticates with INTERNAL_CRON_SECRET rather than a
+# user JWT; the handler performs constant-time secret validation itself.
+[functions.gdpr-deletion-scheduler]
+verify_jwt = false
+
 # ============================================================
 # END OF WASEL CONFIGURATION
 # ============================================================

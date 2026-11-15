@@ -28,7 +28,7 @@ export function useAccountDeletionRequest(options?: { onRequested?: () => void }
     onSuccess: () => {
       toast.success('Account deletion requested', {
         description:
-          'Your account will be deleted within 30 days. You will receive a confirmation email.',
+          'Your request is recorded. You can cancel it during the 30-day grace period.',
       });
       options?.onRequested?.();
     },

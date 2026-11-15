@@ -1170,7 +1170,7 @@
   "error_id": "Error ID",
   "delete_account_permanently": "Delete Account Permanently?",
   "this_action_cannot_be_undone_this_will_permanently_delete_your_account_and_remove_all_your_data_from_our_servers": "This action cannot be undone. This will permanently delete your account and remove all your data from our servers.",
-  "you_will_receive_a_confirmation_email_and_have_30_days_to_cancel_this_request": "You will receive a confirmation email and have 30 days to cancel this request.",
+  "your_request_is_recorded_and_you_can_cancel_it_within_30_days": "Your request is recorded. You can cancel it during the 30-day grace period.",
   "cookie_consent": "Cookie Consent",
   "we_use_cookies_to_enhance_your_experience_analyze_site_usage_and_provide_personalized_content_by_clicking_accept_you_consent_to_our_use_of_cookies_see_our": "We use cookies to enhance your experience, analyze site usage, and provide personalized content. By clicking \"Accept\", you consent to our use of cookies. See our",
   "for_details": "for details.",
