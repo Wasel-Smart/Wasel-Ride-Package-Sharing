@@ -1,4 +1,4 @@
-declare module 'https://esm.sh/@supabase/supabase-js@2' {
+declare module 'https://esm.sh/@supabase/supabase-js@2.39.0' {
   const value: any;
   export default value;
   export const createClient: any;
@@ -14,12 +14,6 @@ declare module 'https://deno.land/std@0.168.0/http/server.ts' {
   const value: any;
   export default value;
   export const serve: any;
-}
-
-declare module 'https://esm.sh/@supabase/supabase-js@2.39.0' {
-  const value: any;
-  export default value;
-  export const createClient: any;
 }
 
 declare module 'https://deno.land/x/zod@v3.23.8/mod.ts' {
@@ -46,12 +40,6 @@ declare module 'https://deno.land/x/zod@v3.23.8/mod.ts' {
   }
   export default z;
   export { z };
-}
-
-declare module 'npm:@supabase/supabase-js@2' {
-  const value: any;
-  export default value;
-  export const createClient: any;
 }
 
 declare module 'npm:@supabase/supabase-js@2.36.0' {

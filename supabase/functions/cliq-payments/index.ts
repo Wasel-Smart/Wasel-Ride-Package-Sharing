@@ -1,5 +1,5 @@
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.36.0";
 import { createRateLimitMiddleware } from "./_shared/rate-limiter.ts";
 
 /**

@@ -1,5 +1,5 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 import { checkRateLimit } from './_shared/rate-limiter.ts';
 import { resolveCorsOrigin } from './_shared/cors.ts';
 
@@ -58,7 +58,7 @@ Deno.serve(async (request: Request) => {
       'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
       'Vary': 'Origin',
     });
-    if (allowedOrigin) headers.set('Access-Control-Allow-Origin', allowedOrigin);
+    if (allowedOrigin) {headers.set('Access-Control-Allow-Origin', allowedOrigin);}
     return new Response(null, {
       status: 204,
       headers,
