@@ -3196,3 +3196,58 @@ export async function recordStripeDispute ( args: {
 
   return { result, disputeId, bookingId };
 }
+
+export type TopUpRefundOutcome =
+  | 'reversed'
+  | 'reversed_with_shortfall'
+  | 'already_applied'
+  | 'not_a_topup'
+  | 'ignored_currency';
+
+// Takes back the wallet credit of a top-up whose card payment Stripe has refunded.
+// Wallet top-ups are JOD only, so a refund in any other currency cannot belong to one.
+// `amountRefundedMinor` is Stripe's cumulative figure in fils; the database function
+// applies only the difference from what was already reversed, so redelivery is safe.
+// Money the wallet no longer holds is recorded as a shortfall and raised for finance
+// instead of driving the balance negative. Errors throw so Stripe retries the event.
+export async function reverseStripeTopUpRefund ( args: {
+  admin: AdminClient;
+  intentId: string;
+  chargeId: string;
+  amountRefundedMinor: number;
+  currency: string;
+  eventId: string;
+} ): Promise<{ outcome: TopUpRefundOutcome }> {
+  const { admin, intentId, chargeId, amountRefundedMinor, currency, eventId } = args;
+  if ( String( currency ?? '' ).trim().toLowerCase() !== 'jod' ) {
+    return { outcome: 'ignored_currency' };
+  }
+
+  const { data, error } = await admin.rpc( 'app_reverse_stripe_topup_refund', {
+    p_payment_intent_id: intentId,
+    p_charge_id: chargeId || null,
+    p_amount_refunded_jod: amountRefundedMinor / 1000,
+    p_event_id: eventId || null,
+  } );
+  if ( error ) {
+    throw new Error( `top-up refund reversal failed: ${ error.message }` );
+  }
+
+  const outcome = data === 'reversed' || data === 'reversed_with_shortfall' || data === 'already_applied' || data === 'not_a_topup'
+    ? data
+    : null;
+  if ( !outcome ) {
+    throw new Error( `unexpected top-up reversal response: ${ String( data ) }` );
+  }
+
+  if ( outcome === 'reversed_with_shortfall' ) {
+    console.error( '[wallet] TOP-UP REFUND SHORTFALL: the customer was refunded but the wallet no longer holds the full credit', {
+      intentId,
+      chargeId: chargeId || null,
+      eventId,
+      amountRefundedJod: amountRefundedMinor / 1000,
+    } );
+  }
+
+  return { outcome };
+}

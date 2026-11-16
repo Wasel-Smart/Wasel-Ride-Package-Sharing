@@ -565,6 +565,12 @@ export async function handleGetWalletSubscription ( request: Request, requestedU
   }
 }
 
+type PaymentMethod = 'cliq' | 'stripe';
+
+export function isPaymentMethod ( value: unknown ): value is PaymentMethod {
+  return value === 'cliq' || value === 'stripe';
+}
+
 // eslint-disable-next-line complexity
 export async function handleWalletTopUp ( request: Request, requestedUserId: string ) {
   const auth = await authenticateRequest( request );
@@ -574,11 +580,19 @@ export async function handleWalletTopUp ( request: Request, requestedUserId: str
   }
 
   const body = await request.json().catch( () => ( {} ) );
+
+  const paymentMethod = body.paymentMethod;
+  if ( !isPaymentMethod( paymentMethod ) ) {
+    return json(
+      { error: 'Invalid paymentMethod', message: "paymentMethod must be exactly 'cliq' or 'stripe'." },
+      400,
+    );
+  }
+
   // Card and CliQ settle in whole 0.01 JOD steps (Stripe rejects JOD amounts that are not a
   // multiple of 10 fils). Quantising here keeps the amount credited to the wallet identical to
   // the amount actually charged; before, 5.124 was charged as 5.120 but credited as 5.124.
   const amountJod = Math.round( toMoneyNumber( body.amount ) * 100 ) / 100;
-  const paymentMethod = String( body.paymentMethod ?? 'card' ).trim() || 'card';
 
   if ( amountJod <= 0 ) {
     return json( { error: 'Amount must be greater than zero.' }, 400 );
@@ -612,6 +626,7 @@ export async function handleWalletTopUp ( request: Request, requestedUserId: str
     paymentMethod,
   );
 
+  // paymentMethod is narrowed to PaymentMethod by isPaymentMethod above — no fallback needed.
   if ( paymentMethod === 'cliq' ) {
     if ( !CLIQ_CHECKOUT_URL_TEMPLATE && !( CLIQ_API_BASE_URL && CLIQ_MERCHANT_ID && CLIQ_API_KEY ) ) {
       await markTopUpTransactionFailed(
@@ -666,6 +681,7 @@ export async function handleWalletTopUp ( request: Request, requestedUserId: str
     }, 202 );
   }
 
+  // paymentMethod === 'stripe'
   try {
     const session = await createStripeCheckoutSession( {
       amountJod,

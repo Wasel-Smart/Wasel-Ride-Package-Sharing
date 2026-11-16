@@ -17,6 +17,7 @@ import {
     finalizeBookingPayment,
     applyStripeRefundToBooking,
     recordStripeDispute,
+    reverseStripeTopUpRefund,
     firstStringValue,
     isFailedProviderStatus,
     isSuccessfulProviderStatus,
@@ -310,7 +311,21 @@ async function processStripeEvent ( event: ReturnType<typeof JSON.parse>, admin:
       chargeAmount: Number( charge?.amount ?? 0 ),
       amountRefunded,
     } );
-    return json( { received: true, refund } );
+    if ( refund.reason !== 'payment_intent_not_bound_to_booking' ) {
+      return json( { received: true, refund } );
+    }
+
+    // Not a booking payment: it may have funded a wallet top-up, whose credit must be
+    // taken back now that the card was refunded.
+    const topUp = await reverseStripeTopUpRefund( {
+      admin,
+      intentId,
+      chargeId: String( charge?.id ?? '' ),
+      amountRefundedMinor: amountRefunded,
+      currency: String( charge?.currency ?? '' ),
+      eventId: String( event?.id ?? '' ),
+    } );
+    return json( { received: true, refund, topUp } );
   }
 
   // Chargebacks: recorded in public.payment_disputes so an operator can answer before
