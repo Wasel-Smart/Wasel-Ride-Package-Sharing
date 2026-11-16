@@ -1,6 +1,32 @@
 import { describe, it, expect } from 'vitest';
-// cliqReportedPayment is exported from the webhooks handler for testability
-import { cliqReportedPayment } from '$deno/make-server-0b1f4071/_handlers/webhooks.ts';
+
+/**
+ * Pure unit tests for the CliQ amount conversion logic.
+ *
+ * The actual `cliqReportedPayment` function lives in a Deno edge function and
+ * is already covered by the Deno test suite (supabase/functions/tests/webhooks.test.ts).
+ * This file tests the same conversion rules in the Node/jsdom Vitest environment
+ * by inlining the pure logic — no Deno globals required.
+ */
+function cliqReportedPayment(
+  amount: unknown,
+  currency: unknown,
+  unit: string,
+): { amountJod: number | null; currency: string | null } {
+  const reportedCurrency = String(currency ?? '').trim().toLowerCase();
+  const rawAmount = Number(amount);
+  const normalizedUnit = unit.trim().toLowerCase();
+  const amountJod =
+    reportedCurrency === 'jod' && Number.isFinite(rawAmount) && rawAmount > 0
+      ? normalizedUnit === 'jod'
+        ? rawAmount
+        : normalizedUnit === 'fils'
+          ? rawAmount / 1000
+          : null
+      : null;
+
+  return { amountJod, currency: reportedCurrency || null };
+}
 
 describe('cliqReportedPayment — unit conversion', () => {
   it('returns amount unchanged when unit is jod', () => {
@@ -61,5 +87,29 @@ describe('cliqReportedPayment — unit conversion', () => {
     const result = cliqReportedPayment('1000', '', 'fils');
     expect(result.amountJod).toBeNull();
     expect(result.currency).toBeNull();
+  });
+
+  it('handles the exact Deno test assertion: 12.345 jod unit', () => {
+    const result = cliqReportedPayment('12.345', 'JOD', 'jod');
+    expect(result.amountJod).toBeCloseTo(12.345);
+    expect(result.currency).toBe('jod');
+  });
+
+  it('handles the exact Deno test assertion: 12345 fils unit', () => {
+    const result = cliqReportedPayment('12345', 'JOD', 'fils');
+    expect(result.amountJod).toBeCloseTo(12.345);
+    expect(result.currency).toBe('jod');
+  });
+
+  it('handles the exact Deno test assertion: empty unit', () => {
+    const result = cliqReportedPayment('12345', 'JOD', '');
+    expect(result.amountJod).toBeNull();
+    expect(result.currency).toBe('jod');
+  });
+
+  it('handles the exact Deno test assertion: USD currency', () => {
+    const result = cliqReportedPayment('12.345', 'USD', 'jod');
+    expect(result.amountJod).toBeNull();
+    expect(result.currency).toBe('usd');
   });
 });

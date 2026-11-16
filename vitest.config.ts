@@ -102,14 +102,13 @@ export default defineConfig( {
         'src/mobilityGraph.ts',
       ],
       thresholds: {
-        // Ratchet: raised after adding targeted tests for validationSchemas,
-        // profileValidation, priceCalculator, healthCheck, gdpr, locale,
-        // errorHandler, corridorBetaHelpers, and featureFlags (Nov 2026).
-        // Previous floors: branches 14 / functions 17 / lines 21 / statements 20.
-        branches: 20,
-        functions: 25,
-        lines: 30,
-        statements: 28,
+        // Ratchet: raised after adding targeted tests for paymentStatusExtract,
+        // appInsightsPlaceholder, cliqReportedPayment (Dec 2026).
+        // Previous floors: branches 20 / functions 25 / lines 30 / statements 28.
+        branches: 25,
+        functions: 32,
+        lines: 38,
+        statements: 35,
       },
     },
   },

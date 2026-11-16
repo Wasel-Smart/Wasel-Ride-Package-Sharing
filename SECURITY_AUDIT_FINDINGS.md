@@ -10,7 +10,7 @@
 | Severity | Count | Resolved |
 |---|---|---|
 | Critical | 2 | 0 |
-| High | 4 | 2 |
+| High | 4 | 3 |
 | Medium | 5 | 4 |
 | Low | 3 | 3 |
 
@@ -53,7 +53,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### H-02 — Twilio webhook allows query-string token fallback
 **File:** `supabase/functions/webhooks/index.ts`
 **Description:** Twilio webhook authentication falls back to a query-string token when `TWILIO_WEBHOOK_REQUIRE_SIGNATURE` is not set to `true`. Twilio's HMAC signature verification is stronger and should be the only accepted method in production.
-**Status:** ❌ Not resolved — set `TWILIO_WEBHOOK_REQUIRE_SIGNATURE=true` in Supabase Edge Function secrets after confirming the provider-side signature URL matches the deployed function URL.
+**Status:** ✅ Resolved — `handleTwilioWebhook` now requires `x-twilio-signature` header and verifies HMAC-SHA1 against the signing secret. The handler returns 503 if no signing secret is configured and 401 if the signature is absent or invalid. `scripts/check-observability-config.mjs` (run in CI via the `observability-gate` job) now also fails if `TWILIO_AUTH_TOKEN` is missing from Supabase Edge Function secrets.
 
 ### H-03 — MFA not enforced for high-privilege roles
 **File:** `src/hooks/useMFAEnforcement.ts`
@@ -68,8 +68,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ### M-01 — Observability env vars are placeholders in production
 **Description:** `VITE_SENTRY_DSN` and `VITE_APP_INSIGHTS_CONNECTION_STRING` are not set in Vercel. Runtime errors and Web Vitals are silently dropped in production — the `initSentry()` function detects placeholder values and skips initialization.
-**Status:** ❌ Not resolved.
-**Fix:** Set both in Vercel Dashboard → Settings → Environment Variables → Production, then redeploy (Vite inlines `VITE_*` at build time):
+**Status:** ⚠️ CI gate added — `scripts/check-observability-config.mjs` runs in the `observability-gate` CI job and warns when these vars are missing. The deploy workflow should run it without `--warn-only` to block production deploys. The vars still need to be set in Vercel:
 - `VITE_SENTRY_DSN`: [sentry.io](https://sentry.io) → Your project → Settings → Client Keys (DSN)
 - `VITE_APP_INSIGHTS_CONNECTION_STRING`: Azure Portal → Application Insights → Overview → Connection String
 

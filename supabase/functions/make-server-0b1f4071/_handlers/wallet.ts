@@ -571,9 +571,22 @@ export function isPaymentMethod ( value: unknown ): value is PaymentMethod {
   return value === 'cliq' || value === 'stripe';
 }
 
+/** Injected provider dependencies for handleWalletTopUp — used in tests to avoid live API calls. */
+export interface TopUpProviderDeps {
+  authenticate: typeof authenticateRequest;
+  createStripe: typeof createStripeCheckoutSession;
+  createCliq: typeof createCliqCheckoutSession;
+}
+
+const defaultTopUpDeps: TopUpProviderDeps = {
+  authenticate: authenticateRequest,
+  createStripe: createStripeCheckoutSession,
+  createCliq: createCliqCheckoutSession,
+};
+
 // eslint-disable-next-line complexity
-export async function handleWalletTopUp ( request: Request, requestedUserId: string ) {
-  const auth = await authenticateRequest( request );
+export async function handleWalletTopUp ( request: Request, requestedUserId: string, _deps: TopUpProviderDeps = defaultTopUpDeps ) {
+  const auth = await _deps.authenticate( request );
   if ( 'error' in auth ) {return auth.error;}
   if ( !matchesAuthenticatedUser( auth, requestedUserId ) ) {
     return json( { error: 'Wallet route is not authorized for this user.' }, 403 );
@@ -640,7 +653,7 @@ export async function handleWalletTopUp ( request: Request, requestedUserId: str
       return json( { error: 'CliQ provider is not configured on the server.' }, 503 );
     }
 
-    const cliqSession = await createCliqCheckoutSession( {
+    const cliqSession = await _deps.createCliq( {
       transactionId: pending.transactionId,
       amountJod,
       currency: String( wallet.currency_code ?? 'JOD' ).toUpperCase(),
@@ -683,7 +696,7 @@ export async function handleWalletTopUp ( request: Request, requestedUserId: str
 
   // paymentMethod === 'stripe'
   try {
-    const session = await createStripeCheckoutSession( {
+    const session = await _deps.createStripe( {
       amountJod,
       paymentMethod,
       transactionId: pending.transactionId,

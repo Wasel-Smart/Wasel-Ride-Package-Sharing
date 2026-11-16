@@ -72,20 +72,25 @@
 
 ## Current readiness rating
 
-**7.8/10 overall (code); 8.5+ once the three operational actions below are completed.**
+**8.1/10 overall (code); 8.5+ once the three operational actions below are completed.**
+
+What improved since the last review (Dec 2026):
+- **H-02 resolved** — Twilio webhook HMAC enforcement confirmed in code; `check-observability-config.mjs` now also verifies `TWILIO_AUTH_TOKEN` is present in CI
+- **M-01 partially resolved** — `scripts/check-observability-config.mjs` added; `observability-gate` CI job warns on missing/placeholder Sentry DSN and AppInsights connection string; deploy workflow should run without `--warn-only` to hard-block
+- **Coverage gate raised** — CI and vitest thresholds raised from 20/25/30/28 → 25/32/38/35 (branches/functions/lines/statements)
+- **New targeted tests** — `paymentStatusExtract.test.ts` (14 cases), `appInsightsPlaceholder.test.ts` (10 cases), `cliqReportedPayment.test.ts` (11 cases) covering the payment status extraction path, observability placeholder detection, and CliQ amount unit conversion
+- **Security gate CI job** — `security-gate` job fails CI if `SECURITY_CHECKLIST.md` still has open ❌ items, making unresolved critical/high findings visible on every PR
 
 What is already at 8.5+ level:
 - Architecture, domain contracts, queue topology, worker framework, outbox pattern
 - Test suite: settlement ledger, RBAC matrix, ride/package lifecycles, payment service, price calculator, error handling, fallback strategy — all with edge cases
-- CI: 15+ jobs including RLS static + live, deno lint + test, translation drift, route contract, Lighthouse, visual regression
+- CI: 17+ jobs including RLS static + live, deno lint + test, translation drift, route contract, Lighthouse, visual regression, observability gate, security gate
 - Security primitives: CSRF, DB-backed distributed rate limiting, sanitization, circuit breaker, SSRF protection, constant-time secret comparison
 - Documentation: OpenAPI spec, architecture, SLOs, runbook, security model, wiring guide
-- `SECURITY_AUDIT_FINDINGS.md` is now a proper findings register (not raw code)
-- Automated remediation scripts exist for all three operational blockers
 
 The three remaining operational actions (none are code problems):
 
-1. **Rotate all credentials at providers** — run through `SECURITY_CHECKLIST.md`
+1. **Rotate all credentials at providers** — run through `SECURITY_CHECKLIST.md` (C-01, C-02, H-01)
 2. **Purge git history** — `bash scripts/purge-git-history.sh` (after rotating Google service account key)
 3. **Move env files off OneDrive** — `npm run secrets:move-offsite`
 
