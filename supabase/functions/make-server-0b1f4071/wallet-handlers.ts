@@ -619,14 +619,26 @@ async function consumeStepUpToken(
     throw new Error('A fresh verification token is required for this wallet action.');
   }
 
-  const { error: updateError } = await admin
+  // Consume with a conditional UPDATE so concurrent requests cannot reuse
+  // the same step-up token. The SELECT above is informational only; this
+  // write is the single-use enforcement point.
+  const { data: consumed, error: updateError } = await admin
     .schema('private')
     .from('wallet_step_up_tokens')
     .update({ consumed_at: now })
-    .eq('token_id', data.token_id);
+    .eq('token_id', data.token_id)
+    .eq('user_id', userId)
+    .eq('purpose', purpose)
+    .is('consumed_at', null)
+    .gt('expires_at', now)
+    .select('token_id')
+    .maybeSingle();
 
   if (updateError) {
     throw new Error(updateError.message);
+  }
+  if (!consumed) {
+    throw new Error('A fresh verification token is required for this wallet action.');
   }
 }
 
