@@ -6,6 +6,7 @@ import { execSync } from 'node:child_process';
 
 const ROOT = process.cwd();
 const REQUIRED_BUILD_ARTIFACTS = ['dist/index.html', 'dist/assets'];
+const COVERAGE_THRESHOLDS = { lines: 90, branches: 85, functions: 90, statements: 90 };
 
 function checkExists(relativePath) {
   return fs.existsSync(path.join(ROOT, relativePath));
@@ -69,9 +70,17 @@ async function verifyQuality() {
     console.log(`     Branches: ${coverageSummary.total.branches.pct}%`);
     console.log(`     Functions: ${coverageSummary.total.functions.pct}%`);
     console.log(`     Statements: ${coverageSummary.total.statements.pct}%`);
+    for (const [metric, minimum] of Object.entries(COVERAGE_THRESHOLDS)) {
+      const actual = Number(coverageSummary.total[metric]?.pct);
+      if (!Number.isFinite(actual) || actual < minimum) {
+        console.log('  FAIL ' + metric + ': ' + (Number.isFinite(actual) ? actual : 'unavailable') + '% (minimum ' + minimum + '%)');
+        allPassed = false;
+      }
+    }
   } else {
-    console.log('  WARN coverage-summary.json missing or invalid');
+    console.log('  FAIL coverage-summary.json missing or invalid');
     console.log('     Run: npm run test:coverage');
+    allPassed = false;
   }
 
   console.log('\nPlaywright:');
@@ -118,4 +127,4 @@ async function verifyQuality() {
 }
 
 await verifyQuality();
-process.exit(0);
+process.exitCode = allPassed ? 0 : 1;
