@@ -244,6 +244,18 @@ jobs:
         run: |
           DB_URL="$(supabase status -o env | sed -n 's/^DB_URL=//p' | tr -d '"')"
           psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/stripe_webhook_event_ledger.sql
+      # Chargeback register: insert, out-of-order stale events, field retention,
+      # terminal-status close, and who may call it.
+      - name: Payment dispute register behaves correctly
+        run: |
+          DB_URL="$(supabase status -o env | sed -n 's/^DB_URL=//p' | tr -d '"')"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/payment_disputes.sql
+      # Refunded card top-ups: partial and full reversal, replay safety, and the
+      # shortfall rule when the customer already spent the credit.
+      - name: Wallet top-up refund reversal behaves correctly
+        run: |
+          DB_URL="$(supabase status -o env | sed -n 's/^DB_URL=//p' | tr -d '"')"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/topup_refund_reversal.sql
       - if: always()
         run: supabase stop --no-backup
 

@@ -28,7 +28,9 @@ const RESERVED_METADATA_KEYS = new Set( [
   'booking_id_verified',
 ] );
 
-const BOOKING_PREPAID_STATUSES = new Set( [ 'succeeded', 'completed', 'paid', 'refunded' ] );
+// A partially refunded booking was still paid for: offering it for payment again would charge the
+// passenger twice for one trip.
+const BOOKING_PREPAID_STATUSES = new Set( [ 'succeeded', 'completed', 'paid', 'refunded', 'partially_refunded' ] );
 const BOOKING_PAYMENT_COLUMNS =
   'booking_id, passenger_id, amount, price_per_seat, seats_requested, currency, payment_status, stripe_payment_intent_id';
 const LEGACY_BOOKING_PAYMENT_COLUMNS =
@@ -450,16 +452,21 @@ export async function handlePaymentRefund ( request: Request ): Promise<Response
     const idempotencyKey = `refund:${ resolvedPaymentIntentId }:${ refundAmount ?? 'full' }${ clientRefundKey }`;
     const refund = await stripe.refunds.create( params, { idempotencyKey } );
 
-    // Reflect the refund on the bound booking. The conditional match on
-    // payment_status 'succeeded' keeps this idempotent and never re-opens a
-    // booking that was already refunded; failure to persist state is not fatal
-    // to the Stripe refund itself, which is the source of truth here.
+    // Reflect the refund on the bound booking. A partial refund must not mark the booking
+    // fully refunded, and the status only ever moves forward (succeeded ->
+    // partially_refunded -> refunded), so a retry or the later `charge.refunded` webhook
+    // can never move it backwards. A failure to persist state is not fatal to the Stripe
+    // refund itself, which is the source of truth; the webhook reconciles it.
     if ( bookingRow && String( bookingRow.booking_id ?? '' ) ) {
+      const isFullRefund = refundAmount === undefined
+        || ( expectedAmountMinor !== null && refundAmount >= expectedAmountMinor );
       const { error: stateError } = await auth.admin
         .from( 'bookings' )
-        .update( { payment_status: 'refunded', updated_at: new Date().toISOString() } )
+        .update( { payment_status: isFullRefund ? 'refunded' : 'partially_refunded', updated_at: new Date().toISOString() } )
         .eq( 'stripe_payment_intent_id', resolvedPaymentIntentId )
-        .eq( 'payment_status', 'succeeded' );
+        .in( 'payment_status', isFullRefund
+          ? [ 'succeeded', 'completed', 'paid', 'partially_refunded' ]
+          : [ 'succeeded', 'completed', 'paid' ] );
       if ( stateError ) {
         console.warn( '[payments] refund state update skipped', stateError.message );
       }

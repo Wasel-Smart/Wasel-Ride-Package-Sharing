@@ -94,7 +94,7 @@ Deno.test('verifyPaymentIntentOwnership — recognizes intents in legacy user_id
 });
 
 Deno.test('computeBookingAmountMinor — an already paid or refunded booking is not payable again', async () => {
-  for (const status of ['succeeded', 'completed', 'paid', 'refunded']) {
+  for (const status of ['succeeded', 'completed', 'paid', 'refunded', 'partially_refunded']) {
     const result = await computeBookingAmountMinor(
       fakeAdmin(booking({ payment_status: status })),
       'b-1',

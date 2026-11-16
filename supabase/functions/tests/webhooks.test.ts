@@ -271,7 +271,7 @@ Deno.test('handleStripeWebhook ledger — a processing failure is recorded as fa
 Deno.test('handleStripeWebhook ledger — event types the handler ignores never touch the ledger', async () => {
   const { calls, ledger } = makeLedger('claimed');
   const res = await postStripeEvent(
-    { id: 'evt_ignored_1', type: 'charge.dispute.created', created: 1_700_000_000, data: { object: {} } },
+    { id: 'evt_ignored_1', type: 'customer.created', created: 1_700_000_000, data: { object: {} } },
     ledger,
   );
   assertEquals(res.status, 200);

@@ -15,6 +15,8 @@ import {
     fetchStripeSubscription,
     finalizeTopUpTransaction,
     finalizeBookingPayment,
+    applyStripeRefundToBooking,
+    recordStripeDispute,
     firstStringValue,
     isFailedProviderStatus,
     isSuccessfulProviderStatus,
@@ -91,6 +93,12 @@ const STRIPE_LEDGER_EVENT_TYPES: ReadonlySet<string> = new Set( [
   'invoice.created',
   'payment_intent.payment_failed',
   'payment_intent.succeeded',
+  'charge.refunded',
+  'charge.dispute.created',
+  'charge.dispute.updated',
+  'charge.dispute.closed',
+  'charge.dispute.funds_withdrawn',
+  'charge.dispute.funds_reinstated',
 ] );
 
 export type StripeEventClaim = 'claimed' | 'duplicate' | 'in_progress';
@@ -285,6 +293,45 @@ async function processStripeEvent ( event: ReturnType<typeof JSON.parse>, admin:
       : eventSubscription;
     const synced = await syncStripeSubscriptionRecord( { admin, subscription } );
     return json( { received: true, subscriptionId, deleted: true, synced } );
+  }
+
+  // A refund issued outside our own endpoint (Stripe dashboard, a lost dispute) must
+  // still be reflected on the booking. `amount_refunded` is cumulative.
+  if ( event?.type === 'charge.refunded' ) {
+    const charge = event?.data?.object ?? {};
+    const intentId = String( charge?.payment_intent ?? '' );
+    const amountRefunded = Number( charge?.amount_refunded ?? 0 );
+    if ( !intentId.startsWith( 'pi_' ) || !Number.isFinite( amountRefunded ) || amountRefunded <= 0 ) {
+      return json( { received: true, ignored: true, reason: 'no_payment_intent_or_refund_amount' } );
+    }
+    const refund = await applyStripeRefundToBooking( {
+      admin,
+      intentId,
+      chargeAmount: Number( charge?.amount ?? 0 ),
+      amountRefunded,
+    } );
+    return json( { received: true, refund } );
+  }
+
+  // Chargebacks: recorded in public.payment_disputes so an operator can answer before
+  // the evidence deadline. Out-of-order events are resolved by the stored event time.
+  if (
+    event?.type === 'charge.dispute.created' ||
+    event?.type === 'charge.dispute.updated' ||
+    event?.type === 'charge.dispute.closed' ||
+    event?.type === 'charge.dispute.funds_withdrawn' ||
+    event?.type === 'charge.dispute.funds_reinstated'
+  ) {
+    const createdSeconds = Number( event?.created );
+    const dispute = await recordStripeDispute( {
+      admin,
+      dispute: ( event?.data?.object ?? {} ) as Record<string, unknown>,
+      eventId: String( event?.id ?? '' ),
+      eventCreatedAt: new Date( ( Number.isFinite( createdSeconds ) && createdSeconds > 0 ? createdSeconds : Date.now() / 1000 ) * 1000 ).toISOString(),
+      livemode: Boolean( event?.livemode ),
+      eventType: String( event?.type ),
+    } );
+    return json( { received: true, dispute } );
   }
 
   if ( event?.type === 'invoice.paid' || event?.type === 'invoice.payment_failed' ) {

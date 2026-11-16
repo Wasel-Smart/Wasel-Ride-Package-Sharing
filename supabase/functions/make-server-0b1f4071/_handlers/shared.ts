@@ -3051,3 +3051,199 @@ export async function finalizeBookingPayment ( args: {
   const applied = Boolean( updated );
   return { applied, reason: applied ? 'finalized' : 'already_settled', bookingId };
 }
+
+export interface BookingRefundResult {
+  applied: boolean;
+  reason: string;
+  bookingId: string | null;
+  status: 'refunded' | 'partially_refunded' | null;
+}
+
+// Reflects a Stripe refund on the booking it paid for, from a `charge.refunded` event.
+// This is what keeps the booking honest when a refund is issued outside our own
+// refund endpoint (Stripe dashboard, a dispute resolution, an automatic refund).
+//
+// `amountRefunded` is cumulative, and events can arrive out of order, so the status
+// only ever moves forward: succeeded -> partially_refunded -> refunded. A late event
+// carrying a smaller cumulative figure can therefore never move a booking backwards.
+// Database errors throw so the event is recorded as failed and Stripe retries it.
+export async function applyStripeRefundToBooking ( args: {
+  admin: AdminClient;
+  intentId: string;
+  chargeAmount: number;
+  amountRefunded: number;
+} ): Promise<BookingRefundResult> {
+  const { admin, intentId, chargeAmount, amountRefunded } = args;
+
+  const { data: booking, error: loadError } = await admin
+    .from( 'bookings' )
+    .select( 'booking_id, payment_status' )
+    .eq( 'stripe_payment_intent_id', intentId )
+    .maybeSingle();
+  if ( loadError ) {
+    throw new Error( `refund booking lookup failed: ${ loadError.message }` );
+  }
+  if ( !booking ) {
+    // Not a booking payment (for example a wallet top-up). Nothing to update here.
+    console.warn( '[payments] charge.refunded for a payment intent not bound to a booking', { intentId, amountRefunded } );
+    return { applied: false, reason: 'payment_intent_not_bound_to_booking', bookingId: null, status: null };
+  }
+
+  const bookingId = String( ( booking as Record<string, unknown> ).booking_id ?? '' );
+  const fullyRefunded = chargeAmount > 0 && amountRefunded >= chargeAmount;
+  const target = fullyRefunded ? 'refunded' : 'partially_refunded';
+  const allowedFrom = fullyRefunded
+    ? [ 'succeeded', 'completed', 'paid', 'partially_refunded' ]
+    : [ 'succeeded', 'completed', 'paid' ];
+
+  const { data: updated, error: updateError } = await admin
+    .from( 'bookings' )
+    .update( { payment_status: target, updated_at: new Date().toISOString() } )
+    .eq( 'booking_id', bookingId )
+    .in( 'payment_status', allowedFrom )
+    .select( 'booking_id' )
+    .maybeSingle();
+  if ( updateError ) {
+    throw new Error( `refund booking update failed: ${ updateError.message }` );
+  }
+
+  const applied = Boolean( updated );
+  return { applied, reason: applied ? 'applied' : 'already_reflected', bookingId, status: target };
+}
+
+export interface DisputeRecordResult {
+  result: 'inserted' | 'updated' | 'stale' | 'ignored';
+  disputeId: string | null;
+  bookingId: string | null;
+}
+
+// Records a Stripe dispute (chargeback) in public.payment_disputes. Dispute events
+// are alertable: money is being pulled back and evidence has a deadline, so a newly
+// opened dispute is logged at error level for the platform's log-based alerting.
+export async function recordStripeDispute ( args: {
+  admin: AdminClient;
+  dispute: Record<string, unknown>;
+  eventId: string;
+  eventCreatedAt: string;
+  livemode: boolean;
+  eventType: string;
+} ): Promise<DisputeRecordResult> {
+  const { admin, dispute, eventId, eventCreatedAt, livemode, eventType } = args;
+  const disputeId = String( dispute.id ?? '' ).trim();
+  if ( !disputeId ) {
+    return { result: 'ignored', disputeId: null, bookingId: null };
+  }
+
+  const intentId = String( dispute.payment_intent ?? '' ).trim();
+  let bookingId: string | null = null;
+  if ( intentId.startsWith( 'pi_' ) ) {
+    const { data: booking, error: lookupError } = await admin
+      .from( 'bookings' )
+      .select( 'booking_id' )
+      .eq( 'stripe_payment_intent_id', intentId )
+      .maybeSingle();
+    if ( lookupError ) {
+      throw new Error( `dispute booking lookup failed: ${ lookupError.message }` );
+    }
+    bookingId = booking ? String( ( booking as Record<string, unknown> ).booking_id ?? '' ) || null : null;
+  }
+
+  const dueBy = Number( ( dispute.evidence_details as Record<string, unknown> | undefined )?.due_by );
+  const amountMinor = Number( dispute.amount ?? 0 );
+  const currency = String( dispute.currency ?? '' ).trim().toLowerCase();
+  if ( !Number.isFinite( amountMinor ) || amountMinor < 0 || currency.length !== 3 ) {
+    throw new Error( `dispute ${ disputeId } has an invalid amount or currency` );
+  }
+
+  const { data, error } = await admin.rpc( 'app_record_stripe_dispute', {
+    p_dispute_id: disputeId,
+    p_charge_id: String( dispute.charge ?? '' ) || null,
+    p_payment_intent_id: intentId || null,
+    p_booking_id: bookingId,
+    p_amount_minor: Math.round( amountMinor ),
+    p_currency: currency,
+    p_reason: String( dispute.reason ?? '' ) || null,
+    p_status: String( dispute.status ?? 'unknown' ),
+    p_evidence_due_by: Number.isFinite( dueBy ) && dueBy > 0 ? new Date( dueBy * 1000 ).toISOString() : null,
+    p_livemode: livemode,
+    p_event_id: eventId,
+    p_event_created_at: eventCreatedAt,
+  } );
+  if ( error ) {
+    throw new Error( `dispute record failed: ${ error.message }` );
+  }
+
+  const result = data === 'inserted' || data === 'updated' || data === 'stale' ? data : null;
+  if ( !result ) {
+    throw new Error( `unexpected dispute ledger response: ${ String( data ) }` );
+  }
+
+  if ( result === 'inserted' && eventType === 'charge.dispute.created' ) {
+    console.error( '[payments] DISPUTE OPENED: evidence is due before the deadline', {
+      disputeId,
+      bookingId,
+      paymentIntent: intentId || null,
+      amountMinor,
+      currency,
+      reason: String( dispute.reason ?? '' ) || null,
+      evidenceDueBy: Number.isFinite( dueBy ) && dueBy > 0 ? new Date( dueBy * 1000 ).toISOString() : null,
+    } );
+  }
+
+  return { result, disputeId, bookingId };
+}
+
+export type TopUpRefundOutcome =
+  | 'reversed'
+  | 'reversed_with_shortfall'
+  | 'already_applied'
+  | 'not_a_topup'
+  | 'ignored_currency';
+
+// Takes back the wallet credit of a top-up whose card payment Stripe has refunded.
+// Wallet top-ups are JOD only, so a refund in any other currency cannot belong to one.
+// `amountRefundedMinor` is Stripe's cumulative figure in fils; the database function
+// applies only the difference from what was already reversed, so redelivery is safe.
+// Money the wallet no longer holds is recorded as a shortfall and raised for finance
+// instead of driving the balance negative. Errors throw so Stripe retries the event.
+export async function reverseStripeTopUpRefund ( args: {
+  admin: AdminClient;
+  intentId: string;
+  chargeId: string;
+  amountRefundedMinor: number;
+  currency: string;
+  eventId: string;
+} ): Promise<{ outcome: TopUpRefundOutcome }> {
+  const { admin, intentId, chargeId, amountRefundedMinor, currency, eventId } = args;
+  if ( String( currency ?? '' ).trim().toLowerCase() !== 'jod' ) {
+    return { outcome: 'ignored_currency' };
+  }
+
+  const { data, error } = await admin.rpc( 'app_reverse_stripe_topup_refund', {
+    p_payment_intent_id: intentId,
+    p_charge_id: chargeId || null,
+    p_amount_refunded_jod: amountRefundedMinor / 1000,
+    p_event_id: eventId || null,
+  } );
+  if ( error ) {
+    throw new Error( `top-up refund reversal failed: ${ error.message }` );
+  }
+
+  const outcome = data === 'reversed' || data === 'reversed_with_shortfall' || data === 'already_applied' || data === 'not_a_topup'
+    ? data
+    : null;
+  if ( !outcome ) {
+    throw new Error( `unexpected top-up reversal response: ${ String( data ) }` );
+  }
+
+  if ( outcome === 'reversed_with_shortfall' ) {
+    console.error( '[wallet] TOP-UP REFUND SHORTFALL: the customer was refunded but the wallet no longer holds the full credit', {
+      intentId,
+      chargeId: chargeId || null,
+      eventId,
+      amountRefundedJod: amountRefundedMinor / 1000,
+    } );
+  }
+
+  return { outcome };
+}
