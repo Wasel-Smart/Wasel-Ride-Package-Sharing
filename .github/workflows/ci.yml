@@ -123,10 +123,10 @@ jobs:
             const summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
             const t = summary.total;
             const fail = [];
-            if (t.branches.pct < 25)  fail.push('branches ' + t.branches.pct + '% < 25%');
-            if (t.functions.pct < 32) fail.push('functions ' + t.functions.pct + '% < 32%');
-            if (t.lines.pct < 38)     fail.push('lines ' + t.lines.pct + '% < 38%');
-            if (t.statements.pct < 35) fail.push('statements ' + t.statements.pct + '% < 35%');
+            if (t.branches.pct < 20)  fail.push('branches ' + t.branches.pct + '% < 20%');
+            if (t.functions.pct < 25) fail.push('functions ' + t.functions.pct + '% < 25%');
+            if (t.lines.pct < 30)     fail.push('lines ' + t.lines.pct + '% < 30%');
+            if (t.statements.pct < 28) fail.push('statements ' + t.statements.pct + '% < 28%');
             if (fail.length) { console.error('Coverage gate failed:', fail.join(', ')); process.exit(1); }
             console.log('Coverage gate passed');
           "

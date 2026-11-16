@@ -1,18 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock the ApplicationInsights SDK so tests never hit the network
-vi.mock('@microsoft/applicationinsights-web', () => ({
-  ApplicationInsights: vi.fn().mockImplementation(() => ({
-    addTelemetryInitializer: vi.fn(),
-    loadAppInsights: vi.fn(),
-    trackPageView: vi.fn(),
-    trackMetric: vi.fn(),
-    trackEvent: vi.fn(),
-    trackException: vi.fn(),
-    unload: vi.fn(),
-  })),
-  DistributedTracingModes: { AI: 0 },
-}));
+// Mock the ApplicationInsights SDK so tests never hit the network.
+// `ApplicationInsights` must be a real constructor: `appInsights.ts` calls
+// `new ApplicationInsights(...)`, and an arrow mock implementation throws
+// "is not a constructor" (swallowed by the production try/catch), leaving the
+// instance null and failing the "initializes when valid" assertion.
+vi.mock('@microsoft/applicationinsights-web', () => {
+  class MockApplicationInsights {
+    addTelemetryInitializer = vi.fn();
+    loadAppInsights = vi.fn();
+    trackPageView = vi.fn();
+    trackMetric = vi.fn();
+    trackEvent = vi.fn();
+    trackException = vi.fn();
+    unload = vi.fn();
+  }
+  return {
+    ApplicationInsights: MockApplicationInsights,
+    DistributedTracingModes: { AI: 0 },
+  };
+});
 
 vi.mock('@/utils/analyticsConsent', () => ({
   hasAnalyticsConsent: vi.fn(() => true),

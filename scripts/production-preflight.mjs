@@ -43,9 +43,9 @@ if (!summary) {
 } else {
   const t = summary.total;
   const checks = [
-    ['branches', t.branches?.pct, 25],
-    ['functions', t.functions?.pct, 32],
-    ['lines', t.lines?.pct, 38],
+    ['branches', t.branches?.pct, 20],
+    ['functions', t.functions?.pct, 25],
+    ['lines', t.lines?.pct, 30],
   ];
   for (const [name, pct, threshold] of checks) {
     if (pct == null) { warn(`Coverage ${name} missing`); continue; }

@@ -28,8 +28,18 @@ const createMockSupabase = () => {
   return { mockSupabase, mockFunctionsInvoke, mockAuthGetUser, mockGetSession, mockRefreshSession, mockFrom, mockSelect, mockEq, mockSingle };
 };
 
+// Single hoisted mock whose `supabase` export is a getter backed by a mutable
+// holder. Tests set `supabaseHolder.current` in beforeEach (and the "not
+// configured" test sets it to null). This replaces the previous mix of a
+// hoisted `vi.mock(supabase: null)` + per-test `vi.doMock` overrides, which was
+// order-dependent and intermittently failed in the full 166-file suite (the
+// override did not always win, so the null-config path saw the live mock and
+// crashed on `getUser()` destructuring).
+const supabaseHolder = vi.hoisted(() => ({ current: null as unknown }));
 vi.mock('@/utils/supabase/client.ts', () => ({
-  supabase: null,
+  get supabase() {
+    return supabaseHolder.current;
+  },
 }));
 
 describe('payment.test.ts', () => {
@@ -49,10 +59,8 @@ describe('payment.test.ts', () => {
     mockSupabase = createMockSupabase();
     mockGetAuthDetails = vi.fn().mockResolvedValue({ token: 'token', userId: 'user-1' });
     mockRequestEdgeJson = vi.fn();
+    supabaseHolder.current = mockSupabase.mockSupabase;
 
-    vi.doMock('@/utils/supabase/client.ts', () => ({
-      supabase: mockSupabase.mockSupabase,
-    }));
     vi.doMock('@/services/core', () => ({
       getAuthDetails: mockGetAuthDetails,
     }));
@@ -224,9 +232,7 @@ describe('payment.test.ts', () => {
   });
 
   it('throws when supabase is not configured', async () => {
-    vi.doMock('@/utils/supabase/client.ts', () => ({
-      supabase: null,
-    }));
+    supabaseHolder.current = null;
 
     const { paymentService: ps } = await import('@/services/payment');
 
