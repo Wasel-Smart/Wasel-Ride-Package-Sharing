@@ -6,19 +6,23 @@ set -euo pipefail
 # Catches: Supabase keys, Google API keys, OAuth client IDs with real project refs.
 STAGED=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
 if [ -n "$STAGED" ]; then
-  DIFF=$(git diff --cached -- $STAGED | grep -E '^\+' | grep -vE 'secretscan:allow')
+  # Collect added lines from staged diff. grep exits 1 when there are no matches
+  # (e.g. delete-only hunks or all additions marked secretscan:allow); with
+  # pipefail that must not abort the hook.
+  DIFF=$(git diff --cached -U0 -- $STAGED | { grep -E '^\+' || true; } | { grep -vE '^\+\+\+' || true; } | { grep -vE 'secretscan:allow' || true; })
+
   # Supabase publishable/anon keys (sb_publishable_...)
-  if echo "$DIFF" | grep -qE 'sb_publishable_[A-Za-z0-9_-]{20,}'; then
+  if printf '%s\n' "$DIFF" | grep -qE 'sb_publishable_[A-Za-z0-9_-]{20,}'; then
     echo "[pre-commit] ERROR: Supabase key detected in staged changes. Remove it before committing."
     exit 1
   fi
   # Google API keys (AIza...)
-  if echo "$DIFF" | grep -qE 'AIza[0-9A-Za-z_-]{35}'; then
+  if printf '%s\n' "$DIFF" | grep -qE 'AIza[0-9A-Za-z_-]{35}'; then
     echo "[pre-commit] ERROR: Google API key detected in staged changes. Remove it before committing."
     exit 1
   fi
   # Supabase project ref URLs (*.supabase.co with a real project ref)
-  if echo "$DIFF" | grep -qE 'https://[a-z]{20}\.supabase\.co'; then
+  if printf '%s\n' "$DIFF" | grep -qE 'https://[a-z]{20}\.supabase\.co'; then
     echo "[pre-commit] ERROR: Supabase project URL detected in staged changes. Use a placeholder instead."
     exit 1
   fi
@@ -26,4 +30,4 @@ fi
 
 # Run lint-staged: only lints and type-checks files staged for this commit.
 # Full test suite runs in CI (on push/PR), not on every local commit.
-npx lint-staged
+npx --no-install lint-staged
