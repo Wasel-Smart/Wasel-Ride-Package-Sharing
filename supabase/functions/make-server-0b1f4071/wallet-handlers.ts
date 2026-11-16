@@ -521,7 +521,9 @@ async function createStepUpChallenge(
     throw new Error('A verified email or phone number is required for wallet verification.');
   }
 
-  const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+  const random = new Uint32Array(1);
+  crypto.getRandomValues(random);
+  const otpCode = String(100000 + (random[0] % 900000));
   const otpHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
   const expiresAt = new Date(Date.now() + OTP_TTL_MS).toISOString();
 
