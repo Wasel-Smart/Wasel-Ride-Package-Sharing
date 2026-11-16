@@ -21,7 +21,7 @@
 ### C-01 — Service account key committed to git history
 **File:** `docs/wasel-planning-with-ai.json` (historical commit — not in working tree)
 **Description:** A Google Cloud service account private key was committed to the repository. Even after removal from the working tree, the key remains accessible in git history to anyone with repo access.
-**Status:** ❌ Not resolved — key not yet rotated at Google Cloud Console; git history not yet purged.
+**Status:** ⚠️ Partially resolved locally — `docs/wasel-planning-with-ai.json` is not in the working tree and is not tracked; local history rewrite attempted with `git-filter-repo` (review result). Provider rotation and remote history purge/force-push still required.
 **Required actions (in order):**
 1. Delete the key: [Google Cloud Console → IAM → Service Accounts](https://console.cloud.google.com/iam-admin/serviceaccounts) → find the account → Keys tab → Delete
 2. Create a replacement key and store it in a secrets manager, not the repo
@@ -111,3 +111,4 @@ The `finalizeTopUpTransaction` function in the payment worker uses the correct p
 Two items still require manual verification before go-live:
 - Confirm `finalizeTopUpTransaction` deduplicates on Stripe `event.id` (replay protection at the application layer)
 - Confirm `verifyStripeWebhookSignature` enforces a timestamp tolerance (replay protection at the transport layer — Stripe recommends rejecting events older than 5 minutes)
+

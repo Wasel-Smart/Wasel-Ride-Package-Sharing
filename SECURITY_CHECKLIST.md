@@ -25,7 +25,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 | Credential | Where to rotate | Status |
 |---|---|---|
-| `TWILIO_AUTH_TOKEN` | [Twilio Console → Account → Auth Token](https://console.twilio.com/us1/account/keys-credentials/auth-token) | ❌ Rotate now |
+| `TWILIO_AUTH_TOKEN` | [Twilio Console → Account → Auth Token](https://console.twilio.com/us1/account/keys-credentials/auth-token) | ❌ Rotate now (provider action) |
 | `TWILIO_API_KEY_SECRET` | Twilio Console → API Keys → delete & recreate the exposed key | ❌ Rotate now |
 | `TWILIO_ACCOUNT_SID` | Note: SIDs are not secrets but rotate the auth token which invalidates them | — |
 | `TWILIO_MESSAGING_SERVICE_SID` | Twilio Console → Messaging → Services | ❌ Verify not exposed |
