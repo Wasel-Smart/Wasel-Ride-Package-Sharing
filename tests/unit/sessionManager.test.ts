@@ -101,14 +101,25 @@ describe('sessionManager.test.ts', () => {
   });
 
   it('extendSession increases time remaining', async () => {
-    const { SessionManager } = await import('@/utils/sessionManager');
-    const sm = new SessionManager({ timeoutMs: 60000 });
-    sm.startSession('user-1');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    const before = sm.getTimeUntilTimeout();
-    sm.extendSession();
-    const after = sm.getTimeUntilTimeout();
-    expect(after).toBeGreaterThan(before);
+    // extendSession() grants a fixed 50 ms buffer, so a real-clock assertion
+    // races wall time: under coverage instrumentation (or a loaded CI runner)
+    // more than ~50 ms can pass between the two reads and the "extended"
+    // remaining time reads *lower*, failing the test at random. Freeze the
+    // clock so the comparison is deterministic.
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+      const { SessionManager } = await import('@/utils/sessionManager');
+      const sm = new SessionManager({ timeoutMs: 60000 });
+      sm.startSession('user-1');
+      vi.advanceTimersByTime(1000);
+      const before = sm.getTimeUntilTimeout();
+      sm.extendSession();
+      const after = sm.getTimeUntilTimeout();
+      expect(after).toBeGreaterThan(before);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('getSessionMetadata returns null when no session', async () => {
