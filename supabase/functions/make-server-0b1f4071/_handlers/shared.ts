@@ -630,7 +630,7 @@ export function getAdminClient () {
 
 /**
  * Asserts that SUPABASE_DB_URL is configured before any code that requires a
- * direct Postgres connection (finalizeTopUpTransaction, executeSqlStatements).
+ * direct Postgres connection (executeSqlStatements).
  * Called at the top of those functions so the failure is explicit and logged
  * rather than surfacing as a cryptic "client.connect() failed" deep in the stack.
  */
@@ -2323,130 +2323,36 @@ interface FinalizeTopUpOptions {
   expected?: { amountJod?: number | null; currency?: string | null };
 }
 
-function checkTopUpAmountValidity(
-  storedAmount: number,
-  expected: { amountJod?: number | null; currency?: string | null } | undefined,
-): { currencyMismatch: boolean; amountMismatch: boolean; amountUnverified: boolean } {
-  const paidAmount = expected?.amountJod;
-  const reportedCurrency = String( expected?.currency ?? '' ).trim();
-  const currencyMismatch = /^[a-z]{3}$/i.test( reportedCurrency ) && reportedCurrency.toLowerCase() !== 'jod';
-  const amountUnverified = !( typeof paidAmount === 'number' && Number.isFinite( paidAmount ) && paidAmount > 0 );
-  const amountMismatch = !amountUnverified && Math.abs( ( paidAmount as number ) - storedAmount ) > 0.0051;
-  return { currencyMismatch, amountMismatch, amountUnverified };
-}
-
-interface RecordTopUpMismatchOpts {
-  client: Client;
-  transactionId: string;
-  provider: string;
-  storedAmount: number;
-  expected: FinalizeTopUpOptions['expected'];
-  amountUnverified: boolean;
-}
-
-async function recordTopUpMismatch( opts: RecordTopUpMismatchOpts ): Promise<void> {
-  const { client, transactionId, provider, storedAmount, expected, amountUnverified } = opts;
-  console.error( '[wallet] top-up amount/currency mismatch, wallet not credited', {
-    transactionId, provider, storedAmount,
-    paidAmount: expected?.amountJod ?? null,
-    currency: String( expected?.currency ?? '' ).trim() || null,
-  } );
-  await client.queryObject(
-    'update public.transactions set metadata = coalesce(metadata, \'{}\'::jsonb) || $1::jsonb, updated_at = timezone(\'utc\', now()) where transaction_id = $2',
-    [
-      JSON.stringify( { amount_mismatch: { provider, storedAmount, paidAmount: expected?.amountJod ?? null, currency: String( expected?.currency ?? '' ).trim() || null, reason: amountUnverified ? 'amount_unverified' : 'amount_mismatch' } } ),
-      transactionId,
-    ],
-  );
-}
-
 export async function finalizeTopUpTransaction ( opts: FinalizeTopUpOptions ) {
   const { transactionId, externalReference, providerPayload, provider = 'stripe', expected } = opts;
-  const dbUrl = requireDbUrl( 'finalizeTopUpTransaction' );
+  const admin = getAdminClient();
 
-  const client = new Client( dbUrl );
-  await client.connect();
+  // The credit is applied inside a single service-role-only database function so
+  // the wallet update and the 'posted' transition commit together, and the edge
+  // no longer needs a direct Postgres connection (which bypassed the pooler).
+  const { data, error } = await admin.rpc( 'app_finalize_wallet_top_up', {
+    p_transaction_id: transactionId,
+    p_external_reference: externalReference,
+    p_provider: provider,
+    p_provider_payload: providerPayload ?? {},
+    p_expected_amount: expected?.amountJod ?? null,
+    p_expected_currency: expected?.currency ?? null,
+  } );
 
-  try {
-    await client.queryArray( 'begin' );
+  if ( error ) {throw new Error( error.message );}
 
-    const transactionResult = await client.queryObject<{ wallet_id: string; amount: number; transaction_status: string; metadata: unknown; transaction_type?: string; direction?: string }>(
-      'select wallet_id, amount, transaction_status, metadata, transaction_type, direction from public.transactions where transaction_id = $1 for update',
-      [ transactionId ],
-    );
+  const result = ( data && typeof data === 'object' ? data : {} ) as { applied?: boolean; reason?: string };
+  const applied = result.applied === true;
 
-    const transaction = transactionResult.rows[ 0 ];
-    if ( !transaction ) {
-      throw new Error( `Transaction ${ transactionId } was not found` );
-    }
-
-    if ( transaction.transaction_status === 'posted' ) {
-      await client.queryArray( 'commit' );
-      return { applied: false, reason: 'already_posted' };
-    }
-
-    // Only credit add_funds/credit top-ups. Never credit debits or other transaction types.
-    const txType = String( transaction.transaction_type ?? '' ).toLowerCase();
-    const direction = String( transaction.direction ?? '' ).toLowerCase();
-    if ( txType !== 'add_funds' || direction !== 'credit' ) {
-      await client.queryArray( 'rollback' ).catch( () => undefined );
-      throw new Error( 'Invalid top-up transaction type or direction' );
-    }
-
-    // A signed "paid" event means real money arrived, so a row that an earlier failure
-    // event marked 'failed' is still credited; otherwise the customer ends up charged
-    // with nothing in the wallet (e.g. CliQ reporting a failed attempt, then a success).
-    const recoveredFromFailed = transaction.transaction_status === 'failed';
-
-    // Never credit more than the provider says was paid. CliQ's checkout URL carries the
-    // amount as a plain query parameter, so the webhook is the only trustworthy source.
-    // The 0.0051 tolerance absorbs the 3-decimal -> 2-decimal rounding of legacy rows.
-    const storedAmount = Number( transaction.amount );
-    const { currencyMismatch, amountMismatch, amountUnverified } = checkTopUpAmountValidity( storedAmount, expected );
-    if ( currencyMismatch || amountMismatch || amountUnverified ) {
-      await recordTopUpMismatch( { client, transactionId, provider, storedAmount, expected, amountUnverified } );
-      await client.queryArray( 'commit' );
-      return { applied: false, reason: amountUnverified ? 'amount_unverified' : 'amount_mismatch' };
-    }
-
-    // Lock the destination wallet and prove it exists before posting. Without this a
-    // missing wallet made the UPDATE below match zero rows while the transaction was
-    // still marked 'posted': the customer paid, nothing was credited, and the row
-    // looked settled. The throw rolls everything back so the provider retries.
-    const walletLock = await client.queryObject<{ wallet_id: string }>(
-      'select wallet_id from public.wallets where wallet_id = $1 for update',
-      [ transaction.wallet_id ],
-    );
-    if ( walletLock.rows.length !== 1 ) {
-      throw new Error( `Wallet ${ String( transaction.wallet_id ) } for transaction ${ transactionId } was not found` );
-    }
-
-    await client.queryObject(
-      'update public.wallets set balance = balance + $1, updated_at = timezone(\'utc\', now()) where wallet_id = $2',
-      [ transaction.amount, transaction.wallet_id ],
-    );
-
-    const nextMetadata = {
-      ...( ( transaction.metadata && typeof transaction.metadata === 'object' ) ? transaction.metadata as Record<string, unknown> : {} ),
-      provider,
-      provider_payload: providerPayload,
-      credited_via: `${ provider }_webhook`,
-      recovered_from_failed: recoveredFromFailed,
-    };
-
-    await client.queryObject(
-      'update public.transactions set transaction_status = $1, reference_id = $2, metadata = $3::jsonb, updated_at = timezone(\'utc\', now()) where transaction_id = $4',
-      [ 'posted', externalReference, JSON.stringify( nextMetadata ), transactionId ],
-    );
-
-    await client.queryArray( 'commit' );
-    return { applied: true };
-  } catch ( error ) {
-    await client.queryArray( 'rollback' ).catch( () => undefined );
-    throw error;
-  } finally {
-    await client.end();
+  if ( !applied && ( result.reason === 'amount_mismatch' || result.reason === 'amount_unverified' ) ) {
+    console.error( '[wallet] top-up amount/currency mismatch, wallet not credited', {
+      transactionId, provider, reason: result.reason,
+      paidAmount: expected?.amountJod ?? null,
+      currency: String( expected?.currency ?? '' ).trim() || null,
+    } );
   }
+
+  return result.reason ? { applied, reason: result.reason } : { applied };
 }
 
 /**

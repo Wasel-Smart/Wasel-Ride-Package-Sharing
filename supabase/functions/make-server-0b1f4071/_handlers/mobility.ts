@@ -65,6 +65,12 @@ export async function handleMobilityOSRequest ( request: Request, path: string )
   // Capacity bookings have no payment authorization/settlement workflow yet.
   // Fail closed until booking creation and payment confirmation can be one
   // server-owned lifecycle. Never return success for an unpaid reservation.
+  //
+  // The data layer is ready for that: app_create_mobility_booking reserves
+  // capacity atomically (locks the corridor, re-checks capacity, increments
+  // seats_booked instead of overwriting it, prices from the server clock and
+  // rejects fractional seat quantities). Re-enable this route only after a
+  // payment confirmation exists; call that RPC instead of any read-then-write.
   if ( request.method === 'POST' && path === '/mobility-os/booking/create' ) {
     return json( {
       error: 'Capacity bookings are paused until payment processing is available.',
