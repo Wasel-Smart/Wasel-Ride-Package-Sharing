@@ -2,6 +2,16 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createRateLimitMiddleware } from "./_shared/rate-limiter.ts";
 
+/**
+ * Legacy CliQ payment function.
+ *
+ * Canonical runtime for wallet top-ups and provider callbacks is:
+ *   - make-server-0b1f4071/wallet/* (top-up orchestration)
+ *   - make-server-0b1f4071/payments/webhooks/cliq and webhooks function (callbacks)
+ *
+ * This endpoint remains for compatibility only. Do not add new product behavior
+ * here; route new clients to the canonical make-server endpoints.
+ */
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CLIQ_MERCHANT_ID = Deno.env.get("CLIQ_MERCHANT_ID") ??

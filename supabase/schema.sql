@@ -1,6 +1,10 @@
+-- REFERENCE SNAPSHOT ONLY — NOT AUTHORITATIVE AND NOT APPLIED BY SUPABASE CLI.
+-- Source of truth: supabase/migrations/*.sql plus reconciled linked-project history.
+-- Regenerate/update this file only as a reviewed snapshot after migration reconciliation.
+--
 -- Wassel Database Schema - Production Grade
 -- Version: 1.0.0
--- Description: Complete database schema for Wassel ride-sharing platform
+-- Description: Complete database schema for Wassel ride-sharing platform (snapshot)
 
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

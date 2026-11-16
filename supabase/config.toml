@@ -168,7 +168,10 @@ enable_confirmations = true
 template = "Your code is {{ .Code }}"
 max_frequency = "30s"
 
-# SMS hook disabled until a provider is configured.
+# Custom send-SMS hook (edge function). Disabled by default because it requires
+# SUPABASE_AUTH_HOOK_SEND_SMS_SECRET and a configured provider path in the function.
+# Enable only when the hook endpoint is deployed, authorized, and verified end-to-end.
+# The URI is environment-specific; override for non-production projects before enabling.
 [auth.hook.send_sms]
 enabled = false
 uri = "https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f4071/auth/hooks/send-sms"
@@ -177,12 +180,17 @@ uri = "https://zexlxabdcsjefptmjhuq.supabase.co/functions/v1/make-server-0b1f407
 # TWILIO SMS
 # ============================================================
 
+# Legacy/programmatic SMS provider block (not used). Twilio Verify is the active
+# verification provider below; keep this block disabled to avoid ambiguous config.
 [auth.sms.twilio]
 enabled = false
 account_sid = ""
 message_service_sid = ""
 auth_token = ""
 
+# Active SMS verification provider. Requires TWILIO_ACCOUNT_SID,
+# TWILIO_VERIFY_SERVICE_SID, and TWILIO_AUTH_TOKEN in the CLI/deploy environment.
+# Set enabled=false for local/dev environments without Twilio credentials.
 [auth.sms.twilio_verify]
 enabled = true
 account_sid = "env(TWILIO_ACCOUNT_SID)"

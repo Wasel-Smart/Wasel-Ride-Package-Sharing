@@ -88,27 +88,31 @@ if (LINKED) {
     });
 
     const appliedVersions = new Set();
+    const localOnly = [];
+    const remoteOnly = [];
     for (const line of output.split('\n')) {
-      const match = line.match(/^(\d{14})\s/);
-      if (match) appliedVersions.add(match[1]);
+      const versionMatch = line.match(/^\s*(\d{14})\b/);
+      if (!versionMatch) continue;
+      const version = versionMatch[1];
+      const columns = line.split('|').map((part) => part.trim());
+      const localColumn = columns[0] || '';
+      const remoteColumn = columns[1] || '';
+      if (/^\d{14}$/.test(localColumn)) migrationVersions.add(localColumn);
+      if (/^\d{14}$/.test(remoteColumn)) appliedVersions.add(remoteColumn);
     }
 
-    // Local-only: exists locally but not applied remotely
     for (const v of migrationVersions) {
-      if (!appliedVersions.has(v)) {
-        warn(`Migration ${v} is local-only (not yet applied to linked project)`);
-      }
+      if (!appliedVersions.has(v)) localOnly.push(v);
     }
-
-    // Remote-only: applied remotely but missing locally
     for (const v of appliedVersions) {
-      if (!migrationVersions.has(v)) {
-        warn(`Migration ${v} is applied remotely but missing locally — fetch it`);
-      }
+      if (!migrationVersions.has(v)) remoteOnly.push(v);
     }
 
-    if (appliedVersions.size > 0) {
-      pass(`Linked project has ${appliedVersions.size} applied migration(s)`);
+    localOnly.forEach((v) => warn(`Migration ${v} is local-only (not yet applied to linked project)`));
+    remoteOnly.forEach((v) => warn(`Migration ${v} is applied remotely but missing locally — fetch or reconcile`));
+    if (appliedVersions.size > 0) pass(`Linked project has ${appliedVersions.size} applied migration version(s)`);
+    if (localOnly.length || remoteOnly.length) {
+      warn('Linked migration history is not reconciled. Do not run `supabase db push` until DBA reconciliation is complete.');
     }
   } catch (err) {
     warn(`Could not query linked project: ${err.message}. Run \`supabase migration list --linked\` manually.`);

@@ -1,3 +1,7 @@
+-- REFERENCE SNAPSHOT ONLY — NOT AUTHORITATIVE AND NOT APPLIED BY SUPABASE CLI.
+-- Source of truth: supabase/migrations/*.sql plus reconciled linked-project history.
+-- This file supports AI feature reference; reconcile before using as deployment input.
+--
 -- Wassel AI Database Schema
 -- This schema supports all AI features including logging, configuration, and user preferences
 

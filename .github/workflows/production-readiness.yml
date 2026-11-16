@@ -57,13 +57,19 @@ jobs:
   preflight:
     name: Production Pre-flight
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.1
       - run: npm ci --legacy-peer-deps
       - name: Run production pre-flight checks
         env:
@@ -75,6 +81,43 @@ jobs:
           VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
           VITE_APP_INSIGHTS_CONNECTION_STRING: ${{ secrets.VITE_APP_INSIGHTS_CONNECTION_STRING }}
         run: node scripts/production-preflight.mjs
+      - name: Validate edge bundles and migration manifests
+        run: |
+          npm run edge:sync:check
+          npm run edge:graph
+          npm run edge:types
+          node scripts/reconcile-migrations.mjs
+      - name: Linked migration history (read-only)
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          DB_DRIFT_ALLOW_SKIP: ${{ vars.DB_DRIFT_ALLOW_SKIP }}
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ] || [ -z "$SUPABASE_DB_PASSWORD" ] || [ -z "$SUPABASE_PROJECT_REF" ]; then
+            if [ "$DB_DRIFT_ALLOW_SKIP" = "true" ]; then
+              echo "::warning::Skipping linked migration check because DB_DRIFT_ALLOW_SKIP=true."
+              exit 0
+            fi
+            echo "::warning::Skipping linked migration check: linked-project secrets are not set. Configure secrets to make this gate authoritative."
+            exit 0
+          fi
+          supabase link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+          node scripts/reconcile-migrations.mjs --linked
+          supabase db push --linked --dry-run
+          supabase db diff --linked --schema public > prod-drift.sql
+          if [ -s prod-drift.sql ]; then
+            echo "::error::Production schema differs from migrations."
+            cat prod-drift.sql
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: production-readiness-drift
+          path: prod-drift.sql
+          if-no-files-found: ignore
+          retention-days: 14
 
   # ── 3. Live integration probes ───────────────────────────────────────────────
   live-integrations:
