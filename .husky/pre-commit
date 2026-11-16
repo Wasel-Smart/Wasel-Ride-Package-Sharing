@@ -30,4 +30,28 @@ fi
 
 # Run lint-staged: only lints and type-checks files staged for this commit.
 # Full test suite runs in CI (on push/PR), not on every local commit.
+#
+# lint-staged intentionally fails ("Prevented an empty git commit!") when its
+# tasks (eslint --fix) revert every staged change back to HEAD, leaving nothing
+# to commit. That is correct behaviour — we must NOT pass --allow-empty or
+# --no-verify. We only improve the diagnostic so the reason is obvious, and we
+# still reject the commit (non-zero exit) so no empty/fixed-away commit slips in.
+set +e
 npx --no-install lint-staged
+LINT_RC=$?
+set -e
+
+if [ "$LINT_RC" -ne 0 ]; then
+  # If nothing is staged any more, ESLint reverted all staged content to HEAD
+  # (genuine empty commit). A real lint error would have restored the user's
+  # staged content, so the staged diff would still be non-empty.
+  if [ -z "$(git diff --cached --name-only)" ]; then
+    echo ""
+    echo "[pre-commit] All staged changes were auto-fixed back to HEAD by ESLint --fix."
+    echo "[pre-commit] There is nothing left to commit — refusing to create an empty commit."
+    echo "[pre-commit] Fix the underlying lint issue, unstage the file, or make a substantive change:"
+    echo "[pre-commit]   git restore --staged <file>"
+    echo "[pre-commit] (lint-staged is working as intended; no hook bypass was used.)"
+  fi
+  exit "$LINT_RC"
+fi
