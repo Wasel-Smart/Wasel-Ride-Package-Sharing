@@ -24,6 +24,7 @@ import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 
 Deno.env.set( 'SUPABASE_URL', 'https://example.supabase.co' );
 Deno.env.set( 'SUPABASE_SERVICE_ROLE_KEY', 'test-service-role-key' );
+Deno.env.set( 'CLIQ_CHECKOUT_URL_TEMPLATE', 'https://cliq.test/pay?tx={transactionId}&amount={amount}' );
 
 const { isPaymentMethod, handleWalletTopUp } = await import( '../make-server-0b1f4071/_handlers/wallet.ts' );
 import type { TopUpProviderDeps } from '../make-server-0b1f4071/_handlers/wallet.ts';
@@ -78,6 +79,7 @@ function makeQueryChain ( table: string, spies: Spies, userId: string ) {
   };
 
   const terminal: Record<string, unknown> = {
+    then: ( resolve: ( v: unknown ) => void ) => resolve( { data: null, error: null } ),
     maybeSingle: async () => {
       if ( table === 'users' ) {return { data: canonicalUser, error: null };}
       if ( table === 'wallets' ) {return { data: { wallet_id: 'w-1', user_id: userId, currency_code: 'JOD' }, error: null };}
@@ -92,7 +94,6 @@ function makeQueryChain ( table: string, spies: Spies, userId: string ) {
   return new Proxy( terminal, {
     get ( target, prop ) {
       if ( prop in target ) {return target[ prop as string ];}
-      // Every unknown method (eq, select, insert, update, neq, …) returns the same proxy.
       return () => new Proxy( terminal, this );
     },
   } );
@@ -191,7 +192,6 @@ Deno.test( 'handleWalletTopUp: "stripe" routes to Stripe only, pending tx create
 } );
 
 Deno.test( 'handleWalletTopUp: "cliq" routes to CliQ only, pending tx created', async () => {
-  Deno.env.set( 'CLIQ_CHECKOUT_URL_TEMPLATE', 'https://cliq.test/pay?tx={transactionId}&amount={amount}' );
   const USER_ID = 'user-1';
   const spies: Spies = { pendingTxCreated: false, stripeCallCount: 0, cliqCallCount: 0 };
   const admin = makeAdminStub( USER_ID, spies );
