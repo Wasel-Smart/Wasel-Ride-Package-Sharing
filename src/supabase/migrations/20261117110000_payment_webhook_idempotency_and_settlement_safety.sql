@@ -252,10 +252,12 @@ returns void
 language plpgsql
 security definer
 set search_path = public, private, pg_temp
-as $
+as $$
 declare
+  v_now timestamptz := clock_timestamp();
   v_max_failures integer := greatest(3, least(coalesce(p_max_failures, 5), 10));
   v_lock_seconds integer := greatest(60, least(coalesce(p_lock_seconds, 600), 3600));
+  v_next_failures integer;
 begin
   if p_user_id is null then
     raise exception 'A wallet owner is required';
@@ -263,20 +265,27 @@ begin
 
   update private.wallet_pin_secrets
   set
-    failed_attempts = failed_attempts + 1,
-    locked_until = case
-      when failed_attempts + 1 >= v_max_failures
-        then greatest(coalesce(locked_until, now()), now()) + make_interval(secs => v_lock_seconds)
-      else locked_until
+    failed_attempts = case
+      when locked_until is not null and locked_until <= v_now then 1
+      else failed_attempts + 1
     end,
-    updated_at = now()
-  where user_id = p_user_id;
+    locked_until = case
+      when (case
+        when locked_until is not null and locked_until <= v_now then 1
+        else failed_attempts + 1
+      end) >= v_max_failures
+        then v_now + make_interval(secs => v_lock_seconds)
+      else null
+    end,
+    updated_at = v_now
+  where user_id = p_user_id
+    and (locked_until is null or locked_until <= v_now);
 
-  if not found then
-    raise exception 'Wallet PIN is not configured';
-  end if;
+  -- A concurrent request may have reached the lock threshold first. In that
+  -- case the conditional update safely does nothing and preserves the lock.
 end;
-$;
+$$;
+
 
 create or replace function public.app_upsert_wallet_subscription(
   p_user_id uuid,
