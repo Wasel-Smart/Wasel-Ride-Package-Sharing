@@ -189,6 +189,9 @@ describe('Supabase rollout guardrails', () => {
     expect(rolloutRunner).toContain('--confirm-project-ref=');
     expect(rolloutRunner).toContain('--allow-production');
     expect(rolloutRunner).toContain('Dry run only.');
+    expect(read('supabase/config.toml')).toContain('[functions.make-server-0b1f4071]');
+    expect(read('supabase/config.toml')).toContain('verify_jwt = false');
+    expect(read('supabase/functions/make-server-0b1f4071/index.ts')).toContain('const auth = await authenticateRequest(req)');
     expect(sql).toContain(
       'Terminal states are monotonic: a late processing/action event cannot',
     );
