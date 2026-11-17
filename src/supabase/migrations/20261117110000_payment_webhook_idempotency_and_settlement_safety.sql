@@ -257,7 +257,6 @@ declare
   v_now timestamptz := clock_timestamp();
   v_max_failures integer := greatest(3, least(coalesce(p_max_failures, 5), 10));
   v_lock_seconds integer := greatest(60, least(coalesce(p_lock_seconds, 600), 3600));
-  v_next_failures integer;
 begin
   if p_user_id is null then
     raise exception 'A wallet owner is required';
