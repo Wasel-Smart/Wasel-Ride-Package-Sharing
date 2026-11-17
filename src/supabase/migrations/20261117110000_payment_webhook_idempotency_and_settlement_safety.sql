@@ -68,13 +68,15 @@ create or replace function public.app_claim_payment_webhook_event(
   p_payload jsonb,
   p_lease_seconds integer default 300
 )
-returns boolean
+returns text
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $$
+as $
 declare
   v_claimed_event_id uuid;
+  v_processed_at timestamptz;
+  v_processing_started_at timestamptz;
   v_lease_seconds integer := greatest(30, least(coalesce(p_lease_seconds, 300), 1800));
 begin
   if p_provider_event_id is null or length(btrim(p_provider_event_id)) = 0
@@ -115,9 +117,23 @@ begin
     )
   returning webhook_event_id into v_claimed_event_id;
 
-  return v_claimed_event_id is not null;
+  if v_claimed_event_id is not null then
+    return 'claimed';
+  end if;
+
+  select processed_at, processing_started_at
+  into v_processed_at, v_processing_started_at
+  from public.payment_webhook_events
+  where provider_name = p_provider_name
+    and provider_event_id = p_provider_event_id;
+
+  if v_processed_at is not null then
+    return 'processed';
+  end if;
+
+  return 'busy';
 end;
-$$;
+$;
 
 create or replace function public.app_complete_payment_webhook_event(
   p_provider_name public.wallet_provider_name,
