@@ -54,6 +54,7 @@ const PIN_LOCK_WINDOW_MS = 10 * 60_000;
 const MAX_PIN_FAILURES = 5;
 const MAX_OTP_ATTEMPTS = 5;
 const WALLET_VERIFY_RATE_LIMIT = { maxRequests: 12, windowMs: 10 * 60_000 };
+const WALLET_PIN_VERIFY_RATE_LIMIT = { maxRequests: MAX_PIN_FAILURES, windowMs: 10 * 60_000 };
 const WALLET_TRANSFER_RATE_LIMIT = { maxRequests: 12, windowMs: 10 * 60_000 };
 const WALLET_MUTATION_RATE_LIMIT = { maxRequests: 20, windowMs: 10 * 60_000 };
 
@@ -1640,7 +1641,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, auth.canonicalUser.id, 'verify-pin', WALLET_VERIFY_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'verify-pin', WALLET_PIN_VERIFY_RATE_LIMIT);
       const body = await readJsonBody(request);
       const pin = normalizeString(body.pin);
       const purpose = normalizeString(body.purpose);
