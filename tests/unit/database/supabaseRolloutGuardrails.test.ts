@@ -84,7 +84,9 @@ describe('Supabase rollout guardrails', () => {
     expect(sql).toContain('and processing_token = p_processing_token');
     expect(sql).toContain('p_payment_intent_id uuid default null');
     expect(sql).toContain('p_payment_status public.wallet_payment_intent_status default null');
-    expect(sql).toContain('late failure/cancellation event must never downgrade a successful payment');
+    expect(sql).toContain(
+      'late failure/cancellation event must never downgrade a successful payment',
+    );
     expect(wallet).toContain('p_processing_token: processingToken');
     expect(wallet).toContain('p_payment_status: paymentUpdate?.status ?? null');
     expect(sql).toContain('wallet_accounts_payment_intent_id_key');
