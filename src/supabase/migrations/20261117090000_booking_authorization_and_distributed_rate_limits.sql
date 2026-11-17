@@ -243,7 +243,7 @@ declare
   v_count integer;
   v_window_started timestamptz;
 begin
-  if auth.role() <> 'service_role' then
+  if auth.role() IS DISTINCT FROM 'service_role' then
     raise exception 'Service role required';
   end if;
   if p_bucket_key is null or length(p_bucket_key) < 1 or length(p_bucket_key) > 512
@@ -284,7 +284,7 @@ set search_path = public, pg_temp
 as $$
 declare v_deleted integer;
 begin
-  if auth.role() <> 'service_role' then raise exception 'Service role required'; end if;
+  if auth.role() IS DISTINCT FROM 'service_role' then raise exception 'Service role required'; end if;
   with expired as (
     select bucket_key from public.edge_rate_limit_buckets
     where expires_at < clock_timestamp()
