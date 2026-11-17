@@ -75,7 +75,7 @@ export async function verifyTimestampedHmacSignature(
   toleranceSeconds = 300,
   nowMs = Date.now(),
 ): Promise<boolean> {
-  if (!secret || !signatureHeader || !Number.isFinite(nowMs) || toleranceSeconds < 0) {
+  if (!secret || !signatureHeader || !Number.isFinite(nowMs) || !Number.isFinite(toleranceSeconds) || toleranceSeconds < 0) {
     return false;
   }
 
@@ -87,6 +87,9 @@ export async function verifyTimestampedHmacSignature(
   });
   const timestampValue = parts.find(([key]) => key === 't')?.[1];
   const signatures = parts.filter(([key, value]) => key === 'v1' && value).map(([, value]) => value);
+  if (!timestampValue || !/^\\d+$/.test(timestampValue)) {
+    return false;
+  }
   const timestamp = Number(timestampValue);
 
   if (!Number.isSafeInteger(timestamp) || timestamp <= 0 || signatures.length === 0) {
