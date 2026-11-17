@@ -27,7 +27,7 @@ export const communicationDeliveryRecordSchema = z
     destination: z.string().min(1),
     subject: z.string().nullable().optional(),
     body: z.string().min(1),
-    metadata: z.record(z.unknown()).nullable().optional(),
+    metadata: z.record(z.string(), z.unknown()).nullable().optional(),
     providerName: z.string().nullable().optional(),
     queuedAt: z.string().min(1),
     createdAt: z.string().optional(),
