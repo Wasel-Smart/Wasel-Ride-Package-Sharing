@@ -370,7 +370,7 @@ export const migrationCatalog = [
   {
     sequence: 40,
     path: 'src/supabase/migrations/20261117110000_payment_webhook_idempotency_and_settlement_safety.sql',
-    description: 'Serialize webhook claims, enforce payment-intent settlement idempotency, and safely upsert subscriptions',
+    description: 'Serialize webhook claims, enforce payment settlement idempotency, safely upsert subscriptions, and atomically lock wallet PIN failures',
     status: 'ready',
     phase: 'rollout',
     category: 'security',
