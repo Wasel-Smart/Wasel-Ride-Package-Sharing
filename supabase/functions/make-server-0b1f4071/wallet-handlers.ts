@@ -1963,6 +1963,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     let admin: SupabaseAdminClient | null = null;
     let providerName = 'stripe';
     let providerEventId = '';
+    let processingToken = '';
     let requestValidated = false;
 
     try {
@@ -1992,12 +1993,14 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       }
 
       admin = runtime.getAdminClient();
+      processingToken = crypto.randomUUID();
       const { data: claimed, error: claimError } = await admin.rpc('app_claim_payment_webhook_event', {
         p_provider_name: providerName,
         p_provider_event_id: providerEventId,
         p_signature: request.headers.get('stripe-signature') ?? request.headers.get('x-wallet-signature'),
         p_payload: eventBody,
         p_lease_seconds: 300,
+        p_processing_token: processingToken,
       });
 
       if (claimError) {
@@ -2015,6 +2018,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         const { data, error } = await admin!.rpc('app_complete_payment_webhook_event', {
           p_provider_name: providerName,
           p_provider_event_id: providerEventId,
+          p_processing_token: processingToken,
         });
         if (error || data !== true) {
           throw new Error(error?.message ?? 'Could not complete payment webhook event.');
@@ -2080,11 +2084,12 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       await completeEvent();
       return runtime.json({ ok: true });
     } catch (error) {
-      if (admin && providerEventId) {
+      if (admin && providerEventId && processingToken) {
         try {
           await admin.rpc('app_fail_payment_webhook_event', {
             p_provider_name: providerName,
             p_provider_event_id: providerEventId,
+            p_processing_token: processingToken,
             p_error: sanitizeEdgeErrorMessage(error),
           });
         } catch {
