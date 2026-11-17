@@ -14,6 +14,7 @@ import {
   type WalletProviderName,
 } from '../../../shared/wallet-contracts.ts';
 import {
+  generateSixDigitOtp,
   getClientIp,
   sanitizeEdgeErrorMessage,
   takeRateLimitToken,
@@ -529,7 +530,7 @@ async function createStepUpChallenge(
     throw new Error('A verified email or phone number is required for wallet verification.');
   }
 
-  const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+  const otpCode = generateSixDigitOtp();
   const otpHash = await sha256Hex(`${getWalletStepUpSecret()}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
   const expiresAt = new Date(Date.now() + OTP_TTL_MS).toISOString();
 
