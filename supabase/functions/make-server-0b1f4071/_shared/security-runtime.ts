@@ -113,3 +113,18 @@ export async function verifyTimestampedHmacSignature(
     return false;
   }
 }
+
+
+export function generateSixDigitOtp(): string {
+  const range = 900_000;
+  const ceiling = Math.floor(0x1_0000_0000 / range) * range;
+  const random = new Uint32Array(1);
+  let value = 0;
+
+  do {
+    crypto.getRandomValues(random);
+    value = random[0] ?? 0;
+  } while (value >= ceiling);
+
+  return String(100_000 + (value % range));
+}
