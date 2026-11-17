@@ -8,6 +8,29 @@ alter table public.payment_webhook_events
 alter table public.wallet_accounts
   add column if not exists payment_intent_id uuid null;
 
+do $
+begin
+  if exists (
+    select 1
+    from public.wallet_payment_intents
+    where purpose in ('ride_payment', 'package_payment')
+      and reference_type is not null
+      and reference_id is not null
+      and status not in ('failed', 'cancelled')
+    group by user_id, purpose, reference_type, reference_id
+    having count(*) > 1
+  ) then
+    raise exception 'Duplicate active payment intents exist for the same ride or package reference; reconcile them before applying payment idempotency constraints.';
+  end if;
+end $;
+
+create unique index if not exists wallet_payment_intents_active_reference_uidx
+  on public.wallet_payment_intents (user_id, purpose, reference_type, reference_id)
+  where purpose in ('ride_payment', 'package_payment')
+    and reference_type is not null
+    and reference_id is not null
+    and status not in ('failed', 'cancelled');
+
 do $$
 begin
   if exists (
