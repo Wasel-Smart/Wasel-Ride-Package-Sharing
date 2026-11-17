@@ -1,0 +1,5 @@
+# Wasel Edge Function gateway configuration.
+# The function performs its own Supabase JWT validation for application routes.
+# Provider callbacks use their own HMAC/token verification and cannot present a Supabase JWT.
+[functions.make-server-0b1f4071]
+verify_jwt = false
