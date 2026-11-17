@@ -1,7 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
-import { consumeRateLimitToken, sanitizeEdgeErrorMessage, verifyTimestampedHmacSignature } from '../../../supabase/functions/make-server-0b1f4071/_shared/security-runtime';
+import { consumeRateLimitToken, getClientIp, sanitizeEdgeErrorMessage, verifyTimestampedHmacSignature } from '../../../supabase/functions/make-server-0b1f4071/_shared/security-runtime';
 
 describe('distributed Edge rate limiter', () => {
+  it('uses the trusted proxy client IP before a caller-supplied forwarded header', () => {
+    const request = new Request('https://edge.example.test/wallet/transfer', {
+      headers: {
+        'cf-connecting-ip': '203.0.113.10',
+        'x-forwarded-for': '198.51.100.20',
+      },
+    });
+
+    expect(getClientIp(request)).toBe('203.0.113.10');
+  });
+
+
   it('hashes the bucket key and returns the atomic database decision', async () => {
     const rpc = vi.fn().mockResolvedValue({ data: true, error: null });
     const result = await consumeRateLimitToken({ rpc }, {
