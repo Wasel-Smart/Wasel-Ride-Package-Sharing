@@ -243,6 +243,41 @@ begin
 end;
 $$;
 
+create or replace function public.app_record_wallet_pin_failure(
+  p_user_id uuid,
+  p_max_failures integer default 5,
+  p_lock_seconds integer default 600
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, private, pg_temp
+as $
+declare
+  v_max_failures integer := greatest(3, least(coalesce(p_max_failures, 5), 10));
+  v_lock_seconds integer := greatest(60, least(coalesce(p_lock_seconds, 600), 3600));
+begin
+  if p_user_id is null then
+    raise exception 'A wallet owner is required';
+  end if;
+
+  update private.wallet_pin_secrets
+  set
+    failed_attempts = failed_attempts + 1,
+    locked_until = case
+      when failed_attempts + 1 >= v_max_failures
+        then greatest(coalesce(locked_until, now()), now()) + make_interval(secs => v_lock_seconds)
+      else locked_until
+    end,
+    updated_at = now()
+  where user_id = p_user_id;
+
+  if not found then
+    raise exception 'Wallet PIN is not configured';
+  end if;
+end;
+$;
+
 create or replace function public.app_upsert_wallet_subscription(
   p_user_id uuid,
   p_provider_name public.wallet_provider_name,
@@ -317,10 +352,12 @@ revoke all on function public.app_claim_payment_webhook_event(public.wallet_prov
 revoke all on function public.app_complete_payment_webhook_event(public.wallet_provider_name, text, uuid, uuid, public.wallet_payment_intent_status, text) from public, anon, authenticated;
 revoke all on function public.app_fail_payment_webhook_event(public.wallet_provider_name, text, uuid, text) from public, anon, authenticated;
 revoke all on function public.app_upsert_wallet_subscription(uuid, public.wallet_provider_name, text, text, text, numeric, text, text, timestamptz, jsonb) from public, anon, authenticated;
+revoke all on function public.app_record_wallet_pin_failure(uuid, integer, integer) from public, anon, authenticated;
 
 grant execute on function public.app_claim_payment_webhook_event(public.wallet_provider_name, text, text, jsonb, integer, uuid) to service_role;
 grant execute on function public.app_complete_payment_webhook_event(public.wallet_provider_name, text, uuid, uuid, public.wallet_payment_intent_status, text) to service_role;
 grant execute on function public.app_fail_payment_webhook_event(public.wallet_provider_name, text, uuid, text) to service_role;
 grant execute on function public.app_upsert_wallet_subscription(uuid, public.wallet_provider_name, text, text, text, numeric, text, text, timestamptz, jsonb) to service_role;
+grant execute on function public.app_record_wallet_pin_failure(uuid, integer, integer) to service_role;
 
 commit;
