@@ -1064,7 +1064,7 @@ async function validatePaymentIntentReference(
   referenceType: string | null,
   referenceId: string | null,
   amount: number,
-) {
+): Promise<{ referenceType: string; referenceId: string }> {
   if (!referenceType || !referenceId) {
     throw new Error('A valid payment reference is required.');
   }
@@ -1100,7 +1100,10 @@ async function validatePaymentIntentReference(
     if (expectedAmount <= 0 || Math.abs(expectedAmount - amount) > 0.001) {
       throw new Error('Payment amount does not match the server-calculated booking total.');
     }
-    return;
+    return {
+      referenceType: 'booking',
+      referenceId: String(booking.booking_id),
+    };
   }
 
   if (referenceType !== 'package') {
@@ -1122,6 +1125,10 @@ async function validatePaymentIntentReference(
   if (expectedAmount <= 0 || Math.abs(expectedAmount - amount) > 0.001) {
     throw new Error('Payment amount does not match the server-calculated package fee.');
   }
+  return {
+    referenceType: 'package',
+    referenceId: String(packageRow.package_id),
+  };
 }
 
 async function createEscrowForIntent(
