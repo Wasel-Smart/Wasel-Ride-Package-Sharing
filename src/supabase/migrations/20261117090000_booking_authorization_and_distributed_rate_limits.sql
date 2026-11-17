@@ -17,6 +17,9 @@ set search_path = public, pg_temp
 as $$
 declare
   v_actor_user_id uuid;
+  v_phone_verified_at timestamptz;
+  v_wallet_status text;
+  v_driver_user_id uuid;
   v_trip public.trips%rowtype;
   v_existing public.bookings%rowtype;
   v_booking public.bookings%rowtype;
@@ -27,6 +30,24 @@ begin
   v_actor_user_id := public.current_user_id();
   if v_actor_user_id is null then
     raise exception 'Authentication required to create bookings';
+  end if;
+
+  -- Enforce the same account eligibility rules at the database boundary;
+  -- callers cannot bypass the UI or Edge API by invoking this RPC directly.
+  select u.phone_verified_at, coalesce(w.wallet_status::text, 'active')
+  into v_phone_verified_at, v_wallet_status
+  from public.users u
+  left join public.wallets w on w.user_id = u.id
+  where u.id = v_actor_user_id;
+
+  if not found then
+    raise exception 'A canonical user profile is required to create bookings';
+  end if;
+  if v_phone_verified_at is null then
+    raise exception 'Booking requires a verified phone number';
+  end if;
+  if v_wallet_status = 'frozen' then
+    raise exception 'Wallet standing needs review before booking';
   end if;
 
   if v_requested_seats < 1 or v_requested_seats > 8 then
@@ -49,6 +70,13 @@ begin
   end if;
   if v_trip.available_seats < v_requested_seats then
     raise exception 'Not enough seats available';
+  end if;
+
+  select user_id into v_driver_user_id
+  from public.drivers
+  where driver_id = v_trip.driver_id;
+  if v_driver_user_id = v_actor_user_id then
+    raise exception 'Drivers cannot book their own trips';
   end if;
 
   select * into v_existing
