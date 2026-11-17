@@ -336,8 +336,23 @@ async function enforceDistributedRateLimit(
     'wallet',
   ]);
   const sensitive = sensitiveGroups.has(routeGroup);
+  const clientIp = getClientIp(request);
+  if (clientIp === 'unknown') {
+    return new Response(
+      JSON.stringify({ error: 'Trusted client IP is unavailable; request protection cannot be applied.' }),
+      {
+        status: 503,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': '30',
+        },
+      },
+    );
+  }
+
   const result = await consumeRateLimitToken(createAdminClient(), {
-    key: `edge:${request.method}:${routeGroup}:${getClientIp(request)}`,
+    key: `edge:${request.method}:${routeGroup}:${clientIp}`,
     maxRequests: sensitive ? 20 : 60,
     windowMs: 60_000,
   });
