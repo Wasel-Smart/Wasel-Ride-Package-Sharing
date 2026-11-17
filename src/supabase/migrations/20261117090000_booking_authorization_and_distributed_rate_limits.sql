@@ -44,7 +44,7 @@ begin
   for update;
 
   if not found then raise exception 'Trip not found'; end if;
-  if v_trip.trip_status not in ('open', 'booked', 'in_progress') then
+  if v_trip.trip_status not in ('open', 'booked') then
     raise exception 'Trip is not open for booking';
   end if;
   if v_trip.available_seats < v_requested_seats then
@@ -67,15 +67,13 @@ begin
     return v_existing;
   end if;
 
-  if p_seat_number is not null and p_seat_number > 0 then
-    v_seat_number := p_seat_number;
-  else
-    select coalesce(max(seat_number), 0) + 1
-    into v_seat_number
-    from public.bookings
-    where trip_id = p_trip_id
-      and booking_status <> 'cancelled';
-  end if;
+  -- Seat identifiers are assigned by the database; callers cannot select
+  -- arbitrary or duplicate seat numbers through this privileged function.
+  select coalesce(max(seat_number), 0) + 1
+  into v_seat_number
+  from public.bookings
+  where trip_id = p_trip_id
+    and booking_status <> 'cancelled';
 
   -- Never trust client-supplied price. Use the locked trip's canonical fare.
   v_total_price := round(v_trip.price_per_seat * v_requested_seats, 2);
@@ -192,7 +190,10 @@ begin
   elsif v_current_status = 'confirmed' and v_next_status = 'cancelled' then
     update public.trips
     set available_seats = available_seats + v_requested_seats,
-        trip_status = case when trip_status = 'cancelled' then trip_status else 'open' end
+        trip_status = case
+          when trip_status = 'booked' and available_seats + v_requested_seats > 0 then 'open'
+          else trip_status
+        end
     where trip_id = v_trip.trip_id;
   end if;
 
