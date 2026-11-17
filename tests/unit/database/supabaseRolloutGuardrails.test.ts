@@ -74,6 +74,9 @@ describe('Supabase rollout guardrails', () => {
     expect(sql).toContain("return 'busy'");
     expect(sql).toContain('processing_started_at');
     expect(sql).toContain('attempt_count');
+    expect(sql).toContain('processing_token uuid');
+    expect(sql).toContain('and processing_token = p_processing_token');
+    expect(wallet).toContain('p_processing_token: processingToken');
     expect(sql).toContain('wallet_accounts_payment_intent_id_key');
     expect(sql).toContain('escrow_accounts_payment_intent_id_key');
     expect(sql).toContain('app_upsert_wallet_subscription');
@@ -86,6 +89,18 @@ describe('Supabase rollout guardrails', () => {
     expect(wallet).toContain("admin.rpc('app_upsert_wallet_subscription'");
     expect(wallet).toContain("onConflict: 'payment_intent_id', ignoreDuplicates: true");
     expect(wallet).not.toContain(".from('payment_webhook_events')");
+  });
+
+
+  it('fails closed for wallet step-up secrets and uses cryptographic OTP generation', () => {
+    const wallet = read('supabase/functions/make-server-0b1f4071/wallet-handlers.ts');
+
+    expect(wallet).toContain('getWalletStepUpSecret()');
+    expect(wallet).toContain('WALLET_STEP_UP_SECRET.length < 32');
+    expect(wallet).toContain('crypto.getRandomValues(sample)');
+    expect(wallet).not.toContain('wallet-step-up-development-secret');
+    expect(wallet).not.toContain('Math.random()');
+    expect(wallet).not.toContain("Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ??");
   });
 
   it('removes permissive legacy RLS paths from kv, subscription, and wallet surfaces', () => {
