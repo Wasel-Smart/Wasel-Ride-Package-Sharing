@@ -1941,7 +1941,9 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       if (!intent) return runtime.json({ error: 'Payment intent was not found.' }, 404);
 
       if (String(intent.provider_name) === 'wallet') {
-        await settlePaymentIntent(auth.admin, intent as Record<string, unknown>);
+        if (canTransitionPaymentStatus(String(intent.status), 'succeeded')) {
+          await settlePaymentIntent(auth.admin, intent as Record<string, unknown>);
+        }
         const updated = await updatePaymentIntentRecord(auth.admin, String(intent.payment_intent_id), {
           status: 'succeeded',
           confirmed_at: new Date().toISOString(),
