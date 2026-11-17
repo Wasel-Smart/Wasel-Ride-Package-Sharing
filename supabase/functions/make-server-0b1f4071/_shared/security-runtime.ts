@@ -60,14 +60,9 @@ export function takeRateLimitToken(args: {
   return current.count <= args.maxRequests;
 }
 
-export function sanitizeEdgeErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message.trim();
-  }
-
-  if (typeof error === 'string' && error.trim()) {
-    return error.trim();
-  }
-
+export function sanitizeEdgeErrorMessage(_error: unknown): string {
+  // Exception messages may contain provider responses, SQL details, identifiers,
+  // or other implementation data. Keep client-facing failures generic; log
+  // structured diagnostics separately on the server without returning them.
   return 'Internal server error';
 }
