@@ -16,7 +16,7 @@ import {
 import {
   getClientIp,
   sanitizeEdgeErrorMessage,
-  takeRateLimitToken,
+  consumeRateLimitToken,
   timingSafeEqual,
 } from './_shared/security-runtime.ts';
 
@@ -157,7 +157,7 @@ function maskDestination(value: string | null | undefined): string | null {
 }
 
 function buildRateLimitKey(request: Request, userId: string, action: string): string {
-  return ['wallet', action, userId, getClientIp(request)].join(':');
+  return ['wallet', action, userId].join(':');
 }
 
 async function requireAllowedRate(
@@ -167,7 +167,14 @@ async function requireAllowedRate(
   action: string,
   limits: { maxRequests: number; windowMs: number },
 ) {
-  if (!takeRateLimitToken({ key: buildRateLimitKey(request, userId, action), ...limits })) {
+  const rateLimit = await consumeRateLimitToken(runtime.getAdminClient(), {
+    key: buildRateLimitKey(request, userId, action),
+    ...limits,
+  });
+  if (rateLimit.unavailable) {
+    throw runtime.json({ error: 'Rate limiting is temporarily unavailable. Please try again.' }, 503);
+  }
+  if (!rateLimit.allowed) {
     throw runtime.json({ error: 'Too many wallet requests. Please wait and try again.' }, 429);
   }
 }
