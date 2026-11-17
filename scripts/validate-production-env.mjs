@@ -95,6 +95,11 @@ const REQUIRED_VARS = {
 };
 
 const BACKEND_REQUIRED_VARS = {
+  SUPABASE_ANON_KEY: {
+    required: true,
+    pattern: /^eyJ/,
+    description: 'Supabase anon key for user-scoped Edge requests',
+  },
   SUPABASE_SERVICE_ROLE_KEY: {
     required: true,
     pattern: /^eyJ/,
