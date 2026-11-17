@@ -156,19 +156,18 @@ function maskDestination(value: string | null | undefined): string | null {
   return `${value.slice(0, Math.min(4, value.length))}***`;
 }
 
-function buildRateLimitKey(request: Request, userId: string, action: string): string {
+function buildRateLimitKey(userId: string, action: string): string {
   return ['wallet', action, userId].join(':');
 }
 
 async function requireAllowedRate(
   runtime: WalletRuntime,
-  request: Request,
   userId: string,
   action: string,
   limits: { maxRequests: number; windowMs: number },
 ) {
   const rateLimit = await consumeRateLimitToken(runtime.getAdminClient(), {
-    key: buildRateLimitKey(request, userId, action),
+    key: buildRateLimitKey(userId, action),
     ...limits,
   });
   if (rateLimit.unavailable) {
@@ -1578,7 +1577,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'set-pin', WALLET_VERIFY_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'set-pin', WALLET_VERIFY_RATE_LIMIT);
       const body = await readJsonBody(request);
       const pin = normalizeString(body.pin);
       if (!pin || !/^\d{4}$/.test(pin)) {
