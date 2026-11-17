@@ -109,8 +109,11 @@ function isFinalPaymentStatus(status: string): boolean {
   return ['succeeded', 'failed', 'cancelled'].includes(status);
 }
 
-function encodeText(value: string): Uint8Array {
-  return new TextEncoder().encode(value);
+function encodeText(value: string): ArrayBuffer {
+  const encoded = new TextEncoder().encode(value);
+  const buffer = new ArrayBuffer(encoded.byteLength);
+  new Uint8Array(buffer).set(encoded);
+  return buffer;
 }
 
 function toHex(bytes: Uint8Array): string {
