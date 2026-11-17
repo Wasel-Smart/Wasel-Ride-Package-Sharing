@@ -12,7 +12,8 @@ import {
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useAuth } from '../../contexts/AuthContext';
-import { startDirectTrustPhoneVerification, confirmDirectTrustPhoneVerification } from '../../services/directSupabase/trust';
+import { confirmDirectTrustPhoneVerification } from '../../services/directSupabase/trust';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { normalizeProfilePhone } from '../../features/profile/profileUtils';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -1060,7 +1061,7 @@ export default function SettingsPage() {
                     <ActionButton
                       label={ar ? 'تأكيد رمز التحقق' : 'Confirm verification code'}
                       onClick={async () => {
-                        if (!user?.id) return;
+                        if (!user?.id) {return;}
                         try {
                           await confirmDirectTrustPhoneVerification(user.id, otpInput);
                           toast.success(ar ? 'تم توثيق الهاتف.' : 'Phone verified.');
