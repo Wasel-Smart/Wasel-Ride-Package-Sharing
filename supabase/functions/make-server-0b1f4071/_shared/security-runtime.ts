@@ -1,9 +1,5 @@
-type RateLimitState = {
-  count: number;
-  resetAt: number;
-};
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const rateLimitStore = new Map<string, RateLimitState>();
 
 function encodeBytes(value: string): Uint8Array {
   return new TextEncoder().encode(value);
@@ -40,24 +36,27 @@ export function getClientIp(request: Request): string {
     || 'unknown';
 }
 
-export function takeRateLimitToken(args: {
-  key: string;
-  maxRequests: number;
-  windowMs: number;
-}): boolean {
-  const now = Date.now();
-  const current = rateLimitStore.get(args.key);
+export async function consumeRateLimitToken(
+  admin: SupabaseClient,
+  args: {
+    key: string;
+    maxRequests: number;
+    windowMs: number;
+  },
+): Promise<{ allowed: boolean; unavailable: boolean }> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(args.key));
+  const bucketKey = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  const { data, error } = await admin.rpc('consume_edge_rate_limit', {
+    p_bucket_key: bucketKey,
+    p_max_requests: args.maxRequests,
+    p_window_seconds: Math.max(1, Math.ceil(args.windowMs / 1000)),
+  });
 
-  if (!current || now >= current.resetAt) {
-    rateLimitStore.set(args.key, {
-      count: 1,
-      resetAt: now + args.windowMs,
-    });
-    return true;
+  if (error || typeof data !== 'boolean') {
+    return { allowed: false, unavailable: true };
   }
 
-  current.count += 1;
-  return current.count <= args.maxRequests;
+  return { allowed: data, unavailable: false };
 }
 
 export function sanitizeEdgeErrorMessage(error: unknown): string {
