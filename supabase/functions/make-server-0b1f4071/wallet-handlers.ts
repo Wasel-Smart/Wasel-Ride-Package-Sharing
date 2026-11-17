@@ -1,5 +1,11 @@
-import type { SupabaseClient, User } from 'https://esm.sh/@supabase/supabase-js@2';
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 type SupabaseAdminClient = SupabaseClient<any, 'public' | 'private', any, any, any>;
+type AuthUser = {
+  id: string;
+  email?: string | null;
+  phone?: string | null;
+  user_metadata?: Record<string, unknown> | null;
+};
 import {
   ESCROW_STATUSES,
   isPaymentIntentPurpose,
@@ -29,7 +35,7 @@ interface CanonicalUser {
 
 type AuthenticatedRequest = {
   admin: SupabaseAdminClient;
-  authUser: User;
+  authUser: AuthUser;
   canonicalUser: CanonicalUser;
 };
 
