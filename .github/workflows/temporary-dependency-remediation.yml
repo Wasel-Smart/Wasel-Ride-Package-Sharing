@@ -59,7 +59,18 @@ jobs:
           deno-version: v2.x
 
       - name: Type-check Supabase Edge Function
-        run: deno check --no-lock supabase/functions/make-server-0b1f4071/index.ts
+        shell: bash
+        run: |
+          set -o pipefail
+          deno check --no-lock supabase/functions/make-server-0b1f4071/index.ts 2>&1 | tee deno-check.log
+
+      - name: Upload Deno check log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: deno-check-log
+          path: deno-check.log
+          if-no-files-found: warn
 
       - name: Format changed source files
         run: npx prettier --write src/contracts/communications.ts src/contracts/trips.ts src/contracts/wallet.ts src/services/dataIntegrity.ts src/services/directSupabase/trips.ts src/utils/api-validation.ts tests/unit/services/directSupabaseIntegrity.test.ts tests/unit/utils/idleScheduler.test.ts
