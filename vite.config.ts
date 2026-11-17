@@ -49,7 +49,10 @@ export default defineConfig({
           if (id.includes('/node_modules/react-dom/')) return 'react-dom';
           if (id.includes('/node_modules/react-router/')) return 'react-router';
 
-          if (id.includes('/node_modules/@supabase/')) return 'supabase';
+          if (id.includes('/node_modules/@supabase/')) {
+            const packageName = id.split('/node_modules/@supabase/').pop()?.split('/')[0];
+            if (packageName) return `supabase-${packageName}`;
+          }
 
           if (id.includes('/node_modules/@tanstack/query-core')) return 'tanstack-core';
           if (id.includes('/node_modules/@tanstack/react-query')) return 'tanstack-react';
