@@ -36,9 +36,9 @@ export function isAllowedOrigin(origin: string | null, appUrl: string | null): b
 }
 
 export function getClientIp(request: Request): string {
-  return request.headers.get('cf-connecting-ip')?.trim()
-    || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    || 'unknown';
+  // Supabase's hosted gateway logs the Cloudflare client-IP header. Do not
+  // trust caller-supplied X-Forwarded-For values for a security boundary.
+  return request.headers.get('cf-connecting-ip')?.trim() || 'unknown';
 }
 
 export async function consumeRateLimitToken(
