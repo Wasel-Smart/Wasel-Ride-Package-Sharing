@@ -71,3 +71,35 @@ jobs:
 
       - name: High and critical dependency audit
         run: npm audit --audit-level=high
+      - name: Full repository verification
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run verify 2>&1 | tee verify.log
+
+      - name: Upload repository verification log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: repository-verification-log
+          path: verify.log
+          if-no-files-found: warn
+
+      - name: Lighthouse and security verification
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:lhci 2>&1 | tee lighthouse.log
+          npm run test:security 2>&1 | tee security.log
+          npm run verify:supabase-rollout 2>&1 | tee rollout.log
+
+      - name: Upload extended verification logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: extended-verification-logs
+          path: |
+            lighthouse.log
+            security.log
+            rollout.log
+          if-no-files-found: warn
