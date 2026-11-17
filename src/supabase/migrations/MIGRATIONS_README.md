@@ -71,7 +71,7 @@ Historical files that predate the current standards remain frozen and explicitly
 | 37 | `20241201000002_bus_services_tables.sql` | schema | Legacy bus operations schema retained while canonical runtime contracts evolve | Applied |
 | 38 | `20260324005540_kv_store.sql` | runtime-contract | Production KV store for feature flags and app configuration | Applied |
 | 39 | `20261117090000_booking_authorization_and_distributed_rate_limits.sql` | security | Restrict booking state transitions to authorized actors and add atomic database-backed Edge rate limits | Ready |
-| 40 | `20261117110000_payment_webhook_idempotency_and_settlement_safety.sql` | security | Serialize webhook claims, enforce payment-intent settlement idempotency, and safely upsert subscriptions | Ready |
+| 40 | `20261117110000_payment_webhook_idempotency_and_settlement_safety.sql` | security | Serialize webhook claims, enforce payment settlement idempotency, safely upsert subscriptions, and atomically lock wallet PIN failures | Ready |
 
 ## Rollout Sequence
 
