@@ -104,12 +104,12 @@ export async function verifyTimestampedHmacSignature(
   try {
     const key = await crypto.subtle.importKey(
       'raw',
-      encodeBytes(secret),
+      new Uint8Array(encodeBytes(secret)),
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign'],
     );
-    const signature = await crypto.subtle.sign('HMAC', key, encodeBytes(`${timestamp}.${payload}`));
+    const signature = await crypto.subtle.sign('HMAC', key, new Uint8Array(encodeBytes(`${timestamp}.${payload}`)));
     const expected = Array.from(new Uint8Array(signature))
       .map((byte) => byte.toString(16).padStart(2, '0'))
       .join('');
