@@ -25,6 +25,7 @@ import {
   sanitizeEdgeErrorMessage,
   consumeRateLimitToken,
   timingSafeEqual,
+  verifyTimestampedHmacSignature,
 } from './_shared/security-runtime.ts';
 
 interface CanonicalUser {
@@ -783,25 +784,7 @@ async function verifyStripeWebhookSignature(payload: string, signatureHeader: st
   if (!STRIPE_WEBHOOK_SECRET) {
     throw new Error('Stripe webhook secret is not configured.');
   }
-  if (!signatureHeader) {
-    throw new Error('Missing Stripe signature header.');
-  }
-
-  const elements = Object.fromEntries(
-    signatureHeader.split(',').map((part) => {
-      const [key, value] = part.split('=');
-      return [key, value];
-    }),
-  );
-
-  const timestamp = elements.t;
-  const signed = elements.v1;
-  if (!timestamp || !signed) {
-    throw new Error('Invalid Stripe signature header.');
-  }
-
-  const expected = await hmacSha256Hex(STRIPE_WEBHOOK_SECRET, `${timestamp}.${payload}`);
-  if (!timingSafeEqual(expected, signed)) {
+  if (!await verifyTimestampedHmacSignature(STRIPE_WEBHOOK_SECRET, payload, signatureHeader)) {
     throw new Error('Stripe webhook signature verification failed.');
   }
 }
