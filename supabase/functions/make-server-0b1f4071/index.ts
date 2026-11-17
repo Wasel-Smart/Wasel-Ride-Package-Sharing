@@ -1851,20 +1851,27 @@ async function handleCreateReview(
       }, { onConflict: 'user_id' });
   }
 
-  await auth.admin
-    .from('audit_logs')
-    .insert({
-      actor_id: auth.authUser.id,
-      actor_role: 'authenticated_user',
-      action: 'review.submitted',
-      table_name: 'reviews',
-      record_id: reviewPayload.trip_id ?? crypto.randomUUID(),
-      new_values: reviewPayload,
-      ip_address: getClientIp(request),
-      user_agent: request.headers.get('user-agent'),
-      created_at: new Date().toISOString(),
-    })
-    .catch(() => undefined);
+  try {
+    const { error: auditLogError } = await auth.admin
+      .from('audit_logs')
+      .insert({
+        actor_id: auth.authUser.id,
+        actor_role: 'authenticated_user',
+        action: 'review.submitted',
+        table_name: 'reviews',
+        record_id: reviewPayload.trip_id ?? crypto.randomUUID(),
+        new_values: reviewPayload,
+        ip_address: getClientIp(request),
+        user_agent: request.headers.get('user-agent'),
+        created_at: new Date().toISOString(),
+      });
+
+    if (auditLogError) {
+      console.warn('Review audit log insert failed:', auditLogError.message);
+    }
+  } catch {
+    // The review has already been saved; audit logging is best-effort.
+  }
 
   return jsonResponse({ success: true });
 }
