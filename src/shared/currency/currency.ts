@@ -35,6 +35,6 @@ export const MAX_PAYMENT_AMOUNT_MINOR = 5_000_000;
 export function normalizeAmount(value: unknown): number | null {
   if (typeof value !== 'number' || !Number.isFinite(value)) {return null;}
   const amount = Math.round(value);
-  if (amount < MIN_PAYMENT_AMOUNT_MINOR || amount > MAX_PAYMENT_AMOUNT_MINOR) {return null;}
+  if (amount < 50 || amount > 500_000) {return null;}
   return amount;
 }

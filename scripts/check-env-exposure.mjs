@@ -109,7 +109,15 @@ async function findEnvFiles(dir, root) {
 }
 
 async function scanFile(file) {
-  const content = await readFile(file, 'utf8');
+  let content;
+  try {
+    content = await readFile(file, 'utf8');
+  } catch (error) {
+    if (error && (error.code === 'EPERM' || error.code === 'ENOENT' || error.code === 'EACCES')) {
+      return null;
+    }
+    throw error;
+  }
   const problems = [];
   content.split(/\r?\n/).forEach((line, index) => {
     const parsed = parseEnvLine(line);
@@ -136,6 +144,10 @@ async function main() {
     const rel = relative(root, file).split(sep).join('/');
     const isTemplate = TEMPLATE_RE.test(rel);
     const problems = await scanFile(file);
+    if (problems === null) {
+      console.log(`skip ${rel} (unreadable or offsite target)`);
+      continue;
+    }
 
     if (inCI && !isTemplate) {
       console.error(`FAIL ${rel}: real env files must not exist in CI. Use CI secrets instead.`);

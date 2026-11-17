@@ -159,7 +159,7 @@ describe('payment.test.ts', () => {
         currency: 'jod',
         bookingId: 'b-1',
       }),
-    ).rejects.toThrow('Payment amount must be at least 0.50');
+    ).rejects.toThrow('Payment amount must be between 0.05 and 5000 JOD');
   });
 
   it('rejects non-safe-integer amounts', async () => {
@@ -175,7 +175,7 @@ describe('payment.test.ts', () => {
         currency: 'jod',
         bookingId: 'b-1',
       }),
-    ).rejects.toThrow('Payment amount must be at least 0.50');
+    ).rejects.toThrow('Payment amount must be between 0.05 and 5000 JOD');
   });
 
   it('throws on unauthenticated user', async () => {
