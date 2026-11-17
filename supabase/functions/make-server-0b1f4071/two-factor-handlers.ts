@@ -37,7 +37,7 @@ const TWO_FACTOR_SETUP_RATE_LIMIT = { maxRequests: 5, windowMs: 10 * 60_000 };
 const MAX_TWO_FACTOR_FAILURES = 5;
 const TWO_FACTOR_LOCK_WINDOW_MS = 10 * 60_000;
 
-function buildRateLimitKey(request: Request, auth: AuthenticatedRequest, action: string): string {
+function buildRateLimitKey(auth: AuthenticatedRequest, action: string): string {
   return ['2fa', action, auth.canonicalUser.id].join(':');
 }
 
@@ -94,7 +94,7 @@ export function createTwoFactorHandlers(runtime: TwoFactorRuntime) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
     const rateLimit = await consumeRateLimitToken(auth.admin, {
-      key: buildRateLimitKey(request, auth, 'setup'),
+      key: buildRateLimitKey(auth, 'setup'),
       ...TWO_FACTOR_SETUP_RATE_LIMIT,
     });
     if (rateLimit.unavailable) {
@@ -156,7 +156,7 @@ export function createTwoFactorHandlers(runtime: TwoFactorRuntime) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
     const rateLimit = await consumeRateLimitToken(auth.admin, {
-      key: buildRateLimitKey(request, auth, 'verify'),
+      key: buildRateLimitKey(auth, 'verify'),
       ...TWO_FACTOR_VERIFY_RATE_LIMIT,
     });
     if (rateLimit.unavailable) {
@@ -234,7 +234,7 @@ export function createTwoFactorHandlers(runtime: TwoFactorRuntime) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
     const rateLimit = await consumeRateLimitToken(auth.admin, {
-      key: buildRateLimitKey(request, auth, 'disable'),
+      key: buildRateLimitKey(auth, 'disable'),
       ...TWO_FACTOR_VERIFY_RATE_LIMIT,
     });
     if (rateLimit.unavailable) {
