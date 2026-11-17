@@ -21,6 +21,7 @@ declare
   v_phone_verified_at timestamptz;
   v_wallet_status text;
   v_driver_user_id uuid;
+  v_driver_status text;
   v_trip public.trips%rowtype;
   v_existing public.bookings%rowtype;
   v_booking public.bookings%rowtype;
@@ -70,16 +71,29 @@ begin
   for update;
 
   if not found then raise exception 'Trip not found'; end if;
-  if v_trip.trip_status not in ('open', 'booked') then
+  if coalesce(v_trip.trip_status::text, '') not in ('open', 'booked') then
     raise exception 'Trip is not open for booking';
   end if;
-  if v_trip.available_seats < v_requested_seats then
+  if v_trip.departure_time is null or v_trip.departure_time <= now() then
+    raise exception 'Trip departure time has already passed';
+  end if;
+  if coalesce(v_trip.available_seats, 0) < v_requested_seats then
     raise exception 'Not enough seats available';
   end if;
+  if v_trip.price_per_seat is null or v_trip.price_per_seat <= 0 then
+    raise exception 'Trip fare is invalid';
+  end if;
 
-  select user_id into v_driver_user_id
+  select user_id, driver_status::text
+  into v_driver_user_id, v_driver_status
   from public.drivers
   where driver_id = v_trip.driver_id;
+  if v_driver_user_id is null then
+    raise exception 'Trip driver profile was not found';
+  end if;
+  if lower(trim(coalesce(v_driver_status, ''))) not in ('approved', 'online', 'offline', 'busy') then
+    raise exception 'Trip driver is not approved to provide rides';
+  end if;
   if v_driver_user_id = v_actor_user_id then
     raise exception 'Drivers cannot book their own trips';
   end if;
