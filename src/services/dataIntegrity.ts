@@ -137,7 +137,7 @@ export function buildTraceHeaders(requestId: string, extraHeaders?: HeadersInit)
 }
 
 const SENSITIVE_LOG_FIELD_PATTERN =
-  /(?:^|_)(?:email|phone|full_name|first_name|last_name|address|pickup|dropoff|location|password|passcode|otp|pin|token|secret|authorization|cookie|card|cvv|cvc|iban|bank_account|national_id|identity|date_of_birth|dob)(?:$|_)/i;
+  /(?:^|_)(?:email|phone|user_id|auth_user_id|reviewer_id|reviewee_id|full_name|first_name|last_name|address|pickup|dropoff|location|password|passcode|otp|pin|token|secret|authorization|cookie|card|cvv|cvc|iban|bank_account|national_id|identity|date_of_birth|dob)(?:$|_)/i;
 
 export function sanitizePayload<T>(value: T): T {
   if (Array.isArray(value)) {
