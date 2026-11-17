@@ -195,6 +195,8 @@ describe('Supabase rollout guardrails', () => {
     expect(wallet).toContain("claimed === 'processed'");
     expect(wallet).toContain("claimed !== 'claimed'");
     expect(wallet).toContain("app_complete_payment_webhook_event");
+    expect(sql).toContain('wallet_payment_intents_active_reference_uidx');
+    expect(sql).toContain('Duplicate active payment intents exist for the same ride or package reference');
     expect(wallet).toContain("'payment_intent.succeeded': 'succeeded'");
     expect(wallet).toContain("'payment_intent.payment_failed': 'failed'");
     expect(wallet).toContain("if (!nextStatus || !canTransitionPaymentStatus");
