@@ -311,8 +311,10 @@ export async function createDirectBooking(input: {
         toNumber(payload.metadata?.seat_number, 0) || 1;
 
       const pricePerSeat = toNumber(trip?.price_per_seat, 0);
-      const totalPrice = toNumber(payload.metadata?.total_price, pricePerSeat * payload.seatsRequested);
-      const bookingStatus = payload.bookingStatus === 'pending_driver' ? 'pending_driver' : 'confirmed';
+      // Passenger requests are always pending. Only the assigned driver may confirm.
+      // The database RPC independently derives the authoritative fare from the locked trip row.
+      const totalPrice = pricePerSeat * payload.seatsRequested;
+      const bookingStatus = 'pending_driver';
 
       const { data, error } = await db.rpc('app_create_booking_request', {
         p_trip_id: payload.tripId,
