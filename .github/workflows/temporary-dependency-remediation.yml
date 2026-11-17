@@ -1,0 +1,52 @@
+name: Temporary dependency remediation
+
+on:
+  push:
+    branches:
+      - automation/wasel-dependency-remediation
+
+permissions:
+  contents: write
+
+jobs:
+  compatible-fixes:
+    if: ${{ !contains(github.event.head_commit.message, 'security: apply compatible dependency fixes') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Apply non-breaking security updates only
+        shell: bash
+        run: |
+          set +e
+          npm audit fix --no-fund --no-progress
+          FIX_EXIT=$?
+          set -e
+          echo "npm audit fix exit code: $FIX_EXIT"
+          if ! git diff --quiet -- package.json package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package.json package-lock.json
+            git commit -m "security: apply compatible dependency fixes"
+            git push
+          else
+            echo "No semver-compatible dependency changes were produced."
+          fi
+      - name: Verify high and critical advisories are resolved
+        run: npm audit --audit-level=high
+      - name: Type check
+        run: npm run type-check
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build
