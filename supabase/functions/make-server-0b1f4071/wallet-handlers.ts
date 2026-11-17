@@ -2018,11 +2018,18 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         return runtime.json({ error: 'Payment event is already being processed. Retry shortly.' }, 503);
       }
 
-      const completeEvent = async () => {
+      const completeEvent = async (paymentUpdate?: {
+        paymentIntentId: string;
+        status: string;
+        lastError?: string | null;
+      }) => {
         const { data, error } = await admin!.rpc('app_complete_payment_webhook_event', {
           p_provider_name: providerName,
           p_provider_event_id: providerEventId,
           p_processing_token: processingToken,
+          p_payment_intent_id: paymentUpdate?.paymentIntentId ?? null,
+          p_payment_status: paymentUpdate?.status ?? null,
+          p_last_error: paymentUpdate?.lastError ?? null,
         });
         if (error || data !== true) {
           throw new Error(error?.message ?? 'Could not complete payment webhook event.');
@@ -2053,10 +2060,14 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         }
 
         if (String(intent.status) !== 'succeeded' || nextStatus === 'succeeded') {
-          await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
+          await completeEvent({
+            paymentIntentId: String(intent.payment_intent_id),
             status: nextStatus,
-            last_error: normalizeString(((object.last_payment_error as Record<string, unknown> | undefined)?.message)),
+            lastError: normalizeString(
+              (object.last_payment_error as Record<string, unknown> | undefined)?.message,
+            ),
           });
+          return runtime.json({ ok: true });
         }
       } else {
         const providerPaymentId = normalizeString(eventBody.providerPaymentId) ?? normalizeString(eventBody.paymentIntentId);
@@ -2075,13 +2086,19 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         if (status === 'succeeded') {
           await settlePaymentIntent(admin, intent);
           if (String(intent.status) !== 'succeeded') {
-            await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), { status: 'succeeded' });
+            await completeEvent({
+              paymentIntentId: String(intent.payment_intent_id),
+              status: 'succeeded',
+            });
+            return runtime.json({ ok: true });
           }
         } else if (status === 'failed' && String(intent.status) !== 'succeeded') {
-          await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
+          await completeEvent({
+            paymentIntentId: String(intent.payment_intent_id),
             status: 'failed',
-            last_error: normalizeString(eventBody.error),
+            lastError: normalizeString(eventBody.error),
           });
+          return runtime.json({ ok: true });
         }
       }
 
