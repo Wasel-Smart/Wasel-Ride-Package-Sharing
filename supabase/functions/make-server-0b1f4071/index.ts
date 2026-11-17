@@ -7,7 +7,7 @@
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { createCommunicationHandlers } from './communications-handlers.ts';
 import { createWalletHandlers } from './wallet-handlers.ts';
 import { getClientIp } from './_shared/security-runtime.ts';
@@ -19,7 +19,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-type SupabaseClientInstance = ReturnType<typeof createClient>;
+type SupabaseClientInstance = SupabaseClient<any, 'public' | 'private', any, any, any>;
 
 type AuthUser = {
   id: string;
@@ -285,7 +285,7 @@ function routeStartsWith(value: string, expectedPrefix: string): boolean {
 }
 
 function createUserScopedClient(request: Request) {
-  return createClient(
+  return createClient<any, 'public' | 'private'>(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     {
