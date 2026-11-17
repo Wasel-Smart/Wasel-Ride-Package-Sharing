@@ -56,6 +56,7 @@ describe('Supabase rollout guardrails', () => {
 
     expect(canonicalUserCreation).toContain("role: 'passenger'");
     expect(canonicalUserCreation).not.toContain('user.user_metadata?.role');
+    expect(edgeRouter).toContain("'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS'");
   });
 
   it('uses atomic database-backed rate limits for every protected Edge handler', () => {
@@ -134,6 +135,7 @@ describe('Supabase rollout guardrails', () => {
 
     expect(envTemplate).toContain('WALLET_STEP_UP_SECRET');
     expect(envValidator).toContain('WALLET_STEP_UP_SECRET');
+    expect(envValidator).toContain('SUPABASE_ANON_KEY');
     expect(envValidator).toContain('/^.{32,}$/');
     expect(wallet).toContain('getWalletStepUpSecret()');
     expect(wallet).toContain('WALLET_STEP_UP_SECRET.length < 32');
