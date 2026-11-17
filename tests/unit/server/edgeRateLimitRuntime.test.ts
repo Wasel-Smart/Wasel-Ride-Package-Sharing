@@ -18,6 +18,14 @@ describe('distributed Edge rate limiter', () => {
     expect(getClientIp(request)).toBe('203.0.113.10');
   });
 
+  it('does not trust X-Forwarded-For when the trusted Cloudflare header is absent', () => {
+    const request = new Request('https://edge.example.test/wallet/transfer', {
+      headers: { 'x-forwarded-for': '198.51.100.20' },
+    });
+
+    expect(getClientIp(request)).toBe('unknown');
+  });
+
 
   it('hashes the bucket key and returns the atomic database decision', async () => {
     const rpc = vi.fn().mockResolvedValue({ data: true, error: null });
