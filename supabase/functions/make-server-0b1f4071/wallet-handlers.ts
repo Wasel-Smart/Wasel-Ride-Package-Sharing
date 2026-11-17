@@ -1596,7 +1596,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'verify-pin', WALLET_VERIFY_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'verify-pin', WALLET_VERIFY_RATE_LIMIT);
       const body = await readJsonBody(request);
       const pin = normalizeString(body.pin);
       const purpose = normalizeString(body.purpose);
@@ -1706,7 +1706,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'payment-intent', WALLET_MUTATION_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'payment-intent', WALLET_MUTATION_RATE_LIMIT);
       const body = await readJsonBody(request);
       const purpose = normalizeString(body.purpose);
       const paymentMethodType = normalizeString(body.paymentMethodType);
@@ -1812,7 +1812,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'confirm-payment', WALLET_MUTATION_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'confirm-payment', WALLET_MUTATION_RATE_LIMIT);
       const body = await readJsonBody(request);
       const paymentIntentId = normalizeString(body.paymentIntentId);
       const paymentMethodId = normalizeString(body.paymentMethodId);
@@ -1900,7 +1900,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'payment-status', WALLET_MUTATION_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'payment-status', WALLET_MUTATION_RATE_LIMIT);
       const body = await readJsonBody(request);
       const paymentIntentId = normalizeString(body.paymentIntentId);
       if (!paymentIntentId) {
@@ -2031,7 +2031,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'transfer', WALLET_TRANSFER_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'transfer', WALLET_TRANSFER_RATE_LIMIT);
       const body = await readJsonBody(request);
       const recipient = normalizeString(body.recipientUserId ?? body.recipient ?? body.recipientPhone);
       const amount = toNumber(body.amount);
@@ -2082,7 +2082,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'withdraw', WALLET_TRANSFER_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'withdraw', WALLET_TRANSFER_RATE_LIMIT);
       const body = await readJsonBody(request);
       const amount = toNumber(body.amount);
       const verificationToken = requireVerificationToken(body);
@@ -2160,7 +2160,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'payment-methods', WALLET_MUTATION_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'payment-methods', WALLET_MUTATION_RATE_LIMIT);
       const body = await readJsonBody(request);
       const action = normalizeString(body.action) ?? 'add';
       const verificationToken = requireVerificationToken(body);
