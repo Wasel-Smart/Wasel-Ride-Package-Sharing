@@ -236,6 +236,7 @@ describe('Supabase rollout guardrails', () => {
     expect(wallet).toContain('MAX_OTP_ATTEMPTS = 5');
     expect(wallet).toContain('WALLET_PIN_VERIFY_RATE_LIMIT');
     expect(wallet).toContain("admin.rpc('app_record_wallet_pin_failure'");
+    expect(wallet).toContain("admin.rpc('app_record_wallet_pin_failure'");
     const paymentMigration = read(
       'src/supabase/migrations/20261117110000_payment_webhook_idempotency_and_settlement_safety.sql',
     );
