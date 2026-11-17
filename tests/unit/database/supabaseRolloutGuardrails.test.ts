@@ -52,8 +52,11 @@ describe('Supabase rollout guardrails', () => {
     const twoFactor = read('supabase/functions/make-server-0b1f4071/two-factor-handlers.ts');
     const wallet = read('supabase/functions/make-server-0b1f4071/wallet-handlers.ts');
     const communications = read('supabase/functions/make-server-0b1f4071/communications-handlers.ts');
+    const edgeRouter = read('supabase/functions/make-server-0b1f4071/index.ts');
 
     expect(limiter).toContain("admin.rpc('consume_edge_rate_limit'");
+    expect(edgeRouter).toContain('consumeRateLimitToken(createAdminClient()');
+    expect(edgeRouter).toContain('enforceDistributedRateLimit(req, path)');
     expect(limiter).not.toContain('new Map<string, RateLimitState>');
     expect(twoFactor).toContain('consumeRateLimitToken(auth.admin');
     expect(wallet).toContain('consumeRateLimitToken(runtime.getAdminClient()');
@@ -79,7 +82,11 @@ describe('Supabase rollout guardrails', () => {
     expect(sql).toContain('attempt_count');
     expect(sql).toContain('processing_token uuid');
     expect(sql).toContain('and processing_token = p_processing_token');
+    expect(sql).toContain('p_payment_intent_id uuid default null');
+    expect(sql).toContain('p_payment_status public.wallet_payment_intent_status default null');
+    expect(sql).toContain('late failure/cancellation event must never downgrade a successful payment');
     expect(wallet).toContain('p_processing_token: processingToken');
+    expect(wallet).toContain('p_payment_status: paymentUpdate?.status ?? null');
     expect(sql).toContain('wallet_accounts_payment_intent_id_key');
     expect(sql).toContain('escrow_accounts_payment_intent_id_key');
     expect(sql).toContain('app_upsert_wallet_subscription');
