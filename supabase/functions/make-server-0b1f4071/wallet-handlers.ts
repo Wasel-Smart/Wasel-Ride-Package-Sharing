@@ -878,18 +878,50 @@ async function updatePaymentIntentRecord(
   paymentIntentId: string,
   patch: Record<string, unknown>,
 ) {
-  const { data, error } = await admin
+  let updateQuery = admin
     .from('wallet_payment_intents')
     .update({ ...patch, updated_at: new Date().toISOString() })
-    .eq('payment_intent_id', paymentIntentId)
-    .select('*')
-    .single();
+    .eq('payment_intent_id', paymentIntentId);
 
+  if (typeof patch.status === 'string') {
+    if (patch.status === 'succeeded') {
+      updateQuery = updateQuery.neq('status', 'cancelled');
+    } else if (patch.status === 'failed') {
+      updateQuery = updateQuery.neq('status', 'succeeded').neq('status', 'cancelled');
+    } else if (patch.status === 'cancelled') {
+      updateQuery = updateQuery
+        .neq('status', 'succeeded')
+        .neq('status', 'failed')
+        .neq('status', 'cancelled');
+    } else {
+      updateQuery = updateQuery
+        .neq('status', 'succeeded')
+        .neq('status', 'failed')
+        .neq('status', 'cancelled');
+    }
+  }
+
+  const { data, error } = await updateQuery.select('*').maybeSingle();
   if (error) {
     throw new Error(error.message);
   }
+  if (data) {
+    return data;
+  }
 
-  return data;
+  // A webhook may have committed a terminal state after the caller read the
+  // intent. Return that authoritative row instead of overwriting or failing.
+  const { data: current, error: currentError } = await admin
+    .from('wallet_payment_intents')
+    .select('*')
+    .eq('payment_intent_id', paymentIntentId)
+    .single();
+
+  if (currentError) {
+    throw new Error(currentError.message);
+  }
+
+  return current;
 }
 
 async function findPaymentIntentByProviderPaymentId(admin: SupabaseAdminClient, providerPaymentId: string) {
@@ -1939,7 +1971,10 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         );
         const mappedStatus = mapStripePaymentStatus(stripePayload.status);
 
-        if (mappedStatus === 'succeeded' && String(intent.status) !== 'succeeded') {
+        if (
+          mappedStatus === 'succeeded' &&
+          canTransitionPaymentStatus(String(intent.status), mappedStatus)
+        ) {
           await settlePaymentIntent(auth.admin, intent as Record<string, unknown>);
         }
 
