@@ -94,7 +94,12 @@ describe('Supabase rollout guardrails', () => {
 
   it('fails closed for wallet step-up secrets and uses cryptographic OTP generation', () => {
     const wallet = read('supabase/functions/make-server-0b1f4071/wallet-handlers.ts');
+    const envTemplate = read('.env.production.template');
+    const envValidator = read('scripts/validate-production-env.mjs');
 
+    expect(envTemplate).toContain('WALLET_STEP_UP_SECRET');
+    expect(envValidator).toContain('WALLET_STEP_UP_SECRET');
+    expect(envValidator).toContain('/^.{32,}$/');
     expect(wallet).toContain('getWalletStepUpSecret()');
     expect(wallet).toContain('WALLET_STEP_UP_SECRET.length < 32');
     expect(wallet).toContain('crypto.getRandomValues(sample)');
