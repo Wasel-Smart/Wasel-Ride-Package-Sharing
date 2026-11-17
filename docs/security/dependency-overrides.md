@@ -4,7 +4,7 @@ These overrides pin patched transitive development-tool dependencies. Do not rem
 
 - `basic-ftp@6.2.1` and `nanoid@5.1.16` pin patched transitive versions.
 - `@puppeteer/browsers@^3.2.7` replaces the exact 2.x version pinned by the Lighthouse/Puppeteer toolchain. The 2.x tree brings in `extract-zip@2.0.1`, for which reviewed GitHub advisories report no patched release. Version 3.x removes that dependency and uses `modern-tar`.
-- `@puppeteer/browsers@3.x` requires Node.js 22.12 or newer for the ESM/CommonJS interop used by the current Puppeteer toolchain. CI therefore runs on Node.js 22.12.0.
+- `@puppeteer/browsers@3.x` requires Node.js 22.13 or newer for the ESM/CommonJS interop used by the current Puppeteer toolchain. CI therefore runs on Node.js 22.13.0.
 
 Verification required after changing these overrides:
 1. `npm ci`
