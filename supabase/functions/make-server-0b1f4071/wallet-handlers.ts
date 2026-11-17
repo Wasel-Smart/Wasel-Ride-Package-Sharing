@@ -497,7 +497,7 @@ async function recordPinFailure(admin: SupabaseAdminClient, userId: string) {
   const { error } = await admin.rpc('app_record_wallet_pin_failure', {
     p_user_id: userId,
     p_max_failures: MAX_PIN_FAILURES,
-    p_lock_seconds: Math.floor(PIN_LOCK_WINDOW_MS / 1000),
+    p_lock_seconds: Math.ceil(PIN_LOCK_WINDOW_MS / 1000),
   });
 
   if (error) {
