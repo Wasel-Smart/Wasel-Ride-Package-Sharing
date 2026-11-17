@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { consumeRateLimitToken, getClientIp, sanitizeEdgeErrorMessage, verifyTimestampedHmacSignature } from '../../../supabase/functions/make-server-0b1f4071/_shared/security-runtime';
+import {
+  consumeRateLimitToken,
+  getClientIp,
+  sanitizeEdgeErrorMessage,
+  verifyTimestampedHmacSignature,
+} from '../../../supabase/functions/make-server-0b1f4071/_shared/security-runtime';
 
 describe('distributed Edge rate limiter', () => {
   it('uses the trusted proxy client IP before a caller-supplied forwarded header', () => {
