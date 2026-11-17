@@ -20,7 +20,9 @@ describe('idleScheduler', () => {
           options?.timeout ?? 0,
         ),
     );
-    vi.stubGlobal('cancelIdleCallback', (handle: ReturnType<typeof setTimeout>) => clearTimeout(handle));
+    vi.stubGlobal('cancelIdleCallback', (handle: ReturnType<typeof setTimeout>) =>
+      clearTimeout(handle),
+    );
   });
 
   afterEach(() => {
