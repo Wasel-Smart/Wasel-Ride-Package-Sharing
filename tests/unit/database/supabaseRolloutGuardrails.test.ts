@@ -88,6 +88,12 @@ describe('Supabase rollout guardrails', () => {
     ).toContain('limit 500');
     expect(edgeRouter).toContain("userClient.rpc('app_create_booking_request'");
     expect(edgeRouter).toContain("userClient.rpc('app_update_booking_runtime_status'");
+    const bookingMigration = read(
+      'src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql',
+    );
+    expect(bookingMigration).toContain("v_trip.trip_status not in ('open', 'booked')");
+    expect(bookingMigration).toContain('Seat identifiers are assigned by the database');
+    expect(bookingMigration).toContain("when trip_status = 'booked' and available_seats + v_requested_seats > 0 then 'open'");
     const createBookingHandler = edgeRouter.slice(
       edgeRouter.indexOf('async function handleCreateBooking('),
       edgeRouter.indexOf('async function handleGetUserBookings('),
