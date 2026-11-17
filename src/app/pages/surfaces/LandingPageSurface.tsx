@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import {
   ArrowRight,
   Calendar,
@@ -28,7 +28,6 @@ import {
 import { useIframeSafeNavigate } from '../../../hooks/useIframeSafeNavigate';
 import { APP_ROUTES } from '../../../router/paths';
 import { LANDING_SUPPORT_EMAIL, LANDING_SUPPORT_PHONE } from './pageTypes';
-import { scheduleDeferredTask } from '../../../utils/runtimeScheduling';
 import '../LandingPage.css';
 
 type LandingMode = 'ride' | 'package';
@@ -62,31 +61,17 @@ function LandingBrandBadge({ size = 46 }: { size?: number }) {
 }
 
 function NetworkMapHero() {
-  const [showImage, setShowImage] = useState(false);
-
-  useEffect(() => {
-    const cancelDeferredLoad = scheduleDeferredTask(() => {
-      setShowImage(true);
-    }, 1_800);
-
-    return () => {
-      cancelDeferredLoad();
-    };
-  }, []);
-
   return (
     <div aria-hidden="true" className="landing-page__network-map">
-      {showImage ? (
-        <img
-          alt=""
-          className="landing-page__network-map-image"
-          decoding="async"
-          draggable={false}
-          fetchPriority="low"
-          loading="lazy"
-          src={landingMapReference}
-        />
-      ) : null}
+      <img
+        alt=""
+        className="landing-page__network-map-image"
+        decoding="async"
+        draggable={false}
+        fetchPriority="high"
+        loading="eager"
+        src={landingMapReference}
+      />
       <div className="landing-page__network-map-shade" />
     </div>
   );
