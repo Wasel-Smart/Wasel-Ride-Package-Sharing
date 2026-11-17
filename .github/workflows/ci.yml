@@ -124,6 +124,18 @@ jobs:
             }
 
             console.log(`Checking Prettier on ${files.length} changed source file(s).`);
+            if (files.includes('src/app/pages/surfaces/LandingPageSurface.tsx')) {
+              const formatted = execSync('npx prettier src/app/pages/surfaces/LandingPageSurface.tsx', { encoding: 'utf8' });
+              try {
+                execSync('diff -u src/app/pages/surfaces/LandingPageSurface.tsx -', {
+                  input: formatted,
+                  encoding: 'utf8',
+                  stdio: ['pipe', 'pipe', 'pipe'],
+                });
+              } catch (error) {
+                console.log(error.stdout?.toString() ?? 'Prettier formatting diff unavailable.');
+              }
+            }
             execSync(`npx prettier --check ${files.map((file) => JSON.stringify(file)).join(' ')}`, {
               stdio: 'inherit',
             });
