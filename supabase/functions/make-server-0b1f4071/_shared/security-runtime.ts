@@ -1,4 +1,9 @@
-import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+type RateLimitRpcClient = {
+  rpc: (
+    functionName: string,
+    args: Record<string, unknown>,
+  ) => PromiseLike<{ data: unknown; error: unknown }>;
+};
 
 
 function encodeBytes(value: string): Uint8Array {
@@ -37,7 +42,7 @@ export function getClientIp(request: Request): string {
 }
 
 export async function consumeRateLimitToken(
-  admin: SupabaseClient,
+  admin: RateLimitRpcClient,
   args: {
     key: string;
     maxRequests: number;
