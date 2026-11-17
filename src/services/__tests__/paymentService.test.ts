@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type * as BackendWorkflowModule from '../backendWorkflow';
+import type * as CurrencyModule from '../../shared/currency/currency';
 
 // ── Hoisted mocks (vi.mock factories are hoisted before const declarations) ──
 
@@ -22,9 +23,13 @@ vi.mock('../core', () => ({
   getAuthDetails: vi.fn(),
 }));
 
-vi.mock('../../shared/currency/currency', () => ({
-  toMinorUnits: vi.fn((amount: number) => Math.round(amount * 100)),
-}));
+vi.mock('../../shared/currency/currency', async (importOriginal) => {
+  const actual = await importOriginal<typeof CurrencyModule>();
+  return {
+    ...actual,
+    toMinorUnits: vi.fn(actual.toMinorUnits),
+  };
+});
 
 vi.mock('../../domain/payments/cliq', () => ({
   generateJordanCliqDeeplink: vi.fn(() => 'cliq://deeplink'),
@@ -77,22 +82,22 @@ describe('paymentService', () => {
       expect(result.clientSecret).toBe('pi_secret_alt');
     });
 
-    it('throws when amount is below minimum (< 0.50 JOD = 50 fils)', async () => {
+    it('throws when amount is below minimum (< 0.05 JOD = 50 fils)', async () => {
       await expect(
-        paymentService.createPaymentIntent({ amount: 0.49, bookingId: 'b-1' }),
-      ).rejects.toThrow('Payment amount must be at least 0.50');
+        paymentService.createPaymentIntent({ amount: 0.049, bookingId: 'b-1' }),
+      ).rejects.toThrow('Payment amount must be between 0.05 and 5000 JOD');
     });
 
     it('throws when amount is zero', async () => {
       await expect(
         paymentService.createPaymentIntent({ amount: 0, bookingId: 'b-1' }),
-      ).rejects.toThrow('Payment amount must be at least 0.50');
+      ).rejects.toThrow('Payment amount must be between 0.05 and 5000 JOD');
     });
 
     it('throws when amount is negative', async () => {
       await expect(
         paymentService.createPaymentIntent({ amount: -1, bookingId: 'b-1' }),
-      ).rejects.toThrow('Payment amount must be at least 0.50');
+      ).rejects.toThrow('Payment amount must be between 0.05 and 5000 JOD');
     });
 
     it('throws BackendRequestError when response is missing clientSecret', async () => {
@@ -161,8 +166,8 @@ describe('paymentService', () => {
 
     it('does not leave a stale in-flight entry when validation fails', async () => {
       await expect(
-        paymentService.createPaymentIntent({ amount: 0.1, bookingId: 'invalid-booking' }),
-      ).rejects.toThrow('Payment amount must be at least 0.50');
+        paymentService.createPaymentIntent({ amount: 0.049, bookingId: 'invalid-booking' }),
+      ).rejects.toThrow('Payment amount must be between 0.05 and 5000 JOD');
 
       mockRequestEdge.mockResolvedValueOnce({ clientSecret: 's', paymentIntentId: 'pi_ok' });
       const result = await paymentService.createPaymentIntent({ amount: 5, bookingId: 'invalid-booking' });

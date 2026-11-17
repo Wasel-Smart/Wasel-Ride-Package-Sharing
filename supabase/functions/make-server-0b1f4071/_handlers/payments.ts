@@ -5,6 +5,7 @@ import {
     consumeRateLimit,
     ALLOWED_PAYMENT_CURRENCIES,
     MAX_PAYMENT_AMOUNT_MINOR,
+    MIN_PAYMENT_AMOUNT_MINOR,
     normalizePaymentAmount,
     stripe,
     toNumber,
@@ -128,7 +129,7 @@ export async function computeBookingAmountMinor (
   if ( !ALLOWED_PAYMENT_CURRENCIES.has( currency ) ) {return null;}
 
   const amountMinor = deriveBookingAmountMinor( booking as Record<string, unknown>, currency );
-  if ( !amountMinor || amountMinor < 50 || amountMinor > MAX_PAYMENT_AMOUNT_MINOR ) {
+  if ( !amountMinor || amountMinor < MIN_PAYMENT_AMOUNT_MINOR || amountMinor > MAX_PAYMENT_AMOUNT_MINOR ) {
     return null;
   }
 

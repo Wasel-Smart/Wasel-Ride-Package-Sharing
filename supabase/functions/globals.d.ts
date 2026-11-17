@@ -1,4 +1,4 @@
-declare module 'https://esm.sh/@supabase/supabase-js@2.39.0' {
+declare module 'https://esm.sh/@supabase/supabase-js@2.119.0' {
   const value: any;
   export default value;
   export const createClient: any;

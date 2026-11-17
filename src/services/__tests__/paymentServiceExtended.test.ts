@@ -50,7 +50,7 @@ describe('paymentService with real currency conversion', () => {
     it.each<[string, number, number]>([
       ['jod', 0.05, 50],
       ['JOD', 1.5, 1500],
-      ['jod', 12.345, 12345],
+      ['jod', 12.345, 12350],
       ['usd', 0.5, 50],
       ['usd', 12.34, 1234],
     ])('sends %s %s as %i minor units', async (currency, amount, expectedMinor) => {
@@ -83,7 +83,7 @@ describe('paymentService with real currency conversion', () => {
     ])('rejects %s %s before any network call', async (currency, amount) => {
       await expect(
         paymentService.createPaymentIntent({ amount, currency, bookingId: 'b-invalid' }),
-      ).rejects.toThrow('Payment amount must be at least 0.50');
+      ).rejects.toThrow(/Payment amount must be between/);
 
       expect(requestEdge).not.toHaveBeenCalled();
     });

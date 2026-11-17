@@ -22,7 +22,7 @@
  *     state before inserting, making it safe to re-run on retry.
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.119.0';
 import { checkRateLimit } from './_shared/rate-limiter.ts';
 import { idempotencyMiddleware } from './_shared/idempotency-middleware.ts';
 

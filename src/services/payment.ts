@@ -1,5 +1,5 @@
 import { supabase } from '@/utils/supabase/client';
-import { toMinorUnits } from '../shared/currency/currency';
+import { toMinorUnits, toStripeMinorUnits, fromMinorUnits, MIN_PAYMENT_AMOUNT_MINOR, MAX_PAYMENT_AMOUNT_MINOR } from '../shared/currency/currency';
 import { requestEdgeJson, BackendRequestError } from './backendWorkflow';
 import { getAuthDetails } from './core';
 import { generateJordanCliqDeeplink, generateJordanCliqQrPayload } from '../domain/payments/cliq';
@@ -84,10 +84,18 @@ class PaymentService {
     }
 
     const currency = request.currency ?? 'jod';
-    const amountMinor = toMinorUnits( request.amount, currency );
-    if ( !Number.isSafeInteger( amountMinor ) || amountMinor < 50 ) {
-      throw new Error( 'Payment amount must be at least 0.50' );
+    const exactMinor = toMinorUnits( request.amount, currency );
+    if (
+      !Number.isSafeInteger( exactMinor )
+      || exactMinor < MIN_PAYMENT_AMOUNT_MINOR
+      || exactMinor > MAX_PAYMENT_AMOUNT_MINOR
+    ) {
+      throw new Error(
+        `Payment amount must be between ${ fromMinorUnits( MIN_PAYMENT_AMOUNT_MINOR, currency ) } and ${ fromMinorUnits( MAX_PAYMENT_AMOUNT_MINOR, currency ) } ${ currency.toUpperCase() }`,
+      );
     }
+    // Three-decimal currencies must be a multiple of 10 minor units for Stripe.
+    const amountMinor = toStripeMinorUnits( request.amount, currency );
 
     const flightKey = `${ user.id }:${ request.bookingId }:${ currency.toLowerCase() }:${ amountMinor }`;
     const inFlight = inFlightPaymentIntents.get( flightKey );

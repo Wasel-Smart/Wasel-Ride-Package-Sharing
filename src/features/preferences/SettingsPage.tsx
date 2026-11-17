@@ -12,7 +12,7 @@ import {
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useAuth } from '../../contexts/AuthContext';
-import { useLanguage } from '../../contexts/LanguageContext';
+import { startDirectTrustPhoneVerification, confirmDirectTrustPhoneVerification } from '../../services/directSupabase/trust';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { normalizeProfilePhone } from '../../features/profile/profileUtils';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -78,6 +78,7 @@ export default function SettingsPage() {
   const [emailSaving, setEmailSaving] = useState(false);
   const [phoneInput, setPhoneInput] = useState(user?.phone ?? '');
   const [phoneSaving, setPhoneSaving] = useState(false);
+  const [otpInput, setOtpInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -1056,11 +1057,27 @@ export default function SettingsPage() {
                     }}
                     disabled={!user || phoneSaving}
                   />
-                  <ActionButton
-                    label={ar ? 'افتح الملف الشخصي' : 'Open Profile'}
-                    onClick={() => nav('/app/profile')}
-                    variant="secondary"
-                  />
+                    <ActionButton
+                      label={ar ? 'تأكيد رمز التحقق' : 'Confirm verification code'}
+                      onClick={async () => {
+                        if (!user?.id) return;
+                        try {
+                          await confirmDirectTrustPhoneVerification(user.id, otpInput);
+                          toast.success(ar ? 'تم توثيق الهاتف.' : 'Phone verified.');
+                          setOtpInput('');
+                        } catch (e) {
+                          toast.error(e instanceof Error ? e.message : String(e));
+                        }
+                      }}
+                      disabled={!user || !otpInput}
+                      variant="secondary"
+                    />
+                    <FormField
+                      value={otpInput}
+                      onChange={setOtpInput}
+                      type="text"
+                      placeholder={ar ? 'رمز التحقق' : 'Verification code'}
+                    />
                 </div>
                </div>
 

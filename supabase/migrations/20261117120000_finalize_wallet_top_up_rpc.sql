@@ -75,8 +75,10 @@ begin
 
   -- Never credit more than the provider says was paid. The 0.0051 tolerance
   -- absorbs the 3-decimal -> 2-decimal rounding of legacy rows.
-  v_currency_mismatch := p_expected_currency ~ '^[A-Za-z]{3}$'
-                         and lower(p_expected_currency) <> 'jod';
+  v_currency_mismatch := coalesce(
+    p_expected_currency ~ '^[A-Za-z]{3}$' and lower(p_expected_currency) <> 'jod',
+    false
+  );
   v_amount_unverified := p_expected_amount is null or p_expected_amount <= 0;
   v_amount_mismatch   := not v_amount_unverified
                          and abs(p_expected_amount - v_stored_amount) > 0.0051;
