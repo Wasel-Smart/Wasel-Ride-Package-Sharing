@@ -27,6 +27,7 @@ describe('Supabase rollout guardrails', () => {
       'src/supabase/migrations/20260422120000_safety_and_user_settings.sql',
       'src/supabase/migrations/20260424140000_harden_user_owned_rpc_boundaries.sql',
       'src/supabase/migrations/20260424153000_database_governance_and_rls_hardening.sql',
+      'src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql',
     ]);
   });
 
