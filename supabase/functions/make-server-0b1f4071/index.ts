@@ -453,12 +453,9 @@ async function authenticateRequest(request: Request): Promise<AuthenticationResu
 
     const canonicalUser = await ensureCanonicalUser(admin, user as AuthUser);
     return { admin, authUser: user as AuthUser, canonicalUser };
-  } catch (error) {
+  } catch {
     return {
-      error: jsonResponse(
-        { error: error instanceof Error ? error.message : 'Unexpected authentication error' },
-        500,
-      ),
+      error: jsonResponse({ error: 'Authentication could not be completed.' }, 500),
     };
   }
 }
