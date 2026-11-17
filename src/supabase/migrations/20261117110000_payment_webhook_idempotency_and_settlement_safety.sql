@@ -189,8 +189,14 @@ begin
       raise exception 'Payment intent was not found while finalizing webhook';
     end if;
 
-    -- A late failure/cancellation event must never downgrade a successful payment.
-    if v_current_status <> 'succeeded' or p_payment_status = 'succeeded' then
+    -- Terminal states are monotonic: a late processing/action event cannot
+    -- downgrade success, failure, or cancellation. A failed intent may still
+    -- recover to success after a provider retry.
+    if
+      (v_current_status not in ('succeeded', 'cancelled') and
+        (v_current_status <> 'failed' or p_payment_status in ('failed', 'succeeded')))
+      or (v_current_status = 'succeeded' and p_payment_status = 'succeeded')
+    then
       update public.wallet_payment_intents
       set
         status = p_payment_status,
