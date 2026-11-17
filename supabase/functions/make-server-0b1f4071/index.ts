@@ -622,6 +622,12 @@ async function getDriverApprovalRows(
     (Array.isArray(userRows) ? userRows : []).map((row) => [String((row as Record<string, unknown>).id ?? ''), row as Record<string, unknown>]),
   );
   const verificationMap = new Map<string, Record<string, unknown>>();
+  const trustMap = new Map<string, Record<string, unknown>>(
+    (Array.isArray(trustRows) ? trustRows : []).map((row) => [
+      String((row as Record<string, unknown>).user_id),
+      row as Record<string, unknown>,
+    ]),
+  );
 
   for (const row of Array.isArray(verificationRows) ? verificationRows : []) {
     const record = row as Record<string, unknown>;
@@ -698,7 +704,11 @@ async function fetchDriverSummaries(
   const drivers = Array.isArray(driverRows) ? (driverRows as DriverRecord[]) : [];
   const userIds = Array.from(new Set(drivers.map((driver) => driver.user_id).filter(Boolean)));
 
-  const [{ data: userRows, error: userError }, { data: verificationRows, error: verificationError }] = await Promise.all([
+  const [
+    { data: userRows, error: userError },
+    { data: verificationRows, error: verificationError },
+    { data: trustRows, error: trustError },
+  ] = await Promise.all([
     userIds.length > 0
       ? admin.from('users').select('id, auth_user_id, email, full_name').in('id', userIds)
       : Promise.resolve({ data: [], error: null }),
@@ -709,6 +719,9 @@ async function fetchDriverSummaries(
         .in('user_id', userIds)
         .order('verification_timestamp', { ascending: false })
       : Promise.resolve({ data: [], error: null }),
+    userIds.length > 0
+      ? admin.from('trust_scores').select('user_id, average_rating').in('user_id', userIds)
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   if (userError) {
@@ -716,6 +729,9 @@ async function fetchDriverSummaries(
   }
   if (verificationError) {
     throw new Error(verificationError.message);
+  }
+  if (trustError) {
+    throw new Error(trustError.message);
   }
 
   const userMap = new Map<string, Record<string, unknown>>(
@@ -734,6 +750,7 @@ async function fetchDriverSummaries(
   for (const driver of drivers) {
     const user = userMap.get(driver.user_id);
     const verification = verificationMap.get(driver.user_id);
+    const trust = trustMap.get(driver.user_id);
     const driverId = String(driver.driver_id);
 
     result.set(driverId, {
@@ -742,7 +759,7 @@ async function fetchDriverSummaries(
         String(user?.full_name ?? '').trim() ||
         String(user?.email ?? '').split('@')[0] ||
         'Wasel Driver',
-      rating: 5,
+      rating: toNumber(trust?.average_rating, 0),
       verified:
         driver.sanad_identity_linked === true ||
         verification?.sanad_status === 'verified' ||
