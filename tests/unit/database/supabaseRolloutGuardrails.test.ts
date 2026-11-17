@@ -57,6 +57,18 @@ describe('Supabase rollout guardrails', () => {
     expect(limiter).toContain("admin.rpc('consume_edge_rate_limit'");
     expect(edgeRouter).toContain('consumeRateLimitToken(createAdminClient()');
     expect(edgeRouter).toContain('enforceDistributedRateLimit(req, path)');
+    expect(edgeRouter).toContain("userClient.rpc('app_create_booking_request'");
+    expect(edgeRouter).toContain("userClient.rpc('app_update_booking_runtime_status'");
+    const createBookingHandler = edgeRouter.slice(
+      edgeRouter.indexOf('async function handleCreateBooking('),
+      edgeRouter.indexOf('async function handleGetUserBookings('),
+    );
+    const updateBookingHandler = edgeRouter.slice(
+      edgeRouter.indexOf('async function handleUpdateBookingStatus('),
+      edgeRouter.indexOf('async function handleGetNotifications('),
+    );
+    expect(createBookingHandler).not.toContain(".from('bookings').insert(");
+    expect(updateBookingHandler).not.toContain(".from('bookings').update(");
     expect(limiter).not.toContain('new Map<string, RateLimitState>');
     expect(twoFactor).toContain('consumeRateLimitToken(auth.admin');
     expect(wallet).toContain('consumeRateLimitToken(runtime.getAdminClient()');
