@@ -62,7 +62,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          deno check --no-lock supabase/functions/make-server-0b1f4071/index.ts 2>&1 | tee deno-check.log
+          deno check --no-lock supabase/functions/make-server-0b1f4071/wallet-handlers.ts 2>&1 | tee deno-check.log
 
       - name: Upload Deno check log
         if: always()
