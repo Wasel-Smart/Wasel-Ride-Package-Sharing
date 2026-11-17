@@ -160,6 +160,10 @@ describe('Supabase rollout guardrails', () => {
     expect(wallet).not.toContain('wallet-step-up-development-secret');
     expect(wallet).not.toContain('Math.random()');
     expect(wallet).not.toContain("Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ??");
+    expect(wallet).toContain('MAX_OTP_ATTEMPTS = 5');
+    expect(wallet).toContain('WALLET_PIN_VERIFY_RATE_LIMIT');
+    expect(wallet).toContain(".is('consumed_at', null)");
+    expect(wallet).toContain(".eq('attempts_count', toNumber(challenge.attempts_count))");
   });
 
   it('removes permissive legacy RLS paths from kv, subscription, and wallet surfaces', () => {
