@@ -144,14 +144,24 @@ $$;
 create or replace function public.app_complete_payment_webhook_event(
   p_provider_name public.wallet_provider_name,
   p_provider_event_id text,
-  p_processing_token uuid
+  p_processing_token uuid,
+  p_payment_intent_id uuid default null,
+  p_payment_status public.wallet_payment_intent_status default null,
+  p_last_error text default null
 )
 returns boolean
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $$
+as $
+declare
+  v_event_id uuid;
+  v_current_status public.wallet_payment_intent_status;
 begin
+  if (p_payment_intent_id is null) <> (p_payment_status is null) then
+    raise exception 'Payment intent ID and status must be supplied together';
+  end if;
+
   update public.payment_webhook_events
   set
     processed_at = now(),
@@ -161,11 +171,45 @@ begin
   where provider_name = p_provider_name
     and provider_event_id = p_provider_event_id
     and processing_token = p_processing_token
-    and processed_at is null;
+    and processed_at is null
+  returning webhook_event_id into v_event_id;
 
-  return found;
+  if v_event_id is null then
+    return false;
+  end if;
+
+  if p_payment_intent_id is not null then
+    select status
+    into v_current_status
+    from public.wallet_payment_intents
+    where payment_intent_id = p_payment_intent_id
+    for update;
+
+    if not found then
+      raise exception 'Payment intent was not found while finalizing webhook';
+    end if;
+
+    -- A late failure/cancellation event must never downgrade a successful payment.
+    if v_current_status <> 'succeeded' or p_payment_status = 'succeeded' then
+      update public.wallet_payment_intents
+      set
+        status = p_payment_status,
+        last_error = case
+          when p_payment_status = 'failed' then left(coalesce(p_last_error, 'Payment failed'), 2000)
+          else null
+        end,
+        confirmed_at = case
+          when p_payment_status = 'succeeded' then coalesce(confirmed_at, now())
+          else confirmed_at
+        end,
+        updated_at = now()
+      where payment_intent_id = p_payment_intent_id;
+    end if;
+  end if;
+
+  return true;
 end;
-$$;
+$;
 
 create or replace function public.app_fail_payment_webhook_event(
   p_provider_name public.wallet_provider_name,
@@ -264,12 +308,12 @@ end;
 $$;
 
 revoke all on function public.app_claim_payment_webhook_event(public.wallet_provider_name, text, text, jsonb, integer, uuid) from public, anon, authenticated;
-revoke all on function public.app_complete_payment_webhook_event(public.wallet_provider_name, text, uuid) from public, anon, authenticated;
+revoke all on function public.app_complete_payment_webhook_event(public.wallet_provider_name, text, uuid, uuid, public.wallet_payment_intent_status, text) from public, anon, authenticated;
 revoke all on function public.app_fail_payment_webhook_event(public.wallet_provider_name, text, uuid, text) from public, anon, authenticated;
 revoke all on function public.app_upsert_wallet_subscription(uuid, public.wallet_provider_name, text, text, text, numeric, text, text, timestamptz, jsonb) from public, anon, authenticated;
 
 grant execute on function public.app_claim_payment_webhook_event(public.wallet_provider_name, text, text, jsonb, integer, uuid) to service_role;
-grant execute on function public.app_complete_payment_webhook_event(public.wallet_provider_name, text, uuid) to service_role;
+grant execute on function public.app_complete_payment_webhook_event(public.wallet_provider_name, text, uuid, uuid, public.wallet_payment_intent_status, text) to service_role;
 grant execute on function public.app_fail_payment_webhook_event(public.wallet_provider_name, text, uuid, text) to service_role;
 grant execute on function public.app_upsert_wallet_subscription(uuid, public.wallet_provider_name, text, text, text, numeric, text, text, timestamptz, jsonb) to service_role;
 
