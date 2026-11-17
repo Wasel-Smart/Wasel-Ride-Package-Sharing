@@ -1996,8 +1996,11 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         throw new Error(claimError.message);
       }
 
-      if (claimed !== true) {
+      if (claimed === 'processed') {
         return runtime.json({ ok: true, duplicate: true });
+      }
+      if (claimed !== 'claimed') {
+        return runtime.json({ error: 'Payment event is already being processed. Retry shortly.' }, 503);
       }
 
       const completeEvent = async () => {
