@@ -133,7 +133,7 @@ async function claimQueuedDeliveries(
 }
 
 function buildLifecyclePatch(
-  status: 'sent' | 'delivered' | 'failed',
+  status: 'sent' | 'delivered' | 'failed' | 'processing',
   now: string,
   payload: unknown,
   errorMessage?: string,
@@ -152,6 +152,14 @@ function buildLifecyclePatch(
     return {
       delivery_status: 'delivered',
       delivered_at: now,
+      provider_response: payload,
+      updated_at: now,
+    };
+  }
+
+  if (status === 'processing') {
+    return {
+      delivery_status: 'processing',
       provider_response: payload,
       updated_at: now,
     };
@@ -616,12 +624,13 @@ export function createCommunicationHandlers(
 
     const payload = await readJsonBody(request);
     const eventType = String(payload?.type ?? '');
-    const externalReference = String(
-      payload?.data?.email_id ??
-      payload?.data?.id ??
-      payload?.data?.email?.id ??
-      '',
-    );
+    const data = payload.data && typeof payload.data === 'object' && !Array.isArray(payload.data)
+      ? payload.data as Record<string, unknown>
+      : {};
+    const email = data.email && typeof data.email === 'object' && !Array.isArray(data.email)
+      ? data.email as Record<string, unknown>
+      : {};
+    const externalReference = String(data.email_id ?? data.id ?? email.id ?? '');
 
     if (!externalReference) {
       return runtime.json({ received: true, ignored: true });
