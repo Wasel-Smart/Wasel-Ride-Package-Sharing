@@ -1,18 +1,47 @@
 name: Deploy to Vercel
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches:
-      - main
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wasel-production-deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    name: Deploy verified master commit to Vercel
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'master' }}
     runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - name: Checkout exact commit verified by CI
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
 
-      - name: Deploy to Vercel
+      - name: Verify Vercel deployment credentials are configured
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          test -n "$VERCEL_TOKEN" || { echo "::error::VERCEL_TOKEN is not configured"; exit 1; }
+          test -n "$VERCEL_ORG_ID" || { echo "::error::VERCEL_ORG_ID is not configured"; exit 1; }
+          test -n "$VERCEL_PROJECT_ID" || { echo "::error::VERCEL_PROJECT_ID is not configured"; exit 1; }
+
+      - name: Deploy to Vercel production
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
