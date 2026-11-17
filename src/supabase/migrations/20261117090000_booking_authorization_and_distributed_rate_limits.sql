@@ -1,5 +1,6 @@
 -- Booking authorization and distributed rate-limit hardening.
 -- This migration is intentionally additive; never edit historical migrations.
+begin;
 
 create or replace function public.app_create_booking_request(
   p_trip_id uuid,
@@ -30,6 +31,10 @@ begin
   v_actor_user_id := public.current_user_id();
   if v_actor_user_id is null then
     raise exception 'Authentication required to create bookings';
+  end if;
+
+  if not public.app_consume_user_rate_limit('booking_create') then
+    raise exception 'Too many booking requests. Please try again shortly';
   end if;
 
   -- Enforce the same account eligibility rules at the database boundary;
@@ -151,6 +156,9 @@ begin
   v_actor_user_id := public.current_user_id();
   if v_actor_user_id is null then
     raise exception 'Authentication required to update bookings';
+  end if;
+  if not public.app_consume_user_rate_limit('booking_update') then
+    raise exception 'Too many booking updates. Please try again shortly';
   end if;
   if v_next_status not in ('confirmed', 'rejected', 'cancelled') then
     raise exception 'Unsupported booking runtime status';
@@ -317,6 +325,40 @@ revoke execute on function public.consume_edge_rate_limit(text, integer, integer
 grant execute on function public.consume_edge_rate_limit(text, integer, integer)
   to service_role;
 
+create or replace function public.app_consume_user_rate_limit(p_scope text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $
+declare
+  v_auth_user_id uuid := auth.uid();
+  v_max_requests integer;
+  v_window_seconds integer := 60;
+begin
+  if v_auth_user_id is null then
+    raise exception 'Authentication required for user rate limits';
+  end if;
+
+  case p_scope
+    when 'booking_create' then v_max_requests := 8;
+    when 'booking_update' then v_max_requests := 30;
+    else raise exception 'Unsupported user rate-limit scope';
+  end case;
+
+  return public.consume_edge_rate_limit(
+    'user:' || v_auth_user_id::text || ':' || p_scope,
+    v_max_requests,
+    v_window_seconds
+  );
+end;
+$;
+
+revoke execute on function public.app_consume_user_rate_limit(text)
+  from public, anon, authenticated;
+grant execute on function public.app_consume_user_rate_limit(text)
+  to authenticated;
+
 create or replace function public.cleanup_edge_rate_limit_buckets(p_limit integer default 5000)
 returns integer
 language plpgsql
@@ -343,3 +385,5 @@ revoke execute on function public.cleanup_edge_rate_limit_buckets(integer)
   from public, anon, authenticated;
 grant execute on function public.cleanup_edge_rate_limit_buckets(integer)
   to service_role;
+
+commit;
