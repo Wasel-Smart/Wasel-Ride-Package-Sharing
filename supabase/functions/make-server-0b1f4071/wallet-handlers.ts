@@ -1183,7 +1183,6 @@ async function activateSubscriptionForIntent(
   }
 
   const renewalAt = new Date(Date.now() + 30 * 24 * 60 * 60_000).toISOString();
-  const now = new Date().toISOString();
   const { data, error } = await admin.rpc('app_upsert_wallet_subscription', {
     p_user_id: userId,
     p_provider_name: providerName,
