@@ -31,5 +31,5 @@ export const tripPublishResultSchema = z.object({
 export const tripPriceCalculationResultSchema = z.object({
   price: z.number().finite(),
   currency: z.string().min(1),
-  breakdown: z.record(z.number().finite()).optional(),
+  breakdown: z.record(z.string(), z.number().finite()).optional(),
 });
