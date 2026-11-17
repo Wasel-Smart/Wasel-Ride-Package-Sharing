@@ -17,7 +17,8 @@ describe('distributed Edge rate limiter', () => {
       p_max_requests: 12,
       p_window_seconds: 600,
     });
-    expect(rpc.mock.calls[0][1].p_bucket_key).not.toContain('user-123');
+    const firstCallArgs = rpc.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(firstCallArgs.p_bucket_key).not.toContain('user-123');
   });
 
   it('fails closed when the RPC returns a database error', async () => {
