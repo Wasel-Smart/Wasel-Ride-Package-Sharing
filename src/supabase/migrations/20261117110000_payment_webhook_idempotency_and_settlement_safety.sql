@@ -2,7 +2,8 @@ begin;
 
 alter table public.payment_webhook_events
   add column if not exists processing_started_at timestamptz null,
-  add column if not exists attempt_count integer not null default 0;
+  add column if not exists attempt_count integer not null default 0,
+  add column if not exists processing_token uuid null;
 
 alter table public.wallet_accounts
   add column if not exists payment_intent_id uuid null;
@@ -65,7 +66,8 @@ create or replace function public.app_claim_payment_webhook_event(
   p_provider_event_id text,
   p_signature text,
   p_payload jsonb,
-  p_lease_seconds integer default 300
+  p_lease_seconds integer default 300,
+  p_processing_token uuid
 )
 returns text
 language plpgsql
@@ -81,6 +83,9 @@ begin
     or length(p_provider_event_id) > 255 then
     raise exception 'A valid provider event ID is required';
   end if;
+  if p_processing_token is null then
+    raise exception 'A payment webhook processing token is required';
+  end if;
 
   insert into public.payment_webhook_events (
     provider_name,
@@ -88,6 +93,7 @@ begin
     signature,
     payload,
     processing_started_at,
+    processing_token,
     attempt_count,
     created_at
   )
@@ -97,6 +103,7 @@ begin
     p_signature,
     coalesce(p_payload, '{}'::jsonb),
     now(),
+    p_processing_token,
     1,
     now()
   )
@@ -105,6 +112,7 @@ begin
     signature = excluded.signature,
     payload = excluded.payload,
     processing_started_at = now(),
+    processing_token = excluded.processing_token,
     attempt_count = public.payment_webhook_events.attempt_count + 1,
     processing_error = null
   where public.payment_webhook_events.processed_at is null
@@ -135,21 +143,24 @@ $$;
 
 create or replace function public.app_complete_payment_webhook_event(
   p_provider_name public.wallet_provider_name,
-  p_provider_event_id text
+  p_provider_event_id text,
+  p_processing_token uuid
 )
 returns boolean
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $$
+as $
 begin
   update public.payment_webhook_events
   set
     processed_at = now(),
     processing_started_at = null,
+    processing_token = null,
     processing_error = null
   where provider_name = p_provider_name
     and provider_event_id = p_provider_event_id
+    and processing_token = p_processing_token
     and processed_at is null;
 
   return found;
@@ -159,6 +170,7 @@ $$;
 create or replace function public.app_fail_payment_webhook_event(
   p_provider_name public.wallet_provider_name,
   p_provider_event_id text,
+  p_processing_token uuid,
   p_error text
 )
 returns boolean
@@ -170,9 +182,11 @@ begin
   update public.payment_webhook_events
   set
     processing_started_at = null,
+    processing_token = null,
     processing_error = left(coalesce(p_error, 'Payment webhook processing failed'), 2000)
   where provider_name = p_provider_name
     and provider_event_id = p_provider_event_id
+    and processing_token = p_processing_token
     and processed_at is null;
 
   return found;
@@ -249,14 +263,14 @@ begin
 end;
 $$;
 
-revoke all on function public.app_claim_payment_webhook_event(public.wallet_provider_name, text, text, jsonb, integer) from public, anon, authenticated;
-revoke all on function public.app_complete_payment_webhook_event(public.wallet_provider_name, text) from public, anon, authenticated;
-revoke all on function public.app_fail_payment_webhook_event(public.wallet_provider_name, text, text) from public, anon, authenticated;
+revoke all on function public.app_claim_payment_webhook_event(public.wallet_provider_name, text, text, jsonb, integer, uuid) from public, anon, authenticated;
+revoke all on function public.app_complete_payment_webhook_event(public.wallet_provider_name, text, uuid) from public, anon, authenticated;
+revoke all on function public.app_fail_payment_webhook_event(public.wallet_provider_name, text, uuid, text) from public, anon, authenticated;
 revoke all on function public.app_upsert_wallet_subscription(uuid, public.wallet_provider_name, text, text, text, numeric, text, text, timestamptz, jsonb) from public, anon, authenticated;
 
-grant execute on function public.app_claim_payment_webhook_event(public.wallet_provider_name, text, text, jsonb, integer) to service_role;
-grant execute on function public.app_complete_payment_webhook_event(public.wallet_provider_name, text) to service_role;
-grant execute on function public.app_fail_payment_webhook_event(public.wallet_provider_name, text, text) to service_role;
+grant execute on function public.app_claim_payment_webhook_event(public.wallet_provider_name, text, text, jsonb, integer, uuid) to service_role;
+grant execute on function public.app_complete_payment_webhook_event(public.wallet_provider_name, text, uuid) to service_role;
+grant execute on function public.app_fail_payment_webhook_event(public.wallet_provider_name, text, uuid, text) to service_role;
 grant execute on function public.app_upsert_wallet_subscription(uuid, public.wallet_provider_name, text, text, text, numeric, text, text, timestamptz, jsonb) to service_role;
 
 commit;
