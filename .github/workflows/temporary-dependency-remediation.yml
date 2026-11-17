@@ -1,0 +1,66 @@
+name: Temporary dependency remediation and full verification
+
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  remediate-and-verify:
+    if: ${{ github.event.pull_request.head.ref == 'security/booking-rpc-rate-limit-hardening' && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.12.0
+          cache: npm
+
+      - name: Apply compatible dependency fixes only
+        shell: bash
+        run: |
+          set +e
+          npm audit fix --ignore-scripts --no-fund --no-progress
+          FIX_EXIT=$?
+          set -e
+          echo "npm audit fix exit code: $FIX_EXIT"
+          if ! git diff --quiet -- package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "security: resolve compatible npm audit advisories"
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          else
+            echo "No compatible lockfile changes were required."
+          fi
+
+      - name: Clean install
+        run: npm ci
+
+      - name: High and critical dependency audit
+        run: npm audit --audit-level=high
+
+      - name: Full repository verification
+        run: npm run verify
+
+      - name: Lighthouse and security verification
+        run: |
+          npm run test:lhci
+          npm run test:security
+          npm run verify:supabase-rollout
