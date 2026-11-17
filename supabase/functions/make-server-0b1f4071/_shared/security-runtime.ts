@@ -87,7 +87,7 @@ export async function verifyTimestampedHmacSignature(
   });
   const timestampValue = parts.find(([key]) => key === 't')?.[1];
   const signatures = parts.filter(([key, value]) => key === 'v1' && value).map(([, value]) => value);
-  if (!timestampValue || !/^\\d+$/.test(timestampValue)) {
+  if (!timestampValue || !/^\d+$/.test(timestampValue)) {
     return false;
   }
   const timestamp = Number(timestampValue);
