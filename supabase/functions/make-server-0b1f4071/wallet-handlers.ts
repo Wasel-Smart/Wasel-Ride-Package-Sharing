@@ -1810,20 +1810,9 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       const paymentMethodType = normalizeString(body.paymentMethodType);
       const amount = toNumber(body.amount);
       const currency = normalizeCurrency(body.currency);
-      const referenceType = normalizeString(body.referenceType);
-      const referenceId = normalizeString(body.referenceId);
+      let referenceType = normalizeString(body.referenceType);
+      let referenceId = normalizeString(body.referenceId);
       const clientIdempotencyKey = normalizeString(body.idempotencyKey);
-      const idempotencyKey = clientIdempotencyKey
-        ? `wasel:${auth.canonicalUser.id}:${await sha256Hex([
-            clientIdempotencyKey,
-            purpose,
-            amount.toFixed(3),
-            currency,
-            paymentMethodType,
-            referenceType ?? '',
-            referenceId ?? '',
-          ].join('|'))}`
-        : `wasel:${auth.canonicalUser.id}:${crypto.randomUUID()}`;
       const metadata = body.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata)
         ? body.metadata as Record<string, unknown>
         : {};
@@ -1850,7 +1839,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         return runtime.json({ error: 'Wallet balance cannot be used to fund a wallet deposit.' }, 400);
       }
       if (purpose === 'ride_payment' || purpose === 'package_payment') {
-        await validatePaymentIntentReference(
+        const canonicalReference = await validatePaymentIntentReference(
           auth.admin,
           auth.canonicalUser.id,
           purpose,
@@ -1858,7 +1847,64 @@ export function createWalletHandlers(runtime: WalletRuntime) {
           referenceId,
           amount,
         );
+        referenceType = canonicalReference.referenceType;
+        referenceId = canonicalReference.referenceId;
+
+        const { data: existingIntent, error: existingIntentError } = await auth.admin
+          .from('wallet_payment_intents')
+          .select('*')
+          .eq('user_id', auth.canonicalUser.id)
+          .eq('purpose', purpose)
+          .eq('reference_type', referenceType)
+          .eq('reference_id', referenceId)
+          .in('status', [
+            'created',
+            'requires_confirmation',
+            'requires_action',
+            'processing',
+            'webhook_received',
+            'succeeded',
+          ])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (existingIntentError) throw new Error(existingIntentError.message);
+        if (existingIntent) {
+          if (Math.abs(toNumber(existingIntent.amount) - amount) > 0.001) {
+            return runtime.json(
+              { error: 'A payment attempt already exists for this booking with a different amount.' },
+              409,
+            );
+          }
+          return runtime.json({
+            id: String(existingIntent.payment_intent_id),
+            purpose: String(existingIntent.purpose),
+            status: String(existingIntent.status),
+            amount: toNumber(existingIntent.amount),
+            currency: normalizeCurrency(existingIntent.currency_code),
+            paymentMethodType: String(existingIntent.payment_method_type),
+            provider: String(existingIntent.provider_name),
+            clientSecret: normalizeString(existingIntent.provider_client_secret),
+            redirectUrl: normalizeString(existingIntent.redirect_url),
+            createdAt: String(existingIntent.created_at),
+            referenceType: normalizeString(existingIntent.reference_type),
+            referenceId: normalizeString(existingIntent.reference_id),
+          });
+        }
       }
+
+      const idempotencyKey = clientIdempotencyKey
+        ? `wasel:${auth.canonicalUser.id}:${await sha256Hex([
+            clientIdempotencyKey,
+            purpose,
+            amount.toFixed(3),
+            currency,
+            paymentMethodType,
+            referenceType ?? '',
+            referenceId ?? '',
+          ].join('|'))}`
+        : `wasel:${auth.canonicalUser.id}:${crypto.randomUUID()}`;
 
       let providerName: WalletProviderName;
       if (paymentMethodType === 'card') providerName = 'stripe';
