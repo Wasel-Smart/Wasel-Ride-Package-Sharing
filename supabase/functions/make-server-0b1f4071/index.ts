@@ -310,7 +310,9 @@ async function enforceDistributedRateLimit(
   request: Request,
   path: string,
 ): Promise<Response | null> {
-  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+  const isPublicPackageTrackingRead =
+    request.method === 'GET' && routeStartsWith(path, '/packages/track/');
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method) && !isPublicPackageTrackingRead) {
     return null;
   }
 
@@ -353,7 +355,7 @@ async function enforceDistributedRateLimit(
 
   const result = await consumeRateLimitToken(createAdminClient(), {
     key: `edge:${request.method}:${routeGroup}:${clientIp}`,
-    maxRequests: sensitive ? 20 : 60,
+    maxRequests: isPublicPackageTrackingRead ? 60 : sensitive ? 20 : 60,
     windowMs: 60_000,
   });
 
@@ -1776,7 +1778,8 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
   const from = normalizeString(body.from);
   const to = normalizeString(body.to);
   const description = normalizeString(body.description) || '';
-  const tracking = normalizeTrackingNumber(body.trackingNumber ?? body.tracking_code) || `PKG-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+  // Tracking identifiers are server-generated with 96 bits of entropy.
+  const tracking = `PKG-${crypto.randomUUID().replace(/-/g, '').slice(0, 24).toUpperCase()}`;
 
   if (!from || !to) {
     return jsonResponse({ error: 'from and to are required.' }, 400);
@@ -1823,7 +1826,9 @@ async function handleTrackPackage(admin: SupabaseClientInstance, trackingId: str
 
   const { data, error } = await admin
     .from('packages')
-    .select('*')
+    .select(
+      'package_id, tracking_number, package_code, origin_name, origin_location, destination_name, destination_location, status, package_status, created_at',
+    )
     .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
     .maybeSingle();
 
@@ -1834,7 +1839,15 @@ async function handleTrackPackage(admin: SupabaseClientInstance, trackingId: str
     return null;
   }
 
-  return mapPackageRow(data as PackageRow);
+  const row = data as PackageRow;
+  return {
+    id: String(row.package_id ?? ''),
+    tracking_code: String(row.tracking_number ?? row.package_code ?? ''),
+    from: String(row.origin_name ?? row.origin_location ?? ''),
+    to: String(row.destination_name ?? row.destination_location ?? ''),
+    status: normalizePackageStatus(row.status ?? row.package_status),
+    created_at: String(row.created_at ?? new Date().toISOString()),
+  };
 }
 
 async function handleCreateReview(
