@@ -47,6 +47,17 @@ describe('Supabase rollout guardrails', () => {
     expect(sql).toContain('create or replace function public.app_update_booking_runtime_status(');
   });
 
+  it('never derives authorization roles from user-editable Supabase metadata', () => {
+    const edgeRouter = read('supabase/functions/make-server-0b1f4071/index.ts');
+    const canonicalUserCreation = edgeRouter.slice(
+      edgeRouter.indexOf('async function ensureCanonicalUser('),
+      edgeRouter.indexOf('async function authenticateRequest('),
+    );
+
+    expect(canonicalUserCreation).toContain("role: 'passenger'");
+    expect(canonicalUserCreation).not.toContain('user.user_metadata?.role');
+  });
+
   it('uses atomic database-backed rate limits for every protected Edge handler', () => {
     const limiter = read('supabase/functions/make-server-0b1f4071/_shared/security-runtime.ts');
     const twoFactor = read('supabase/functions/make-server-0b1f4071/two-factor-handlers.ts');
