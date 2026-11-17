@@ -10,7 +10,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { createCommunicationHandlers } from './communications-handlers.ts';
 import { createWalletHandlers } from './wallet-handlers.ts';
-import { getClientIp } from './_shared/security-runtime.ts';
+import { consumeRateLimitToken, getClientIp } from './_shared/security-runtime.ts';
 
 const FUNCTION_NAME = 'make-server-0b1f4071';
 
@@ -301,6 +301,58 @@ function createAdminClient() {
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
   );
+}
+
+async function enforceDistributedRateLimit(
+  request: Request,
+  path: string,
+): Promise<Response | null> {
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+    return null;
+  }
+
+  // Provider callbacks have independent signature verification and retry semantics.
+  if (
+    routeMatches(path, '/payments/webhook') ||
+    routeMatches(path, '/communications/webhooks/resend') ||
+    routeMatches(path, '/communications/webhooks/twilio')
+  ) {
+    return null;
+  }
+
+  const routeGroup = path.split('/').filter(Boolean)[0] ?? 'root';
+  const sensitiveGroups = new Set([
+    'auth',
+    'bookings',
+    'communications',
+    'packages',
+    'payments',
+    'profile',
+    'safety',
+    'trips',
+    'wallet',
+  ]);
+  const sensitive = sensitiveGroups.has(routeGroup);
+  const result = await consumeRateLimitToken(createAdminClient(), {
+    key: `edge:${request.method}:${routeGroup}:${getClientIp(request)}`,
+    maxRequests: sensitive ? 20 : 60,
+    windowMs: 60_000,
+  });
+
+  if (result.unavailable) {
+    // Fail closed: do not silently fall back to per-instance memory counters.
+    return jsonResponse({ error: 'Request protection is temporarily unavailable.' }, 503, {
+      'Retry-After': '30',
+    });
+  }
+
+  if (!result.allowed) {
+    return jsonResponse({ error: 'Too many requests. Please try again shortly.' }, 429, {
+      'Retry-After': '60',
+    });
+  }
+
+  return null;
 }
 
 async function readJsonBody(req: Request): Promise<Record<string, unknown>> {
@@ -1897,6 +1949,11 @@ serve(async (req) => {
 
     if (routeMatches(path, '/health')) {
       return jsonResponse({ status: 'healthy', timestamp: new Date().toISOString() });
+    }
+
+    const rateLimitResponse = await enforceDistributedRateLimit(req, path);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     if (routeMatches(path, '/payments/webhook') && req.method === 'POST') {
