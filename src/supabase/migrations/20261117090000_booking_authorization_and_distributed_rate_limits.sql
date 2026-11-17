@@ -249,6 +249,21 @@ begin
     raise exception 'Invalid rate-limit parameters';
   end if;
 
+  -- Bounded opportunistic cleanup prevents the shared bucket table growing forever
+  -- when a scheduled pg_cron job is not configured on the target project.
+  if get_byte(decode(substr(md5(p_bucket_key), 1, 2), 'hex'), 0) < 4 then
+    with expired as (
+      select bucket_key
+      from public.edge_rate_limit_buckets
+      where expires_at < v_now
+      order by expires_at
+      limit 500
+    )
+    delete from public.edge_rate_limit_buckets b
+    using expired e
+    where b.bucket_key = e.bucket_key;
+  end if;
+
   insert into public.edge_rate_limit_buckets(bucket_key, window_started_at, request_count, expires_at)
   values (p_bucket_key, v_now, 1, v_now + make_interval(secs => p_window_seconds))
   on conflict (bucket_key) do update
