@@ -1345,6 +1345,9 @@ async function settlePaymentIntent(
   }
 
   if (purpose === 'deposit') {
+    if (String(intent.payment_method_type) === 'wallet') {
+      throw new Error('Wallet balance cannot be used to fund a wallet deposit.');
+    }
     const infra = await ensureWalletInfrastructure(admin, String(intent.user_id));
     const providerClearing = await getSystemAccount(admin, 'provider_clearing', String(intent.currency_code ?? 'JOD'));
     await postLedgerTransaction(admin, {
@@ -1374,8 +1377,7 @@ async function settlePaymentIntent(
   }
 
   if (purpose === 'subscription') {
-    await activateSubscriptionForIntent(admin, intent);
-    return;
+    throw new Error('Subscription settlement is disabled until server-side plan pricing is configured.');
   }
 
   throw new Error('Withdrawal payment intents are not supported for wallet settlement.');
