@@ -115,6 +115,7 @@ Apply the rollout set in this exact order for production cutover projects:
 4. `db/seeds/pricing.seed.sql`
 5. `db/seeds/core.seed.sql`
 6. `db/seeds/automation.seed.sql`
+7. `db/seeds/rolling_trips.seed.sql`
 
 ### Smoke checks
 
@@ -130,6 +131,7 @@ Operational bootstrap seed assets live in `db/seeds/`:
 - `pricing.seed.sql`
 - `core.seed.sql`
 - `automation.seed.sql`
+- `rolling_trips.seed.sql`
 
 Smoke checks remain in `src/supabase/seeds/` and are never part of the production rollout seed pack.
 
