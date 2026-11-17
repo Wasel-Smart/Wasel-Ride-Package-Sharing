@@ -52,6 +52,7 @@ const OTP_TTL_MS = 10 * 60_000;
 const STEP_UP_TOKEN_TTL_MS = 10 * 60_000;
 const PIN_LOCK_WINDOW_MS = 10 * 60_000;
 const MAX_PIN_FAILURES = 5;
+const MAX_OTP_ATTEMPTS = 5;
 const WALLET_VERIFY_RATE_LIMIT = { maxRequests: 12, windowMs: 10 * 60_000 };
 const WALLET_TRANSFER_RATE_LIMIT = { maxRequests: 12, windowMs: 10 * 60_000 };
 const WALLET_MUTATION_RATE_LIMIT = { maxRequests: 20, windowMs: 10 * 60_000 };
@@ -1706,28 +1707,54 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       if (challenge.verified_at || new Date(String(challenge.expires_at)).getTime() <= Date.now()) {
         return runtime.json({ error: 'This verification challenge has expired.' }, 400);
       }
+      if (toNumber(challenge.attempts_count) >= MAX_OTP_ATTEMPTS) {
+        return runtime.json({ error: 'This verification challenge has reached its attempt limit.' }, 429);
+      }
 
+      const now = new Date().toISOString();
       const otpHash = await sha256Hex(`${getWalletStepUpSecret()}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
       if (!timingSafeEqual(String(challenge.otp_hash), otpHash)) {
-        await auth.admin
+        const { data: failedAttempt, error: attemptError } = await auth.admin
           .schema('private')
           .from('wallet_step_up_challenges')
           .update({
             attempts_count: toNumber(challenge.attempts_count) + 1,
-            updated_at: new Date().toISOString(),
+            updated_at: now,
           })
-          .eq('challenge_id', challenge.challenge_id);
+          .eq('challenge_id', challenge.challenge_id)
+          .eq('attempts_count', toNumber(challenge.attempts_count))
+          .is('verified_at', null)
+          .gt('expires_at', now)
+          .lt('attempts_count', MAX_OTP_ATTEMPTS)
+          .select('challenge_id')
+          .maybeSingle();
+
+        if (attemptError) throw new Error(attemptError.message);
+        if (!failedAttempt) {
+          return runtime.json({ error: 'This verification challenge has expired or reached its attempt limit.' }, 429);
+        }
         return runtime.json({ error: 'OTP verification failed.' }, 401);
       }
 
-      await auth.admin
+      const { data: verifiedChallenge, error: verifyError } = await auth.admin
         .schema('private')
         .from('wallet_step_up_challenges')
         .update({
-          verified_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          verified_at: now,
+          updated_at: now,
         })
-        .eq('challenge_id', challenge.challenge_id);
+        .eq('challenge_id', challenge.challenge_id)
+        .eq('attempts_count', toNumber(challenge.attempts_count))
+        .is('verified_at', null)
+        .gt('expires_at', now)
+        .lt('attempts_count', MAX_OTP_ATTEMPTS)
+        .select('challenge_id')
+        .maybeSingle();
+
+      if (verifyError) throw new Error(verifyError.message);
+      if (!verifiedChallenge) {
+        return runtime.json({ error: 'This verification challenge has already been used or has expired.' }, 409);
+      }
 
       const token = await issueStepUpToken(auth.admin, auth.canonicalUser.id, purpose);
       return runtime.json({
