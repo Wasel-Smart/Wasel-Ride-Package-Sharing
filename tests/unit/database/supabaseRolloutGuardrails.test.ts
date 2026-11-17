@@ -215,6 +215,12 @@ describe('Supabase rollout guardrails', () => {
     expect(wallet).not.toContain("Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ??");
     expect(wallet).toContain('MAX_OTP_ATTEMPTS = 5');
     expect(wallet).toContain('WALLET_PIN_VERIFY_RATE_LIMIT');
+    expect(wallet).toContain("admin.rpc('app_record_wallet_pin_failure'");
+    const paymentMigration = read(
+      'src/supabase/migrations/20261117110000_payment_webhook_idempotency_and_settlement_safety.sql',
+    );
+    expect(paymentMigration).toContain('public.app_record_wallet_pin_failure');
+    expect(paymentMigration).toContain('and (locked_until is null or locked_until <= v_now)');
     expect(wallet).toContain(".is('consumed_at', null)");
     expect(wallet).toContain(".eq('attempts_count', toNumber(challenge.attempts_count))");
   });
