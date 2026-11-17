@@ -45,7 +45,14 @@ function LandingBrandBadge({ size = 46 }: { size?: number }) {
       height={size}
       xmlns="http://www.w3.org/2000/svg"
     >
-      <rect x="4" y="4" width="48" height="48" rx="14" fill="var(--wasel-brand-gradient-end)" />
+      <rect
+        x="4"
+        y="4"
+        width="48"
+        height="48"
+        rx="14"
+        fill="var(--wasel-brand-gradient-end)"
+      />
       <path
         d="M18 36.5L28.7 20.2C30 18.2 32.2 17 34.6 17H38.2L27.4 33.4C26.1 35.4 23.9 36.5 21.5 36.5H18ZM35 20.4C35 21.7 36 22.7 37.3 22.7C38.6 22.7 39.6 21.7 39.6 20.4C39.6 19.1 38.6 18.1 37.3 18.1C36 18.1 35 19.1 35 20.4Z"
         fill="var(--wasel-copy-primary)"
@@ -92,7 +99,8 @@ export function LandingPage() {
   const [route, setRoute] = useState<EntryRouteDraft>({ ...ENTRY_DEFAULT_ROUTE_DRAFT });
 
   const routePreview = `${route.from} \u2192 ${route.to}`;
-  const primaryPath = mode === 'ride' ? buildRideSearchPath(route) : buildPackagePrefillPath(route);
+  const primaryPath =
+    mode === 'ride' ? buildRideSearchPath(route) : buildPackagePrefillPath(route);
   const primaryLabel = mode === 'ride' ? 'Find a ride' : 'Send a package';
   const plannerTitle = mode === 'ride' ? 'Find a ride' : 'Send a package';
   const plannerCopy =
@@ -209,8 +217,8 @@ export function LandingPage() {
               </h1>
 
               <p className="landing-page__hero-description">
-                Wasel makes the idea clear in seconds: the same corridor can carry riders, packages,
-                and sharper decisions.
+                Wasel makes the idea clear in seconds: the same corridor can carry riders,
+                packages, and sharper decisions.
               </p>
 
               <div className="landing-page__signal-list" aria-label="Landing signals">
@@ -252,7 +260,11 @@ export function LandingPage() {
             </div>
 
             <aside className="landing-page__planner">
-              <div aria-label="Service mode" className="landing-page__tablist" role="tablist">
+              <div
+                aria-label="Service mode"
+                className="landing-page__tablist"
+                role="tablist"
+              >
                 <button
                   aria-selected={mode === 'ride'}
                   className={mode === 'ride' ? 'is-active' : undefined}
