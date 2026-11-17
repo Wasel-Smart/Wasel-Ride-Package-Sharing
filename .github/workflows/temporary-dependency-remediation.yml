@@ -128,6 +128,14 @@ jobs:
           npm run test:security 2>&1 | tee security.log
           npm run verify:supabase-rollout 2>&1 | tee rollout.log
 
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci
+          if-no-files-found: warn
+
       - name: Upload extended verification logs
         if: always()
         uses: actions/upload-artifact@v7
