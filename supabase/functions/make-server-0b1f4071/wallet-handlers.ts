@@ -1812,6 +1812,8 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       const currency = normalizeCurrency(body.currency);
       let referenceType = normalizeString(body.referenceType);
       let referenceId = normalizeString(body.referenceId);
+      const requestedReferenceType = referenceType;
+      const requestedReferenceId = referenceId;
       const clientIdempotencyKey = normalizeString(body.idempotencyKey);
       const metadata = body.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata)
         ? body.metadata as Record<string, unknown>
@@ -1850,26 +1852,52 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         referenceType = canonicalReference.referenceType;
         referenceId = canonicalReference.referenceId;
 
-        const { data: existingIntent, error: existingIntentError } = await auth.admin
+        const activeStatuses = [
+          'created',
+          'requires_confirmation',
+          'requires_action',
+          'processing',
+          'webhook_received',
+          'succeeded',
+        ];
+        const { data: canonicalIntent, error: canonicalIntentError } = await auth.admin
           .from('wallet_payment_intents')
           .select('*')
           .eq('user_id', auth.canonicalUser.id)
           .eq('purpose', purpose)
           .eq('reference_type', referenceType)
           .eq('reference_id', referenceId)
-          .in('status', [
-            'created',
-            'requires_confirmation',
-            'requires_action',
-            'processing',
-            'webhook_received',
-            'succeeded',
-          ])
+          .in('status', activeStatuses)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
 
-        if (existingIntentError) throw new Error(existingIntentError.message);
+        if (canonicalIntentError) throw new Error(canonicalIntentError.message);
+        let existingIntent = canonicalIntent;
+
+        // Catch legacy ride/trip references that predate canonical booking IDs.
+        if (
+          !existingIntent &&
+          purpose === 'ride_payment' &&
+          requestedReferenceId &&
+          (requestedReferenceType === 'ride' || requestedReferenceType === 'trip')
+        ) {
+          const { data: legacyIntent, error: legacyIntentError } = await auth.admin
+            .from('wallet_payment_intents')
+            .select('*')
+            .eq('user_id', auth.canonicalUser.id)
+            .eq('purpose', purpose)
+            .in('reference_type', ['ride', 'trip'])
+            .eq('reference_id', requestedReferenceId)
+            .in('status', activeStatuses)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (legacyIntentError) throw new Error(legacyIntentError.message);
+          existingIntent = legacyIntent;
+        }
+
         if (existingIntent) {
           if (Math.abs(toNumber(existingIntent.amount) - amount) > 0.001) {
             return runtime.json(
