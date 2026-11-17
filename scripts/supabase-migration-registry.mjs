@@ -358,6 +358,15 @@ export const migrationCatalog = [
     category: 'runtime-contract',
     naming: 'canonical',
   },
+  {
+    sequence: 39,
+    path: 'src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql',
+    description: 'Restrict booking state transitions to authorized actors and add atomic database-backed Edge rate limits',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'security',
+    naming: 'canonical',
+  },
 ];
 
 export const operationalSeedFiles = [
