@@ -1,4 +1,5 @@
 import type { SupabaseClient, User } from 'https://esm.sh/@supabase/supabase-js@2';
+type SupabaseAdminClient = SupabaseClient<any, 'public' | 'private', any, any, any>;
 import {
   buildFailurePatch,
   buildIdempotencyKey,
@@ -19,7 +20,7 @@ interface CanonicalUser {
 }
 
 type AuthenticatedRequest = {
-  admin: SupabaseClient;
+  admin: SupabaseAdminClient;
   authUser: User;
   canonicalUser: CanonicalUser;
 };
@@ -29,7 +30,7 @@ type AuthenticationResult = AuthenticatedRequest | { error: Response };
 interface CommunicationRuntime {
   authenticateRequest: (request: Request) => Promise<AuthenticationResult>;
   executeSqlStatements: (sql: string) => Promise<void>;
-  getAdminClient: () => SupabaseClient;
+  getAdminClient: () => SupabaseAdminClient;
   getFunctionBaseUrl: (request: Request) => string;
   hasCommunicationWorkerAccess: (request: Request) => boolean;
   json: (data: unknown, status?: number) => Response;
@@ -73,7 +74,7 @@ function sanitizeDeliveryText(value: unknown, maxLength: number): string | null 
 }
 
 async function claimQueuedDeliveries(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   workerName: string,
   limit = 25,
 ) {
@@ -222,7 +223,7 @@ export function createCommunicationHandlers(
   }
 
   async function sendDelivery(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     delivery: CommunicationDeliveryRecord,
     functionBaseUrl: string,
   ) {
@@ -308,7 +309,7 @@ export function createCommunicationHandlers(
   }
 
   async function processQueuedDeliveries(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     functionBaseUrl: string,
   ) {
     const dueDeliveries = await claimQueuedDeliveries(admin, 'edge:communications-process', 25);
