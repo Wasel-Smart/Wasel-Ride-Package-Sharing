@@ -16,7 +16,10 @@ const FUNCTION_NAME = 'make-server-0b1f4071';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-wallet-provider, x-wallet-signature, stripe-signature, x-communication-worker-secret, x-idempotency-key, x-request-id',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
 type SupabaseClientInstance = SupabaseClient<any, 'public' | 'private', any, any, any>;
@@ -422,7 +425,8 @@ async function ensureCanonicalUser(
       email: normalizeString(user.email),
       full_name: fullName,
       phone_number: normalizeString(user.user_metadata?.phone_number) || normalizeString(user.phone),
-      role: normalizeString(user.user_metadata?.role) || 'passenger',
+      // Authorization roles are server-controlled; user_metadata is user-editable.
+      role: 'passenger',
     })
     .select('id, auth_user_id, email, full_name, phone_number')
     .single();
