@@ -5,8 +5,7 @@ alter table public.payment_webhook_events
   add column if not exists attempt_count integer not null default 0;
 
 alter table public.wallet_accounts
-  add column if not exists payment_intent_id uuid null
-    references public.wallet_payment_intents(payment_intent_id) on delete set null;
+  add column if not exists payment_intent_id uuid null;
 
 do $$
 begin
