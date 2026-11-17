@@ -12,7 +12,7 @@ import {
   type CommunicationDeliveryRecord,
   type DeliveryProcessorEnv,
 } from './_shared/communication-runtime.ts';
-import { getClientIp, takeRateLimitToken } from './_shared/security-runtime.ts';
+import { consumeRateLimitToken, getClientIp } from './_shared/security-runtime.ts';
 
 interface CanonicalUser {
   id: string;
@@ -335,10 +335,14 @@ export function createCommunicationHandlers(
   async function handleQueueCommunicationDeliveries(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
-    if (!takeRateLimitToken({
-      key: ['communications', auth.canonicalUser.id, getClientIp(request)].join(':'),
+    const rateLimit = await consumeRateLimitToken(auth.admin, {
+      key: ['communications', auth.canonicalUser.id].join(':'),
       ...COMMUNICATION_QUEUE_RATE_LIMIT,
-    })) {
+    });
+    if (rateLimit.unavailable) {
+      return runtime.json({ error: 'Rate limiting is temporarily unavailable. Please try again.' }, 503);
+    }
+    if (!rateLimit.allowed) {
       return runtime.json({ error: 'Too many outbound communication requests. Please wait and try again.' }, 429);
     }
 
