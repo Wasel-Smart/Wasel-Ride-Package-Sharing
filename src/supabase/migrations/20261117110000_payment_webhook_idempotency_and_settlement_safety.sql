@@ -150,7 +150,7 @@ returns boolean
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $$
 begin
   update public.payment_webhook_events
   set
