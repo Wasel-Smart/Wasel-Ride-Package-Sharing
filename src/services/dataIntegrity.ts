@@ -136,6 +136,9 @@ export function buildTraceHeaders(requestId: string, extraHeaders?: HeadersInit)
   return headers;
 }
 
+const SENSITIVE_LOG_FIELD_PATTERN =
+  /(?:^|_)(?:email|phone|full_name|first_name|last_name|address|pickup|dropoff|location|password|passcode|otp|pin|token|secret|authorization|cookie|card|cvv|cvc|iban|bank_account|national_id|identity|date_of_birth|dob)(?:$|_)/i;
+
 export function sanitizePayload<T>(value: T): T {
   if (Array.isArray(value)) {
     return value.map(entry => sanitizePayload(entry)) as T;
@@ -145,8 +148,9 @@ export function sanitizePayload<T>(value: T): T {
     const nextEntries = Object.entries(value as Record<string, unknown>)
       .filter(([, entry]) => entry !== undefined)
       .map(([key, entry]) => {
-        if (key === 'avatar_url' && typeof entry === 'string' && entry.startsWith('data:')) {
-          return [key, '[data-url]'] as const;
+        const normalizedKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+        if (SENSITIVE_LOG_FIELD_PATTERN.test(normalizedKey) || key === 'avatar_url') {
+          return [key, '[redacted]'] as const;
         }
         return [key, sanitizePayload(entry)];
       });
