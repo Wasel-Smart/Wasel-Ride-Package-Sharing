@@ -126,7 +126,7 @@ describe('Supabase rollout guardrails', () => {
     expect(sql).toContain('p_payment_intent_id uuid default null');
     expect(sql).toContain('p_payment_status public.wallet_payment_intent_status default null');
     expect(sql).toContain(
-      'late failure/cancellation event must never downgrade a successful payment',
+      'Terminal states are monotonic: a late processing/action event cannot',
     );
     expect(wallet).toContain('p_processing_token: processingToken');
     expect(wallet).toContain('p_payment_status: paymentUpdate?.status ?? null');
@@ -138,6 +138,9 @@ describe('Supabase rollout guardrails', () => {
     expect(wallet).toContain("claimed === 'processed'");
     expect(wallet).toContain("claimed !== 'claimed'");
     expect(wallet).toContain("app_complete_payment_webhook_event");
+    expect(wallet).toContain("'payment_intent.succeeded': 'succeeded'");
+    expect(wallet).toContain("'payment_intent.payment_failed': 'failed'");
+    expect(wallet).toContain("if (!nextStatus)");
     expect(wallet).toContain("app_fail_payment_webhook_event");
     expect(wallet).toContain("admin.rpc('app_upsert_wallet_subscription'");
     expect(wallet).toContain("onConflict: 'payment_intent_id', ignoreDuplicates: true");
