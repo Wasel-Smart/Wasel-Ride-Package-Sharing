@@ -153,7 +153,7 @@ returns boolean
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $$
 declare
   v_event_id uuid;
   v_current_status public.wallet_payment_intent_status;
@@ -209,7 +209,7 @@ begin
 
   return true;
 end;
-$;
+$$;
 
 create or replace function public.app_fail_payment_webhook_event(
   p_provider_name public.wallet_provider_name,
