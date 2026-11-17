@@ -67,7 +67,7 @@ create or replace function public.app_claim_payment_webhook_event(
   p_signature text,
   p_payload jsonb,
   p_lease_seconds integer default 300,
-  p_processing_token uuid
+  p_processing_token uuid default null
 )
 returns text
 language plpgsql
