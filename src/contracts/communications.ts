@@ -34,13 +34,7 @@ export const communicationDeliveryRecordSchema = z
   })
   .passthrough();
 
-export const communicationDeliveryHistorySchema = z.array(
-  communicationDeliveryRecordSchema,
-);
+export const communicationDeliveryHistorySchema = z.array(communicationDeliveryRecordSchema);
 
-export type CommunicationPreferencesContract = z.infer<
-  typeof communicationPreferencesSchema
->;
-export type CommunicationDeliveryRecordContract = z.infer<
-  typeof communicationDeliveryRecordSchema
->;
+export type CommunicationPreferencesContract = z.infer<typeof communicationPreferencesSchema>;
+export type CommunicationDeliveryRecordContract = z.infer<typeof communicationDeliveryRecordSchema>;

@@ -48,11 +48,13 @@ export const TripSchema = z.object({
   currentPassengers: z.number().min(0),
   departureTime: DateSchema,
   arrivalTime: DateSchema.optional(),
-  vehicle: z.object({
-    plate: z.string(),
-    model: z.string(),
-    color: z.string(),
-  }).optional(),
+  vehicle: z
+    .object({
+      plate: z.string(),
+      model: z.string(),
+      color: z.string(),
+    })
+    .optional(),
   notes: z.string().optional(),
 });
 
@@ -123,9 +125,11 @@ export const AuthSessionSchema = z.object({
     refresh_token: z.string(),
     expires_in: z.number().min(0),
     token_type: z.enum(['bearer']),
-    user: z.object({
-      id: z.string(),
-    }).optional(),
+    user: z
+      .object({
+        id: z.string(),
+      })
+      .optional(),
   }),
 });
 
@@ -166,15 +170,12 @@ export function createListSchema<T extends z.ZodTypeAny>(itemSchema: T) {
 /**
  * Validator function to validate API responses
  */
-export function validateResponse<T extends z.ZodTypeAny>(
-  schema: T,
-  data: unknown,
-): z.infer<T> {
+export function validateResponse<T extends z.ZodTypeAny>(schema: T, data: unknown): z.infer<T> {
   try {
     return schema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const details = error.errors.map((err) => ({
+      const details = error.errors.map(err => ({
         path: err.path.join('.'),
         message: err.message,
         code: err.code,

@@ -116,10 +116,17 @@ export const communicationPreferenceUpdateSchema = z
   .refine(presentKeys, 'At least one communication preference must be provided');
 
 export function buildRequestId(operation: string): string {
-  const slug = operation.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase();
-  const entropy = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID().slice(0, 8)
-    : `${Date.now().toString(36)}${Math.floor(Math.random() * 1_000_000).toString(36)}`.slice(0, 8);
+  const slug = operation
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+  const entropy =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID().slice(0, 8)
+      : `${Date.now().toString(36)}${Math.floor(Math.random() * 1_000_000).toString(36)}`.slice(
+          0,
+          8,
+        );
   return `${slug || 'write'}-${Date.now()}-${entropy}`;
 }
 
@@ -131,7 +138,7 @@ export function buildTraceHeaders(requestId: string, extraHeaders?: HeadersInit)
 
 export function sanitizePayload<T>(value: T): T {
   if (Array.isArray(value)) {
-    return value.map((entry) => sanitizePayload(entry)) as T;
+    return value.map(entry => sanitizePayload(entry)) as T;
   }
 
   if (value && typeof value === 'object') {
@@ -180,8 +187,12 @@ export function logDataFlow(entry: DataFlowLogEntry) {
 }
 
 function toErrorMessage(error: unknown) {
-  if (error instanceof Error) {return error.message;}
-  if (typeof error === 'string') {return error;}
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
   return 'Unknown write failure';
 }
 
@@ -200,7 +211,7 @@ function isTransientWriteError(error: unknown) {
 }
 
 async function sleep(ms: number) {
-  await new Promise((resolve) => setTimeout(resolve, ms));
+  await new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export function validatePayload<T>(schema: z.ZodType<T>, payload: unknown, operation: string): T {
@@ -209,11 +220,13 @@ export function validatePayload<T>(schema: z.ZodType<T>, payload: unknown, opera
     return parsed.data;
   }
 
-  const issues = parsed.error.issues.map((issue) => ({
+  const issues = parsed.error.issues.map(issue => ({
     path: issue.path.join('.'),
     message: issue.message,
   }));
-  throw new Error(`${operation} validation failed: ${issues.map((issue) => `${issue.path || 'payload'} ${issue.message}`).join('; ')}`);
+  throw new Error(
+    `${operation} validation failed: ${issues.map(issue => `${issue.path || 'payload'} ${issue.message}`).join('; ')}`,
+  );
 }
 
 export async function withDataIntegrity<TPayload, TResult>(args: {
@@ -239,9 +252,7 @@ export async function withDataIntegrity<TPayload, TResult>(args: {
   });
 
   const retryPolicy = args.retryPolicy ?? 'never';
-  const maxAttempts = retryPolicy === 'transient'
-    ? Math.max(1, args.maxAttempts ?? 2)
-    : 1;
+  const maxAttempts = retryPolicy === 'transient' ? Math.max(1, args.maxAttempts ?? 2) : 1;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
@@ -273,7 +284,8 @@ export async function withDataIntegrity<TPayload, TResult>(args: {
         payload: sanitizedPayload as Record<string, unknown>,
       };
 
-      const retryable = retryPolicy === 'transient' && attempt < maxAttempts && isTransientWriteError(error);
+      const retryable =
+        retryPolicy === 'transient' && attempt < maxAttempts && isTransientWriteError(error);
       logDataFlow({
         requestId,
         operation: args.operation,
