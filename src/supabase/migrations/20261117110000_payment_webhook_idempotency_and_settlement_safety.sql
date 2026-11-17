@@ -71,7 +71,7 @@ returns text
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $$
 declare
   v_claimed_event_id uuid;
   v_processed_at timestamptz;
@@ -131,7 +131,7 @@ begin
 
   return 'busy';
 end;
-$;
+$$;
 
 create or replace function public.app_complete_payment_webhook_event(
   p_provider_name public.wallet_provider_name,
