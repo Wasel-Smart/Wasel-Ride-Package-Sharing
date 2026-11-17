@@ -493,26 +493,12 @@ async function getWalletPinSecret(admin: SupabaseAdminClient, userId: string) {
   return data;
 }
 
-async function recordPinFailure(
-  admin: SupabaseAdminClient,
-  userId: string,
-  currentFailures: number,
-) {
-  const nextFailures = currentFailures + 1;
-  const now = new Date().toISOString();
-  const lockedUntil = nextFailures >= MAX_PIN_FAILURES
-    ? new Date(Date.now() + PIN_LOCK_WINDOW_MS).toISOString()
-    : null;
-
-  const { error } = await admin
-    .schema('private')
-    .from('wallet_pin_secrets')
-    .update({
-      failed_attempts: nextFailures,
-      locked_until: lockedUntil,
-      updated_at: now,
-    })
-    .eq('user_id', userId);
+async function recordPinFailure(admin: SupabaseAdminClient, userId: string) {
+  const { error } = await admin.rpc('app_record_wallet_pin_failure', {
+    p_user_id: userId,
+    p_max_failures: MAX_PIN_FAILURES,
+    p_lock_seconds: Math.floor(PIN_LOCK_WINDOW_MS / 1000),
+  });
 
   if (error) {
     throw new Error(error.message);
@@ -1699,7 +1685,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
 
       const expectedHash = await sha256Hex(`${getWalletStepUpSecret()}:${pin}`);
       if (!timingSafeEqual(String(pinSecret.pin_hash), expectedHash)) {
-        await recordPinFailure(auth.admin, auth.canonicalUser.id, toNumber(pinSecret.failed_attempts));
+        await recordPinFailure(auth.admin, auth.canonicalUser.id);
         return runtime.json({ error: 'Wallet PIN verification failed.' }, 401);
       }
 
