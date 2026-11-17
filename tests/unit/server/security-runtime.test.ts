@@ -68,6 +68,16 @@ describe('verifyTimestampedHmacSignature', () => {
     )).resolves.toBe(false);
   });
 
+  it('rejects a non-decimal timestamp value', async () => {
+    await expect(verifyTimestampedHmacSignature(
+      'test-secret',
+      '{"id":"evt_test"}',
+      't=1e9,v1=invalid',
+      300,
+      1_000_000_000_000,
+    )).resolves.toBe(false);
+  });
+
   it('accepts any matching v1 signature during secret rotation', async () => {
     const timestamp = 1_800_000_000;
     const payload = '{"id":"evt_test"}';
@@ -88,3 +98,4 @@ describe('generateSixDigitOtp', () => {
     expect(generateSixDigitOtp()).toMatch(/^[1-9]\d{5}$/);
   });
 });
+
