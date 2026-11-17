@@ -70,8 +70,25 @@ async function verifyQuality() {
     console.log(`     Functions: ${coverageSummary.total.functions.pct}%`);
     console.log(`     Statements: ${coverageSummary.total.statements.pct}%`);
   } else {
-    console.log('  WARN coverage-summary.json missing or invalid');
+    console.log('  FAIL coverage-summary.json missing or invalid');
     console.log('     Run: npm run test:coverage');
+    allPassed = false;
+  }
+
+  console.log('\nUnit Tests:');
+  const vitestResults = readJson('vitest-results.json');
+  if (!vitestResults) {
+    console.log('  FAIL vitest-results.json missing or invalid');
+    allPassed = false;
+  } else {
+    const failedTests = vitestResults.numFailedTests ?? 0;
+    const failedSuites = vitestResults.numFailedTestSuites ?? 0;
+    const testSuccess = vitestResults.success === true && failedTests === 0 && failedSuites === 0;
+    console.log(`  ${testSuccess ? 'OK' : 'FAIL'} Vitest result status`);
+    console.log(`     Passed: ${vitestResults.numPassedTests ?? 0}`);
+    console.log(`     Failed: ${failedTests}`);
+    console.log(`     Failed suites: ${failedSuites}`);
+    if (!testSuccess) allPassed = false;
   }
 
   console.log('\nPlaywright:');
@@ -118,4 +135,4 @@ async function verifyQuality() {
 }
 
 await verifyQuality();
-process.exit(0);
+process.exit(allPassed ? 0 : 1);
