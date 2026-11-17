@@ -138,6 +138,13 @@ function isFinalPaymentStatus(status: string): boolean {
   return ['succeeded', 'failed', 'cancelled'].includes(status);
 }
 
+function canTransitionPaymentStatus(currentStatus: string, nextStatus: string): boolean {
+  if (currentStatus === 'succeeded') return nextStatus === 'succeeded';
+  if (currentStatus === 'cancelled') return nextStatus === 'cancelled';
+  if (currentStatus === 'failed') return nextStatus === 'failed' || nextStatus === 'succeeded';
+  return true;
+}
+
 function encodeText(value: string): ArrayBuffer {
   const encoded = new TextEncoder().encode(value);
   const buffer = new ArrayBuffer(encoded.byteLength);
@@ -2096,7 +2103,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         };
         const nextStatus = eventType ? stripeEventStatuses[eventType] : undefined;
 
-        if (!nextStatus) {
+        if (!nextStatus || !canTransitionPaymentStatus(String(intent.status), nextStatus)) {
           await completeEvent();
           return runtime.json({ ok: true, ignored: true });
         }
