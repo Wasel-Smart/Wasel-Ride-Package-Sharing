@@ -36,8 +36,8 @@ export function isAllowedOrigin(origin: string | null, appUrl: string | null): b
 }
 
 export function getClientIp(request: Request): string {
-  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    || request.headers.get('cf-connecting-ip')?.trim()
+  return request.headers.get('cf-connecting-ip')?.trim()
+    || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || 'unknown';
 }
 
