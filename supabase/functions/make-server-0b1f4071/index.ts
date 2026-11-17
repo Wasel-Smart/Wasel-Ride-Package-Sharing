@@ -424,6 +424,40 @@ async function ensureCanonicalUser(
   }
 
   if (existingById) {
+    const linkedAuthUserId = normalizeString(existingById.auth_user_id);
+    if (linkedAuthUserId && linkedAuthUserId !== user.id) {
+      throw new Error('Canonical user identity is already linked to another authentication account.');
+    }
+
+    if (!linkedAuthUserId) {
+      const { data: linkedUser, error: linkError } = await supabaseClient
+        .from('users')
+        .update({ auth_user_id: user.id })
+        .eq('id', user.id)
+        .is('auth_user_id', null)
+        .select('id, auth_user_id, email, full_name, phone_number')
+        .maybeSingle();
+
+      if (linkError) {
+        throw new Error(linkError.message);
+      }
+      if (linkedUser) {
+        return linkedUser as CanonicalUser;
+      }
+
+      const { data: concurrentlyLinked, error: concurrentLookupError } = await supabaseClient
+        .from('users')
+        .select('id, auth_user_id, email, full_name, phone_number')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+
+      if (concurrentLookupError || !concurrentlyLinked) {
+        throw new Error('Canonical user identity could not be linked safely.');
+      }
+
+      return concurrentlyLinked as CanonicalUser;
+    }
+
     return existingById as CanonicalUser;
   }
 
