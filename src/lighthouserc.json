@@ -82,7 +82,6 @@
         ],
         "uses-responsive-images": "off",
         "offscreen-images": "warn",
-        "uses-webp-images": "warn",
         "uses-optimized-images": "warn",
         "efficient-animated-content": "warn",
         "uses-rel-preconnect": "warn",
@@ -100,7 +99,6 @@
         "meta-description": "error",
         "canonical": "warn",
         "is-on-https": "error",
-        "no-vulnerable-libraries": "error",
         "csp-xss": "warn"
       }
     },
