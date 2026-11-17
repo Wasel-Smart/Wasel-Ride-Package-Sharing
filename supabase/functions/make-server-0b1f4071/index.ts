@@ -341,15 +341,17 @@ async function enforceDistributedRateLimit(
 
   if (result.unavailable) {
     // Fail closed: do not silently fall back to per-instance memory counters.
-    return jsonResponse({ error: 'Request protection is temporarily unavailable.' }, 503, {
-      'Retry-After': '30',
-    });
+    return new Response(
+      JSON.stringify({ error: 'Request protection is temporarily unavailable.' }),
+      { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '30' } },
+    );
   }
 
   if (!result.allowed) {
-    return jsonResponse({ error: 'Too many requests. Please try again shortly.' }, 429, {
-      'Retry-After': '60',
-    });
+    return new Response(
+      JSON.stringify({ error: 'Too many requests. Please try again shortly.' }),
+      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' } },
+    );
   }
 
   return null;
