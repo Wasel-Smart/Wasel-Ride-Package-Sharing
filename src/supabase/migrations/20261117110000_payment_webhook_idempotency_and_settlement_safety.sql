@@ -76,7 +76,6 @@ as $
 declare
   v_claimed_event_id uuid;
   v_processed_at timestamptz;
-  v_processing_started_at timestamptz;
   v_lease_seconds integer := greatest(30, least(coalesce(p_lease_seconds, 300), 1800));
 begin
   if p_provider_event_id is null or length(btrim(p_provider_event_id)) = 0
@@ -121,8 +120,8 @@ begin
     return 'claimed';
   end if;
 
-  select processed_at, processing_started_at
-  into v_processed_at, v_processing_started_at
+  select processed_at
+  into v_processed_at
   from public.payment_webhook_events
   where provider_name = p_provider_name
     and provider_event_id = p_provider_event_id;
