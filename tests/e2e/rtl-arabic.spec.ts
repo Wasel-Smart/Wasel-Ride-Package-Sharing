@@ -58,8 +58,9 @@ test.describe('RTL / Arabic layout', () => {
     await setArabic(page);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-    // Pick the first visible button
-    const btn = page.getByRole('button').first();
+    // Ignore icon-only utility buttons; validate a user-facing Arabic CTA.
+    const btn = page.getByRole('button').filter({ hasText: /[\u0600-\u06FF]/ }).first();
+    await expect(btn).toBeVisible();
     const dir = await btn.evaluate((el) => window.getComputedStyle(el).direction);
     expect(dir).toBe('rtl');
   });
