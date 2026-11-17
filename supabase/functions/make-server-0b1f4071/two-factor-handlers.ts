@@ -1,4 +1,5 @@
 import type { SupabaseClient, User } from 'https://esm.sh/@supabase/supabase-js@2';
+type SupabaseAdminClient = SupabaseClient<any, 'public' | 'private', any, any, any>;
 import {
   buildOtpAuthUrl,
   generateBackupCodes,
@@ -14,7 +15,7 @@ interface CanonicalUser {
 }
 
 type AuthenticatedRequest = {
-  admin: SupabaseClient;
+  admin: SupabaseAdminClient;
   authUser: User;
   canonicalUser: CanonicalUser;
 };
@@ -54,7 +55,7 @@ function validateAuthenticatorCode(code: string, allowBackupCode: boolean): stri
   throw new Error('A valid authenticator code is required');
 }
 
-async function getTwoFactorState(admin: SupabaseClient, userId: string) {
+async function getTwoFactorState(admin: SupabaseAdminClient, userId: string) {
   const { data, error } = await admin
     .schema('private')
     .from('user_two_factor_secrets')
@@ -69,7 +70,7 @@ async function getTwoFactorState(admin: SupabaseClient, userId: string) {
   return data;
 }
 
-async function recordTwoFactorFailure(admin: SupabaseClient, userId: string, nextFailures: number) {
+async function recordTwoFactorFailure(admin: SupabaseAdminClient, userId: string, nextFailures: number) {
   const now = Date.now();
   const { error } = await admin
     .schema('private')
