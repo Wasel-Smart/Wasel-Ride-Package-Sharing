@@ -1910,6 +1910,28 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       if (amount <= 0) {
         return runtime.json({ error: 'Amount must be greater than zero.' }, 400);
       }
+      if (purpose === 'withdrawal') {
+        return runtime.json({ error: 'Use the wallet withdrawal operation for withdrawals.' }, 400);
+      }
+      if (purpose === 'subscription') {
+        return runtime.json(
+          { error: 'Subscription checkout is temporarily unavailable until server-side plan pricing is configured.' },
+          503,
+        );
+      }
+      if (purpose === 'deposit' && paymentMethodType === 'wallet') {
+        return runtime.json({ error: 'Wallet balance cannot be used to fund a wallet deposit.' }, 400);
+      }
+      if (purpose === 'ride_payment' || purpose === 'package_payment') {
+        await validatePaymentIntentReference(
+          auth.admin,
+          auth.canonicalUser.id,
+          purpose,
+          referenceType,
+          referenceId,
+          amount,
+        );
+      }
 
       let providerName: WalletProviderName;
       if (paymentMethodType === 'card') providerName = 'stripe';
