@@ -61,6 +61,7 @@ function LandingBrandBadge({ size = 46 }: { size?: number }) {
   );
 }
 
+// Eager loading keeps the route-map visual eligible for the initial paint.
 function NetworkMapHero() {
   const [showImage, setShowImage] = useState(false);
 
