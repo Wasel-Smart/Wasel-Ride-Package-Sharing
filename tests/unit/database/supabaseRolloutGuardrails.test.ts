@@ -47,6 +47,25 @@ describe('Supabase rollout guardrails', () => {
     expect(sql).toContain('create or replace function public.app_update_booking_runtime_status(');
   });
 
+  it('keeps public package tracking data private and uses persisted driver ratings', () => {
+    const edgeRouter = read('supabase/functions/make-server-0b1f4071/index.ts');
+    const trackingHandler = edgeRouter.slice(
+      edgeRouter.indexOf('async function handleTrackPackage('),
+      edgeRouter.indexOf('async function handleCreateReview('),
+    );
+    const driverSummaries = edgeRouter.slice(
+      edgeRouter.indexOf('async function fetchDriverSummaries('),
+      edgeRouter.indexOf('function mapTripRow('),
+    );
+
+    expect(trackingHandler).not.toContain(".select('*')");
+    expect(trackingHandler).not.toContain('receiver_phone');
+    expect(trackingHandler).not.toContain('recipient_phone');
+    expect(edgeRouter).toContain('crypto.randomUUID().replace(/-/g, \'\').slice(0, 24)');
+    expect(driverSummaries).toContain(".from('trust_scores')");
+    expect(driverSummaries).toContain('rating: toNumber(trust?.average_rating, 0)');
+  });
+
   it('fails closed on unverified review writes instead of accepting caller-selected trust scores', () => {
     const edgeRouter = read('supabase/functions/make-server-0b1f4071/index.ts');
     const reviewHandler = edgeRouter.slice(
