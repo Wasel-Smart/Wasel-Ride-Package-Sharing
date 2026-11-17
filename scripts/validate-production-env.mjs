@@ -17,8 +17,8 @@ const REQUIRED_VARS = {
   },
   VITE_SUPABASE_ANON_KEY: {
     required: true,
-    pattern: /^eyJ/,
-    description: 'Supabase publishable anon key (starts with eyJ)',
+    pattern: /^(?:eyJ|sb_publishable_)/,
+    description: 'Supabase anon JWT or publishable key',
   },
 
   // Stripe
@@ -97,13 +97,13 @@ const REQUIRED_VARS = {
 const BACKEND_REQUIRED_VARS = {
   SUPABASE_ANON_KEY: {
     required: true,
-    pattern: /^eyJ/,
-    description: 'Supabase anon key for user-scoped Edge requests',
+    pattern: /^(?:eyJ|sb_publishable_)/,
+    description: 'Supabase anon JWT or publishable key for user-scoped Edge requests',
   },
   SUPABASE_SERVICE_ROLE_KEY: {
     required: true,
-    pattern: /^eyJ/,
-    description: 'Supabase service role key (backend only)',
+    pattern: /^(?:eyJ|sb_secret_)/,
+    description: 'Supabase service-role JWT or secret key (backend only)',
   },
   STRIPE_SECRET_KEY: {
     required: true,
