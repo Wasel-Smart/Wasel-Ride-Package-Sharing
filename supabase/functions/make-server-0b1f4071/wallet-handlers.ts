@@ -1038,18 +1038,23 @@ async function findBeneficiaryUserId(
   admin: SupabaseAdminClient,
   intent: Record<string, unknown>,
 ): Promise<string | null> {
-  const metadata = (intent.metadata && typeof intent.metadata === 'object' && !Array.isArray(intent.metadata))
-    ? intent.metadata as Record<string, unknown>
-    : {};
-  const explicitBeneficiary = normalizeString(metadata.beneficiaryUserId);
-  if (explicitBeneficiary) return explicitBeneficiary;
-
   const referenceType = normalizeString(intent.reference_type);
   const referenceId = normalizeString(intent.reference_id);
   if (!referenceType || !referenceId) return null;
 
-  if (referenceType === 'trip') {
+  if (referenceType === 'trip' || referenceType === 'ride') {
     return findDriverUserIdForTrip(admin, referenceId);
+  }
+
+  if (referenceType === 'package') {
+    const { data, error } = await admin
+      .from('packages')
+      .select('trip_id')
+      .eq('package_id', referenceId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data?.trip_id) return null;
+    return findDriverUserIdForTrip(admin, String(data.trip_id));
   }
 
   if (referenceType === 'booking') {
@@ -1064,6 +1069,73 @@ async function findBeneficiaryUserId(
   }
 
   return null;
+}
+
+async function validatePaymentIntentReference(
+  admin: SupabaseAdminClient,
+  userId: string,
+  purpose: 'ride_payment' | 'package_payment',
+  referenceType: string | null,
+  referenceId: string | null,
+  amount: number,
+) {
+  if (!referenceType || !referenceId) {
+    throw new Error('A valid payment reference is required.');
+  }
+
+  if (purpose === 'ride_payment') {
+    let bookingQuery = admin
+      .from('bookings')
+      .select('booking_id, trip_id, passenger_id, total_price, amount, booking_status, status')
+      .eq('passenger_id', userId);
+
+    if (referenceType === 'booking') {
+      bookingQuery = bookingQuery.eq('booking_id', referenceId);
+    } else if (referenceType === 'ride' || referenceType === 'trip') {
+      bookingQuery = bookingQuery.eq('trip_id', referenceId);
+    } else {
+      throw new Error('Ride payments must reference your own booking or trip.');
+    }
+
+    const { data: booking, error } = await bookingQuery.maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!booking) throw new Error('A booking owned by the authenticated passenger was not found.');
+
+    const bookingStatus = String(booking.booking_status ?? '').toLowerCase();
+    const runtimeStatus = String(booking.status ?? '').toLowerCase();
+    if (
+      ['cancelled', 'rejected', 'completed'].includes(bookingStatus) ||
+      ['cancelled', 'rejected', 'completed'].includes(runtimeStatus)
+    ) {
+      throw new Error('This booking is not eligible for payment.');
+    }
+
+    const expectedAmount = toNumber(booking.total_price ?? booking.amount, 0);
+    if (expectedAmount <= 0 || Math.abs(expectedAmount - amount) > 0.001) {
+      throw new Error('Payment amount does not match the server-calculated booking total.');
+    }
+    return;
+  }
+
+  if (referenceType !== 'package') {
+    throw new Error('Package payments must reference a package.');
+  }
+
+  const { data: packageRow, error } = await admin
+    .from('packages')
+    .select('package_id, sender_id, trip_id, fee_amount, delivery_fee, status, package_status')
+    .eq('package_id', referenceId)
+    .eq('sender_id', userId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!packageRow) throw new Error('A package owned by the authenticated sender was not found.');
+  if (!packageRow.trip_id) throw new Error('This package must be matched to a trip before payment.');
+
+  const expectedAmount = toNumber(packageRow.fee_amount ?? packageRow.delivery_fee, 0);
+  if (expectedAmount <= 0 || Math.abs(expectedAmount - amount) > 0.001) {
+    throw new Error('Payment amount does not match the server-calculated package fee.');
+  }
 }
 
 async function createEscrowForIntent(
