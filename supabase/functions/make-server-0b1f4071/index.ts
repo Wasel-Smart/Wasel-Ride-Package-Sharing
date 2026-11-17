@@ -1424,77 +1424,42 @@ async function handlePublishTrip(auth: AuthenticatedRequest, tripId: string) {
   return jsonResponse({ success: true });
 }
 
-async function handleCreateBooking(auth: AuthenticatedRequest, body: Record<string, unknown>) {
+async function handleCreateBooking(
+  auth: AuthenticatedRequest,
+  body: Record<string, unknown>,
+  request: Request,
+) {
   const tripId = normalizeString(body.trip_id ?? body.tripId);
-  const seatsRequested = Math.max(1, toNumber(body.seats_requested ?? body.seatsRequested, 1));
+  const seatsRequested = toNumber(body.seats_requested ?? body.seatsRequested, 1);
   const pickup = normalizeString(body.pickup_stop ?? body.pickup);
   const dropoff = normalizeString(body.dropoff_stop ?? body.dropoff);
 
-  if (!tripId) {
-    return jsonResponse({ error: 'trip_id is required.' }, 400);
+  if (!tripId || !isUuid(tripId)) {
+    return jsonResponse({ error: 'A valid trip_id is required.' }, 400);
+  }
+  if (!Number.isInteger(seatsRequested) || seatsRequested < 1 || seatsRequested > 8) {
+    return jsonResponse({ error: 'Requested seat count must be between 1 and 8.' }, 400);
   }
 
-  const { data: trip, error: tripError } = await auth.admin
-    .from('trips')
-    .select('trip_id, available_seats, price_per_seat')
-    .eq('trip_id', tripId)
-    .maybeSingle();
+  // Use the caller's JWT so current_user_id() and the RPC's ownership checks
+  // evaluate the real passenger, not the service-role identity.
+  const userClient = createUserScopedClient(request);
+  const { data, error } = await userClient.rpc('app_create_booking_request', {
+    p_trip_id: tripId,
+    p_seats_requested: seatsRequested,
+    p_pickup_location: pickup,
+    p_dropoff_location: dropoff,
+    p_runtime_status: 'pending_driver',
+  });
 
-  if (tripError) {
-    return jsonResponse({ error: tripError.message }, 400);
+  if (error) {
+    return jsonResponse({ error: error.message }, 400);
   }
-  if (!trip) {
-    return jsonResponse({ error: 'Trip not found.' }, 404);
-  }
-
-  const availableSeats = toNumber(trip.available_seats, 0);
-  if (availableSeats < seatsRequested) {
-    return jsonResponse({ error: 'Not enough seats available.' }, 400);
-  }
-
-  const pricePerSeat = toNumber(trip.price_per_seat, 0);
-  const totalPrice = Number((pricePerSeat * seatsRequested).toFixed(3));
-  const bookingId = crypto.randomUUID();
-
-  const { data: booking, error: bookingError } = await auth.admin
-    .from('bookings')
-    .insert({
-      booking_id: bookingId,
-      trip_id: tripId,
-      passenger_id: auth.canonicalUser.id,
-      seat_number: 1,
-      booking_status: 'confirmed',
-      amount: totalPrice,
-      status: 'confirmed',
-      confirmed_by_driver: true,
-      seats_requested: seatsRequested,
-      pickup_location: pickup,
-      pickup_name: pickup,
-      dropoff_location: dropoff,
-      dropoff_name: dropoff,
-      price_per_seat: pricePerSeat,
-      total_price: totalPrice,
-      seats_booked: seatsRequested,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .select('booking_id, trip_id, passenger_id, seats_requested, seat_number, pickup_location, dropoff_location, price_per_seat, total_price, amount, status, booking_status, created_at, updated_at')
-    .single();
-
-  if (bookingError) {
-    return jsonResponse({ error: bookingError.message }, 400);
+  if (!data) {
+    return jsonResponse({ error: 'Booking request could not be created.' }, 500);
   }
 
-  const { error: tripUpdateError } = await auth.admin
-    .from('trips')
-    .update({ available_seats: Math.max(0, availableSeats - seatsRequested) })
-    .eq('trip_id', tripId);
-
-  if (tripUpdateError) {
-    return jsonResponse({ error: tripUpdateError.message }, 400);
-  }
-
-  return jsonResponse({ booking: mapBookingRow(booking as BookingRow) }, 201);
+  return jsonResponse({ booking: mapBookingRow(data as BookingRow) }, 201);
 }
 
 async function handleGetUserBookings(auth: AuthenticatedRequest) {
@@ -1541,84 +1506,40 @@ async function handleGetTripBookings(auth: AuthenticatedRequest, tripId: string)
 }
 
 async function handleUpdateBookingStatus(
-  auth: AuthenticatedRequest,
+  _auth: AuthenticatedRequest,
   bookingId: string,
   body: Record<string, unknown>,
+  request: Request,
 ) {
-  const nextStatusInput = normalizeString(body.status);
-  if (!nextStatusInput) {
+  const requestedStatus = normalizeString(body.status)?.toLowerCase();
+  if (!requestedStatus) {
     return jsonResponse({ error: 'status is required.' }, 400);
   }
 
-  const nextStatus = normalizeBookingStatus(nextStatusInput);
-  const { data: existing, error: existingError } = await auth.admin
-    .from('bookings')
-    .select('booking_id, trip_id, passenger_id, seats_requested, seat_number, pickup_location, dropoff_location, price_per_seat, total_price, amount, status, booking_status, created_at, updated_at')
-    .eq('booking_id', bookingId)
-    .maybeSingle();
-
-  if (existingError) {
-    return jsonResponse({ error: existingError.message }, 400);
+  const nextStatus = requestedStatus === 'accepted' ? 'confirmed' : requestedStatus;
+  if (!['confirmed', 'rejected', 'cancelled'].includes(nextStatus)) {
+    return jsonResponse({ error: 'Unsupported booking status.' }, 400);
   }
-  if (!existing) {
-    return jsonResponse({ error: 'Booking not found.' }, 404);
+  if (!isUuid(bookingId)) {
+    return jsonResponse({ error: 'A valid booking ID is required.' }, 400);
   }
 
-  const existingRow = existing as BookingRow;
-  const actorOwnsBooking = String(existingRow.passenger_id ?? '') === auth.canonicalUser.id;
+  // The database RPC enforces passenger / assigned-driver / admin ownership
+  // and applies the booking + trip seat changes in one transaction.
+  const userClient = createUserScopedClient(request);
+  const { data, error } = await userClient.rpc('app_update_booking_runtime_status', {
+    p_booking_id: bookingId,
+    p_runtime_status: nextStatus,
+  });
 
-  if (!actorOwnsBooking) {
-    const driver = await ensureApprovedDriver(auth.admin, auth.canonicalUser.id);
-    const { data: trip, error: tripError } = await auth.admin
-      .from('trips')
-      .select('trip_id')
-      .eq('trip_id', existingRow.trip_id)
-      .eq('driver_id', driver.driver_id)
-      .maybeSingle();
-
-    if (tripError) {
-      return jsonResponse({ error: tripError.message }, 400);
-    }
-    if (!trip) {
-      return jsonResponse({ error: 'You do not have permission to update this booking.' }, 403);
-    }
+  if (error) {
+    return jsonResponse({ error: error.message }, 400);
+  }
+  if (!data) {
+    return jsonResponse({ error: 'Booking status could not be updated.' }, 500);
   }
 
-  const { data: updated, error: updateError } = await auth.admin
-    .from('bookings')
-    .update({
-      status: nextStatus,
-      booking_status: nextStatus,
-      confirmed_by_driver: nextStatus === 'confirmed',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('booking_id', bookingId)
-    .select('booking_id, trip_id, passenger_id, seats_requested, seat_number, pickup_location, dropoff_location, price_per_seat, total_price, amount, status, booking_status, created_at, updated_at')
-    .single();
-
-  if (updateError) {
-    return jsonResponse({ error: updateError.message }, 400);
-  }
-
-  if (['cancelled', 'rejected'].includes(nextStatus)) {
-    const { data: trip } = await auth.admin
-      .from('trips')
-      .select('available_seats')
-      .eq('trip_id', existingRow.trip_id)
-      .maybeSingle();
-
-    if (trip) {
-      await auth.admin
-        .from('trips')
-        .update({
-          available_seats:
-            toNumber(trip.available_seats, 0) + toNumber(existingRow.seats_requested, 1),
-        })
-        .eq('trip_id', existingRow.trip_id);
-    }
-  }
-
-  return jsonResponse({ booking: mapBookingRow(updated as BookingRow) });
+  return jsonResponse({ booking: mapBookingRow(data as BookingRow) });
 }
 
 async function handleGetNotifications(auth: AuthenticatedRequest) {
@@ -2320,7 +2241,7 @@ serve(async (req) => {
     }
 
     if (routeMatches(path, '/bookings') && req.method === 'POST') {
-      return handleCreateBooking(auth, await readJsonBody(req));
+      return handleCreateBooking(auth, await readJsonBody(req), req);
     }
 
     if (routeStartsWith(path, '/bookings/user/') && req.method === 'GET') {
@@ -2333,7 +2254,7 @@ serve(async (req) => {
 
     if (routeStartsWith(path, '/bookings/') && req.method === 'PUT') {
       const bookingId = path.slice('/bookings/'.length);
-      return handleUpdateBookingStatus(auth, bookingId, await readJsonBody(req));
+      return handleUpdateBookingStatus(auth, bookingId, await readJsonBody(req), req);
     }
 
     if (routeMatches(path, '/notifications') && req.method === 'GET') {
