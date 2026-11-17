@@ -96,22 +96,22 @@ begin
     p_provider_event_id,
     p_signature,
     coalesce(p_payload, '{}'::jsonb),
-    timezone('utc', now()),
+    now(),
     1,
-    timezone('utc', now())
+    now()
   )
   on conflict (provider_name, provider_event_id) do update
   set
     signature = excluded.signature,
     payload = excluded.payload,
-    processing_started_at = timezone('utc', now()),
+    processing_started_at = now(),
     attempt_count = public.payment_webhook_events.attempt_count + 1,
     processing_error = null
   where public.payment_webhook_events.processed_at is null
     and (
       public.payment_webhook_events.processing_started_at is null
       or public.payment_webhook_events.processing_started_at
-        < timezone('utc', now()) - make_interval(secs => v_lease_seconds)
+        < now() - make_interval(secs => v_lease_seconds)
     )
   returning webhook_event_id into v_claimed_event_id;
 
@@ -131,7 +131,7 @@ as $$
 begin
   update public.payment_webhook_events
   set
-    processed_at = timezone('utc', now()),
+    processed_at = now(),
     processing_started_at = null,
     processing_error = null
   where provider_name = p_provider_name
@@ -212,8 +212,8 @@ begin
     p_corridor_id,
     p_renewal_at,
     coalesce(p_metadata, '{}'::jsonb),
-    timezone('utc', now()),
-    timezone('utc', now())
+    now(),
+    now()
   )
   on conflict (user_id)
     where subscription_status in ('trialing', 'active', 'past_due', 'paused')
@@ -228,7 +228,7 @@ begin
     corridor_id = excluded.corridor_id,
     renewal_at = excluded.renewal_at,
     metadata = excluded.metadata,
-    updated_at = timezone('utc', now())
+    updated_at = now()
   returning * into v_subscription;
 
   return v_subscription;
