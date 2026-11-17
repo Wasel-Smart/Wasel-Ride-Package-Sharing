@@ -1425,7 +1425,7 @@ async function handlePublishTrip(auth: AuthenticatedRequest, tripId: string) {
 }
 
 async function handleCreateBooking(
-  auth: AuthenticatedRequest,
+  _auth: AuthenticatedRequest,
   body: Record<string, unknown>,
   request: Request,
 ) {
