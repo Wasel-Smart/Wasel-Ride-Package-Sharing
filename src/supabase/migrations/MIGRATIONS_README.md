@@ -131,7 +131,6 @@ Operational bootstrap seed assets live in `db/seeds/`:
 - `pricing.seed.sql`
 - `core.seed.sql`
 - `automation.seed.sql`
-- `rolling_trips.seed.sql`
 
 Smoke checks remain in `src/supabase/seeds/` and are never part of the production rollout seed pack.
 
