@@ -2191,26 +2191,10 @@ serve(async (req) => {
     }
 
     if (routeMatches(path, '/rides')) {
-      if (req.method === 'POST') {
-        return jsonResponse(
-          { error: 'Legacy ride creation is disabled. Create a trip booking through POST /bookings.' },
-          410,
-        );
-      }
-
-      if (req.method === 'GET') {
-        const { data, error } = await auth.admin
-          .from('rides')
-          .select('*, trips(*), profiles(*)')
-          .eq('passenger_id', auth.canonicalUser.id)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          return jsonResponse({ error: error.message }, 400);
-        }
-
-        return jsonResponse(data ?? []);
-      }
+      return jsonResponse(
+        { error: 'The legacy rides API is retired. Use /trips and /bookings.' },
+        410,
+      );
     }
 
     if (routeMatches(path, '/trips') && req.method === 'POST') {
