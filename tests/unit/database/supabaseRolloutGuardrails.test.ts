@@ -47,6 +47,22 @@ describe('Supabase rollout guardrails', () => {
     expect(sql).toContain('create or replace function public.app_update_booking_runtime_status(');
   });
 
+  it('uses atomic database-backed rate limits for every protected Edge handler', () => {
+    const limiter = read('supabase/functions/make-server-0b1f4071/_shared/security-runtime.ts');
+    const twoFactor = read('supabase/functions/make-server-0b1f4071/two-factor-handlers.ts');
+    const wallet = read('supabase/functions/make-server-0b1f4071/wallet-handlers.ts');
+    const communications = read('supabase/functions/make-server-0b1f4071/communications-handlers.ts');
+
+    expect(limiter).toContain("admin.rpc('consume_edge_rate_limit'");
+    expect(limiter).not.toContain('new Map<string, RateLimitState>');
+    expect(twoFactor).toContain('consumeRateLimitToken(auth.admin');
+    expect(wallet).toContain('consumeRateLimitToken(runtime.getAdminClient()');
+    expect(communications).toContain('consumeRateLimitToken(auth.admin');
+    expect(twoFactor).toContain('rateLimit.unavailable');
+    expect(wallet).toContain('rateLimit.unavailable');
+    expect(communications).toContain('rateLimit.unavailable');
+  });
+
   it('removes permissive legacy RLS paths from kv, subscription, and wallet surfaces', () => {
     const sql = read(
       'src/supabase/migrations/20260424153000_database_governance_and_rls_hardening.sql',
