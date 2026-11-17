@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sanitizeEdgeErrorMessage, verifyTimestampedHmacSignature } from '../../../supabase/functions/make-server-0b1f4071/_shared/security-runtime';
+import { generateSixDigitOtp, sanitizeEdgeErrorMessage, verifyTimestampedHmacSignature } from '../../../supabase/functions/make-server-0b1f4071/_shared/security-runtime';
 
 describe('sanitizeEdgeErrorMessage', () => {
   it('does not expose provider or database exception messages', () => {
@@ -80,5 +80,11 @@ describe('verifyTimestampedHmacSignature', () => {
       300,
       timestamp * 1000,
     )).resolves.toBe(true);
+  });
+});
+
+describe('generateSixDigitOtp', () => {
+  it('returns a six-digit numeric code', () => {
+    expect(generateSixDigitOtp()).toMatch(/^[1-9]\d{5}$/);
   });
 });
