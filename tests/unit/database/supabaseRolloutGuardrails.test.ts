@@ -69,6 +69,9 @@ describe('Supabase rollout guardrails', () => {
     expect(limiter).toContain("admin.rpc('consume_edge_rate_limit'");
     expect(edgeRouter).toContain('consumeRateLimitToken(createAdminClient()');
     expect(edgeRouter).toContain('enforceDistributedRateLimit(req, path)');
+    expect(
+      read('src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql'),
+    ).toContain('limit 500');
     expect(edgeRouter).toContain("userClient.rpc('app_create_booking_request'");
     expect(edgeRouter).toContain("userClient.rpc('app_update_booking_runtime_status'");
     const createBookingHandler = edgeRouter.slice(
