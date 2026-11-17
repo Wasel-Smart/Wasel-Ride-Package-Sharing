@@ -2087,10 +2087,21 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         }
 
         const eventType = normalizeString(eventBody.type);
-        const mappedStatus = mapStripePaymentStatus(object.status);
-        const nextStatus = eventType === 'payment_intent.payment_failed' ? 'failed' : mappedStatus;
+        const stripeEventStatuses: Record<string, string> = {
+          'payment_intent.succeeded': 'succeeded',
+          'payment_intent.payment_failed': 'failed',
+          'payment_intent.canceled': 'cancelled',
+          'payment_intent.processing': 'processing',
+          'payment_intent.requires_action': 'requires_action',
+        };
+        const nextStatus = eventType ? stripeEventStatuses[eventType] : undefined;
 
-        if (mappedStatus === 'succeeded') {
+        if (!nextStatus) {
+          await completeEvent();
+          return runtime.json({ ok: true, ignored: true });
+        }
+
+        if (eventType === 'payment_intent.succeeded') {
           await settlePaymentIntent(admin, intent);
         }
 
