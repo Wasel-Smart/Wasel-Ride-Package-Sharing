@@ -54,6 +54,14 @@ jobs:
       - name: Type check
         run: npm run type-check
 
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check Supabase Edge Functions
+        run: deno check --no-lock supabase/functions/make-server-0b1f4071/index.ts
+
       - name: Lint (zero warnings)
         run: npm run lint:strict
 
