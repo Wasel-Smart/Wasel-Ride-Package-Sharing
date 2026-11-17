@@ -23,11 +23,11 @@ describe('Supabase rollout guardrails', () => {
       'src/supabase/migrations/20260324005540_kv_store.sql',
     );
     expect(rolloutMigrations.slice(-5)).toEqual([
-      'src/supabase/migrations/20260421100000_stripe_subscriptions.sql',
       'src/supabase/migrations/20260422120000_safety_and_user_settings.sql',
       'src/supabase/migrations/20260424140000_harden_user_owned_rpc_boundaries.sql',
       'src/supabase/migrations/20260424153000_database_governance_and_rls_hardening.sql',
       'src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql',
+      'src/supabase/migrations/20261117110000_payment_webhook_idempotency_and_settlement_safety.sql',
     ]);
   });
 
@@ -61,6 +61,27 @@ describe('Supabase rollout guardrails', () => {
     expect(twoFactor).toContain('rateLimit.unavailable');
     expect(wallet).toContain('rateLimit.unavailable');
     expect(communications).toContain('rateLimit.unavailable');
+  });
+
+  it('serializes payment webhook claims and makes settlement writes idempotent', () => {
+    const sql = read(
+      'src/supabase/migrations/20261117110000_payment_webhook_idempotency_and_settlement_safety.sql',
+    );
+    const wallet = read('supabase/functions/make-server-0b1f4071/wallet-handlers.ts');
+
+    expect(sql).toContain('app_claim_payment_webhook_event');
+    expect(sql).toContain('processing_started_at');
+    expect(sql).toContain('attempt_count');
+    expect(sql).toContain('wallet_accounts_payment_intent_id_key');
+    expect(sql).toContain('escrow_accounts_payment_intent_id_key');
+    expect(sql).toContain('app_upsert_wallet_subscription');
+    expect(sql).toContain('on conflict (user_id)');
+    expect(wallet).toContain("admin.rpc('app_claim_payment_webhook_event'");
+    expect(wallet).toContain("app_complete_payment_webhook_event");
+    expect(wallet).toContain("app_fail_payment_webhook_event");
+    expect(wallet).toContain("admin.rpc('app_upsert_wallet_subscription'");
+    expect(wallet).toContain("onConflict: 'payment_intent_id', ignoreDuplicates: true");
+    expect(wallet).not.toContain(".from('payment_webhook_events')");
   });
 
   it('removes permissive legacy RLS paths from kv, subscription, and wallet surfaces', () => {
