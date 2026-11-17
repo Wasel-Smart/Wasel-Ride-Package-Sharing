@@ -88,6 +88,22 @@ jobs:
             echo "Changed source files already satisfy Prettier."
           fi
 
+      - name: Sync Supabase migration documentation
+        run: npm run sync:supabase-migration-docs
+
+      - name: Commit generated migration documentation
+        shell: bash
+        run: |
+          if ! git diff --quiet -- src/supabase/migrations/MIGRATIONS_README.md; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/supabase/migrations/MIGRATIONS_README.md
+            git commit -m "docs: synchronize Supabase migration inventory"
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          else
+            echo "Migration documentation is already synchronized."
+          fi
+
       - name: High and critical dependency audit
         run: npm audit --audit-level=high
       - name: Full repository verification
