@@ -240,7 +240,7 @@ export function buildTwilioRequest(
   };
 }
 
-export function mapResendEventToStatus(eventType: string): DeliveryLifecycleStatus {
+export function mapResendEventToStatus(eventType: string): 'sent' | 'delivered' | 'failed' {
   const normalized = eventType.toLowerCase();
   if (normalized.includes('delivered') || normalized.includes('opened') || normalized.includes('clicked')) return 'delivered';
   if (normalized.includes('sent') || normalized.includes('queued') || normalized.includes('processed')) return 'sent';
@@ -248,7 +248,7 @@ export function mapResendEventToStatus(eventType: string): DeliveryLifecycleStat
   return 'sent';
 }
 
-export function mapTwilioStatusToLifecycle(status: string): DeliveryLifecycleStatus {
+export function mapTwilioStatusToLifecycle(status: string): 'sent' | 'delivered' | 'failed' | 'processing' {
   const normalized = status.toLowerCase();
   if (normalized === 'delivered' || normalized === 'read') return 'delivered';
   if (normalized === 'sent' || normalized === 'queued' || normalized === 'accepted' || normalized === 'scheduled') return 'sent';
