@@ -1805,7 +1805,18 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       const currency = normalizeCurrency(body.currency);
       const referenceType = normalizeString(body.referenceType);
       const referenceId = normalizeString(body.referenceId);
-      const idempotencyKey = normalizeString(body.idempotencyKey) ?? `wallet-intent:${auth.canonicalUser.id}:${crypto.randomUUID()}`;
+      const clientIdempotencyKey = normalizeString(body.idempotencyKey);
+      const idempotencyKey = clientIdempotencyKey
+        ? `wasel:${auth.canonicalUser.id}:${await sha256Hex([
+            clientIdempotencyKey,
+            purpose,
+            amount.toFixed(3),
+            currency,
+            paymentMethodType,
+            referenceType ?? '',
+            referenceId ?? '',
+          ].join('|'))}`
+        : `wasel:${auth.canonicalUser.id}:${crypto.randomUUID()}`;
       const metadata = body.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata)
         ? body.metadata as Record<string, unknown>
         : {};
