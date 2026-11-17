@@ -182,6 +182,9 @@ describe('Supabase rollout guardrails', () => {
     expect(bookingSql).toContain("app_consume_user_rate_limit('booking_create')");
     expect(bookingSql).toContain("app_consume_user_rate_limit('booking_update')");
     expect(bookingSql).toContain("when 'booking_create' then v_max_requests := 8");
+    expect(bookingSql).toContain("v_trip.departure_time <= now()");
+    expect(bookingSql).toContain("Trip driver is not approved to provide rides");
+    expect(bookingSql).toContain("Trip is no longer eligible for confirmation");
     expect(sql).toContain(
       'Terminal states are monotonic: a late processing/action event cannot',
     );
