@@ -63,6 +63,9 @@ describe('Supabase rollout guardrails', () => {
     expect(paymentIntentHandler).toContain("paymentMethodType === 'wallet'");
     expect(paymentIntentHandler).toContain("purpose === 'subscription'");
     expect(paymentIntentHandler).toContain('validatePaymentIntentReference(');
+    expect(paymentIntentHandler).toContain('clientIdempotencyKey');
+    expect(paymentIntentHandler).toContain('auth.canonicalUser.id');
+    expect(paymentIntentHandler).toContain('await sha256Hex(');
   });
 
   it('keeps public package tracking data private and uses persisted driver ratings', () => {
