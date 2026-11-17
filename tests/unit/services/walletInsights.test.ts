@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { mockFetchWithRetry, mockGetAuthDetails } = vi.hoisted(() => ({
   mockFetchWithRetry: vi.fn(),
@@ -91,9 +91,15 @@ const walletPayload = {
 
 describe('walletApi insights and payment-method controls', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-05T12:00:00.000Z'));
     vi.clearAllMocks();
     __resetWalletApiCachesForTests();
     window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('derives wallet insights from secure backend transactions', async () => {
@@ -133,7 +139,7 @@ describe('walletApi insights and payment-method controls', () => {
         verified: true,
         otpRequired: true,
         verificationToken: 'pm-step-up',
-        expiresAt: '2026-04-12T11:00:00.000Z',
+        expiresAt: '2026-08-05T13:00:00.000Z',
       }))
       .mockResolvedValueOnce(await jsonResponse({ ok: true, paymentMethodId: 'pm-local-1' }));
 
