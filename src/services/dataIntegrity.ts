@@ -81,7 +81,7 @@ export const bookingCreatePayloadSchema = z.object({
   seatsRequested: z.number().int().min(1).max(7),
   pickup: z.string().trim().max(120).optional(),
   dropoff: z.string().trim().max(120).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   bookingStatus: z.string().trim().optional(),
 });
 
@@ -95,7 +95,7 @@ export const pricingSnapshotPayloadSchema = z.object({
   demandScore: z.number().finite().min(0).max(100).optional(),
   pricePressure: z.string().trim().max(40).optional(),
   sourceContext: z.string().trim().max(120).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const communicationPreferenceUpdateSchema = z
