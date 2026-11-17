@@ -72,10 +72,14 @@ function generateSecureOtp(): string {
   const range = 900_000;
   const ceiling = Math.floor(0x1_0000_0000 / range) * range;
   const sample = new Uint32Array(1);
+  let value = 0;
+
   do {
     crypto.getRandomValues(sample);
-  } while (sample[0] >= ceiling);
-  return String(100_000 + (sample[0] % range));
+    value = sample[0] ?? 0;
+  } while (value >= ceiling);
+
+  return String(100_000 + (value % range));
 }
 
 function readJsonBody(request: Request): Promise<Record<string, unknown>> {
