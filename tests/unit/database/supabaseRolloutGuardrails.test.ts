@@ -54,7 +54,7 @@ describe('Supabase rollout guardrails', () => {
       edgeRouter.indexOf('serve(async (req) =>'),
     );
 
-    expect(reviewHandler).toContain('}, 503)');
+    expect(reviewHandler).toContain('503,');
     expect(reviewHandler).not.toContain(".from('trust_scores')");
     expect(reviewHandler).not.toContain(".from('reviews')");
   });
