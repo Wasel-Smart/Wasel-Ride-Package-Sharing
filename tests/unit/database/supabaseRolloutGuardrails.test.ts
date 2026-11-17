@@ -69,9 +69,9 @@ describe('Supabase rollout guardrails', () => {
     );
     const wallet = read('supabase/functions/make-server-0b1f4071/wallet-handlers.ts');
 
-    expect(sql).not.toMatch(/^\\s*as \\$(?!\\$)/m);
-    expect(sql.match(/^\\s*as \\$\\$/gm) ?? []).toHaveLength(4);
-    expect(sql.match(/^\\$\\$;$/gm) ?? []).toHaveLength(4);
+    expect(sql).not.toMatch(/^\s*as \$(?!\$)/m);
+    expect(sql.match(/^\s*as \$\$/gm) ?? []).toHaveLength(4);
+    expect(sql.match(/^\$\$;$/gm) ?? []).toHaveLength(4);
     expect(sql).toContain('app_claim_payment_webhook_event');
     expect(sql).toContain("return 'processed'");
     expect(sql).toContain("return 'busy'");
