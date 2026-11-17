@@ -1,4 +1,5 @@
 import type { SupabaseClient, User } from 'https://esm.sh/@supabase/supabase-js@2';
+type SupabaseAdminClient = SupabaseClient<any, 'public' | 'private', any, any, any>;
 import {
   ESCROW_STATUSES,
   isPaymentIntentPurpose,
@@ -27,7 +28,7 @@ interface CanonicalUser {
 }
 
 type AuthenticatedRequest = {
-  admin: SupabaseClient;
+  admin: SupabaseAdminClient;
   authUser: User;
   canonicalUser: CanonicalUser;
 };
@@ -36,7 +37,7 @@ type AuthenticationResult = AuthenticatedRequest | { error: Response };
 
 interface WalletRuntime {
   authenticateRequest: (request: Request) => Promise<AuthenticationResult>;
-  getAdminClient: () => SupabaseClient;
+  getAdminClient: () => SupabaseAdminClient;
   json: (data: unknown, status?: number) => Response;
 }
 
@@ -181,7 +182,7 @@ async function requireAllowedRate(
   }
 }
 
-async function ensureWalletProfile(admin: SupabaseClient, userId: string) {
+async function ensureWalletProfile(admin: SupabaseAdminClient, userId: string) {
   const { data: profile, error: profileError } = await admin
     .from('wallet_profiles')
     .select('*')
@@ -220,7 +221,7 @@ async function ensureWalletProfile(admin: SupabaseClient, userId: string) {
 }
 
 async function ensureWalletAccount(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   args: {
     ownerUserId: string | null;
     scope: string;
@@ -269,7 +270,7 @@ async function ensureWalletAccount(
   return inserted;
 }
 
-async function ensureWalletInfrastructure(admin: SupabaseClient, userId: string) {
+async function ensureWalletInfrastructure(admin: SupabaseAdminClient, userId: string) {
   const profile = await ensureWalletProfile(admin, userId);
   const availableAccount = await ensureWalletAccount(admin, {
     ownerUserId: userId,
@@ -289,7 +290,7 @@ async function ensureWalletInfrastructure(admin: SupabaseClient, userId: string)
   return { profile, availableAccount, escrowAccount };
 }
 
-async function getSystemAccount(admin: SupabaseClient, scope: string, currency = 'JOD') {
+async function getSystemAccount(admin: SupabaseAdminClient, scope: string, currency = 'JOD') {
   return ensureWalletAccount(admin, {
     ownerUserId: null,
     scope,
@@ -302,7 +303,7 @@ async function getSystemAccount(admin: SupabaseClient, scope: string, currency =
 }
 
 async function createEscrowLedgerAccount(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   args: {
     paymentIntentId: string;
     currencyCode: string;
@@ -349,7 +350,7 @@ async function createEscrowLedgerAccount(
 }
 
 async function postLedgerTransaction(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   args: {
     transactionType: string;
     transactionStatus: string;
@@ -389,7 +390,7 @@ async function postLedgerTransaction(
   return String(data);
 }
 
-async function getOwnedAccountIds(admin: SupabaseClient, userId: string): Promise<string[]> {
+async function getOwnedAccountIds(admin: SupabaseAdminClient, userId: string): Promise<string[]> {
   const { data, error } = await admin
     .from('wallet_accounts')
     .select('account_id')
@@ -402,7 +403,7 @@ async function getOwnedAccountIds(admin: SupabaseClient, userId: string): Promis
   return Array.isArray(data) ? data.map((row) => String(row.account_id)) : [];
 }
 
-async function resolveRecipientUser(admin: SupabaseClient, recipient: string) {
+async function resolveRecipientUser(admin: SupabaseAdminClient, recipient: string) {
   const trimmed = recipient.trim();
   const selectors = [
     admin.from('users').select('id, email, phone_number').eq('id', trimmed).maybeSingle(),
@@ -421,7 +422,7 @@ async function resolveRecipientUser(admin: SupabaseClient, recipient: string) {
   return null;
 }
 
-async function setWalletPin(admin: SupabaseClient, userId: string, pin: string) {
+async function setWalletPin(admin: SupabaseAdminClient, userId: string, pin: string) {
   const now = new Date().toISOString();
   const pinHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${pin}`);
   const { error } = await admin
@@ -442,7 +443,7 @@ async function setWalletPin(admin: SupabaseClient, userId: string, pin: string) 
   }
 }
 
-async function getWalletPinSecret(admin: SupabaseClient, userId: string) {
+async function getWalletPinSecret(admin: SupabaseAdminClient, userId: string) {
   const { data, error } = await admin
     .schema('private')
     .from('wallet_pin_secrets')
@@ -458,7 +459,7 @@ async function getWalletPinSecret(admin: SupabaseClient, userId: string) {
 }
 
 async function recordPinFailure(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   userId: string,
   currentFailures: number,
 ) {
@@ -483,7 +484,7 @@ async function recordPinFailure(
   }
 }
 
-async function clearPinFailures(admin: SupabaseClient, userId: string) {
+async function clearPinFailures(admin: SupabaseAdminClient, userId: string) {
   const { error } = await admin
     .schema('private')
     .from('wallet_pin_secrets')
@@ -500,7 +501,7 @@ async function clearPinFailures(admin: SupabaseClient, userId: string) {
 }
 
 async function enqueueOtpDelivery(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   args: {
     userId: string;
     destination: string;
@@ -536,7 +537,7 @@ async function enqueueOtpDelivery(
 }
 
 async function createStepUpChallenge(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   auth: AuthenticatedRequest,
   purpose: StepUpPurpose,
 ) {
@@ -587,7 +588,7 @@ async function createStepUpChallenge(
   };
 }
 
-async function issueStepUpToken(admin: SupabaseClient, userId: string, purpose: StepUpPurpose) {
+async function issueStepUpToken(admin: SupabaseAdminClient, userId: string, purpose: StepUpPurpose) {
   const rawToken = `${crypto.randomUUID()}.${crypto.randomUUID()}`;
   const tokenHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${rawToken}`);
   const expiresAt = new Date(Date.now() + STEP_UP_TOKEN_TTL_MS).toISOString();
@@ -611,7 +612,7 @@ async function issueStepUpToken(admin: SupabaseClient, userId: string, purpose: 
 }
 
 async function consumeStepUpToken(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   userId: string,
   purpose: StepUpPurpose,
   verificationToken: string,
@@ -798,7 +799,7 @@ async function verifyLocalGatewaySignature(payload: string, signatureHeader: str
 }
 
 async function createPaymentIntentRecord(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   args: {
     userId: string;
     purpose: PaymentIntentPurpose;
@@ -849,7 +850,7 @@ async function createPaymentIntentRecord(
 }
 
 async function updatePaymentIntentRecord(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   paymentIntentId: string,
   patch: Record<string, unknown>,
 ) {
@@ -867,7 +868,7 @@ async function updatePaymentIntentRecord(
   return data;
 }
 
-async function findPaymentIntentByProviderPaymentId(admin: SupabaseClient, providerPaymentId: string) {
+async function findPaymentIntentByProviderPaymentId(admin: SupabaseAdminClient, providerPaymentId: string) {
   const { data, error } = await admin
     .from('wallet_payment_intents')
     .select('*')
@@ -881,7 +882,7 @@ async function findPaymentIntentByProviderPaymentId(admin: SupabaseClient, provi
   return data;
 }
 
-async function getDefaultPaymentMethod(admin: SupabaseClient, userId: string) {
+async function getDefaultPaymentMethod(admin: SupabaseAdminClient, userId: string) {
   const { data, error } = await admin
     .from('wallet_payment_methods')
     .select('*')
@@ -907,7 +908,7 @@ function buildPaymentIntentStatusResponse(intent: Record<string, unknown>) {
 }
 
 async function reconcilePaymentIntentStatus(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   intent: Record<string, unknown>,
 ) {
   const currentStatus = String(intent.status ?? 'processing');
@@ -952,7 +953,7 @@ async function reconcilePaymentIntentStatus(
   };
 }
 
-async function findDriverUserIdForTrip(admin: SupabaseClient, tripId: string) {
+async function findDriverUserIdForTrip(admin: SupabaseAdminClient, tripId: string) {
   const { data, error } = await admin
     .from('trips')
     .select('driver_id')
@@ -978,7 +979,7 @@ async function findDriverUserIdForTrip(admin: SupabaseClient, tripId: string) {
 }
 
 async function findBeneficiaryUserId(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   intent: Record<string, unknown>,
 ): Promise<string | null> {
   const metadata = (intent.metadata && typeof intent.metadata === 'object' && !Array.isArray(intent.metadata))
@@ -1010,7 +1011,7 @@ async function findBeneficiaryUserId(
 }
 
 async function createEscrowForIntent(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   intent: Record<string, unknown>,
 ) {
   const payerUserId = String(intent.user_id);
@@ -1127,7 +1128,7 @@ async function createEscrowForIntent(
 }
 
 async function activateSubscriptionForIntent(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   intent: Record<string, unknown>,
 ) {
   const userId = String(intent.user_id);
@@ -1207,7 +1208,7 @@ async function activateSubscriptionForIntent(
 }
 
 async function settlePaymentIntent(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   intent: Record<string, unknown>,
 ) {
   const purpose = String(intent.purpose);
@@ -1253,7 +1254,7 @@ async function settlePaymentIntent(
 }
 
 async function releaseEscrow(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   escrowId: string,
   actorUserId: string,
 ) {
@@ -1305,7 +1306,7 @@ async function releaseEscrow(
 }
 
 async function refundEscrow(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   escrowId: string,
   actorUserId: string,
 ) {
@@ -1361,7 +1362,7 @@ function inferSubscriptionType(planCode: string): 'plus' | 'commuter-pass' {
   return planCode.includes('corridor') || planCode.includes('commuter') ? 'commuter-pass' : 'plus';
 }
 
-async function buildWalletSnapshot(admin: SupabaseClient, userId: string) {
+async function buildWalletSnapshot(admin: SupabaseAdminClient, userId: string) {
   const { profile } = await ensureWalletInfrastructure(admin, userId);
   const [balancesResult, paymentMethodsResult, subscriptionsResult, escrowsResult, pinSecret, accountIds] = await Promise.all([
     admin
@@ -1955,7 +1956,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
   }
 
   async function handlePaymentWebhook(request: Request) {
-    let admin: SupabaseClient | null = null;
+    let admin: SupabaseAdminClient | null = null;
     let providerName = 'stripe';
     let providerEventId = '';
     let requestValidated = false;
