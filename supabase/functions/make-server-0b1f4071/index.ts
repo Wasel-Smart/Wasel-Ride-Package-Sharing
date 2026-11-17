@@ -1789,81 +1789,17 @@ async function handleTrackPackage(admin: SupabaseClientInstance, trackingId: str
 }
 
 async function handleCreateReview(
-  request: Request,
-  auth: AuthenticatedRequest,
-  body: Record<string, unknown>,
+  _request: Request,
+  _auth: AuthenticatedRequest,
+  _body: Record<string, unknown>,
 ) {
-  const reviewPayload = {
-    reviewee_id: normalizeString(body.reviewee_id),
-    role: normalizeString(body.role),
-    overall_rating: Math.max(1, Math.min(5, toNumber(body.overall_rating, 5))),
-    comment: normalizeString(body.comment),
-    trip_id: normalizeString(body.trip_id),
-  };
-
-  let trustUserId: string | null = reviewPayload.reviewee_id;
-
-  if (isUuid(reviewPayload.reviewee_id)) {
-    const { data: reviewedUser, error: reviewedUserError } = await auth.admin
-      .from('users')
-      .select('id')
-      .or(`auth_user_id.eq.${reviewPayload.reviewee_id},id.eq.${reviewPayload.reviewee_id}`)
-      .maybeSingle();
-
-    if (reviewedUserError) {
-      throw new Error(reviewedUserError.message);
-    }
-
-    trustUserId = String(reviewedUser?.id ?? reviewPayload.reviewee_id);
-  }
-
-  if (isUuid(trustUserId)) {
-    const { data: existingTrust } = await auth.admin
-      .from('trust_scores')
-      .select('user_id, total_ratings, average_rating, positive_reviews, negative_reviews')
-      .eq('user_id', trustUserId)
-      .maybeSingle();
-
-    const totalRatings = toNumber(existingTrust?.total_ratings, 0) + 1;
-    const currentAverage = toNumber(existingTrust?.average_rating, 0);
-    const nextAverage = Number((((currentAverage * toNumber(existingTrust?.total_ratings, 0)) + reviewPayload.overall_rating) / totalRatings).toFixed(2));
-
-    await auth.admin
-      .from('trust_scores')
-      .upsert({
-        user_id: trustUserId,
-        total_ratings: totalRatings,
-        average_rating: nextAverage,
-        score: nextAverage,
-        positive_reviews: toNumber(existingTrust?.positive_reviews, 0) + (reviewPayload.overall_rating >= 4 ? 1 : 0),
-        negative_reviews: toNumber(existingTrust?.negative_reviews, 0) + (reviewPayload.overall_rating <= 2 ? 1 : 0),
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' });
-  }
-
-  try {
-    const { error: auditLogError } = await auth.admin
-      .from('audit_logs')
-      .insert({
-        actor_id: auth.authUser.id,
-        actor_role: 'authenticated_user',
-        action: 'review.submitted',
-        table_name: 'reviews',
-        record_id: reviewPayload.trip_id ?? crypto.randomUUID(),
-        new_values: reviewPayload,
-        ip_address: getClientIp(request),
-        user_agent: request.headers.get('user-agent'),
-        created_at: new Date().toISOString(),
-      });
-
-    if (auditLogError) {
-      console.warn('Review audit log insert failed:', auditLogError.message);
-    }
-  } catch {
-    // The review has already been saved; audit logging is best-effort.
-  }
-
-  return jsonResponse({ success: true });
+  // The legacy handler trusted reviewee_id and wrote trust_scores directly
+  // without proving trip participation or persisting a review row. Fail closed
+  // until the canonical review schema and participant-bound RPC are verified.
+  return jsonResponse(
+    { error: 'Review submission is temporarily unavailable while review verification is being upgraded.' },
+    503,
+  );
 }
 
 serve(async (req) => {
