@@ -68,6 +68,8 @@ describe('Supabase rollout guardrails', () => {
 
     expect(canonicalUserCreation).toContain("role: 'passenger'");
     expect(canonicalUserCreation).not.toContain('user.user_metadata?.role');
+    expect(canonicalUserCreation).toContain('.update({ auth_user_id: user.id })');
+    expect(canonicalUserCreation).toContain('already linked to another authentication account');
     expect(edgeRouter).toContain("'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS'");
   });
 
