@@ -43,16 +43,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: |
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --no-progress
-          npm ci
-
-      - name: Upload normalized dependency lockfile
-        uses: actions/upload-artifact@v7
-        with:
-          name: normalized-package-lock
-          path: package-lock.json
-          if-no-files-found: error
+        run: npm ci
 
       - name: Dependency audit (high + critical only)
         run: npm audit --audit-level=high
@@ -258,9 +249,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: |
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --no-progress
-          npm ci
+        run: npm ci
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -299,9 +288,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: |
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --no-progress
-          npm ci
+        run: npm ci
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -340,9 +327,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: |
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --no-progress
-          npm ci
+        run: npm ci
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
@@ -374,9 +359,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: |
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund --no-progress
-          npm ci
+        run: npm ci
 
       - name: Build
         run: npm run build
