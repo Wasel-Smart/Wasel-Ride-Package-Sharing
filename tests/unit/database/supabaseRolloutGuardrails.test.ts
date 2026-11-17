@@ -167,6 +167,9 @@ describe('Supabase rollout guardrails', () => {
     expect(wallet).toContain("'payment_intent.payment_failed': 'failed'");
     expect(wallet).toContain("if (!nextStatus || !canTransitionPaymentStatus");
     expect(wallet).toContain("if (currentStatus === 'cancelled') return nextStatus === 'cancelled'");
+    expect(wallet).toContain(".neq('status', 'succeeded')");
+    expect(wallet).toContain(".neq('status', 'cancelled')");
+    expect(wallet).toContain('Return that authoritative row instead of overwriting or failing.');
     expect(wallet).toContain("app_fail_payment_webhook_event");
     expect(wallet).toContain("admin.rpc('app_upsert_wallet_subscription'");
     expect(wallet).toContain("onConflict: 'payment_intent_id', ignoreDuplicates: true");
