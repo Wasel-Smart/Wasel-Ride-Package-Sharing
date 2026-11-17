@@ -497,12 +497,7 @@ ${renderSequence(smokeCheckSeedFiles)}
 
 Operational bootstrap seed assets live in \`db/seeds/\`:
 
-- \`roles.seed.sql\`
-- \`cities.seed.sql\`
-- \`trip_types.seed.sql\`
-- \`pricing.seed.sql\`
-- \`core.seed.sql\`
-- \`automation.seed.sql\`
+${operationalSeedFiles.map(file => `- \`${getMigrationFileName(file)}\``).join('\n')}
 
 Smoke checks remain in \`src/supabase/seeds/\` and are never part of the production rollout seed pack.
 
