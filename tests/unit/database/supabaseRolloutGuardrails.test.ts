@@ -185,6 +185,10 @@ describe('Supabase rollout guardrails', () => {
     expect(bookingSql).toContain("v_trip.departure_time <= now()");
     expect(bookingSql).toContain("Trip driver is not approved to provide rides");
     expect(bookingSql).toContain("Trip is no longer eligible for confirmation");
+    const rolloutRunner = read('scripts/apply-supabase-rollout.mjs');
+    expect(rolloutRunner).toContain('--confirm-project-ref=');
+    expect(rolloutRunner).toContain('--allow-production');
+    expect(rolloutRunner).toContain('Dry run only.');
     expect(sql).toContain(
       'Terminal states are monotonic: a late processing/action event cannot',
     );
