@@ -70,6 +70,8 @@ describe('Supabase rollout guardrails', () => {
     const wallet = read('supabase/functions/make-server-0b1f4071/wallet-handlers.ts');
 
     expect(sql).toContain('app_claim_payment_webhook_event');
+    expect(sql).toContain("return 'processed'");
+    expect(sql).toContain("return 'busy'");
     expect(sql).toContain('processing_started_at');
     expect(sql).toContain('attempt_count');
     expect(sql).toContain('wallet_accounts_payment_intent_id_key');
@@ -77,6 +79,8 @@ describe('Supabase rollout guardrails', () => {
     expect(sql).toContain('app_upsert_wallet_subscription');
     expect(sql).toContain('on conflict (user_id)');
     expect(wallet).toContain("admin.rpc('app_claim_payment_webhook_event'");
+    expect(wallet).toContain("claimed === 'processed'");
+    expect(wallet).toContain("claimed !== 'claimed'");
     expect(wallet).toContain("app_complete_payment_webhook_event");
     expect(wallet).toContain("app_fail_payment_webhook_event");
     expect(wallet).toContain("admin.rpc('app_upsert_wallet_subscription'");
