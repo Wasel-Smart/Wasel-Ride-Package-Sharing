@@ -6,7 +6,7 @@ import {
   hashBackupCodes,
   verifyTwoFactorChallenge,
 } from './_shared/two-factor-runtime.ts';
-import { getClientIp, takeRateLimitToken } from './_shared/security-runtime.ts';
+import { consumeRateLimitToken } from './_shared/security-runtime.ts';
 
 interface CanonicalUser {
   id: string;
@@ -38,7 +38,7 @@ const MAX_TWO_FACTOR_FAILURES = 5;
 const TWO_FACTOR_LOCK_WINDOW_MS = 10 * 60_000;
 
 function buildRateLimitKey(request: Request, auth: AuthenticatedRequest, action: string): string {
-  return ['2fa', action, auth.canonicalUser.id, getClientIp(request)].join(':');
+  return ['2fa', action, auth.canonicalUser.id].join(':');
 }
 
 function validateAuthenticatorCode(code: string, allowBackupCode: boolean): string {
@@ -93,10 +93,14 @@ export function createTwoFactorHandlers(runtime: TwoFactorRuntime) {
   async function handleTwoFactorSetup(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
-    if (!takeRateLimitToken({
+    const rateLimit = await consumeRateLimitToken(auth.admin, {
       key: buildRateLimitKey(request, auth, 'setup'),
       ...TWO_FACTOR_SETUP_RATE_LIMIT,
-    })) {
+    });
+    if (rateLimit.unavailable) {
+      return runtime.json({ error: 'Rate limiting is temporarily unavailable. Please try again.' }, 503);
+    }
+    if (!rateLimit.allowed) {
       return runtime.json({ error: 'Too many setup attempts. Please wait and try again.' }, 429);
     }
 
@@ -151,10 +155,14 @@ export function createTwoFactorHandlers(runtime: TwoFactorRuntime) {
   async function handleTwoFactorVerify(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
-    if (!takeRateLimitToken({
+    const rateLimit = await consumeRateLimitToken(auth.admin, {
       key: buildRateLimitKey(request, auth, 'verify'),
       ...TWO_FACTOR_VERIFY_RATE_LIMIT,
-    })) {
+    });
+    if (rateLimit.unavailable) {
+      return runtime.json({ error: 'Rate limiting is temporarily unavailable. Please try again.' }, 503);
+    }
+    if (!rateLimit.allowed) {
       return runtime.json({ valid: false, error: 'Too many verification attempts. Please wait and try again.' }, 429);
     }
 
@@ -225,10 +233,14 @@ export function createTwoFactorHandlers(runtime: TwoFactorRuntime) {
   async function handleTwoFactorDisable(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
-    if (!takeRateLimitToken({
+    const rateLimit = await consumeRateLimitToken(auth.admin, {
       key: buildRateLimitKey(request, auth, 'disable'),
       ...TWO_FACTOR_VERIFY_RATE_LIMIT,
-    })) {
+    });
+    if (rateLimit.unavailable) {
+      return runtime.json({ error: 'Rate limiting is temporarily unavailable. Please try again.' }, 503);
+    }
+    if (!rateLimit.allowed) {
       return runtime.json({ disabled: false, error: 'Too many verification attempts. Please wait and try again.' }, 429);
     }
 
