@@ -301,6 +301,7 @@ async function getSystemAccount(admin: SupabaseClient, scope: string, currency =
 async function createEscrowLedgerAccount(
   admin: SupabaseClient,
   args: {
+    paymentIntentId: string;
     currencyCode: string;
     accountName: string;
     metadata: Record<string, unknown>;
@@ -309,24 +310,39 @@ async function createEscrowLedgerAccount(
   const now = new Date().toISOString();
   const { data, error } = await admin
     .from('wallet_accounts')
-    .insert({
+    .upsert({
       owner_user_id: null,
       account_scope: 'platform_escrow',
+      payment_intent_id: args.paymentIntentId,
       account_name: args.accountName,
       currency_code: normalizeCurrency(args.currencyCode),
       normal_balance: 'credit',
       metadata: args.metadata,
       created_at: now,
       updated_at: now,
-    })
+    }, { onConflict: 'payment_intent_id', ignoreDuplicates: true })
     .select('*')
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return data;
+  if (data) {
+    return data;
+  }
+
+  const { data: existing, error: existingError } = await admin
+    .from('wallet_accounts')
+    .select('*')
+    .eq('payment_intent_id', args.paymentIntentId)
+    .single();
+
+  if (existingError || !existing) {
+    throw new Error(existingError?.message ?? 'Could not retrieve the existing escrow ledger account.');
+  }
+
+  return existing;
 }
 
 async function postLedgerTransaction(
@@ -1003,6 +1019,7 @@ async function createEscrowForIntent(
   const payerInfra = await ensureWalletInfrastructure(admin, payerUserId);
   const beneficiaryInfra = await ensureWalletInfrastructure(admin, beneficiaryUserId);
   const escrowLedgerAccount = await createEscrowLedgerAccount(admin, {
+    paymentIntentId: String(intent.payment_intent_id),
     currencyCode: String(intent.currency_code ?? 'JOD'),
     accountName: `Escrow ${String(intent.purpose)} ${String(intent.reference_id ?? intent.payment_intent_id)}`,
     metadata: {
@@ -1058,37 +1075,52 @@ async function createEscrowForIntent(
   });
 
   const now = new Date().toISOString();
+  const escrowPayload = {
+    payer_user_id: payerUserId,
+    beneficiary_user_id: beneficiaryUserId,
+    payer_account_id: payerInfra.availableAccount.account_id,
+    beneficiary_account_id: beneficiaryInfra.availableAccount.account_id,
+    ledger_account_id: escrowLedgerAccount.account_id,
+    payment_intent_id: intent.payment_intent_id,
+    hold_transaction_id: transactionId,
+    escrow_type: escrowType,
+    reference_id: intent.reference_id,
+    amount,
+    currency_code: intent.currency_code,
+    escrow_state: 'held',
+    held_at: now,
+    created_at: now,
+    updated_at: now,
+    metadata: {
+      paymentMethodType: intent.payment_method_type,
+      providerName: intent.provider_name,
+    },
+  };
   const { data: escrow, error } = await admin
     .from('escrow_accounts')
-    .insert({
-      payer_user_id: payerUserId,
-      beneficiary_user_id: beneficiaryUserId,
-      payer_account_id: payerInfra.availableAccount.account_id,
-      beneficiary_account_id: beneficiaryInfra.availableAccount.account_id,
-      ledger_account_id: escrowLedgerAccount.account_id,
-      payment_intent_id: intent.payment_intent_id,
-      hold_transaction_id: transactionId,
-      escrow_type: escrowType,
-      reference_id: intent.reference_id,
-      amount,
-      currency_code: intent.currency_code,
-      escrow_state: 'held',
-      held_at: now,
-      created_at: now,
-      updated_at: now,
-      metadata: {
-        paymentMethodType: intent.payment_method_type,
-        providerName: intent.provider_name,
-      },
-    })
+    .upsert(escrowPayload, { onConflict: 'payment_intent_id', ignoreDuplicates: true })
     .select('*')
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return { escrow, transactionId };
+  if (escrow) {
+    return { escrow, transactionId };
+  }
+
+  const { data: existingEscrow, error: existingEscrowError } = await admin
+    .from('escrow_accounts')
+    .select('*')
+    .eq('payment_intent_id', String(intent.payment_intent_id))
+    .single();
+
+  if (existingEscrowError || !existingEscrow) {
+    throw new Error(existingEscrowError?.message ?? 'Could not retrieve the existing escrow settlement.');
+  }
+
+  return { escrow: existingEscrow, transactionId };
 }
 
 async function activateSubscriptionForIntent(
@@ -1152,25 +1184,18 @@ async function activateSubscriptionForIntent(
 
   const renewalAt = new Date(Date.now() + 30 * 24 * 60 * 60_000).toISOString();
   const now = new Date().toISOString();
-  const { data, error } = await admin
-    .from('wallet_subscriptions')
-    .upsert({
-      user_id: userId,
-      provider_name: providerName,
-      provider_subscription_id: normalizeString(metadata.providerSubscriptionId),
-      plan_code: planCode,
-      plan_name: planName,
-      amount,
-      currency_code: currencyCode,
-      subscription_status: 'active',
-      corridor_id: corridorId,
-      renewal_at: renewalAt,
-      metadata,
-      created_at: now,
-      updated_at: now,
-    }, { onConflict: 'user_id' })
-    .select('*')
-    .single();
+  const { data, error } = await admin.rpc('app_upsert_wallet_subscription', {
+    p_user_id: userId,
+    p_provider_name: providerName,
+    p_provider_subscription_id: normalizeString(metadata.providerSubscriptionId),
+    p_plan_code: planCode,
+    p_plan_name: planName,
+    p_amount: amount,
+    p_currency_code: currencyCode,
+    p_corridor_id: corridorId,
+    p_renewal_at: renewalAt,
+    p_metadata: metadata,
+  });
 
   if (error) {
     throw new Error(error.message);
@@ -1928,12 +1953,21 @@ export function createWalletHandlers(runtime: WalletRuntime) {
   }
 
   async function handlePaymentWebhook(request: Request) {
+    let admin: SupabaseClient | null = null;
+    let providerName = 'stripe';
+    let providerEventId = '';
+    let requestValidated = false;
+
     try {
-      const provider = normalizeString(request.headers.get('x-wallet-provider')) ?? 'stripe';
+      providerName = normalizeString(request.headers.get('x-wallet-provider')) ?? 'stripe';
+      if (!['stripe', 'cliq', 'aman', 'wallet'].includes(providerName)) {
+        return runtime.json({ error: 'Unsupported payment provider.' }, 400);
+      }
+
       const rawPayload = await request.text();
       let eventBody: Record<string, unknown>;
 
-      if (provider === 'stripe') {
+      if (providerName === 'stripe') {
         await verifyStripeWebhookSignature(rawPayload, request.headers.get('stripe-signature'));
         eventBody = JSON.parse(rawPayload) as Record<string, unknown>;
       } else {
@@ -1941,61 +1975,91 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         eventBody = JSON.parse(rawPayload) as Record<string, unknown>;
       }
 
-      const providerEventId = normalizeString(eventBody.id)
+      requestValidated = true;
+      providerEventId = normalizeString(eventBody.id)
         ?? normalizeString(eventBody.providerEventId)
-        ?? crypto.randomUUID();
+        ?? '';
 
-      const admin = runtime.getAdminClient();
-      const { error: eventInsertError } = await admin
-        .from('payment_webhook_events')
-        .upsert({
-          provider_name: provider,
-          provider_event_id: providerEventId,
-          signature: request.headers.get('stripe-signature') ?? request.headers.get('x-wallet-signature'),
-          payload: eventBody,
-          created_at: new Date().toISOString(),
-        }, { onConflict: 'provider_name,provider_event_id' });
-
-      if (eventInsertError) {
-        throw new Error(eventInsertError.message);
+      if (!providerEventId) {
+        return runtime.json({ error: 'A stable provider event ID is required.' }, 400);
       }
 
+      admin = runtime.getAdminClient();
+      const { data: claimed, error: claimError } = await admin.rpc('app_claim_payment_webhook_event', {
+        p_provider_name: providerName,
+        p_provider_event_id: providerEventId,
+        p_signature: request.headers.get('stripe-signature') ?? request.headers.get('x-wallet-signature'),
+        p_payload: eventBody,
+        p_lease_seconds: 300,
+      });
+
+      if (claimError) {
+        throw new Error(claimError.message);
+      }
+
+      if (claimed !== true) {
+        return runtime.json({ ok: true, duplicate: true });
+      }
+
+      const completeEvent = async () => {
+        const { data, error } = await admin!.rpc('app_complete_payment_webhook_event', {
+          p_provider_name: providerName,
+          p_provider_event_id: providerEventId,
+        });
+        if (error || data !== true) {
+          throw new Error(error?.message ?? 'Could not complete payment webhook event.');
+        }
+      };
+
       let intent: Record<string, unknown> | null = null;
-      if (provider === 'stripe') {
+      if (providerName === 'stripe') {
         const object = ((eventBody.data as Record<string, unknown> | undefined)?.object as Record<string, unknown> | undefined) ?? {};
         const providerPaymentId = normalizeString(object.id);
         if (!providerPaymentId) {
+          await completeEvent();
           return runtime.json({ ok: true });
         }
+
         intent = await findPaymentIntentByProviderPaymentId(admin, providerPaymentId) as Record<string, unknown> | null;
         if (!intent) {
+          await completeEvent();
           return runtime.json({ ok: true });
         }
 
         const eventType = normalizeString(eventBody.type);
         const mappedStatus = mapStripePaymentStatus(object.status);
-        if (mappedStatus === 'succeeded' && String(intent.status) !== 'succeeded') {
+        const nextStatus = eventType === 'payment_intent.payment_failed' ? 'failed' : mappedStatus;
+
+        if (mappedStatus === 'succeeded') {
           await settlePaymentIntent(admin, intent);
         }
 
-        await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
-          status: eventType === 'payment_intent.payment_failed' ? 'failed' : mappedStatus,
-          last_error: normalizeString(((object.last_payment_error as Record<string, unknown> | undefined)?.message)),
-        });
+        if (String(intent.status) !== 'succeeded' || nextStatus === 'succeeded') {
+          await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
+            status: nextStatus,
+            last_error: normalizeString(((object.last_payment_error as Record<string, unknown> | undefined)?.message)),
+          });
+        }
       } else {
         const providerPaymentId = normalizeString(eventBody.providerPaymentId) ?? normalizeString(eventBody.paymentIntentId);
         if (!providerPaymentId) {
+          await completeEvent();
           return runtime.json({ ok: true });
         }
+
         intent = await findPaymentIntentByProviderPaymentId(admin, providerPaymentId) as Record<string, unknown> | null;
         if (!intent) {
+          await completeEvent();
           return runtime.json({ ok: true });
         }
+
         const status = normalizeString(eventBody.status);
         if (status === 'succeeded') {
           await settlePaymentIntent(admin, intent);
-          await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), { status: 'succeeded' });
-        } else if (status === 'failed') {
+          if (String(intent.status) !== 'succeeded') {
+            await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), { status: 'succeeded' });
+          }
+        } else if (status === 'failed' && String(intent.status) !== 'succeeded') {
           await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
             status: 'failed',
             last_error: normalizeString(eventBody.error),
@@ -2003,15 +2067,25 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         }
       }
 
-      await admin
-        .from('payment_webhook_events')
-        .update({ processed_at: new Date().toISOString(), processing_error: null })
-        .eq('provider_name', provider)
-        .eq('provider_event_id', providerEventId);
-
+      await completeEvent();
       return runtime.json({ ok: true });
     } catch (error) {
-      return runtime.json({ error: sanitizeEdgeErrorMessage(error) }, 400);
+      if (admin && providerEventId) {
+        try {
+          await admin.rpc('app_fail_payment_webhook_event', {
+            p_provider_name: providerName,
+            p_provider_event_id: providerEventId,
+            p_error: sanitizeEdgeErrorMessage(error),
+          });
+        } catch {
+          // The claim lease expires if the failure marker cannot be persisted.
+        }
+      }
+
+      return runtime.json(
+        { error: sanitizeEdgeErrorMessage(error) },
+        requestValidated ? 500 : 400,
+      );
     }
   }
 
