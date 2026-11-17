@@ -53,6 +53,22 @@ jobs:
       - name: Clean install
         run: npm ci
 
+      - name: Format changed source files
+        run: npx prettier --write src/contracts/communications.ts src/contracts/trips.ts src/contracts/wallet.ts src/services/dataIntegrity.ts src/services/directSupabase/trips.ts src/utils/api-validation.ts
+
+      - name: Commit formatting
+        shell: bash
+        run: |
+          if ! git diff --quiet -- src/contracts/communications.ts src/contracts/trips.ts src/contracts/wallet.ts src/services/dataIntegrity.ts src/services/directSupabase/trips.ts src/utils/api-validation.ts; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/contracts/communications.ts src/contracts/trips.ts src/contracts/wallet.ts src/services/dataIntegrity.ts src/services/directSupabase/trips.ts src/utils/api-validation.ts
+            git commit -m "style: format changed source files"
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          else
+            echo "Changed source files already satisfy Prettier."
+          fi
+
       - name: High and critical dependency audit
         run: npm audit --audit-level=high
 
