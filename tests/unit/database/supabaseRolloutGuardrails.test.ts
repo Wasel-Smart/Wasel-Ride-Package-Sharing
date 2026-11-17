@@ -47,6 +47,24 @@ describe('Supabase rollout guardrails', () => {
     expect(sql).toContain('create or replace function public.app_update_booking_runtime_status(');
   });
 
+  it('prevents client-priced escrow beneficiaries and unsafe wallet payment purposes', () => {
+    const wallet = read('supabase/functions/make-server-0b1f4071/wallet-handlers.ts');
+    const beneficiaryResolver = wallet.slice(
+      wallet.indexOf('async function findBeneficiaryUserId('),
+      wallet.indexOf('async function validatePaymentIntentReference('),
+    );
+    const paymentIntentHandler = wallet.slice(
+      wallet.indexOf('async function handleCreatePaymentIntent('),
+      wallet.indexOf('async function handleConfirmPayment('),
+    );
+
+    expect(beneficiaryResolver).not.toContain('metadata.beneficiaryUserId');
+    expect(beneficiaryResolver).toContain("referenceType === 'package'");
+    expect(paymentIntentHandler).toContain("paymentMethodType === 'wallet'");
+    expect(paymentIntentHandler).toContain("purpose === 'subscription'");
+    expect(paymentIntentHandler).toContain('validatePaymentIntentReference(');
+  });
+
   it('keeps public package tracking data private and uses persisted driver ratings', () => {
     const edgeRouter = read('supabase/functions/make-server-0b1f4071/index.ts');
     const trackingHandler = edgeRouter.slice(
