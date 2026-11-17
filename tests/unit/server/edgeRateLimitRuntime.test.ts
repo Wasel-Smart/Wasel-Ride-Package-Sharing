@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { consumeRateLimitToken } from '../../../supabase/functions/make-server-0b1f4071/_shared/security-runtime';
+import { consumeRateLimitToken, sanitizeEdgeErrorMessage, verifyTimestampedHmacSignature } from '../../../supabase/functions/make-server-0b1f4071/_shared/security-runtime';
 
 describe('distributed Edge rate limiter', () => {
   it('hashes the bucket key and returns the atomic database decision', async () => {
@@ -37,5 +37,50 @@ describe('distributed Edge rate limiter', () => {
       maxRequests: 25,
       windowMs: 300_000,
     })).resolves.toEqual({ allowed: false, unavailable: true });
+  });
+});
+
+
+describe('Edge security helpers', () => {
+  it('does not expose internal exception messages to API callers', () => {
+    expect(sanitizeEdgeErrorMessage(new Error('provider secret or SQL detail'))).toBe('Internal server error');
+  });
+
+  it('accepts a valid timestamped HMAC signature including a rotated v1 signature', async () => {
+    const secret = 'test-webhook-secret-with-sufficient-entropy';
+    const payload = '{"id":"evt_test"}';
+    const nowMs = 1_800_000_000_000;
+    const timestamp = Math.floor(nowMs / 1000);
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
+    const signature = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      new TextEncoder().encode(`${timestamp}.${payload}`),
+    );
+    const signatureHex = Array.from(new Uint8Array(signature), byte => byte.toString(16).padStart(2, '0')).join('');
+
+    await expect(verifyTimestampedHmacSignature(
+      secret,
+      payload,
+      `t=${timestamp},v1=${'0'.repeat(64)},v1=${signatureHex}`,
+      300,
+      nowMs,
+    )).resolves.toBe(true);
+  });
+
+  it('rejects stale, malformed, and missing timestamped signatures', async () => {
+    const secret = 'test-webhook-secret-with-sufficient-entropy';
+    const payload = '{"id":"evt_test"}';
+    const nowMs = 1_800_000_000_000;
+
+    await expect(verifyTimestampedHmacSignature(secret, payload, 't=1,v1=deadbeef', 300, nowMs)).resolves.toBe(false);
+    await expect(verifyTimestampedHmacSignature(secret, payload, 't=not-a-number,v1=deadbeef', 300, nowMs)).resolves.toBe(false);
+    await expect(verifyTimestampedHmacSignature(secret, payload, null, 300, nowMs)).resolves.toBe(false);
   });
 });
