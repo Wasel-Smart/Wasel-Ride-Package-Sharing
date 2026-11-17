@@ -47,6 +47,18 @@ describe('Supabase rollout guardrails', () => {
     expect(sql).toContain('create or replace function public.app_update_booking_runtime_status(');
   });
 
+  it('fails closed on unverified review writes instead of accepting caller-selected trust scores', () => {
+    const edgeRouter = read('supabase/functions/make-server-0b1f4071/index.ts');
+    const reviewHandler = edgeRouter.slice(
+      edgeRouter.indexOf('async function handleCreateReview('),
+      edgeRouter.indexOf('serve(async (req) =>'),
+    );
+
+    expect(reviewHandler).toContain('}, 503)');
+    expect(reviewHandler).not.toContain(".from('trust_scores')");
+    expect(reviewHandler).not.toContain(".from('reviews')");
+  });
+
   it('never derives authorization roles from user-editable Supabase metadata', () => {
     const edgeRouter = read('supabase/functions/make-server-0b1f4071/index.ts');
     const canonicalUserCreation = edgeRouter.slice(
