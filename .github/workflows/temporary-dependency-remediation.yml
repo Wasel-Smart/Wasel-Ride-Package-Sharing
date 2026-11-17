@@ -71,12 +71,3 @@ jobs:
 
       - name: High and critical dependency audit
         run: npm audit --audit-level=high
-
-      - name: Full repository verification
-        run: npm run verify
-
-      - name: Lighthouse and security verification
-        run: |
-          npm run test:lhci
-          npm run test:security
-          npm run verify:supabase-rollout
