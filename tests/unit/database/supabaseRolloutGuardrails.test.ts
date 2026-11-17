@@ -174,6 +174,14 @@ describe('Supabase rollout guardrails', () => {
     expect(sql).toContain('and processing_token = p_processing_token');
     expect(sql).toContain('p_payment_intent_id uuid default null');
     expect(sql).toContain('p_payment_status public.wallet_payment_intent_status default null');
+    const bookingSql = read(
+      'src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql',
+    );
+    expect(bookingSql.trimStart().startsWith('begin;')).toBe(true);
+    expect(bookingSql.trimEnd().endsWith('commit;')).toBe(true);
+    expect(bookingSql).toContain("app_consume_user_rate_limit('booking_create')");
+    expect(bookingSql).toContain("app_consume_user_rate_limit('booking_update')");
+    expect(bookingSql).toContain("when 'booking_create' then v_max_requests := 8");
     expect(sql).toContain(
       'Terminal states are monotonic: a late processing/action event cannot',
     );
