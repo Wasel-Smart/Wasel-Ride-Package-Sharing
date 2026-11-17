@@ -70,6 +70,8 @@ Historical files that predate the current standards remain frozen and explicitly
 | 36 | `20241201000001_payments_wallet_tables.sql` | schema | Legacy wallet, payment intent, and escrow tables retained for auditability | Applied |
 | 37 | `20241201000002_bus_services_tables.sql` | schema | Legacy bus operations schema retained while canonical runtime contracts evolve | Applied |
 | 38 | `20260324005540_kv_store.sql` | runtime-contract | Production KV store for feature flags and app configuration | Applied |
+| 39 | `20261117090000_booking_authorization_and_distributed_rate_limits.sql` | security | Restrict booking state transitions to authorized actors and add atomic database-backed Edge rate limits | Ready |
+| 40 | `20261117110000_payment_webhook_idempotency_and_settlement_safety.sql` | security | Serialize webhook claims, enforce payment-intent settlement idempotency, and safely upsert subscriptions | Ready |
 
 ## Rollout Sequence
 
@@ -102,6 +104,8 @@ Apply the rollout set in this exact order for production cutover projects:
 23. `20260422120000_safety_and_user_settings.sql`
 24. `20260424140000_harden_user_owned_rpc_boundaries.sql`
 25. `20260424153000_database_governance_and_rls_hardening.sql`
+26. `20261117090000_booking_authorization_and_distributed_rate_limits.sql`
+27. `20261117110000_payment_webhook_idempotency_and_settlement_safety.sql`
 
 ### Operational seeds
 
