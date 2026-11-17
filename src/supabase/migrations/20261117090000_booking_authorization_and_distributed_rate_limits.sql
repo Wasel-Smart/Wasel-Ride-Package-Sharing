@@ -190,7 +190,8 @@ begin
   for update;
   if not found then raise exception 'Trip not found for booking'; end if;
 
-  select user_id into v_driver_user_id
+  select user_id, driver_status::text
+  into v_driver_user_id, v_driver_status
   from public.drivers
   where driver_id = v_trip.driver_id;
 
@@ -208,6 +209,17 @@ begin
       then 'pending_driver' else v_booking.booking_status::text end
   );
   if v_current_status = v_next_status then return v_booking; end if;
+
+  if v_next_status = 'confirmed' then
+    if coalesce(v_trip.trip_status::text, '') not in ('open', 'booked')
+      or v_trip.departure_time is null
+      or v_trip.departure_time <= now() then
+      raise exception 'Trip is no longer eligible for confirmation';
+    end if;
+    if lower(trim(coalesce(v_driver_status, ''))) not in ('approved', 'online', 'offline', 'busy') then
+      raise exception 'Trip driver is no longer approved to provide rides';
+    end if;
+  end if;
 
   if v_current_status = 'pending_driver' then
     if v_next_status in ('confirmed', 'rejected') and not (v_is_driver or v_is_admin) then
