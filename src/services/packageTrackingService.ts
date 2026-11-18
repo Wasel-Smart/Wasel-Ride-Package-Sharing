@@ -462,7 +462,7 @@ export class PackageTrackingService {
       throw new ValidationError(
         'Delivery verification is only allowed for packages currently in delivery',
         {
-        packageId,
+          packageId,
           status: pkg.status,
         },
       );
