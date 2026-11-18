@@ -16,6 +16,7 @@ const withSeeds = process.argv.includes('--with-seeds');
 const withSmokeChecks = process.argv.includes('--with-smoke-checks');
 const applyChanges = process.argv.includes('--apply');
 const allowProduction = process.argv.includes('--allow-production');
+const confirmNoPriorRolloutMigrations = process.argv.includes('--confirm-no-prior-rollout-migrations');
 const confirmedProjectRef = process.argv
   .find(argument => argument.startsWith('--confirm-project-ref='))
   ?.slice('--confirm-project-ref='.length);
@@ -116,6 +117,14 @@ const script = [
     constraint migration_ledger_applied_timestamp_check
       check ((status = 'applied' and applied_at is not null) or (status = 'started' and applied_at is null))
   );`,
+  ');',
+  "select count(*) = 0 as migration_ledger_empty from wasel_migration_meta.migration_ledger \\gset",
+  "\\if :migration_ledger_empty",
+  confirmNoPriorRolloutMigrations
+    ? "\\echo Empty migration ledger explicitly confirmed; proceeding with first-time rollout."
+    : "\\echo ERROR: empty migration ledger. Verify migration history and rerun with --confirm-no-prior-rollout-migrations.",
+  ...(!confirmNoPriorRolloutMigrations ? ["\\quit 3"] : []),
+  "\\endif",
 ];
 
 for (const migration of migrationRecords) {
