@@ -54,9 +54,15 @@ if (!databaseName || !databaseUser || !connectionUrl.hostname) {
 }
 
 const directProjectRef = connectionUrl.hostname.match(/^db\.([a-z0-9]{20})\.supabase\.co$/)?.[1];
-const poolerProjectRef = databaseUser.match(/\.([a-z0-9]{20})$/)?.[1];
-if ((directProjectRef ?? poolerProjectRef) !== projectRef) {
-  fail('The database connection host/user does not prove it belongs to SUPABASE_PROJECT_REF.');
+const isSupabasePoolerHost = /^[a-z0-9-]+\.pooler\.supabase\.com$/.test(connectionUrl.hostname);
+const poolerProjectRef = isSupabasePoolerHost
+  ? databaseUser.match(/\.([a-z0-9]{20})$/)?.[1]
+  : undefined;
+const targetMatches =
+  (directProjectRef !== undefined && directProjectRef === projectRef) ||
+  (isSupabasePoolerHost && poolerProjectRef === projectRef);
+if (!targetMatches) {
+  fail('The database host must be the matching Supabase direct host or Supabase pooler host/user for SUPABASE_PROJECT_REF.');
 }
 
 // Credentials are passed through the child environment, never command-line arguments.
@@ -68,6 +74,8 @@ const psqlEnvironment = {
   PGUSER: databaseUser,
   PGSSLMODE: connectionUrl.searchParams.get('sslmode') || 'require',
 };
+// Never inherit an unrelated ambient password when the URL has no password.
+delete psqlEnvironment.PGPASSWORD;
 if (connectionUrl.password) psqlEnvironment.PGPASSWORD = decodeURIComponent(connectionUrl.password);
 const connectTimeout = connectionUrl.searchParams.get('connect_timeout');
 if (connectTimeout) psqlEnvironment.PGCONNECT_TIMEOUT = connectTimeout;
@@ -86,7 +94,9 @@ if (!applyChanges) {
 }
 
 const versionCheck = spawnSync('psql', ['--version'], { stdio: 'ignore' });
-if (versionCheck.error) fail('psql is not available in PATH. Install the PostgreSQL client.');
+if (versionCheck.error || versionCheck.status !== 0 || versionCheck.signal) {
+  fail('psql is unavailable or failed its version check. Install a working PostgreSQL client and verify PATH.');
+}
 
 function sqlLiteral(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
