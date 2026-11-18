@@ -97,7 +97,7 @@ function migrationRecord(relativePath) {
     fail(`Migration file is missing or outside the repository: ${relativePath}`);
   }
   const checksum = createHash('sha256').update(fs.readFileSync(absolutePath)).digest('hex');
-  return { relativePath, absolutePath: absolutePath.replaceAll('\\\\', '/'), checksum };
+  return { relativePath, absolutePath: absolutePath.split(path.sep).join('/'), checksum };
 }
 
 const migrationRecords = rolloutMigrations.map(migrationRecord);
@@ -142,7 +142,7 @@ for (const migration of migrationRecords) {
     `insert into wasel_migration_meta.migration_ledger (migration_name, checksum_sha256, status)
       values (${name}, ${checksum}, 'started');`,
     `\\echo Applying migration: ${migration.relativePath}`,
-    `\\i ${migration.absolutePath}`,
+    `\\i ${migration.absolutePath.split(path.sep).join('/')}`,
     `update wasel_migration_meta.migration_ledger
       set status = 'applied', applied_at = now()
       where migration_name = ${name} and checksum_sha256 = ${checksum} and status = 'started';`,
@@ -156,7 +156,7 @@ function appendSqlFile(relativePath, label) {
   if (!absolutePath.startsWith(`${root}${path.sep}`) || !fs.existsSync(absolutePath)) {
     fail(`SQL file is missing or outside the repository: ${relativePath}`);
   }
-  script.push(`\\echo ${label}: ${relativePath}`, `\\i ${absolutePath}`);
+  script.push(`\\echo ${label}: ${relativePath}`, `\\i ${absolutePath.split(path.sep).join('/')}`);
 }
 
 if (withSeeds) {
@@ -167,7 +167,7 @@ if (withSmokeChecks) {
 }
 
 const result = spawnSync('psql', ['-X', '-v', 'ON_ERROR_STOP=1'], {
-  input: `${script.join('\\n')}\\n`,
+  input: `${script.join('\n')}\n`,
   stdio: ['pipe', 'inherit', 'inherit'],
   env: psqlEnvironment,
 });
