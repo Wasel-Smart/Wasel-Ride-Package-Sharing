@@ -622,12 +622,6 @@ async function getDriverApprovalRows(
     (Array.isArray(userRows) ? userRows : []).map((row) => [String((row as Record<string, unknown>).id ?? ''), row as Record<string, unknown>]),
   );
   const verificationMap = new Map<string, Record<string, unknown>>();
-  const trustMap = new Map<string, Record<string, unknown>>(
-    (Array.isArray(trustRows) ? trustRows : []).map((row) => [
-      String((row as Record<string, unknown>).user_id),
-      row as Record<string, unknown>,
-    ]),
-  );
 
   for (const row of Array.isArray(verificationRows) ? verificationRows : []) {
     const record = row as Record<string, unknown>;
@@ -738,6 +732,12 @@ async function fetchDriverSummaries(
     (Array.isArray(userRows) ? userRows : []).map((row) => [String((row as Record<string, unknown>).id), row as Record<string, unknown>]),
   );
   const verificationMap = new Map<string, Record<string, unknown>>();
+  const trustMap = new Map<string, Record<string, unknown>>(
+    (Array.isArray(trustRows) ? trustRows : []).map((row) => [
+      String((row as Record<string, unknown>).user_id),
+      row as Record<string, unknown>,
+    ]),
+  );
 
   for (const row of Array.isArray(verificationRows) ? verificationRows : []) {
     const record = row as Record<string, unknown>;
