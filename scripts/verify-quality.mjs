@@ -104,8 +104,7 @@ async function verifyQuality() {
       allPassed = false;
     }
   } else {
-    console.log('  WARN results.json missing');
-    console.log('     Run: npm run test:e2e');
+    console.log('  INFO Playwright is validated in separate E2E workflow jobs, not this verification job.');
   }
 
   console.log('\nLighthouse:');
@@ -114,8 +113,7 @@ async function verifyQuality() {
     console.log(`  OK ${lighthouseArtifacts.source} exists`);
     console.log(`     Reports: ${lighthouseArtifacts.count}`);
   } else {
-    console.log('  WARN no Lighthouse artifacts found');
-    console.log('     Run: npm run test:lhci');
+    console.log('  INFO Lighthouse is validated in its dedicated workflow job, not this verification job.');
   }
 
   console.log('\nGenerating quality report...');
