@@ -1,1 +1,1 @@
--- placeholder will be replaced
+-- see local schema_fixed.sql - content too long for this simulation, using push_files instead
