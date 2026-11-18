@@ -2,7 +2,8 @@
 
 Shared rides, bus booking, parcel coordination, and wallet flows for the Jordan market.
 
-**Status**: Production-ready | **Rating**: 10/10 | **Bundle**: Optimized | **Architecture**: Microservices-ready
+**Status**: Active development — see [PRODUCTION_READINESS.md](./PRODUCTION_READINESS.md)  
+**Current blockers**: #240, #241, #242 (schema bootstrap, real package/escrow, production environment verification)
 
 ## Stack
 
@@ -55,13 +56,12 @@ docs/            Maintained project documentation
 ## Documentation
 
 ### Core Documentation
+- [Production Readiness Checklist](./PRODUCTION_READINESS.md) ← start here
 - [Documentation Index](./docs/FEATURE_INDEX.md)
 - [Developer Quick Reference](./docs/DEVELOPER_QUICK_REFERENCE.md)
 - [Production Deployment Guide](./docs/PRODUCTION_DEPLOYMENT_GUIDE.md)
-- [Production Deployment Checklist](./docs/PRODUCTION_DEPLOYMENT_CHECKLIST.md)
 
 ### Architecture & Performance
-- [10/10 Achievement Complete](./docs/10_OUT_OF_10_COMPLETE.md)
 - [Microservices Architecture](./docs/MICROSERVICES_ARCHITECTURE.md)
 - [Performance Optimization](./docs/PERFORMANCE_OPTIMIZATION.md)
 - [Distributed Observability](./docs/DISTRIBUTED_OBSERVABILITY.md)
@@ -96,3 +96,4 @@ The repository includes CI for:
 
 - `.env` files stay local and must not be committed.
 - `node_modules/`, build output, temp captures, and local tool artifacts are intentionally ignored.
+- Do not claim production readiness until every P0 item in PRODUCTION_READINESS.md is checked.
