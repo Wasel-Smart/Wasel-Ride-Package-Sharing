@@ -1,10 +1,8 @@
 /**
- * Package Tracking Service
- * Secure package delivery system with QR codes and escrow payments
- * Links packages to rides with full transparency for sender
- *
- * Persistence: packages + escrows are stored in localStorage so they
- * survive page refreshes and reconnects.
+ * Package Tracking Prototype
+ * Browser storage is development-only and is never authoritative in production.
+ * Production package operations remain disabled until server-side persistence,
+ * authorization, delivery evidence, and payment-provider settlement are deployed.
  */
 
 import { generateId } from '../utils/api';
@@ -505,6 +503,7 @@ export class PackageTrackingService {
   }
 
   resetForTesting(): void {
+    this.assertPreviewOnly();
     this.packages.clear();
     this.timeline.clear();
     this.savePackages();
