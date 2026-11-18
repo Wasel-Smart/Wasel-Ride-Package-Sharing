@@ -120,9 +120,13 @@ const TIMELINE_STORAGE_KEY = 'wasel-package-timeline';
 
 function loadMap<T>(key: string): Map<string, T> {
   try {
-    if (typeof window === 'undefined') {return new Map();}
+    if (typeof window === 'undefined') {
+      return new Map();
+    }
     const raw = window.localStorage.getItem(key);
-    if (!raw) {return new Map();}
+    if (!raw) {
+      return new Map();
+    }
     const entries: [string, T][] = JSON.parse(raw);
     return new Map(entries);
   } catch {
@@ -134,7 +138,9 @@ function saveMap<T>(key: string, map: Map<string, T>): void {
   try {
     if (typeof window === 'undefined') {return;}
     window.localStorage.setItem(key, JSON.stringify(Array.from(map.entries())));
-  } catch { /* storage unavailable */ }
+  } catch {
+    // Storage is unavailable.
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -232,7 +238,9 @@ export class PackageTrackingService {
   }): Promise<PackageTracking> {
     this.assertPreviewOnly();
     if (!params.senderId.trim()) {
-      throw new ValidationError('senderId is required for package creation', { senderId: params.senderId });
+      throw new ValidationError('senderId is required for package creation', {
+        senderId: params.senderId,
+      });
     }
     if (!params.from.trim() || !params.to.trim()) {
       throw new ValidationError('Both origin and destination are required for package creation', {
@@ -369,7 +377,9 @@ export class PackageTrackingService {
       });
     }
 
-    if (pkg.pickupVerificationCode !== verificationCode) {return false;}
+    if (pkg.pickupVerificationCode !== verificationCode) {
+      return false;
+    }
 
     const updated: PackageTracking = {
       ...pkg,
@@ -497,9 +507,9 @@ export class PackageTrackingService {
   }
 
   getPackageTimeline(packageId: string): PackageTimelineEvent[] {
-    return [...(this.timeline.get(packageId) ?? [])].sort((a, b) => (
-      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    ));
+    return [...(this.timeline.get(packageId) ?? [])].sort(
+      (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+    );
   }
 
   resetForTesting(): void {
@@ -533,10 +543,14 @@ export class PackageTrackingService {
 
   private calculateBasePrice(size: 'small' | 'medium' | 'large'): number {
     switch (size) {
-      case 'small':  return 3.0;
-      case 'medium': return 5.0;
-      case 'large':  return 8.0;
-      default:       return 3.0;
+      case 'small':
+        return 3.0;
+      case 'medium':
+        return 5.0;
+      case 'large':
+        return 8.0;
+      default:
+        return 3.0;
     }
   }
 
