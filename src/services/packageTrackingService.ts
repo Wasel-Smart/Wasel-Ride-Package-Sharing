@@ -136,7 +136,9 @@ function loadMap<T>(key: string): Map<string, T> {
 
 function saveMap<T>(key: string, map: Map<string, T>): void {
   try {
-    if (typeof window === 'undefined') {return;}
+    if (typeof window === 'undefined') {
+      return;
+    }
     window.localStorage.setItem(key, JSON.stringify(Array.from(map.entries())));
   } catch {
     // Storage is unavailable.
@@ -563,7 +565,6 @@ export class PackageTrackingService {
     // Production: geocode destination and compare with PostGIS ST_DWithin
     return false;
   }
-
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
