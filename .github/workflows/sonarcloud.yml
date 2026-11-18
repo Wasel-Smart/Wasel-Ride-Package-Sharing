@@ -58,8 +58,8 @@ jobs:
           if [[ -n "$SONAR_TOKEN" && -n "$SONAR_PROJECT_KEY" && -n "$SONAR_ORGANIZATION" ]]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::SonarCloud analysis skipped. Configure SONAR_TOKEN and repository variables SONAR_PROJECT_KEY and SONAR_ORGANIZATION to enable it."
+            echo "::error::SonarCloud analysis is not configured. Add the SONAR_TOKEN repository secret and SONAR_PROJECT_KEY and SONAR_ORGANIZATION repository variables; this check must not report success without an analysis."
+            exit 1
           fi
 
       - name: Analyze with SonarCloud
