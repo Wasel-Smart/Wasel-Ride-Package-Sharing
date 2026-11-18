@@ -46,14 +46,14 @@ if (!['postgres:', 'postgresql:'].includes(connectionUrl.protocol)) {
   fail('SUPABASE_DB_URL must use the postgres:// or postgresql:// protocol.');
 }
 
-const databaseName = decodeURIComponent(connectionUrl.pathname.replace(/^\\/+/, ''));
+const databaseName = decodeURIComponent(connectionUrl.pathname.replace(/^\/+/, ''));
 const databaseUser = decodeURIComponent(connectionUrl.username);
 if (!databaseName || !databaseUser || !connectionUrl.hostname) {
   fail('SUPABASE_DB_URL must include a host, database name, and username.');
 }
 
-const directProjectRef = connectionUrl.hostname.match(/^db\\.([a-z0-9]{20})\\.supabase\\.co$/)?.[1];
-const poolerProjectRef = databaseUser.match(/\\.([a-z0-9]{20})$/)?.[1];
+const directProjectRef = connectionUrl.hostname.match(/^db\.([a-z0-9]{20})\.supabase\.co$/)?.[1];
+const poolerProjectRef = databaseUser.match(/\.([a-z0-9]{20})$/)?.[1];
 if ((directProjectRef ?? poolerProjectRef) !== projectRef) {
   fail('The database connection host/user does not prove it belongs to SUPABASE_PROJECT_REF.');
 }
@@ -97,7 +97,7 @@ function migrationRecord(relativePath) {
     fail(`Migration file is missing or outside the repository: ${relativePath}`);
   }
   const checksum = createHash('sha256').update(fs.readFileSync(absolutePath)).digest('hex');
-  return { relativePath, absolutePath, checksum };
+  return { relativePath, absolutePath: absolutePath.replaceAll('\\\\', '/'), checksum };
 }
 
 const migrationRecords = rolloutMigrations.map(migrationRecord);
