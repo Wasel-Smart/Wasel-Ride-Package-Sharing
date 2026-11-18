@@ -129,7 +129,8 @@ async function verifyQuality() {
   }
 
   console.log(`\n${'='.repeat(50)}`);
-  console.log(allPassed ? 'All quality checks passed.\n' : 'Some quality checks need attention.\n');
+  console.log(allPassed ? 'All checks owned by this quality-verification job passed.' : 'Quality verification failed.');
+  if (!allPassed) process.exitCode = 1;
 }
 
 await verifyQuality();
