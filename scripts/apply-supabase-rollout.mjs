@@ -46,6 +46,44 @@ try {
   process.exit(1);
 }
 
+if (!['postgres:', 'postgresql:'].includes(connectionUrl.protocol)) {
+  console.error('SUPABASE_DB_URL must use the postgres:// or postgresql:// protocol.');
+  process.exit(1);
+}
+
+const databaseName = decodeURIComponent(connectionUrl.pathname.replace(/^\\/+/, ''));
+const databaseUser = decodeURIComponent(connectionUrl.username);
+if (!databaseName || !databaseUser) {
+  console.error('SUPABASE_DB_URL must include a database name and username.');
+  process.exit(1);
+}
+
+// Keep database credentials out of the psql process argument list. Passing the
+// full connection URL as argv can expose its password through process inspection.
+const psqlEnvironment = {
+  ...process.env,
+  PGHOST: connectionUrl.hostname,
+  PGPORT: connectionUrl.port || '5432',
+  PGDATABASE: databaseName,
+  PGUSER: databaseUser,
+  PGSSLMODE: connectionUrl.searchParams.get('sslmode') || 'require',
+};
+if (connectionUrl.password) {
+  psqlEnvironment.PGPASSWORD = decodeURIComponent(connectionUrl.password);
+}
+const connectionTimeout = connectionUrl.searchParams.get('connect_timeout');
+if (connectionTimeout) {
+  psqlEnvironment.PGCONNECT_TIMEOUT = connectionTimeout;
+}
+const applicationName = connectionUrl.searchParams.get('application_name');
+if (applicationName) {
+  psqlEnvironment.PGAPPNAME = applicationName;
+}
+const postgresOptions = connectionUrl.searchParams.get('options');
+if (postgresOptions) {
+  psqlEnvironment.PGOPTIONS = postgresOptions;
+}
+
 const directProjectRef = connectionUrl.hostname.match(/^db\.([a-z0-9]{20})\.supabase\.co$/)?.[1];
 const poolerProjectRef = decodeURIComponent(connectionUrl.username).match(/\.([a-z0-9]{20})$/)?.[1];
 const connectionProjectRef = directProjectRef ?? poolerProjectRef;
@@ -76,8 +114,8 @@ function applyFile(relativePath) {
   console.log(`\nApplying ${relativePath}`);
   const result = spawnSync(
     'psql',
-    [connectionString, '-v', 'ON_ERROR_STOP=1', '-f', absolutePath],
-    { stdio: 'inherit' },
+    ['-v', 'ON_ERROR_STOP=1', '-f', absolutePath],
+    { stdio: 'inherit', env: psqlEnvironment },
   );
 
   if (result.status !== 0) {
