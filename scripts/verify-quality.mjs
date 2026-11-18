@@ -63,14 +63,21 @@ async function verifyQuality() {
 
   console.log('\nCoverage:');
   const coverageSummary = readJson('coverage/coverage-summary.json');
-  if (coverageSummary?.total) {
-    console.log('  OK coverage-summary.json exists');
+  const coverageMetrics = ['lines', 'branches', 'functions', 'statements'];
+  const validCoverage = coverageMetrics.every((metric) => {
+    const percentage = coverageSummary?.total?.[metric]?.pct;
+    return typeof percentage === 'number' && Number.isFinite(percentage) && percentage >= 0 && percentage <= 100;
+  });
+
+  if (validCoverage) {
+    console.log('  OK coverage-summary.json contains valid metrics');
     console.log(`     Lines: ${coverageSummary.total.lines.pct}%`);
     console.log(`     Branches: ${coverageSummary.total.branches.pct}%`);
     console.log(`     Functions: ${coverageSummary.total.functions.pct}%`);
     console.log(`     Statements: ${coverageSummary.total.statements.pct}%`);
   } else {
-    console.log('  FAIL coverage-summary.json missing or invalid');
+    console.log('  FAIL coverage-summary.json missing or contains invalid metrics');
+    console.log('     Percentages must be finite numbers between 0 and 100.');
     console.log('     Run: npm run test:coverage');
     allPassed = false;
   }
@@ -81,11 +88,15 @@ async function verifyQuality() {
     console.log('  FAIL vitest-results.json missing or invalid');
     allPassed = false;
   } else {
+    const passedTests = vitestResults.numPassedTests ?? 0;
     const failedTests = vitestResults.numFailedTests ?? 0;
     const failedSuites = vitestResults.numFailedTestSuites ?? 0;
-    const testSuccess = vitestResults.success === true && failedTests === 0 && failedSuites === 0;
+    const totalTests = vitestResults.numTotalTests ?? passedTests + failedTests;
+    const testSuccess =
+      vitestResults.success === true && totalTests > 0 && failedTests === 0 && failedSuites === 0;
     console.log(`  ${testSuccess ? 'OK' : 'FAIL'} Vitest result status`);
-    console.log(`     Passed: ${vitestResults.numPassedTests ?? 0}`);
+    console.log(`     Total: ${totalTests}`);
+    console.log(`     Passed: ${passedTests}`);
     console.log(`     Failed: ${failedTests}`);
     console.log(`     Failed suites: ${failedSuites}`);
     if (!testSuccess) allPassed = false;
