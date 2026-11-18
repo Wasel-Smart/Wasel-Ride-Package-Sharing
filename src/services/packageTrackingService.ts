@@ -118,7 +118,6 @@ export interface PackageTimelineEvent {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const PACKAGES_STORAGE_KEY = 'wasel-packages';
-const ESCROWS_STORAGE_KEY  = 'wasel-package-escrows';
 const TIMELINE_STORAGE_KEY = 'wasel-package-timeline';
 
 function loadMap<T>(key: string): Map<string, T> {
@@ -147,7 +146,6 @@ function saveMap<T>(key: string, map: Map<string, T>): void {
 export class PackageTrackingService {
   private static instance: PackageTrackingService;
   private packages: Map<string, PackageTracking>;
-  private escrows: Map<string, PackagePaymentEscrow>;
   private timeline: Map<string, PackageTimelineEvent[]>;
 
   private constructor() {
@@ -161,7 +159,6 @@ export class PackageTrackingService {
             { ...pkg, paymentStatus: 'pending' as const, paymentMethod: undefined },
           ]),
         );
-    this.escrows = new Map();
     this.timeline = import.meta.env.PROD
       ? new Map()
       : loadMap<PackageTimelineEvent[]>(TIMELINE_STORAGE_KEY);
@@ -186,10 +183,6 @@ export class PackageTrackingService {
 
   private savePackages(): void {
     saveMap(PACKAGES_STORAGE_KEY, this.packages);
-  }
-
-  private saveEscrows(): void {
-    saveMap(ESCROWS_STORAGE_KEY, this.escrows);
   }
 
   private saveTimeline(): void {
@@ -400,8 +393,8 @@ export class PackageTrackingService {
   /**
    * Update package location during transit
    */
-  async updateLocation(packageId: string, location: {
-    this.assertPreviewOnly(); lat: number; lng: number }): Promise<void> {
+  async updateLocation(packageId: string, location: { lat: number; lng: number }): Promise<void> {
+    this.assertPreviewOnly();
     const pkg = this.requirePackage(packageId);
     if (!['picked_up', 'in_transit', 'near_destination'].includes(pkg.status)) {
       throw new ValidationError('Package location updates are only allowed after pickup', {
@@ -442,8 +435,8 @@ export class PackageTrackingService {
     packageId: string,
     verificationCode: string,
     photo?: string,
-  ): Promise<{
-    this.assertPreviewOnly(); verified: boolean; paymentReleased: boolean }> {
+  ): Promise<{ verified: boolean; paymentReleased: boolean }> {
+    this.assertPreviewOnly();
     const pkg = this.requirePackage(packageId);
     if (!pkg.pickupVerified) {
       throw new ValidationError('Delivery cannot be verified before pickup is confirmed', {
@@ -513,10 +506,8 @@ export class PackageTrackingService {
 
   resetForTesting(): void {
     this.packages.clear();
-    this.escrows.clear();
     this.timeline.clear();
     this.savePackages();
-    this.saveEscrows();
     this.saveTimeline();
   }
 
@@ -560,13 +551,6 @@ export class PackageTrackingService {
     return false;
   }
 
-  private canReleasePayment(escrow: PackagePaymentEscrow): boolean {
-    return (
-      escrow.releaseConditions.deliveryVerified &&
-      escrow.releaseConditions.photoProvided &&
-      escrow.releaseConditions.noDisputes
-    );
-  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
