@@ -151,10 +151,28 @@ export class PackageTrackingService {
   private timeline: Map<string, PackageTimelineEvent[]>;
 
   private constructor() {
-    // Rehydrate from localStorage on startup
-    this.packages = loadMap<PackageTracking>(PACKAGES_STORAGE_KEY);
-    this.escrows  = loadMap<PackagePaymentEscrow>(ESCROWS_STORAGE_KEY);
-    this.timeline = loadMap<PackageTimelineEvent[]>(TIMELINE_STORAGE_KEY);
+    // Browser storage is a development preview only, never production state.
+    // Legacy client-side escrow records were simulated and must not be trusted.
+    this.packages = import.meta.env.PROD
+      ? new Map()
+      : new Map(
+          Array.from(loadMap<PackageTracking>(PACKAGES_STORAGE_KEY).entries()).map(([id, pkg]) => [
+            id,
+            { ...pkg, paymentStatus: 'pending' as const, paymentMethod: undefined },
+          ]),
+        );
+    this.escrows = new Map();
+    this.timeline = import.meta.env.PROD
+      ? new Map()
+      : loadMap<PackageTimelineEvent[]>(TIMELINE_STORAGE_KEY);
+  }
+
+  private assertPreviewOnly(): void {
+    if (import.meta.env.PROD) {
+      throw new ValidationError(
+        'Package tracking is temporarily unavailable until server-side persistence and authorization are deployed.',
+      );
+    }
   }
 
   static getInstance(): PackageTrackingService {
@@ -221,6 +239,7 @@ export class PackageTrackingService {
     insurance: boolean;
     description?: string;
   }): Promise<PackageTracking> {
+    this.assertPreviewOnly();
     if (!params.senderId.trim()) {
       throw new ValidationError('senderId is required for package creation', { senderId: params.senderId });
     }
@@ -298,6 +317,7 @@ export class PackageTrackingService {
       vehicleInfo?: string;
     },
   ): Promise<PackageTracking> {
+    this.assertPreviewOnly();
     const pkg = this.requirePackage(packageId);
     if (pkg.status !== 'created') {
       throw new ValidationError('Only newly created packages can be linked to a ride', {
@@ -331,56 +351,19 @@ export class PackageTrackingService {
   /**
    * Process payment and hold in escrow
    */
-  async processPayment(packageId: string, paymentMethod: string): Promise<PackagePaymentEscrow> {
-    const pkg = this.requirePackage(packageId);
-    if (!pkg.rideId || !pkg.driverId) {
-      throw new ValidationError('Package must be linked to a ride before payment can be escrowed', {
-        packageId,
-      });
-    }
-    if (pkg.paymentStatus !== 'pending') {
-      throw new ValidationError('Package payment has already been processed', {
-        packageId,
-        paymentStatus: pkg.paymentStatus,
-      });
-    }
-
-    const escrow: PackagePaymentEscrow = {
-      packageId,
-      amount: pkg.totalCost,
-      senderPaid: true,
-      heldInEscrow: true,
-      releasedToDriver: false,
-      releaseConditions: {
-        deliveryVerified: false,
-        photoProvided: false,
-        noDisputes: false,
-      },
-    };
-
-    const updatedPkg: PackageTracking = {
-      ...pkg,
-      paymentStatus: 'escrowed',
-      paymentMethod,
-      status: pkg.status === 'matched' ? 'pickup_scheduled' : pkg.status,
-      lastUpdated: new Date().toISOString(),
-    };
-
-    this.packages.set(packageId, updatedPkg);
-    this.escrows.set(packageId, escrow);
-    this.savePackages();
-    this.saveEscrows();
-    this.recordPackageEvent(packageId, 'payment_escrowed', updatedPkg.status, {
-      paymentMethod,
-      amount: escrow.amount,
-    });
-    return escrow;
+  async processPayment(packageId: string, _paymentMethod: string): Promise<PackagePaymentEscrow> {
+    this.requirePackage(packageId);
+    throw new ValidationError(
+      'Package payments are disabled until a server-verified payment provider and escrow workflow are implemented.',
+      { packageId },
+    );
   }
 
   /**
    * Verify pickup with QR code
    */
   async verifyPickup(packageId: string, verificationCode: string, photo?: string): Promise<boolean> {
+    this.assertPreviewOnly();
     const pkg = this.requirePackage(packageId);
     if (pkg.paymentStatus !== 'escrowed') {
       throw new ValidationError('Pickup cannot be verified until payment is held in escrow', {
@@ -417,7 +400,8 @@ export class PackageTrackingService {
   /**
    * Update package location during transit
    */
-  async updateLocation(packageId: string, location: { lat: number; lng: number }): Promise<void> {
+  async updateLocation(packageId: string, location: {
+    this.assertPreviewOnly(); lat: number; lng: number }): Promise<void> {
     const pkg = this.requirePackage(packageId);
     if (!['picked_up', 'in_transit', 'near_destination'].includes(pkg.status)) {
       throw new ValidationError('Package location updates are only allowed after pickup', {
@@ -458,7 +442,8 @@ export class PackageTrackingService {
     packageId: string,
     verificationCode: string,
     photo?: string,
-  ): Promise<{ verified: boolean; paymentReleased: boolean }> {
+  ): Promise<{
+    this.assertPreviewOnly(); verified: boolean; paymentReleased: boolean }> {
     const pkg = this.requirePackage(packageId);
     if (!pkg.pickupVerified) {
       throw new ValidationError('Delivery cannot be verified before pickup is confirmed', {
@@ -486,41 +471,15 @@ export class PackageTrackingService {
       lastUpdated: new Date().toISOString(),
     };
 
-    const escrow = this.escrows.get(packageId);
-    if (escrow?.heldInEscrow) {
-      const conditions = {
-        deliveryVerified: true,
-        photoProvided: !!photo,
-        noDisputes: true,
-      };
-      const updated = { ...escrow, releaseConditions: conditions };
-
-      if (this.canReleasePayment(updated)) {
-        updated.releasedToDriver = true;
-        updated.heldInEscrow = false;
-        updatedPkg = { ...updatedPkg, paymentStatus: 'released' };
-        this.escrows.set(packageId, updated);
-        this.saveEscrows();
-      }
-    }
-
-    this.packages.set(packageId, updatedPkg);
+    // Delivery confirmation must never release funds from browser-owned state.
+    this.packages.set(packageId, { ...updatedPkg, paymentStatus: 'pending', paymentMethod: undefined });
     this.savePackages();
     this.recordPackageEvent(packageId, 'delivery_verified', updatedPkg.status, {
       photoProvided: Boolean(photo),
-      paymentReleased: updatedPkg.paymentStatus === 'released',
+      paymentReleased: false,
     });
 
-    if (updatedPkg.paymentStatus === 'released') {
-      this.recordPackageEvent(packageId, 'payment_released', updatedPkg.status, {
-        amount: escrow?.amount ?? updatedPkg.totalCost,
-      });
-    }
-
-    return {
-      verified: true,
-      paymentReleased: updatedPkg.paymentStatus === 'released',
-    };
+    return { verified: true, paymentReleased: false };
   }
 
   // ── read-only helpers ──────────────────────────────────────────────────────
@@ -541,8 +500,9 @@ export class PackageTrackingService {
     return Array.from(this.packages.values()).filter((p) => p.driverId === driverId);
   }
 
-  getEscrowStatus(packageId: string): PackagePaymentEscrow | undefined {
-    return this.escrows.get(packageId);
+  getEscrowStatus(_packageId: string): PackagePaymentEscrow | undefined {
+    // Escrow status is not available until it is backed by the payment provider.
+    return undefined;
   }
 
   getPackageTimeline(packageId: string): PackageTimelineEvent[] {
