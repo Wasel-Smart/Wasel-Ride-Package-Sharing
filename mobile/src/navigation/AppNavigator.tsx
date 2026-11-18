@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { colors } from '../theme';
 import { useAuth } from '../providers/AuthProvider';
+import { useLanguage } from '../contexts/LanguageContext';
 
 import HomeScreen from '../screens/HomeScreen';
 import RideRequestScreen from '../screens/RideRequestScreen';
@@ -84,17 +85,18 @@ const getTabScreenOptions = ({ route }: { route: { name: string } }): BottomTabN
 // Five tabs is the usable maximum on a phone. Map and Networks stay reachable
 // from Home (quick action + service card) via the stack below.
 function TabNavigator() {
+  const { t } = useLanguage();
   return (
     <Tab.Navigator initialRouteName="Home" screenOptions={getTabScreenOptions}>
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ title: 'الرئيسية', headerShown: false, tabBarButtonTestID: 'home-tab' }}
+        options={{ title: t('nav.home'), headerShown: false, tabBarButtonTestID: 'home-tab' }}
       />
-      <Tab.Screen name="Rides" component={RideRequestScreen} options={{ title: 'المشاوير', tabBarButtonTestID: 'rides-tab' }} />
-      <Tab.Screen name="Packages" component={PackagesScreen} options={{ title: 'الطرود', tabBarButtonTestID: 'packages-tab' }} />
-      <Tab.Screen name="Wallet" component={WalletScreen} options={{ title: 'المحفظة', tabBarButtonTestID: 'wallet-tab' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'حسابي', tabBarButtonTestID: 'profile-tab' }} />
+      <Tab.Screen name="Rides" component={RideRequestScreen} options={{ title: t('nav.rides'), tabBarButtonTestID: 'rides-tab' }} />
+      <Tab.Screen name="Packages" component={PackagesScreen} options={{ title: t('nav.packages'), tabBarButtonTestID: 'packages-tab' }} />
+      <Tab.Screen name="Wallet" component={WalletScreen} options={{ title: t('nav.wallet'), tabBarButtonTestID: 'wallet-tab' }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: t('nav.profile'), tabBarButtonTestID: 'profile-tab' }} />
     </Tab.Navigator>
   );
 }
@@ -106,6 +108,7 @@ const authBackOnly = { headerShown: true, title: '', headerTransparent: false } 
 export const AppNavigator = React.memo(function AppNavigator() {
   const { user, loading } = useAuth();
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     let alive = true;
@@ -152,7 +155,7 @@ export const AppNavigator = React.memo(function AppNavigator() {
           <Stack.Screen
             name="SignIn"
             component={SignInScreen}
-            options={{ title: 'تسجيل الدخول إلى واصل', headerShown: false }}
+            options={{ title: t('nav.signIn'), headerShown: false }}
           />
           <Stack.Screen name="SignUp" component={SignUpScreen} options={authBackOnly} />
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={authBackOnly} />
@@ -161,38 +164,38 @@ export const AppNavigator = React.memo(function AppNavigator() {
       ) : (
         <>
           <Stack.Screen name="Tabs" component={TabNavigator} options={{ headerShown: false }} />
-          <Stack.Screen name="Map" component={MapScreen} options={{ title: 'الخريطة' }} />
-          <Stack.Screen name="Networks" component={NetworksScreen} options={{ title: 'الشبكات' }} />
-          <Stack.Screen name="Safety" component={SafetyScreen} options={{ title: 'مركز الأمان' }} />
-          <Stack.Screen name="Trips" component={TripsScreen} options={{ title: 'مشاويري' }} />
-          <Stack.Screen name="Bus" component={BusScreen} options={{ title: 'خطوط الباصات' }} />
-          <Stack.Screen name="Driver" component={DriverScreen} options={{ title: 'تجهيز السائق' }} />
-          <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: 'الإشعارات' }} />
+          <Stack.Screen name="Map" component={MapScreen} options={{ title: t('nav.map') }} />
+          <Stack.Screen name="Networks" component={NetworksScreen} options={{ title: t('nav.networks') }} />
+          <Stack.Screen name="Safety" component={SafetyScreen} options={{ title: t('nav.safety') }} />
+          <Stack.Screen name="Trips" component={TripsScreen} options={{ title: t('nav.trips') }} />
+          <Stack.Screen name="Bus" component={BusScreen} options={{ title: t('nav.bus') }} />
+          <Stack.Screen name="Driver" component={DriverScreen} options={{ title: t('nav.driver') }} />
+          <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ title: t('nav.notifications') }} />
           <Stack.Screen
             name="LiveTracking"
             component={LiveTrackingScreen}
-            options={{ title: 'التتبع المباشر', headerShown: false }}
+            options={{ title: t('nav.liveTracking'), headerShown: false }}
           />
-          <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'مراسلة السائق' }} />
-          <Stack.Screen name="RateRide" component={RateRideScreen} options={{ title: 'قيّم المشوار' }} />
+          <Stack.Screen name="Chat" component={ChatScreen} options={{ title: t('nav.chat') }} />
+          <Stack.Screen name="RateRide" component={RateRideScreen} options={{ title: t('nav.rateRide') }} />
           <Stack.Screen
             name="AdvancedSearch"
             component={AdvancedSearchScreen}
-            options={{ title: 'بحث ذكي عن مشوار' }}
+            options={{ title: t('nav.advancedSearch') }}
           />
           <Stack.Screen
             name="ScheduledRide"
             component={ScheduledRideScreen}
-            options={{ title: 'جدولة مشوار' }}
+            options={{ title: t('nav.scheduledRide') }}
           />
-          <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ title: 'تعديل الملف الشخصي', headerShown: false }} />
-          <Stack.Screen name="SecuritySettings" component={SecuritySettingsScreen} options={{ title: 'إعدادات الأمان', headerShown: false }} />
-          <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} options={{ title: 'طرق الدفع' }} />
-          <Stack.Screen name="Receipt" component={ReceiptScreen} options={{ title: 'إيصال الدفع' }} />
-          <Stack.Screen name="ReportIssue" component={ReportIssueScreen} options={{ title: 'الإبلاغ عن مشكلة' }} />
-          <Stack.Screen name="DriverProfile" component={DriverProfileScreen} options={{ title: 'ملف السائق' }} />
-          <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'الإعدادات' }} />
-          <Stack.Screen name="TrustCenter" component={TrustCenterScreen} options={{ title: 'مركز الثقة' }} />
+          <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} options={{ title: t('nav.profileEdit'), headerShown: false }} />
+          <Stack.Screen name="SecuritySettings" component={SecuritySettingsScreen} options={{ title: t('nav.securitySettings'), headerShown: false }} />
+          <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} options={{ title: t('nav.paymentMethods') }} />
+          <Stack.Screen name="Receipt" component={ReceiptScreen} options={{ title: t('nav.receipt') }} />
+          <Stack.Screen name="ReportIssue" component={ReportIssueScreen} options={{ title: t('nav.reportIssue') }} />
+          <Stack.Screen name="DriverProfile" component={DriverProfileScreen} options={{ title: t('nav.driverProfile') }} />
+          <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: t('nav.settings') }} />
+          <Stack.Screen name="TrustCenter" component={TrustCenterScreen} options={{ title: t('nav.trustCenter') }} />
         </>
       )}
     </Stack.Navigator>

@@ -1,6 +1,11 @@
 /**
- * Client-side encryption utilities for sensitive data storage
- * Uses Web Crypto API for secure encryption
+ * Client-side obfuscation for values kept in localStorage (AES-GCM via Web Crypto).
+ *
+ * SECURITY NOTE: this is NOT a security boundary. The key is derived from a session id that
+ * sits in sessionStorage next to its salt, so any script running on this origin (for example
+ * after an XSS) can re-derive the key and read the data. It only keeps values from sitting in
+ * localStorage as plain text. Never store credentials, tokens, payment data or anything else
+ * whose disclosure matters here; keep those on the server.
  */
 
 const ALGORITHM = 'AES-GCM';

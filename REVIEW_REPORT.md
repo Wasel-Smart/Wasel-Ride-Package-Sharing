@@ -56,28 +56,37 @@
 5. **Deploy migrations and edge functions** through the protected deployment workflow, then verify profile reads/writes as anon and authenticated users and run payment smoke tests.
 6. **Configure `CLIQ_WEBHOOK_AMOUNT_UNIT`** only after checking an actual signed sandbox event.
 7. **Configure the isolated staging GitHub environment** with its own Supabase project ref, database password, scoped token, and staging URL.
+8. **Decide how migrations reach production.** `.github/workflows/deploy.yml` runs `supabase db push --yes` on every push to main/master, while `supabase/SUPABASE_BLOCKERS.md` says not to run `db push` until a DBA reconciles migration history. The `--dry-run` step does not stop the apply step. Either complete the reconciliation first or gate the apply step behind a manual approval and a clean `npm run reconcile:migrations`.
+9. **Deploy the functions that production actually depends on.** `deploy.yml` deploys only `make-server-0b1f4071` and `stripe-payments-v2` (a 410 stub). `webhooks`, `outbox-worker`, `matching-worker`, `gdpr-deletion-scheduler` (called nightly by the Vercel cron) and the other functions have no deploy step, so they are updated by hand or not at all. Also settle which Stripe webhook URL is canonical: `SECURITY_CHECKLIST.md` points it at `make-server-0b1f4071/payments/webhooks/stripe`, while this file describes the dedicated `webhooks` function.
 
 ---
 
 ## Remaining improvements (not blockers)
 
-- Twilio webhook authentication still allows a query-string token until
-  `TWILIO_WEBHOOK_REQUIRE_SIGNATURE=true` is enabled after validating the
-  provider-side signature URL and secret.
-- Confirm `finalizeTopUpTransaction` dedupes on Stripe `event.id` and that
-  `verifyStripeWebhookSignature` enforces a timestamp tolerance.
+- Twilio webhook authentication: RESOLVED in code (verified 2026-11-19). `handleTwilioWebhook` in `_handlers/webhooks.ts` requires `x-twilio-signature`, returns 503 when no signing secret is configured and 401 when the signature is missing or invalid. There is no query-string token fallback.
+- Stripe event replay protection: event-id dedupe is IMPLEMENTED (verified 2026-11-19: `handleStripeWebhook` claims each event through `app_claim_stripe_event` and refuses with 503 if the ledger is unavailable). Still to confirm in `shared.ts`: that `verifyStripeWebhookSignature` rejects timestamps older than about 5 minutes.
 - Keep the 30/25/20/28 coverage ratchet moving toward the 85% release target; current coverage remains substantially below target.
 - Add end-to-end payment authorization and settlement for Mobility OS before re-enabling its booking action.
 - Add OTLP distributed tracing export via `VITE_OTEL_EXPORTER_OTLP_ENDPOINT`.
 
 ## Current readiness rating
 
-**8.1/10 overall (code); 8.5+ once the three operational actions below are completed.**
+**7.0/10 overall (independent file-level review, 2026-11-19). The earlier 8.1/10 figure in this file was not backed by measurements and is retracted.**
 
-What improved since the last review (Dec 2026):
+Measured evidence behind the 7.0 (all from files in this repo, none from a live system):
+
+- Frontend unit coverage (`coverage/coverage-summary.json`): 32.1% lines, 31.1% statements, 27.3% functions, 21.8% branches. Edge Function (Deno) tests are not included in that figure.
+- Enforced coverage gate (`vitest.config.ts`, `ci.yml`): 20/25/30/28 (branches/functions/lines/statements). The 25/32/38/35 values mentioned below were never met and are not enforced.
+- Lighthouse, mobile profile, landing page (`.lighthouseci/`, 2026-11-15, taken BEFORE the `display=optional` font change in `index.html`): performance 22-29, LCP 7.7-8.1s, TBT 1.4-3.4s, CLS 0.38. Re-run `npm run lighthouse` against a fresh build to get current numbers; the repo's own gate requires 90.
+- Provider-side credential rotation: not confirmed for any credential (see `SECURITY_CHECKLIST.md`).
+- Mobile: type-check, lint and 266 Jest tests reported passing; no native build, EAS project or store credentials verified (`mobile/HONEST_AUDIT_REPORT.md`).
+
+The paragraphs below this point are historical notes from earlier sessions and are kept for context only.
+
+What improved since the last review (Nov 2026, historical):
 - **H-02 resolved** — Twilio webhook HMAC enforcement confirmed in code; `check-observability-config.mjs` now also verifies `TWILIO_AUTH_TOKEN` is present in CI
 - **M-01 partially resolved** — `scripts/check-observability-config.mjs` added; `observability-gate` CI job warns on missing/placeholder Sentry DSN and AppInsights connection string; deploy workflow should run without `--warn-only` to hard-block
-- **Coverage gate raised** — CI and vitest thresholds raised from 20/25/30/28 → 25/32/38/35 (branches/functions/lines/statements)
+- **Coverage gate** — NOT raised: `vitest.config.ts` documents that 25/32/38/35 was never met and left CI red, so the enforced floor remains 20/25/30/28 (branches/functions/lines/statements)
 - **New targeted tests** — `paymentStatusExtract.test.ts` (14 cases), `appInsightsPlaceholder.test.ts` (10 cases), `cliqReportedPayment.test.ts` (11 cases) covering the payment status extraction path, observability placeholder detection, and CliQ amount unit conversion
 - **Security gate CI job** — `security-gate` job fails CI if `SECURITY_CHECKLIST.md` still has open ❌ items, making unresolved critical/high findings visible on every PR
 

@@ -33,8 +33,8 @@
 ### C-02 — Real env files in OneDrive sync path
 **Files:** `.env`, `.env.local`, `.env.production` (local disk only, not committed)
 **Description:** Real secrets sit in a OneDrive-synced folder. OneDrive uploads them to Microsoft cloud storage and makes them accessible from any signed-in device or OneDrive web interface.
-**Status:** ❌ Not resolved.
-**Required action:** Run `node scripts/move-env-offsite.mjs` (or `npm run secrets:move-offsite`) — moves real env files to `~/.wasel-secrets/` outside the OneDrive sync tree and replaces them with pointer files. Supports `--dry-run` to preview.
+**Status:** ⚠️ Mitigated locally, not yet verified end to end (2026-11-19). The repo now lives at `C:\Users\user\Wasel14.online` (not under OneDrive), and `.env`, `.env.local` and `.env.production` are links into `C:\Users\user\.wasel-secrets\`, outside the repo. Exposure that happened while the files were in the synced folder is NOT undone by this: those credentials still count as exposed until rotated at the provider (H-01). To close this item: confirm `C:\Users\user\.wasel-secrets\` is not inside any OneDrive/cloud-synced path and that the Microsoft account's OneDrive version history/recycle bin no longer holds the old files.
+**Original required action (done via `move-env-offsite.mjs` or equivalent):** Run `node scripts/move-env-offsite.mjs` (or `npm run secrets:move-offsite`) — moves real env files to `~/.wasel-secrets/` outside the OneDrive sync tree and replaces them with pointer files. Supports `--dry-run` to preview.
 
 ---
 

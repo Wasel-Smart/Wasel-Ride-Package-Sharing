@@ -74,5 +74,11 @@ export function buildTracingHeaders(ctx: RequestContext): Record<string, string>
  * retried requests within a 24-hour window.
  */
 export function createIdempotencyKey(userId: string, operation: string): string {
-  return `${userId}:${operation}:${crypto.randomUUID()}`;
+  // The backend only accepts [A-Za-z0-9_-]{16,128} (wallet and idempotency middleware), so a
+  // key containing ':' would be rejected with 400. Sanitise the scope and truncate it, never
+  // the random suffix, so the 128-char cap cannot make two keys collide.
+  const segment = (value: string) => value.replace(/[^A-Za-z0-9_-]/g, '-');
+  const unique = crypto.randomUUID().replace(/-/g, '');
+  const scope = `${segment(userId)}_${segment(operation)}`;
+  return `${scope.slice(0, 128 - unique.length - 1)}_${unique}`;
 }

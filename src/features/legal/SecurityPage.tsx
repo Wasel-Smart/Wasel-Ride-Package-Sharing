@@ -341,7 +341,12 @@ function TwoFactorSection() {
       const result = await enable2FA(userId);
       setSetup(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to set up 2FA.');
+      const message = err instanceof Error ? err.message : 'Failed to set up 2FA.';
+      // The server refuses to restart setup while 2FA is on, so show the disable control.
+      if (/already enabled/i.test(message)) {
+        setEnabled(true);
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -458,6 +463,41 @@ function TwoFactorSection() {
                 </div>
               </div>
             </div>
+
+            {setup.qrCode ? (
+              <img
+                src={setup.qrCode}
+                alt={ar ? 'رمز QR لإعداد تطبيق المصادقة' : 'QR code for your authenticator app'}
+                width={192}
+                height={192}
+                style={{ justifySelf: 'center', background: '#fff', padding: SPACE[2], borderRadius: R.lg }}
+              />
+            ) : null}
+
+            {setup.secret ? (
+              <div style={{ display: 'grid', gap: 6 }}>
+                <div style={{ color: C.textMuted, fontSize: TYPE.size.xs }}>
+                  {ar
+                    ? 'أو أدخل هاد المفتاح يدوياً في تطبيق المصادقة:'
+                    : 'Or enter this key manually in your authenticator app:'}
+                </div>
+                <code
+                  dir="ltr"
+                  style={{
+                    background: C.bgAlt,
+                    borderRadius: R.md,
+                    padding: `${SPACE[2]} ${SPACE[3]}`,
+                    fontFamily: 'monospace',
+                    fontSize: TYPE.size.sm,
+                    color: C.text,
+                    overflowWrap: 'anywhere',
+                    userSelect: 'all',
+                  }}
+                >
+                  {setup.secret}
+                </code>
+              </div>
+            ) : null}
 
             {setup.secret ? (
               <div style={{ display: 'flex', gap: SPACE[2], alignItems: 'center' }}>

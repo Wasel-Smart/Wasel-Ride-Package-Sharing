@@ -31,7 +31,7 @@ type VercelResponse = {
   end: () => void;
 };
 
-const DEFAULT_RETURN_TO = '/app/find-ride';
+export const DEFAULT_RETURN_TO = '/app/find-ride';
 const SIGN_IN_PATH = '/app/auth';
 // Client route that renders the new-password form (WaselAuthCallback).
 const CLIENT_CALLBACK_PATH = '/app/auth/callback';
@@ -73,7 +73,7 @@ function getRequestOrigin(request: VercelRequest): string {
  * control characters outright, then parse against our own origin and require
  * that the resolved origin is unchanged.
  */
-function hasUnsafeRedirectChars(value: string): boolean {
+export function hasUnsafeRedirectChars(value: string): boolean {
   for (let i = 0; i < value.length; i += 1) {
     const code = value.charCodeAt(i);
     if (code === 0x5c /* backslash */ || code <= 0x1f || code === 0x7f) {return true;}
@@ -81,11 +81,15 @@ function hasUnsafeRedirectChars(value: string): boolean {
   return false;
 }
 
-function safeReturnTo(value: string | null, origin: string): string {
+export function safeReturnTo(value: string | null, origin: string): string {
   if (!value) {return DEFAULT_RETURN_TO;}
   if (!value.startsWith('/') || value.startsWith('//') || hasUnsafeRedirectChars(value)) {
     return DEFAULT_RETURN_TO;
   }
+  // Reject dot-segment traversal before URL parsing collapses it into a
+  // different same-origin path (defence in depth: still same-origin, but the
+  // resolved path would no longer be the one the caller asked for).
+  if (/(^|\/)\.\.(\/|$)/.test(value)) {return DEFAULT_RETURN_TO;}
   try {
     const parsed = new URL(value, origin);
     if (parsed.origin !== origin) {return DEFAULT_RETURN_TO;}
@@ -100,7 +104,7 @@ function safeReturnTo(value: string | null, origin: string): string {
  * (phishing copy injected into our sign-in page). Never echo it back; map the
  * known OAuth error codes to fixed messages instead.
  */
-function friendlyAuthError(code: string | null): string {
+export function friendlyAuthError(code: string | null): string {
   switch ((code ?? '').toLowerCase()) {
     case 'access_denied':
       return 'Sign-in was cancelled.';
@@ -112,7 +116,7 @@ function friendlyAuthError(code: string | null): string {
   }
 }
 
-function parseCookies(header: string | undefined): Record<string, string> {
+export function parseCookies(header: string | undefined): Record<string, string> {
   const out: Record<string, string> = {};
   if (!header) {return out;}
   for (const part of header.split(';')) {
@@ -130,7 +134,7 @@ function parseCookies(header: string | undefined): Record<string, string> {
   return out;
 }
 
-function serializeCookie(name: string, value: string, options?: CookieOptions): string {
+export function serializeCookie(name: string, value: string, options?: CookieOptions): string {
   const parts = [`${name}=${encodeURIComponent(value)}`];
   parts.push(`Path=${options?.path ?? '/'}`);
   if (options?.domain) {parts.push(`Domain=${options.domain}`);}

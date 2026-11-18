@@ -1,5 +1,5 @@
 import { type ComponentType } from 'react';
-import { Eye, FileText, Lock, Mail, Phone, Shield, ShieldCheck, KeyRound } from 'lucide-react';
+import { Eye, FileText, Lock, Mail, Shield, ShieldCheck, KeyRound } from 'lucide-react';
 import {
   MetricCard,
   PageHero,
@@ -31,7 +31,7 @@ export function PrivacyPolicy() {
   const content = {
     ar: {
       title: 'سياسة الخصوصية',
-      subtitle: 'آخر تحديث: 16 مارس 2026',
+      subtitle: 'آخر تحديث: 19 تشرين الثاني 2026',
       intro:
         'في واصل، نحترم خصوصيتك ونلتزم بحماية بياناتك الشخصية. توضح هذه السياسة كيف نجمع ونستخدم ونحمي معلوماتك.',
 
@@ -65,7 +65,7 @@ export function PrivacyPolicy() {
           content: [
             'تشفير SSL/TLS لجميع عمليات نقل البيانات',
             'تخزين البيانات الحساسة بتشفير AES-256',
-            'مصادقة ثنائية لحسابات السائقين',
+            'مصادقة متعددة العوامل للحسابات الإدارية',
             'عمليات تدقيق أمنية منتظمة',
             'الوصول المحدود إلى البيانات الشخصية',
             'نسخ احتياطي آمن ومشفر',
@@ -100,24 +100,22 @@ export function PrivacyPolicy() {
         title: 'اتصل بنا',
         subtitle: 'لأسئلة الخصوصية أو طلبات البيانات:',
         email: 'privacy@wasel.jo',
-        phone: '+962 79 000 0000',
         address: 'عمان، الأردن',
       },
 
       compliance: {
         title: 'الامتثال القانوني',
         items: [
-          { icon: ShieldCheck, title: 'GDPR', detail: 'متوافق مع اللائحة العامة لحماية البيانات' },
+          { icon: ShieldCheck, title: 'GDPR', detail: 'نوفّر حقوق الوصول والتصحيح والحذف والنقل المنصوص عليها في اللائحة العامة لحماية البيانات' },
           { icon: ShieldCheck, title: 'قوانين أردنية', detail: 'يتبع قوانين حماية البيانات الأردنية' },
-          { icon: ShieldCheck, title: 'TRC', detail: 'معتمد من هيئة تنظيم قطاع الاتصالات' },
           { icon: Lock, title: 'تشفير', detail: 'TLS في النقل و AES-256 في التخزين' },
-          { icon: KeyRound, title: 'تحقق ثنائي', detail: 'حماية إضافية للحساب' },
+          { icon: KeyRound, title: 'تحقق متعدد العوامل', detail: 'حماية إضافية للحسابات الإدارية' },
         ],
       },
     },
     en: {
       title: 'Privacy Policy',
-      subtitle: 'Last Updated: March 16, 2026',
+      subtitle: 'Last Updated: November 19, 2026',
       intro:
         'At Wasel, privacy is part of movement trust. This policy explains what we collect, why it is needed for rides, parcels, support, and safety, and how users stay in control.',
 
@@ -151,7 +149,7 @@ export function PrivacyPolicy() {
           content: [
             'SSL/TLS encryption for all data transmission',
             'AES-256 encryption for sensitive data storage',
-            'Two-factor authentication for driver accounts',
+            'Multi-factor authentication for administrative accounts',
             'Regular security audits',
             'Limited access to personal data',
             'Secure encrypted backups',
@@ -196,18 +194,16 @@ export function PrivacyPolicy() {
         title: 'Contact Us',
         subtitle: 'For privacy questions or data requests:',
         email: 'privacy@wasel.jo',
-        phone: '+962 79 000 0000',
         address: 'Amman, Jordan',
       },
 
       compliance: {
         title: 'Legal Compliance',
         items: [
-          { icon: ShieldCheck, title: 'GDPR', detail: 'Compliant with General Data Protection Regulation' },
+          { icon: ShieldCheck, title: 'GDPR', detail: 'We provide the access, correction, erasure and portability rights set out in the GDPR' },
           { icon: ShieldCheck, title: 'Jordanian Law', detail: 'Follows Jordanian Data Protection Laws' },
-          { icon: ShieldCheck, title: 'TRC', detail: 'Telecommunications Regulatory Commission Certified' },
           { icon: Lock, title: 'Encryption', detail: 'TLS in transit and AES-256 at rest' },
-          { icon: KeyRound, title: 'Two-factor', detail: 'Extra account protection' },
+          { icon: KeyRound, title: 'Multi-factor', detail: 'Extra protection for administrative accounts' },
         ],
       },
     },
@@ -475,26 +471,11 @@ export function PrivacyPolicy() {
                   </div>
                 </div>
               </a>
-              <a
-                href={`tel:${copy.contact.phone.replace(/\s/g, '')}`}
-                style={{
-                  ...policyCardStyle(C.green),
-                  textDecoration: 'none',
-                  color: 'inherit',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-                  <Phone size={18} color={C.green} />
-                  <div>
-                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
-                      {copy.contact.phone}
-                    </div>
-                    <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>
-                      {copy.contact.address}
-                    </div>
-                  </div>
+              <div style={policyCardStyle(C.green)}>
+                <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                  {copy.contact.address}
                 </div>
-              </a>
+              </div>
             </div>
           </SectionCard>
 

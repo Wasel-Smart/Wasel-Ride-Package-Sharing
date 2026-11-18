@@ -3,6 +3,7 @@ import {
     json,
     authenticateRequest,
     authenticateAuthUser,
+    consumeRateLimit,
     ensureCanonicalUserForAuth,
     buildProfilePayload,
     parseEntityRoute,
@@ -121,6 +122,30 @@ export async function handleTwoFactorSetup ( request: Request ) {
   const auth = await authenticateRequest( request );
   if ( 'error' in auth ) {return auth.error;}
 
+  const limited = await consumeRateLimit( auth.admin, `2fa-setup:${ auth.canonicalUser.id }`, 5, { windowSeconds: 3600, failClosed: true } );
+  if ( limited ) {return limited;}
+
+  // Running setup replaces the stored secret and switches 2FA off. While 2FA is on, that
+  // would let anyone holding a stolen session strip the second factor without ever
+  // presenting a code. The user must disable it first, which requires a valid code.
+  const { data: existingTwoFactor, error: existingTwoFactorError } = await auth.admin
+    .from( 'users' )
+    .select( 'two_factor_enabled' )
+    .eq( 'id', auth.canonicalUser.id )
+    .single();
+  if ( existingTwoFactorError ) {
+    return json( { error: existingTwoFactorError.message }, 500 );
+  }
+  if ( existingTwoFactor?.two_factor_enabled === true ) {
+    return json(
+      {
+        error: 'Two-factor authentication is already enabled. Disable it with a valid code before setting it up again.',
+        code: 'TWO_FACTOR_ALREADY_ENABLED',
+      },
+      409,
+    );
+  }
+
   const label = auth.canonicalUser.email || auth.authUser.email || auth.canonicalUser.id;
   const secret = generateTOTPSecret();
   const backupCodes = generateBackupCodes( 10 );
@@ -152,6 +177,10 @@ export async function handleTwoFactorSetup ( request: Request ) {
 export async function handleTwoFactorVerify ( request: Request ) {
   const auth = await authenticateRequest( request );
   if ( 'error' in auth ) {return auth.error;}
+
+  // A 6-digit code has only 10^6 values, so guessing must be throttled per account.
+  const limited = await consumeRateLimit( auth.admin, `2fa-verify:${ auth.canonicalUser.id }`, 10, { windowSeconds: 900, failClosed: true } );
+  if ( limited ) {return limited;}
 
   const body = await request.json().catch( () => ( {} ) );
   const code = typeof body.code === 'string' ? body.code : '';
@@ -207,6 +236,10 @@ export async function handleTwoFactorVerify ( request: Request ) {
 export async function handleTwoFactorDisable ( request: Request ) {
   const auth = await authenticateRequest( request );
   if ( 'error' in auth ) {return auth.error;}
+
+  // Disable accepts backup codes as well as TOTP codes, so it needs the same throttle.
+  const limited = await consumeRateLimit( auth.admin, `2fa-disable:${ auth.canonicalUser.id }`, 10, { windowSeconds: 900, failClosed: true } );
+  if ( limited ) {return limited;}
 
   const body = await request.json().catch( () => ( {} ) );
   const code = typeof body.code === 'string' ? body.code : '';

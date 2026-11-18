@@ -60,10 +60,23 @@ export function generateJordanCliqQrPayload ( req: CliqPaymentRequest ): string 
   return [
     'CLIQ_JO',
     `TYPE:${ req.identifierType }`,
-    `ID:${ req.identifierValue.trim() }`,
+    `ID:${ toQrField( req.identifierValue ) }`,
     `AMT:${ amountFormatted }`,
     'CUR:JOD',
-    `REF:${ req.orderOrBookingId }`,
+    `REF:${ toQrField( req.orderOrBookingId ) }`,
   ].join( '|' );
+}
+
+/**
+ * The QR payload is pipe-delimited, so a field value must never carry the delimiter or a
+ * control character: a recipient alias such as "WASEL|AMT:0.001" would otherwise inject a
+ * second AMT field that a scanner may read instead of the real amount.
+ */
+function toQrField ( value: string ): string {
+  return String( value )
+    .split( '' )
+    .filter( char => char !== '|' && char.charCodeAt( 0 ) > 31 && char.charCodeAt( 0 ) !== 127 )
+    .join( '' )
+    .trim();
 }
 

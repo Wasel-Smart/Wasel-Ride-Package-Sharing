@@ -20,7 +20,7 @@
  *   skills-lock.json    → DELETE (not a standard package manager file)
  */
 
-import { existsSync, renameSync, unlinkSync, copyFileSync } from 'fs';
+import { existsSync, renameSync, unlinkSync, copyFileSync, readdirSync } from 'fs';
 import { join, basename, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -95,6 +95,15 @@ remove('screenshot.png');
 remove('arabic-full-route-leaks.json');
 remove('wasel-planning-with-ai-b7cd624ecbce.json');
 remove('skills-lock.json');
+
+// Lighthouse CLI writes <host>-<timestamp>.report.html/json into the working directory.
+// They are gitignored (/*.report.*) but pile up on disk, inflate the OneDrive sync and
+// make the root unreadable. Only root-level files are touched.
+for (const name of readdirSync(ROOT)) {
+  if (/\.report\.(html|json)$/.test(name)) {
+    remove(name);
+  }
+}
 
 // ── Misc ──────────────────────────────────────────────────────────────────────
 // common.json — unclear purpose, likely a stray translation export
