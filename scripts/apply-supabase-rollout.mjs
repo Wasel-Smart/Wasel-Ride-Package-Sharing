@@ -117,7 +117,6 @@ const script = [
     constraint migration_ledger_applied_timestamp_check
       check ((status = 'applied' and applied_at is not null) or (status = 'started' and applied_at is null))
   );`,
-  ');',
   "select count(*) = 0 as migration_ledger_empty from wasel_migration_meta.migration_ledger \\gset",
   "\\if :migration_ledger_empty",
   confirmNoPriorRolloutMigrations
