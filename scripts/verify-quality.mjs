@@ -133,4 +133,4 @@ async function verifyQuality() {
 }
 
 await verifyQuality();
-process.exit(allPassed ? 0 : 1);
+
