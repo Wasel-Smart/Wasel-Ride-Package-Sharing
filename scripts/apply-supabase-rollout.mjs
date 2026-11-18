@@ -51,7 +51,7 @@ if (!['postgres:', 'postgresql:'].includes(connectionUrl.protocol)) {
   process.exit(1);
 }
 
-const databaseName = decodeURIComponent(connectionUrl.pathname.replace(/^\\/+/, ''));
+const databaseName = decodeURIComponent(connectionUrl.pathname.replace(/^\/+/, '');
 const databaseUser = decodeURIComponent(connectionUrl.username);
 if (!databaseName || !databaseUser) {
   console.error('SUPABASE_DB_URL must include a database name and username.');
