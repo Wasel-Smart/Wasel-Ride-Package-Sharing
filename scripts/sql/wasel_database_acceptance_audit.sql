@@ -107,3 +107,42 @@ where s.schemaname = 'public' and s.idx_scan = 0
 order by pg_relation_size(s.indexrelid) desc;
 
 \echo '=== Audit complete: review findings; no database changes were made. ==='
+
+\echo '=== 13. Critical Wasel application contract tables ==='
+with expected(table_name, purpose) as (
+  values
+    ('users', 'canonical user identity'),
+    ('drivers', 'driver profiles and eligibility'),
+    ('trips', 'intercity ride inventory'),
+    ('bookings', 'atomic passenger reservations'),
+    ('packages', 'package-sharing lifecycle'),
+    ('wallet_accounts', 'wallet balances / account state'),
+    ('wallet_transactions', 'immutable financial ledger'),
+    ('wallet_payment_intents', 'payment intent lifecycle'),
+    ('notifications', 'persistent notification delivery')
+)
+select e.table_name, e.purpose,
+       (to_regclass(format('public.%I', e.table_name)) is not null) as exists_in_public
+from expected e
+order by e.table_name;
+
+\echo '=== 14. Required PostgreSQL extensions ==='
+select required.extension_name,
+       exists (select 1 from pg_extension x where x.extname = required.extension_name) as installed
+from (values ('pgcrypto'), ('uuid-ossp'), ('postgis')) as required(extension_name)
+order by required.extension_name;
+
+\echo '=== 15. Migration history relation presence ==='
+select to_regclass('supabase_migrations.schema_migrations') as supabase_migration_history,
+       to_regclass('public.schema_migrations') as public_migration_history;
+
+\echo '=== 16. Auth-to-application user synchronization triggers ==='
+select n.nspname as schema_name, c.relname as table_name, t.tgname as trigger_name,
+       pg_get_triggerdef(t.oid) as definition
+from pg_trigger t
+join pg_class c on c.oid = t.tgrelid
+join pg_namespace n on n.oid = c.relnamespace
+where not t.tgisinternal
+  and n.nspname in ('auth', 'public')
+  and (c.relname in ('users') or t.tgname ilike '%user%')
+order by schema_name, table_name, trigger_name;
