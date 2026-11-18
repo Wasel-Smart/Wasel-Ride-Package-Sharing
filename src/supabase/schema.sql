@@ -283,7 +283,7 @@ CREATE OR REPLACE FUNCTION public.reject_self_booking()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SET search_path = pg_catalog, public
-AS $
+AS $wasel$
 DECLARE
   trip_driver_id UUID;
 BEGIN
@@ -300,7 +300,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$;
+$wasel$;
 
 CREATE TRIGGER enforce_no_self_booking
   BEFORE INSERT OR UPDATE OF trip_id, passenger_id ON public.bookings
