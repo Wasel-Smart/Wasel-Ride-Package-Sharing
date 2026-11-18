@@ -282,6 +282,7 @@ CREATE TABLE bookings (
 CREATE OR REPLACE FUNCTION public.reject_self_booking()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path = pg_catalog, public
 AS $wasel$
 DECLARE
