@@ -453,7 +453,7 @@ export class PackageTrackingService {
       return { verified: false, paymentReleased: false };
     }
 
-    let updatedPkg: PackageTracking = {
+    const updatedPkg: PackageTracking = {
       ...pkg,
       deliveryVerified: true,
       status: 'delivered',
