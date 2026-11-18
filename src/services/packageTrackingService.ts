@@ -363,7 +363,11 @@ export class PackageTrackingService {
   /**
    * Verify pickup with QR code
    */
-  async verifyPickup(packageId: string, verificationCode: string, photo?: string): Promise<boolean> {
+  async verifyPickup(
+    packageId: string,
+    verificationCode: string,
+    photo?: string,
+  ): Promise<boolean> {
     this.assertPreviewOnly();
     const pkg = this.requirePackage(packageId);
     if (pkg.paymentStatus !== 'escrowed') {
@@ -455,10 +459,13 @@ export class PackageTrackingService {
       });
     }
     if (!['picked_up', 'in_transit', 'near_destination'].includes(pkg.status)) {
-      throw new ValidationError('Delivery verification is only allowed for packages currently in delivery', {
+      throw new ValidationError(
+        'Delivery verification is only allowed for packages currently in delivery',
+        {
         packageId,
-        status: pkg.status,
-      });
+          status: pkg.status,
+        },
+      );
     }
 
     if (pkg.deliveryVerificationCode !== verificationCode) {
@@ -475,7 +482,11 @@ export class PackageTrackingService {
     };
 
     // Delivery confirmation must never release funds from browser-owned state.
-    this.packages.set(packageId, { ...updatedPkg, paymentStatus: 'pending', paymentMethod: undefined });
+    this.packages.set(packageId, {
+      ...updatedPkg,
+      paymentStatus: 'pending',
+      paymentMethod: undefined,
+    });
     this.savePackages();
     this.recordPackageEvent(packageId, 'delivery_verified', updatedPkg.status, {
       photoProvided: Boolean(photo),
