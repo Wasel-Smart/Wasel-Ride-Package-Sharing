@@ -275,7 +275,7 @@ CREATE TABLE bookings (
   cancelled_by UUID REFERENCES profiles(id),
   cancellation_reason TEXT,
   
-  UNIQUE(trip_id, passenger_id),
+  UNIQUE(trip_id, passenger_id)
 );
 
 -- Reject self-booking with a row lock; PostgreSQL CHECK constraints cannot query other tables.
