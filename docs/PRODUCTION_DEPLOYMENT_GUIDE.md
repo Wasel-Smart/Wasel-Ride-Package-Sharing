@@ -1,463 +1,138 @@
-# Wasel Production Deployment Guide
+# Wasel Production Deployment and Recovery Guide
 
-## Prerequisites
+**Current release decision: NOT READY for production schema rollout.**
 
-- [ ] Supabase account created
-- [ ] Stripe account with API keys
-- [ ] Twilio account with phone number
-- [ ] Resend account for emails
-- [ ] Google Maps API key
-- [ ] Sentry account for monitoring
-- [ ] Domain name configured
+This document is intentionally conservative. The live Supabase project has been confirmed as `ztsuuvetsiufqzeabfbr` (project name: `Wasel14.online`). A read-only inspection on 2026-11-19 found only the legacy `public.kv_store_0b1f4071` table and one migration (`20260714021551_create_kv_table_0b1f4071`). The deployed `make-server-0b1f4071` function is not evidence that the canonical Wasel application schema or booking/payment flows are deployed.
 
-## Phase 1: Database Setup (Critical)
+**Do not run migrations, deploy Edge Functions, change secrets, or run seed scripts against the live project as part of initial recovery.** First establish a separate staging project and validate the complete migration rollout there.
 
-### 1.1 Create Supabase Project
+## 1. Non-negotiable safety rules
 
-```bash
-# Install Supabase CLI
-npm install -g supabase
+- Never paste database passwords, service-role keys, Stripe secrets, webhook secrets, or other credentials into Git, issues, pull requests, logs, or chat.
+- Never use a production service-role key in local development, CI, or staging.
+- Never manually apply selected historical SQL files with `psql`. The repository migration set and its canonical runner are the source of truth.
+- Never assume a successful Edge Function deployment means its database dependencies exist.
+- Do not disable or replace the currently deployed Edge Function until frontend routing, authentication, traffic, and rollback have been reviewed.
+- Do not mark a release ready because a Vercel status context is green; verify the actual production deployment, domain, and smoke tests.
+- Database migrations must be additive where possible, reviewed, backed up, and have a documented recovery plan. Do not assume SQL migrations can be rolled back automatically.
 
-# Login to Supabase
-supabase login
+## 2. Environment inventory
 
-# Link to your project
-supabase link --project-ref YOUR_PROJECT_REF
-```
+| Environment | Supabase project ref | Allowed use |
+| --- | --- | --- |
+| Production | `ztsuuvetsiufqzeabfbr` | Read-only inspection until staging validation and explicit release approval |
+| Staging | Create a separate project and record its ref in the deployment record | Migration execution, integration tests, webhook tests, and release-candidate validation |
+| Local | Local Supabase CLI stack | Fresh database bootstrap and repeatable automated tests |
 
-### 1.2 Apply Migrations
+The staging project must be separate from production, use the same major Postgres version, enable the required extensions, and use non-production provider credentials. Do not use a second project that contains unknown user data as a disposable staging target.
 
-```bash
-# Apply all migrations in order
-supabase db push
+## 3. Local clean-database validation
 
-# Or manually apply each migration
-psql $DATABASE_URL -f supabase/migrations/20250101000000_complete_schema.sql
-psql $DATABASE_URL -f supabase/migrations/20250418000001_resilient_core.sql
-psql $DATABASE_URL -f supabase/migrations/20250420000000_phone_verification.sql
-```
-
-### 1.3 Seed Database
+Run from the repository root using the Node version pinned by the project:
 
 ```bash
-# Apply seed data
-psql $DATABASE_URL -f db/seeds/jordan_data.seed.sql
-```
-
-### 1.4 Verify Database
-
-```sql
--- Check tables exist
-SELECT table_name FROM information_schema.tables 
-WHERE table_schema = 'public' 
-ORDER BY table_name;
-
--- Check RLS is enabled
-SELECT tablename, rowsecurity 
-FROM pg_tables 
-WHERE schemaname = 'public';
-
--- Check cities data
-SELECT COUNT(*) FROM cities;
-
--- Check routes data
-SELECT COUNT(*) FROM routes;
-```
-
-## Phase 2: Edge Functions Deployment
-
-### 2.1 Deploy Functions
-
-```bash
-# Deploy main API server
-supabase functions deploy make-server-0b1f4071
-
-# Deploy payment webhook
-supabase functions deploy payment-webhook
-
-# Deploy email service
-supabase functions deploy wasel-email
-
-# Deploy SMS verification
-supabase functions deploy sms-verification
-```
-
-### 2.2 Set Function Secrets
-
-```bash
-# Stripe secrets
-supabase secrets set STRIPE_SECRET_KEY=sk_live_...
-supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Twilio secrets
-supabase secrets set TWILIO_ACCOUNT_SID=AC...
-supabase secrets set TWILIO_AUTH_TOKEN=...
-supabase secrets set TWILIO_SMS_FROM=+962...
-
-# Resend secrets
-supabase secrets set RESEND_API_KEY=re_...
-supabase secrets set RESEND_FROM_EMAIL="Wasel <notifications@wasel.jo>"
-
-# Supabase secrets (already set by default)
-supabase secrets set SUPABASE_URL=https://your-project.supabase.co
-supabase secrets set SUPABASE_ANON_KEY=eyJ...
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY=eyJ...
-```
-
-### 2.3 Test Functions
-
-```bash
-# Test health endpoint
-curl https://your-project.supabase.co/functions/v1/make-server-0b1f4071/health
-
-# Test with authentication
-curl -X GET \
-  https://your-project.supabase.co/functions/v1/make-server-0b1f4071/profile/USER_ID \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
-## Phase 3: Frontend Configuration
-
-### 3.1 Update Environment Variables
-
-Create `.env.production`:
-
-```bash
-# App Configuration
-VITE_APP_ENV=production
-VITE_APP_URL=https://wasel.jo
-VITE_APP_NAME=Wasel
-
-# Supabase
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJ...
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
-VITE_EDGE_FUNCTION_NAME=make-server-0b1f4071
-
-# Google Maps
-VITE_GOOGLE_MAPS_API_KEY=AIza...
-VITE_GOOGLE_CLIENT_ID=...apps.googleusercontent.com
-
-# Stripe
-VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
-
-# Sentry
-VITE_SENTRY_DSN=https://...@sentry.io/...
-
-# Contact
-VITE_SUPPORT_EMAIL=support@wasel.jo
-VITE_SUPPORT_WHATSAPP_NUMBER=962790000000
-VITE_SUPPORT_PHONE_NUMBER=962790000000
-
-# Features
-VITE_ENABLE_TWO_FACTOR_AUTH=true
-VITE_ENABLE_EMAIL_NOTIFICATIONS=true
-VITE_ENABLE_SMS_NOTIFICATIONS=true
-VITE_ENABLE_WHATSAPP_NOTIFICATIONS=true
-
-# Security
-VITE_ENABLE_SYNTHETIC_DATA=false
-VITE_ENABLE_SYNTHETIC_TRIPS=false
-VITE_ALLOW_DIRECT_SUPABASE_FALLBACK=false
-VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK=false
-```
-
-### 3.2 Build Production Bundle
-
-```bash
-# Install dependencies
 npm ci
-
-# Run all checks
+npx supabase start
+npx supabase db reset
+npm run verify:supabase-rollout
 npm run type-check
 npm run lint:strict
+npm test
 npm run test:coverage
-
-# Build
 npm run build
-
-# Verify bundle size
-npm run size
 ```
 
-### 3.3 Deploy to Vercel
+A successful static rollout-manifest check is not a substitute for executing every migration against a clean PostgreSQL database. Record the CLI version, Postgres version, migration count, command exit codes, and test artifacts.
 
-```bash
-# Install Vercel CLI
-npm install -g vercel
+If `supabase db reset` fails, stop and fix the migration ordering, SQL, extension, role, policy, or seed issue. Do not skip the failing migration or continue against production.
 
-# Deploy
-vercel --prod
+## 4. Staging migration validation
 
-# Or use GitHub integration
-git push origin main
-```
+1. Create and verify a dedicated staging Supabase project.
+2. Confirm its project ref, region, Postgres major version, extensions, Auth settings, Storage buckets, and Edge Function configuration.
+3. Review the full ordered migration inventory and compare it with the repository migration ledger.
+4. Take a staging backup before applying the release candidate.
+5. Link the local CLI to staging only after checking the project ref in the Supabase dashboard.
+6. Apply the complete repository migration set using the repository's documented migration workflow. Do not cherry-pick SQL files or use old hard-coded filenames.
+7. Verify migration history, table definitions, indexes, foreign keys, triggers, grants, RLS policies, and function security settings.
+8. Re-run the migration workflow to verify its documented repeatability behavior. If the runner is not safely repeatable or cannot recover from a partial run, fix the runner before production rollout.
+9. Execute integration and concurrency tests for signup/OTP, driver authorization, booking capacity, cancellation, payment intents, webhook replay, wallet PIN/step-up, package lifecycle, escrow, and refunds.
+10. Verify cross-user and cross-tenant isolation with real authenticated test users.
 
-## Phase 4: Payment Integration
+Do not connect production until the staging evidence is reviewed and all release gates pass.
 
-### 4.1 Configure Stripe Webhook
+## 5. Production preflight (read-only until approved)
 
-1. Go to Stripe Dashboard → Developers → Webhooks
-2. Add endpoint: `https://your-project.supabase.co/functions/v1/payment-webhook`
-3. Select events:
-   - `payment_intent.succeeded`
-   - `payment_intent.payment_failed`
-   - `charge.refunded`
-4. Copy webhook signing secret
-5. Update function secrets
+Before any production write, two people should independently verify:
 
-### 4.2 Test Payment Flow
+- The target project ref is exactly `ztsuuvetsiufqzeabfbr`.
+- A current restorable database backup exists and the restore procedure has been tested.
+- The production migration plan contains only reviewed changes and identifies lock duration, data impact, compatibility, and recovery steps.
+- The exact release commit and CI run are recorded.
+- Frontend and Edge Function versions are compatible with the schema before and after the migration.
+- Required secrets are present in the correct Supabase project without exposing their values.
+- Auth redirect URLs, OAuth providers, email/SMS providers, webhook endpoints, Storage policies, CORS origins, and rate limits are verified.
+- A rollback or forward-fix decision tree is approved. Do not promise that reverting an application deployment reverses a database migration.
+- A maintenance window and owner for monitoring are assigned.
 
-```bash
-# Use Stripe test cards
-# Success: 4242 4242 4242 4242
-# Decline: 4000 0000 0000 0002
-# 3D Secure: 4000 0025 0000 3155
-```
+The current production database inspection does **not** satisfy the schema preflight. Do not proceed until the discrepancy between the live legacy KV-only schema and the repository's canonical application schema is understood and a staged migration has passed.
 
-## Phase 5: Monitoring Setup
+## 6. Edge Function release
 
-### 5.1 Configure Sentry
+Deploy functions only after their required schema, grants, RLS policies, and secrets have been validated in staging.
 
-```bash
-# Install Sentry CLI
-npm install -g @sentry/cli
+- Review each function's authentication model. Keep JWT verification enabled for user-facing functions unless the function performs its own verified authentication.
+- Webhooks must verify provider signatures and reject replayed or stale events.
+- Never trust client-supplied prices, roles, payment state, escrow state, trip ownership, or delivery evidence.
+- Use an explicit allowlist of production web origins for browser-facing CORS. Do not use `Access-Control-Allow-Origin: *` for authenticated application APIs.
+- Verify function-to-database compatibility and run authenticated smoke tests after deployment.
+- Keep a copy of the previous function source and its configuration for recovery.
 
-# Create release
-sentry-cli releases new wasel@1.0.0
+The currently deployed `make-server-0b1f4071` function must not be replaced blindly. First map every frontend caller and confirm whether production traffic depends on it.
 
-# Upload source maps
-sentry-cli releases files wasel@1.0.0 upload-sourcemaps ./dist
+## 7. Frontend and Vercel release
 
-# Finalize release
-sentry-cli releases finalize wasel@1.0.0
-```
-
-### 5.2 Set Up Alerts
-
-In Sentry Dashboard:
-- Error spike: > 10 errors in 15 minutes
-- Performance: p75 LCP > 2.8s
-- Availability: 2 consecutive failures
+- Confirm the Vercel project is the one serving the Wasel production domain.
+- Confirm `www.wasel14.online` is the canonical domain and the apex domain redirects as intended.
+- Confirm production environment variables are configured in Vercel without copying secret values into this document.
+- Ensure the frontend points to the confirmed production Supabase URL and uses only publishable client credentials.
+- Build the exact release commit in CI. Require type checks, lint, unit tests, coverage, production build, security checks, database bootstrap, and relevant E2E suites.
+- Deploy through the protected production workflow after all required checks pass. Do not use an unreviewed local `vercel --prod` command as a workaround for blocked CI.
+- Verify the deployment URL, domain routing, TLS, cache behavior, service worker update, and browser console after deployment.
 
-### 5.3 Web Vitals Dashboard
-
-```sql
--- Create view for Web Vitals monitoring
-CREATE OR REPLACE VIEW web_vitals_summary AS
-SELECT 
-  metric_name,
-  rating,
-  COUNT(*) as count,
-  AVG(value) as avg_value,
-  PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY value) as p75,
-  PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY value) as p95,
-  DATE_TRUNC('hour', created_at) as hour
-FROM web_vitals
-WHERE created_at > NOW() - INTERVAL '24 hours'
-GROUP BY metric_name, rating, DATE_TRUNC('hour', created_at)
-ORDER BY hour DESC, metric_name;
-```
-
-## Phase 6: Security Hardening
-
-### 6.1 Configure Auth Redirect URLs
-
-In Supabase Dashboard → Authentication → URL Configuration:
+## 8. Post-deployment smoke tests
 
-```
-Site URL: https://wasel.jo
-Redirect URLs:
-  - https://wasel.jo/app/auth/callback
-  - https://wasel.jo/auth/callback
-```
-
-### 6.2 Enable Rate Limiting
-
-In Supabase Dashboard → Settings → API:
-- Enable rate limiting
-- Set to 100 requests per minute per IP
-
-### 6.3 Configure CORS
+Use dedicated test accounts and non-production payment instruments where applicable. Verify:
 
-Already configured in Edge Functions with:
-```typescript
-'Access-Control-Allow-Origin': '*'
-```
-
-For production, update to:
-```typescript
-'Access-Control-Allow-Origin': 'https://wasel.jo'
-```
-
-## Phase 7: Testing
-
-### 7.1 Smoke Tests
-
-```bash
-# Run E2E tests against production
-VITE_APP_URL=https://wasel.jo npm run test:e2e
-
-# Run accessibility tests
-npm run test:e2e:a11y
+- Signup, login, logout, password recovery, OAuth callback, and phone verification.
+- User profile reads and updates under RLS.
+- Driver eligibility and trip creation.
+- Search, booking, seat allocation, cancellation, and concurrent booking behavior.
+- Payment intent creation, signed webhook success/failure, duplicate webhook replay, refunds, and ledger consistency.
+- Package creation, matching, pickup, delivery evidence, and escrow transitions across separate devices.
+- Notifications, Arabic RTL, accessibility, and mobile layouts.
+- Monitoring, alert delivery, database health, and error rates.
 
-# Run RTL tests
-npm run test:e2e:rtl
-```
-
-### 7.2 Load Testing
-
-```bash
-# Install k6
-brew install k6  # macOS
-# or download from k6.io
-
-# Run load test
-k6 run scripts/load-test.js
-```
-
-### 7.3 Manual Testing Checklist
-
-- [ ] User registration with email
-- [ ] User registration with Google OAuth
-- [ ] Phone verification flow
-- [ ] Create trip as driver
-- [ ] Book ride as passenger
-- [ ] Payment with Stripe
-- [ ] Send package
-- [ ] Book bus ticket
-- [ ] Real-time notifications
-- [ ] Live trip tracking
-- [ ] Wallet top-up
-- [ ] Profile update
-- [ ] Arabic language switch
-- [ ] Mobile responsive design
-- [ ] Offline functionality
-
-## Phase 8: Go Live
-
-### 8.1 DNS Configuration
-
-```
-A     @       76.76.21.21
-CNAME www     cname.vercel-dns.com
-```
-
-### 8.2 SSL Certificate
-
-Vercel automatically provisions SSL certificates.
-
-### 8.3 Launch Checklist
-
-- [ ] All migrations applied
-- [ ] All Edge Functions deployed
-- [ ] All secrets configured
-- [ ] Payment webhook configured
-- [ ] Monitoring configured
-- [ ] DNS configured
-- [ ] SSL active
-- [ ] Smoke tests passed
-- [ ] Load tests passed
-- [ ] Manual tests passed
-- [ ] Backup strategy in place
-- [ ] Rollback plan documented
-
-### 8.4 Post-Launch Monitoring
-
-First 24 hours:
-- Monitor Sentry for errors
-- Check Web Vitals dashboard
-- Monitor payment success rate
-- Check database performance
-- Monitor API response times
-
-## Rollback Procedure
-
-If critical issues occur:
-
-```bash
-# 1. Revert Vercel deployment
-vercel rollback
-
-# 2. Revert database migration (if needed)
-psql $DATABASE_URL -f supabase/migrations/rollback.sql
-
-# 3. Notify users via status page
-```
-
-## Support Contacts
-
-- Database: Supabase Support
-- Payments: Stripe Support
-- SMS: Twilio Support
-- Email: Resend Support
-- Monitoring: Sentry Support
-
-## Maintenance
-
-### Daily
-- Check error logs in Sentry
-- Monitor payment success rate
-- Check API health endpoints
-
-### Weekly
-- Review Web Vitals trends
-- Check database performance
-- Review user feedback
-
-### Monthly
-- Update dependencies
-- Review security alerts
-- Backup database
-- Review and optimize queries
-
-## Troubleshooting
-
-### Database Connection Issues
-```bash
-# Check connection
-psql $DATABASE_URL -c "SELECT 1"
-
-# Check active connections
-psql $DATABASE_URL -c "SELECT count(*) FROM pg_stat_activity"
-```
-
-### Edge Function Errors
-```bash
-# View function logs
-supabase functions logs make-server-0b1f4071
-
-# Test function locally
-supabase functions serve make-server-0b1f4071
-```
-
-### Payment Failures
-```bash
-# Check webhook logs
-supabase functions logs payment-webhook
-
-# Verify webhook signature
-curl -X POST https://your-project.supabase.co/functions/v1/payment-webhook \
-  -H "stripe-signature: test"
-```
-
-## Success Metrics
-
-Track these KPIs:
-- User registrations per day
-- Trips created per day
-- Bookings per day
-- Payment success rate (target: >95%)
-- Average response time (target: <500ms)
-- Error rate (target: <1%)
-- Web Vitals (LCP <2.5s, CLS <0.1, INP <200ms)
-
----
-
-**Deployment Status**: Ready for Production ✅
-
-**Estimated Deployment Time**: 4-6 hours
-
-**Team Required**: 1 DevOps + 1 Backend + 1 Frontend
-
-**Risk Level**: Medium (comprehensive testing required)
+Do not create fake transactions or mark a smoke test passed without retaining the test result.
+
+## 9. Recovery
+
+For an application-only regression, redeploy the last known-good application release after confirming schema compatibility.
+
+For a database issue:
+1. Stop further writes if data integrity may be affected.
+2. Preserve logs, migration output, and the exact release commit.
+3. Assess whether a reviewed forward fix is safer than restoring a backup.
+4. Restore only using the tested recovery procedure and an explicitly approved target.
+5. Reconcile payments and external provider events before reopening affected flows.
+6. Verify critical invariants and user-facing flows before resuming traffic.
+
+Never run an invented `rollback.sql` or assume a previous migration can safely be reversed.
+
+## 10. Release status
+
+**Current status: NOT READY.**
+
+The live project is confirmed, but its database does not currently expose the canonical Wasel application schema. A staging environment, clean database bootstrap, migration recovery design, end-to-end booking/payment/package validation, production secret verification, and deployment-domain verification remain required.
+
+Do not change this status until the corresponding evidence is recorded in [`PRODUCTION_READINESS.md`](../PRODUCTION_READINESS.md) and all P0 acceptance criteria are verified.
