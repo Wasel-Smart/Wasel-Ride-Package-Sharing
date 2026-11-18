@@ -9,9 +9,24 @@ import { scheduleIdleTask, hasRequestIdleCallback } from '@/utils/idleScheduler'
 describe('idleScheduler', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.stubGlobal(
+      'requestIdleCallback',
+      (
+        callback: (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void,
+        options?: { timeout?: number },
+      ) =>
+        setTimeout(
+          () => callback({ didTimeout: false, timeRemaining: () => 50 }),
+          options?.timeout ?? 0,
+        ),
+    );
+    vi.stubGlobal('cancelIdleCallback', (handle: ReturnType<typeof setTimeout>) =>
+      clearTimeout(handle),
+    );
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 

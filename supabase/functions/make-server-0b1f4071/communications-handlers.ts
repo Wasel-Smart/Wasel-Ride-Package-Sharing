@@ -1,4 +1,11 @@
-import type { SupabaseClient, User } from 'https://esm.sh/@supabase/supabase-js@2';
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+type SupabaseAdminClient = SupabaseClient<any, 'public' | 'private', any, any, any>;
+type AuthUser = {
+  id: string;
+  email?: string | null;
+  phone?: string | null;
+  user_metadata?: Record<string, unknown> | null;
+};
 import {
   buildFailurePatch,
   buildIdempotencyKey,
@@ -12,15 +19,15 @@ import {
   type CommunicationDeliveryRecord,
   type DeliveryProcessorEnv,
 } from './_shared/communication-runtime.ts';
-import { getClientIp, takeRateLimitToken } from './_shared/security-runtime.ts';
+import { consumeRateLimitToken, getClientIp } from './_shared/security-runtime.ts';
 
 interface CanonicalUser {
   id: string;
 }
 
 type AuthenticatedRequest = {
-  admin: SupabaseClient;
-  authUser: User;
+  admin: SupabaseAdminClient;
+  authUser: AuthUser;
   canonicalUser: CanonicalUser;
 };
 
@@ -29,7 +36,7 @@ type AuthenticationResult = AuthenticatedRequest | { error: Response };
 interface CommunicationRuntime {
   authenticateRequest: (request: Request) => Promise<AuthenticationResult>;
   executeSqlStatements: (sql: string) => Promise<void>;
-  getAdminClient: () => SupabaseClient;
+  getAdminClient: () => SupabaseAdminClient;
   getFunctionBaseUrl: (request: Request) => string;
   hasCommunicationWorkerAccess: (request: Request) => boolean;
   json: (data: unknown, status?: number) => Response;
@@ -73,7 +80,7 @@ function sanitizeDeliveryText(value: unknown, maxLength: number): string | null 
 }
 
 async function claimQueuedDeliveries(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   workerName: string,
   limit = 25,
 ) {
@@ -132,7 +139,7 @@ async function claimQueuedDeliveries(
 }
 
 function buildLifecyclePatch(
-  status: 'sent' | 'delivered' | 'failed',
+  status: 'sent' | 'delivered' | 'failed' | 'processing',
   now: string,
   payload: unknown,
   errorMessage?: string,
@@ -151,6 +158,14 @@ function buildLifecyclePatch(
     return {
       delivery_status: 'delivered',
       delivered_at: now,
+      provider_response: payload,
+      updated_at: now,
+    };
+  }
+
+  if (status === 'processing') {
+    return {
+      delivery_status: 'processing',
       provider_response: payload,
       updated_at: now,
     };
@@ -222,7 +237,7 @@ export function createCommunicationHandlers(
   }
 
   async function sendDelivery(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     delivery: CommunicationDeliveryRecord,
     functionBaseUrl: string,
   ) {
@@ -308,7 +323,7 @@ export function createCommunicationHandlers(
   }
 
   async function processQueuedDeliveries(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     functionBaseUrl: string,
   ) {
     const dueDeliveries = await claimQueuedDeliveries(admin, 'edge:communications-process', 25);
@@ -335,10 +350,14 @@ export function createCommunicationHandlers(
   async function handleQueueCommunicationDeliveries(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
-    if (!takeRateLimitToken({
-      key: ['communications', auth.canonicalUser.id, getClientIp(request)].join(':'),
+    const rateLimit = await consumeRateLimitToken(auth.admin, {
+      key: ['communications', auth.canonicalUser.id].join(':'),
       ...COMMUNICATION_QUEUE_RATE_LIMIT,
-    })) {
+    });
+    if (rateLimit.unavailable) {
+      return runtime.json({ error: 'Rate limiting is temporarily unavailable. Please try again.' }, 503);
+    }
+    if (!rateLimit.allowed) {
       return runtime.json({ error: 'Too many outbound communication requests. Please wait and try again.' }, 429);
     }
 
@@ -611,12 +630,13 @@ export function createCommunicationHandlers(
 
     const payload = await readJsonBody(request);
     const eventType = String(payload?.type ?? '');
-    const externalReference = String(
-      payload?.data?.email_id ??
-      payload?.data?.id ??
-      payload?.data?.email?.id ??
-      '',
-    );
+    const data = payload.data && typeof payload.data === 'object' && !Array.isArray(payload.data)
+      ? payload.data as Record<string, unknown>
+      : {};
+    const email = data.email && typeof data.email === 'object' && !Array.isArray(data.email)
+      ? data.email as Record<string, unknown>
+      : {};
+    const externalReference = String(data.email_id ?? data.id ?? email.id ?? '');
 
     if (!externalReference) {
       return runtime.json({ received: true, ignored: true });

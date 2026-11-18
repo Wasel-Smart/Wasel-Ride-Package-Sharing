@@ -63,15 +63,43 @@ async function verifyQuality() {
 
   console.log('\nCoverage:');
   const coverageSummary = readJson('coverage/coverage-summary.json');
-  if (coverageSummary?.total) {
-    console.log('  OK coverage-summary.json exists');
+  const coverageMetrics = ['lines', 'branches', 'functions', 'statements'];
+  const validCoverage = coverageMetrics.every((metric) => {
+    const percentage = coverageSummary?.total?.[metric]?.pct;
+    return typeof percentage === 'number' && Number.isFinite(percentage) && percentage >= 0 && percentage <= 100;
+  });
+
+  if (validCoverage) {
+    console.log('  OK coverage-summary.json contains valid metrics');
     console.log(`     Lines: ${coverageSummary.total.lines.pct}%`);
     console.log(`     Branches: ${coverageSummary.total.branches.pct}%`);
     console.log(`     Functions: ${coverageSummary.total.functions.pct}%`);
     console.log(`     Statements: ${coverageSummary.total.statements.pct}%`);
   } else {
-    console.log('  WARN coverage-summary.json missing or invalid');
+    console.log('  FAIL coverage-summary.json missing or contains invalid metrics');
+    console.log('     Percentages must be finite numbers between 0 and 100.');
     console.log('     Run: npm run test:coverage');
+    allPassed = false;
+  }
+
+  console.log('\nUnit Tests:');
+  const vitestResults = readJson('vitest-results.json');
+  if (!vitestResults) {
+    console.log('  FAIL vitest-results.json missing or invalid');
+    allPassed = false;
+  } else {
+    const passedTests = vitestResults.numPassedTests ?? 0;
+    const failedTests = vitestResults.numFailedTests ?? 0;
+    const failedSuites = vitestResults.numFailedTestSuites ?? 0;
+    const totalTests = vitestResults.numTotalTests ?? passedTests + failedTests;
+    const testSuccess =
+      vitestResults.success === true && totalTests > 0 && failedTests === 0 && failedSuites === 0;
+    console.log(`  ${testSuccess ? 'OK' : 'FAIL'} Vitest result status`);
+    console.log(`     Total: ${totalTests}`);
+    console.log(`     Passed: ${passedTests}`);
+    console.log(`     Failed: ${failedTests}`);
+    console.log(`     Failed suites: ${failedSuites}`);
+    if (!testSuccess) allPassed = false;
   }
 
   console.log('\nPlaywright:');
@@ -87,8 +115,7 @@ async function verifyQuality() {
       allPassed = false;
     }
   } else {
-    console.log('  WARN results.json missing');
-    console.log('     Run: npm run test:e2e');
+    console.log('  INFO Playwright is validated in separate E2E workflow jobs, not this verification job.');
   }
 
   console.log('\nLighthouse:');
@@ -97,8 +124,7 @@ async function verifyQuality() {
     console.log(`  OK ${lighthouseArtifacts.source} exists`);
     console.log(`     Reports: ${lighthouseArtifacts.count}`);
   } else {
-    console.log('  WARN no Lighthouse artifacts found');
-    console.log('     Run: npm run test:lhci');
+    console.log('  INFO Lighthouse is validated in its dedicated workflow job, not this verification job.');
   }
 
   console.log('\nGenerating quality report...');
@@ -114,8 +140,9 @@ async function verifyQuality() {
   }
 
   console.log(`\n${'='.repeat(50)}`);
-  console.log(allPassed ? 'All quality checks passed.\n' : 'Some quality checks need attention.\n');
+  console.log(allPassed ? 'All checks owned by this quality-verification job passed.' : 'Quality verification failed.');
+  if (!allPassed) process.exitCode = 1;
 }
 
 await verifyQuality();
-process.exit(0);
+

@@ -17,8 +17,8 @@ const REQUIRED_VARS = {
   },
   VITE_SUPABASE_ANON_KEY: {
     required: true,
-    pattern: /^eyJ/,
-    description: 'Supabase publishable anon key (starts with eyJ)',
+    pattern: /^(?:eyJ|sb_publishable_)/,
+    description: 'Supabase anon JWT or publishable key',
   },
 
   // Stripe
@@ -95,10 +95,15 @@ const REQUIRED_VARS = {
 };
 
 const BACKEND_REQUIRED_VARS = {
+  SUPABASE_ANON_KEY: {
+    required: true,
+    pattern: /^(?:eyJ|sb_publishable_)/,
+    description: 'Supabase anon JWT or publishable key for user-scoped Edge requests',
+  },
   SUPABASE_SERVICE_ROLE_KEY: {
     required: true,
-    pattern: /^eyJ/,
-    description: 'Supabase service role key (backend only)',
+    pattern: /^(?:eyJ|sb_secret_)/,
+    description: 'Supabase service-role JWT or secret key (backend only)',
   },
   STRIPE_SECRET_KEY: {
     required: true,
@@ -109,6 +114,11 @@ const BACKEND_REQUIRED_VARS = {
     required: true,
     pattern: /^whsec_/,
     description: 'Stripe webhook signing secret',
+  },
+  WALLET_STEP_UP_SECRET: {
+    required: true,
+    pattern: /^.{32,}$/,
+    description: 'Dedicated random wallet step-up secret (minimum 32 characters; must not reuse another credential)',
   },
   RESEND_API_KEY: {
     required: true,
@@ -237,6 +247,15 @@ function main() {
 
   if (allVars.STRIPE_SECRET_KEY?.startsWith('sk_test_')) {
     securityIssues.push('❌ Using Stripe TEST secret key in production');
+  }
+
+  if (
+    allVars.WALLET_STEP_UP_SECRET &&
+    [allVars.SUPABASE_SERVICE_ROLE_KEY, allVars.STRIPE_SECRET_KEY, allVars.STRIPE_WEBHOOK_SECRET]
+      .filter(Boolean)
+      .includes(allVars.WALLET_STEP_UP_SECRET)
+  ) {
+    securityIssues.push('❌ WALLET_STEP_UP_SECRET must be unique and must not reuse another credential');
   }
 
   if (securityIssues.length > 0) {

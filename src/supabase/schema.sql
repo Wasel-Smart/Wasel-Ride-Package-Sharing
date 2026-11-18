@@ -122,6 +122,48 @@ CREATE TABLE vehicles (
   UNIQUE(license_plate)
 );
 
+-- Recurring Trips Table
+CREATE TABLE recurring_trips (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  driver_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  vehicle_id UUID REFERENCES vehicles(id) ON DELETE SET NULL,
+  
+  -- Schedule details
+  name TEXT NOT NULL,
+  trip_type trip_type NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  
+  -- Route
+  from_location TEXT NOT NULL,
+  from_lat DECIMAL(10,8) NOT NULL,
+  from_lng DECIMAL(11,8) NOT NULL,
+  to_location TEXT NOT NULL,
+  to_lat DECIMAL(10,8) NOT NULL,
+  to_lng DECIMAL(11,8) NOT NULL,
+  
+  -- Recurrence
+  days_of_week INTEGER[] NOT NULL CHECK (array_length(days_of_week, 1) > 0), -- 0=Sunday, 6=Saturday
+  departure_time TIME NOT NULL,
+  
+  -- Capacity & Pricing
+  available_seats INTEGER NOT NULL CHECK (available_seats >= 1),
+  price_per_seat DECIMAL(10,2) NOT NULL CHECK (price_per_seat >= 0),
+  
+  -- Statistics
+  total_trips_created INTEGER DEFAULT 0,
+  total_bookings INTEGER DEFAULT 0,
+  
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  paused_at TIMESTAMPTZ,
+  
+  -- Validity period
+  valid_from DATE DEFAULT CURRENT_DATE,
+  valid_until DATE
+);
+
+
 -- Trips Table (offered rides)
 CREATE TABLE trips (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -233,50 +275,38 @@ CREATE TABLE bookings (
   cancelled_by UUID REFERENCES profiles(id),
   cancellation_reason TEXT,
   
-  UNIQUE(trip_id, passenger_id),
-  CONSTRAINT no_self_booking CHECK (passenger_id != (SELECT driver_id FROM trips WHERE id = trip_id))
+  UNIQUE(trip_id, passenger_id)
 );
 
--- Recurring Trips Table
-CREATE TABLE recurring_trips (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  driver_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  vehicle_id UUID REFERENCES vehicles(id) ON DELETE SET NULL,
-  
-  -- Schedule details
-  name TEXT NOT NULL,
-  trip_type trip_type NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  
-  -- Route
-  from_location TEXT NOT NULL,
-  from_lat DECIMAL(10,8) NOT NULL,
-  from_lng DECIMAL(11,8) NOT NULL,
-  to_location TEXT NOT NULL,
-  to_lat DECIMAL(10,8) NOT NULL,
-  to_lng DECIMAL(11,8) NOT NULL,
-  
-  -- Recurrence
-  days_of_week INTEGER[] NOT NULL CHECK (array_length(days_of_week, 1) > 0), -- 0=Sunday, 6=Saturday
-  departure_time TIME NOT NULL,
-  
-  -- Capacity & Pricing
-  available_seats INTEGER NOT NULL CHECK (available_seats >= 1),
-  price_per_seat DECIMAL(10,2) NOT NULL CHECK (price_per_seat >= 0),
-  
-  -- Statistics
-  total_trips_created INTEGER DEFAULT 0,
-  total_bookings INTEGER DEFAULT 0,
-  
-  -- Metadata
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  paused_at TIMESTAMPTZ,
-  
-  -- Validity period
-  valid_from DATE DEFAULT CURRENT_DATE,
-  valid_until DATE
-);
+-- Reject self-booking with a row lock; PostgreSQL CHECK constraints cannot query other tables.
+CREATE OR REPLACE FUNCTION public.reject_self_booking()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $wasel$
+DECLARE
+  trip_driver_id UUID;
+BEGIN
+  SELECT driver_id
+    INTO trip_driver_id
+    FROM public.trips
+   WHERE id = NEW.trip_id
+   FOR SHARE;
+
+  IF trip_driver_id = NEW.passenger_id THEN
+    RAISE EXCEPTION 'A driver cannot book their own trip'
+      USING ERRCODE = '23514', CONSTRAINT = 'no_self_booking';
+  END IF;
+
+  RETURN NEW;
+END;
+$wasel$;
+
+CREATE TRIGGER enforce_no_self_booking
+  BEFORE INSERT OR UPDATE OF trip_id, passenger_id ON public.bookings
+  FOR EACH ROW
+  EXECUTE FUNCTION public.reject_self_booking();
 
 -- Reviews & Ratings Table
 CREATE TABLE reviews (

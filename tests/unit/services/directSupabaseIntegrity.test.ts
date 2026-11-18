@@ -113,7 +113,7 @@ describe('direct Supabase booking integrity', () => {
     bookingRpcPayload = null;
   });
 
-  it('persists all booking fields through the atomic booking RPC instead of only returning them in memory', async () => {
+  it('persists booking fields and forces passenger requests to pending through the atomic booking RPC', async () => {
     const result = await createDirectBooking({
       tripId: 'trip-1',
       userId: 'auth-user-1',
@@ -129,7 +129,7 @@ describe('direct Supabase booking integrity', () => {
       p_seats_requested: 2,
       p_pickup_location: 'University Street',
       p_dropoff_location: '7th Circle',
-      p_runtime_status: 'confirmed',
+      p_runtime_status: 'pending_driver',
       p_total_price: 14,
       p_seat_number: 1,
     });
@@ -138,6 +138,7 @@ describe('direct Supabase booking integrity', () => {
         seats_requested: 2,
         pickup_location: 'University Street',
         dropoff_location: '7th Circle',
+        booking_status: 'pending_driver',
       },
     });
   });

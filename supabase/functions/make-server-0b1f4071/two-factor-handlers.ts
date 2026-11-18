@@ -1,4 +1,11 @@
-import type { SupabaseClient, User } from 'https://esm.sh/@supabase/supabase-js@2';
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+type SupabaseAdminClient = SupabaseClient<any, 'public' | 'private', any, any, any>;
+type AuthUser = {
+  id: string;
+  email?: string | null;
+  phone?: string | null;
+  user_metadata?: Record<string, unknown> | null;
+};
 import {
   buildOtpAuthUrl,
   generateBackupCodes,
@@ -6,7 +13,7 @@ import {
   hashBackupCodes,
   verifyTwoFactorChallenge,
 } from './_shared/two-factor-runtime.ts';
-import { getClientIp, takeRateLimitToken } from './_shared/security-runtime.ts';
+import { consumeRateLimitToken } from './_shared/security-runtime.ts';
 
 interface CanonicalUser {
   id: string;
@@ -14,8 +21,8 @@ interface CanonicalUser {
 }
 
 type AuthenticatedRequest = {
-  admin: SupabaseClient;
-  authUser: User;
+  admin: SupabaseAdminClient;
+  authUser: AuthUser;
   canonicalUser: CanonicalUser;
 };
 
@@ -37,8 +44,8 @@ const TWO_FACTOR_SETUP_RATE_LIMIT = { maxRequests: 5, windowMs: 10 * 60_000 };
 const MAX_TWO_FACTOR_FAILURES = 5;
 const TWO_FACTOR_LOCK_WINDOW_MS = 10 * 60_000;
 
-function buildRateLimitKey(request: Request, auth: AuthenticatedRequest, action: string): string {
-  return ['2fa', action, auth.canonicalUser.id, getClientIp(request)].join(':');
+function buildRateLimitKey(auth: AuthenticatedRequest, action: string): string {
+  return ['2fa', action, auth.canonicalUser.id].join(':');
 }
 
 function validateAuthenticatorCode(code: string, allowBackupCode: boolean): string {
@@ -54,7 +61,7 @@ function validateAuthenticatorCode(code: string, allowBackupCode: boolean): stri
   throw new Error('A valid authenticator code is required');
 }
 
-async function getTwoFactorState(admin: SupabaseClient, userId: string) {
+async function getTwoFactorState(admin: SupabaseAdminClient, userId: string) {
   const { data, error } = await admin
     .schema('private')
     .from('user_two_factor_secrets')
@@ -69,7 +76,7 @@ async function getTwoFactorState(admin: SupabaseClient, userId: string) {
   return data;
 }
 
-async function recordTwoFactorFailure(admin: SupabaseClient, userId: string, nextFailures: number) {
+async function recordTwoFactorFailure(admin: SupabaseAdminClient, userId: string, nextFailures: number) {
   const now = Date.now();
   const { error } = await admin
     .schema('private')
@@ -93,10 +100,14 @@ export function createTwoFactorHandlers(runtime: TwoFactorRuntime) {
   async function handleTwoFactorSetup(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
-    if (!takeRateLimitToken({
-      key: buildRateLimitKey(request, auth, 'setup'),
+    const rateLimit = await consumeRateLimitToken(auth.admin, {
+      key: buildRateLimitKey(auth, 'setup'),
       ...TWO_FACTOR_SETUP_RATE_LIMIT,
-    })) {
+    });
+    if (rateLimit.unavailable) {
+      return runtime.json({ error: 'Rate limiting is temporarily unavailable. Please try again.' }, 503);
+    }
+    if (!rateLimit.allowed) {
       return runtime.json({ error: 'Too many setup attempts. Please wait and try again.' }, 429);
     }
 
@@ -151,10 +162,14 @@ export function createTwoFactorHandlers(runtime: TwoFactorRuntime) {
   async function handleTwoFactorVerify(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
-    if (!takeRateLimitToken({
-      key: buildRateLimitKey(request, auth, 'verify'),
+    const rateLimit = await consumeRateLimitToken(auth.admin, {
+      key: buildRateLimitKey(auth, 'verify'),
       ...TWO_FACTOR_VERIFY_RATE_LIMIT,
-    })) {
+    });
+    if (rateLimit.unavailable) {
+      return runtime.json({ error: 'Rate limiting is temporarily unavailable. Please try again.' }, 503);
+    }
+    if (!rateLimit.allowed) {
       return runtime.json({ valid: false, error: 'Too many verification attempts. Please wait and try again.' }, 429);
     }
 
@@ -225,10 +240,14 @@ export function createTwoFactorHandlers(runtime: TwoFactorRuntime) {
   async function handleTwoFactorDisable(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
-    if (!takeRateLimitToken({
-      key: buildRateLimitKey(request, auth, 'disable'),
+    const rateLimit = await consumeRateLimitToken(auth.admin, {
+      key: buildRateLimitKey(auth, 'disable'),
       ...TWO_FACTOR_VERIFY_RATE_LIMIT,
-    })) {
+    });
+    if (rateLimit.unavailable) {
+      return runtime.json({ error: 'Rate limiting is temporarily unavailable. Please try again.' }, 503);
+    }
+    if (!rateLimit.allowed) {
       return runtime.json({ disabled: false, error: 'Too many verification attempts. Please wait and try again.' }, 429);
     }
 

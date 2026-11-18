@@ -22,11 +22,12 @@ describe('Supabase rollout guardrails', () => {
     expect(catalogPaths).toContain(
       'src/supabase/migrations/20260324005540_kv_store.sql',
     );
-    expect(rolloutMigrations.slice(-4)).toEqual([
-      'src/supabase/migrations/20260421100000_stripe_subscriptions.sql',
+    expect(rolloutMigrations.slice(-5)).toEqual([
       'src/supabase/migrations/20260422120000_safety_and_user_settings.sql',
       'src/supabase/migrations/20260424140000_harden_user_owned_rpc_boundaries.sql',
       'src/supabase/migrations/20260424153000_database_governance_and_rls_hardening.sql',
+      'src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql',
+      'src/supabase/migrations/20261117110000_payment_webhook_idempotency_and_settlement_safety.sql',
     ]);
   });
 
@@ -44,6 +45,210 @@ describe('Supabase rollout guardrails', () => {
     expect(sql).toContain('Cannot submit verification for another user');
     expect(sql).toContain('create or replace function public.app_create_booking_request(');
     expect(sql).toContain('create or replace function public.app_update_booking_runtime_status(');
+  });
+
+  it('prevents client-priced escrow beneficiaries and unsafe wallet payment purposes', () => {
+    const wallet = read('supabase/functions/make-server-0b1f4071/wallet-handlers.ts');
+    const beneficiaryResolver = wallet.slice(
+      wallet.indexOf('async function findBeneficiaryUserId('),
+      wallet.indexOf('async function validatePaymentIntentReference('),
+    );
+    const paymentIntentHandler = wallet.slice(
+      wallet.indexOf('async function handleCreatePaymentIntent('),
+      wallet.indexOf('async function handleConfirmPayment('),
+    );
+
+    expect(beneficiaryResolver).not.toContain('metadata.beneficiaryUserId');
+    expect(beneficiaryResolver).toContain("referenceType === 'package'");
+    expect(paymentIntentHandler).toContain("paymentMethodType === 'wallet'");
+    expect(paymentIntentHandler).toContain("purpose === 'subscription'");
+    expect(paymentIntentHandler).toContain('validatePaymentIntentReference(');
+    expect(paymentIntentHandler).toContain('clientIdempotencyKey');
+    expect(paymentIntentHandler).toContain('auth.canonicalUser.id');
+    expect(paymentIntentHandler).toContain('await sha256Hex(');
+  });
+
+  it('keeps public package tracking data private and uses persisted driver ratings', () => {
+    const edgeRouter = read('supabase/functions/make-server-0b1f4071/index.ts');
+    const trackingHandler = edgeRouter.slice(
+      edgeRouter.indexOf('async function handleTrackPackage('),
+      edgeRouter.indexOf('async function handleCreateReview('),
+    );
+    const driverSummaries = edgeRouter.slice(
+      edgeRouter.indexOf('async function fetchDriverSummaries('),
+      edgeRouter.indexOf('function mapTripRow('),
+    );
+
+    expect(trackingHandler).not.toContain(".select('*')");
+    expect(trackingHandler).not.toContain('receiver_phone');
+    expect(trackingHandler).not.toContain('recipient_phone');
+    expect(edgeRouter).toContain('crypto.randomUUID().replace(/-/g, \'\').slice(0, 24)');
+    expect(driverSummaries).toContain(".from('trust_scores')");
+    expect(driverSummaries).toContain('rating: toNumber(trust?.average_rating, 0)');
+  });
+
+  it('fails closed on unverified review writes instead of accepting caller-selected trust scores', () => {
+    const edgeRouter = read('supabase/functions/make-server-0b1f4071/index.ts');
+    const reviewHandler = edgeRouter.slice(
+      edgeRouter.indexOf('async function handleCreateReview('),
+      edgeRouter.indexOf('serve(async (req) =>'),
+    );
+
+    expect(reviewHandler).toContain('503,');
+    expect(reviewHandler).not.toContain(".from('trust_scores')");
+    expect(reviewHandler).not.toContain(".from('reviews')");
+  });
+
+  it('never derives authorization roles from user-editable Supabase metadata', () => {
+    const edgeRouter = read('supabase/functions/make-server-0b1f4071/index.ts');
+    const canonicalUserCreation = edgeRouter.slice(
+      edgeRouter.indexOf('async function ensureCanonicalUser('),
+      edgeRouter.indexOf('async function authenticateRequest('),
+    );
+
+    expect(canonicalUserCreation).toContain("role: 'passenger'");
+    expect(canonicalUserCreation).not.toContain('user.user_metadata?.role');
+    expect(canonicalUserCreation).toContain('.update({ auth_user_id: user.id })');
+    expect(canonicalUserCreation).toContain('already linked to another authentication account');
+    expect(edgeRouter).toContain("'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS'");
+  });
+
+  it('uses atomic database-backed rate limits for every protected Edge handler', () => {
+    const limiter = read('supabase/functions/make-server-0b1f4071/_shared/security-runtime.ts');
+    const twoFactor = read('supabase/functions/make-server-0b1f4071/two-factor-handlers.ts');
+    const wallet = read('supabase/functions/make-server-0b1f4071/wallet-handlers.ts');
+    const communications = read('supabase/functions/make-server-0b1f4071/communications-handlers.ts');
+    const edgeRouter = read('supabase/functions/make-server-0b1f4071/index.ts');
+
+    expect(limiter).toContain("admin.rpc('consume_edge_rate_limit'");
+    expect(edgeRouter).toContain('consumeRateLimitToken(createAdminClient()');
+    expect(edgeRouter).toContain('enforceDistributedRateLimit(req, path)');
+    expect(edgeRouter).toContain('The legacy rides API is retired. Use /trips and /bookings.');
+    expect(edgeRouter).not.toContain(".from('rides')\n          .insert");
+    expect(
+      read('src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql'),
+    ).toContain('limit 500');
+    expect(edgeRouter).toContain("userClient.rpc('app_create_booking_request'");
+    expect(edgeRouter).toContain("userClient.rpc('app_update_booking_runtime_status'");
+    const bookingMigration = read(
+      'src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql',
+    );
+    expect(bookingMigration).toContain("v_trip.trip_status not in ('open', 'booked')");
+    expect(bookingMigration).toContain('Booking requires a verified phone number');
+    expect(bookingMigration).toContain("v_wallet_status = 'frozen'");
+    expect(bookingMigration).toContain('Drivers cannot book their own trips');
+    expect(bookingMigration).toContain('Seat identifiers are assigned by the database');
+    expect(bookingMigration).toContain("when trip_status = 'booked' and available_seats + v_requested_seats > 0 then 'open'");
+    const createBookingHandler = edgeRouter.slice(
+      edgeRouter.indexOf('async function handleCreateBooking('),
+      edgeRouter.indexOf('async function handleGetUserBookings('),
+    );
+    const updateBookingHandler = edgeRouter.slice(
+      edgeRouter.indexOf('async function handleUpdateBookingStatus('),
+      edgeRouter.indexOf('async function handleGetNotifications('),
+    );
+    expect(createBookingHandler).not.toContain(".from('bookings').insert(");
+    expect(updateBookingHandler).not.toContain(".from('bookings').update(");
+    expect(limiter).not.toContain('new Map<string, RateLimitState>');
+    expect(twoFactor).toContain('consumeRateLimitToken(auth.admin');
+    expect(wallet).toContain('consumeRateLimitToken(runtime.getAdminClient()');
+    expect(communications).toContain('consumeRateLimitToken(auth.admin');
+    expect(twoFactor).toContain('rateLimit.unavailable');
+    expect(wallet).toContain('rateLimit.unavailable');
+    expect(communications).toContain('rateLimit.unavailable');
+  });
+
+  it('serializes payment webhook claims and makes settlement writes idempotent', () => {
+    const sql = read(
+      'src/supabase/migrations/20261117110000_payment_webhook_idempotency_and_settlement_safety.sql',
+    );
+    const wallet = read('supabase/functions/make-server-0b1f4071/wallet-handlers.ts');
+
+    expect(sql).not.toMatch(/^\s*as \$(?!\$)/m);
+    expect(sql.match(/^\s*as \$\$/gm) ?? []).toHaveLength(4);
+    expect(sql.match(/^\$\$;$/gm) ?? []).toHaveLength(4);
+    expect(sql).toContain('app_claim_payment_webhook_event');
+    expect(sql).toContain("return 'processed'");
+    expect(sql).toContain("return 'busy'");
+    expect(sql).toContain('processing_started_at');
+    expect(sql).toContain('attempt_count');
+    expect(sql).toContain('processing_token uuid');
+    expect(sql).toContain('and processing_token = p_processing_token');
+    expect(sql).toContain('p_payment_intent_id uuid default null');
+    expect(sql).toContain('p_payment_status public.wallet_payment_intent_status default null');
+    const bookingSql = read(
+      'src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql',
+    );
+    expect(bookingSql.trimStart().startsWith('begin;')).toBe(true);
+    expect(bookingSql.trimEnd().endsWith('commit;')).toBe(true);
+    expect(bookingSql).toContain("app_consume_user_rate_limit('booking_create')");
+    expect(bookingSql).toContain("app_consume_user_rate_limit('booking_update')");
+    expect(bookingSql).toContain("when 'booking_create' then v_max_requests := 8");
+    expect(bookingSql).toContain("v_trip.departure_time <= now()");
+    expect(bookingSql).toContain("Trip driver is not approved to provide rides");
+    expect(bookingSql).toContain("Trip is no longer eligible for confirmation");
+    const rolloutRunner = read('scripts/apply-supabase-rollout.mjs');
+    expect(rolloutRunner).toContain('--confirm-project-ref=');
+    expect(rolloutRunner).toContain('--allow-production');
+    expect(rolloutRunner).toContain('Dry run only.');
+    expect(read('supabase/config.toml')).toContain('[functions.make-server-0b1f4071]');
+    expect(read('supabase/config.toml')).toContain('verify_jwt = false');
+    expect(read('supabase/functions/make-server-0b1f4071/index.ts')).toContain('const auth = await authenticateRequest(req)');
+    expect(sql).toContain(
+      'Terminal states are monotonic: a late processing/action event cannot',
+    );
+    expect(wallet).toContain('p_processing_token: processingToken');
+    expect(wallet).toContain('p_payment_status: paymentUpdate?.status ?? null');
+    expect(sql).toContain('wallet_accounts_payment_intent_id_key');
+    expect(sql).toContain('escrow_accounts_payment_intent_id_key');
+    expect(sql).toContain('app_upsert_wallet_subscription');
+    expect(sql).toContain('on conflict (user_id)');
+    expect(wallet).toContain("admin.rpc('app_claim_payment_webhook_event'");
+    expect(wallet).toContain("claimed === 'processed'");
+    expect(wallet).toContain("claimed !== 'claimed'");
+    expect(wallet).toContain("app_complete_payment_webhook_event");
+    expect(sql).toContain('wallet_payment_intents_active_reference_uidx');
+    expect(sql).toContain('Duplicate active payment intents exist for the same ride or package reference');
+    expect(wallet).toContain("'payment_intent.succeeded': 'succeeded'");
+    expect(wallet).toContain("'payment_intent.payment_failed': 'failed'");
+    expect(wallet).toContain("if (!nextStatus || !canTransitionPaymentStatus");
+    expect(wallet).toContain("if (currentStatus === 'cancelled') return nextStatus === 'cancelled'");
+    expect(wallet).toContain(".neq('status', 'succeeded')");
+    expect(wallet).toContain(".neq('status', 'cancelled')");
+    expect(wallet).toContain('Return that authoritative row instead of overwriting or failing.');
+    expect(wallet).toContain("app_fail_payment_webhook_event");
+    expect(wallet).toContain("admin.rpc('app_upsert_wallet_subscription'");
+    expect(wallet).toContain("onConflict: 'payment_intent_id', ignoreDuplicates: true");
+    expect(wallet).not.toContain(".from('payment_webhook_events')");
+  });
+
+
+  it('fails closed for wallet step-up secrets and uses cryptographic OTP generation', () => {
+    const wallet = read('supabase/functions/make-server-0b1f4071/wallet-handlers.ts');
+    const envTemplate = read('.env.production.template');
+    const envValidator = read('scripts/validate-production-env.mjs');
+
+    expect(envTemplate).toContain('WALLET_STEP_UP_SECRET');
+    expect(envValidator).toContain('WALLET_STEP_UP_SECRET');
+    expect(envValidator).toContain('SUPABASE_ANON_KEY');
+    expect(envValidator).toContain('/^.{32,}$/');
+    expect(wallet).toContain('getWalletStepUpSecret()');
+    expect(wallet).toContain('WALLET_STEP_UP_SECRET.length < 32');
+    expect(wallet).toContain('crypto.getRandomValues(sample)');
+    expect(wallet).not.toContain('wallet-step-up-development-secret');
+    expect(wallet).not.toContain('Math.random()');
+    expect(wallet).not.toContain("Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ??");
+    expect(wallet).toContain('MAX_OTP_ATTEMPTS = 5');
+    expect(wallet).toContain('WALLET_PIN_VERIFY_RATE_LIMIT');
+    expect(wallet).toContain("admin.rpc('app_record_wallet_pin_failure'");
+    expect(wallet).toContain("admin.rpc('app_record_wallet_pin_failure'");
+    const paymentMigration = read(
+      'src/supabase/migrations/20261117110000_payment_webhook_idempotency_and_settlement_safety.sql',
+    );
+    expect(paymentMigration).toContain('public.app_record_wallet_pin_failure');
+    expect(paymentMigration).toContain('and (locked_until is null or locked_until <= v_now)');
+    expect(wallet).toContain(".is('consumed_at', null)");
+    expect(wallet).toContain(".eq('attempts_count', toNumber(challenge.attempts_count))");
   });
 
   it('removes permissive legacy RLS paths from kv, subscription, and wallet surfaces', () => {

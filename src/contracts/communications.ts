@@ -27,20 +27,14 @@ export const communicationDeliveryRecordSchema = z
     destination: z.string().min(1),
     subject: z.string().nullable().optional(),
     body: z.string().min(1),
-    metadata: z.record(z.unknown()).nullable().optional(),
+    metadata: z.record(z.string(), z.unknown()).nullable().optional(),
     providerName: z.string().nullable().optional(),
     queuedAt: z.string().min(1),
     createdAt: z.string().optional(),
   })
   .passthrough();
 
-export const communicationDeliveryHistorySchema = z.array(
-  communicationDeliveryRecordSchema,
-);
+export const communicationDeliveryHistorySchema = z.array(communicationDeliveryRecordSchema);
 
-export type CommunicationPreferencesContract = z.infer<
-  typeof communicationPreferencesSchema
->;
-export type CommunicationDeliveryRecordContract = z.infer<
-  typeof communicationDeliveryRecordSchema
->;
+export type CommunicationPreferencesContract = z.infer<typeof communicationPreferencesSchema>;
+export type CommunicationDeliveryRecordContract = z.infer<typeof communicationDeliveryRecordSchema>;

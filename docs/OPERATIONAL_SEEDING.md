@@ -20,7 +20,7 @@ Do not invent ad hoc seed order or manually maintain a second source of truth.
 
 ## Seed Packs
 
-- Operational seeds: `db/seeds/roles.seed.sql`, `db/seeds/cities.seed.sql`, `db/seeds/trip_types.seed.sql`, `db/seeds/pricing.seed.sql`, `db/seeds/core.seed.sql`, `db/seeds/automation.seed.sql`
+- Operational seeds: `db/seeds/roles.seed.sql`, `db/seeds/cities.seed.sql`, `db/seeds/trip_types.seed.sql`, `db/seeds/pricing.seed.sql`, `db/seeds/core.seed.sql`, `db/seeds/automation.seed.sql`, `db/seeds/rolling_trips.seed.sql` (idempotently refreshes future trip inventory).
 - Smoke checks: `src/supabase/seeds/mock_engine_smoke_checks.sql`
 
 ## Guardrails

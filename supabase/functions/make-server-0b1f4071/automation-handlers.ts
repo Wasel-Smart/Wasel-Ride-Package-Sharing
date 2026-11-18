@@ -1,4 +1,5 @@
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+type SupabaseAdminClient = SupabaseClient<any, 'public' | 'private', any, any, any>;
 import {
   buildAutomationActionUrl,
   buildAutomationFailurePatch,
@@ -24,11 +25,11 @@ const defaultAutomationPreferences = {
 
 interface AutomationRuntime {
   executeSqlStatements: (sql: string) => Promise<void>;
-  getAdminClient: () => SupabaseClient;
+  getAdminClient: () => SupabaseAdminClient;
   getFunctionBaseUrl: (request: Request) => string;
   hasAutomationWorkerAccess: (request: Request) => boolean;
   json: (data: unknown, status?: number) => Response;
-  processQueuedDeliveries: (admin: SupabaseClient, functionBaseUrl: string) => Promise<unknown>;
+  processQueuedDeliveries: (admin: SupabaseAdminClient, functionBaseUrl: string) => Promise<unknown>;
 }
 
 interface AutomationModuleOptions {
@@ -46,7 +47,7 @@ export function createAutomationHandlers(
   options: AutomationModuleOptions,
 ) {
   async function backfillAutomationJobs(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     maxRows = 100,
   ) {
     const { data, error } = await admin.rpc('app_backfill_automation_jobs', {
@@ -61,7 +62,7 @@ export function createAutomationHandlers(
   }
 
   async function claimAutomationJobs(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     workerName: string,
     limit = 25,
   ) {
@@ -78,7 +79,7 @@ export function createAutomationHandlers(
   }
 
   async function getAutomationUserContext(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     userId?: string | null,
   ) {
     if (!userId) return null;
@@ -129,7 +130,7 @@ export function createAutomationHandlers(
   }
 
   async function upsertAutomationNotification(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     job: AutomationJobRecord,
     plan: NonNullable<ReturnType<typeof buildAutomationNotification>>,
   ) {
@@ -181,7 +182,7 @@ export function createAutomationHandlers(
   }
 
   async function queueAutomationDeliveries(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     job: AutomationJobRecord,
     plan: NonNullable<ReturnType<typeof buildAutomationNotification>>,
     notificationId?: string | null,
@@ -272,7 +273,7 @@ export function createAutomationHandlers(
   }
 
   async function updateAutomationJob(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     jobId: string,
     patch: Record<string, unknown>,
   ) {
@@ -287,7 +288,7 @@ export function createAutomationHandlers(
   }
 
   async function ensureQueuedReminderDispatch(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     reminder: Record<string, unknown>,
     nextReminderAt: string,
   ) {
@@ -336,7 +337,7 @@ export function createAutomationHandlers(
   }
 
   async function executeReminderDispatch(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     job: AutomationJobRecord,
   ) {
     const payload = job.payload ?? {};
@@ -433,7 +434,7 @@ export function createAutomationHandlers(
   }
 
   async function executeSupportSla(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     job: AutomationJobRecord,
   ) {
     const payload = job.payload ?? {};
@@ -552,7 +553,7 @@ export function createAutomationHandlers(
   }
 
   async function executeAutomationJob(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     job: AutomationJobRecord,
   ) {
     if (job.job_type === 'reminder_dispatch') {
@@ -596,7 +597,7 @@ export function createAutomationHandlers(
   }
 
   async function processAutomationQueue(
-    admin: SupabaseClient,
+    admin: SupabaseAdminClient,
     queueOptions: {
       limit?: number;
       backfill?: boolean;

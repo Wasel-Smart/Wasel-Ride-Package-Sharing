@@ -358,6 +358,24 @@ export const migrationCatalog = [
     category: 'runtime-contract',
     naming: 'canonical',
   },
+  {
+    sequence: 39,
+    path: 'src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql',
+    description: 'Restrict booking state transitions to authorized actors and add atomic database-backed Edge rate limits',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'security',
+    naming: 'canonical',
+  },
+  {
+    sequence: 40,
+    path: 'src/supabase/migrations/20261117110000_payment_webhook_idempotency_and_settlement_safety.sql',
+    description: 'Serialize webhook claims, enforce payment settlement idempotency, safely upsert subscriptions, and atomically lock wallet PIN failures',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'security',
+    naming: 'canonical',
+  },
 ];
 
 export const operationalSeedFiles = [
@@ -479,12 +497,7 @@ ${renderSequence(smokeCheckSeedFiles)}
 
 Operational bootstrap seed assets live in \`db/seeds/\`:
 
-- \`roles.seed.sql\`
-- \`cities.seed.sql\`
-- \`trip_types.seed.sql\`
-- \`pricing.seed.sql\`
-- \`core.seed.sql\`
-- \`automation.seed.sql\`
+${operationalSeedFiles.map(file => `- \`${getMigrationFileName(file)}\``).join('\n')}
 
 Smoke checks remain in \`src/supabase/seeds/\` and are never part of the production rollout seed pack.
 

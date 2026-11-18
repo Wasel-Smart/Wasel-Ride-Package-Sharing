@@ -58,8 +58,9 @@ test.describe('RTL / Arabic layout', () => {
     await setArabic(page);
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-    // Pick the first visible button
-    const btn = page.getByRole('button').first();
+    // Target the actual landing-page primary CTA, not the first utility button.
+    const btn = page.locator('.landing-page__primary-button');
+    await expect(btn).toBeVisible();
     const dir = await btn.evaluate((el) => window.getComputedStyle(el).direction);
     expect(dir).toBe('rtl');
   });

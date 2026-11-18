@@ -1,0 +1,37 @@
+name: Supabase Edge Functions Type Check
+
+on:
+  pull_request:
+    paths:
+      - "supabase/functions/**"
+      - ".github/workflows/edge-functions-typecheck.yml"
+  push:
+    branches:
+      - master
+    paths:
+      - "supabase/functions/**"
+      - ".github/workflows/edge-functions-typecheck.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: edge-functions-typecheck-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deno-check:
+    name: Deno type-check (make-server)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check Supabase Edge Function
+        run: deno check --no-lock supabase/functions/make-server-0b1f4071/index.ts

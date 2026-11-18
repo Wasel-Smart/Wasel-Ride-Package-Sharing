@@ -8,7 +8,7 @@ describe('packageTrackingService', () => {
     packageTrackingService.resetForTesting();
   });
 
-  it('creates an auditable timeline for package fulfillment', async () => {
+  it('never represents browser-local payment as verified escrow or releases funds', async () => {
     const pkg = await packageTrackingService.createPackage({
       senderId: 'sender-1',
       from: 'Amman',
@@ -24,24 +24,15 @@ describe('packageTrackingService', () => {
       driverName: 'Wasel Captain',
       driverPhone: '+962790000000',
     });
-    await packageTrackingService.processPayment(pkg.id, 'wallet');
-    await packageTrackingService.verifyPickup(pkg.id, pkg.pickupVerificationCode, 'pickup.jpg');
-    await packageTrackingService.updateLocation(pkg.id, { lat: 31.95, lng: 35.91 });
-    const delivery = await packageTrackingService.verifyDelivery(
-      pkg.id,
-      pkg.deliveryVerificationCode,
-      'delivery.jpg',
-    );
 
-    expect(delivery).toEqual({ verified: true, paymentReleased: true });
+    await expect(packageTrackingService.processPayment(pkg.id, 'wallet')).rejects.toThrow(
+      'server-verified payment provider',
+    );
+    expect(packageTrackingService.getPackage(pkg.id)?.paymentStatus).toBe('pending');
+    expect(packageTrackingService.getEscrowStatus(pkg.id)).toBeUndefined();
     expect(packageTrackingService.getPackageTimeline(pkg.id).map((event) => event.type)).toEqual([
       'created',
       'linked_to_ride',
-      'payment_escrowed',
-      'pickup_verified',
-      'location_updated',
-      'delivery_verified',
-      'payment_released',
     ]);
   });
 
@@ -76,8 +67,6 @@ describe('packageTrackingService', () => {
       driverName: 'Wasel Captain',
       driverPhone: '+962790000000',
     });
-    await packageTrackingService.processPayment(pkg.id, 'wallet');
-
     await expect(
       packageTrackingService.updateLocation(pkg.id, { lat: 31.95, lng: 35.91 }),
     ).rejects.toBeInstanceOf(ValidationError);

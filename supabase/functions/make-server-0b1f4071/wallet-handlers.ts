@@ -1,4 +1,11 @@
-import type { SupabaseClient, User } from 'https://esm.sh/@supabase/supabase-js@2';
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+type SupabaseAdminClient = SupabaseClient<any, 'public' | 'private', any, any, any>;
+type AuthUser = {
+  id: string;
+  email?: string | null;
+  phone?: string | null;
+  user_metadata?: Record<string, unknown> | null;
+};
 import {
   ESCROW_STATUSES,
   isPaymentIntentPurpose,
@@ -16,8 +23,9 @@ import {
 import {
   getClientIp,
   sanitizeEdgeErrorMessage,
-  takeRateLimitToken,
+  consumeRateLimitToken,
   timingSafeEqual,
+  verifyTimestampedHmacSignature,
 } from './_shared/security-runtime.ts';
 
 interface CanonicalUser {
@@ -27,8 +35,8 @@ interface CanonicalUser {
 }
 
 type AuthenticatedRequest = {
-  admin: SupabaseClient;
-  authUser: User;
+  admin: SupabaseAdminClient;
+  authUser: AuthUser;
   canonicalUser: CanonicalUser;
 };
 
@@ -36,7 +44,7 @@ type AuthenticationResult = AuthenticatedRequest | { error: Response };
 
 interface WalletRuntime {
   authenticateRequest: (request: Request) => Promise<AuthenticationResult>;
-  getAdminClient: () => SupabaseClient;
+  getAdminClient: () => SupabaseAdminClient;
   json: (data: unknown, status?: number) => Response;
 }
 
@@ -44,16 +52,37 @@ const OTP_TTL_MS = 10 * 60_000;
 const STEP_UP_TOKEN_TTL_MS = 10 * 60_000;
 const PIN_LOCK_WINDOW_MS = 10 * 60_000;
 const MAX_PIN_FAILURES = 5;
+const MAX_OTP_ATTEMPTS = 5;
 const WALLET_VERIFY_RATE_LIMIT = { maxRequests: 12, windowMs: 10 * 60_000 };
+const WALLET_PIN_VERIFY_RATE_LIMIT = { maxRequests: MAX_PIN_FAILURES, windowMs: 10 * 60_000 };
 const WALLET_TRANSFER_RATE_LIMIT = { maxRequests: 12, windowMs: 10 * 60_000 };
 const WALLET_MUTATION_RATE_LIMIT = { maxRequests: 20, windowMs: 10 * 60_000 };
 
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? '';
 const LOCAL_GATEWAY_WEBHOOK_SECRET = Deno.env.get('LOCAL_GATEWAY_WEBHOOK_SECRET') ?? '';
-const WALLET_STEP_UP_SECRET = Deno.env.get('WALLET_STEP_UP_SECRET')
-  ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  ?? 'wallet-step-up-development-secret';
+const WALLET_STEP_UP_SECRET = Deno.env.get('WALLET_STEP_UP_SECRET') ?? '';
+
+function getWalletStepUpSecret(): string {
+  if (WALLET_STEP_UP_SECRET.length < 32) {
+    throw new Error('Wallet step-up is unavailable: configure a dedicated WALLET_STEP_UP_SECRET of at least 32 characters.');
+  }
+  return WALLET_STEP_UP_SECRET;
+}
+
+function generateSecureOtp(): string {
+  const range = 900_000;
+  const ceiling = Math.floor(0x1_0000_0000 / range) * range;
+  const sample = new Uint32Array(1);
+  let value = 0;
+
+  do {
+    crypto.getRandomValues(sample);
+    value = sample[0] ?? 0;
+  } while (value >= ceiling);
+
+  return String(100_000 + (value % range));
+}
 
 function readJsonBody(request: Request): Promise<Record<string, unknown>> {
   return request.json()
@@ -109,8 +138,18 @@ function isFinalPaymentStatus(status: string): boolean {
   return ['succeeded', 'failed', 'cancelled'].includes(status);
 }
 
-function encodeText(value: string): Uint8Array {
-  return new TextEncoder().encode(value);
+function canTransitionPaymentStatus(currentStatus: string, nextStatus: string): boolean {
+  if (currentStatus === 'succeeded') return nextStatus === 'succeeded';
+  if (currentStatus === 'cancelled') return nextStatus === 'cancelled';
+  if (currentStatus === 'failed') return nextStatus === 'failed' || nextStatus === 'succeeded';
+  return true;
+}
+
+function encodeText(value: string): ArrayBuffer {
+  const encoded = new TextEncoder().encode(value);
+  const buffer = new ArrayBuffer(encoded.byteLength);
+  new Uint8Array(buffer).set(encoded);
+  return buffer;
 }
 
 function toHex(bytes: Uint8Array): string {
@@ -156,23 +195,29 @@ function maskDestination(value: string | null | undefined): string | null {
   return `${value.slice(0, Math.min(4, value.length))}***`;
 }
 
-function buildRateLimitKey(request: Request, userId: string, action: string): string {
-  return ['wallet', action, userId, getClientIp(request)].join(':');
+function buildRateLimitKey(userId: string, action: string): string {
+  return ['wallet', action, userId].join(':');
 }
 
 async function requireAllowedRate(
   runtime: WalletRuntime,
-  request: Request,
   userId: string,
   action: string,
   limits: { maxRequests: number; windowMs: number },
 ) {
-  if (!takeRateLimitToken({ key: buildRateLimitKey(request, userId, action), ...limits })) {
+  const rateLimit = await consumeRateLimitToken(runtime.getAdminClient(), {
+    key: buildRateLimitKey(userId, action),
+    ...limits,
+  });
+  if (rateLimit.unavailable) {
+    throw runtime.json({ error: 'Rate limiting is temporarily unavailable. Please try again.' }, 503);
+  }
+  if (!rateLimit.allowed) {
     throw runtime.json({ error: 'Too many wallet requests. Please wait and try again.' }, 429);
   }
 }
 
-async function ensureWalletProfile(admin: SupabaseClient, userId: string) {
+async function ensureWalletProfile(admin: SupabaseAdminClient, userId: string) {
   const { data: profile, error: profileError } = await admin
     .from('wallet_profiles')
     .select('*')
@@ -211,7 +256,7 @@ async function ensureWalletProfile(admin: SupabaseClient, userId: string) {
 }
 
 async function ensureWalletAccount(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   args: {
     ownerUserId: string | null;
     scope: string;
@@ -260,7 +305,7 @@ async function ensureWalletAccount(
   return inserted;
 }
 
-async function ensureWalletInfrastructure(admin: SupabaseClient, userId: string) {
+async function ensureWalletInfrastructure(admin: SupabaseAdminClient, userId: string) {
   const profile = await ensureWalletProfile(admin, userId);
   const availableAccount = await ensureWalletAccount(admin, {
     ownerUserId: userId,
@@ -280,7 +325,7 @@ async function ensureWalletInfrastructure(admin: SupabaseClient, userId: string)
   return { profile, availableAccount, escrowAccount };
 }
 
-async function getSystemAccount(admin: SupabaseClient, scope: string, currency = 'JOD') {
+async function getSystemAccount(admin: SupabaseAdminClient, scope: string, currency = 'JOD') {
   return ensureWalletAccount(admin, {
     ownerUserId: null,
     scope,
@@ -293,8 +338,9 @@ async function getSystemAccount(admin: SupabaseClient, scope: string, currency =
 }
 
 async function createEscrowLedgerAccount(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   args: {
+    paymentIntentId: string;
     currencyCode: string;
     accountName: string;
     metadata: Record<string, unknown>;
@@ -303,28 +349,43 @@ async function createEscrowLedgerAccount(
   const now = new Date().toISOString();
   const { data, error } = await admin
     .from('wallet_accounts')
-    .insert({
+    .upsert({
       owner_user_id: null,
       account_scope: 'platform_escrow',
+      payment_intent_id: args.paymentIntentId,
       account_name: args.accountName,
       currency_code: normalizeCurrency(args.currencyCode),
       normal_balance: 'credit',
       metadata: args.metadata,
       created_at: now,
       updated_at: now,
-    })
+    }, { onConflict: 'payment_intent_id', ignoreDuplicates: true })
     .select('*')
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return data;
+  if (data) {
+    return data;
+  }
+
+  const { data: existing, error: existingError } = await admin
+    .from('wallet_accounts')
+    .select('*')
+    .eq('payment_intent_id', args.paymentIntentId)
+    .single();
+
+  if (existingError || !existing) {
+    throw new Error(existingError?.message ?? 'Could not retrieve the existing escrow ledger account.');
+  }
+
+  return existing;
 }
 
 async function postLedgerTransaction(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   args: {
     transactionType: string;
     transactionStatus: string;
@@ -364,7 +425,7 @@ async function postLedgerTransaction(
   return String(data);
 }
 
-async function getOwnedAccountIds(admin: SupabaseClient, userId: string): Promise<string[]> {
+async function getOwnedAccountIds(admin: SupabaseAdminClient, userId: string): Promise<string[]> {
   const { data, error } = await admin
     .from('wallet_accounts')
     .select('account_id')
@@ -377,7 +438,7 @@ async function getOwnedAccountIds(admin: SupabaseClient, userId: string): Promis
   return Array.isArray(data) ? data.map((row) => String(row.account_id)) : [];
 }
 
-async function resolveRecipientUser(admin: SupabaseClient, recipient: string) {
+async function resolveRecipientUser(admin: SupabaseAdminClient, recipient: string) {
   const trimmed = recipient.trim();
   const selectors = [
     admin.from('users').select('id, email, phone_number').eq('id', trimmed).maybeSingle(),
@@ -396,9 +457,9 @@ async function resolveRecipientUser(admin: SupabaseClient, recipient: string) {
   return null;
 }
 
-async function setWalletPin(admin: SupabaseClient, userId: string, pin: string) {
+async function setWalletPin(admin: SupabaseAdminClient, userId: string, pin: string) {
   const now = new Date().toISOString();
-  const pinHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${pin}`);
+  const pinHash = await sha256Hex(`${getWalletStepUpSecret()}:${pin}`);
   const { error } = await admin
     .schema('private')
     .from('wallet_pin_secrets')
@@ -417,7 +478,7 @@ async function setWalletPin(admin: SupabaseClient, userId: string, pin: string) 
   }
 }
 
-async function getWalletPinSecret(admin: SupabaseClient, userId: string) {
+async function getWalletPinSecret(admin: SupabaseAdminClient, userId: string) {
   const { data, error } = await admin
     .schema('private')
     .from('wallet_pin_secrets')
@@ -432,33 +493,19 @@ async function getWalletPinSecret(admin: SupabaseClient, userId: string) {
   return data;
 }
 
-async function recordPinFailure(
-  admin: SupabaseClient,
-  userId: string,
-  currentFailures: number,
-) {
-  const nextFailures = currentFailures + 1;
-  const now = new Date().toISOString();
-  const lockedUntil = nextFailures >= MAX_PIN_FAILURES
-    ? new Date(Date.now() + PIN_LOCK_WINDOW_MS).toISOString()
-    : null;
-
-  const { error } = await admin
-    .schema('private')
-    .from('wallet_pin_secrets')
-    .update({
-      failed_attempts: nextFailures,
-      locked_until: lockedUntil,
-      updated_at: now,
-    })
-    .eq('user_id', userId);
+async function recordPinFailure(admin: SupabaseAdminClient, userId: string) {
+  const { error } = await admin.rpc('app_record_wallet_pin_failure', {
+    p_user_id: userId,
+    p_max_failures: MAX_PIN_FAILURES,
+    p_lock_seconds: Math.ceil(PIN_LOCK_WINDOW_MS / 1000),
+  });
 
   if (error) {
     throw new Error(error.message);
   }
 }
 
-async function clearPinFailures(admin: SupabaseClient, userId: string) {
+async function clearPinFailures(admin: SupabaseAdminClient, userId: string) {
   const { error } = await admin
     .schema('private')
     .from('wallet_pin_secrets')
@@ -475,7 +522,7 @@ async function clearPinFailures(admin: SupabaseClient, userId: string) {
 }
 
 async function enqueueOtpDelivery(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   args: {
     userId: string;
     destination: string;
@@ -511,7 +558,7 @@ async function enqueueOtpDelivery(
 }
 
 async function createStepUpChallenge(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   auth: AuthenticatedRequest,
   purpose: StepUpPurpose,
 ) {
@@ -521,8 +568,8 @@ async function createStepUpChallenge(
     throw new Error('A verified email or phone number is required for wallet verification.');
   }
 
-  const otpCode = String(Math.floor(100000 + Math.random() * 900000));
-  const otpHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
+  const otpCode = generateSecureOtp();
+  const otpHash = await sha256Hex(`${getWalletStepUpSecret()}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
   const expiresAt = new Date(Date.now() + OTP_TTL_MS).toISOString();
 
   const { data, error } = await admin
@@ -562,9 +609,9 @@ async function createStepUpChallenge(
   };
 }
 
-async function issueStepUpToken(admin: SupabaseClient, userId: string, purpose: StepUpPurpose) {
+async function issueStepUpToken(admin: SupabaseAdminClient, userId: string, purpose: StepUpPurpose) {
   const rawToken = `${crypto.randomUUID()}.${crypto.randomUUID()}`;
-  const tokenHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${rawToken}`);
+  const tokenHash = await sha256Hex(`${getWalletStepUpSecret()}:${rawToken}`);
   const expiresAt = new Date(Date.now() + STEP_UP_TOKEN_TTL_MS).toISOString();
 
   const { error } = await admin
@@ -586,12 +633,12 @@ async function issueStepUpToken(admin: SupabaseClient, userId: string, purpose: 
 }
 
 async function consumeStepUpToken(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   userId: string,
   purpose: StepUpPurpose,
   verificationToken: string,
 ) {
-  const tokenHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${verificationToken}`);
+  const tokenHash = await sha256Hex(`${getWalletStepUpSecret()}:${verificationToken}`);
   const now = new Date().toISOString();
   const { data, error } = await admin
     .schema('private')
@@ -610,14 +657,21 @@ async function consumeStepUpToken(
     throw new Error('A fresh verification token is required for this wallet action.');
   }
 
-  const { error: updateError } = await admin
+  const { data: consumed, error: updateError } = await admin
     .schema('private')
     .from('wallet_step_up_tokens')
     .update({ consumed_at: now })
-    .eq('token_id', data.token_id);
+    .eq('token_id', data.token_id)
+    .is('consumed_at', null)
+    .gt('expires_at', now)
+    .select('token_id')
+    .maybeSingle();
 
   if (updateError) {
     throw new Error(updateError.message);
+  }
+  if (!consumed) {
+    throw new Error('This verification token has already been used or has expired.');
   }
 }
 
@@ -736,25 +790,7 @@ async function verifyStripeWebhookSignature(payload: string, signatureHeader: st
   if (!STRIPE_WEBHOOK_SECRET) {
     throw new Error('Stripe webhook secret is not configured.');
   }
-  if (!signatureHeader) {
-    throw new Error('Missing Stripe signature header.');
-  }
-
-  const elements = Object.fromEntries(
-    signatureHeader.split(',').map((part) => {
-      const [key, value] = part.split('=');
-      return [key, value];
-    }),
-  );
-
-  const timestamp = elements.t;
-  const signed = elements.v1;
-  if (!timestamp || !signed) {
-    throw new Error('Invalid Stripe signature header.');
-  }
-
-  const expected = await hmacSha256Hex(STRIPE_WEBHOOK_SECRET, `${timestamp}.${payload}`);
-  if (!timingSafeEqual(expected, signed)) {
+  if (!await verifyTimestampedHmacSignature(STRIPE_WEBHOOK_SECRET, payload, signatureHeader)) {
     throw new Error('Stripe webhook signature verification failed.');
   }
 }
@@ -773,7 +809,7 @@ async function verifyLocalGatewaySignature(payload: string, signatureHeader: str
 }
 
 async function createPaymentIntentRecord(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   args: {
     userId: string;
     purpose: PaymentIntentPurpose;
@@ -824,25 +860,57 @@ async function createPaymentIntentRecord(
 }
 
 async function updatePaymentIntentRecord(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   paymentIntentId: string,
   patch: Record<string, unknown>,
 ) {
-  const { data, error } = await admin
+  let updateQuery = admin
     .from('wallet_payment_intents')
     .update({ ...patch, updated_at: new Date().toISOString() })
-    .eq('payment_intent_id', paymentIntentId)
-    .select('*')
-    .single();
+    .eq('payment_intent_id', paymentIntentId);
 
+  if (typeof patch.status === 'string') {
+    if (patch.status === 'succeeded') {
+      updateQuery = updateQuery.neq('status', 'cancelled');
+    } else if (patch.status === 'failed') {
+      updateQuery = updateQuery.neq('status', 'succeeded').neq('status', 'cancelled');
+    } else if (patch.status === 'cancelled') {
+      updateQuery = updateQuery
+        .neq('status', 'succeeded')
+        .neq('status', 'failed')
+        .neq('status', 'cancelled');
+    } else {
+      updateQuery = updateQuery
+        .neq('status', 'succeeded')
+        .neq('status', 'failed')
+        .neq('status', 'cancelled');
+    }
+  }
+
+  const { data, error } = await updateQuery.select('*').maybeSingle();
   if (error) {
     throw new Error(error.message);
   }
+  if (data) {
+    return data;
+  }
 
-  return data;
+  // A webhook may have committed a terminal state after the caller read the
+  // intent. Return that authoritative row instead of overwriting or failing.
+  const { data: current, error: currentError } = await admin
+    .from('wallet_payment_intents')
+    .select('*')
+    .eq('payment_intent_id', paymentIntentId)
+    .single();
+
+  if (currentError) {
+    throw new Error(currentError.message);
+  }
+
+  return current;
 }
 
-async function findPaymentIntentByProviderPaymentId(admin: SupabaseClient, providerPaymentId: string) {
+async function findPaymentIntentByProviderPaymentId(admin: SupabaseAdminClient, providerPaymentId: string) {
   const { data, error } = await admin
     .from('wallet_payment_intents')
     .select('*')
@@ -856,7 +924,7 @@ async function findPaymentIntentByProviderPaymentId(admin: SupabaseClient, provi
   return data;
 }
 
-async function getDefaultPaymentMethod(admin: SupabaseClient, userId: string) {
+async function getDefaultPaymentMethod(admin: SupabaseAdminClient, userId: string) {
   const { data, error } = await admin
     .from('wallet_payment_methods')
     .select('*')
@@ -882,7 +950,7 @@ function buildPaymentIntentStatusResponse(intent: Record<string, unknown>) {
 }
 
 async function reconcilePaymentIntentStatus(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   intent: Record<string, unknown>,
 ) {
   const currentStatus = String(intent.status ?? 'processing');
@@ -927,7 +995,7 @@ async function reconcilePaymentIntentStatus(
   };
 }
 
-async function findDriverUserIdForTrip(admin: SupabaseClient, tripId: string) {
+async function findDriverUserIdForTrip(admin: SupabaseAdminClient, tripId: string) {
   const { data, error } = await admin
     .from('trips')
     .select('driver_id')
@@ -953,21 +1021,26 @@ async function findDriverUserIdForTrip(admin: SupabaseClient, tripId: string) {
 }
 
 async function findBeneficiaryUserId(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   intent: Record<string, unknown>,
 ): Promise<string | null> {
-  const metadata = (intent.metadata && typeof intent.metadata === 'object' && !Array.isArray(intent.metadata))
-    ? intent.metadata as Record<string, unknown>
-    : {};
-  const explicitBeneficiary = normalizeString(metadata.beneficiaryUserId);
-  if (explicitBeneficiary) return explicitBeneficiary;
-
   const referenceType = normalizeString(intent.reference_type);
   const referenceId = normalizeString(intent.reference_id);
   if (!referenceType || !referenceId) return null;
 
-  if (referenceType === 'trip') {
+  if (referenceType === 'trip' || referenceType === 'ride') {
     return findDriverUserIdForTrip(admin, referenceId);
+  }
+
+  if (referenceType === 'package') {
+    const { data, error } = await admin
+      .from('packages')
+      .select('trip_id')
+      .eq('package_id', referenceId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data?.trip_id) return null;
+    return findDriverUserIdForTrip(admin, String(data.trip_id));
   }
 
   if (referenceType === 'booking') {
@@ -984,8 +1057,82 @@ async function findBeneficiaryUserId(
   return null;
 }
 
+async function validatePaymentIntentReference(
+  admin: SupabaseAdminClient,
+  userId: string,
+  purpose: 'ride_payment' | 'package_payment',
+  referenceType: string | null,
+  referenceId: string | null,
+  amount: number,
+): Promise<{ referenceType: string; referenceId: string }> {
+  if (!referenceType || !referenceId) {
+    throw new Error('A valid payment reference is required.');
+  }
+
+  if (purpose === 'ride_payment') {
+    let bookingQuery = admin
+      .from('bookings')
+      .select('booking_id, trip_id, passenger_id, total_price, amount, booking_status, status')
+      .eq('passenger_id', userId);
+
+    if (referenceType === 'booking') {
+      bookingQuery = bookingQuery.eq('booking_id', referenceId);
+    } else if (referenceType === 'ride' || referenceType === 'trip') {
+      bookingQuery = bookingQuery.eq('trip_id', referenceId);
+    } else {
+      throw new Error('Ride payments must reference your own booking or trip.');
+    }
+
+    const { data: booking, error } = await bookingQuery.maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!booking) throw new Error('A booking owned by the authenticated passenger was not found.');
+
+    const bookingStatus = String(booking.booking_status ?? '').toLowerCase();
+    const runtimeStatus = String(booking.status ?? '').toLowerCase();
+    if (
+      ['cancelled', 'rejected', 'completed'].includes(bookingStatus) ||
+      ['cancelled', 'rejected', 'completed'].includes(runtimeStatus)
+    ) {
+      throw new Error('This booking is not eligible for payment.');
+    }
+
+    const expectedAmount = toNumber(booking.total_price ?? booking.amount, 0);
+    if (expectedAmount <= 0 || Math.abs(expectedAmount - amount) > 0.001) {
+      throw new Error('Payment amount does not match the server-calculated booking total.');
+    }
+    return {
+      referenceType: 'booking',
+      referenceId: String(booking.booking_id),
+    };
+  }
+
+  if (referenceType !== 'package') {
+    throw new Error('Package payments must reference a package.');
+  }
+
+  const { data: packageRow, error } = await admin
+    .from('packages')
+    .select('package_id, sender_id, trip_id, fee_amount, delivery_fee, status, package_status')
+    .eq('package_id', referenceId)
+    .eq('sender_id', userId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!packageRow) throw new Error('A package owned by the authenticated sender was not found.');
+  if (!packageRow.trip_id) throw new Error('This package must be matched to a trip before payment.');
+
+  const expectedAmount = toNumber(packageRow.fee_amount ?? packageRow.delivery_fee, 0);
+  if (expectedAmount <= 0 || Math.abs(expectedAmount - amount) > 0.001) {
+    throw new Error('Payment amount does not match the server-calculated package fee.');
+  }
+  return {
+    referenceType: 'package',
+    referenceId: String(packageRow.package_id),
+  };
+}
+
 async function createEscrowForIntent(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   intent: Record<string, unknown>,
 ) {
   const payerUserId = String(intent.user_id);
@@ -997,6 +1144,7 @@ async function createEscrowForIntent(
   const payerInfra = await ensureWalletInfrastructure(admin, payerUserId);
   const beneficiaryInfra = await ensureWalletInfrastructure(admin, beneficiaryUserId);
   const escrowLedgerAccount = await createEscrowLedgerAccount(admin, {
+    paymentIntentId: String(intent.payment_intent_id),
     currencyCode: String(intent.currency_code ?? 'JOD'),
     accountName: `Escrow ${String(intent.purpose)} ${String(intent.reference_id ?? intent.payment_intent_id)}`,
     metadata: {
@@ -1052,129 +1200,57 @@ async function createEscrowForIntent(
   });
 
   const now = new Date().toISOString();
+  const escrowPayload = {
+    payer_user_id: payerUserId,
+    beneficiary_user_id: beneficiaryUserId,
+    payer_account_id: payerInfra.availableAccount.account_id,
+    beneficiary_account_id: beneficiaryInfra.availableAccount.account_id,
+    ledger_account_id: escrowLedgerAccount.account_id,
+    payment_intent_id: intent.payment_intent_id,
+    hold_transaction_id: transactionId,
+    escrow_type: escrowType,
+    reference_id: intent.reference_id,
+    amount,
+    currency_code: intent.currency_code,
+    escrow_state: 'held',
+    held_at: now,
+    created_at: now,
+    updated_at: now,
+    metadata: {
+      paymentMethodType: intent.payment_method_type,
+      providerName: intent.provider_name,
+    },
+  };
   const { data: escrow, error } = await admin
     .from('escrow_accounts')
-    .insert({
-      payer_user_id: payerUserId,
-      beneficiary_user_id: beneficiaryUserId,
-      payer_account_id: payerInfra.availableAccount.account_id,
-      beneficiary_account_id: beneficiaryInfra.availableAccount.account_id,
-      ledger_account_id: escrowLedgerAccount.account_id,
-      payment_intent_id: intent.payment_intent_id,
-      hold_transaction_id: transactionId,
-      escrow_type: escrowType,
-      reference_id: intent.reference_id,
-      amount,
-      currency_code: intent.currency_code,
-      escrow_state: 'held',
-      held_at: now,
-      created_at: now,
-      updated_at: now,
-      metadata: {
-        paymentMethodType: intent.payment_method_type,
-        providerName: intent.provider_name,
-      },
-    })
+    .upsert(escrowPayload, { onConflict: 'payment_intent_id', ignoreDuplicates: true })
     .select('*')
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return { escrow, transactionId };
-}
-
-async function activateSubscriptionForIntent(
-  admin: SupabaseClient,
-  intent: Record<string, unknown>,
-) {
-  const userId = String(intent.user_id);
-  const metadata = (intent.metadata && typeof intent.metadata === 'object' && !Array.isArray(intent.metadata))
-    ? intent.metadata as Record<string, unknown>
-    : {};
-  const planName = normalizeString(metadata.planName) ?? 'Wasel Plus';
-  const planCode = normalizeString(metadata.planCode) ?? 'wasel-plus';
-  const corridorId = normalizeString(metadata.corridorId);
-  const amount = toNumber(intent.amount);
-  const currencyCode = String(intent.currency_code ?? 'JOD');
-  const providerName = String(intent.provider_name);
-
-  if (String(intent.payment_method_type) === 'wallet') {
-    const infra = await ensureWalletInfrastructure(admin, userId);
-    const revenueAccount = await getSystemAccount(admin, 'revenue', currencyCode);
-    await postLedgerTransaction(admin, {
-      transactionType: 'payment',
-      transactionStatus: 'completed',
-      initiatedByUserId: userId,
-      amount,
-      currencyCode,
-      description: `${planName} subscription payment`,
-      referenceType: 'subscription',
-      referenceId: String(intent.payment_intent_id),
-      metadata: { planCode, planName, corridorId },
-      entries: [
-        { account_id: String(infra.availableAccount.account_id), entry_side: 'debit', amount },
-        { account_id: String(revenueAccount.account_id), entry_side: 'credit', amount },
-      ],
-      participants: [userId],
-      paymentIntentId: String(intent.payment_intent_id),
-      idempotencyKey: `subscription:${String(intent.payment_intent_id)}`,
-    });
-  } else {
-    const providerClearing = await getSystemAccount(admin, 'provider_clearing', currencyCode);
-    const revenueAccount = await getSystemAccount(admin, 'revenue', currencyCode);
-    await postLedgerTransaction(admin, {
-      transactionType: 'payment',
-      transactionStatus: 'completed',
-      initiatedByUserId: userId,
-      amount,
-      currencyCode,
-      description: `${planName} subscription payment`,
-      referenceType: 'subscription',
-      referenceId: String(intent.payment_intent_id),
-      metadata: { planCode, planName, corridorId },
-      entries: [
-        { account_id: String(providerClearing.account_id), entry_side: 'debit', amount },
-        { account_id: String(revenueAccount.account_id), entry_side: 'credit', amount },
-      ],
-      participants: [userId],
-      paymentIntentId: String(intent.payment_intent_id),
-      idempotencyKey: `subscription:${String(intent.payment_intent_id)}`,
-    });
+  if (escrow) {
+    return { escrow, transactionId };
   }
 
-  const renewalAt = new Date(Date.now() + 30 * 24 * 60 * 60_000).toISOString();
-  const now = new Date().toISOString();
-  const { data, error } = await admin
-    .from('wallet_subscriptions')
-    .upsert({
-      user_id: userId,
-      provider_name: providerName,
-      provider_subscription_id: normalizeString(metadata.providerSubscriptionId),
-      plan_code: planCode,
-      plan_name: planName,
-      amount,
-      currency_code: currencyCode,
-      subscription_status: 'active',
-      corridor_id: corridorId,
-      renewal_at: renewalAt,
-      metadata,
-      created_at: now,
-      updated_at: now,
-    }, { onConflict: 'user_id' })
+  const { data: existingEscrow, error: existingEscrowError } = await admin
+    .from('escrow_accounts')
     .select('*')
+    .eq('payment_intent_id', String(intent.payment_intent_id))
     .single();
 
-  if (error) {
-    throw new Error(error.message);
+  if (existingEscrowError || !existingEscrow) {
+    throw new Error(existingEscrowError?.message ?? 'Could not retrieve the existing escrow settlement.');
   }
 
-  return data;
+  return { escrow: existingEscrow, transactionId };
 }
+
 
 async function settlePaymentIntent(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   intent: Record<string, unknown>,
 ) {
   const purpose = String(intent.purpose);
@@ -1183,6 +1259,9 @@ async function settlePaymentIntent(
   }
 
   if (purpose === 'deposit') {
+    if (String(intent.payment_method_type) === 'wallet') {
+      throw new Error('Wallet balance cannot be used to fund a wallet deposit.');
+    }
     const infra = await ensureWalletInfrastructure(admin, String(intent.user_id));
     const providerClearing = await getSystemAccount(admin, 'provider_clearing', String(intent.currency_code ?? 'JOD'));
     await postLedgerTransaction(admin, {
@@ -1212,15 +1291,14 @@ async function settlePaymentIntent(
   }
 
   if (purpose === 'subscription') {
-    await activateSubscriptionForIntent(admin, intent);
-    return;
+    throw new Error('Subscription settlement is disabled until server-side plan pricing is configured.');
   }
 
   throw new Error('Withdrawal payment intents are not supported for wallet settlement.');
 }
 
 async function releaseEscrow(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   escrowId: string,
   actorUserId: string,
 ) {
@@ -1272,7 +1350,7 @@ async function releaseEscrow(
 }
 
 async function refundEscrow(
-  admin: SupabaseClient,
+  admin: SupabaseAdminClient,
   escrowId: string,
   actorUserId: string,
 ) {
@@ -1328,7 +1406,7 @@ function inferSubscriptionType(planCode: string): 'plus' | 'commuter-pass' {
   return planCode.includes('corridor') || planCode.includes('commuter') ? 'commuter-pass' : 'plus';
 }
 
-async function buildWalletSnapshot(admin: SupabaseClient, userId: string) {
+async function buildWalletSnapshot(admin: SupabaseAdminClient, userId: string) {
   const { profile } = await ensureWalletInfrastructure(admin, userId);
   const [balancesResult, paymentMethodsResult, subscriptionsResult, escrowsResult, pinSecret, accountIds] = await Promise.all([
     admin
@@ -1571,7 +1649,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'set-pin', WALLET_VERIFY_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'set-pin', WALLET_VERIFY_RATE_LIMIT);
       const body = await readJsonBody(request);
       const pin = normalizeString(body.pin);
       if (!pin || !/^\d{4}$/.test(pin)) {
@@ -1590,7 +1668,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'verify-pin', WALLET_VERIFY_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'verify-pin', WALLET_PIN_VERIFY_RATE_LIMIT);
       const body = await readJsonBody(request);
       const pin = normalizeString(body.pin);
       const purpose = normalizeString(body.purpose);
@@ -1612,9 +1690,9 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         return runtime.json({ error: 'Wallet PIN is temporarily locked. Please wait and try again.' }, 429);
       }
 
-      const expectedHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${pin}`);
+      const expectedHash = await sha256Hex(`${getWalletStepUpSecret()}:${pin}`);
       if (!timingSafeEqual(String(pinSecret.pin_hash), expectedHash)) {
-        await recordPinFailure(auth.admin, auth.canonicalUser.id, toNumber(pinSecret.failed_attempts));
+        await recordPinFailure(auth.admin, auth.canonicalUser.id);
         return runtime.json({ error: 'Wallet PIN verification failed.' }, 401);
       }
 
@@ -1657,28 +1735,54 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       if (challenge.verified_at || new Date(String(challenge.expires_at)).getTime() <= Date.now()) {
         return runtime.json({ error: 'This verification challenge has expired.' }, 400);
       }
+      if (toNumber(challenge.attempts_count) >= MAX_OTP_ATTEMPTS) {
+        return runtime.json({ error: 'This verification challenge has reached its attempt limit.' }, 429);
+      }
 
-      const otpHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
+      const now = new Date().toISOString();
+      const otpHash = await sha256Hex(`${getWalletStepUpSecret()}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
       if (!timingSafeEqual(String(challenge.otp_hash), otpHash)) {
-        await auth.admin
+        const { data: failedAttempt, error: attemptError } = await auth.admin
           .schema('private')
           .from('wallet_step_up_challenges')
           .update({
             attempts_count: toNumber(challenge.attempts_count) + 1,
-            updated_at: new Date().toISOString(),
+            updated_at: now,
           })
-          .eq('challenge_id', challenge.challenge_id);
+          .eq('challenge_id', challenge.challenge_id)
+          .eq('attempts_count', toNumber(challenge.attempts_count))
+          .is('verified_at', null)
+          .gt('expires_at', now)
+          .lt('attempts_count', MAX_OTP_ATTEMPTS)
+          .select('challenge_id')
+          .maybeSingle();
+
+        if (attemptError) throw new Error(attemptError.message);
+        if (!failedAttempt) {
+          return runtime.json({ error: 'This verification challenge has expired or reached its attempt limit.' }, 429);
+        }
         return runtime.json({ error: 'OTP verification failed.' }, 401);
       }
 
-      await auth.admin
+      const { data: verifiedChallenge, error: verifyError } = await auth.admin
         .schema('private')
         .from('wallet_step_up_challenges')
         .update({
-          verified_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          verified_at: now,
+          updated_at: now,
         })
-        .eq('challenge_id', challenge.challenge_id);
+        .eq('challenge_id', challenge.challenge_id)
+        .eq('attempts_count', toNumber(challenge.attempts_count))
+        .is('verified_at', null)
+        .gt('expires_at', now)
+        .lt('attempts_count', MAX_OTP_ATTEMPTS)
+        .select('challenge_id')
+        .maybeSingle();
+
+      if (verifyError) throw new Error(verifyError.message);
+      if (!verifiedChallenge) {
+        return runtime.json({ error: 'This verification challenge has already been used or has expired.' }, 409);
+      }
 
       const token = await issueStepUpToken(auth.admin, auth.canonicalUser.id, purpose);
       return runtime.json({
@@ -1700,15 +1804,17 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'payment-intent', WALLET_MUTATION_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'payment-intent', WALLET_MUTATION_RATE_LIMIT);
       const body = await readJsonBody(request);
       const purpose = normalizeString(body.purpose);
       const paymentMethodType = normalizeString(body.paymentMethodType);
       const amount = toNumber(body.amount);
       const currency = normalizeCurrency(body.currency);
-      const referenceType = normalizeString(body.referenceType);
-      const referenceId = normalizeString(body.referenceId);
-      const idempotencyKey = normalizeString(body.idempotencyKey) ?? `wallet-intent:${auth.canonicalUser.id}:${crypto.randomUUID()}`;
+      let referenceType = normalizeString(body.referenceType);
+      let referenceId = normalizeString(body.referenceId);
+      const requestedReferenceType = referenceType;
+      const requestedReferenceId = referenceId;
+      const clientIdempotencyKey = normalizeString(body.idempotencyKey);
       const metadata = body.metadata && typeof body.metadata === 'object' && !Array.isArray(body.metadata)
         ? body.metadata as Record<string, unknown>
         : {};
@@ -1722,6 +1828,111 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       if (amount <= 0) {
         return runtime.json({ error: 'Amount must be greater than zero.' }, 400);
       }
+      if (purpose === 'withdrawal') {
+        return runtime.json({ error: 'Use the wallet withdrawal operation for withdrawals.' }, 400);
+      }
+      if (purpose === 'subscription') {
+        return runtime.json(
+          { error: 'Subscription checkout is temporarily unavailable until server-side plan pricing is configured.' },
+          503,
+        );
+      }
+      if (purpose === 'deposit' && paymentMethodType === 'wallet') {
+        return runtime.json({ error: 'Wallet balance cannot be used to fund a wallet deposit.' }, 400);
+      }
+      if (purpose === 'ride_payment' || purpose === 'package_payment') {
+        const canonicalReference = await validatePaymentIntentReference(
+          auth.admin,
+          auth.canonicalUser.id,
+          purpose,
+          referenceType,
+          referenceId,
+          amount,
+        );
+        referenceType = canonicalReference.referenceType;
+        referenceId = canonicalReference.referenceId;
+
+        const activeStatuses = [
+          'created',
+          'requires_confirmation',
+          'requires_action',
+          'processing',
+          'webhook_received',
+          'succeeded',
+        ];
+        const { data: canonicalIntent, error: canonicalIntentError } = await auth.admin
+          .from('wallet_payment_intents')
+          .select('*')
+          .eq('user_id', auth.canonicalUser.id)
+          .eq('purpose', purpose)
+          .eq('reference_type', referenceType)
+          .eq('reference_id', referenceId)
+          .in('status', activeStatuses)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (canonicalIntentError) throw new Error(canonicalIntentError.message);
+        let existingIntent = canonicalIntent;
+
+        // Catch legacy ride/trip references that predate canonical booking IDs.
+        if (
+          !existingIntent &&
+          purpose === 'ride_payment' &&
+          requestedReferenceId &&
+          (requestedReferenceType === 'ride' || requestedReferenceType === 'trip')
+        ) {
+          const { data: legacyIntent, error: legacyIntentError } = await auth.admin
+            .from('wallet_payment_intents')
+            .select('*')
+            .eq('user_id', auth.canonicalUser.id)
+            .eq('purpose', purpose)
+            .in('reference_type', ['ride', 'trip'])
+            .eq('reference_id', requestedReferenceId)
+            .in('status', activeStatuses)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (legacyIntentError) throw new Error(legacyIntentError.message);
+          existingIntent = legacyIntent;
+        }
+
+        if (existingIntent) {
+          if (Math.abs(toNumber(existingIntent.amount) - amount) > 0.001) {
+            return runtime.json(
+              { error: 'A payment attempt already exists for this booking with a different amount.' },
+              409,
+            );
+          }
+          return runtime.json({
+            id: String(existingIntent.payment_intent_id),
+            purpose: String(existingIntent.purpose),
+            status: String(existingIntent.status),
+            amount: toNumber(existingIntent.amount),
+            currency: normalizeCurrency(existingIntent.currency_code),
+            paymentMethodType: String(existingIntent.payment_method_type),
+            provider: String(existingIntent.provider_name),
+            clientSecret: normalizeString(existingIntent.provider_client_secret),
+            redirectUrl: normalizeString(existingIntent.redirect_url),
+            createdAt: String(existingIntent.created_at),
+            referenceType: normalizeString(existingIntent.reference_type),
+            referenceId: normalizeString(existingIntent.reference_id),
+          });
+        }
+      }
+
+      const idempotencyKey = clientIdempotencyKey
+        ? `wasel:${auth.canonicalUser.id}:${await sha256Hex([
+            clientIdempotencyKey,
+            purpose,
+            amount.toFixed(3),
+            currency,
+            paymentMethodType,
+            referenceType ?? '',
+            referenceId ?? '',
+          ].join('|'))}`
+        : `wasel:${auth.canonicalUser.id}:${crypto.randomUUID()}`;
 
       let providerName: WalletProviderName;
       if (paymentMethodType === 'card') providerName = 'stripe';
@@ -1806,7 +2017,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'confirm-payment', WALLET_MUTATION_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'confirm-payment', WALLET_MUTATION_RATE_LIMIT);
       const body = await readJsonBody(request);
       const paymentIntentId = normalizeString(body.paymentIntentId);
       const paymentMethodId = normalizeString(body.paymentMethodId);
@@ -1825,7 +2036,9 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       if (!intent) return runtime.json({ error: 'Payment intent was not found.' }, 404);
 
       if (String(intent.provider_name) === 'wallet') {
-        await settlePaymentIntent(auth.admin, intent as Record<string, unknown>);
+        if (canTransitionPaymentStatus(String(intent.status), 'succeeded')) {
+          await settlePaymentIntent(auth.admin, intent as Record<string, unknown>);
+        }
         const updated = await updatePaymentIntentRecord(auth.admin, String(intent.payment_intent_id), {
           status: 'succeeded',
           confirmed_at: new Date().toISOString(),
@@ -1855,7 +2068,10 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         );
         const mappedStatus = mapStripePaymentStatus(stripePayload.status);
 
-        if (mappedStatus === 'succeeded' && String(intent.status) !== 'succeeded') {
+        if (
+          mappedStatus === 'succeeded' &&
+          canTransitionPaymentStatus(String(intent.status), mappedStatus)
+        ) {
           await settlePaymentIntent(auth.admin, intent as Record<string, unknown>);
         }
 
@@ -1894,7 +2110,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'payment-status', WALLET_MUTATION_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'payment-status', WALLET_MUTATION_RATE_LIMIT);
       const body = await readJsonBody(request);
       const paymentIntentId = normalizeString(body.paymentIntentId);
       if (!paymentIntentId) {
@@ -1922,12 +2138,22 @@ export function createWalletHandlers(runtime: WalletRuntime) {
   }
 
   async function handlePaymentWebhook(request: Request) {
+    let admin: SupabaseAdminClient | null = null;
+    let providerName = 'stripe';
+    let providerEventId = '';
+    let processingToken = '';
+    let requestValidated = false;
+
     try {
-      const provider = normalizeString(request.headers.get('x-wallet-provider')) ?? 'stripe';
+      providerName = normalizeString(request.headers.get('x-wallet-provider')) ?? 'stripe';
+      if (!['stripe', 'cliq', 'aman', 'wallet'].includes(providerName)) {
+        return runtime.json({ error: 'Unsupported payment provider.' }, 400);
+      }
+
       const rawPayload = await request.text();
       let eventBody: Record<string, unknown>;
 
-      if (provider === 'stripe') {
+      if (providerName === 'stripe') {
         await verifyStripeWebhookSignature(rawPayload, request.headers.get('stripe-signature'));
         eventBody = JSON.parse(rawPayload) as Record<string, unknown>;
       } else {
@@ -1935,77 +2161,152 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         eventBody = JSON.parse(rawPayload) as Record<string, unknown>;
       }
 
-      const providerEventId = normalizeString(eventBody.id)
+      requestValidated = true;
+      providerEventId = normalizeString(eventBody.id)
         ?? normalizeString(eventBody.providerEventId)
-        ?? crypto.randomUUID();
+        ?? '';
 
-      const admin = runtime.getAdminClient();
-      const { error: eventInsertError } = await admin
-        .from('payment_webhook_events')
-        .upsert({
-          provider_name: provider,
-          provider_event_id: providerEventId,
-          signature: request.headers.get('stripe-signature') ?? request.headers.get('x-wallet-signature'),
-          payload: eventBody,
-          created_at: new Date().toISOString(),
-        }, { onConflict: 'provider_name,provider_event_id' });
-
-      if (eventInsertError) {
-        throw new Error(eventInsertError.message);
+      if (!providerEventId) {
+        return runtime.json({ error: 'A stable provider event ID is required.' }, 400);
       }
 
+      admin = runtime.getAdminClient();
+      processingToken = crypto.randomUUID();
+      const { data: claimed, error: claimError } = await admin.rpc('app_claim_payment_webhook_event', {
+        p_provider_name: providerName,
+        p_provider_event_id: providerEventId,
+        p_signature: request.headers.get('stripe-signature') ?? request.headers.get('x-wallet-signature'),
+        p_payload: eventBody,
+        p_lease_seconds: 300,
+        p_processing_token: processingToken,
+      });
+
+      if (claimError) {
+        throw new Error(claimError.message);
+      }
+
+      if (claimed === 'processed') {
+        return runtime.json({ ok: true, duplicate: true });
+      }
+      if (claimed !== 'claimed') {
+        return runtime.json({ error: 'Payment event is already being processed. Retry shortly.' }, 503);
+      }
+
+      const completeEvent = async (paymentUpdate?: {
+        paymentIntentId: string;
+        status: string;
+        lastError?: string | null;
+      }) => {
+        const { data, error } = await admin!.rpc('app_complete_payment_webhook_event', {
+          p_provider_name: providerName,
+          p_provider_event_id: providerEventId,
+          p_processing_token: processingToken,
+          p_payment_intent_id: paymentUpdate?.paymentIntentId ?? null,
+          p_payment_status: paymentUpdate?.status ?? null,
+          p_last_error: paymentUpdate?.lastError ?? null,
+        });
+        if (error || data !== true) {
+          throw new Error(error?.message ?? 'Could not complete payment webhook event.');
+        }
+      };
+
       let intent: Record<string, unknown> | null = null;
-      if (provider === 'stripe') {
+      if (providerName === 'stripe') {
         const object = ((eventBody.data as Record<string, unknown> | undefined)?.object as Record<string, unknown> | undefined) ?? {};
         const providerPaymentId = normalizeString(object.id);
         if (!providerPaymentId) {
+          await completeEvent();
           return runtime.json({ ok: true });
         }
+
         intent = await findPaymentIntentByProviderPaymentId(admin, providerPaymentId) as Record<string, unknown> | null;
         if (!intent) {
+          await completeEvent();
           return runtime.json({ ok: true });
         }
 
         const eventType = normalizeString(eventBody.type);
-        const mappedStatus = mapStripePaymentStatus(object.status);
-        if (mappedStatus === 'succeeded' && String(intent.status) !== 'succeeded') {
+        const stripeEventStatuses: Record<string, string> = {
+          'payment_intent.succeeded': 'succeeded',
+          'payment_intent.payment_failed': 'failed',
+          'payment_intent.canceled': 'cancelled',
+          'payment_intent.processing': 'processing',
+          'payment_intent.requires_action': 'requires_action',
+        };
+        const nextStatus = eventType ? stripeEventStatuses[eventType] : undefined;
+
+        if (!nextStatus || !canTransitionPaymentStatus(String(intent.status), nextStatus)) {
+          await completeEvent();
+          return runtime.json({ ok: true, ignored: true });
+        }
+
+        if (eventType === 'payment_intent.succeeded') {
           await settlePaymentIntent(admin, intent);
         }
 
-        await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
-          status: eventType === 'payment_intent.payment_failed' ? 'failed' : mappedStatus,
-          last_error: normalizeString(((object.last_payment_error as Record<string, unknown> | undefined)?.message)),
-        });
+        if (String(intent.status) !== 'succeeded' || nextStatus === 'succeeded') {
+          await completeEvent({
+            paymentIntentId: String(intent.payment_intent_id),
+            status: nextStatus,
+            lastError: normalizeString(
+              (object.last_payment_error as Record<string, unknown> | undefined)?.message,
+            ),
+          });
+          return runtime.json({ ok: true });
+        }
       } else {
         const providerPaymentId = normalizeString(eventBody.providerPaymentId) ?? normalizeString(eventBody.paymentIntentId);
         if (!providerPaymentId) {
+          await completeEvent();
           return runtime.json({ ok: true });
         }
+
         intent = await findPaymentIntentByProviderPaymentId(admin, providerPaymentId) as Record<string, unknown> | null;
         if (!intent) {
+          await completeEvent();
           return runtime.json({ ok: true });
         }
+
         const status = normalizeString(eventBody.status);
         if (status === 'succeeded') {
           await settlePaymentIntent(admin, intent);
-          await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), { status: 'succeeded' });
-        } else if (status === 'failed') {
-          await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
+          if (String(intent.status) !== 'succeeded') {
+            await completeEvent({
+              paymentIntentId: String(intent.payment_intent_id),
+              status: 'succeeded',
+            });
+            return runtime.json({ ok: true });
+          }
+        } else if (status === 'failed' && String(intent.status) !== 'succeeded') {
+          await completeEvent({
+            paymentIntentId: String(intent.payment_intent_id),
             status: 'failed',
-            last_error: normalizeString(eventBody.error),
+            lastError: normalizeString(eventBody.error),
           });
+          return runtime.json({ ok: true });
         }
       }
 
-      await admin
-        .from('payment_webhook_events')
-        .update({ processed_at: new Date().toISOString(), processing_error: null })
-        .eq('provider_name', provider)
-        .eq('provider_event_id', providerEventId);
-
+      await completeEvent();
       return runtime.json({ ok: true });
     } catch (error) {
-      return runtime.json({ error: sanitizeEdgeErrorMessage(error) }, 400);
+      if (admin && providerEventId && processingToken) {
+        try {
+          await admin.rpc('app_fail_payment_webhook_event', {
+            p_provider_name: providerName,
+            p_provider_event_id: providerEventId,
+            p_processing_token: processingToken,
+            p_error: sanitizeEdgeErrorMessage(error),
+          });
+        } catch {
+          // The claim lease expires if the failure marker cannot be persisted.
+        }
+      }
+
+      return runtime.json(
+        { error: sanitizeEdgeErrorMessage(error) },
+        requestValidated ? 500 : 400,
+      );
     }
   }
 
@@ -2025,7 +2326,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'transfer', WALLET_TRANSFER_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'transfer', WALLET_TRANSFER_RATE_LIMIT);
       const body = await readJsonBody(request);
       const recipient = normalizeString(body.recipientUserId ?? body.recipient ?? body.recipientPhone);
       const amount = toNumber(body.amount);
@@ -2076,7 +2377,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'withdraw', WALLET_TRANSFER_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'withdraw', WALLET_TRANSFER_RATE_LIMIT);
       const body = await readJsonBody(request);
       const amount = toNumber(body.amount);
       const verificationToken = requireVerificationToken(body);
@@ -2154,7 +2455,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     if ('error' in auth) return auth.error;
 
     try {
-      await requireAllowedRate(runtime, request, auth.canonicalUser.id, 'payment-methods', WALLET_MUTATION_RATE_LIMIT);
+      await requireAllowedRate(runtime, auth.canonicalUser.id, 'payment-methods', WALLET_MUTATION_RATE_LIMIT);
       const body = await readJsonBody(request);
       const action = normalizeString(body.action) ?? 'add';
       const verificationToken = requireVerificationToken(body);

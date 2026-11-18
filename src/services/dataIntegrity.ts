@@ -81,7 +81,7 @@ export const bookingCreatePayloadSchema = z.object({
   seatsRequested: z.number().int().min(1).max(7),
   pickup: z.string().trim().max(120).optional(),
   dropoff: z.string().trim().max(120).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   bookingStatus: z.string().trim().optional(),
 });
 
@@ -95,7 +95,7 @@ export const pricingSnapshotPayloadSchema = z.object({
   demandScore: z.number().finite().min(0).max(100).optional(),
   pricePressure: z.string().trim().max(40).optional(),
   sourceContext: z.string().trim().max(120).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const communicationPreferenceUpdateSchema = z
@@ -116,10 +116,17 @@ export const communicationPreferenceUpdateSchema = z
   .refine(presentKeys, 'At least one communication preference must be provided');
 
 export function buildRequestId(operation: string): string {
-  const slug = operation.replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '').toLowerCase();
-  const entropy = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID().slice(0, 8)
-    : `${Date.now().toString(36)}${Math.floor(Math.random() * 1_000_000).toString(36)}`.slice(0, 8);
+  const slug = operation
+    .replace(/[^a-z0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase();
+  const entropy =
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID().slice(0, 8)
+      : `${Date.now().toString(36)}${Math.floor(Math.random() * 1_000_000).toString(36)}`.slice(
+          0,
+          8,
+        );
   return `${slug || 'write'}-${Date.now()}-${entropy}`;
 }
 
@@ -129,17 +136,21 @@ export function buildTraceHeaders(requestId: string, extraHeaders?: HeadersInit)
   return headers;
 }
 
+const SENSITIVE_LOG_FIELD_PATTERN =
+  /(?:^|_)(?:email|phone|user_id|auth_user_id|reviewer_id|reviewee_id|full_name|first_name|last_name|address|pickup|dropoff|location|password|passcode|otp|pin|token|secret|authorization|cookie|card|cvv|cvc|iban|bank_account|national_id|identity|date_of_birth|dob)(?:$|_)/i;
+
 export function sanitizePayload<T>(value: T): T {
   if (Array.isArray(value)) {
-    return value.map((entry) => sanitizePayload(entry)) as T;
+    return value.map(entry => sanitizePayload(entry)) as T;
   }
 
   if (value && typeof value === 'object') {
     const nextEntries = Object.entries(value as Record<string, unknown>)
       .filter(([, entry]) => entry !== undefined)
       .map(([key, entry]) => {
-        if (key === 'avatar_url' && typeof entry === 'string' && entry.startsWith('data:')) {
-          return [key, '[data-url]'] as const;
+        const normalizedKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+        if (SENSITIVE_LOG_FIELD_PATTERN.test(normalizedKey) || key === 'avatar_url') {
+          return [key, '[redacted]'] as const;
         }
         return [key, sanitizePayload(entry)];
       });
@@ -180,8 +191,12 @@ export function logDataFlow(entry: DataFlowLogEntry) {
 }
 
 function toErrorMessage(error: unknown) {
-  if (error instanceof Error) {return error.message;}
-  if (typeof error === 'string') {return error;}
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
   return 'Unknown write failure';
 }
 
@@ -200,7 +215,7 @@ function isTransientWriteError(error: unknown) {
 }
 
 async function sleep(ms: number) {
-  await new Promise((resolve) => setTimeout(resolve, ms));
+  await new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export function validatePayload<T>(schema: z.ZodType<T>, payload: unknown, operation: string): T {
@@ -209,11 +224,13 @@ export function validatePayload<T>(schema: z.ZodType<T>, payload: unknown, opera
     return parsed.data;
   }
 
-  const issues = parsed.error.issues.map((issue) => ({
+  const issues = parsed.error.issues.map(issue => ({
     path: issue.path.join('.'),
     message: issue.message,
   }));
-  throw new Error(`${operation} validation failed: ${issues.map((issue) => `${issue.path || 'payload'} ${issue.message}`).join('; ')}`);
+  throw new Error(
+    `${operation} validation failed: ${issues.map(issue => `${issue.path || 'payload'} ${issue.message}`).join('; ')}`,
+  );
 }
 
 export async function withDataIntegrity<TPayload, TResult>(args: {
@@ -239,9 +256,7 @@ export async function withDataIntegrity<TPayload, TResult>(args: {
   });
 
   const retryPolicy = args.retryPolicy ?? 'never';
-  const maxAttempts = retryPolicy === 'transient'
-    ? Math.max(1, args.maxAttempts ?? 2)
-    : 1;
+  const maxAttempts = retryPolicy === 'transient' ? Math.max(1, args.maxAttempts ?? 2) : 1;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
@@ -273,7 +288,8 @@ export async function withDataIntegrity<TPayload, TResult>(args: {
         payload: sanitizedPayload as Record<string, unknown>,
       };
 
-      const retryable = retryPolicy === 'transient' && attempt < maxAttempts && isTransientWriteError(error);
+      const retryable =
+        retryPolicy === 'transient' && attempt < maxAttempts && isTransientWriteError(error);
       logDataFlow({
         requestId,
         operation: args.operation,

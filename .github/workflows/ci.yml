@@ -39,7 +39,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: npm
 
       - name: Install dependencies
@@ -53,6 +53,14 @@ jobs:
 
       - name: Type check
         run: npm run type-check
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check Supabase Edge Functions
+        run: deno check --no-lock supabase/functions/make-server-0b1f4071/index.ts
 
       - name: Lint (zero warnings)
         run: npm run lint:strict
@@ -69,16 +77,9 @@ jobs:
       - name: Security audit (critical vulnerabilities)
         run: npm audit --audit-level=critical
 
-      - name: License compliance check
+      - name: License compliance status
         run: |
-          node -e "
-            const fs = require('fs');
-            const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            const allowedLicenses = ['MIT', 'Apache-2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'ISC'];
-            
-            // This is a basic check - in production you'd use a proper license checker
-            console.log('License compliance check passed (basic)');
-          "
+          echo "::warning::No automated dependency-license allowlist scanner is configured. This workflow does not claim license compliance."
 
       - name: TypeScript strict mode verification
         run: npm run check:ts-strict
@@ -230,6 +231,7 @@ jobs:
             coverage
             quality-report.verify.json
           if-no-files-found: ignore
+          include-hidden-files: true
 
   # ── Job 2: E2E — core user flows ─────────────────────────────────────────────
   e2e-core:
@@ -245,7 +247,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: npm
 
       - name: Install dependencies
@@ -284,7 +286,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: npm
 
       - name: Install dependencies
@@ -323,7 +325,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: npm
 
       - name: Install dependencies
@@ -355,7 +357,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22.13.0
           cache: npm
 
       - name: Install dependencies
@@ -365,9 +367,7 @@ jobs:
         run: npm run build
 
       - name: Run Lighthouse CI
-        run: npm run test:lhci
-        env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        run: npx lhci autorun --config=src/lighthouserc.json
 
       - name: Generate Lighthouse quality report
         run: npm run report:quality -- --test-status=passed --output=quality-report.lighthouse.json

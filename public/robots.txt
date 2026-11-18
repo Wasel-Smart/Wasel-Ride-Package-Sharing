@@ -24,4 +24,4 @@ Disallow: /src/
 
 Crawl-delay: 2
 
-Sitemap: https://wasel14.online/sitemap.xml
+Sitemap: https://www.wasel14.online/sitemap.xml

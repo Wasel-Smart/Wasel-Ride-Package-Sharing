@@ -7,19 +7,22 @@
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { createCommunicationHandlers } from './communications-handlers.ts';
 import { createWalletHandlers } from './wallet-handlers.ts';
-import { getClientIp } from './_shared/security-runtime.ts';
+import { consumeRateLimitToken, getClientIp } from './_shared/security-runtime.ts';
 
 const FUNCTION_NAME = 'make-server-0b1f4071';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-wallet-provider, x-wallet-signature, stripe-signature, x-communication-worker-secret, x-idempotency-key, x-request-id',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 };
 
-type SupabaseClientInstance = ReturnType<typeof createClient>;
+type SupabaseClientInstance = SupabaseClient<any, 'public' | 'private', any, any, any>;
 
 type AuthUser = {
   id: string;
@@ -285,7 +288,7 @@ function routeStartsWith(value: string, expectedPrefix: string): boolean {
 }
 
 function createUserScopedClient(request: Request) {
-  return createClient(
+  return createClient<any, 'public' | 'private'>(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     {
@@ -301,6 +304,91 @@ function createAdminClient() {
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
   );
+}
+
+async function enforceDistributedRateLimit(
+  request: Request,
+  path: string,
+): Promise<Response | null> {
+  const isPublicPackageTrackingRead =
+    request.method === 'GET' && routeStartsWith(path, '/packages/track/');
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method) && !isPublicPackageTrackingRead) {
+    return null;
+  }
+
+  // Provider callbacks have independent signature verification and retry semantics.
+  if (
+    routeMatches(path, '/payments/webhook') ||
+    routeMatches(path, '/communications/webhooks/resend') ||
+    routeMatches(path, '/communications/webhooks/twilio')
+  ) {
+    return null;
+  }
+
+  const routeGroup = path.split('/').filter(Boolean)[0] ?? 'root';
+  const sensitiveGroups = new Set([
+    'auth',
+    'bookings',
+    'communications',
+    'packages',
+    'payments',
+    'profile',
+    'safety',
+    'trips',
+    'wallet',
+  ]);
+  const sensitive = sensitiveGroups.has(routeGroup);
+  const clientIp = getClientIp(request);
+  if (clientIp === 'unknown') {
+    return new Response(
+      JSON.stringify({ error: 'Trusted client IP is unavailable; request protection cannot be applied.' }),
+      {
+        status: 503,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': '30',
+        },
+      },
+    );
+  }
+
+  const result = await consumeRateLimitToken(createAdminClient(), {
+    key: `edge:${request.method}:${routeGroup}:${clientIp}`,
+    maxRequests: isPublicPackageTrackingRead ? 60 : sensitive ? 20 : 60,
+    windowMs: 60_000,
+  });
+
+  if (result.unavailable) {
+    // Fail closed: do not silently fall back to per-instance memory counters.
+    return new Response(
+      JSON.stringify({ error: 'Request protection is temporarily unavailable.' }),
+      {
+        status: 503,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': '30',
+        },
+      },
+    );
+  }
+
+  if (!result.allowed) {
+    return new Response(
+      JSON.stringify({ error: 'Too many requests. Please try again shortly.' }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Retry-After': '60',
+        },
+      },
+    );
+  }
+
+  return null;
 }
 
 async function readJsonBody(req: Request): Promise<Record<string, unknown>> {
@@ -338,6 +426,40 @@ async function ensureCanonicalUser(
   }
 
   if (existingById) {
+    const linkedAuthUserId = normalizeString(existingById.auth_user_id);
+    if (linkedAuthUserId && linkedAuthUserId !== user.id) {
+      throw new Error('Canonical user identity is already linked to another authentication account.');
+    }
+
+    if (!linkedAuthUserId) {
+      const { data: linkedUser, error: linkError } = await supabaseClient
+        .from('users')
+        .update({ auth_user_id: user.id })
+        .eq('id', user.id)
+        .is('auth_user_id', null)
+        .select('id, auth_user_id, email, full_name, phone_number')
+        .maybeSingle();
+
+      if (linkError) {
+        throw new Error(linkError.message);
+      }
+      if (linkedUser) {
+        return linkedUser as CanonicalUser;
+      }
+
+      const { data: concurrentlyLinked, error: concurrentLookupError } = await supabaseClient
+        .from('users')
+        .select('id, auth_user_id, email, full_name, phone_number')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+
+      if (concurrentLookupError || !concurrentlyLinked) {
+        throw new Error('Canonical user identity could not be linked safely.');
+      }
+
+      return concurrentlyLinked as CanonicalUser;
+    }
+
     return existingById as CanonicalUser;
   }
 
@@ -354,7 +476,8 @@ async function ensureCanonicalUser(
       email: normalizeString(user.email),
       full_name: fullName,
       phone_number: normalizeString(user.user_metadata?.phone_number) || normalizeString(user.phone),
-      role: normalizeString(user.user_metadata?.role) || 'passenger',
+      // Authorization roles are server-controlled; user_metadata is user-editable.
+      role: 'passenger',
     })
     .select('id, auth_user_id, email, full_name, phone_number')
     .single();
@@ -381,12 +504,9 @@ async function authenticateRequest(request: Request): Promise<AuthenticationResu
 
     const canonicalUser = await ensureCanonicalUser(admin, user as AuthUser);
     return { admin, authUser: user as AuthUser, canonicalUser };
-  } catch (error) {
+  } catch {
     return {
-      error: jsonResponse(
-        { error: error instanceof Error ? error.message : 'Unexpected authentication error' },
-        500,
-      ),
+      error: jsonResponse({ error: 'Authentication could not be completed.' }, 500),
     };
   }
 }
@@ -578,7 +698,11 @@ async function fetchDriverSummaries(
   const drivers = Array.isArray(driverRows) ? (driverRows as DriverRecord[]) : [];
   const userIds = Array.from(new Set(drivers.map((driver) => driver.user_id).filter(Boolean)));
 
-  const [{ data: userRows, error: userError }, { data: verificationRows, error: verificationError }] = await Promise.all([
+  const [
+    { data: userRows, error: userError },
+    { data: verificationRows, error: verificationError },
+    { data: trustRows, error: trustError },
+  ] = await Promise.all([
     userIds.length > 0
       ? admin.from('users').select('id, auth_user_id, email, full_name').in('id', userIds)
       : Promise.resolve({ data: [], error: null }),
@@ -589,6 +713,9 @@ async function fetchDriverSummaries(
         .in('user_id', userIds)
         .order('verification_timestamp', { ascending: false })
       : Promise.resolve({ data: [], error: null }),
+    userIds.length > 0
+      ? admin.from('trust_scores').select('user_id, average_rating').in('user_id', userIds)
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   if (userError) {
@@ -597,11 +724,20 @@ async function fetchDriverSummaries(
   if (verificationError) {
     throw new Error(verificationError.message);
   }
+  if (trustError) {
+    throw new Error(trustError.message);
+  }
 
   const userMap = new Map<string, Record<string, unknown>>(
     (Array.isArray(userRows) ? userRows : []).map((row) => [String((row as Record<string, unknown>).id), row as Record<string, unknown>]),
   );
   const verificationMap = new Map<string, Record<string, unknown>>();
+  const trustMap = new Map<string, Record<string, unknown>>(
+    (Array.isArray(trustRows) ? trustRows : []).map((row) => [
+      String((row as Record<string, unknown>).user_id),
+      row as Record<string, unknown>,
+    ]),
+  );
 
   for (const row of Array.isArray(verificationRows) ? verificationRows : []) {
     const record = row as Record<string, unknown>;
@@ -614,6 +750,7 @@ async function fetchDriverSummaries(
   for (const driver of drivers) {
     const user = userMap.get(driver.user_id);
     const verification = verificationMap.get(driver.user_id);
+    const trust = trustMap.get(driver.user_id);
     const driverId = String(driver.driver_id);
 
     result.set(driverId, {
@@ -622,7 +759,7 @@ async function fetchDriverSummaries(
         String(user?.full_name ?? '').trim() ||
         String(user?.email ?? '').split('@')[0] ||
         'Wasel Driver',
-      rating: 5,
+      rating: toNumber(trust?.average_rating, 0),
       verified:
         driver.sanad_identity_linked === true ||
         verification?.sanad_status === 'verified' ||
@@ -1356,77 +1493,42 @@ async function handlePublishTrip(auth: AuthenticatedRequest, tripId: string) {
   return jsonResponse({ success: true });
 }
 
-async function handleCreateBooking(auth: AuthenticatedRequest, body: Record<string, unknown>) {
+async function handleCreateBooking(
+  _auth: AuthenticatedRequest,
+  body: Record<string, unknown>,
+  request: Request,
+) {
   const tripId = normalizeString(body.trip_id ?? body.tripId);
-  const seatsRequested = Math.max(1, toNumber(body.seats_requested ?? body.seatsRequested, 1));
+  const seatsRequested = toNumber(body.seats_requested ?? body.seatsRequested, 1);
   const pickup = normalizeString(body.pickup_stop ?? body.pickup);
   const dropoff = normalizeString(body.dropoff_stop ?? body.dropoff);
 
-  if (!tripId) {
-    return jsonResponse({ error: 'trip_id is required.' }, 400);
+  if (!tripId || !isUuid(tripId)) {
+    return jsonResponse({ error: 'A valid trip_id is required.' }, 400);
+  }
+  if (!Number.isInteger(seatsRequested) || seatsRequested < 1 || seatsRequested > 8) {
+    return jsonResponse({ error: 'Requested seat count must be between 1 and 8.' }, 400);
   }
 
-  const { data: trip, error: tripError } = await auth.admin
-    .from('trips')
-    .select('trip_id, available_seats, price_per_seat')
-    .eq('trip_id', tripId)
-    .maybeSingle();
+  // Use the caller's JWT so current_user_id() and the RPC's ownership checks
+  // evaluate the real passenger, not the service-role identity.
+  const userClient = createUserScopedClient(request);
+  const { data, error } = await userClient.rpc('app_create_booking_request', {
+    p_trip_id: tripId,
+    p_seats_requested: seatsRequested,
+    p_pickup_location: pickup,
+    p_dropoff_location: dropoff,
+    p_runtime_status: 'pending_driver',
+  });
 
-  if (tripError) {
-    return jsonResponse({ error: tripError.message }, 400);
+  if (error) {
+    return jsonResponse({ error: error.message }, 400);
   }
-  if (!trip) {
-    return jsonResponse({ error: 'Trip not found.' }, 404);
-  }
-
-  const availableSeats = toNumber(trip.available_seats, 0);
-  if (availableSeats < seatsRequested) {
-    return jsonResponse({ error: 'Not enough seats available.' }, 400);
-  }
-
-  const pricePerSeat = toNumber(trip.price_per_seat, 0);
-  const totalPrice = Number((pricePerSeat * seatsRequested).toFixed(3));
-  const bookingId = crypto.randomUUID();
-
-  const { data: booking, error: bookingError } = await auth.admin
-    .from('bookings')
-    .insert({
-      booking_id: bookingId,
-      trip_id: tripId,
-      passenger_id: auth.canonicalUser.id,
-      seat_number: 1,
-      booking_status: 'confirmed',
-      amount: totalPrice,
-      status: 'confirmed',
-      confirmed_by_driver: true,
-      seats_requested: seatsRequested,
-      pickup_location: pickup,
-      pickup_name: pickup,
-      dropoff_location: dropoff,
-      dropoff_name: dropoff,
-      price_per_seat: pricePerSeat,
-      total_price: totalPrice,
-      seats_booked: seatsRequested,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .select('booking_id, trip_id, passenger_id, seats_requested, seat_number, pickup_location, dropoff_location, price_per_seat, total_price, amount, status, booking_status, created_at, updated_at')
-    .single();
-
-  if (bookingError) {
-    return jsonResponse({ error: bookingError.message }, 400);
+  if (!data) {
+    return jsonResponse({ error: 'Booking request could not be created.' }, 500);
   }
 
-  const { error: tripUpdateError } = await auth.admin
-    .from('trips')
-    .update({ available_seats: Math.max(0, availableSeats - seatsRequested) })
-    .eq('trip_id', tripId);
-
-  if (tripUpdateError) {
-    return jsonResponse({ error: tripUpdateError.message }, 400);
-  }
-
-  return jsonResponse({ booking: mapBookingRow(booking as BookingRow) }, 201);
+  return jsonResponse({ booking: mapBookingRow(data as BookingRow) }, 201);
 }
 
 async function handleGetUserBookings(auth: AuthenticatedRequest) {
@@ -1473,84 +1575,40 @@ async function handleGetTripBookings(auth: AuthenticatedRequest, tripId: string)
 }
 
 async function handleUpdateBookingStatus(
-  auth: AuthenticatedRequest,
+  _auth: AuthenticatedRequest,
   bookingId: string,
   body: Record<string, unknown>,
+  request: Request,
 ) {
-  const nextStatusInput = normalizeString(body.status);
-  if (!nextStatusInput) {
+  const requestedStatus = normalizeString(body.status)?.toLowerCase();
+  if (!requestedStatus) {
     return jsonResponse({ error: 'status is required.' }, 400);
   }
 
-  const nextStatus = normalizeBookingStatus(nextStatusInput);
-  const { data: existing, error: existingError } = await auth.admin
-    .from('bookings')
-    .select('booking_id, trip_id, passenger_id, seats_requested, seat_number, pickup_location, dropoff_location, price_per_seat, total_price, amount, status, booking_status, created_at, updated_at')
-    .eq('booking_id', bookingId)
-    .maybeSingle();
-
-  if (existingError) {
-    return jsonResponse({ error: existingError.message }, 400);
+  const nextStatus = requestedStatus === 'accepted' ? 'confirmed' : requestedStatus;
+  if (!['confirmed', 'rejected', 'cancelled'].includes(nextStatus)) {
+    return jsonResponse({ error: 'Unsupported booking status.' }, 400);
   }
-  if (!existing) {
-    return jsonResponse({ error: 'Booking not found.' }, 404);
+  if (!isUuid(bookingId)) {
+    return jsonResponse({ error: 'A valid booking ID is required.' }, 400);
   }
 
-  const existingRow = existing as BookingRow;
-  const actorOwnsBooking = String(existingRow.passenger_id ?? '') === auth.canonicalUser.id;
+  // The database RPC enforces passenger / assigned-driver / admin ownership
+  // and applies the booking + trip seat changes in one transaction.
+  const userClient = createUserScopedClient(request);
+  const { data, error } = await userClient.rpc('app_update_booking_runtime_status', {
+    p_booking_id: bookingId,
+    p_runtime_status: nextStatus,
+  });
 
-  if (!actorOwnsBooking) {
-    const driver = await ensureApprovedDriver(auth.admin, auth.canonicalUser.id);
-    const { data: trip, error: tripError } = await auth.admin
-      .from('trips')
-      .select('trip_id')
-      .eq('trip_id', existingRow.trip_id)
-      .eq('driver_id', driver.driver_id)
-      .maybeSingle();
-
-    if (tripError) {
-      return jsonResponse({ error: tripError.message }, 400);
-    }
-    if (!trip) {
-      return jsonResponse({ error: 'You do not have permission to update this booking.' }, 403);
-    }
+  if (error) {
+    return jsonResponse({ error: error.message }, 400);
+  }
+  if (!data) {
+    return jsonResponse({ error: 'Booking status could not be updated.' }, 500);
   }
 
-  const { data: updated, error: updateError } = await auth.admin
-    .from('bookings')
-    .update({
-      status: nextStatus,
-      booking_status: nextStatus,
-      confirmed_by_driver: nextStatus === 'confirmed',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('booking_id', bookingId)
-    .select('booking_id, trip_id, passenger_id, seats_requested, seat_number, pickup_location, dropoff_location, price_per_seat, total_price, amount, status, booking_status, created_at, updated_at')
-    .single();
-
-  if (updateError) {
-    return jsonResponse({ error: updateError.message }, 400);
-  }
-
-  if (['cancelled', 'rejected'].includes(nextStatus)) {
-    const { data: trip } = await auth.admin
-      .from('trips')
-      .select('available_seats')
-      .eq('trip_id', existingRow.trip_id)
-      .maybeSingle();
-
-    if (trip) {
-      await auth.admin
-        .from('trips')
-        .update({
-          available_seats:
-            toNumber(trip.available_seats, 0) + toNumber(existingRow.seats_requested, 1),
-        })
-        .eq('trip_id', existingRow.trip_id);
-    }
-  }
-
-  return jsonResponse({ booking: mapBookingRow(updated as BookingRow) });
+  return jsonResponse({ booking: mapBookingRow(data as BookingRow) });
 }
 
 async function handleGetNotifications(auth: AuthenticatedRequest) {
@@ -1737,7 +1795,8 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
   const from = normalizeString(body.from);
   const to = normalizeString(body.to);
   const description = normalizeString(body.description) || '';
-  const tracking = normalizeTrackingNumber(body.trackingNumber ?? body.tracking_code) || `PKG-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+  // Tracking identifiers are server-generated with 96 bits of entropy.
+  const tracking = `PKG-${crypto.randomUUID().replace(/-/g, '').slice(0, 24).toUpperCase()}`;
 
   if (!from || !to) {
     return jsonResponse({ error: 'from and to are required.' }, 400);
@@ -1784,7 +1843,9 @@ async function handleTrackPackage(admin: SupabaseClientInstance, trackingId: str
 
   const { data, error } = await admin
     .from('packages')
-    .select('*')
+    .select(
+      'package_id, tracking_number, package_code, origin_name, origin_location, destination_name, destination_location, status, package_status, created_at',
+    )
     .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
     .maybeSingle();
 
@@ -1795,78 +1856,29 @@ async function handleTrackPackage(admin: SupabaseClientInstance, trackingId: str
     return null;
   }
 
-  return mapPackageRow(data as PackageRow);
+  const row = data as PackageRow;
+  return {
+    id: String(row.package_id ?? ''),
+    tracking_code: String(row.tracking_number ?? row.package_code ?? ''),
+    from: String(row.origin_name ?? row.origin_location ?? ''),
+    to: String(row.destination_name ?? row.destination_location ?? ''),
+    status: normalizePackageStatus(row.status ?? row.package_status),
+    created_at: String(row.created_at ?? new Date().toISOString()),
+  };
 }
 
 async function handleCreateReview(
-  request: Request,
-  auth: AuthenticatedRequest,
-  body: Record<string, unknown>,
+  _request: Request,
+  _auth: AuthenticatedRequest,
+  _body: Record<string, unknown>,
 ) {
-  const reviewPayload = {
-    reviewee_id: normalizeString(body.reviewee_id),
-    role: normalizeString(body.role),
-    overall_rating: Math.max(1, Math.min(5, toNumber(body.overall_rating, 5))),
-    comment: normalizeString(body.comment),
-    trip_id: normalizeString(body.trip_id),
-  };
-
-  let trustUserId: string | null = reviewPayload.reviewee_id;
-
-  if (isUuid(reviewPayload.reviewee_id)) {
-    const { data: reviewedUser, error: reviewedUserError } = await auth.admin
-      .from('users')
-      .select('id')
-      .or(`auth_user_id.eq.${reviewPayload.reviewee_id},id.eq.${reviewPayload.reviewee_id}`)
-      .maybeSingle();
-
-    if (reviewedUserError) {
-      throw new Error(reviewedUserError.message);
-    }
-
-    trustUserId = String(reviewedUser?.id ?? reviewPayload.reviewee_id);
-  }
-
-  if (isUuid(trustUserId)) {
-    const { data: existingTrust } = await auth.admin
-      .from('trust_scores')
-      .select('user_id, total_ratings, average_rating, positive_reviews, negative_reviews')
-      .eq('user_id', trustUserId)
-      .maybeSingle();
-
-    const totalRatings = toNumber(existingTrust?.total_ratings, 0) + 1;
-    const currentAverage = toNumber(existingTrust?.average_rating, 0);
-    const nextAverage = Number((((currentAverage * toNumber(existingTrust?.total_ratings, 0)) + reviewPayload.overall_rating) / totalRatings).toFixed(2));
-
-    await auth.admin
-      .from('trust_scores')
-      .upsert({
-        user_id: trustUserId,
-        total_ratings: totalRatings,
-        average_rating: nextAverage,
-        score: nextAverage,
-        positive_reviews: toNumber(existingTrust?.positive_reviews, 0) + (reviewPayload.overall_rating >= 4 ? 1 : 0),
-        negative_reviews: toNumber(existingTrust?.negative_reviews, 0) + (reviewPayload.overall_rating <= 2 ? 1 : 0),
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' });
-  }
-
-  await auth.admin
-    .from('audit_logs')
-    .insert({
-      actor_id: auth.authUser.id,
-      actor_role: 'authenticated_user',
-      action: 'review.submitted',
-      table_name: 'reviews',
-      record_id: reviewPayload.trip_id ?? crypto.randomUUID(),
-      new_values: reviewPayload,
-      ip_address: getClientIp(request),
-      user_agent: request.headers.get('user-agent'),
-      created_at: new Date().toISOString(),
-    })
-    .catch(() => undefined);
-
-  return jsonResponse({ success: true });
+  // The legacy handler trusted reviewee_id and wrote trust_scores directly
+  // without proving trip participation or persisting a review row. Fail closed
+  // until the canonical review schema and participant-bound RPC are verified.
+  return jsonResponse(
+    { error: 'Review submission is temporarily unavailable while review verification is being upgraded.' },
+    503,
+  );
 }
 
 serve(async (req) => {
@@ -1890,6 +1902,11 @@ serve(async (req) => {
 
     if (routeMatches(path, '/health')) {
       return jsonResponse({ status: 'healthy', timestamp: new Date().toISOString() });
+    }
+
+    const rateLimitResponse = await enforceDistributedRateLimit(req, path);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     if (routeMatches(path, '/payments/webhook') && req.method === 'POST') {
@@ -2174,34 +2191,10 @@ serve(async (req) => {
     }
 
     if (routeMatches(path, '/rides')) {
-      if (req.method === 'POST') {
-        const body = await readJsonBody(req);
-        const { data, error } = await auth.admin
-          .from('rides')
-          .insert({ ...body, passenger_id: auth.canonicalUser.id })
-          .select()
-          .single();
-
-        if (error) {
-          return jsonResponse({ error: error.message }, 400);
-        }
-
-        return jsonResponse(data);
-      }
-
-      if (req.method === 'GET') {
-        const { data, error } = await auth.admin
-          .from('rides')
-          .select('*, trips(*), profiles(*)')
-          .eq('passenger_id', auth.canonicalUser.id)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          return jsonResponse({ error: error.message }, 400);
-        }
-
-        return jsonResponse(data ?? []);
-      }
+      return jsonResponse(
+        { error: 'The legacy rides API is retired. Use /trips and /bookings.' },
+        410,
+      );
     }
 
     if (routeMatches(path, '/trips') && req.method === 'POST') {
@@ -2240,7 +2233,7 @@ serve(async (req) => {
     }
 
     if (routeMatches(path, '/bookings') && req.method === 'POST') {
-      return handleCreateBooking(auth, await readJsonBody(req));
+      return handleCreateBooking(auth, await readJsonBody(req), req);
     }
 
     if (routeStartsWith(path, '/bookings/user/') && req.method === 'GET') {
@@ -2253,7 +2246,7 @@ serve(async (req) => {
 
     if (routeStartsWith(path, '/bookings/') && req.method === 'PUT') {
       const bookingId = path.slice('/bookings/'.length);
-      return handleUpdateBookingStatus(auth, bookingId, await readJsonBody(req));
+      return handleUpdateBookingStatus(auth, bookingId, await readJsonBody(req), req);
     }
 
     if (routeMatches(path, '/notifications') && req.method === 'GET') {

@@ -37,7 +37,7 @@ const walletTransactionSchema = z.object({
   status: z.enum(WALLET_TRANSACTION_STATUSES),
   counterpartyUserId: z.string().nullable().optional(),
   paymentIntentId: z.string().nullable().optional(),
-  metadata: z.record(z.unknown()).nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 const walletEscrowSchema = z.object({
