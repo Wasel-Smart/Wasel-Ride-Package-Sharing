@@ -7,11 +7,11 @@ interface PhoneVerificationProps {
 }
 
 function normalizeJordanMobile(value: string): string | null {
-  let digits = value.replace(/\\D/g, '');
+  let digits = value.replace(/\D/g, '');
   if (digits.startsWith('00962')) digits = digits.slice(2);
   if (digits.startsWith('962')) digits = digits.slice(3);
   if (digits.startsWith('0')) digits = digits.slice(1);
-  if (!/^7\\d{8}$/.test(digits)) return null;
+  if (!/^7\d{8}$/.test(digits)) return null;
   return `+962${digits}`;
 }
 
@@ -61,7 +61,7 @@ export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps
     e.preventDefault();
     setError('');
     setSuccess('');
-    if (!/^\\d{6}$/.test(code)) {
+    if (!/^\d{6}$/.test(code)) {
       setError('Enter the 6-digit verification code.');
       return;
     }
@@ -149,7 +149,7 @@ export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps
               inputMode="numeric"
               autoComplete="one-time-code"
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\\D/g, '').slice(0, 6))}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="000000"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white text-center text-2xl tracking-widest"
               required
