@@ -7,11 +7,16 @@ export type OfflineActionType =
   | 'SCHEDULED_RIDE_CREATE'
   | 'ISSUE_REPORT';
 
+/** Actions older than this are discarded on the next sync attempt. */
+export const OFFLINE_ACTION_MAX_AGE_MS = 48 * 60 * 60 * 1000; // 48 hours
+
 export type OfflineAction<TPayload = unknown> = {
   id: string;
   type: OfflineActionType;
   payload: TPayload;
   timestamp: number;
+  /** Unix timestamp (ms) after which this action must not be dispatched. */
+  expiresAt: number;
   retries: number;
 };
 
@@ -44,6 +49,7 @@ export function createOfflineAction<TPayload>(
     ...action,
     id: `action_${now}_${randomPart}`,
     timestamp: now,
+    expiresAt: now + OFFLINE_ACTION_MAX_AGE_MS,
     retries: 0,
   };
 }

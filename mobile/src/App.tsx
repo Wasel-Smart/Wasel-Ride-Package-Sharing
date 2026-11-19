@@ -10,6 +10,7 @@ import { waselMobileConfig } from './lib/config';
 import { AuthProvider } from './providers/AuthProvider';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AppNavigator } from './navigation/AppNavigator';
+import { navigationRef } from './navigation/ref';
 import { OfflineBanner } from './components/OfflineBanner';
 import { MobileErrorBoundary } from './components/MobileErrorBoundary';
 import { RTLProvider } from './utils/rtl';
@@ -104,7 +105,8 @@ const App = () => {
                   <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
                     <StatusBar backgroundColor={colors.bg} barStyle="light-content" />
                     <OfflineBanner />
-                    <NavigationContainer linking={linking} fallback={<View style={{ flex: 1, backgroundColor: colors.bg }} />}>
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    <NavigationContainer linking={linking} fallback={<View style={{ flex: 1, backgroundColor: colors.bg }} />} {...({ ref: navigationRef } as any)}>
                       <AppNavigator />
                     </NavigationContainer>
                   </SafeAreaView>

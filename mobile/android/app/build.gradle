@@ -12,8 +12,11 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 8
         versionName "1.0.0"
-        buildConfigField "String", "SUPABASE_URL", "\"${System.env.VITE_SUPABASE_URL}\""
-        buildConfigField "String", "SUPABASE_ANON_KEY", "\"${System.env.VITE_SUPABASE_ANON_KEY}\""
+        // Supabase credentials are intentionally NOT baked into the APK binary via buildConfigField.
+        // Values compiled into BuildConfig are readable from decompiled APKs (strings.xml).
+        // The app reads these at runtime from the Expo Constants / app.config.js extra field,
+        // which is sourced exclusively from EAS Secrets / CI environment variables.
+        // See: mobile/app.config.js and mobile/src/lib/config.ts
     }
     signingConfigs {
         release {

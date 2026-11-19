@@ -25,6 +25,7 @@ import { RideCard, type RideCardProps } from '../components/domain/RideCard';
 import { useOffline } from '../hooks/useOffline';
 import { useAuth } from '../providers/AuthProvider';
 import { rideLifecycle, type AvailableTrip } from '../services/ride';
+import { apiClient } from '../lib/api';
 import { colors, spacing, radii, typography, shadows } from '../theme';
 
 type RootStackParamList = {
@@ -88,12 +89,15 @@ const HomeHeader = React.memo(({
   displayName,
   avatarUrl,
   unreadCount,
+  trustScore,
   onNotificationsPress,
   onTrustPress,
 }: {
   displayName: string;
   avatarUrl?: string | null;
   unreadCount: number;
+  /** null = loading, undefined = unavailable */
+  trustScore: number | null | undefined;
   onNotificationsPress: () => void;
   onTrustPress: () => void;
 }) => {
@@ -132,10 +136,16 @@ const HomeHeader = React.memo(({
             onPress={onTrustPress}
             accessible
             accessibilityRole="button"
-            accessibilityLabel="مركز الثقة - موثوق"
+            accessibilityLabel={
+              trustScore != null
+                ? `مركز الثقة - موثوق ${trustScore}%`
+                : 'مركز الثقة'
+            }
           >
             <Ionicons name="shield-checkmark" size={12} color={colors.teal} />
-            <Text style={styles.trustBadgeText}>موثوق 98%</Text>
+            <Text style={styles.trustBadgeText}>
+              {trustScore != null ? `موثوق ${trustScore}%` : 'موثوق'}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -329,6 +339,7 @@ const HomeScreen = React.memo(() => {
   const { isOnline } = useOffline();
   const navigation = useNavigation<NavProp>();
   const [recommendedTrip, setRecommendedTrip] = useState<AvailableTrip | null>(null);
+  const [trustScore, setTrustScore] = useState<number | null | undefined>(null);
 
   const displayName = useMemo(
     () => user?.user_metadata?.name || user?.email?.split('@')[0] || 'صديق',
@@ -346,6 +357,28 @@ const HomeScreen = React.memo(() => {
       .catch(() => { /* Silent fallback if offline or backend missing */ });
     return () => { cancelled = true; };
   }, [isOnline]);
+
+  // Fetch real trust score from the backend.
+  useEffect(() => {
+    if (!user?.id || !isOnline) {
+      setTrustScore(undefined);
+      return;
+    }
+    let cancelled = false;
+    apiClient.get<{ completedSteps: number; totalSteps: number }>('trust/status')
+      .then(res => {
+        if (cancelled) return;
+        if (res.data && res.data.totalSteps > 0) {
+          setTrustScore(Math.round((res.data.completedSteps / res.data.totalSteps) * 100));
+        } else {
+          setTrustScore(undefined);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setTrustScore(undefined);
+      });
+    return () => { cancelled = true; };
+  }, [user?.id, isOnline]);
 
   const handleReserveRecommended = useCallback(() => {
     navigation.navigate('AdvancedSearch');
@@ -375,6 +408,7 @@ const HomeScreen = React.memo(() => {
           displayName={displayName}
           avatarUrl={user?.user_metadata?.avatar_url}
           unreadCount={0}
+          trustScore={trustScore}
           onNotificationsPress={handleNotificationsPress}
           onTrustPress={handleTrustPress}
         />

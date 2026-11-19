@@ -71,6 +71,10 @@ function normalizePreferences(row: Record<string, unknown> | null | undefined): 
 class PushNotificationsService {
   private expoPushToken: string | null = null;
   private preferences: NotificationPreferences = { ...DEFAULT_PREFERENCES };
+  // Store subscription handles so they can be removed when the service is torn down.
+  private receivedSub: ReturnType<typeof Notifications.addNotificationReceivedListener> | null = null;
+  private responseSub: ReturnType<typeof Notifications.addNotificationResponseReceivedListener> | null = null;
+  private tokenSub: ReturnType<typeof Notifications.addPushTokenListener> | null = null;
 
   async initialize(): Promise<void> {
     if (!Device.isDevice) {
@@ -109,17 +113,31 @@ class PushNotificationsService {
 
     await this.saveTokenToServer(token.data);
 
-    Notifications.addPushTokenListener((data: any) =>
+    // Store subscriptions so they can be properly removed via destroy().
+    this.tokenSub = Notifications.addPushTokenListener((data: any) =>
       this.handleTokenRefresh(data),
     );
 
-    Notifications.addNotificationReceivedListener((notification: any) =>
+    this.receivedSub = Notifications.addNotificationReceivedListener((notification: any) =>
       this.handleNotificationReceived(notification),
     );
 
-    Notifications.addNotificationResponseReceivedListener((response: any) =>
+    this.responseSub = Notifications.addNotificationResponseReceivedListener((response: any) =>
       this.handleNotificationTap(response),
     );
+  }
+
+  /**
+   * Removes all notification listeners. Call this if the service is re-initialized
+   * (e.g. after sign-out) to avoid accumulating duplicate listeners.
+   */
+  destroy(): void {
+    this.tokenSub?.remove();
+    this.receivedSub?.remove();
+    this.responseSub?.remove();
+    this.tokenSub = null;
+    this.receivedSub = null;
+    this.responseSub = null;
   }
 
   private async handleTokenRefresh(token: string): Promise<void> {
@@ -144,6 +162,13 @@ class PushNotificationsService {
 
   private navigateToScreen(screen: string, params?: Record<string, unknown>) {
     if (Platform.OS === 'web') return;
+    // Use the in-process navigation ref first (available once the navigator is mounted).
+    // This avoids relying on a cold deep-link URL which can race with app startup.
+    const { navigateFromOutside } = require('../navigation/ref') as typeof import('../navigation/ref');
+    if (navigateFromOutside(screen, params)) return;
+
+    // Fallback: open via deep-link URL (handles the case where the navigator
+    // is not yet mounted when the notification tap triggers app launch).
     const query = params
       ? Object.entries(params)
           .filter(([, value]) => value !== undefined && value !== null)

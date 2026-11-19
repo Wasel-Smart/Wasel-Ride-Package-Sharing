@@ -417,10 +417,24 @@ export function FindRidePage() {
           });
         } catch (paymentError) {
           console.error('[Wallet] ride booking payment failed, cancelling booking:', paymentError);
-          await updateRideBooking(booking.id, { status: 'cancelled' }).catch(() => {});
+          // Attempt to cancel the booking. If that also fails we surface a clear
+          // "contact support" message rather than leaving the user with no info.
+          let cancelFailed = false;
+          try {
+            await updateRideBooking(booking.id, { status: 'cancelled' });
+          } catch (cancelError) {
+            cancelFailed = true;
+            console.error('[Wallet] booking cancellation after payment failure also failed:', cancelError);
+          }
           setRideBookings(getRideBookings());
           setBookingSuccess(null);
-          setBookingMessage(t.paymentFailed(ride.from, ride.to));
+          setBookingMessage(
+            cancelFailed
+              ? (ar
+                  ? `فشل الدفع وتعذّر إلغاء الحجز تلقائياً. تواصل مع الدعم مع رمز الحجز: ${booking.id}`
+                  : `Payment failed and automatic cancellation also failed. Contact support with booking ID: ${booking.id}`)
+              : t.paymentFailed(ride.from, ride.to),
+          );
           return;
         }
       } else {

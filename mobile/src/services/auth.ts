@@ -371,5 +371,22 @@ export class MobileAuthService {
 }
 
 export const mobileAuth = new MobileAuthService();
-void mobileAuth.initialize();
+
+/**
+ * `readyPromise` resolves once both auth session restoration AND biometric
+ * initialization are complete. AppNavigator waits on this before rendering any
+ * screen, so `biometricAuth.isEnabled()` always returns its true value on the
+ * first render instead of silently returning false on fast cold starts.
+ */
+export const authReadyPromise: Promise<void> = (async () => {
+  // Run auth init and biometric init in parallel — they don't depend on each other.
+  await Promise.all([
+    mobileAuth.initialize(),
+    biometricAuth.initialize().catch(() => {
+      // Biometric init failure must never block the app. It leaves
+      // biometricAuth.isSupported() as false, which is the safe default.
+    }),
+  ]);
+})();
+
 export const authService = mobileAuth;

@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme';
 import { useAuth } from '../providers/AuthProvider';
 import { useLanguage } from '../contexts/LanguageContext';
+import { authReadyPromise } from '../services/auth';
 
 import HomeScreen from '../screens/HomeScreen';
 import RideRequestScreen from '../screens/RideRequestScreen';
@@ -108,7 +109,22 @@ const authBackOnly = { headerShown: true, title: '', headerTransparent: false } 
 export const AppNavigator = React.memo(function AppNavigator() {
   const { user, loading } = useAuth();
   const [onboarded, setOnboarded] = useState<boolean | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const { t } = useLanguage();
+
+  // Wait for both auth session restoration and biometric initialization before
+  // rendering any screen. This prevents biometricAuth.isEnabled() from returning
+  // a stale false on fast cold starts.
+  useEffect(() => {
+    let alive = true;
+    authReadyPromise.then(() => {
+      if (alive) setAuthReady(true);
+    }).catch(() => {
+      // Should not happen — authReadyPromise never rejects — but be safe.
+      if (alive) setAuthReady(true);
+    });
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -130,7 +146,7 @@ export const AppNavigator = React.memo(function AppNavigator() {
     void AsyncStorage.setItem(ONBOARDING_KEY, 'done').catch(() => undefined);
   }, []);
 
-  if (loading || onboarded === null) return <AppLoadingScreen />;
+  if (loading || onboarded === null || !authReady) return <AppLoadingScreen />;
 
   return (
     <Stack.Navigator

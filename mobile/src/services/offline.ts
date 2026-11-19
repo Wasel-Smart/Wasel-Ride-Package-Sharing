@@ -123,7 +123,7 @@ export class OfflineService {
   // ── Queue management ────────────────────────────────────────────────────────
 
   async queueOfflineAction(
-    action: Omit<OfflineAction, 'id' | 'timestamp' | 'retries'>,
+    action: Omit<OfflineAction, 'id' | 'timestamp' | 'expiresAt' | 'retries'>,
   ): Promise<void> {
     // Check persisted dedup cache first (survives app restarts)
     const dedupKey = `${action.type}:${JSON.stringify(action.payload)}`;
@@ -169,9 +169,20 @@ export class OfflineService {
       const queue = this.loadQueue();
       if (queue.length === 0) return;
 
+      const now = Date.now();
+      // Discard any action that has exceeded its maximum age before dispatching.
+      const expired = queue.filter(a => a.expiresAt !== undefined && a.expiresAt < now);
+      const activeQueue = queue.filter(a => a.expiresAt === undefined || a.expiresAt >= now);
+      if (expired.length > 0) {
+        console.warn(`[Offline] Discarding ${expired.length} expired action(s):`, expired.map(a => sanitizeLogValue(a.id)).join(', '));
+        this.saveQueue(activeQueue);
+        void this.notifyStats();
+      }
+      if (activeQueue.length === 0) return;
+
       // Dispatch sequentially in queue order so e.g. a cancel never races the booking it cancels.
       const results: PromiseSettledResult<void>[] = [];
-      for (const action of queue) {
+      for (const action of activeQueue) {
         try {
           await this.executeAction(action);
           results.push({ status: 'fulfilled', value: undefined });
@@ -183,7 +194,7 @@ export class OfflineService {
       const failed: OfflineAction[] = [];
 
       results.forEach((result, i) => {
-        const action = queue[i];
+        const action = activeQueue[i];
         if (result.status === 'fulfilled') {
           console.log(`[Offline] Synced: ${sanitizeLogValue(action.type)} (id=${action.id})`);
         } else {
@@ -199,7 +210,7 @@ export class OfflineService {
 
       // Actions queued while the sync was in flight must not be lost: reload the
       // live queue, drop everything we processed, keep retried failures.
-      const processedIds = new Set(queue.map(a => a.id));
+      const processedIds = new Set(activeQueue.map(a => a.id));
       const arrivedDuringSync = this.loadQueue().filter(a => !processedIds.has(a.id));
       this.saveQueue([...failed, ...arrivedDuringSync]);
 
@@ -214,7 +225,7 @@ export class OfflineService {
         this.saveDedupCache(newDedup);
       }
 
-      console.log(`[Offline] Sync done: ${queue.length - failed.length} ok, ${failed.length} remaining`);
+      console.log(`[Offline] Sync done: ${activeQueue.length - failed.length} ok, ${failed.length} remaining`);
       void this.notifyStats();
     } finally {
       this.syncInProgress = false;
