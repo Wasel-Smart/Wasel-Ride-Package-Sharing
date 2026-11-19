@@ -52,7 +52,7 @@ BEGIN
 
   RETURN true;
 END;
-$;
+$$;
 
 REVOKE ALL ON FUNCTION public.confirm_phone_verification(uuid, text)
   FROM PUBLIC, anon, authenticated;
