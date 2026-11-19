@@ -7,21 +7,7 @@ import type { RootStackParamList } from '../navigation/types';
 import { offlineService } from '../services/offline';
 import { mobileAuth } from '../services/auth';
 import { colors, spacing, typography } from '../theme';
-
-const ALLOWED_API_DOMAINS = ['supabase.co', 'supabase.net', 'wasel14.online', 'localhost'];
-
-function isValidApiUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
-    if (parsed.hostname === 'localhost') return true;
-    const privateRanges = [/^127\./, /^10\./, /^172\.(1[6-9]|2[0-9]|3[01])\./, /^192\.168\./, /^169\.254\./];
-    if (privateRanges.some(p => p.test(parsed.hostname))) return false;
-    return ALLOWED_API_DOMAINS.some(d => parsed.hostname.endsWith(d));
-  } catch {
-    return false;
-  }
-}
+import { isValidApiUrl } from '../utils/sanitize';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 interface ReportIssueProps { route: { params?: Partial<RootStackParamList['ReportIssue']> }; navigation: NavProp; }

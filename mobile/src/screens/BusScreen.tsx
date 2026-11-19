@@ -16,6 +16,7 @@ import { offlineService } from '../services/offline';
 import { mobileAuth } from '../services/auth';
 import { waselMobileConfig } from '../lib/config';
 import { colors, radii, spacing } from '../theme';
+import { isValidApiUrl } from '../utils/sanitize';
 
 interface BusRoute {
   id: string;
@@ -31,21 +32,6 @@ interface BusRoute {
 
 const CACHE_KEY = 'bus_routes_v1';
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
-
-const ALLOWED_API_DOMAINS = ['supabase.co', 'supabase.net', 'wasel14.online', 'localhost'];
-
-function isValidApiUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
-    if (parsed.hostname === 'localhost') return true;
-    const privateRanges = [/^127\./, /^10\./, /^172\.(1[6-9]|2[0-9]|3[01])\./, /^192\.168\./, /^169\.254\./];
-    if (privateRanges.some(p => p.test(parsed.hostname))) return false;
-    return ALLOWED_API_DOMAINS.some(d => parsed.hostname.endsWith(d));
-  } catch {
-    return false;
-  }
-}
 
 const FALLBACK_ROUTES: BusRoute[] = [
   { id: 'f1', from: 'عمّان', to: 'إربد', departure: '08:00', seats: 12, priceJod: 2.5, operator: 'JETT', arrivalEstimate: '09:30', routeCode: 'JT-001' },
