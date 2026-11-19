@@ -16,6 +16,7 @@ const domOnlyTsTests = [
   'tests/integration/**/*.test.ts',
   'tests/unit/services/bus.test.ts',
   'tests/unit/services/communicationPreferences.test.ts',
+  'tests/unit/services/core.test.ts',
   'tests/unit/services/corePerformance.test.ts',
   'tests/unit/services/demandCapture.test.ts',
   'tests/unit/services/journeyLogistics.test.ts',

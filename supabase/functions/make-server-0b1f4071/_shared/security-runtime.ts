@@ -60,14 +60,74 @@ export function takeRateLimitToken(args: {
   return current.count <= args.maxRequests;
 }
 
-export function sanitizeEdgeErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message.trim();
-  }
-
-  if (typeof error === 'string' && error.trim()) {
-    return error.trim();
-  }
-
+export function sanitizeEdgeErrorMessage(_error: unknown): string {
+  // Exception messages may contain provider responses, SQL details, identifiers,
+  // or other implementation data. Keep client-facing failures generic; log
+  // structured diagnostics separately on the server without returning them.
   return 'Internal server error';
+}
+
+
+export async function verifyTimestampedHmacSignature(
+  secret: string,
+  payload: string,
+  signatureHeader: string | null,
+  toleranceSeconds = 300,
+  nowMs = Date.now(),
+): Promise<boolean> {
+  if (!secret || !signatureHeader || !Number.isFinite(nowMs) || !Number.isFinite(toleranceSeconds) || toleranceSeconds < 0) {
+    return false;
+  }
+
+  const parts = signatureHeader.split(',').map((part) => {
+    const separator = part.indexOf('=');
+    return separator > 0
+      ? [part.slice(0, separator).trim(), part.slice(separator + 1).trim()] as const
+      : ['', ''] as const;
+  });
+  const timestampValue = parts.find(([key]) => key === 't')?.[1];
+  const signatures = parts.filter(([key, value]) => key === 'v1' && value).map(([, value]) => value);
+  if (!timestampValue || !/^\d+$/.test(timestampValue)) {
+    return false;
+  }
+  const timestamp = Number(timestampValue);
+
+  if (!Number.isSafeInteger(timestamp) || timestamp <= 0 || signatures.length === 0) {
+    return false;
+  }
+  if (Math.abs(nowMs / 1000 - timestamp) > toleranceSeconds) {
+    return false;
+  }
+
+  try {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encodeBytes(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
+    const signature = await crypto.subtle.sign('HMAC', key, encodeBytes(`${timestamp}.${payload}`));
+    const expected = Array.from(new Uint8Array(signature))
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('');
+    return signatures.some((candidate) => timingSafeEqual(expected, candidate));
+  } catch {
+    return false;
+  }
+}
+
+
+export function generateSixDigitOtp(): string {
+  const range = 900_000;
+  const ceiling = Math.floor(0x1_0000_0000 / range) * range;
+  const random = new Uint32Array(1);
+  let value = 0;
+
+  do {
+    crypto.getRandomValues(random);
+    value = random[0] ?? 0;
+  } while (value >= ceiling);
+
+  return String(100_000 + (value % range));
 }

@@ -1,0 +1,91 @@
+name: Dependency remediation
+
+on:
+  push:
+    branches:
+      - codex/security-ci-pr-gates-2026-11-17
+
+concurrency:
+  group: dependency-remediation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  safe-updates:
+    name: Apply non-breaking audit fixes and verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout isolated remediation branch
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install current lockfile
+        run: npm ci
+
+      - name: Apply npm audit fixes without force
+        run: npm audit fix --no-fund --no-progress || true
+
+      - name: Reinstall exact updated lockfile
+        run: npm ci
+
+      - name: Report remaining audit findings
+        run: |
+          npm audit --json > npm-audit.json || true
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const report = JSON.parse(fs.readFileSync('npm-audit.json', 'utf8'));
+          const counts = report.metadata?.vulnerabilities ?? {};
+          console.log(
+            'Remaining vulnerabilities:',
+            JSON.stringify({
+              info: counts.info ?? 0,
+              low: counts.low ?? 0,
+              moderate: counts.moderate ?? 0,
+              high: counts.high ?? 0,
+              critical: counts.critical ?? 0,
+            }),
+          );
+          NODE
+
+      - name: Verify dependency updates
+        run: |
+          if ! git diff --quiet -- package.json; then
+            echo "Refusing to auto-commit manifest range changes. Review package.json manually."
+            exit 1
+          fi
+          git diff --check
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint:strict
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build:optimized
+
+      - name: Commit verified lockfile-only updates
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo "No non-breaking lockfile updates were produced."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "fix(deps): apply verified non-breaking audit updates"
+          git push origin HEAD
