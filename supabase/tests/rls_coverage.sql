@@ -124,6 +124,27 @@ BEGIN
     problems := problems || 'authenticated has direct write access to public.profiles';
   END IF;
 
+  -- 7. Privileged-column guards must exist: RLS self-update policies are not
+  -- column-level, so without these triggers a user could set their own role.
+  IF to_regclass('public.users') IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgrelid = 'public.users'::regclass
+      AND tgname = 'trg_guard_users_privileged_columns' AND NOT tgisinternal
+  ) THEN
+    problems := problems || 'public.users is missing trg_guard_users_privileged_columns';
+  END IF;
+  IF to_regclass('public.drivers') IS NOT NULL AND NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgrelid = 'public.drivers'::regclass
+      AND tgname = 'trg_guard_drivers_privileged_columns' AND NOT tgisinternal
+  ) THEN
+    problems := problems || 'public.drivers is missing trg_guard_drivers_privileged_columns';
+  END IF;
+  IF to_regclass('public.wallets') IS NOT NULL AND (
+    has_table_privilege('authenticated', 'public.wallets', 'UPDATE')
+    OR has_table_privilege('authenticated', 'public.wallets', 'INSERT')
+  ) THEN
+    problems := problems || 'authenticated can write public.wallets directly';
+  END IF;
+
   IF array_length(problems, 1) IS NOT NULL THEN
     RAISE EXCEPTION E'RLS coverage check failed (% problem(s)):\n  - %',
       array_length(problems, 1), array_to_string(problems, E'\n  - ');
