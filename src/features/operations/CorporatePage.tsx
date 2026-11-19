@@ -23,9 +23,9 @@ export function CorporatePage() {
           style={{
             textAlign: 'center',
             padding: '48px 24px',
-            background: 'linear-gradient(135deg, #11141c 0%, #07090e 100%)',
+            background: 'linear-gradient(135deg, ' + C.bg + ' 0%, ' + C.card2 + ' 100%),
             borderRadius: 16,
-            border: '1px solid #1f2937',
+            border: '1px solid ' + C.border,
             marginBottom: 32,
           }}
         >
@@ -33,7 +33,7 @@ export function CorporatePage() {
           <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12 }}>
             {ar ? 'حلول النقل للشركات والمؤسسات' : 'Corporate Mobility & Fleet Solutions'}
           </h1>
-          <p style={{ color: '#9ca3af', maxWidth: 600, margin: '0 auto', fontSize: 16 }}>
+          <p style={{ color: C.textMuted, maxWidth: 600, margin: '0 auto', fontSize: 16 }}>
             {ar
               ? 'خدمات نقل مخصصة للموظفين، فوترة مركزية، إدارة مسارات ذكية، وحجز أساطيل كاملة للشركات في الأردن.'
               : 'Dedicated fleet dispatch, recurring routes, centralized billing, and custom logistics portals for companies in Jordan.'}
@@ -81,10 +81,10 @@ export function CorporatePage() {
         {/* Inquiry Form */}
         <div
           style={{
-            backgroundColor: '#11141c',
+            backgroundColor: C.cardSolid,
             padding: 32,
             borderRadius: 12,
-            border: '1px solid #1f2937',
+            border: '1px solid ' + C.border,
           }}
         >
           {submitted ? (
@@ -93,7 +93,7 @@ export function CorporatePage() {
               <h3 style={{ fontSize: 20, fontWeight: 600 }}>
                 {ar ? 'تم إرسال الطلب بنجاح' : 'Inquiry Submitted'}
               </h3>
-              <p style={{ color: '#9ca3af', marginTop: 8 }}>
+              <p style={{ color: C.textMuted, marginTop: 8 }}>
                 {ar
                   ? 'سيتواصل معك فريق مبيعات واصل خلال 24 ساعة عمل.'
                   : 'Our corporate logistics team will contact you within 24 business hours.'}
@@ -115,7 +115,7 @@ export function CorporatePage() {
                 <div>
                   <label
                     htmlFor="corporate-company-name"
-                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: '#9ca3af' }}
+                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: C.textMuted }}
                   >
                     {ar ? 'اسم الشركة' : 'Company Name'}
                   </label>
@@ -125,8 +125,8 @@ export function CorporatePage() {
                     style={{
                       width: '100%',
                       padding: 12,
-                      backgroundColor: '#161b26',
-                      border: '1px solid #374151',
+                      backgroundColor: C.bgAlt,
+                      border: '1px solid ' + C.borderHov,
                       borderRadius: 8,
                       color: '#fff',
                     }}
@@ -135,7 +135,7 @@ export function CorporatePage() {
                 <div>
                   <label
                     htmlFor="corporate-work-email"
-                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: '#9ca3af' }}
+                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: C.textMuted }}
                   >
                     {ar ? 'البريد الإلكتروني للعمل' : 'Work Email'}
                   </label>
@@ -146,8 +146,8 @@ export function CorporatePage() {
                     style={{
                       width: '100%',
                       padding: 12,
-                      backgroundColor: '#161b26',
-                      border: '1px solid #374151',
+                      backgroundColor: C.bgAlt,
+                      border: '1px solid ' + C.borderHov,
                       borderRadius: 8,
                       color: '#fff',
                     }}
@@ -165,7 +165,7 @@ export function CorporatePage() {
                 <div>
                   <label
                     htmlFor="corporate-passenger-count"
-                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: '#9ca3af' }}
+                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: C.textMuted }}
                   >
                     {ar ? 'عدد الموظفين المتوقع نقلهم' : 'Estimated Passengers'}
                   </label>
@@ -174,8 +174,8 @@ export function CorporatePage() {
                     style={{
                       width: '100%',
                       padding: 12,
-                      backgroundColor: '#161b26',
-                      border: '1px solid #374151',
+                      backgroundColor: C.bgAlt,
+                      border: '1px solid ' + C.borderHov,
                       borderRadius: 8,
                       color: '#fff',
                     }}
@@ -189,7 +189,7 @@ export function CorporatePage() {
                 <div>
                   <label
                     htmlFor="corporate-schedule-mode"
-                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: '#9ca3af' }}
+                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: C.textMuted }}
                   >
                     {ar ? 'الجدول الزمني المطلوب' : 'Schedule Mode'}
                   </label>
@@ -198,8 +198,8 @@ export function CorporatePage() {
                     style={{
                       width: '100%',
                       padding: 12,
-                      backgroundColor: '#161b26',
-                      border: '1px solid #374151',
+                      backgroundColor: C.bgAlt,
+                      border: '1px solid ' + C.borderHov,
                       borderRadius: 8,
                       color: '#fff',
                     }}
@@ -215,7 +215,7 @@ export function CorporatePage() {
                   width: '100%',
                   padding: 14,
                   backgroundColor: C.cyan,
-                  color: '#0c0f16',
+                  color: C.brandInk,
                   border: 'none',
                   borderRadius: 8,
                   fontWeight: 600,
@@ -245,15 +245,15 @@ function FeatureCard({
   return (
     <div
       style={{
-        backgroundColor: '#11141c',
-        border: '1px solid #1f2937',
+        backgroundColor: C.cardSolid,
+        border: '1px solid ' + C.border,
         borderRadius: 12,
         padding: 24,
       }}
     >
       <div
         style={{
-          backgroundColor: '#1c2230',
+          backgroundColor: C.panel,
           width: 44,
           height: 44,
           display: 'flex',
@@ -266,7 +266,7 @@ function FeatureCard({
         {icon}
       </div>
       <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: '#fff' }}>{title}</h3>
-      <p style={{ color: '#9ca3af', fontSize: 14, lineHeight: 1.5 }}>{description}</p>
+      <p style={{ color: C.textMuted, fontSize: 14, lineHeight: 1.5 }}>{description}</p>
     </div>
   );
 }
