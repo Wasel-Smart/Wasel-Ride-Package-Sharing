@@ -97,6 +97,11 @@ export function mapBookingRow ( row: Record<string, unknown> ) {
     amount,
     status: String( row.booking_status ?? row.status ?? 'pending' ),
     booking_status: String( row.booking_status ?? row.status ?? 'pending' ),
+    service_type: String( row.service_type ?? 'ride' ),
+    schedule_date: row.schedule_date ?? null,
+    departure_time: row.departure_time ?? null,
+    seat_preference: row.seat_preference ?? null,
+    schedule_mode: row.schedule_mode ?? null,
   };
 }
 

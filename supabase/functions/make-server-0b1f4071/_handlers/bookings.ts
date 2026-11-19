@@ -123,6 +123,41 @@ async function createBooking ( request: Request, auth: BookingAuth ): Promise<Re
   const data = ( Array.isArray( created ) ? created[ 0 ] : created );
   if ( !data ) {return json( { error: 'Booking could not be created' }, 500 );}
 
+  const bookingId = String( data.booking_id ?? data.id ?? '' );
+
+  // Bus bookings carry schedule + seat-preference metadata that the
+  // seat-reservation RPC does not store. Persist them as a best-effort follow-up so
+  // a bus ticket keeps its schedule date and seat choice server-side. This is
+  // metadata only — seats and fare stay server-owned via the RPC. If the bus
+  // columns are not yet migrated the update errors, is caught and logged, and the
+  // booking still succeeds (the seat is the source of truth).
+  const serviceType = typeof body.service_type === 'string'
+    ? body.service_type.trim().toLowerCase()
+    : 'ride';
+  if ( bookingId && serviceType === 'bus' ) {
+    const { data: busRow, error: busErr } = await auth.admin
+      .from( 'bookings' )
+      .update( {
+        service_type: 'bus',
+        schedule_date: typeof body.schedule_date === 'string' ? body.schedule_date.trim().slice( 0, 10 ) : null,
+        departure_time: typeof body.departure_time === 'string' ? body.departure_time.trim().slice( 0, 8 ) : null,
+        seat_preference: typeof body.seat_preference === 'string' ? body.seat_preference.trim().slice( 0, 50 ) : null,
+        schedule_mode: typeof body.schedule_mode === 'string' ? body.schedule_mode.trim().slice( 0, 20 ) : null,
+      } )
+      .eq( 'booking_id', bookingId )
+      .select( '*' )
+      .maybeSingle();
+    if ( busErr ) {
+      console.error( '[bookings] bus metadata persist failed', {
+        requestId: crypto.randomUUID(),
+        bookingId,
+        detail: busErr.message,
+      } );
+    } else if ( busRow ) {
+      return json( { booking: mapBookingRow( busRow ) } );
+    }
+  }
+
   return json( { booking: mapBookingRow( data ) } );
 }
 

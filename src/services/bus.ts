@@ -173,7 +173,33 @@ export function getOfficialBusRoutes(query: BusRouteQuery = {}): BusRoute[] {
   return OFFICIAL_JORDAN_BUS_ROUTES.filter(route => !query.seats || route.seats >= query.seats);
 }
 
+// Short-lived route cache so repeated bus searches within a session do not each
+// hit the trips API. The official route list is a static module const, but the
+// live search is a network call; a 60s TTL keeps results fresh for a booking flow
+// without hammering the backend on every keystroke or tab switch.
+const ROUTE_CACHE_TTL_MS = 60_000;
+const ROUTE_CACHE_MAX = 64;
+const routeCache = new Map<string, { at: number; routes: BusRoute[] }>();
+
+function routeCacheKey(query: BusRouteQuery): string {
+  return `${query.from ?? ''}|${query.to ?? ''}|${query.date ?? ''}|${query.seats ?? ''}`;
+}
+
+function cacheRoutes(key: string, routes: BusRoute[]): void {
+  routeCache.set(key, { at: Date.now(), routes });
+  if (routeCache.size > ROUTE_CACHE_MAX) {
+    const oldestKey = [...routeCache.entries()].sort((a, b) => a[1].at - b[1].at)[0]?.[0];
+    if (oldestKey) {routeCache.delete(oldestKey);}
+  }
+}
+
 export async function fetchBusRoutes(query: BusRouteQuery): Promise<BusRoute[]> {
+  const key = routeCacheKey(query);
+  const cached = routeCache.get(key);
+  if (cached && Date.now() - cached.at < ROUTE_CACHE_TTL_MS) {
+    return cached.routes;
+  }
+
   const officialRoutes = getOfficialBusRoutes(query);
 
   try {
@@ -188,7 +214,9 @@ export async function fetchBusRoutes(query: BusRouteQuery): Promise<BusRoute[]> 
       .filter(looksLikeBusTrip)
       .map((item, index) => normalizeBusRoute(item, index));
 
-    return busOnly.length > 0 ? busOnly : officialRoutes;
+    const result = busOnly.length > 0 ? busOnly : officialRoutes;
+    cacheRoutes(key, result);
+    return result;
   } catch {
     return officialRoutes;
   }
@@ -298,6 +326,7 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
       pickup: payload.pickupStop,
       dropoff: payload.dropoffStop,
       metadata: {
+        service_type: 'bus',
         schedule_date: payload.scheduleDate,
         departure_time: payload.departureTime,
         seat_preference: payload.seatPreference,
