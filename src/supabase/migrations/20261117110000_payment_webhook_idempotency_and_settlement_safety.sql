@@ -23,7 +23,6 @@ begin
     raise exception 'Duplicate active payment intents exist for the same ride or package reference; reconcile them before applying payment idempotency constraints.';
   end if;
 end $;
-
 create unique index if not exists wallet_payment_intents_active_reference_uidx
   on public.wallet_payment_intents (user_id, purpose, reference_type, reference_id)
   where purpose in ('ride_payment', 'package_payment')
