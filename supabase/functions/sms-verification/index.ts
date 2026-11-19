@@ -32,6 +32,8 @@ const SUPABASE_SECRET_KEY =
 
 const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID') ?? '';
 const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN') ?? '';
+const TWILIO_API_KEY_SID = Deno.env.get('TWILIO_API_KEY_SID') ?? '';
+const TWILIO_API_KEY_SECRET = Deno.env.get('TWILIO_API_KEY_SECRET') ?? '';
 const TWILIO_VERIFY_SERVICE_SID =
   Deno.env.get('TWILIO_VERIFY_SERVICE_SID') ??
   Deno.env.get('TWILIO_VERIFY_SID') ??
@@ -90,9 +92,9 @@ function isConfigured(): boolean {
     SUPABASE_URL &&
     SUPABASE_PUBLISHABLE_KEY &&
     SUPABASE_SECRET_KEY &&
-    TWILIO_ACCOUNT_SID &&
-    TWILIO_AUTH_TOKEN &&
-    TWILIO_VERIFY_SERVICE_SID
+    ((TWILIO_API_KEY_SID && TWILIO_API_KEY_SECRET) ||
+      (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN)) &&
+    /^VA[0-9a-f]{32}$/i.test(TWILIO_VERIFY_SERVICE_SID)
   );
 }
 
@@ -148,7 +150,9 @@ async function supabaseAdminRateLimit(
 }
 
 function twilioAuthHeader(): string {
-  return `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`;
+  const username = TWILIO_API_KEY_SID || TWILIO_ACCOUNT_SID;
+  const password = TWILIO_API_KEY_SECRET || TWILIO_AUTH_TOKEN;
+  return `Basic ${btoa(`${username}:${password}`)}`;
 }
 
 async function callTwilioVerify(
