@@ -340,7 +340,7 @@ export function CoreExperienceBanner({
         borderRadius: R.xl,
         padding: '13px 14px',
         marginBottom: 18,
-        boxShadow: '0 14px 34px rgba(0,0,0,0.22)',
+        boxShadow: '0 14px 34px rgba(8,29,57,0.22)',
       }}
     >
       <span style={{ ...pill(tone), flexShrink: 0 }}>{t('pageShared.live')}</span>

@@ -18,7 +18,7 @@ export function TrustOnboarding({
         borderRadius: R.xxl,
         border: `1px solid ${C.cyan}33`,
         background: `linear-gradient(180deg, ${C.cyan}08, ${C.card})`,
-        boxShadow: `0 0 0 1px ${C.cyan}12, 0 8px 24px rgba(0,0,0,0.25)`,
+        boxShadow: `0 0 0 1px ${C.cyan}12, 0 8px 24px rgba(8,29,57,0.25)`,
       }}
     >
       <div

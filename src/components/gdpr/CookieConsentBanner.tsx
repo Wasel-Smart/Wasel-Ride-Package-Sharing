@@ -95,7 +95,7 @@ export function CookieConsentBanner() {
         padding: isMobile ? '1rem' : '1.25rem 1.5rem',
         zIndex: 999,
         backdropFilter: 'blur(12px)',
-        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.35)',
+        boxShadow: '0 -4px 20px rgba(8,29,57, 0.35)',
         transition: 'bottom 0.2s ease-in-out',
       }}
     >

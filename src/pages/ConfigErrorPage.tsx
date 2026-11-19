@@ -38,7 +38,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
           background:
             'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)), rgba(10,22,40,0.94)',
           border: '1px solid rgba(245,177,30,0.24)',
-          boxShadow: '0 28px 70px rgba(0,0,0,0.42)',
+          boxShadow: '0 28px 70px rgba(8,29,57,0.42)',
           backdropFilter: 'blur(18px)',
         }}
       >

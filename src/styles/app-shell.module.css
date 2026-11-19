@@ -156,7 +156,7 @@
   border-radius: 50%;
   background: #eef8ff;
   transition: left 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 2px 8px rgba(8,29,57, 0.28);
 }
 
 .settingsToggleThumbActive {

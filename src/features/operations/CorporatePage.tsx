@@ -89,7 +89,7 @@ export function CorporatePage() {
         >
           {submitted ? (
             <div style={{ textAlign: 'center', padding: '24px 0' }}>
-              <CheckCircle size={48} color="#10b981" style={{ margin: '0 auto 16px' }} />
+              <CheckCircle size={48} color="#72C70D" style={{ margin: '0 auto 16px' }} />
               <h3 style={{ fontSize: 20, fontWeight: 600 }}>
                 {ar ? 'تم إرسال الطلب بنجاح' : 'Inquiry Submitted'}
               </h3>

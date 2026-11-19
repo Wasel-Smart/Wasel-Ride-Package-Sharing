@@ -177,7 +177,8 @@ export function getPasswordStrengthLabel(score: number): string {
 }
 
 export function getPasswordStrengthColor(score: number): string {
-  return ['#ef4444', '#f59e0b', '#eab308', '#22c55e', '#10b981'][score] ?? '#ef4444';
+  // Brand-aligned strength ramp (weak -> strong): rose, ember, gold, lime, green.
+  return ['#FF7C8B', '#FF8A0B', '#FFBE5C', '#9AF1CF', '#72C70D'][score] ?? '#FF7C8B';
 }
 
 export interface TwoFactorSetup {

@@ -59,7 +59,7 @@ export function popoverStyle({
   padding,
   borderRadius = 16,
   background = 'rgba(8,22,35,0.98)',
-  boxShadow = '0 24px 64px rgba(0,0,0,0.75)',
+  boxShadow = '0 24px 64px rgba(8,29,57,0.75)',
 }: PopoverOptions): CSSProperties {
   return {
     position: 'absolute',
@@ -210,7 +210,7 @@ export const rootPartStyles = {
     position: 'fixed',
     inset: 0,
     zIndex: 2000,
-    background: 'rgba(0,0,0,0.75)',
+    background: 'rgba(8,29,57,0.75)',
     backdropFilter: 'blur(6px)',
   } satisfies CSSProperties,
   drawerPanel: (ar: boolean) =>
@@ -222,7 +222,7 @@ export const rootPartStyles = {
       height: '100%',
       background: C.bg,
       borderInlineStart: `1px solid ${C.border}`,
-      boxShadow: ar ? '20px 0 60px rgba(0,0,0,0.7)' : '-20px 0 60px rgba(0,0,0,0.7)',
+      boxShadow: ar ? '20px 0 60px rgba(8,29,57,0.7)' : '-20px 0 60px rgba(8,29,57,0.7)',
       overflowY: 'auto',
       display: 'flex',
       flexDirection: 'column',

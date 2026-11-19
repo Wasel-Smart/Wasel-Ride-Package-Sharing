@@ -70,7 +70,7 @@ export function Protected({ children }: { children: ReactNode }) {
             borderRadius: r(24),
             background: `linear-gradient(180deg, ${DS.card} 0%, ${DS.bg} 100%)`,
             border: `1px solid ${DS.border}`,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
+            boxShadow: '0 20px 60px rgba(8,29,57,0.35)',
             textAlign: 'center',
           }}
         >
@@ -234,7 +234,7 @@ export function SectionHead({
         position: 'relative',
         overflow: 'hidden',
         border: `1px solid ${color}18`,
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+        boxShadow: '0 8px 32px rgba(8,29,57,0.4)',
       }}
     >
       <div
