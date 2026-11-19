@@ -7,9 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Refactored
+- `OfferRidePage` split into a pure render shell (~394 lines) and `useOfferRideController` hook (350 lines) — all state, side-effects, trust gate evaluation, route intelligence, and submission logic are now independently testable
+- Added `useOfferRideController.test.ts` unit tests covering step validation boundary conditions and Arabic error message format
+- Added `aria-label` to all icon-only buttons in `OfferRidePage` (step progress bar now carries `role="progressbar"` with `aria-valuenow`)
+
+### Added
+- E2E specs: `offer-ride.spec.ts`, `bus-booking.spec.ts`, `package-flow.spec.ts`, `driver-onboarding.spec.ts`, `trust-center.spec.ts`, `payment-methods.spec.ts`, `schedule.spec.ts`, `support.spec.ts` — 10 spec files total (was 4)
+- W3C traceparent distributed tracing helpers (`resolveTraceContext`, `buildDownstreamTraceHeaders`) in edge `_shared/pure-helpers.ts`; exported through `_handlers/shared.ts` barrel
+- `CREDENTIAL_ROTATION_REQUIRED.md` — operator checklist with provider links for all exposed credentials
+
+### Fixed
+- `SchedulePage.persist()` is now Supabase-first (throws on failure instead of silently falling through to localStorage); errors surface via a live `role="alert"` banner
+- `AdminDashboardPage` now verifies JWT `app_metadata.role` claim (server-issued) in addition to the profile role field — cannot be spoofed via DevTools or stale cache
+- Removed duplicate `src/services/tokens.ts` (conflicting hex values; canonical source is `src/utils/wasel-ds.ts`)
+- Removed `--warn-only` from `verify:ci` observability gate — missing `VITE_SENTRY_DSN` or `VITE_APP_INSIGHTS_CONNECTION_STRING` now blocks production deploys
+- Iraq market code clarified as infrastructure-only (future feature flag) — not dead code, not accidentally active
+
 ### Security
 - Stripe and CliQ webhooks now answer 400 (not a retryable 500) when a correctly signed body is not a JSON object; covered by new Deno tests
 - `/communications/admin/apply-migrations` and `/moderation/admin/apply-migrations` return 410 unless `ALLOW_RUNTIME_MIGRATIONS=true`; schema changes ship through `supabase db push`
+
 
 ### Changed
 - Documentation now states the coverage gate CI actually enforces (20/25/30/28 ratchet) separately from the 75/80/85/85 target

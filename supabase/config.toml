@@ -254,6 +254,12 @@ enabled = false
 #
 # OPTIONS requests must be handled with proper CORS responses.
 
+# Canonical Wasel API edge function.
+# Human-readable alias: "wasel-api". The hash suffix (0b1f4071) is a
+# deployment-stability identifier. All new external integrations (Stripe,
+# CliQ webhooks, monitoring) should reference this function by its full name.
+# Rename path: supabase functions deploy wasel-api --project-ref $REF
+# then update Stripe webhook URL, SMS hook URI above, and SUPABASE_BLOCKERS.md.
 [functions.make-server-0b1f4071]
 verify_jwt = false
 

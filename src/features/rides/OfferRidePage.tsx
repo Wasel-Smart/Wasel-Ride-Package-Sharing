@@ -1,255 +1,53 @@
-import { useEffect, useMemo, useState } from 'react';
+/**
+ * OfferRidePage — pure render shell.
+ *
+ * All state, effects, and business logic live in useOfferRideController.
+ * This file is intentionally thin: it only maps controller output to JSX.
+ */
+
 import { Brain, CheckCircle2, Network } from 'lucide-react';
-import { useLocalAuth } from '../../contexts/LocalAuth';
-import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { createGenderMeta, OFFER_RIDE_DRAFT_KEY } from '../../pages/waselCoreRideData';
-import { DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
-import {
-  createOfferRideDefaultForm,
-  validateOfferRideStep,
-} from '../../pages/waselCorePageHelpers';
-import { readStoredObject } from '../../pages/waselCoreStorage';
-import {
-  createConnectedRide,
-  getConnectedRides,
-  getConnectedStats,
-} from '../../services/journeyLogistics';
-import { getBookingsForDriver, type RideBookingRecord } from '../../services/rideLifecycle';
-import { notificationsAPI } from '../../services/notifications.js';
-import { subscribeToRideBookingRealtime } from '../../services/rideRealtime';
-import { getDriverReadinessSummary } from '../../services/driverOnboarding';
-import { evaluateTrustCapability } from '../../services/trustRules';
-import { recordMovementActivity } from '../../services/movementMembership';
-import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
-import { buildDriverRoutePlan, getMarketplaceNodes } from '../../config/wasel-movement-network';
+import { PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
 import { C } from '../../utils/wasel-ds';
-import { useLocale } from '../../hooks/useLocale';
 import { OfferRideFormPanel } from './components/OfferRideFormPanel';
 import { OfferRideIncomingRequests } from './components/OfferRideIncomingRequests';
-import { cityLabel, packageCapacityLabel } from './offerRideContent';
-import { tx } from '../../locales/tx';
-import { useLanguage } from '../../contexts/LanguageContext';
-
-const GENDER_META = createGenderMeta(DS);
+import { useOfferRideController } from './hooks/useOfferRideController';
 
 export function OfferRidePage() {
-  const nav = useIframeSafeNavigate();
-  const { user } = useLocalAuth();
-  const defaultForm = createOfferRideDefaultForm();
-  const { notifyTripConfirmed, requestPermission, permission } = usePushNotifications();
-  const locale = useLocale();
-  const { language } = useLanguage();
-  const ar = language === 'ar';
-  const city = (value: string) => cityLabel(value, language);
-  const capacity = (value: string) => packageCapacityLabel(value, language);
-  const departureWindow = (value: string) =>
-    ar ? value.replace(/\band\b/g, 'و') : value;
-
-  const [step, setStep] = useState(1);
-  const [form, setForm] = useState(() => readStoredObject(OFFER_RIDE_DRAFT_KEY, defaultForm));
-  const [submitted, setSubmitted] = useState(false);
-  const [rideBookings, setRideBookings] = useState<RideBookingRecord[]>([]);
-  const [networkStats, setNetworkStats] = useState(() => getConnectedStats());
-  const [busyState, setBusyState] = useState<'idle' | 'posting'>('idle');
-  const [formError, setFormError] = useState<string | null>(null);
-  const [draftMessage, setDraftMessage] = useState<string | null>(null);
-
-  const marketplaceNodes = useMemo(() => getMarketplaceNodes().slice(2, 5), []);
-  const offerGate = evaluateTrustCapability(user, 'offer_ride');
-  const packageGate = evaluateTrustCapability(user, 'carry_packages');
-  const driverReadiness = getDriverReadinessSummary(user);
-  const readinessHeadline = ar
-    ? {
-      not_started: 'ابدأ إعداد السائق',
-      complete_profile: 'أكد معلومات الاتصال',
-      complete_verification: 'أرسل مستندات السائق',
-      pending_review: 'مستنداتك قيد المراجعة',
-      ready: 'أنت جاهز لنشر الرحلة',
-    }[driverReadiness.status]
-    : driverReadiness.headline;
-  const readinessDetail = ar
-    ? {
-      not_started: 'فعّل وضع السائق للبدء.',
-      complete_profile: 'أكد رقم هاتفك وبريدك الإلكتروني للمتابعة.',
-      complete_verification: 'أدخل رقم رخصة القيادة لإرسال مستنداتك للمراجعة.',
-      pending_review: 'يمكنك تجهيز مسارك الآن؛ يتاح النشر بعد اعتماد المستندات.',
-      ready: 'يمكنك نشر الرحلات بعد إكمال خطوات التحقق.',
-    }[driverReadiness.status]
-    : driverReadiness.detail;
-  const readinessStepLabels = ar
-    ? {
-      account_role: 'تفعيل وضع السائق',
-      phone: 'تأكيد الهاتف',
-      email: 'تأكيد البريد الإلكتروني',
-      driver_documents: 'إرسال مستندات السائق',
-      driver_clearance: 'اعتماد السائق',
-    }
-    : null;
-  const driverPlan = useMemo(
-    () => buildDriverRoutePlan(form.from, form.to, form.seats),
-    [form.from, form.to, form.seats],
-  );
-  const routeIntelligence = useLiveRouteIntelligence({
-    from: form.from,
-    to: form.to,
-    userId: user?.id,
-  });
-  const selectedSignal = routeIntelligence.selectedSignal;
-  const corridorCount = getConnectedRides().filter(
-    ride => ride.from === form.from && ride.to === form.to,
-  ).length;
-  const recentPostedRides = getConnectedRides()
-    .filter(ride => ride.from === form.from && ride.to === form.to)
-    .slice(0, 3);
-  const incomingRequests = user
-    ? getBookingsForDriver(user.id, getConnectedRides())
-        .filter(booking => {
-          const liveBooking = rideBookings.find(item => item.id === booking.id);
-          return (liveBooking ?? booking).status === 'pending_driver';
-        })
-        .slice(0, 4)
-    : [];
-
-  useEffect(() => {
-    setNetworkStats(getConnectedStats());
-  }, [submitted]);
-
-  useEffect(() => {
-    if (!user?.id) {return;}
-    return subscribeToRideBookingRealtime({
-      userId: user.id,
-      rides: getConnectedRides(),
-      onBookingsChange: setRideBookings,
-    });
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {return;}
-    const saved = window.localStorage.getItem(OFFER_RIDE_DRAFT_KEY);
-    if (saved) {setDraftMessage(ar ? 'تمت استعادة المسودة من جلستك السابقة.' : 'Draft restored from your last session.');}
-    window.localStorage.setItem(OFFER_RIDE_DRAFT_KEY, JSON.stringify(form));
-  }, [form]);
-
-  const updateForm = (key: string, value: string | number | boolean) => {
-    setForm(previous => ({ ...previous, [key]: value }));
-  };
-
-  const moveToStep = (targetStep: number) => {
-    const nextError = validateOfferRideStep(form, targetStep - 1, ar);
-    if (nextError) {
-      setFormError(nextError);
-      return;
-    }
-    setFormError(null);
-    setStep(targetStep);
-  };
-
-  const handlePostRide = async () => {
-    if (!user) {
-      nav('/app/auth');
-      return;
-    }
-    if (!offerGate.allowed) {
-      setFormError(offerGate.reason || 'Your account is not ready to offer a ride yet.');
-      return;
-    }
-    if (form.acceptsPackages && !packageGate.allowed) {
-      setFormError(packageGate.reason || 'Your account is not ready to carry packages yet.');
-      return;
-    }
-
-    const nextError = validateOfferRideStep(form, 3, ar);
-    if (nextError) {
-      setFormError(nextError);
-      return;
-    }
-
-    setBusyState('posting');
-    setFormError(null);
-
-    try {
-      const createdRide = await createConnectedRide({
-        ownerId: user.id,
-        from: form.from,
-        to: form.to,
-        date: form.date,
-        time: form.time,
-        seats: form.seats,
-        price: form.price,
-        gender: form.gender,
-        prayer: form.prayer,
-        carModel: form.carModel,
-        note: form.note,
-        acceptsPackages: form.acceptsPackages,
-        packageCapacity: form.packageCapacity as 'small' | 'medium' | 'large',
-        packageNote: form.packageNote,
-        status: 'active',
-      });
-
-      setSubmitted(true);
-      setDraftMessage(ar ? 'تم نشر الرحلة وحذف المسودة.' : 'Ride posted. Draft cleared.');
-      setNetworkStats(getConnectedStats());
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(OFFER_RIDE_DRAFT_KEY);
-      }
-
-      notificationsAPI
-        .createNotification({
-          title: ar ? 'تم نشر عرض الرحلة' : 'Ride offer posted',
-          message: form.acceptsPackages
-            ? ar
-              ? `أصبح مسارك من ${city(form.from)} إلى ${city(form.to)} متاحاً للركاب والطرود.`
-              : `Your ${form.from} to ${form.to} route is live for riders and packages.`
-            : ar
-              ? `أصبح مسارك من ${city(form.from)} إلى ${city(form.to)} متاحاً الآن.`
-              : `Your ${form.from} to ${form.to} route is now live.`,
-          type: 'booking',
-          priority: 'high',
-          action_url: '/app/offer-ride',
-        })
-        .catch(() => {});
-
-      if (permission === 'default') {
-        requestPermission().catch(() => {});
-      }
-      notifyTripConfirmed('Wasel Network', `${createdRide.from} to ${createdRide.to}`);
-      void recordMovementActivity('route_published', driverPlan?.corridor.id ?? null);
-    } catch (error) {
-      setFormError(ar
-        ? 'تعذّر نشر الرحلة الآن. تحقّق من اتصالك وحاول مرة أخرى.'
-        : error instanceof Error ? error.message : 'We could not post the route right now.');
-    } finally {
-      setBusyState('idle');
-    }
-  };
-
-  const quickMetrics = [
-    {
-      label: ar ? 'المقعد' : 'Seat',
-      value: driverPlan ? locale.formatCurrency(driverPlan.recommendedSeatPriceJod, 'JOD') : '--',
-      color: DS.cyan,
-    },
-    {
-      label: ar ? 'الرحلة الكاملة' : 'Full trip',
-      value: driverPlan ? locale.formatCurrency(driverPlan.grossWhenFullJod, 'JOD') : '--',
-      color: DS.green,
-    },
-    {
-      label: ar ? 'الطرد' : 'Package',
-      value: driverPlan ? locale.formatCurrency(driverPlan.packageBonusJod, 'JOD') : '--',
-      color: DS.gold,
-    },
-    {
-      label: ar ? 'الطلب' : 'Demand',
-      value: selectedSignal
-        ? `${selectedSignal.forecastDemandScore}/100`
-        : driverPlan
-          ? `${driverPlan.corridor.predictedDemandScore}/100`
-          : `${networkStats.ridesPosted}`,
-      color: DS.blue,
-    },
-  ];
+  const {
+    nav,
+    user,
+    ar,
+    form,
+    step,
+    busyState,
+    formError,
+    draftMessage,
+    submitted,
+    updateForm,
+    moveToStep,
+    resetForm,
+    setDraftMessage,
+    offerGate,
+    packageGate,
+    driverReadiness,
+    readinessHeadline,
+    readinessDetail,
+    readinessStepLabels,
+    driverPlan,
+    selectedSignal,
+    corridorCount,
+    recentPostedRides,
+    incomingRequests,
+    marketplaceNodes,
+    quickMetrics,
+    city,
+    capacity,
+    departureWindow,
+    handlePostRide,
+    tx,
+    GENDER_META,
+    DS,
+  } = useOfferRideController();
 
   return (
     <Protected>
@@ -262,6 +60,7 @@ export function OfferRidePage() {
           color={DS.blue}
         />
 
+        {/* ── Readiness / package gate banner ── */}
         {(!offerGate.allowed || (form.acceptsPackages && !packageGate.allowed)) && (
           <div
             style={{
@@ -341,6 +140,9 @@ export function OfferRidePage() {
             )}
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
               <button
+                aria-label={driverReadiness.status === 'pending_review'
+                  ? (ar ? 'متابعة حالة المراجعة' : 'Check approval status')
+                  : tx('offerRidePage.finish_checks')}
                 onClick={() => { void nav('/app/trust'); }}
                 style={{
                   height: 40,
@@ -358,6 +160,7 @@ export function OfferRidePage() {
                   : tx('offerRidePage.finish_checks')}
               </button>
               <button
+                aria-label={tx('offerRidePage.driver_console')}
                 onClick={() => { void nav('/app/driver'); }}
                 style={{
                   height: 40,
@@ -376,9 +179,9 @@ export function OfferRidePage() {
           </div>
         )}
 
-        {/* Step progress indicator */}
+        {/* ── Step progress bar ── */}
         {!submitted && (
-          <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 18 }} role="progressbar" aria-valuemin={1} aria-valuemax={3} aria-valuenow={step} aria-label={ar ? `الخطوة ${step} من 3` : `Step ${step} of 3`}>
             {[1, 2, 3].map(s => (
               <div
                 key={s}
@@ -396,7 +199,7 @@ export function OfferRidePage() {
           </div>
         )}
 
-        {/* Incoming requests shown BEFORE the form so drivers see them first */}
+        {/* Incoming requests shown BEFORE the form */}
         {incomingRequests.length > 0 && (
           <OfferRideIncomingRequests
             incomingRequests={incomingRequests}
@@ -406,13 +209,9 @@ export function OfferRidePage() {
 
         <div
           className="sp-2col"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '1.18fr 0.82fr',
-            gap: 18,
-            alignItems: 'start',
-          }}
+          style={{ display: 'grid', gridTemplateColumns: '1.18fr 0.82fr', gap: 18, alignItems: 'start' }}
         >
+          {/* ── Main column: form or success state ── */}
           <div>
             {submitted ? (
               <div
@@ -426,107 +225,38 @@ export function OfferRidePage() {
               >
                 <div
                   style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: r(16),
-                    margin: '0 auto 18px',
-                    display: 'grid',
-                    placeItems: 'center',
-                    background: C.greenDim,
-                    border: `1px solid ${DS.green}35`,
-                    color: DS.green,
+                    width: 64, height: 64, borderRadius: r(16), margin: '0 auto 18px',
+                    display: 'grid', placeItems: 'center',
+                    background: C.greenDim, border: `1px solid ${DS.green}35`, color: DS.green,
                   }}
                 >
                   <CheckCircle2 size={30} />
                 </div>
-                <h2
-                  style={{
-                    color: DS.green,
-                    fontWeight: 900,
-                    fontSize: '1.6rem',
-                    margin: '0 0 12px',
-                  }}
-                >
+                <h2 style={{ color: DS.green, fontWeight: 900, fontSize: '1.6rem', margin: '0 0 12px' }}>
                   {tx('offerRidePage.ride_offer_is_live')}
                 </h2>
                 <p style={{ color: DS.sub, margin: 0 }}>
-                  <strong style={{ color: C.text }}>{city(form.from)}</strong> {tx('offerRidePage.to')}{' '}
+                  <strong style={{ color: C.text }}>{city(form.from)}</strong>{' '}
+                  {tx('offerRidePage.to')}{' '}
                   <strong style={{ color: C.text }}>{city(form.to)}</strong>{' '}
                   {tx('offerRidePage.is_now_open_across_the_movement_network')}
                 </p>
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                    gap: 12,
-                    marginTop: 22,
-                  }}
-                >
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, marginTop: 22 }}>
                   {[
-                    {
-                      label: ar ? 'المسارات المباشرة' : 'Live routes',
-                      value: corridorCount > 0 ? `${corridorCount + 1}` : '1',
-                    },
-                    {
-                      label: ar ? 'الرحلة الكاملة' : 'Full trip',
-                      value: driverPlan ? `${driverPlan.grossWhenFullJod} ${ar ? 'دينار' : 'JOD'}` : '--',
-                    },
-                    {
-                      label: ar ? 'الوضع' : 'Mode',
-                      value: form.acceptsPackages
-                        ? ar ? `طرود ${capacity(form.packageCapacity)}` : `Packages ${form.packageCapacity}`
-                        : ar ? 'ركاب' : 'Passengers',
-                    },
+                    { label: ar ? 'المسارات المباشرة' : 'Live routes', value: corridorCount > 0 ? `${corridorCount + 1}` : '1' },
+                    { label: ar ? 'الرحلة الكاملة' : 'Full trip', value: driverPlan ? `${driverPlan.grossWhenFullJod} ${ar ? 'دينار' : 'JOD'}` : '--' },
+                    { label: ar ? 'الوضع' : 'Mode', value: form.acceptsPackages ? (ar ? `طرود ${capacity(form.packageCapacity)}` : `Packages ${form.packageCapacity}`) : (ar ? 'ركاب' : 'Passengers') },
                   ].map(item => (
-                    <div
-                      key={item.label}
-                      style={{
-                        background: DS.card2,
-                        borderRadius: r(16),
-                        padding: '14px 15px',
-                        border: `1px solid ${DS.border}`,
-                      }}
-                    >
-                      <div
-                        style={{
-                          color: DS.muted,
-                          fontSize: '0.68rem',
-                          textTransform: 'uppercase',
-                          letterSpacing: 0,
-                        }}
-                      >
-                        {item.label}
-                      </div>
-                      <div
-                        style={{
-                          color: C.text,
-                          fontWeight: 800,
-                          fontSize: '0.86rem',
-                          marginTop: 6,
-                        }}
-                      >
-                        {item.value}
-                      </div>
+                    <div key={item.label} style={{ background: DS.card2, borderRadius: r(16), padding: '14px 15px', border: `1px solid ${DS.border}` }}>
+                      <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase' }}>{item.label}</div>
+                      <div style={{ color: C.text, fontWeight: 800, fontSize: '0.86rem', marginTop: 6 }}>{item.value}</div>
                     </div>
                   ))}
                 </div>
                 <button
-                  onClick={() => {
-                    setSubmitted(false);
-                    setStep(1);
-                    setForm(defaultForm);
-                  }}
-                  style={{
-                    height: 46,
-                    marginTop: 24,
-                    padding: '0 20px',
-                    borderRadius: '999px',
-                    border: 'none',
-                    background: DS.gradC,
-                    color: C.text,
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                  }}
+                  aria-label={tx('offerRidePage.post_another_route')}
+                  onClick={resetForm}
+                  style={{ height: 46, marginTop: 24, padding: '0 20px', borderRadius: '999px', border: 'none', background: DS.gradC, color: C.text, fontWeight: 800, cursor: 'pointer' }}
                 >
                   {tx('offerRidePage.post_another_route')}
                 </button>
@@ -550,248 +280,97 @@ export function OfferRidePage() {
             )}
           </div>
 
+          {/* ── Sidebar: route intel + quick actions ── */}
           <div style={{ display: 'grid', gap: 14 }}>
-            <div
-              style={{
-                background: `linear-gradient(135deg, ${C.cyanDim}, ${C.cardSolid} 62%, ${C.goldDim})`,
-                borderRadius: r(22),
-                padding: '20px',
-                border: `1px solid ${DS.border}`,
-              }}
-            >
-              <div
-                style={{
-                  color: DS.cyan,
-                  fontSize: '0.72rem',
-                  fontWeight: 800,
-                  letterSpacing: 0,
-                  textTransform: 'uppercase',
-                }}
-              >
+            {/* Route launch card */}
+            <div style={{ background: `linear-gradient(135deg, ${C.cyanDim}, ${C.cardSolid} 62%, ${C.goldDim})`, borderRadius: r(22), padding: '20px', border: `1px solid ${DS.border}` }}>
+              <div style={{ color: DS.cyan, fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase' }}>
                 {tx('offerRidePage.launch_route')}
               </div>
-              <h2
-                style={{
-                  color: C.text,
-                  fontWeight: 900,
-                  fontSize: '1.5rem',
-                  lineHeight: 1.1,
-                  margin: '8px 0 10px',
-                }}
-              >
-                {city(form.from)} {tx('offerRidePage.to_2')}
-                {city(form.to)}
+              <h2 style={{ color: C.text, fontWeight: 900, fontSize: '1.5rem', lineHeight: 1.1, margin: '8px 0 10px' }}>
+                {city(form.from)} {tx('offerRidePage.to_2')}{city(form.to)}
               </h2>
               <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>
                 {ar
                   ? 'راقب الطلب والسعة والتسعير قبل نشر هذا المسار.'
-                  : selectedSignal?.recommendedReason ??
-                    driverPlan?.waselBrainNote ??
-                    'Choose the route, keep the price sharp, and open supply fast.'}
+                  : selectedSignal?.recommendedReason ?? driverPlan?.waselBrainNote ?? 'Choose the route, keep the price sharp, and open supply fast.'}
               </div>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                  gap: 10,
-                  marginTop: 16,
-                }}
-              >
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 16 }}>
                 {quickMetrics.map(item => (
-                  <div
-                    key={item.label}
-                    style={{
-                      background: C.elevated,
-                      borderRadius: r(16),
-                      border: `1px solid ${DS.border}`,
-                      padding: '14px 14px 12px',
-                    }}
-                  >
-                    <div style={{ color: item.color, fontWeight: 900, fontSize: '1rem' }}>
-                      {item.value}
-                    </div>
-                    <div
-                      style={{ color: C.text, fontWeight: 800, fontSize: '0.74rem', marginTop: 4 }}
-                    >
-                      {item.label}
-                    </div>
+                  <div key={item.label} style={{ background: C.elevated, borderRadius: r(16), border: `1px solid ${DS.border}`, padding: '14px 14px 12px' }}>
+                    <div style={{ color: item.color, fontWeight: 900, fontSize: '1rem' }}>{item.value}</div>
+                    <div style={{ color: C.text, fontWeight: 800, fontSize: '0.74rem', marginTop: 4 }}>{item.label}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div
-              style={{
-                background: DS.card,
-                borderRadius: r(20),
-                padding: '18px',
-                border: `1px solid ${DS.border}`,
-              }}
-            >
+            {/* Corridor pulse */}
+            <div style={{ background: DS.card, borderRadius: r(20), padding: '18px', border: `1px solid ${DS.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <Brain size={18} color={DS.cyan} />
-                <div style={{ color: C.text, fontWeight: 900 }}>
-                  {tx('offerRidePage.corridor_pulse')}
-                </div>
+                <Brain size={18} color={DS.cyan} aria-hidden="true" />
+                <div style={{ color: C.text, fontWeight: 900 }}>{tx('offerRidePage.corridor_pulse')}</div>
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
                   selectedSignal
-                    ? ar
-                      ? `${selectedSignal.activeDemandAlerts} تنبيه | ${selectedSignal.liveBookings} حجز`
-                      : `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings`
-                    : ar
-                      ? `${corridorCount} مسار مباشر على هذا الممر`
-                      : `${corridorCount} live route${corridorCount === 1 ? '' : 's'} on this lane`,
+                    ? ar ? `${selectedSignal.activeDemandAlerts} تنبيه | ${selectedSignal.liveBookings} حجز` : `${selectedSignal.activeDemandAlerts} alerts | ${selectedSignal.liveBookings} bookings`
+                    : ar ? `${corridorCount} مسار مباشر على هذا الممر` : `${corridorCount} live route${corridorCount === 1 ? '' : 's'} on this lane`,
                   selectedSignal
-                    ? ar
-                      ? `نافذة الانطلاق التالية: ${departureWindow(selectedSignal.nextWaveWindow)}`
-                      : `${selectedSignal.nextWaveWindow} | ${selectedSignal.recommendedPickupPoint}`
-                    : ar
-                      ? 'تظهر أفضل نافذة للانطلاق هنا'
-                      : (driverPlan?.corridor.autoGroupWindow ?? 'Best pickup window appears here'),
+                    ? ar ? `نافذة الانطلاق التالية: ${departureWindow(selectedSignal.nextWaveWindow)}` : `${selectedSignal.nextWaveWindow} | ${selectedSignal.recommendedPickupPoint}`
+                    : ar ? 'تظهر أفضل نافذة للانطلاق هنا' : (driverPlan?.corridor.autoGroupWindow ?? 'Best pickup window appears here'),
                   selectedSignal
-                    ? ar
-                      ? 'بيانات الحركة المباشرة تدعم هذا المسار.'
-                      : selectedSignal.productionSources.slice(0, 3).join(' | ')
+                    ? ar ? 'بيانات الحركة المباشرة تدعم هذا المسار.' : selectedSignal.productionSources.slice(0, 3).join(' | ')
                     : driverPlan
-                      ? ar
-                        ? `${driverPlan.emptySeatCostJod} دينار تكلفة المقعد الشاغر`
-                        : `${driverPlan.emptySeatCostJod} JOD lost per empty seat`
-                      : ar
-                        ? 'تظهر معلومات المسار بعد الاختيار'
-                        : 'Route intelligence appears after lane selection',
+                      ? ar ? `${driverPlan.emptySeatCostJod} دينار تكلفة المقعد الشاغر` : `${driverPlan.emptySeatCostJod} JOD lost per empty seat`
+                      : ar ? 'تظهر معلومات المسار بعد الاختيار' : 'Route intelligence appears after lane selection',
                 ].map(line => (
-                  <div
-                    key={line}
-                    style={{
-                      borderRadius: r(14),
-                      border: `1px solid ${DS.border}`,
-                      background: DS.card2,
-                      padding: '12px 14px',
-                      color: C.text,
-                      fontSize: '0.78rem',
-                      lineHeight: 1.55,
-                    }}
-                  >
+                  <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: C.text, fontSize: '0.78rem', lineHeight: 1.55 }}>
                     {line}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div
-              style={{
-                background: DS.card,
-                borderRadius: r(20),
-                padding: '18px',
-                border: `1px solid ${DS.border}`,
-              }}
-            >
+            {/* Add-on demand nodes */}
+            <div style={{ background: DS.card, borderRadius: r(20), padding: '18px', border: `1px solid ${DS.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <Network size={18} color={DS.green} />
-                <div style={{ color: C.text, fontWeight: 900 }}>
-                  {tx('offerRidePage.add_on_demand')}
-                </div>
+                <Network size={18} color={DS.green} aria-hidden="true" />
+                <div style={{ color: C.text, fontWeight: 900 }}>{tx('offerRidePage.add_on_demand')}</div>
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {marketplaceNodes.map(node => (
-                  <div
-                    key={node.id}
-                    style={{
-                      borderRadius: r(14),
-                      border: `1px solid ${DS.border}`,
-                      background: DS.card2,
-                      padding: '12px 14px',
-                    }}
-                  >
-                    <div style={{ color: C.text, fontWeight: 700, fontSize: '0.8rem' }}>
-                      {ar ? 'خدمة إضافية مرتبطة بالمسار' : node.title}
-                    </div>
-                    <div
-                      style={{
-                        color: DS.muted,
-                        fontSize: '0.74rem',
-                        lineHeight: 1.5,
-                        marginTop: 4,
-                      }}
-                    >
-                      {ar
-                        ? 'اربط هذه الخدمة بنفس الممر لتبقى الحركة والطرود والدعم في سياق واحد.'
-                        : node.summary}
-                    </div>
+                  <div key={node.id} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
+                    <div style={{ color: C.text, fontWeight: 700, fontSize: '0.8rem' }}>{ar ? 'خدمة إضافية مرتبطة بالمسار' : node.title}</div>
+                    <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.5, marginTop: 4 }}>{ar ? 'اربط هذه الخدمة بنفس الممر لتبقى الحركة والطرود والدعم في سياق واحد.' : node.summary}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div
-              style={{
-                background: DS.card,
-                borderRadius: r(20),
-                padding: '18px',
-                border: `1px solid ${DS.border}`,
-              }}
-            >
-              <div style={{ color: C.text, fontWeight: 900, marginBottom: 12 }}>
-                {tx('offerRidePage.quick_actions')}
-              </div>
+            {/* Quick actions */}
+            <div style={{ background: DS.card, borderRadius: r(20), padding: '18px', border: `1px solid ${DS.border}` }}>
+              <div style={{ color: C.text, fontWeight: 900, marginBottom: 12 }}>{tx('offerRidePage.quick_actions')}</div>
               <div style={{ display: 'grid', gap: 10 }}>
-                {driverReadiness.steps
-                  .filter(step => !step.complete)
-                  .slice(0, 2)
-                  .map(step => (
-                    <div
-                      key={step.id}
-                      style={{
-                        borderRadius: r(14),
-                        border: `1px solid ${DS.border}`,
-                        background: DS.card2,
-                        padding: '12px 14px',
-                      }}
-                    >
-                      <div style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem' }}>
-                        {step.label}
-                      </div>
-                      <div
-                        style={{
-                          color: DS.muted,
-                          fontSize: '0.74rem',
-                          lineHeight: 1.5,
-                          marginTop: 4,
-                        }}
-                      >
-                        {step.description}
-                      </div>
-                    </div>
-                  ))}
+                {driverReadiness.steps.filter(s => !s.complete).slice(0, 2).map(s => (
+                  <div key={s.id} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
+                    <div style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem' }}>{s.label}</div>
+                    <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.5, marginTop: 4 }}>{s.description}</div>
+                  </div>
+                ))}
               </div>
               <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
                 <button
+                  aria-label={tx('offerRidePage.open_driver_console')}
                   onClick={() => { void nav('/app/driver'); }}
-                  style={{
-                    height: 42,
-                    borderRadius: '999px',
-                    border: 'none',
-                    background: DS.gradC,
-                    color: C.text,
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                  }}
+                  style={{ height: 42, borderRadius: '999px', border: 'none', background: DS.gradC, color: C.text, fontWeight: 800, cursor: 'pointer' }}
                 >
                   {tx('offerRidePage.open_driver_console')}
                 </button>
                 <button
+                  aria-label={tx('offerRidePage.trust_center')}
                   onClick={() => { void nav('/app/trust'); }}
-                  style={{
-                    height: 42,
-                    borderRadius: '999px',
-                    border: `1px solid ${DS.border}`,
-                    background: DS.card2,
-                    color: C.text,
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                  }}
+                  style={{ height: 42, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: C.text, fontWeight: 800, cursor: 'pointer' }}
                 >
                   {tx('offerRidePage.trust_center')}
                 </button>
@@ -800,7 +379,6 @@ export function OfferRidePage() {
           </div>
         </div>
 
-        {/* Only show bottom incoming requests section if none shown above */}
         {incomingRequests.length === 0 && (
           <OfferRideIncomingRequests
             incomingRequests={incomingRequests}
