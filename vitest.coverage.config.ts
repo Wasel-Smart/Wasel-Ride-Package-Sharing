@@ -9,11 +9,14 @@ export default mergeConfig(baseConfig, {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov', 'json-summary', 'json'],
       reportsDirectory: './coverage',
+      // Keep the dedicated coverage run aligned with the thresholds in
+      // vitest.config.ts. Zero thresholds silently turn coverage into a
+      // report-only step and can allow regressions through CI.
       thresholds: {
-        lines: 0,
-        functions: 0,
-        branches: 0,
-        statements: 0,
+        lines: 90,
+        functions: 90,
+        branches: 85,
+        statements: 90,
       },
       all: true,
       include: ['src/**/*.{ts,tsx}'],

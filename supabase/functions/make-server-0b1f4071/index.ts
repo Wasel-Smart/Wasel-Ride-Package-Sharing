@@ -354,7 +354,9 @@ async function ensureCanonicalUser(
       email: normalizeString(user.email),
       full_name: fullName,
       phone_number: normalizeString(user.user_metadata?.phone_number) || normalizeString(user.phone),
-      role: normalizeString(user.user_metadata?.role) || 'passenger',
+      // Authorization roles must never come from user-editable Auth metadata.
+      // New canonical users start as passengers; privileged roles require a trusted admin workflow.
+      role: 'passenger',
     })
     .select('id, auth_user_id, email, full_name, phone_number')
     .single();

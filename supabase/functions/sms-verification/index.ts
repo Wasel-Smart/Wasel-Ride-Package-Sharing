@@ -16,7 +16,9 @@ const corsHeaders = {
 };
 
 function generateVerificationCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  const random = new Uint32Array(1);
+  crypto.getRandomValues(random);
+  return String(100000 + (random[0] % 900000));
 }
 
 serve(async (req) => {
@@ -60,21 +62,43 @@ serve(async (req) => {
         );
       }
 
-      const code = generateVerificationCode();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
       const supabaseAdmin = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
       );
 
-      await supabaseAdmin.from('phone_verifications').insert({
+      const windowStart = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      const { count: recentSends, error: rateLimitError } = await supabaseAdmin
+        .from('phone_verifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('phone_number', phone_number)
+        .gte('created_at', windowStart);
+
+      if (rateLimitError) {
+        throw new Error('Unable to verify SMS request limits.');
+      }
+      if ((recentSends ?? 0) >= 3) {
+        return new Response(
+          JSON.stringify({ error: 'Too many verification messages. Please try again later.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const code = generateVerificationCode();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+      const { error: insertError } = await supabaseAdmin.from('phone_verifications').insert({
         user_id: user.id,
         phone_number,
         code,
         expires_at: expiresAt.toISOString(),
         attempts: 0,
       });
+
+      if (insertError) {
+        throw new Error('Unable to create phone verification challenge.');
+      }
 
       const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
       const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
@@ -124,9 +148,10 @@ serve(async (req) => {
         .select('*')
         .eq('user_id', user.id)
         .eq('phone_number', phone_number)
-        .eq('code', code)
         .eq('verified', false)
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
       if (error || !verification) {
         return new Response(
@@ -138,6 +163,24 @@ serve(async (req) => {
       if (new Date(verification.expires_at) < new Date()) {
         return new Response(
           JSON.stringify({ error: 'Verification code expired' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if ((verification.attempts ?? 0) >= 5) {
+        return new Response(
+          JSON.stringify({ error: 'Too many incorrect attempts. Request a new code.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (String(verification.code) !== String(code)) {
+        await supabaseAdmin
+          .from('phone_verifications')
+          .update({ attempts: (verification.attempts ?? 0) + 1 })
+          .eq('id', verification.id);
+        return new Response(
+          JSON.stringify({ error: 'Invalid verification code' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -170,9 +213,9 @@ serve(async (req) => {
       { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('SMS verification error:', error);
+    console.error('SMS verification request failed:', error instanceof Error ? error.name : 'UnknownError');
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Unable to process verification request. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
