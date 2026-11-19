@@ -40,7 +40,7 @@
   --accent: var(--wasel-brand-ember);
   --accent-foreground: #081D39;
   --destructive: #ff7c8b;
-  --destructive-foreground: #ffffff;
+  --destructive-foreground: #081D39;
   --border: rgba(0, 229, 255, 0.16);
   --input: rgba(0, 229, 255, 0.08);
   /* Solid cyan ring — passes 3:1 non-text contrast on ink (#081D39). */
@@ -137,7 +137,7 @@
   --wasel-lh-body-ar: 1.95;
   --wasel-lh-body-en: 1.65;
   --wasel-lh-caption: 1.5;
-  --wasel-fw-black: 900;
+  --wasel-fw-black: 800;
   --wasel-fw-bold: 700;
   --wasel-fw-semibold: 600;
   --wasel-fw-medium: 500;
@@ -349,8 +349,8 @@ input[type='submit'] {
   --muted-foreground: #5d7d96;
   --accent: #ff8a0b;
   --accent-foreground: #081d39;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+  --destructive: #ff7c8b;
+  --destructive-foreground: #081D39;
   --border: rgba(8, 29, 57, 0.14);
   --input: rgba(8, 29, 57, 0.05);
   /* Solid blue ring — passes 3:1 non-text contrast on light surfaces. */
