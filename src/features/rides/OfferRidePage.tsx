@@ -15,7 +15,6 @@ import { useOfferRideController } from './hooks/useOfferRideController';
 export function OfferRidePage() {
   const {
     nav,
-    user,
     ar,
     form,
     step,

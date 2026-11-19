@@ -34,7 +34,8 @@ function useIsVerifiedAdmin(): { isAdmin: boolean; loading: boolean } {
 
   const isAdmin = useMemo(() => {
     // 1. Profile role check (client-cached).
-    if (!user || (user as unknown as Record<string, unknown>)?.user_metadata?.role !== 'admin') {
+    const meta = (user as unknown as { user_metadata?: { role?: string } })?.user_metadata;
+    if (!user || meta?.role !== 'admin') {
       return false;
     }
 
@@ -63,7 +64,7 @@ function useIsVerifiedAdmin(): { isAdmin: boolean; loading: boolean } {
 }
 
 export function AdminDashboardPage() {
-  const { user, session } = useAuth();
+  const { session } = useAuth();
   const { isAdmin } = useIsVerifiedAdmin();
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [loading, setLoading] = useState(true);
