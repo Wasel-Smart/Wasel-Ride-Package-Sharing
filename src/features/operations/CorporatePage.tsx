@@ -23,7 +23,7 @@ export function CorporatePage() {
           style={{
             textAlign: 'center',
             padding: '48px 24px',
-            background: 'linear-gradient(135deg, ' + C.bg + ' 0%, ' + C.card2 + ' 100%),
+            background: 'linear-gradient(135deg, ' + C.bg + ' 0%, ' + C.card2 + ' 100%)',
             borderRadius: 16,
             border: '1px solid ' + C.border,
             marginBottom: 32,
