@@ -3,6 +3,7 @@ import { BackendRequestError } from './backendWorkflow';
 import { trackGrowthEvent } from './growthEngine';
 import { tripsAPI } from './trips';
 import { OFFICIAL_JORDAN_BUS_ROUTES } from '../data/jordanBusNetwork';
+import { isLocalOnlySession } from '../utils/localSession';
 
 export interface BusRoute {
   id: string;
@@ -279,10 +280,21 @@ export function getStoredBusBookings(): StoredBusBooking[] {
 }
 
 export async function createBusBooking(payload: BusBookingPayload): Promise<BusBookingResult> {
+  // Validate up front: never send an invalid request, and never mask a
+  // validation failure behind a fabricated confirmation.
+  const tripId = payload.tripId?.trim();
+  const seats = payload.seatsRequested;
+  if (!tripId) {
+    throw new Error('A trip is required to book a bus seat.');
+  }
+  if (!Number.isInteger(seats) || seats < 1 || seats > 8) {
+    throw new Error('Choose between 1 and 8 seats.');
+  }
+
   try {
     const server = await bookingsAPI.createBooking({
-      tripId: payload.tripId,
-      seatsRequested: payload.seatsRequested,
+      tripId,
+      seatsRequested: seats,
       pickup: payload.pickupStop,
       dropoff: payload.dropoffStop,
       metadata: {
@@ -328,14 +340,20 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
     });
     return result;
   } catch (error) {
-    if (shouldUseLocalBusFallback(error)) {
+    // Only seeded demo / Playwright E2E sessions carry no real backend token, so a
+    // local booking record is the only way that flow can exercise the UI. Real
+    // signed-in users are never affected and never receive a fake confirmation.
+    if (isLocalOnlySession() && shouldUseLocalBusFallback(error)) {
       return createLocalBusBooking(payload);
     }
 
+    // Fail closed: a real user whose seat could not be reserved must see the
+    // failure, never a fabricated "confirmed" ticket. Only the server can hold
+    // a seat, so a server failure means no seat exists.
     throw error instanceof Error
       ? error
       : new Error(
-          'Bus booking is temporarily unavailable because the secure booking backend could not confirm the seat.',
+          'Your bus seat could not be confirmed. No charge was made — please try again.',
         );
   }
 }
