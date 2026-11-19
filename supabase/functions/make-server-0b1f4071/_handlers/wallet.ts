@@ -934,18 +934,24 @@ export async function resolvePayableAmount (
   }
 
   if ( referenceType === 'bus_booking' ) {
+    // Bus bookings live in the bookings table with service_type = 'bus' (see
+    // migration 20261120030000). The legacy bus_bookings table was never created by
+    // any migration and nothing wrote to it, so this lookup previously always 404'd.
     const { data, error } = await admin
-      .from( 'bus_bookings' )
-      .select( 'id, total_price, user_id, status' )
-      .eq( 'id', referenceId )
+      .from( 'bookings' )
+      .select( 'booking_id, total_price, passenger_id, booking_status, service_type' )
+      .eq( 'booking_id', referenceId )
       .maybeSingle();
 
     if ( error ) {return { error: walletOperationFailed( 'pay', error ) };}
     if ( !data ) {return { error: json( { error: 'Bus booking not found.' }, 404 ) };}
-    if ( data.user_id !== callerUserId ) {
+    if ( String( data.service_type ?? 'ride' ) !== 'bus' ) {
+      return { error: json( { error: 'Bus booking not found.' }, 404 ) };
+    }
+    if ( data.passenger_id !== callerUserId ) {
       return { error: json( { error: 'This booking does not belong to you.' }, 403 ) };
     }
-    if ( NON_PAYABLE_STATUSES.has( String( data.status ?? '' ).toLowerCase() ) ) {
+    if ( NON_PAYABLE_STATUSES.has( String( data.booking_status ?? '' ).toLowerCase() ) ) {
       return { error: json( { error: 'This booking is not payable (already paid or cancelled).' }, 409 ) };
     }
 
@@ -954,7 +960,7 @@ export async function resolvePayableAmount (
       return { error: json( { error: 'This booking has no payable amount.' }, 409 ) };
     }
 
-    return { amountJod, metadata: { bus_booking_id: data.id } };
+    return { amountJod, metadata: { bus_booking_id: data.booking_id } };
   }
 
   // Subscriptions and one-off purchases are priced by the server from the
