@@ -6,34 +6,36 @@ interface PhoneVerificationProps {
   onSkip?: () => void;
 }
 
+function normalizeJordanMobile(value: string): string | null {
+  let digits = value.replace(/\\D/g, '');
+  if (digits.startsWith('00962')) digits = digits.slice(2);
+  if (digits.startsWith('962')) digits = digits.slice(3);
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  if (!/^7\\d{8}$/.test(digits)) return null;
+  return `+962${digits}`;
+}
+
 export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps) {
   const [step, setStep] = useState<'input' | 'verify'>('input');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [normalizedPhone, setNormalizedPhone] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const formatPhoneNumber = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    if (cleaned.startsWith('962')) {
-      return '+' + cleaned;
-    }
-    if (cleaned.startsWith('0')) {
-      return '+962' + cleaned.slice(1);
-    }
-    return '+962' + cleaned;
-  };
-
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    setLoading(true);
+    const formatted = normalizeJordanMobile(phoneNumber);
+    if (!formatted) {
+      setError('Enter a valid Jordanian mobile number, for example 79 000 0000.');
+      return;
+    }
 
+    setLoading(true);
     try {
-      const formatted = formatPhoneNumber(phoneNumber);
-      
       const response = await fetchWithRetry(`${API_URL}/sms-verification/send-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -41,11 +43,12 @@ export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         throw new Error(data.error || 'Failed to send verification code');
       }
 
-      setSuccess('Verification code sent to your phone');
+      setNormalizedPhone(formatted);
+      setSuccess('Verification code sent to your phone.');
       setStep('verify');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send code');
@@ -57,24 +60,28 @@ export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
+    setSuccess('');
+    if (!/^\\d{6}$/.test(code)) {
+      setError('Enter the 6-digit verification code.');
+      return;
+    }
 
+    setLoading(true);
     try {
-      const formatted = formatPhoneNumber(phoneNumber);
-      
       const response = await fetchWithRetry(`${API_URL}/sms-verification/verify-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone_number: formatted, code }),
+        body: JSON.stringify({ phone_number: normalizedPhone, code }),
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         throw new Error(data.error || 'Invalid verification code');
       }
 
-      setSuccess('Phone verified successfully!');
-      setTimeout(() => onVerified(), 1000);
+      setSuccess('Phone verified successfully.');
+      setCode('');
+      onVerified();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Verification failed');
     } finally {
@@ -87,7 +94,6 @@ export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps
       <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
         Verify Your Phone Number
       </h2>
-      
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
         Phone verification is required for booking rides and sending packages in Jordan.
       </p>
@@ -105,50 +111,30 @@ export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps
               <input
                 id="phone"
                 type="tel"
+                inputMode="numeric"
+                autoComplete="tel-national"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, '').slice(0, 12))}
                 placeholder="79 000 0000"
                 className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 required
-                pattern="[0-9]{9,10}"
                 disabled={loading}
+                aria-describedby="phone-help"
               />
             </div>
-            <p className="mt-1 text-xs text-gray-500">
-              Enter your Jordanian mobile number
+            <p id="phone-help" className="mt-1 text-xs text-gray-500">
+              Enter your Jordanian mobile number.
             </p>
           </div>
 
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
-          {success && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-              <p className="text-sm text-green-600">{success}</p>
-            </div>
-          )}
+          {error && <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-md"><p className="text-sm text-red-600">{error}</p></div>}
+          {success && <div role="status" className="p-3 bg-green-50 border border-green-200 rounded-md"><p className="text-sm text-green-600">{success}</p></div>}
 
           <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={loading || !phoneNumber}
-              className="flex-1 bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            >
+            <button type="submit" disabled={loading || !phoneNumber.trim()} className="flex-1 bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium">
               {loading ? 'Sending...' : 'Send Code'}
             </button>
-            
-            {onSkip && (
-              <button
-                type="button"
-                onClick={onSkip}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                Skip
-              </button>
-            )}
+            {onSkip && <button type="button" onClick={onSkip} disabled={loading} className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">Skip</button>}
           </div>
         </form>
       ) : (
@@ -160,8 +146,10 @@ export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps
             <input
               id="code"
               type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
               value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onChange={(e) => setCode(e.target.value.replace(/\\D/g, '').slice(0, 6))}
               placeholder="000000"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white text-center text-2xl tracking-widest"
               required
@@ -169,52 +157,25 @@ export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps
               maxLength={6}
               disabled={loading}
               autoFocus
+              aria-describedby="code-help"
             />
-            <p className="mt-1 text-xs text-gray-500">
-              Enter the 6-digit code sent to +962{phoneNumber}
+            <p id="code-help" className="mt-1 text-xs text-gray-500">
+              Enter the 6-digit code sent to {normalizedPhone}.
             </p>
           </div>
 
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
-          {success && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-              <p className="text-sm text-green-600">{success}</p>
-            </div>
-          )}
+          {error && <div role="alert" className="p-3 bg-red-50 border border-red-200 rounded-md"><p className="text-sm text-red-600">{error}</p></div>}
+          {success && <div role="status" className="p-3 bg-green-50 border border-green-200 rounded-md"><p className="text-sm text-green-600">{success}</p></div>}
 
           <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={loading || code.length !== 6}
-              className="flex-1 bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            >
+            <button type="submit" disabled={loading || code.length !== 6} className="flex-1 bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium">
               {loading ? 'Verifying...' : 'Verify'}
             </button>
-            
-            <button
-              type="button"
-              onClick={() => {
-                setStep('input');
-                setCode('');
-                setError('');
-              }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-            >
+            <button type="button" disabled={loading} onClick={() => { setStep('input'); setCode(''); setError(''); setSuccess(''); }} className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">
               Change Number
             </button>
           </div>
-
-          <button
-            type="button"
-            onClick={handleSendCode}
-            disabled={loading}
-            className="w-full text-sm text-primary hover:text-primary-dark disabled:opacity-50"
-          >
+          <button type="button" onClick={handleSendCode} disabled={loading} className="w-full text-sm text-primary hover:text-primary-dark disabled:opacity-50">
             Resend Code
           </button>
         </form>
