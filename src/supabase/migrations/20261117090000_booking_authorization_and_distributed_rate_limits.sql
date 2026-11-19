@@ -160,6 +160,7 @@ declare
   v_booking public.bookings%rowtype;
   v_trip public.trips%rowtype;
   v_driver_user_id uuid;
+  v_driver_status text;
   v_is_admin boolean;
   v_is_passenger boolean;
   v_is_driver boolean;
