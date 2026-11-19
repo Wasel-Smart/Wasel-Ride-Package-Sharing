@@ -274,6 +274,25 @@ serve(async (req) => {
       return jsonResponse({ error: 'A valid verification code is required' }, 400, headers);
     }
 
+    const { data: allowed, error: limitError } = await supabaseAdminRateLimit(
+      user.id, phoneNumber, 'verify', 5,
+    );
+    if (limitError) {
+      console.error('Phone verification attempt rate-limit check failed', { code: limitError.code });
+      return jsonResponse({ error: 'Phone verification is temporarily unavailable' }, 503, headers);
+    }
+    if (allowed !== true) {
+      return jsonResponse({ error: 'Too many verification attempts. Please try again later.' }, 429, headers);
+    }
+    const userAllowed = await supabaseAdminRateLimit(user.id, '*', 'verify', 10);
+    if (userAllowed.error) {
+      console.error('Phone verification user attempt rate-limit check failed', { code: userAllowed.error.code });
+      return jsonResponse({ error: 'Phone verification is temporarily unavailable' }, 503, headers);
+    }
+    if (userAllowed.data !== true) {
+      return jsonResponse({ error: 'Too many verification attempts. Please try again later.' }, 429, headers);
+    }
+
     const values = new URLSearchParams({ To: phoneNumber, Code: code });
     const result = await callTwilioVerify('VerificationCheck', values);
 
