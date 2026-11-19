@@ -918,11 +918,11 @@ export default function WaselAuth () {
                   variant="solid"
                   padding={ `${ SPACE[ 3 ] } ${ SPACE[ 4 ] }` }
                   radius={ R.lg }
-                  style={ { background: '#FEF3C7', border: '1px solid #F59E0B40' } }
+                  style={ { background: 'rgba(255,190,92,0.08)', border: '1px solid rgba(255,190,92,0.28)' } }
                 >
                   <div style={ { display: 'flex', alignItems: 'flex-start', gap: SPACE[ 2 ] } }>
-                    <AlertCircle size={ 16 } color="#D97706" style={ { flexShrink: 0, marginTop: 2 } } />
-                    <span style={ { fontSize: TYPE.size.sm, color: '#92400E', fontFamily: F } }>
+                    <AlertCircle size={ 16 } color="#FFBE5C" style={ { flexShrink: 0, marginTop: 2 } } />
+                    <span style={ { fontSize: TYPE.size.sm, color: 'rgba(248,251,255,0.86)', fontFamily: F } }>
                       { oauthConfigWarning }
                     </span>
                   </div>

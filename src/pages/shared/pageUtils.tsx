@@ -225,7 +225,7 @@ export function SectionHead({
               borderRadius: r(10),
               background: DS.gradC,
               border: 'none',
-              color: '#040C18',
+              color: '#081D39',
               fontWeight: 800,
               cursor: 'pointer',
               fontSize: '0.85rem',

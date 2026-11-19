@@ -23,9 +23,9 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
           radial-gradient(circle at 16% 18%, rgba(85,233,255,0.12), transparent 24%),
           radial-gradient(circle at 82% 12%, rgba(245,177,30,0.12), transparent 20%),
           radial-gradient(circle at 78% 72%, rgba(51,232,95,0.08), transparent 20%),
-          #040C18
+          #050B12
         `,
-        color: '#EFF6FF',
+        color: '#F8FBFF',
         padding: 24,
         textAlign: 'center',
       }}
@@ -52,14 +52,14 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
             marginBottom: 12,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
-            color: '#F5B11E',
+            color: '#FFBE5C',
             fontWeight: 800,
           }}
         >
           {tx('configErrorPage.configuration_error')}
         </div>
 
-        <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#EFF6FF', margin: '0 0 16px' }}>
+        <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#F8FBFF', margin: '0 0 16px' }}>
           {tx('configErrorPage.environment_configuration_errors')}
         </h2>
 
@@ -86,7 +86,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
                 >
                   {issue.message}
                 </div>
-                <div style={{ color: 'rgba(239,246,255,0.52)', fontSize: '0.82rem' }}>
+                <div style={{ color: 'rgba(248,251,255,0.52)', fontSize: '0.82rem' }}>
                   {tx('configErrorPage.variable')}
                   {issue.key}
                 </div>
@@ -98,7 +98,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
         {warnings.length > 0 && (
           <div style={{ textAlign: 'left', marginBottom: 24 }}>
             <div
-              style={{ color: '#F5B11E', fontSize: '0.88rem', fontWeight: 700, marginBottom: 12 }}
+              style={{ color: '#FFBE5C', fontSize: '0.88rem', fontWeight: 700, marginBottom: 12 }}
             >
               {tx('configErrorPage.warnings')}
             </div>
@@ -112,7 +112,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
                   padding: 12,
                   marginBottom: 8,
                   fontSize: '0.84rem',
-                  color: 'rgba(239,246,255,0.72)',
+                  color: 'rgba(248,251,255,0.72)',
                 }}
               >
                 {issue.message}
@@ -123,7 +123,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
 
         <p
           style={{
-            color: 'rgba(239,246,255,0.72)',
+            color: 'rgba(248,251,255,0.72)',
             fontSize: '0.92rem',
             margin: '0 auto 24px',
             maxWidth: 520,
@@ -135,17 +135,17 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
 
         <div
           style={{
-            background: 'rgba(85,233,255,0.06)',
-            border: '1px solid rgba(85,233,255,0.18)',
+            background: 'rgba(0,229,255,0.06)',
+            border: '1px solid rgba(0,229,255,0.18)',
             borderRadius: 12,
             padding: 16,
             textAlign: 'left',
             fontSize: '0.84rem',
-            color: 'rgba(239,246,255,0.82)',
+            color: 'rgba(248,251,255,0.82)',
             lineHeight: 1.6,
           }}
         >
-          <div style={{ fontWeight: 700, marginBottom: 8, color: '#55E9FF' }}>
+          <div style={{ fontWeight: 700, marginBottom: 8, color: '#00E5FF' }}>
             {tx('configErrorPage.for_vercel_deployments')}
           </div>
           <ol style={{ margin: 0, paddingLeft: 20 }}>

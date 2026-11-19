@@ -125,8 +125,8 @@ export function OfferRidePage() {
                         height: 20,
                         borderRadius: '50%',
                         background: readinessStep.complete ? DS.green : C.elevated,
-                        color: readinessStep.complete ? '#052a24' : DS.muted,
-                        fontWeight: 900,
+                        color: readinessStep.complete ? '#050B12' : DS.muted,
+                        fontWeight: 800,
                         fontSize: '0.68rem',
                       }}
                     >
@@ -231,7 +231,7 @@ export function OfferRidePage() {
                 >
                   <CheckCircle2 size={30} />
                 </div>
-                <h2 style={{ color: DS.green, fontWeight: 900, fontSize: '1.6rem', margin: '0 0 12px' }}>
+                <h2 style={{ color: DS.green, fontWeight: 800, fontSize: '1.6rem', margin: '0 0 12px' }}>
                   {tx('offerRidePage.ride_offer_is_live')}
                 </h2>
                 <p style={{ color: DS.sub, margin: 0 }}>
@@ -286,7 +286,7 @@ export function OfferRidePage() {
               <div style={{ color: DS.cyan, fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase' }}>
                 {tx('offerRidePage.launch_route')}
               </div>
-              <h2 style={{ color: C.text, fontWeight: 900, fontSize: '1.5rem', lineHeight: 1.1, margin: '8px 0 10px' }}>
+              <h2 style={{ color: C.text, fontWeight: 800, fontSize: '1.5rem', lineHeight: 1.1, margin: '8px 0 10px' }}>
                 {city(form.from)} {tx('offerRidePage.to_2')}{city(form.to)}
               </h2>
               <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>
@@ -297,7 +297,7 @@ export function OfferRidePage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 16 }}>
                 {quickMetrics.map(item => (
                   <div key={item.label} style={{ background: C.elevated, borderRadius: r(16), border: `1px solid ${DS.border}`, padding: '14px 14px 12px' }}>
-                    <div style={{ color: item.color, fontWeight: 900, fontSize: '1rem' }}>{item.value}</div>
+                    <div style={{ color: item.color, fontWeight: 800, fontSize: '1rem' }}>{item.value}</div>
                     <div style={{ color: C.text, fontWeight: 800, fontSize: '0.74rem', marginTop: 4 }}>{item.label}</div>
                   </div>
                 ))}
@@ -349,7 +349,7 @@ export function OfferRidePage() {
 
             {/* Quick actions */}
             <div style={{ background: DS.card, borderRadius: r(20), padding: '18px', border: `1px solid ${DS.border}` }}>
-              <div style={{ color: C.text, fontWeight: 900, marginBottom: 12 }}>{tx('offerRidePage.quick_actions')}</div>
+              <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>{tx('offerRidePage.quick_actions')}</div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {driverReadiness.steps.filter(s => !s.complete).slice(0, 2).map(s => (
                   <div key={s.id} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>

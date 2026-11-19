@@ -111,15 +111,15 @@ export function CookieConsentBanner() {
       >
         <div style={{ flex: 1, minWidth: isMobile ? '200px' : '280px' }}>
           <h3
-            style={{ fontSize: '0.95rem', fontWeight: 700, color: '#EFF6FF', marginBottom: '0.35rem' }}
+            style={{ fontSize: '0.95rem', fontWeight: 700, color: '#F8FBFF', marginBottom: '0.35rem' }}
           >
             {tx('cookieConsentBanner.cookie_consent')}
           </h3>
-          <p style={{ fontSize: '0.8125rem', color: 'rgba(239, 246, 255, 0.75)', lineHeight: 1.5, wordBreak: 'break-word' }}>
+          <p style={{ fontSize: '0.8125rem', color: 'rgba(248,251,255,0.72)', lineHeight: 1.5, wordBreak: 'break-word' }}>
             {tx(
               'cookieConsentBanner.we_use_cookies_to_enhance_your_experience_analyze_site_usage_and_provide_personalized_content_by_clicking_accept_you_consent_to_our_use_of_cookies_see_our',
             )}{' '}
-            <a href="/privacy" style={{ color: '#55E9FF', textDecoration: 'underline' }}>
+            <a href="/privacy" style={{ color: '#00E5FF', textDecoration: 'underline' }}>
               {tx('sidebar.privacy')}
             </a>{' '}
             {tx('cookieConsentBanner.for_details')}
@@ -130,8 +130,8 @@ export function CookieConsentBanner() {
             onClick={() => { void handleDecline(); }}
             variant="outline"
             style={{
-              borderColor: 'rgba(85, 233, 255, 0.3)',
-              color: '#EFF6FF',
+              borderColor: 'rgba(0,229,255,0.3)',
+              color: '#F8FBFF',
               padding: '0.4rem 0.9rem',
               fontSize: '0.8125rem',
             }}
@@ -142,8 +142,8 @@ export function CookieConsentBanner() {
             id="cookie-accept-btn"
             onClick={() => { void handleAccept(); }}
             style={{
-              background: 'linear-gradient(135deg, #55E9FF 0%, #1EA1FF 100%)',
-              color: '#041018',
+              background: 'linear-gradient(135deg, #00E5FF 0%, #0a3d6e 100%)',
+              color: '#081D39',
               padding: '0.4rem 1rem',
               fontSize: '0.8125rem',
             }}

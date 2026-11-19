@@ -301,7 +301,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
             <h1
               style={{
                 margin: 0,
-                color: '#FFFFFF',
+                color: '#F8FBFF',
                 fontSize: 'clamp(2rem, 4vw, 2.8rem)',
                 lineHeight: TYPE.lineHeight.tight,
                 letterSpacing: TYPE.letterSpacing.tighter,
@@ -347,7 +347,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
                     display: 'flex',
                     alignItems: 'center',
                     gap: 10,
-                    color: '#FFFFFF',
+                    color: '#F8FBFF',
                     fontSize: TYPE.size.sm,
                     fontWeight: TYPE.weight.semibold,
                     lineHeight: TYPE.lineHeight.relaxed,

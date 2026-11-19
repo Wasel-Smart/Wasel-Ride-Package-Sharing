@@ -126,7 +126,7 @@ function ProgressTimeline({
               )}
             </div>
             <div className="mt-1 text-center px-0.5">
-              <p className="text-[9px] text-slate-400 leading-tight font-medium">{wp.label}</p>
+              <p className="text-[9px] text-[#95b2c9] leading-tight font-medium">{wp.label}</p>
             </div>
             {i < waypoints.length - 1 && <div className="absolute" style={{ display: 'none' }} />}
           </div>
@@ -182,7 +182,7 @@ function ETACard({
 
 function LiveMapLoader() {
   return (
-    <div className="flex h-full min-h-[320px] items-center justify-center bg-[#081220] text-sm text-slate-400">
+    <div className="flex h-full min-h-[320px] items-center justify-center bg-[#081D39] text-sm text-[#95b2c9]">
       {tx('liveTripTracking.loading_map')}
     </div>
   );
@@ -232,7 +232,7 @@ function SOSDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
               {tx('liveTripTracking.emergency_sos')}
             </h3>
             <p className="text-red-400 font-semibold mb-1">طوارئ</p>
-            <p className="text-slate-400 text-sm mb-6">
+            <p className="text-[#95b2c9] text-sm mb-6">
               {tx(
                 'liveTripTracking.this_will_alert_wasel_s_safety_team_and_share_your_live_location_with_emergency_contacts',
               )}
@@ -250,7 +250,7 @@ function SOSDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
                 <Button
                   onClick={() => { void onClose(); }}
                   variant="ghost"
-                  className="w-full text-slate-400 hover:text-white rounded-xl h-10"
+                  className="w-full text-[#95b2c9] hover:text-white rounded-xl h-10"
                 >
                   {tx('liveTripTracking.cancel')}
                 </Button>
@@ -352,7 +352,7 @@ function TripRatingSheet({
                 <h2 className="text-lg font-bold text-white">
                   {tx('liveTripTracking.rate_your_ride')}
                 </h2>
-                <p className="text-slate-400 text-sm">
+                <p className="text-[#95b2c9] text-sm">
                   {tx('liveTripTracking.with')}
                   <span className="text-primary font-semibold">{driverName}</span>
                   <span className="text-slate-600 mx-1.5">·</span>
@@ -422,7 +422,7 @@ function TripRatingSheet({
             <div className="flex gap-3">
               <Button
                 variant="ghost"
-                className="flex-1 h-11 border border-border text-slate-400 hover:text-white rounded-xl"
+                className="flex-1 h-11 border border-border text-[#95b2c9] hover:text-white rounded-xl"
                 onClick={() => { void onSkip(); }}
                 disabled={submitting}
               >
@@ -499,7 +499,7 @@ function CancelConfirmDialog({
             <p className="text-red-400 text-sm font-medium mb-1" dir="rtl">
               إلغاء هذه الرحلة؟
             </p>
-            <p className="text-slate-400 text-xs mb-6">
+            <p className="text-[#95b2c9] text-xs mb-6">
               {tx(
                 'liveTripTracking.the_driver_has_already_been_dispatched_a_cancellation_fee_may_apply',
               )}
@@ -507,7 +507,7 @@ function CancelConfirmDialog({
             <div className="flex gap-3">
               <Button
                 variant="ghost"
-                className="flex-1 h-11 border border-border text-slate-400 hover:text-white rounded-xl"
+                className="flex-1 h-11 border border-border text-[#95b2c9] hover:text-white rounded-xl"
                 onClick={() => { void onClose(); }}
                 disabled={cancelling}
               >
@@ -683,7 +683,7 @@ export function LiveTripTracking() {
           <h2 className="text-xl font-bold text-white">
             {tx('liveTripTracking.loading_live_trip')}
           </h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-[#95b2c9]">
             {tx(
               'liveTripTracking.wasel_is_checking_the_active_booking_and_driver_telemetry_for_this_account',
             )}
@@ -703,7 +703,7 @@ export function LiveTripTracking() {
           <h2 className="text-xl font-bold text-white">
             {tx('liveTripTracking.no_active_trip_right_now')}
           </h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-[#95b2c9]">
             {tx(
               'liveTripTracking.live_tracking_appears_here_once_a_confirmed_trip_starts_streaming_location_updates_from_the_driver',
             )}
@@ -906,7 +906,7 @@ export function LiveTripTracking() {
                     window.open(`tel:${trip.driver.phone}`, '_self');
                     toast.info(`Calling ${trip.driver.name}…`);
                   }}
-                  className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/30 transition-all"
+                  className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center text-[#95b2c9] hover:text-primary hover:border-primary/30 transition-all"
                   aria-label={`Call ${trip.driver.name}`}
                 >
                   <Phone className="w-3.5 h-3.5" />
@@ -919,7 +919,7 @@ export function LiveTripTracking() {
                       'noopener,noreferrer',
                     );
                   }}
-                  className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center text-slate-400 hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
+                  className="w-9 h-9 rounded-xl bg-background border border-border flex items-center justify-center text-[#95b2c9] hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
                   aria-label={`Message ${trip.driver.name} on WhatsApp`}
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
@@ -938,13 +938,13 @@ export function LiveTripTracking() {
               {tx('liveTripTracking.safety_code')}
               <strong className="text-white font-mono">{trip.shareCode}</strong>
             </span>
-            <Copy className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 transition-colors" />
+            <Copy className="w-3.5 h-3.5 text-slate-600 group-hover:text-[#95b2c9] transition-colors" />
           </button>
 
           {/* Toggle trip details */}
           <button
             onClick={() => { void setShowDetails(!showDetails); }}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-card border border-border text-sm text-slate-400 hover:text-white transition-all"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-card border border-border text-sm text-[#95b2c9] hover:text-white transition-all"
           >
             <span>{tx('liveTripTracking.trip_details')}</span>
             {showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
