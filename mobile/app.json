@@ -107,10 +107,6 @@
       "expo-secure-store",
       "expo-font"
     ],
-    "extra": {
-      "eas": {
-        "projectId": "wasel-mobility-jordan"
-      }
-    }
+    "extra": {}
   }
 }
