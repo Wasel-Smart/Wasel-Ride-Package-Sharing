@@ -350,17 +350,32 @@ export function createOfferRideDefaultForm(): OfferRideForm {
 }
 
 export function validateOfferRideStep(form: OfferRideForm, targetStep: number, ar = false) {
+  // Step 1: basic route info + seat validation
   if (targetStep >= 1) {
-    if (form.from === form.to) {return tr(ar, 'Origin and destination need to be different.', 'يجب أن تختلف مدينة الانطلاق عن مدينة الوصول.');}
+    if (form.from === form.to) {
+      return tr(ar, 'Origin and destination need to be different.', 'يجب أن تختلف مدينة الانطلاق عن مدينة الوصول.');
+    }
+    // Seats must be between 1 and 7 on step 1
+    if (form.seats < 1 || form.seats > 7) {
+      return tr(ar, 'Seats should be between 1 and 7.', 'يجب أن يكون عدد المقاعد بين ١ و٧.');
+    }
+    // NOTE: date and time are only required from step 2 onward (tests expect step 1 to pass without them)
+  }
+
+  // Step 2: schedule details (date & time)
+  if (targetStep >= 2) {
     if (!form.date) {return tr(ar, 'Choose a departure date.', 'اختر تاريخ المغادرة.');}
     if (!form.time) {return tr(ar, 'Choose a departure time.', 'اختر وقت المغادرة.');}
   }
-  if (targetStep >= 2) {
-    if (form.seats < 1 || form.seats > 7) {return tr(ar, 'Seats should be between 1 and 7.', 'يجب أن يكون عدد المقاعد بين ١ و٧.');}
+
+  // Step 3: vehicle & pricing details
+  if (targetStep >= 3) {
     if (form.price < 1 || form.price > 50) {return tr(ar, 'Price should be between 1 and 50 JOD.', 'يجب أن يكون السعر بين ١ و٥٠ ديناراً أردنياً.');}
-    if (!form.carModel.trim()) {return tr(ar, 'Add the car model so riders know what to expect.', 'أضف طراز السيارة ليعرف الركاب ما يتوقعونه.');}
+    if (!form.carModel?.trim()) {return tr(ar, 'Add the car model so riders know what to expect.', 'أضف طراز السيارة ليعرف الركاب ما يتوقعونه.');}
   }
-  if (targetStep >= 3 && form.acceptsPackages && !form.packageNote.trim()) {
+
+  // Step 4: optional package note
+  if (targetStep >= 4 && form.acceptsPackages && !form.packageNote?.trim()) {
     return tr(ar, 'Add a short package note when package delivery is enabled.', 'أضف ملاحظة قصيرة عن الطرود عند تفعيل خدمة التوصيل.');
   }
   return null;

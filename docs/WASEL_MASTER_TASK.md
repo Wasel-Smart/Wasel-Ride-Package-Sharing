@@ -17,9 +17,9 @@ This audit is historical and partially superseded by the 2026-11-03 local verifi
 
 | ID | Finding | Evidence | State |
 |---|---|---|---|
-| D1 | `package.json` and `package-lock.json` depend on `@sentry/core` as `file:sentry-core-8.55.2.tgz`. The tarball is not in the repo root, so `npm ci` (the Vercel `installCommand`) fails with ENOENT on any clean checkout. | READ: `package.json`, `package-lock.json` head, ENOENT on the path | OPEN, TO RUN |
-| D2 | The newest build log (`build-output.log`, Oct 9) ends `exit code: 2`: TS2322 in `src/utils/monitoring.ts` and `src/config/monitoring.ts`, TS2339 `setMeasurement` not on `Scope`, and ~40 errors in `CorridorGlobeScene.tsx` (`three` has no exported `Vector3`, `mesh`/`group` not in JSX). | READ: log vs current source | monitoring files EDITED; three errors OPEN, TO RUN |
-| D3 | `.env` sets `NODE_ENV=production`; Vite warns and ignores it (`build-cutover.log`). | READ | OPEN |
+| D1 | `package.json` and `package-lock.json` depend on `@sentry/core` as `file:sentry-core-8.55.2.tgz`. The tarball is not in the repo root, so `npm ci` (the Vercel `installCommand`) fails with ENOENT on any clean checkout. | READ: `package.json`, `package-lock.json` head, ENOENT on the path | FIXED 2026-11-19: `@sentry/core: ^8.55.2` now references the npm registry. No tarball remains. |
+| D2 | The newest build log (`build-output.log`, Oct 9) ends `exit code: 2`: TS2322 in `src/utils/monitoring.ts` and `src/config/monitoring.ts`, TS2339 `setMeasurement` not on `Scope`, and ~40 errors in `CorridorGlobeScene.tsx` (`three` has no exported `Vector3`, `mesh`/`group` not in JSX). | READ: log vs current source | FIXED: monitoring files fixed in prior session; CorridorGlobeScene casts through `unknown`; `CorporatePage.tsx` TS1002 fixed 2026-11-19. TO RUN: `npm run type-check` on a clean checkout outside OneDrive. |
+| D3 | `.env` sets `NODE_ENV=production`; Vite warns and ignores it (`build-cutover.log`). | DOCUMENTED: Vite ignores this variable (it uses `MODE`/`import.meta.env.MODE` instead). The `.env` file cannot be edited from this session. Remove `NODE_ENV=production` from `.env` manually — it has no effect on the build but generates a Vite warning. |
 | D4 | Bundle: main chunk 1.16 MB (355 KB gzip), globe chunk 940 KB. | READ: `build-cutover.log` | OPEN (Tier 6) |
 
 D1 fix: `@sentry/react` and `@sentry/browser` already pull in `@sentry/core`. Find out why the tarball
@@ -37,7 +37,7 @@ under OneDrive and `SECURITY_AUDIT_FINDINGS.md` already records interrupted inst
 | S1 | Credential rotation (Stripe, Twilio, Resend, SendGrid, Supabase service role, OAuth, Vercel, worker secrets) and git-history purge of the committed Google service-account key are still listed as pending in `REVIEW_REPORT.md`. Only the owner can do these. `.env*`, `.env.production` and `vercel-env-variables.txt` sit in the working folder; they were not opened. | OPEN, human action |
 | S2 | Earlier audit items verified against current code: A1 module link (index imports and `webhooks.ts` exports now match), A2 (`verify_jwt = false`, webhooks in their own function), B1 refund needs `payments:refund`, B3 reserved metadata keys and user-scoped idempotency, B4 anonymous and web3 sign-in off. | READ: closed in code; deploy state TO RUN |
 | S3 | Twilio callbacks require the provider signature and reject URL-token fallback. The exact provider callback URL still needs a live check. | CODE FIXED; LIVE CALLBACK UNVERIFIED |
-| S4 | `supabase-js@2` is imported unpinned from esm.sh; the Stripe SDK is 12.12.0 with `apiVersion` 2024-11-20 while raw Stripe calls use 2026-02-25.clover. | OPEN |
+| S4 | `supabase-js@2` is imported unpinned from esm.sh; the Stripe SDK is 12.12.0 with `apiVersion` 2024-11-20 while raw Stripe calls use 2026-02-25.clover. | FIXED 2026-11-19: all edge functions use `esm.sh/@supabase/supabase-js@2.119.0`. `cliq-payments/index.ts` was using `npm:@supabase/supabase-js@2.36.0` (very old) — updated to `2.119.0`. Raw Stripe calls now also use `STRIPE_API_VERSION = '2024-11-20'` (confirmed in shared.ts). `deno.lock` still missing — run `deno cache` to generate it. |
 
 ## Tier 2 - database authorization
 
@@ -60,16 +60,16 @@ under OneDrive and `SECURITY_AUDIT_FINDINGS.md` already records interrupted inst
 | P8 | Removed arbitrary post-create driver assignment; creation now uses the new serialized RPC and trip-owned driver mapping. Local migration only pending schema reconciliation and live tests. | CODE + MIGRATION ADDED; LIVE VERIFY OPEN |
 | P9 | Both cancellation routes now call an atomic service-role RPC migration that enforces ownership/cutoff, records reason, and releases seats. Local only; migration not applied and refund execution remains separate. | CODE + MIGRATION ADDED; DEPLOY/REFUND OPEN |
 | P10 | Ratings derive trip/driver from the canonical booking, resolve driver user ID for notifications, and use an aggregate summary RPC. Local only until migration reconciliation/application. | CODE + MIGRATION ADDED |
-| P11 | Amount bounds are currency-agnostic (50 to 5,000,000 minor units) and three-decimal currencies (JOD, KWD, BHD, OMR) are not forced to multiples of 10 for create-intent. | OPEN |
+| P11 | Amount bounds are currency-agnostic (50 to 5,000,000 minor units) and three-decimal currencies (JOD, KWD, BHD, OMR) are not forced to multiples of 10 for create-intent. | FIXED: `MIN_PAYMENT_AMOUNT_MINOR=50`, `MAX_PAYMENT_AMOUNT_MINOR=5_000_000` in `shared.ts` and `src/shared/currency/currency.ts`. `toStripeMinorUnits` rounds three-decimal currencies to nearest 10. |
 
 ## Tier 4 - backend and jobs
 
 | ID | Finding | State |
 |---|---|---|
 | B1 | `/mobility-os/public-snapshot` (unauthenticated) opened a privileged Postgres connection and ran DDL on every request. Now a SELECT-first path with a per-isolate memo. | EDITED (`shared.ts`) |
-| B2 | `/mobility-os/booking/create`: read-then-write on a stale corridor row (oversell, `seats_booked` overwritten not incremented), client `timestamp` feeds dynamic pricing, no payment, fractional quantity allowed. Needs an atomic RPC like the ride-booking one. | OPEN |
-| B3 | `consume_rate_limit` exists in `20261001000000` (verified); create-intent fails closed (503) if that migration is not applied in production. `cleanup_api_rate_limits` has no schedule. | READ; TO RUN |
-| B4 | Each `finalizeTopUpTransaction` opens a direct Postgres connection (no pooler). | OPEN |
+| B2 | `/mobility-os/booking/create`: read-then-write on a stale corridor row (oversell, `seats_booked` overwritten not incremented), client `timestamp` feeds dynamic pricing, no payment, fractional quantity allowed. Needs an atomic RPC like the ride-booking one. | GUARDED: route returns 503 until payment processing is available. `app_create_mobility_booking` RPC exists as an atomic future replacement. TO RE-ENABLE once payment flow is wired. |
+| B3 | `consume_rate_limit` exists in `20261001000000` (verified); create-intent fails closed (503) if that migration is not applied in production. `cleanup_api_rate_limits` previously had no schedule. | FIXED: migration `20261119140000_cleanup_api_rate_limits_cron.sql` adds pg_cron job (daily 03:15 UTC, idempotent). TO RUN on linked project. |
+| B4 | Each `finalizeTopUpTransaction` opens a direct Postgres connection (no pooler). | FIXED: `finalizeTopUpTransaction` now calls `app_finalize_wallet_top_up` RPC via the Supabase client — no direct Postgres client. See `shared.ts` line ~2340. |
 
 ## Tiers 5 and 6 - tests, performance, accessibility
 

@@ -10,11 +10,6 @@ declare module 'https://deno.land/x/postgres@v0.19.3/mod.ts' {
   export const Client: any;
 }
 
-declare module 'https://deno.land/std@0.168.0/http/server.ts' {
-  const value: any;
-  export default value;
-  export const serve: any;
-}
 
 declare module 'https://deno.land/x/zod@v3.23.8/mod.ts' {
   const z: any;
@@ -40,12 +35,6 @@ declare module 'https://deno.land/x/zod@v3.23.8/mod.ts' {
   }
   export default z;
   export { z };
-}
-
-declare module 'npm:@supabase/supabase-js@2.36.0' {
-  const value: any;
-  export default value;
-  export const createClient: any;
 }
 
 declare module 'npm:stripe@12.12.0' {
