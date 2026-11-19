@@ -1,179 +1,245 @@
 /**
- * Wasel SMS Verification Service
- * Handles phone verification via Twilio
+ * Wasel phone verification via Twilio Verify.
+ *
+ * OTP generation, delivery, expiry, and verification are delegated to
+ * Twilio Verify. No OTP is stored in Wasel's database or application logs.
  */
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID') || '';
-const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN') || '';
-const TWILIO_SMS_FROM = Deno.env.get('TWILIO_SMS_FROM') || '';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? '';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+function readKeySet(name: string): string | null {
+  const raw = Deno.env.get(name);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const value = parsed.default;
+    return typeof value === 'string' && value.length > 0 ? value : null;
+  } catch {
+    return null;
+  }
+}
 
-function generateVerificationCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+const SUPABASE_PUBLISHABLE_KEY =
+  readKeySet('SUPABASE_PUBLISHABLE_KEYS') ??
+  Deno.env.get('SUPABASE_ANON_KEY') ??
+  '';
+const SUPABASE_SECRET_KEY =
+  readKeySet('SUPABASE_SECRET_KEYS') ??
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ??
+  '';
+
+const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID') ?? '';
+const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN') ?? '';
+const TWILIO_VERIFY_SERVICE_SID =
+  Deno.env.get('TWILIO_VERIFY_SERVICE_SID') ??
+  Deno.env.get('TWILIO_VERIFY_SID') ??
+  '';
+
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://wasel14.online',
+  'https://www.wasel14.online',
+  'https://wasel.wasel14.online',
+  'https://waseljo.wasel14.online',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
+
+const configuredOrigins = (Deno.env.get('WASEL_ALLOWED_ORIGINS') ?? '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const ALLOWED_ORIGINS = new Set([
+  ...DEFAULT_ALLOWED_ORIGINS,
+  ...configuredOrigins,
+]);
+
+function corsHeaders(origin: string | null): HeadersInit {
+  const headers: Record<string, string> = {
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  };
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  }
+  return headers;
+}
+
+function jsonResponse(
+  body: Record<string, unknown>,
+  status: number,
+  headers: HeadersInit,
+): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...headers, 'Content-Type': 'application/json' },
+  });
+}
+
+function normalizeE164(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const phone = value.trim();
+  if (!/^\+[1-9]\d{7,14}$/.test(phone)) return null;
+  return phone;
+}
+
+function isConfigured(): boolean {
+  return Boolean(
+    SUPABASE_URL &&
+    SUPABASE_PUBLISHABLE_KEY &&
+    SUPABASE_SECRET_KEY &&
+    TWILIO_ACCOUNT_SID &&
+    TWILIO_AUTH_TOKEN &&
+    TWILIO_VERIFY_SERVICE_SID
+  );
+}
+
+function twilioAuthHeader(): string {
+  return `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`;
+}
+
+async function callTwilioVerify(
+  endpoint: 'Verifications' | 'VerificationCheck',
+  values: URLSearchParams,
+): Promise<{ ok: boolean; status: number; data: Record<string, unknown> }> {
+  const url =
+    `https://verify.twilio.com/v2/Services/${TWILIO_VERIFY_SERVICE_SID}/${endpoint}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: twilioAuthHeader(),
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: values,
+    signal: AbortSignal.timeout(10_000),
+  });
+
+  let data: Record<string, unknown> = {};
+  try {
+    data = await response.json() as Record<string, unknown>;
+  } catch {
+    // Do not surface provider response bodies to clients.
+  }
+  return { ok: response.ok, status: response.status, data };
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('Origin');
+  const headers = corsHeaders(origin);
+
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    return jsonResponse({ error: 'Origin not allowed' }, 403, headers);
+  }
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { status: 204, headers });
+  }
+
+  if (req.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405, headers);
+  }
+
+  if (!isConfigured()) {
+    console.error('Phone verification configuration is incomplete');
+    return jsonResponse({ error: 'Phone verification is temporarily unavailable' }, 503, headers);
   }
 
   try {
-    const url = new URL(req.url);
-    const path = url.pathname;
+    const authorization = req.headers.get('Authorization');
+    if (!authorization?.startsWith('Bearer ')) {
+      return jsonResponse({ error: 'Unauthorized' }, 401, headers);
+    }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization') ?? '' },
-        },
-      }
-    );
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      global: { headers: { Authorization: authorization } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return jsonResponse({ error: 'Unauthorized' }, 401, headers);
     }
 
-    if (path.includes('/send-code')) {
-      const { phone_number } = await req.json();
-
-      if (!phone_number) {
-        return new Response(
-          JSON.stringify({ error: 'Phone number required' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      const code = generateVerificationCode();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-      const supabaseAdmin = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
-
-      await supabaseAdmin.from('phone_verifications').insert({
-        user_id: user.id,
-        phone_number,
-        code,
-        expires_at: expiresAt.toISOString(),
-        attempts: 0,
-      });
-
-      const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
-      const auth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-
-      const formData = new URLSearchParams();
-      formData.append('To', phone_number);
-      formData.append('From', TWILIO_SMS_FROM);
-      formData.append('Body', `Your Wasel verification code is: ${code}. Valid for 10 minutes.`);
-
-      const response = await fetch(twilioUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Twilio error: ${error}`);
-      }
-
-      return new Response(
-        JSON.stringify({ success: true, message: 'Verification code sent' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const url = new URL(req.url);
+    const route = url.pathname.replace(/\/+$/, '').split('/').pop();
+    if (route !== 'send-code' && route !== 'verify-code') {
+      return jsonResponse({ error: 'Not found' }, 404, headers);
     }
 
-    if (path.includes('/verify-code')) {
-      const { phone_number, code } = await req.json();
-
-      if (!phone_number || !code) {
-        return new Response(
-          JSON.stringify({ error: 'Phone number and code required' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      const supabaseAdmin = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      );
-
-      const { data: verification, error } = await supabaseAdmin
-        .from('phone_verifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('phone_number', phone_number)
-        .eq('code', code)
-        .eq('verified', false)
-        .single();
-
-      if (error || !verification) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid verification code' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      if (new Date(verification.expires_at) < new Date()) {
-        return new Response(
-          JSON.stringify({ error: 'Verification code expired' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      await supabaseAdmin
-        .from('phone_verifications')
-        .update({ verified: true, verified_at: new Date().toISOString() })
-        .eq('id', verification.id);
-
-      await supabaseAdmin
-        .from('profiles')
-        .update({ phone_number, phone_verified: true })
-        .eq('id', user.id);
-
-      await supabaseAdmin.from('user_verifications').insert({
-        user_id: user.id,
-        verification_type: 'phone',
-        status: 'verified',
-        verified_at: new Date().toISOString(),
-      });
-
-      return new Response(
-        JSON.stringify({ success: true, message: 'Phone verified successfully' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    const contentLength = Number(req.headers.get('Content-Length') ?? 0);
+    if (contentLength > 2048) {
+      return jsonResponse({ error: 'Request too large' }, 413, headers);
     }
 
-    return new Response(
-      JSON.stringify({ error: 'Not found' }),
-      { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json() as Record<string, unknown>;
+    } catch {
+      return jsonResponse({ error: 'Invalid JSON body' }, 400, headers);
+    }
+
+    const phoneNumber = normalizeE164(body.phone_number);
+    if (!phoneNumber) {
+      return jsonResponse({ error: 'A valid E.164 phone number is required' }, 400, headers);
+    }
+
+    if (route === 'send-code') {
+      const values = new URLSearchParams({ To: phoneNumber, Channel: 'sms' });
+      const result = await callTwilioVerify('Verifications', values);
+
+      if (!result.ok) {
+        if (result.status === 429 || result.data.code === 60203) {
+          return jsonResponse({ error: 'Too many verification requests. Please wait before trying again.' }, 429, headers);
+        }
+        console.error('Twilio Verify send failed', { status: result.status, code: result.data.code });
+        return jsonResponse({ error: 'Unable to send a verification code. Please try again later.' }, 502, headers);
+      }
+
+      return jsonResponse({ success: true, message: 'Verification code sent' }, 200, headers);
+    }
+
+    const code = typeof body.code === 'string' ? body.code.trim() : '';
+    if (!/^\d{4,10}$/.test(code)) {
+      return jsonResponse({ error: 'A valid verification code is required' }, 400, headers);
+    }
+
+    const values = new URLSearchParams({ To: phoneNumber, Code: code });
+    const result = await callTwilioVerify('VerificationCheck', values);
+
+    if (!result.ok) {
+      if (result.status === 429 || result.data.code === 60202 || result.data.code === 60203) {
+        return jsonResponse({ error: 'Too many verification attempts. Please try again later.' }, 429, headers);
+      }
+      console.error('Twilio Verify check failed', { status: result.status, code: result.data.code });
+      return jsonResponse({ error: 'Unable to verify this code. Please request a new one.' }, 502, headers);
+    }
+
+    if (result.data.status !== 'approved') {
+      return jsonResponse({ error: 'Invalid or expired verification code' }, 400, headers);
+    }
+
+    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { error: confirmationError } = await supabaseAdmin.rpc(
+      'confirm_phone_verification',
+      { p_user_id: user.id, p_phone_number: phoneNumber },
     );
+
+    if (confirmationError) {
+      console.error('Phone verification database confirmation failed', {
+        code: confirmationError.code,
+      });
+      return jsonResponse({ error: 'Verification succeeded but account update failed. Please contact support.' }, 500, headers);
+    }
+
+    return jsonResponse({ success: true, message: 'Phone verified successfully' }, 200, headers);
   } catch (error) {
-    console.error('SMS verification error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error('Phone verification request failed', {
+      name: error instanceof Error ? error.name : 'UnknownError',
+    });
+    return jsonResponse({ error: 'Phone verification is temporarily unavailable' }, 500, headers);
   }
 });
