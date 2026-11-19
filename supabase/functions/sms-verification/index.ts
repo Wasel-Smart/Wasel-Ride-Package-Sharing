@@ -96,9 +96,11 @@ function isConfigured(): boolean {
   );
 }
 
-const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false },
-});
+function createSupabaseAdmin() {
+  return createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 async function supabaseAdminRateLimit(
   userId: string,
@@ -106,7 +108,7 @@ async function supabaseAdminRateLimit(
   action: 'send' | 'verify',
   limit: number,
 ): Promise<{ data: unknown; error: { code?: string } | null }> {
-  const { data, error } = await supabaseAdmin.rpc(
+  const { data, error } = await createSupabaseAdmin().rpc(
     'consume_phone_verification_rate_limit',
     {
       p_user_id: userId,
@@ -218,6 +220,14 @@ serve(async (req) => {
       if (allowed !== true) {
         return jsonResponse({ error: 'Too many verification requests. Please wait before trying again.' }, 429, headers);
       }
+      const userAllowed = await supabaseAdminRateLimit(user.id, '*', 'send', 5);
+      if (userAllowed.error) {
+        console.error('Phone verification user rate-limit check failed', { code: userAllowed.error.code });
+        return jsonResponse({ error: 'Phone verification is temporarily unavailable' }, 503, headers);
+      }
+      if (userAllowed.data !== true) {
+        return jsonResponse({ error: 'Too many verification requests. Please wait before trying again.' }, 429, headers);
+      }
       const values = new URLSearchParams({ To: phoneNumber, Channel: 'sms' });
       const result = await callTwilioVerify('Verifications', values);
 
@@ -252,7 +262,7 @@ serve(async (req) => {
       return jsonResponse({ error: 'Invalid or expired verification code' }, 400, headers);
     }
 
-    const { error: confirmationError } = await supabaseAdmin.rpc(
+    const { error: confirmationError } = await createSupabaseAdmin().rpc(
       'confirm_phone_verification',
       { p_user_id: user.id, p_phone_number: phoneNumber },
     );
