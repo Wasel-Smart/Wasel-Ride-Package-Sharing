@@ -100,7 +100,13 @@ const JORDAN_CITIES = [
   'Salt',
 ] as const;
 
-// Iraq cities — Baghdad, Erbil, Basra, Najaf and major governorates
+// Iraq cities — Baghdad, Erbil, Basra, Najaf and major governorates.
+// MARKET STATUS: Iraq support is infrastructure-only (locale strings, phone
+// validation, region config). No corridors, pricing, or booking flows are
+// active for IQ. These cities are excluded from the ride/bus search dropdowns
+// by the CITIES constant in waselCoreRideData.ts (Jordan-only). Re-enable by
+// adding IQ corridors to wasel-movement-network.ts and setting the
+// VITE_ENABLE_IRAQ_MARKET feature flag.
 const IRAQ_CITIES = [
   'Baghdad',
   'Erbil',

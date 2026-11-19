@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  AlertCircle,
   Calendar,
   Car,
   Package,
@@ -173,42 +174,56 @@ export function SchedulePage() {
     setLoading(false);
   }, [user?.id]);
 
-  const persist = async (next: ScheduleItem[]) => {
-    setItems(next);
-    if (supabase && user?.id) {
-      try {
-        const payload = next.map(item => ({
-          id: item.id,
-          user_id: user.id,
-          item_type: item.item_type,
-          status: item.status,
-          pickup_location: item.pickup_location,
-          pickup_lat: item.pickup_lat ?? 0,
-          pickup_lng: item.pickup_lng ?? 0,
-          dropoff_location: item.dropoff_location ?? null,
-          dropoff_lat: item.dropoff_lat ?? null,
-          dropoff_lng: item.dropoff_lng ?? null,
-          scheduled_at: item.scheduled_at,
-          recurring_pattern: item.recurring_pattern,
-          notes: item.notes ?? null,
-          contact_name: item.contact_name ?? null,
-          contact_phone: item.contact_phone ?? null,
-          estimated_price: item.estimated_price ?? null,
-          updated_at: new Date().toISOString(),
-        }));
-        const { error } = await supabase
-          .from('scheduled_pickups')
-          .upsert(payload, { onConflict: 'id' });
-        if (!error) {
-          localStorage.setItem(LOCAL_KEY, JSON.stringify(next));
-          setDataSource('server');
-          return;
-        }
-      } catch {
-        /* fall back */
-      }
+  /**
+   * Supabase-first write strategy (mirrors rideLifecycle.ts).
+   * - If Supabase is available: write there first. On success, update the
+   *   localStorage read-through cache and update state.
+   * - If Supabase is unavailable or the user is unauthenticated: throw so
+   *   the caller can surface a real error. We never silently write only to
+   *   localStorage for a schedule item — a "saved" item that never reached
+   *   the server would vanish on the next full reload.
+   * - Guest/unauthenticated users cannot schedule (the Protected wrapper
+   *   above the page already enforces sign-in; this is a belt-and-braces guard).
+   */
+  const persist = async (next: ScheduleItem[]): Promise<void> => {
+    if (!supabase || !user?.id) {
+      throw new Error('Sign in to save scheduled items to your account.');
     }
+
+    const payload = next.map(item => ({
+      id: item.id,
+      user_id: user.id,
+      item_type: item.item_type,
+      status: item.status,
+      pickup_location: item.pickup_location,
+      pickup_lat: item.pickup_lat ?? 0,
+      pickup_lng: item.pickup_lng ?? 0,
+      dropoff_location: item.dropoff_location ?? null,
+      dropoff_lat: item.dropoff_lat ?? null,
+      dropoff_lng: item.dropoff_lng ?? null,
+      scheduled_at: item.scheduled_at,
+      recurring_pattern: item.recurring_pattern,
+      notes: item.notes ?? null,
+      contact_name: item.contact_name ?? null,
+      contact_phone: item.contact_phone ?? null,
+      estimated_price: item.estimated_price ?? null,
+      updated_at: new Date().toISOString(),
+    }));
+
+    const { error } = await supabase
+      .from('scheduled_pickups')
+      .upsert(payload, { onConflict: 'id' });
+
+    if (error) {
+      // Propagate so callers (handleCreate / handleCancel) can show the user
+      // a real error rather than silently losing the write.
+      throw new Error(error.message ?? 'Failed to save schedule item. Please try again.');
+    }
+
+    // Server write confirmed — update the read-through cache and local state.
     localStorage.setItem(LOCAL_KEY, JSON.stringify(next));
+    setItems(next);
+    setDataSource('server');
   };
 
   const handleGeolocate = async () => {
@@ -228,6 +243,8 @@ export function SchedulePage() {
     setLocating(false);
   };
 
+  const [persistError, setPersistError] = useState<string | null>(null);
+
   const handleCreate = async () => {
     if (!form.pickup_location || !form.scheduled_at) {return;}
     const newItem: ScheduleItem = {
@@ -238,15 +255,26 @@ export function SchedulePage() {
       pickup_lng: form.pickup_lng ?? 0,
       user_id: user?.id,
     };
-    await persist([newItem, ...items]);
-    setShowForm(false);
-    setLocationCaptured(false);
-    setForm({ ...EMPTY_FORM, user_id: user?.id });
+    setPersistError(null);
+    try {
+      await persist([newItem, ...items]);
+      setShowForm(false);
+      setLocationCaptured(false);
+      setForm({ ...EMPTY_FORM, user_id: user?.id });
+    } catch (err) {
+      setPersistError(err instanceof Error ? err.message : 'Could not save the schedule item. Please try again.');
+    }
   };
 
   const handleCancel = async (id: string) => {
-    await persist(items.map(i => (i.id === id ? { ...i, status: 'cancelled' } : i)));
-    setCancellingId(null);
+    setPersistError(null);
+    try {
+      await persist(items.map(i => (i.id === id ? { ...i, status: 'cancelled' } : i)));
+      setCancellingId(null);
+    } catch (err) {
+      setPersistError(err instanceof Error ? err.message : 'Could not cancel the item. Please try again.');
+      setCancellingId(null);
+    }
   };
 
   useEffect(() => {
@@ -332,6 +360,31 @@ export function SchedulePage() {
       >
         <div style={{ height: 4 }} />
       </SectionCard>
+
+      {/* ── Persist error banner ── */}
+      {persistError && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '12px 16px',
+            marginBottom: 16,
+            borderRadius: R.md,
+            border: `1px solid ${C.error}44`,
+            background: `${C.error}12`,
+            color: C.error,
+            fontSize: TYPE.size.xs,
+            fontFamily: F,
+            lineHeight: 1.6,
+          }}
+        >
+          <AlertCircle size={14} />
+          {persistError}
+        </div>
+      )}
 
       {/* Rows below came from the on-device copy, not the account — say so. */}
       {!loading && dataSource === 'local' && (

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
 import { C, R, SPACE, TYPE, card, pillStyle } from '../../utils/wasel-ds';
@@ -18,8 +18,53 @@ type Range = '1d' | '7d' | '30d';
 
 const RANGE_LABELS: Record<Range, string> = { '1d': 'Today', '7d': '7 days', '30d': '30 days' };
 
+/**
+ * Verifies admin access using BOTH the profile role (client-cached) AND the
+ * JWT `app_metadata.role` claim (server-issued, cannot be forged by the client).
+ *
+ * The profile role guards the React render (fast, no network). The JWT claim
+ * is the second check that cannot be spoofed via DevTools, a stale cache, or
+ * a future auth bug. Both must agree before the admin UI is shown.
+ *
+ * The edge API enforces the same check server-side via `ensureRuntimeAdminAccess`
+ * + `enforcePermission`, so this is defence-in-depth, not the sole gate.
+ */
+function useIsVerifiedAdmin(): { isAdmin: boolean; loading: boolean } {
+  const { user, session } = useAuth();
+
+  const isAdmin = useMemo(() => {
+    // 1. Profile role check (client-cached).
+    if (!user || (user as unknown as Record<string, unknown>)?.user_metadata?.role !== 'admin') {
+      return false;
+    }
+
+    // 2. JWT app_metadata.role check (server-issued claim).
+    // Supabase encodes app_metadata in the JWT payload. We decode the payload
+    // segment here — no crypto verification needed; Supabase already verifies
+    // the signature when it issues the session. We only read what the server
+    // put there; a client cannot change their own JWT payload without a new
+    // server-issued token.
+    if (!session?.access_token) {return false;}
+    try {
+      const payloadB64 = session.access_token.split('.')[1];
+      if (!payloadB64) {return false;}
+      const payload = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/'))) as Record<string, unknown>;
+      const jwtRole =
+        (payload['app_metadata'] as Record<string, unknown> | undefined)?.['role'] ??
+        payload['role'];
+      return jwtRole === 'admin';
+    } catch {
+      // Malformed token — deny access.
+      return false;
+    }
+  }, [user, session?.access_token]);
+
+  return { isAdmin, loading: false };
+}
+
 export function AdminDashboardPage() {
   const { user, session } = useAuth();
+  const { isAdmin } = useIsVerifiedAdmin();
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +73,7 @@ const [range, setRange] = useState<Range>('1d');
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
 useEffect(() => {
-    if (!user || user.role !== 'admin') {
+    if (!isAdmin) {
       return;
     }
 
@@ -58,9 +103,9 @@ useEffect(() => {
     fetchData();
 
     return () => { cancelled = true; };
-  }, [range, session?.access_token, user?.role, refetchTrigger]);
+  }, [range, session?.access_token, isAdmin, refetchTrigger]);
 
-  if (!user || user.role !== 'admin') {
+  if (!isAdmin) {
     return (
       <PageShell>
         <div style={{ padding: SPACE[6], textAlign: 'center', color: C.text }}>

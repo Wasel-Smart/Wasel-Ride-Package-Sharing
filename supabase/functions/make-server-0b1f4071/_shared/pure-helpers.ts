@@ -217,3 +217,80 @@ export function isExpired ( isoValue?: string | null ): boolean {
   if ( Number.isNaN( expiresAt ) ) {return false;}
   return expiresAt <= Date.now();
 }
+
+// ── Distributed tracing (W3C traceparent) ────────────────────────────────────
+//
+// Every inbound request receives a trace-id so correlated log lines from
+// chained edge function calls can be joined in a single query.
+//
+// Format: W3C traceparent  00-{traceId}-{spanId}-01
+//   traceId  = 32 hex chars (128-bit)
+//   spanId   = 16 hex chars (64-bit)
+//
+// Downstream handlers that call another edge function should forward the
+// X-Trace-Id header they received. That way a failure in a chained call
+// (e.g. booking-service → wallet handler) produces two log entries that share
+// the same traceId and can be joined without guessing.
+
+function hex ( length: number ): string {
+  const bytes = new Uint8Array( length / 2 );
+  crypto.getRandomValues( bytes );
+  return Array.from( bytes ).map( b => b.toString( 16 ).padStart( 2, '0' ) ).join( '' );
+}
+
+export interface TraceContext {
+  traceId: string;
+  spanId: string;
+  traceparent: string;
+  traceHeader: string; // X-Trace-Id value (traceId only — easier to log)
+}
+
+/**
+ * Extract the W3C traceparent from an inbound request, or generate a fresh one.
+ * Always returns a valid TraceContext — never throws.
+ */
+export function resolveTraceContext ( request: Request ): TraceContext {
+  const inbound = request.headers.get( 'traceparent' ) ?? request.headers.get( 'x-trace-id' );
+  let traceId = '';
+  let spanId = '';
+
+  if ( inbound ) {
+    // Try W3C traceparent: 00-<traceId>-<spanId>-<flags>
+    const parts = inbound.split( '-' );
+    if ( parts.length >= 4 && parts[ 1 ] && parts[ 1 ].length === 32 ) {
+      traceId = parts[ 1 ];
+      spanId = hex( 16 ); // new span for this hop
+    } else if ( /^[0-9a-f]{32}$/i.test( inbound ) ) {
+      // Plain 32-char hex (X-Trace-Id from client)
+      traceId = inbound.toLowerCase();
+      spanId = hex( 16 );
+    }
+  }
+
+  if ( !traceId ) {
+    traceId = hex( 32 );
+    spanId = hex( 16 );
+  }
+
+  return {
+    traceId,
+    spanId,
+    traceparent: `00-${ traceId }-${ spanId }-01`,
+    traceHeader: traceId,
+  };
+}
+
+/**
+ * Build headers to forward the trace context to a downstream edge function call.
+ *
+ * Usage:
+ *   const downstream = await fetch(url, {
+ *     headers: buildDownstreamTraceHeaders(trace),
+ *   });
+ */
+export function buildDownstreamTraceHeaders ( trace: TraceContext ): Record<string, string> {
+  return {
+    'traceparent': trace.traceparent,
+    'x-trace-id': trace.traceHeader,
+  };
+}
