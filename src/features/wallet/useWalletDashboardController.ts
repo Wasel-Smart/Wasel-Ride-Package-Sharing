@@ -252,7 +252,7 @@ export function useWalletDashboardController() {
       } else {
         await walletApi.withdraw(effectiveUserId, amt, withdrawBank, { method: withdrawMethod });
       }
-      toast.success((t.withdrawnSuccess ?? 'JOD {amount} withdrawn successfully').replace('{amount}', String(amt)));
+      toast.success((t.withdrawnSuccess ?? 'Withdrawal request for JOD {amount} submitted — pending operator review.').replace('{amount}', String(amt)));
       setShowWithdraw(false);
       setWithdrawAmount('');
       setWithdrawBank('');

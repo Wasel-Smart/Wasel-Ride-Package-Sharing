@@ -36,7 +36,8 @@ jest.mock('../lib/config', () => ({
 
 jest.mock('../services/biometricAuth', () => ({
   biometricAuth: {
-    storeSessionForBiometric: jest.fn(),
+    initialize: jest.fn().mockResolvedValue(undefined),
+    storeSessionForBiometric: jest.fn().mockResolvedValue(undefined),
   },
 }));
 

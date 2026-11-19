@@ -149,6 +149,12 @@ export {
 export { idempotencyMiddleware } from '../_shared/idempotency-middleware.ts';
 
 export {
+  resolveTraceContext,
+  buildDownstreamTraceHeaders,
+  type TraceContext,
+} from '../_shared/pure-helpers.ts';
+
+export {
   hasPermission,
   resolveAccessRole,
   getRolePermissions,

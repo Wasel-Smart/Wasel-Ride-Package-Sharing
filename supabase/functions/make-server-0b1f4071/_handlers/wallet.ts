@@ -106,6 +106,7 @@ export async function handleGetWalletInsights ( request: Request, requestedUserI
 
 // Per-operation ceilings (JOD). Anything larger must go through support/KYC.
 const MAX_WALLET_SEND_JOD = 1000;
+const MAX_WALLET_WITHDRAW_JOD = 2000;
 const MAX_WALLET_TOPUP_JOD = 2000;
 const MAX_WALLET_AUTO_TOPUP_THRESHOLD_JOD = 1000;
 const PIN_MAX_ATTEMPTS = 5;
@@ -235,13 +236,71 @@ export async function enforceWalletPin (
 export async function handleWalletWithdraw ( request: Request, requestedUserId: string ) {
   const auth = await authenticateWalletRequest( request, requestedUserId );
   if ( 'error' in auth ) {return auth.error;}
-  // Do not debit the wallet until a real payout provider is configured and the
-  // provider's result can be reconciled. The previous path only wrote a ledger
-  // debit, then presented it to the client as a completed withdrawal.
-  return json(
-    { error: 'Withdrawals are temporarily unavailable until a payout provider is configured.', code: 'PAYOUT_UNAVAILABLE' },
-    503,
-  );
+
+  const body = await request.json().catch( () => ( {} ) );
+  const amountJod = toMoneyNumber( body.amount );
+  const bankAccount = String( body.bankAccount ?? '' ).trim();
+  const method = String( body.method ?? 'bank_transfer' ).trim();
+
+  if ( amountJod <= 0 ) {return json( { error: 'Amount must be greater than zero.' }, 400 );}
+  if ( amountJod > MAX_WALLET_WITHDRAW_JOD ) {
+    return json( { error: `Withdrawals are limited to JOD ${ MAX_WALLET_WITHDRAW_JOD } per request.` }, 400 );
+  }
+  if ( !bankAccount ) {return json( { error: 'A bank account or payout destination is required.' }, 400 );}
+
+  // Limit withdrawal requests to 5 per hour per user to prevent queue flooding.
+  const throttled = await consumeRateLimit( auth.admin, `wallet-withdraw:${ auth.canonicalUser.id }`, 5, { windowSeconds: 3600, failClosed: true } );
+  if ( throttled ) {return throttled;}
+
+  try {
+    const wallet = await ensureWalletForUser( auth.admin, auth.canonicalUser.id );
+    const pinDenied = await enforceWalletPin( auth.admin, auth.canonicalUser.id, wallet, body.pin, amountJod );
+    if ( pinDenied ) {return pinDenied;}
+
+    // Check sufficient balance WITHOUT debiting — the wallet is only debited
+    // when the operator approves and processes the actual payout.
+    const { data: balanceData, error: balanceError } = await auth.admin
+      .rpc( 'get_authoritative_wallet_balance', { p_user_id: auth.canonicalUser.id } );
+    if ( balanceError ) {throw new Error( balanceError.message );}
+    const balance = Number( balanceData ?? 0 );
+    if ( amountJod > balance ) {
+      return json( { error: 'Insufficient wallet balance for this withdrawal request.' }, 400 );
+    }
+
+    // Prevent more than 3 pending requests at a time.
+    const { count: pendingCount } = await auth.admin
+      .from( 'withdrawal_requests' )
+      .select( 'id', { count: 'exact', head: true } )
+      .eq( 'user_id', auth.canonicalUser.id )
+      .eq( 'status', 'pending' );
+    if ( ( pendingCount ?? 0 ) >= 3 ) {
+      return json( { error: 'You already have 3 pending withdrawal requests. Please wait for them to be processed.' }, 429 );
+    }
+
+    const { data: withdrawalRequest, error: insertError } = await auth.admin
+      .from( 'withdrawal_requests' )
+      .insert( {
+        user_id: auth.canonicalUser.id,
+        amount_jod: amountJod,
+        payout_method: method,
+        bank_account: bankAccount,
+        pin_verified: Boolean( wallet.pin_hash ),
+        status: 'pending',
+      } )
+      .select( 'id, amount_jod, payout_method, status, created_at' )
+      .single();
+
+    if ( insertError ) {throw new Error( insertError.message );}
+
+    return json( {
+      success: true,
+      status: 'pending',
+      message: 'Withdrawal request submitted. An operator will review and process it within 1-2 business days.',
+      withdrawalRequest,
+    }, 202 );
+  } catch ( error ) {
+    return walletOperationFailed( 'withdraw', error );
+  }
 }
 
 export async function handleWalletSend ( request: Request, requestedUserId: string ) {

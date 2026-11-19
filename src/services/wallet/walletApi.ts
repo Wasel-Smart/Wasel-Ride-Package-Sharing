@@ -142,9 +142,10 @@ async function fetchSubscriptionViaBackend(userId: string): Promise<WalletSubscr
 
 export function getWalletCapabilities(): WalletCapabilities {
   const secureEdgeReady = canUseEdgeApi();
-  // Withdrawals remain disabled until a configured payout provider can execute
-  // and reconcile them; a database debit alone is not a completed withdrawal.
-  return { topUp: secureEdgeReady, rewardClaim: secureEdgeReady, subscription: secureEdgeReady, pin: secureEdgeReady, send: secureEdgeReady, withdraw: false, autoTopUp: secureEdgeReady };
+  // Withdrawals are now enabled as an operator-reviewed request flow: the driver
+  // submits a request, the operator approves and processes the payout, and only
+  // then is the wallet debited. No money leaves without human confirmation.
+  return { topUp: secureEdgeReady, rewardClaim: secureEdgeReady, subscription: secureEdgeReady, pin: secureEdgeReady, send: secureEdgeReady, withdraw: secureEdgeReady, autoTopUp: secureEdgeReady };
 }
 
 export const walletApi = {
@@ -201,11 +202,12 @@ export const walletApi = {
   },
 
   async withdraw(userId: string, amount: number, bankAccount: string, opts: { method?: string; pin?: string } = {}) {
-    void userId;
-    void amount;
-    void bankAccount;
-    void opts;
-    return runSecureWalletOperation(() => { throw new Error('Withdrawals are temporarily unavailable until a payout provider is configured.'); });
+    return runSecureWalletOperation(
+      () => requestWalletJson<{ success: boolean; status: string; message: string; withdrawalRequest: { id: string; amount_jod: number; payout_method: string; status: string; created_at: string } }>(
+        userId, '/withdraw', 'Request wallet withdrawal',
+        { method: 'POST', body: { amount, bankAccount, ...(opts.method ? { method: opts.method } : {}), ...(opts.pin ? { pin: opts.pin } : {}) } },
+      ),
+    );
   },
 
   async sendMoney(userId: string, recipientId: string, amount: number, optsOrNote?: { note?: string; pin?: string; idempotencyKey?: string } | string) {

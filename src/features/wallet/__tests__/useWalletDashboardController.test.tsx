@@ -245,7 +245,7 @@ describe( 'useWalletDashboardController', () => {
   } );
 
   describe( 'handleWithdraw', () => {
-    it( 'does not call the API and explains when payout is unavailable', async () => {
+    it( 'does not call the API and explains when withdrawals are unavailable', async () => {
       walletCapabilitiesMock.withdraw = false;
       const { result } = renderController();
       await waitFor( () => expect( result.current.loading ).toBe( false ) );
@@ -258,7 +258,7 @@ describe( 'useWalletDashboardController', () => {
 
       expect( walletApiMocks.withdraw ).not.toHaveBeenCalled();
       expect( toastMock.error ).toHaveBeenCalledWith(
-        'Withdrawals are temporarily unavailable until a payout provider is configured.',
+        'Wallet withdrawals require the secure backend. Connect the edge function to enable withdrawal requests.',
       );
     } );
 

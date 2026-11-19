@@ -84,10 +84,10 @@ describe( 'walletApi — edge transport configured', () => {
   } );
 
   describe( 'getWalletCapabilities', () => {
-    it( 'keeps withdrawals disabled until a payout provider is configured', () => {
+    it( 'enables withdrawals as an operator-reviewed request flow', () => {
       expect( getWalletCapabilities() ).toEqual( {
         topUp: true, rewardClaim: true, subscription: true, pin: true,
-        send: true, withdraw: false, autoTopUp: true,
+        send: true, withdraw: true, autoTopUp: true,
       } );
     } );
   } );
@@ -174,11 +174,16 @@ describe( 'walletApi — edge transport configured', () => {
   } );
 
   describe( 'withdraw / sendMoney / pin / reward — edge success paths', () => {
-    it( 'fails closed while no payout provider is configured', async () => {
-      await expect( walletApi.withdraw( 'user-123', 25, 'JO00BANK123', { method: 'bank_transfer' } ) )
-        .rejects.toThrow( 'Withdrawals are temporarily unavailable until a payout provider is configured.' );
-      expect( requestEdgeJsonMock ).not.toHaveBeenCalled();
-      expect( walletDirectMocks.fetchWalletDirect ).not.toHaveBeenCalled();
+    it( 'sends a withdrawal request to the edge API and returns the pending response', async () => {
+      const edgeResult = { success: true, status: 'pending', message: 'Withdrawal request submitted.', withdrawalRequest: { id: 'wr-1', amount_jod: 25, payout_method: 'bank_transfer', status: 'pending', created_at: '2026-11-19T12:00:00Z' } };
+      requestEdgeJsonMock.mockResolvedValue( edgeResult );
+
+      const out = await walletApi.withdraw( 'user-123', 25, 'JO00BANK123', { method: 'bank_transfer' } );
+      expect( out ).toBe( edgeResult );
+      expect( requestEdgeJsonMock ).toHaveBeenCalledWith( expect.objectContaining( {
+        path: '/v1/wallet/user-123/withdraw',
+        method: 'POST',
+      } ) );
     } );
 
     it( 'sendMoney returns the edge response as-is (no re-wrapping)', async () => {

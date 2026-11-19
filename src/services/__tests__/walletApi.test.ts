@@ -406,7 +406,7 @@ describe('walletApi — edge transport NOT configured (read-only/local tiers)', 
       expect(caps.pin).toBe(true);
       expect(caps.send).toBe(true);
       expect(caps.autoTopUp).toBe(true);
-      expect(caps.withdraw).toBe(false); // withdraw stays false per design
+      expect(caps.withdraw).toBe(true);
     });
   });
 

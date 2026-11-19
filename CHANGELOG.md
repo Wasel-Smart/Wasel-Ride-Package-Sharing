@@ -13,11 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `aria-label` to all icon-only buttons in `OfferRidePage` (step progress bar now carries `role="progressbar"` with `aria-valuenow`)
 
 ### Added
+- Driver withdrawal request system — drivers can submit withdrawal requests that an operator reviews and processes before the wallet is debited; new `withdrawal_requests` table with RLS, max 3 pending per user, PIN gate, balance check, and rate limiting (5/hour)
 - E2E specs: `offer-ride.spec.ts`, `bus-booking.spec.ts`, `package-flow.spec.ts`, `driver-onboarding.spec.ts`, `trust-center.spec.ts`, `payment-methods.spec.ts`, `schedule.spec.ts`, `support.spec.ts` — 10 spec files total (was 4)
 - W3C traceparent distributed tracing helpers (`resolveTraceContext`, `buildDownstreamTraceHeaders`) in edge `_shared/pure-helpers.ts`; exported through `_handlers/shared.ts` barrel
 - `CREDENTIAL_ROTATION_REQUIRED.md` — operator checklist with provider links for all exposed credentials
 
 ### Fixed
+- Driver withdrawals are no longer hardcoded off — the edge handler creates a pending `withdrawal_requests` record instead of returning 503 `PAYOUT_UNAVAILABLE`; `walletApi.withdraw()` now calls the server; `getWalletCapabilities().withdraw` follows `secureEdgeReady` like all other capabilities
 - `SchedulePage.persist()` is now Supabase-first (throws on failure instead of silently falling through to localStorage); errors surface via a live `role="alert"` banner
 - `AdminDashboardPage` now verifies JWT `app_metadata.role` claim (server-issued) in addition to the profile role field — cannot be spoofed via DevTools or stale cache
 - Removed duplicate `src/services/tokens.ts` (conflicting hex values; canonical source is `src/utils/wasel-ds.ts`)
