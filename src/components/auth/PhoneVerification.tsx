@@ -24,8 +24,8 @@ export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const handleSendCode = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendCode = async (e?: React.FormEvent | React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault();
     setError('');
     setSuccess('');
     const formatted = normalizeJordanMobile(phoneNumber);
