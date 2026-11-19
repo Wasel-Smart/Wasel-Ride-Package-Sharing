@@ -1,10 +1,10 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert, Linking } from 'react-native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   PrimaryButton,
 } from '../components/MobilePrimitives';
-import { paymentService, type PaymentMethod } from '../services/payments';
+import { paymentService, createTopUpSession, type PaymentMethod } from '../services/payments';
 import { useAuth } from '../providers/AuthProvider';
 import { colors, spacing, typography } from '../theme';
 
@@ -33,6 +33,33 @@ export default function PaymentMethodsScreen() {
   const queryClient = useQueryClient();
   const [actionLoading, setActionLoading] = useState(false);
   const userId = user?.id ?? '';
+
+  /**
+   * Opens the Stripe Checkout flow in the system browser to add a new card.
+   * After the user completes checkout and returns to the app, invalidating
+   * the payment-methods query re-fetches the updated list.
+   */
+  const handleAddCard = useCallback(async () => {
+    if (!userId) {
+      Alert.alert('سجّل دخولك أولاً', 'تحتاج إلى حساب لإضافة بطاقة.');
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const session = await createTopUpSession({ userId, amount: 0.01 }); // minimal amount to register card
+      if (session.checkoutUrl) {
+        await Linking.openURL(session.checkoutUrl);
+        // Refresh list when user returns to foreground (AppState listener is in WalletScreen)
+        void queryClient.invalidateQueries({ queryKey: ['payment-methods', userId] });
+      } else {
+        Alert.alert('خطأ', 'تعذّر فتح صفحة إضافة البطاقة. حاول مرة ثانية.');
+      }
+    } catch (err) {
+      Alert.alert('خطأ', err instanceof Error ? err.message : 'تعذّر فتح الدفع.');
+    } finally {
+      setActionLoading(false);
+    }
+  }, [userId, queryClient]);
 
   const { data: methods, isLoading, error, refetch } = useQuery({
     queryKey: ['payment-methods', userId],
@@ -149,9 +176,10 @@ export default function PaymentMethodsScreen() {
       ))}
 
       <PrimaryButton
-        label="إضافة وسيلة دفع جديدة"
+        label={actionLoading ? 'جاري الفتح...' : 'إضافة وسيلة دفع جديدة'}
         icon="card"
-        onPress={() => Alert.alert('قريباً', 'ستتوفر إضافة بطاقات جديدة عبر Stripe Checkout في التحديث القادم.')}
+        loading={actionLoading}
+        onPress={handleAddCard}
         testID="add-payment-method"
       />
     </ScrollView>

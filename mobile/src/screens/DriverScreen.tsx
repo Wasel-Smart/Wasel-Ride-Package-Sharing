@@ -1,5 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   InfoCard,
   MetricTile,
@@ -10,7 +12,11 @@ import {
   StatusPill,
 } from '../components/MobilePrimitives';
 import { useAuth } from '../providers/AuthProvider';
+import { apiClient } from '../lib/api';
 import { colors, spacing } from '../theme';
+import type { RootStackParamList } from '../navigation/types';
+
+type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface DriverStep {
   id: string;
@@ -21,6 +27,7 @@ interface DriverStep {
 
 const DriverScreen = React.memo(function DriverScreen() {
   const { user } = useAuth();
+  const navigation = useNavigation<NavProp>();
   const [steps, setSteps] = useState<DriverStep[]>([
     { id: 'email', label: 'تأكيد البريد الإلكتروني', description: 'أكد بريدك الإلكتروني من الإعدادات.', complete: Boolean(user?.email) },
     { id: 'phone', label: 'تأكيد رقم الهاتف', description: 'أضف رقم موبايل أردني وفعّله.', complete: false },
@@ -35,18 +42,28 @@ const DriverScreen = React.memo(function DriverScreen() {
   const canCarryPackages = completedCount >= 5;
 
   const toggleStep = useCallback((id: string) => {
-    setSteps(prev =>
-      prev.map(s => (s.id === id ? { ...s, complete: !s.complete } : s)),
-    );
-  }, []);
+    setSteps(prev => {
+      const next = prev.map(s => (s.id === id ? { ...s, complete: !s.complete } : s));
+      // Persist driver readiness to backend so it survives navigation.
+      // Best-effort: a failure here must not prevent the UI from updating.
+      const updated = next.find(s => s.id === id);
+      if (updated && user?.id) {
+        void apiClient.patch(`profile/${user.id}`, {
+          driver_onboarding: { stepId: id, complete: updated.complete },
+        }).catch(() => { /* non-blocking */ });
+      }
+      return next;
+    });
+  }, [user?.id]);
 
   const offerRide = useCallback(() => {
     if (!canOfferRide) {
       Alert.alert('لسه مش جاهز', 'كمّل ٤ خطوات على الأقل قبل عرض المشاوير.');
       return;
     }
-    Alert.alert('انتقال', 'بنفتح مسار عرض مشوار...');
-  }, [canOfferRide]);
+    // Navigate to the ride search screen where the driver can post/offer a ride.
+    navigation.navigate('AdvancedSearch');
+  }, [canOfferRide, navigation]);
 
   const STATUS_COLOR = readinessPercent >= 80 ? colors.green : readinessPercent >= 50 ? colors.amber : colors.red;
 
