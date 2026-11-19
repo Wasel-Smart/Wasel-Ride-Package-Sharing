@@ -121,7 +121,9 @@ async function handleBookingRequest(request: Request, path: string) {
     });
     if (error) {
       // RPC can return custom error messages; map to appropriate HTTP status codes
-      const message = typeof error === 'object' && 'message' in error ? (error as any).message : String(error);
+      const message = typeof error === 'object' && error !== null && 'message' in error
+        ? String((error as { message?: unknown }).message ?? '')
+        : String(error);
       const statusCode = message.includes('Not enough seats') ? 409 : 500;
       return json({ error: message }, statusCode);
     }
