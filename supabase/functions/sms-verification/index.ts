@@ -96,6 +96,28 @@ function isConfigured(): boolean {
   );
 }
 
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+
+async function supabaseAdminRateLimit(
+  userId: string,
+  phoneNumber: string,
+  action: 'send' | 'verify',
+  limit: number,
+): Promise<{ data: unknown; error: { code?: string } | null }> {
+  const { data, error } = await supabaseAdmin.rpc(
+    'consume_phone_verification_rate_limit',
+    {
+      p_user_id: userId,
+      p_phone_number: phoneNumber,
+      p_action: action,
+      p_limit: limit,
+    },
+  );
+  return { data, error };
+}
+
 function twilioAuthHeader(): string {
   return `Basic ${btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`)}`;
 }
@@ -186,6 +208,16 @@ serve(async (req) => {
     }
 
     if (route === 'send-code') {
+      const { data: allowed, error: limitError } = await supabaseAdminRateLimit(
+        user.id, phoneNumber, 'send', 3,
+      );
+      if (limitError) {
+        console.error('Phone verification send rate-limit check failed', { code: limitError.code });
+        return jsonResponse({ error: 'Phone verification is temporarily unavailable' }, 503, headers);
+      }
+      if (allowed !== true) {
+        return jsonResponse({ error: 'Too many verification requests. Please wait before trying again.' }, 429, headers);
+      }
       const values = new URLSearchParams({ To: phoneNumber, Channel: 'sms' });
       const result = await callTwilioVerify('Verifications', values);
 
@@ -220,9 +252,6 @@ serve(async (req) => {
       return jsonResponse({ error: 'Invalid or expired verification code' }, 400, headers);
     }
 
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
     const { error: confirmationError } = await supabaseAdmin.rpc(
       'confirm_phone_verification',
       { p_user_id: user.id, p_phone_number: phoneNumber },
