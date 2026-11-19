@@ -6,6 +6,15 @@ import { WaselColors } from '../../../tokens/wasel-tokens';
 import { ActionModal as SharedActionModal } from './WalletShared';
 import { tx } from '../../../locales/tx';
 
+/** Accepts a Supabase UUID, an E.164 phone number, or an email address. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const E164_RE = /^\+[1-9]\d{6,14}$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function isValidRecipient(value: string): boolean {
+  const v = value.trim();
+  return UUID_RE.test(v) || E164_RE.test(v) || EMAIL_RE.test(v);
+}
+
 type WalletActionModalsProps = {
   actionLoading: boolean;
   balance: number;
@@ -117,10 +126,22 @@ export function WalletActionModals({
             <Input
               type="number"
               value={topUpAmount}
+              min="1"
+              max="10000"
+              step="0.5"
               onChange={e => setTopUpAmount(e.target.value)}
-              className="mt-1 rounded-lg"
+              className={`mt-1 rounded-lg ${topUpAmount && (parseFloat(topUpAmount) < 1 || parseFloat(topUpAmount) > 10000) ? 'border-destructive ring-1 ring-destructive' : ''}`}
               placeholder="0.00"
+              aria-invalid={topUpAmount !== '' && (parseFloat(topUpAmount) < 1 || parseFloat(topUpAmount) > 10000)}
+              aria-describedby="topup-amount-error"
             />
+            {topUpAmount !== '' && (parseFloat(topUpAmount) < 1 || parseFloat(topUpAmount) > 10000) && (
+              <p id="topup-amount-error" role="alert" className="mt-1 text-xs text-destructive">
+                {parseFloat(topUpAmount) < 1
+                  ? (t.minTopUp ?? 'Minimum top-up is 1 JOD')
+                  : (t.maxTopUp ?? 'Maximum top-up is 10,000 JOD')}
+              </p>
+            )}
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">{t.paymentMethod}</Label>
@@ -145,7 +166,7 @@ export function WalletActionModals({
           </div>
           <Button
             onClick={() => { void onTopUp(); }}
-            disabled={actionLoading}
+            disabled={actionLoading || !topUpAmount || parseFloat(topUpAmount) < 1 || parseFloat(topUpAmount) > 10000}
             className="h-11 w-full rounded-xl font-semibold"
             style={{ background: WaselColors.teal }}
           >
@@ -226,9 +247,16 @@ export function WalletActionModals({
             <Input
               value={sendRecipient}
               onChange={e => setSendRecipient(e.target.value)}
-              className="mt-1 rounded-lg"
+              className={`mt-1 rounded-lg ${sendRecipient && !isValidRecipient(sendRecipient) ? 'border-destructive ring-1 ring-destructive' : ''}`}
               placeholder={t.userIdPlaceholder}
+              aria-invalid={sendRecipient !== '' && !isValidRecipient(sendRecipient)}
+              aria-describedby="send-recipient-error"
             />
+            {sendRecipient !== '' && !isValidRecipient(sendRecipient) && (
+              <p id="send-recipient-error" role="alert" className="mt-1 text-xs text-destructive">
+                {t.invalidRecipient ?? 'Enter a valid user ID, phone number (+9647…), or email'}
+              </p>
+            )}
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">{t.sendAmount}</Label>
@@ -251,7 +279,7 @@ export function WalletActionModals({
           </div>
           <Button
             onClick={() => { void onSend(); }}
-            disabled={actionLoading}
+            disabled={actionLoading || !sendRecipient.trim() || !isValidRecipient(sendRecipient) || !sendAmount || parseFloat(sendAmount) <= 0}
             className="h-11 w-full rounded-xl font-semibold"
             style={{ background: WaselColors.teal }}
           >

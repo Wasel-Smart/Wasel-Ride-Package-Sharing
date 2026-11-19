@@ -535,10 +535,9 @@ export function FindRidePage() {
       <PageShell>
         <SectionHead
           emoji={<Search size={24} />}
-          title="Book a Ride"
-          titleAr="احجز مشوار"
-          sub="Compare routes, demand outlook, and route-level price clarity."
-          action={{ label: 'Offer a ride', onClick: () => nav('/app/offer-ride') }}
+          title={ar ? 'احجز مشوار' : 'Book a Ride'}
+          sub={copy.pageSub}
+          action={{ label: copy.pageAction, onClick: () => nav('/app/offer-ride') }}
         />
 
         {/* Persistent booking indicator */}
@@ -571,7 +570,7 @@ export function FindRidePage() {
         <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
           {(
             [
-              ['ride', 'Shared route'],
+              ['ride', copy.tabRide],
               ['package', copy.tabPackage],
             ] as const
           ).map(([key, label]) => (
