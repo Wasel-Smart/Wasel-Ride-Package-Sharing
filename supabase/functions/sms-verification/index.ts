@@ -219,14 +219,14 @@ serve(async (req) => {
       return jsonResponse({ error: 'Not found' }, 404, headers);
     }
 
-    const contentLength = Number(req.headers.get('Content-Length') ?? 0);
-    if (contentLength > 2048) {
+    const rawBody = await req.text();
+    if (rawBody.length > 2048) {
       return jsonResponse({ error: 'Request too large' }, 413, headers);
     }
 
     let body: Record<string, unknown>;
     try {
-      body = await req.json() as Record<string, unknown>;
+      body = JSON.parse(rawBody) as Record<string, unknown>;
     } catch {
       return jsonResponse({ error: 'Invalid JSON body' }, 400, headers);
     }
@@ -259,7 +259,7 @@ serve(async (req) => {
       const result = await callTwilioVerify('Verifications', values);
 
       if (!result.ok) {
-        if (result.status === 429 || result.data.code === 60203) {
+        if (result.status === 429 || result.data.code === 60203 || result.data.code === 60212 || result.data.code === 60238 || result.data.code === 60245) {
           return jsonResponse({ error: 'Too many verification requests. Please wait before trying again.' }, 429, headers);
         }
         console.error('Twilio Verify send failed', { status: result.status, code: result.data.code });
@@ -297,8 +297,11 @@ serve(async (req) => {
     const result = await callTwilioVerify('VerificationCheck', values);
 
     if (!result.ok) {
-      if (result.status === 429 || result.data.code === 60202 || result.data.code === 60203) {
+      if (result.status === 429 || result.data.code === 60202 || result.data.code === 60203 || result.data.code === 60212) {
         return jsonResponse({ error: 'Too many verification attempts. Please try again later.' }, 429, headers);
+      }
+      if (result.status === 404 || result.data.code === 20404 || result.data.code === 60431) {
+        return jsonResponse({ error: 'Invalid or expired verification code' }, 400, headers);
       }
       console.error('Twilio Verify check failed', { status: result.status, code: result.data.code });
       return jsonResponse({ error: 'Unable to verify this code. Please request a new one.' }, 502, headers);
