@@ -1,0 +1,19 @@
+# Ignore root repository files that EAS does not need for the mobile build
+/*
+!/mobile/
+!/brand/
+!/api-contracts/
+
+# Ignore heavy directories
+node_modules/
+.git/
+.venv/
+dist/
+build/
+coverage/
+.expo/
+.idea/
+.vscode/
+artifacts/
+.lighthouseci/
+test-results/

@@ -1,0 +1,16 @@
+# Mobile project EAS ignore rules
+node_modules/
+.expo/
+dist/
+build/
+coverage/
+.idea/
+.vscode/
+android/app/build/
+android/.gradle/
+ios/build/
+ios/Pods/
+test-results/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

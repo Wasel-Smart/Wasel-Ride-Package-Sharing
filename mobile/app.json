@@ -65,7 +65,7 @@
         "backgroundColor": "#081D39"
       },
       "package": "online.wasel14.app",
-      "versionCode": 2,
+      "versionCode": 4,
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "ACCESS_FINE_LOCATION",
