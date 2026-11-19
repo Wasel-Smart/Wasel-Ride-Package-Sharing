@@ -60,11 +60,10 @@ GRANT EXECUTE ON FUNCTION public.confirm_phone_verification(uuid, text)
   TO service_role;
 
 -- Private table for atomic per-user/per-number throttling.
-CREATE SCHEMA IF NOT EXISTS private;
-REVOKE ALL ON SCHEMA private FROM PUBLIC, anon, authenticated;
-GRANT USAGE ON SCHEMA private TO service_role;
+CREATE SCHEMA IF NOT EXISTS phone_verification_private;
+REVOKE ALL ON SCHEMA phone_verification_private FROM PUBLIC, anon, authenticated, service_role;
 
-CREATE TABLE IF NOT EXISTS private.phone_verification_rate_limits (
+CREATE TABLE IF NOT EXISTS phone_verification_private.phone_verification_rate_limits (
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   phone_number text NOT NULL,
   action text NOT NULL CHECK (action IN ('send', 'verify')),
@@ -73,7 +72,7 @@ CREATE TABLE IF NOT EXISTS private.phone_verification_rate_limits (
   PRIMARY KEY (user_id, phone_number, action)
 );
 
-REVOKE ALL ON TABLE private.phone_verification_rate_limits
+REVOKE ALL ON TABLE phone_verification_private.phone_verification_rate_limits
   FROM PUBLIC, anon, authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.consume_phone_verification_rate_limit(
@@ -85,7 +84,7 @@ CREATE OR REPLACE FUNCTION public.consume_phone_verification_rate_limit(
 RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, private
+SET search_path = pg_catalog, phone_verification_private
 AS $$
 DECLARE
   v_allowed boolean := false;
@@ -101,7 +100,7 @@ BEGIN
       USING ERRCODE = '22023';
   END IF;
 
-  INSERT INTO private.phone_verification_rate_limits AS limits (
+  INSERT INTO phone_verification_private.phone_verification_rate_limits AS limits (
     user_id, phone_number, action, window_started_at, request_count
   )
   VALUES (p_user_id, p_phone_number, p_action, now(), 1)
