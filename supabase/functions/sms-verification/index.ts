@@ -150,8 +150,9 @@ async function supabaseAdminRateLimit(
 }
 
 function twilioAuthHeader(): string {
-  const username = TWILIO_API_KEY_SID || TWILIO_ACCOUNT_SID;
-  const password = TWILIO_API_KEY_SECRET || TWILIO_AUTH_TOKEN;
+  const useApiKey = Boolean(TWILIO_API_KEY_SID && TWILIO_API_KEY_SECRET);
+  const username = useApiKey ? TWILIO_API_KEY_SID : TWILIO_ACCOUNT_SID;
+  const password = useApiKey ? TWILIO_API_KEY_SECRET : TWILIO_AUTH_TOKEN;
   return `Basic ${btoa(`${username}:${password}`)}`;
 }
 
