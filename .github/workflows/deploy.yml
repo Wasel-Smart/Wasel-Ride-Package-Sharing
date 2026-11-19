@@ -3,13 +3,88 @@ name: Deploy to Vercel
 on:
   push:
     branches:
-      - main
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wasel-production-deploy
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  verify:
+    name: Verify before production deployment
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
-      - name: Checkout Code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Block high/critical dependency vulnerabilities
+        run: npm audit --audit-level=high
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Strict lint
+        run: npm run lint:strict
+
+      - name: Validate production configuration contract
+        run: npm run production:validate
+        env:
+          NODE_ENV: production
+          APP_ENV: production
+          VITE_APP_ENV: production
+          VITE_APP_URL: https://www.wasel14.online
+          VITE_SUPABASE_URL: https://ci-project.supabase.co
+          VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjaSIsImF1ZCI6ImF1dGhlbnRpY2F0ZWQifQ.signature
+          VITE_ENABLE_SYNTHETIC_DATA: 'false'
+          VITE_ENABLE_SYNTHETIC_TRIPS: 'false'
+          VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'false'
+          VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: 'false'
+          WASEL_REQUIRE_STRIPE: 'false'
+          WASEL_REQUIRE_RESEND: 'false'
+          WASEL_REQUIRE_GOOGLE_MAPS: 'false'
+          WASEL_REQUIRE_GOOGLE_OAUTH: 'false'
+          WASEL_REQUIRE_SUPABASE_SERVICE_ROLE: 'false'
+          WASEL_REQUIRE_AUTOMATION: 'false'
+          WASEL_REQUIRE_COMMUNICATIONS_WORKER: 'false'
+          WASEL_REQUIRE_WALLET: 'false'
+
+      - name: Unit and integration tests
+        run: npm run test
+
+      - name: Production build
+        run: npm run build:optimized
+        env:
+          VITE_APP_ENV: production
+          VITE_APP_URL: https://www.wasel14.online
+          VITE_SUPABASE_URL: https://ci-project.supabase.co
+          VITE_SUPABASE_ANON_KEY: ci-anon-key
+          VITE_SUPABASE_PUBLISHABLE_KEY: ci-anon-key
+          VITE_ENABLE_SYNTHETIC_DATA: 'false'
+          VITE_ENABLE_SYNTHETIC_TRIPS: 'false'
+          VITE_ALLOW_DIRECT_SUPABASE_FALLBACK: 'false'
+          VITE_ALLOW_LOCAL_PERSISTENCE_FALLBACK: 'false'
+
+  deploy:
+    name: Deploy production to Vercel
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Deploy to Vercel

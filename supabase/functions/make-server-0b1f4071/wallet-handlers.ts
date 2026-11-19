@@ -51,9 +51,16 @@ const WALLET_MUTATION_RATE_LIMIT = { maxRequests: 20, windowMs: 10 * 60_000 };
 const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY') ?? '';
 const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? '';
 const LOCAL_GATEWAY_WEBHOOK_SECRET = Deno.env.get('LOCAL_GATEWAY_WEBHOOK_SECRET') ?? '';
-const WALLET_STEP_UP_SECRET = Deno.env.get('WALLET_STEP_UP_SECRET')
-  ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-  ?? 'wallet-step-up-development-secret';
+const WALLET_STEP_UP_SECRET = Deno.env.get('WALLET_STEP_UP_SECRET') ?? '';
+
+function getWalletStepUpSecret(): string {
+  // Step-up tokens and PIN hashes must never fall back to a public/default secret
+  // or reuse the Supabase service-role key for a separate security boundary.
+  if (WALLET_STEP_UP_SECRET.length < 32) {
+    throw new Error('Wallet step-up security is not configured. Contact support.');
+  }
+  return WALLET_STEP_UP_SECRET;
+}
 
 function readJsonBody(request: Request): Promise<Record<string, unknown>> {
   return request.json()
@@ -398,7 +405,7 @@ async function resolveRecipientUser(admin: SupabaseClient, recipient: string) {
 
 async function setWalletPin(admin: SupabaseClient, userId: string, pin: string) {
   const now = new Date().toISOString();
-  const pinHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${pin}`);
+  const pinHash = await sha256Hex(`${getWalletStepUpSecret()}:${pin}`);
   const { error } = await admin
     .schema('private')
     .from('wallet_pin_secrets')
@@ -522,7 +529,7 @@ async function createStepUpChallenge(
   }
 
   const otpCode = String(Math.floor(100000 + Math.random() * 900000));
-  const otpHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
+  const otpHash = await sha256Hex(`${getWalletStepUpSecret()}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
   const expiresAt = new Date(Date.now() + OTP_TTL_MS).toISOString();
 
   const { data, error } = await admin
@@ -564,7 +571,7 @@ async function createStepUpChallenge(
 
 async function issueStepUpToken(admin: SupabaseClient, userId: string, purpose: StepUpPurpose) {
   const rawToken = `${crypto.randomUUID()}.${crypto.randomUUID()}`;
-  const tokenHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${rawToken}`);
+  const tokenHash = await sha256Hex(`${getWalletStepUpSecret()}:${rawToken}`);
   const expiresAt = new Date(Date.now() + STEP_UP_TOKEN_TTL_MS).toISOString();
 
   const { error } = await admin
@@ -591,7 +598,7 @@ async function consumeStepUpToken(
   purpose: StepUpPurpose,
   verificationToken: string,
 ) {
-  const tokenHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${verificationToken}`);
+  const tokenHash = await sha256Hex(`${getWalletStepUpSecret()}:${verificationToken}`);
   const now = new Date().toISOString();
   const { data, error } = await admin
     .schema('private')
@@ -740,21 +747,31 @@ async function verifyStripeWebhookSignature(payload: string, signatureHeader: st
     throw new Error('Missing Stripe signature header.');
   }
 
-  const elements = Object.fromEntries(
-    signatureHeader.split(',').map((part) => {
-      const [key, value] = part.split('=');
-      return [key, value];
-    }),
-  );
+  const parts = signatureHeader.split(',').map((part) => {
+    const separator = part.indexOf('=');
+    return separator < 0
+      ? ['', '']
+      : [part.slice(0, separator).trim(), part.slice(separator + 1).trim()];
+  });
+  const timestamp = parts.find(([key]) => key === 't')?.[1];
+  const signatures = parts
+    .filter(([key, value]) => key === 'v1' && value)
+    .map(([, value]) => value);
 
-  const timestamp = elements.t;
-  const signed = elements.v1;
-  if (!timestamp || !signed) {
+  if (!timestamp || signatures.length === 0 || !/^\d+$/.test(timestamp)) {
     throw new Error('Invalid Stripe signature header.');
   }
 
+  // Reject stale signed payloads to limit replay attacks. Stripe's standard
+  // tolerance is five minutes; clock synchronization is required on workers.
+  const timestampSeconds = Number(timestamp);
+  if (!Number.isSafeInteger(timestampSeconds) ||
+      Math.abs(Math.floor(Date.now() / 1000) - timestampSeconds) > 300) {
+    throw new Error('Stripe webhook timestamp is outside the allowed tolerance.');
+  }
+
   const expected = await hmacSha256Hex(STRIPE_WEBHOOK_SECRET, `${timestamp}.${payload}`);
-  if (!timingSafeEqual(expected, signed)) {
+  if (!signatures.some((signature) => timingSafeEqual(expected, signature))) {
     throw new Error('Stripe webhook signature verification failed.');
   }
 }
@@ -1612,7 +1629,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         return runtime.json({ error: 'Wallet PIN is temporarily locked. Please wait and try again.' }, 429);
       }
 
-      const expectedHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${pin}`);
+      const expectedHash = await sha256Hex(`${getWalletStepUpSecret()}:${pin}`);
       if (!timingSafeEqual(String(pinSecret.pin_hash), expectedHash)) {
         await recordPinFailure(auth.admin, auth.canonicalUser.id, toNumber(pinSecret.failed_attempts));
         return runtime.json({ error: 'Wallet PIN verification failed.' }, 401);
@@ -1658,7 +1675,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         return runtime.json({ error: 'This verification challenge has expired.' }, 400);
       }
 
-      const otpHash = await sha256Hex(`${WALLET_STEP_UP_SECRET}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
+      const otpHash = await sha256Hex(`${getWalletStepUpSecret()}:${auth.canonicalUser.id}:${purpose}:${otpCode}`);
       if (!timingSafeEqual(String(challenge.otp_hash), otpHash)) {
         await auth.admin
           .schema('private')
@@ -1937,10 +1954,10 @@ export function createWalletHandlers(runtime: WalletRuntime) {
 
       const providerEventId = normalizeString(eventBody.id)
         ?? normalizeString(eventBody.providerEventId)
-        ?? crypto.randomUUID();
+        ?? await sha256Hex(rawPayload);
 
       const admin = runtime.getAdminClient();
-      const { error: eventInsertError } = await admin
+      const { data: insertedEvents, error: eventInsertError } = await admin
         .from('payment_webhook_events')
         .upsert({
           provider_name: provider,
@@ -1948,10 +1965,29 @@ export function createWalletHandlers(runtime: WalletRuntime) {
           signature: request.headers.get('stripe-signature') ?? request.headers.get('x-wallet-signature'),
           payload: eventBody,
           created_at: new Date().toISOString(),
-        }, { onConflict: 'provider_name,provider_event_id' });
+        }, { onConflict: 'provider_name,provider_event_id', ignoreDuplicates: true })
+        .select('provider_event_id');
 
       if (eventInsertError) {
         throw new Error(eventInsertError.message);
+      }
+
+      // Process a previously unseen event once. An unprocessed record is allowed
+      // to retry after a transient failure; already processed events are no-ops.
+      if (!Array.isArray(insertedEvents) || insertedEvents.length === 0) {
+        const { data: existingEvent, error: existingEventError } = await admin
+          .from('payment_webhook_events')
+          .select('processed_at')
+          .eq('provider_name', provider)
+          .eq('provider_event_id', providerEventId)
+          .maybeSingle();
+
+        if (existingEventError) {
+          throw new Error(existingEventError.message);
+        }
+        if (existingEvent?.processed_at) {
+          return runtime.json({ ok: true, duplicate: true });
+        }
       }
 
       let intent: Record<string, unknown> | null = null;
