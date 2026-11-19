@@ -96,10 +96,41 @@ function isConfigured(): boolean {
   );
 }
 
-function createSupabaseAdmin() {
-  return createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+async function callSupabaseRpc(
+  functionName: string,
+  args: Record<string, unknown>,
+): Promise<{ data: unknown; error: { code?: string } | null }> {
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/rpc/${functionName}`,
+    {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_SECRET_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(args),
+      signal: AbortSignal.timeout(10_000),
+    },
+  );
+
+  if (!response.ok) {
+    let code = String(response.status);
+    try {
+      const payload = await response.json() as { code?: string };
+      if (payload.code) code = payload.code;
+    } catch {
+      // Keep only the HTTP status; never log or return upstream details.
+    }
+    return { data: null, error: { code } };
+  }
+
+  let data: unknown = null;
+  try {
+    data = await response.json();
+  } catch {
+    return { data: null, error: { code: 'INVALID_RPC_RESPONSE' } };
+  }
+  return { data, error: null };
 }
 
 async function supabaseAdminRateLimit(
@@ -108,16 +139,12 @@ async function supabaseAdminRateLimit(
   action: 'send' | 'verify',
   limit: number,
 ): Promise<{ data: unknown; error: { code?: string } | null }> {
-  const { data, error } = await createSupabaseAdmin().rpc(
-    'consume_phone_verification_rate_limit',
-    {
-      p_user_id: userId,
-      p_phone_number: phoneNumber,
-      p_action: action,
-      p_limit: limit,
-    },
-  );
-  return { data, error };
+  return await callSupabaseRpc('consume_phone_verification_rate_limit', {
+    p_user_id: userId,
+    p_phone_number: phoneNumber,
+    p_action: action,
+    p_limit: limit,
+  });
 }
 
 function twilioAuthHeader(): string {
@@ -262,10 +289,10 @@ serve(async (req) => {
       return jsonResponse({ error: 'Invalid or expired verification code' }, 400, headers);
     }
 
-    const { error: confirmationError } = await createSupabaseAdmin().rpc(
-      'confirm_phone_verification',
-      { p_user_id: user.id, p_phone_number: phoneNumber },
-    );
+    const { error: confirmationError } = await callSupabaseRpc('confirm_phone_verification', {
+      p_user_id: user.id,
+      p_phone_number: phoneNumber,
+    });
 
     if (confirmationError) {
       console.error('Phone verification database confirmation failed', {
