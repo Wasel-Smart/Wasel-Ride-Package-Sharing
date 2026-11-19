@@ -2,13 +2,13 @@
 -- Legacy OTPs are one-time credentials. They are invalid after this migration.
 DELETE FROM public.phone_verifications;
 DROP POLICY IF EXISTS phone_verifications_own ON public.phone_verifications;
-REVOKE ALL ON TABLE public.phone_verifications FROM anon, authenticated;
+REVOKE ALL ON TABLE public.phone_verifications FROM PUBLIC, anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.confirm_phone_verification(
   p_user_id uuid,
   p_phone_number text
 )
-RETURNS void
+RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = pg_catalog, public
@@ -49,8 +49,10 @@ BEGIN
       user_id, verification_type, status, verified_at, updated_at
     ) VALUES (p_user_id, 'phone', 'verified', now(), now());
   END IF;
+
+  RETURN true;
 END;
-$$;
+$;
 
 REVOKE ALL ON FUNCTION public.confirm_phone_verification(uuid, text)
   FROM PUBLIC, anon, authenticated;
@@ -90,6 +92,8 @@ DECLARE
 BEGIN
   IF p_user_id IS NULL
      OR p_phone_number IS NULL
+     OR p_action IS NULL
+     OR p_limit IS NULL
      OR (p_phone_number <> '*' AND p_phone_number !~ '^\+[1-9][0-9]{7,14}$')
      OR p_action NOT IN ('send', 'verify')
      OR p_limit NOT BETWEEN 1 AND 10 THEN
