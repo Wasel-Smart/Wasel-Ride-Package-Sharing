@@ -203,11 +203,15 @@ serve(async (req) => {
       return jsonResponse({ error: 'Unauthorized' }, 401, headers);
     }
 
+    const accessToken = authorization.slice('Bearer '.length).trim();
+    if (!accessToken) {
+      return jsonResponse({ error: 'Unauthorized' }, 401, headers);
+    }
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-      global: { headers: { Authorization: authorization } },
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
 
     if (authError || !user) {
       return jsonResponse({ error: 'Unauthorized' }, 401, headers);
