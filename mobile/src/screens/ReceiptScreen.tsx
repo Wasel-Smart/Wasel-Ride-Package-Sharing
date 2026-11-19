@@ -1,19 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
-
-type RootStackParamList = {
-  Tabs: undefined;
-  Safety: undefined;
-  Trips: undefined;
-  Bus: undefined;
-  Driver: undefined;
-  Notifications: undefined;
-  LiveTracking: { rideId: string };
-  Chat: { rideId: string; driverName: string };
-  RateRide: { rideId: string; driverName: string };
-  AdvancedSearch: undefined;
-  SignIn: undefined;
-};
+import type { RootStackParamList } from '../navigation/types';
 
 interface ReceiptData {
   rideId?: string;

@@ -27,26 +27,7 @@ import { useAuth } from '../providers/AuthProvider';
 import { rideLifecycle, type AvailableTrip } from '../services/ride';
 import { apiClient } from '../lib/api';
 import { colors, spacing, radii, typography, shadows } from '../theme';
-
-type RootStackParamList = {
-  Tabs: undefined;
-  Safety: undefined;
-  Trips: undefined;
-  Bus: undefined;
-  Driver: undefined;
-  Notifications: undefined;
-  LiveTracking: { rideId: string };
-  Chat: { rideId: string; driverName: string };
-  RateRide: { rideId: string; driverName: string };
-  AdvancedSearch: undefined;
-  SignIn: undefined;
-  Map: undefined;
-  Networks: undefined;
-  Wallet: undefined;
-  ScheduledRide: undefined;
-  Packages: undefined;
-  TrustCenter: undefined;
-};
+import type { RootStackParamList } from '../navigation/types';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 

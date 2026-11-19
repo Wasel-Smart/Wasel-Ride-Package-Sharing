@@ -29,10 +29,7 @@ import { apiClient } from '../lib/api';
 import { useOffline } from '../hooks/useOffline';
 import { colors, radii, spacing } from '../theme';
 import * as ImagePicker from 'expo-image-picker';
-
-type RootStackParamList = {
-  TrustCenter: undefined;
-};
+import type { RootStackParamList } from '../navigation/types';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 

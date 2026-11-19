@@ -18,6 +18,11 @@ export type RootStackParamList = {
   Bus: undefined;
   Driver: undefined;
   Notifications: undefined;
+  Tabs: undefined;
+  Map: undefined;
+  Networks: undefined;
+  Wallet: undefined;
+  Packages: undefined;
   DriverProfile: { driverId: string; driver?: Driver };
   PaymentMethods: undefined;
   Receipt: { paymentId: string };

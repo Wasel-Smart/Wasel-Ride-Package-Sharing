@@ -18,16 +18,7 @@ import { useOffline } from '../hooks/useOffline';
 import { rideLifecycle, type AvailableTrip } from '../services/ride';
 import { colors, radii, spacing } from '../theme';
 import { validateRideRequest } from '../utils/mobileValidation';
-
-type RootStackParamList = {
-  Tabs: undefined;
-  Safety: undefined;
-  Trips: undefined;
-  Bus: undefined;
-  Driver: undefined;
-  Notifications: undefined;
-  LiveTracking: { rideId: string };
-};
+import type { RootStackParamList } from '../navigation/types';
 
 type NavProp = NativeStackNavigationProp<RootStackParamList>;
 
