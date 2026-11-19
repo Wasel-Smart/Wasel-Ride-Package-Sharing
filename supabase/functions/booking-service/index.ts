@@ -106,28 +106,26 @@ async function handleBookingRequest(request: Request, path: string) {
     const body = await request.json().catch(() => ({}));
     const tripId = String(body.trip_id ?? '');
     const seatsRequested = Math.max(1, toNumber(body.seats_requested, 1));
-    const { data: trip, error: tripError } = await auth.admin.from('trips').select('trip_id, available_seats, price_per_seat, trip_status').eq('trip_id', tripId).single();
-    if (tripError) {return json({ error: 'Internal server error' }, 500);}
-    const availableSeats = toNumber(trip.available_seats, 0);
-    if (availableSeats < seatsRequested) {return json({ error: 'Not enough seats available' }, 409);}
-
-    const totalPrice = toNumber(body.total_price, toNumber(trip.price_per_seat, 0) * seatsRequested);
     const status = String(body.status ?? body.booking_status ?? 'confirmed');
-    const { data, error } = await auth.admin.from('bookings').insert({
-      trip_id: tripId, passenger_id: auth.canonicalUser.id,
-      seats_requested: seatsRequested, seat_number: toNumber(body.seat_number, 1),
-      pickup_location: body.pickup_stop ?? body.pickup_location ?? null,
-      dropoff_location: body.dropoff_stop ?? body.dropoff_location ?? null,
-      booking_status: status, status, confirmed_by_driver: status !== 'pending_driver',
-      amount: totalPrice, price_per_seat: toNumber(trip.price_per_seat, 0), total_price: totalPrice,
-    }).select('*').single();
-    if (error) {return json({ error: 'Internal server error' }, 500);}
-    if (status !== 'pending_driver') {
-      await auth.admin.from('trips').update({
-        available_seats: Math.max(availableSeats - seatsRequested, 0),
-        trip_status: availableSeats - seatsRequested <= 0 ? 'booked' : trip.trip_status ?? 'open',
-      }).eq('trip_id', tripId);
+    const totalPrice = toNumber(body.total_price, 0);
+
+    // Call atomic multi‑seat booking RPC
+    const { data, error } = await auth.admin.rpc('app_create_ride_booking', {
+      p_trip_id: tripId,
+      p_passenger_id: auth.canonicalUser.id,
+      p_seats_requested: seatsRequested,
+      p_pickup: body.pickup_stop ?? body.pickup_location ?? null,
+      p_dropoff: body.dropoff_stop ?? body.dropoff_location ?? null,
+      p_booking_status: status,
+      p_total_price: totalPrice,
+    });
+    if (error) {
+      // RPC can return custom error messages; map to appropriate HTTP status codes
+      const message = typeof error === 'object' && 'message' in error ? (error as any).message : String(error);
+      const statusCode = message.includes('Not enough seats') ? 409 : 500;
+      return json({ error: message }, statusCode);
     }
+    // RPC returns the full booking row; map to API shape
     return json({ booking: mapBookingRow(data) });
   }
 
