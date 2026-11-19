@@ -1,4 +1,4 @@
-// GENERATED FILE — DO NOT EDIT.
+﻿// GENERATED FILE — DO NOT EDIT.
 // Vendored from supabase/functions/make-server-0b1f4071/_handlers/shared.ts
 // by scripts/prepare-edge-bundles.mjs so that this function is a closed,
 // self-contained module graph. Edit the source of truth instead.
