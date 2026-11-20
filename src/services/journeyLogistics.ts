@@ -570,13 +570,14 @@ export function getConnectedPackages(): PackageRequest[] {
   return packages;
 }
 
-function buildServerPackagePayload(pkg: PackageRequest) {
+function buildServerPackagePayload(pkg: PackageRequest, preferredRideId?: string) {
   return {
     from: pkg.from,
     to: pkg.to,
     weight: parseWeight(pkg.weight),
     description: pkg.note,
     price: 5,
+    ...(preferredRideId ? { preferredRideId } : {}),
     ...(pkg.recipientName ? { recipientName: pkg.recipientName } : {}),
     ...(pkg.recipientPhone ? { recipientPhone: pkg.recipientPhone } : {}),
     ...(pkg.packageType === 'return' ? { packageType: pkg.packageType } : {}),
@@ -642,7 +643,7 @@ export async function createConnectedPackage(input: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(buildServerPackagePayload(pkg)),
+      body: JSON.stringify(buildServerPackagePayload(pkg, input.preferredRideId)),
     });
 
     const payload = await response.json().catch(() => ({}));
