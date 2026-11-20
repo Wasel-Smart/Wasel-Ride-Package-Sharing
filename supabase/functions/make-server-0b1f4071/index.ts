@@ -1974,9 +1974,7 @@ async function handleTrackPackage(auth: AuthenticatedRequest, trackingId: string
     }
   }
 
-  if (!isParticipant) {
-    throw new Error('You are not a participant in this package.');
-  }
+  if (!isParticipant) return null;
 
   return mapPackageRow(data as PackageRow);
 }
