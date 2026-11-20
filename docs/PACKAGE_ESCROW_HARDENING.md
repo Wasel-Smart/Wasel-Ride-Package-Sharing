@@ -11,6 +11,8 @@ The migration `20261120100000_package_tracking_escrow_hardening.sql` adds:
 - A trigger that blocks authenticated clients from creating packages directly or changing assignment, tracking, custody, evidence, or financial state.
 - A dispute RPC that freezes held package escrow in the existing ledger by moving the escrow state to `cancelled`; the wallet refund flow must then resolve the dispute.
 
+The server package workflow now also generates random tracking IDs and one-time pickup/delivery OTPs, assigns a selected trip only after checking driver approval, route, departure time and remaining package slots, and reserves one slot for an unpaid request. Unpaid reservations expire after 15 minutes; payment attempts extend the reservation while active and are reconciled/cancelled after their 30-minute expiry. OTP hashes are HMAC-SHA-256 using the required server-only pepper.
+
 The wallet service changes add:
 - Package beneficiary resolution through the package's assigned trip and driver.
 - Sender ownership, assigned-trip, payment-state, and fee-amount checks before package escrow is funded.
@@ -56,4 +58,4 @@ The connected production project currently has no canonical application tables o
 
 ## Current status
 
-Database hardening, wallet-ledger package payment/release guards, authenticated package tracking, server-generated pickup/delivery OTPs, driver-only verification, private evidence upload, and participant dispute controls have been authored on a feature branch. The `PACKAGE_OTP_PEPPER` secret is not configured, the canonical database rollout has not been applied, integration tests have not passed, and the backend has not been deployed. Live package payments are not enabled by these changes.
+Database hardening, wallet-ledger package payment/release guards, authenticated package tracking, server-generated pickup/delivery OTPs, driver-only verification, private evidence upload, and participant dispute controls have been authored on a feature branch. The `PACKAGE_OTP_PEPPER` secret is not configured, the canonical database rollout has not been applied, integration tests have not passed, and the backend has not been deployed. Live package payments are not enabled by these changes. The legacy standalone payment-webhook function now returns HTTP 410 so it cannot bypass the unified wallet escrow workflow. Browser-local package tracking and fake escrow have been disabled.
