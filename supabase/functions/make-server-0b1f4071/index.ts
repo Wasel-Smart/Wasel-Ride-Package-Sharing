@@ -1838,7 +1838,6 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
       origin_location: from,
       destination_name: to,
       destination_location: to,
-      size: weight <= 1 ? 'small' : weight <= 5 ? 'medium' : 'large',
       weight_kg: weight,
       description,
       fee_amount: 5,
