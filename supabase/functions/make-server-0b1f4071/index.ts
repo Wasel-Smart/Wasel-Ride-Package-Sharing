@@ -1878,8 +1878,8 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
     .insert({
       package_id: packageId,
       event_type: 'created',
-      event_status: 'searching',
-      notes: 'Package request created by sender.',
+      event_status: assignedTripId ? 'assigned' : 'searching',
+      notes: assignedTripId ? 'Package request created and assigned to the selected driver trip.' : 'Package request created by sender.',
       created_by: auth.canonicalUser.id,
       created_at: now,
     });
