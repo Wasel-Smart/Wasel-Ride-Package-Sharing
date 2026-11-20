@@ -5,7 +5,6 @@ import { tripsAPI } from './trips';
 import {
   normalizeJordanLocation,
   routeEndpointsAreDistinct,
-  routeMatchesLocationPair,
 } from '../utils/jordanLocations';
 import { logger } from '../utils/logging';
 
@@ -93,10 +92,6 @@ function writeList<T>(key: string, list: T[]): void {
 
 function makeId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-}
-
-function generateHandoffCode(): string {
-  return `HC-${Math.floor(100000 + Math.random() * 900000)}`;
 }
 
 function parseWeight(weight: string): number {
@@ -456,36 +451,6 @@ function saveRides(...lists: PostedRide[][]): PostedRide[] {
   return rides;
 }
 
-function findBestMatchingRide(
-  rides: PostedRide[],
-  input: { from: string; to: string; weight: string; preferredRideId?: string },
-): PostedRide | undefined {
-  const requestedWeight = parseWeight(input.weight);
-  const capacityRank = { small: 1, medium: 5, large: 10 };
-  const preferredRide = input.preferredRideId
-    ? rides.find(
-        ride =>
-          ride.id === input.preferredRideId &&
-          ride.acceptsPackages &&
-          routeMatchesLocationPair(ride.from, ride.to, input.from, input.to, {
-            allowReverse: false,
-          }) &&
-          capacityRank[ride.packageCapacity] >= requestedWeight,
-      )
-    : undefined;
-
-  if (preferredRide) {
-    return preferredRide;
-  }
-
-  return sortByCreatedAtDesc(rides)
-    .filter(
-      ride =>
-        ride.acceptsPackages &&
-        routeMatchesLocationPair(ride.from, ride.to, input.from, input.to, { allowReverse: false }),
-    )
-    .find(ride => capacityRank[ride.packageCapacity] >= requestedWeight);
-}
 
 export function getConnectedRides(): PostedRide[] {
   const rides = mergeRides(readList<PostedRide>(RIDES_KEY)).filter(isPersistedRideVisible);
