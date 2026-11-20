@@ -260,6 +260,11 @@ export function PackagesPage() {
     }
   };
 
+  const handlePayPackage = () => {
+    if (!trackedPackage?.id) return;
+    nav(`/app/payments?purpose=package_payment&referenceType=package&referenceId=${encodeURIComponent(trackedPackage.id)}`);
+  };
+
   const handleOpenSupport = () => {
     if (!trackedPackage) return;
 
@@ -571,6 +576,7 @@ export function PackagesPage() {
               onSearch={handleTrackingSearch}
               onVerificationAction={handleVerificationAction}
               onRotateCodes={handleRotateCodes}
+              onPayPackage={handlePayPackage}
               onOpenSupport={handleOpenSupport}
               onOpenRecent={item => focusTrackingItem(item)}
             />
