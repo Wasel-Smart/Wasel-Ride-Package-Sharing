@@ -11,7 +11,7 @@ The migration `20261120100000_package_tracking_escrow_hardening.sql` adds:
 - A trigger that blocks authenticated clients from creating packages directly or changing assignment, tracking, custody, evidence, or financial state.
 - A dispute RPC that freezes held package escrow in the existing ledger by moving the escrow state to `cancelled`; the wallet refund flow must then resolve the dispute.
 
-The server package workflow now also generates random tracking IDs and one-time pickup/delivery OTPs, auto-matches waiting requests when an eligible trip is published, and assigns a selected trip only after checking driver approval, route, departure time and remaining package slots. It reserves one slot for an unpaid request. Unpaid reservations expire after 15 minutes; payment attempts extend the reservation while active and are reconciled/cancelled after their 30-minute expiry. OTP hashes are HMAC-SHA-256 using the required server-only pepper.
+The server package workflow now also generates random tracking IDs and one-time pickup/delivery OTPs, auto-matches waiting requests when an eligible trip is published, and assigns a selected trip only after checking driver approval, route, departure time and remaining package slots. It reserves one slot for an unpaid request. Unpaid reservations expire after 15 minutes; the migration schedules a five-minute cleanup job when `pg_cron` is available. Payment attempts extend the reservation while active and are reconciled/cancelled after their 30-minute expiry. Verify the scheduled job exists in `cron.job` on the target project. OTP hashes are HMAC-SHA-256 using the required server-only pepper.
 
 The wallet service changes add:
 - Package beneficiary resolution through the package's assigned trip and driver.
