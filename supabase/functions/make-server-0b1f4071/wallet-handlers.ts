@@ -1049,11 +1049,11 @@ async function findBeneficiaryUserId(
     if (!data || String(data.sender_id) !== String(intent.user_id)) {
       throw new Error('Package payment must be initiated by its sender.');
     }
-    if (!data.trip_id || String(data.package_status) !== 'assigned') {
-      throw new Error('Package must be assigned to an approved driver before payment.');
+    if (!data.trip_id || !['assigned', 'disputed'].includes(String(data.package_status))) {
+      throw new Error('Package must remain assigned to an approved driver before payment settlement.');
     }
-    if (!['unpaid', 'pending'].includes(String(data.payment_status))) {
-      throw new Error('Package payment is not eligible for a new escrow hold.');
+    if (!['unpaid', 'pending', 'disputed'].includes(String(data.payment_status))) {
+      throw new Error('Package payment is not eligible for an escrow hold.');
     }
     return findDriverUserIdForTrip(admin, String(data.trip_id));
   }
@@ -1107,6 +1107,7 @@ async function createEscrowForIntent(
     return { escrow: existingEscrow, transactionId: normalizeString(existingEscrow.hold_transaction_id) };
   }
 
+  let packageDisputed = false;
   if (String(intent.purpose) === 'package_payment') {
     const packageId = normalizeString(intent.reference_id);
     if (!packageId || normalizeString(intent.reference_type) !== 'package') {
@@ -1121,10 +1122,13 @@ async function createEscrowForIntent(
     if (!packageRow || String(packageRow.sender_id) !== payerUserId) {
       throw new Error('Package payment must be initiated by its sender.');
     }
-    if (!packageRow.trip_id || String(packageRow.package_status) !== 'assigned') {
-      throw new Error('Package must be assigned before payment can be held.');
+    if (!packageRow.trip_id || !['assigned', 'disputed'].includes(String(packageRow.package_status))) {
+      throw new Error('Package must remain assigned to a driver before payment settlement.');
     }
-    if (!['unpaid', 'pending'].includes(String(packageRow.payment_status))) {
+    packageDisputed = String(packageRow.package_status) === 'disputed'
+      || String(packageRow.payment_status) === 'disputed'
+      || Boolean(packageRow.dispute_opened_at);
+    if (!['unpaid', 'pending', 'disputed'].includes(String(packageRow.payment_status))) {
       throw new Error('Package already has a payment state.');
     }
     if (Math.round(toNumber(packageRow.fee_amount) * 1000) !== Math.round(toNumber(intent.amount) * 1000)) {
@@ -1208,7 +1212,7 @@ async function createEscrowForIntent(
       reference_id: intent.reference_id,
       amount,
       currency_code: intent.currency_code,
-      escrow_state: 'held',
+      escrow_state: packageDisputed ? 'cancelled' : 'held',
       held_at: now,
       created_at: now,
       updated_at: now,
