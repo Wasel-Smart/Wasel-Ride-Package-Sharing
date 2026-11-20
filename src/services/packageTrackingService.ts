@@ -160,10 +160,12 @@ export class PackageTrackingService {
     this.packages = import.meta.env.PROD
       ? new Map()
       : new Map(
-          Array.from(loadMap<PackageTracking>(PACKAGES_STORAGE_KEY).entries()).map(([id, pkg]) => [
-            id,
-            { ...pkg, paymentStatus: 'pending' as const, paymentMethod: undefined },
-          ]),
+          Array.from(loadMap<PackageTracking>(PACKAGES_STORAGE_KEY).entries()).map(
+            ([id, pkg]) => [
+              id,
+              { ...pkg, paymentStatus: 'pending' as const, paymentMethod: undefined },
+            ],
+          ),
         );
     this.timeline = import.meta.env.PROD
       ? new Map()
