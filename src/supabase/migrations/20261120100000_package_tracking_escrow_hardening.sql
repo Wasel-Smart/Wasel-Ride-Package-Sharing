@@ -6,6 +6,7 @@ begin;
 
 alter table public.packages
   add column if not exists payment_status text not null default 'unpaid',
+  add column if not exists sender_code_shared_at timestamptz,
   add column if not exists pickup_verified_at timestamptz,
   add column if not exists delivery_verified_at timestamptz,
   add column if not exists delivery_evidence_url text,
