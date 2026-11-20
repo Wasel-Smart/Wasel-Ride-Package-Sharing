@@ -35,7 +35,7 @@ export interface PostedRide {
   syncedAt?: string;
 }
 
-export type PackageStatus = 'searching' | 'matched' | 'in_transit' | 'delivered';
+export type PackageStatus = 'searching' | 'matched' | 'in_transit' | 'delivered' | 'disputed' | 'cancelled';
 
 export interface PackageVerification {
   senderCodeSharedAt?: string;
@@ -142,6 +142,8 @@ function isPersistedPackageVisible(pkg: PackageRequest): boolean {
 function normalizeStatus(value: unknown, matchedRideId?: string): PackageStatus {
   const status = String(value ?? '').toLowerCase();
   if (status === 'delivered') {return 'delivered';}
+  if (status === 'disputed') {return 'disputed';}
+  if (status === 'cancelled') {return 'cancelled';}
   if (status === 'in_transit' || status === 'picked_up') {return 'in_transit';}
   if (
     status === 'searching' ||
