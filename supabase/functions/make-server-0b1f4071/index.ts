@@ -2112,12 +2112,15 @@ async function handleUpdatePackageVerification(
     const tracking = normalizeTrackingNumber(trackingId);
     const { data: senderPackage, error: senderError } = await auth.admin
       .from('packages')
-      .select('package_id, sender_id')
+      .select('package_id, sender_id, trip_id, package_status')
       .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
       .maybeSingle();
     if (senderError) throw new Error(senderError.message);
     if (!senderPackage || String(senderPackage.sender_id) !== auth.canonicalUser.id) {
       return jsonResponse({ error: 'Only the package sender can record handoff-code sharing.' }, 403);
+    }
+    if (!senderPackage.trip_id || String(senderPackage.package_status) !== 'assigned') {
+      return jsonResponse({ error: 'Assign the package to a driver before sharing the pickup code.' }, 409);
     }
 
     const now = new Date().toISOString();
