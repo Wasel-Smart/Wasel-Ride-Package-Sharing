@@ -44,6 +44,7 @@ export interface PackageVerification {
 
 export interface PackageRequest {
   id: string;
+  senderId?: string;
   trackingId: string;
   handoffCode: string;
   deliveryCode?: string;
@@ -181,7 +182,8 @@ function normalizeServerRide(raw: Record<string, unknown>, fallback: PostedRide)
   const rawStatus = String(raw.status ?? '').toLowerCase();
   return {
     ...fallback,
-    id: String(raw.id ?? fallback.id),
+    id: String(raw.id ?? raw.package_id ?? fallback.id),
+    senderId: String(raw.senderId ?? raw.sender_id ?? fallback.senderId ?? '') || undefined,
     from: String(raw.from_location ?? raw.from ?? fallback.from),
     to: String(raw.to_location ?? raw.to ?? fallback.to),
     date: String(raw.departure_date ?? raw.date ?? fallback.date),
@@ -773,6 +775,23 @@ export async function openPackageDispute(trackingId: string, reason: string): Pr
   );
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(String(payload.error ?? 'Package dispute could not be opened.'));
+  const packages = getConnectedPackages();
+  const target = packages.find(item => item.trackingId === trackingId);
+  if (!payload.package || !target) return null;
+  const updated = normalizeServerPackage(payload.package as Record<string, unknown>, target);
+  savePackages([updated], packages);
+  return updated;
+}
+
+export async function refundPackageEscrow(trackingId: string): Promise<PackageRequest | null> {
+  if (!API_URL) throw new Error('Secure package refund API is not configured.');
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(
+    `${API_URL}/packages/track/${encodeURIComponent(trackingId)}/refund`,
+    { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
+  );
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(String(payload.error ?? 'Package refund could not be processed.'));
   const packages = getConnectedPackages();
   const target = packages.find(item => item.trackingId === trackingId);
   if (!payload.package || !target) return null;
