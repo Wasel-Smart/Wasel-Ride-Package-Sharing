@@ -21,6 +21,7 @@
     "node_modules",
     "build",
     "dist",
-    "src/supabase/functions"
+    "src/supabase/functions",
+    "tests/unit/pure-helpers.test.ts"
   ]
 }

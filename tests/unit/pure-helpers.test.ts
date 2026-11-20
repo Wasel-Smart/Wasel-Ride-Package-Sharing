@@ -16,7 +16,7 @@ import {
   isFailedProviderStatus,
   isWebhookRoute,
   mapSubscriptionPlan,
-} from '$deno/make-server-0b1f4071/_shared/pure-helpers.ts';
+} from '$deno/make-server-0b1f4071/_shared/pure-helpers';
 
 // ── parseWalletRoute ──────────────────────────────────────────────────────────
 

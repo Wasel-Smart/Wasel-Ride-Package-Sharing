@@ -5,18 +5,25 @@
  * because it was buried inside the page component.
  */
 import { describe, it, expect } from 'vitest';
-import { validateOfferRideStep } from '../../../pages/waselCorePageHelpers';
+import { validateOfferRideStep, type OfferRideForm } from '../../../pages/waselCorePageHelpers';
 
 // Re-use the same validation function the controller delegates to.
 // This tests the boundary that guards step transitions.
 
-type OfferRideForm = Record<string, unknown>;
-
 const VALID_STEP1: OfferRideForm = {
   from: 'Amman',
   to: 'Aqaba',
+  date: '',
+  time: '',
   seats: 2,
   price: 5,
+  gender: 'any',
+  prayer: false,
+  carModel: '',
+  note: '',
+  acceptsPackages: false,
+  packageCapacity: 'small',
+  packageNote: '',
 };
 
 const VALID_STEP2: OfferRideForm = {
