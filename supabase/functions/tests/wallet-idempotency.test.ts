@@ -18,11 +18,14 @@ const { parseWalletIdempotencyKey } = await import('../make-server-0b1f4071/_han
 
 const VALID_KEY = '3f2b8c1e-9a4d-4e6f-8b1a-2c7d5e9f0a1b';
 
-Deno.test('parseWalletIdempotencyKey — a missing key is tolerated while the rollout is optional', () => {
+Deno.test('parseWalletIdempotencyKey — a missing key is now required for all money-out operations', async () => {
   for (const raw of [undefined, null, '']) {
     const result = parseWalletIdempotencyKey(raw);
-    assertEquals(result.ok, true);
-    if (result.ok) {assertEquals(result.key, null);}
+    assertEquals(result.ok, false);
+    if (!result.ok) {
+      assertEquals(result.response.status, 400);
+      assertEquals((await result.response.json()).code, 'IDEMPOTENCY_KEY_REQUIRED');
+    }
   }
 });
 

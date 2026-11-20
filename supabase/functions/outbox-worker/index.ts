@@ -5,6 +5,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get( 'SUPABASE_SERVICE_ROLE_KEY' ) ??
 const WORKER_SECRET = Deno.env.get( 'OUTBOX_WORKER_SECRET' ) ?? '';
 const BATCH_SIZE = 50;
 const MAX_ATTEMPTS = 5;
+const DLQ_TABLE = 'dead_letter_messages';
 
 type OutboxRow = {
   id: string;
@@ -43,10 +44,33 @@ function constantTimeEqual ( a: string, b: string ): boolean {
   return result === 0;
 }
 
+async function sendToDlq ( admin: ReturnType<typeof getAdminClient>, event: OutboxRow, error: string, errorStack?: string ): Promise<void> {
+  const { error: dlqError } = await admin.from( DLQ_TABLE ).insert( {
+    original_topic: event.topic,
+    original_id: event.id,
+    payload: event.payload as never,
+    error,
+    error_stack: errorStack ?? null,
+    retry_count: event.attempts,
+    trace_id: event.trace_id,
+    worker: 'outbox-worker',
+  } );
+  if ( dlqError ) {
+    console.error( JSON.stringify( {
+      level: 'error',
+      service: 'outbox-worker',
+      message: 'DLQ insert failed',
+      eventId: event.id,
+      topic: event.topic,
+      dlqError: dlqError.message,
+    } ) );
+  }
+}
+
 async function dispatchEvent ( event: OutboxRow ): Promise<{ ok: boolean; reason?: string }> {
   const fnName = TOPIC_FUNCTION_MAP[ event.topic ];
   if ( !fnName ) {
-    return { ok: true, reason: 'no_worker_registered' };
+    return { ok: false, reason: 'no_worker_registered' };
   }
 
   const fnUrl = `${ SUPABASE_URL.replace( /\/$/, '' ) }/functions/v1/${ fnName }/events`;
@@ -103,6 +127,8 @@ async function drainOutbox (): Promise<{ processed: number; succeeded: number; f
     const result = await dispatchEvent( event );
 
     if ( result.reason === 'no_worker_registered' ) {
+      // Unroutable event — move to DLQ immediately, no retries.
+      await sendToDlq( admin, event, `no_worker_registered:${ event.topic }`, 'Topic has no registered handler in TOPIC_FUNCTION_MAP' );
       const { data: failedEvent, error: failError } = await admin
         .from( 'event_outbox' )
         .update( {
@@ -117,7 +143,9 @@ async function drainOutbox (): Promise<{ processed: number; succeeded: number; f
         .maybeSingle();
       if ( failError || !failedEvent ) {throw new Error( `outbox unroutable-event update failed for ${ event.id }: ${ failError?.message ?? 'claim lost' }` );}
       console.error( JSON.stringify( {
-        message: 'outbox event has no registered worker',
+        level: 'error',
+        service: 'outbox-worker',
+        message: 'outbox event has no registered worker — moved to DLQ',
         eventId: event.id,
         topic: event.topic,
         traceId: event.trace_id,
@@ -157,16 +185,37 @@ async function drainOutbox (): Promise<{ processed: number; succeeded: number; f
         throw new Error( `outbox failure update failed for ${ event.id }: ${ failError.message }` );
       }
 
-      console.error( JSON.stringify( {
-        level: 'error',
-        service: 'outbox-worker',
-        message: 'event dispatch failed',
-        eventId: event.id,
-        topic: event.topic,
-        traceId: event.trace_id,
-        attempts: ( event.attempts ?? 0 ) + 1,
-        reason: result.reason,
-      } ) );
+      // Check if the event has been moved to DLQ (exhausted retries)
+      const { data: dlqEvent } = await admin
+        .from( 'event_outbox' )
+        .select( 'status, attempts' )
+        .eq( 'id', event.id )
+        .maybeSingle();
+      
+      if ( dlqEvent?.status === 'dead_letter' ) {
+        await sendToDlq( admin, event, result.reason ?? 'unknown', undefined );
+        console.error( JSON.stringify( {
+          level: 'error',
+          service: 'outbox-worker',
+          message: 'event exhausted retries — moved to DLQ',
+          eventId: event.id,
+          topic: event.topic,
+          traceId: event.trace_id,
+          attempts: dlqEvent.attempts,
+          reason: result.reason,
+        } ) );
+      } else {
+        console.error( JSON.stringify( {
+          level: 'error',
+          service: 'outbox-worker',
+          message: 'event dispatch failed — will retry',
+          eventId: event.id,
+          topic: event.topic,
+          traceId: event.trace_id,
+          attempts: ( event.attempts ?? 0 ) + 1,
+          reason: result.reason,
+        } ) );
+      }
 
       failed++;
     }
@@ -194,16 +243,33 @@ Deno.serve( async ( request: Request ) => {
     return new Response( JSON.stringify( { error: 'Supabase not configured' } ), { status: 503 } );
   }
 
+  const startTime = Date.now();
   try {
     const result = await drainOutbox();
-    console.info( JSON.stringify( { level: 'info', service: 'outbox-worker', ...result } ) );
+    const durationMs = Date.now() - startTime;
+    const logPayload = {
+      level: 'info',
+      service: 'outbox-worker',
+      durationMs,
+      ...result,
+      // Alert if failure rate is high
+      alert: result.failed > 0 && result.processed > 0 && result.failed / result.processed > 0.5 ? 'HIGH_FAILURE_RATE' : undefined,
+    };
+    console.info( JSON.stringify( logPayload ) );
     return new Response( JSON.stringify( result ), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     } );
   } catch ( err ) {
+    const durationMs = Date.now() - startTime;
     const message = err instanceof Error ? err.message : String( err );
-    console.error( JSON.stringify( { level: 'error', service: 'outbox-worker', message } ) );
+    console.error( JSON.stringify( {
+      level: 'error',
+      service: 'outbox-worker',
+      durationMs,
+      message,
+      alert: 'WORKER_CRASHED',
+    } ) );
     return new Response( JSON.stringify( { error: message } ), { status: 500 } );
   }
 } );
