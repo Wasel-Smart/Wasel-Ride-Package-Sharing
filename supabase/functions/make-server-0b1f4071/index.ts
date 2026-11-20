@@ -1954,8 +1954,9 @@ async function handleTrackPackage(auth: AuthenticatedRequest, trackingId: string
   const canonicalUserId = auth.canonicalUser.id;
   let isParticipant = String(row.sender_id ?? '') === canonicalUserId
     || String(row.receiver_id ?? '') === canonicalUserId;
+  let driverSummary: Record<string, unknown> = {};
 
-  if (!isParticipant && row.trip_id) {
+  if (row.trip_id) {
     const { data: trip, error: tripError } = await auth.admin
       .from('trips')
       .select('driver_id')
@@ -1970,13 +1971,25 @@ async function handleTrackPackage(auth: AuthenticatedRequest, trackingId: string
         .eq('driver_id', String(trip.driver_id))
         .maybeSingle();
       if (driverError) throw new Error(driverError.message);
-      isParticipant = String(driver?.user_id ?? '') === canonicalUserId;
+
+      if (String(driver?.user_id ?? '') === canonicalUserId) isParticipant = true;
+      if (driver?.user_id) {
+        const { data: driverUser, error: driverUserError } = await auth.admin
+          .from('users')
+          .select('full_name, phone_number')
+          .eq('id', String(driver.user_id))
+          .maybeSingle();
+        if (driverUserError) throw new Error(driverUserError.message);
+        driverSummary = {
+          driver_name: driverUser?.full_name ?? null,
+          driver_phone: driverUser?.phone_number ?? null,
+        };
+      }
     }
   }
 
   if (!isParticipant) return null;
-
-  return mapPackageRow(data as PackageRow);
+  return { ...mapPackageRow(data as PackageRow), ...driverSummary };
 }
 
 async function loadPackageForAssignedDriver(
