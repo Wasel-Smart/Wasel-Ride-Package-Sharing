@@ -447,7 +447,7 @@ function buildDispatch(topRoute: string, ar: boolean): string {
 async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot | null> {
   if (!supabase) return null;
 
-  const [{ data: trips }, { data: bookings }, { data: packages }, { data: tripPresence }] =
+  const [{ data: trips }, { data: bookings }, { data: tripPresence }] =
     await Promise.all([
       supabase
         .from('trips')
