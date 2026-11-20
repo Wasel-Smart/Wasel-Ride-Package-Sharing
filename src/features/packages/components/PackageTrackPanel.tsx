@@ -18,6 +18,7 @@ type PackageTrackPanelProps = {
   onVerificationAction: (action: 'share_code' | 'confirm_pickup' | 'confirm_delivery', code?: string, evidenceFile?: File) => void;
   onRotateCodes: () => void;
   onPayPackage: () => void;
+  onOpenDispute: (reason: string) => void;
   onOpenSupport: () => void;
   onOpenRecent: (item: PackageRequest) => void;
 };
@@ -34,11 +35,13 @@ export function PackageTrackPanel({
   onVerificationAction,
   onRotateCodes,
   onPayPackage,
+  onOpenDispute,
   onOpenSupport,
   onOpenRecent,
 }: PackageTrackPanelProps) {
   const [verificationCode, setVerificationCode] = useState('');
   const [deliveryEvidenceFile, setDeliveryEvidenceFile] = useState<File | undefined>();
+  const [disputeReason, setDisputeReason] = useState('');
   const holderWhatsAppUrl = trackedPackage
     ? buildPreferredWhatsAppUrl({
         phone: trackedPackage.matchedDriverPhone,
@@ -98,6 +101,21 @@ export function PackageTrackPanel({
               <button onClick={onPayPackage} style={{ marginTop: 10, padding: '9px 14px', borderRadius: '99px', border: 'none', background: DS.gradG, color: '#fff', cursor: 'pointer', fontFamily: DS.F, fontWeight: 700 }}>
                 Pay 5 JOD into escrow
               </button>
+            )}
+            {trackedPackage.paymentStatus === 'held' && (
+              <div style={{ marginTop: 12, display: 'grid', gap: 8 }}>
+                <textarea
+                  aria-label="Package dispute reason"
+                  value={disputeReason}
+                  onChange={(event) => setDisputeReason(event.target.value)}
+                  placeholder="Describe the package issue before opening a payment dispute"
+                  rows={2}
+                  style={{ width: '100%', boxSizing: 'border-box', padding: '10px 12px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, fontFamily: DS.F, resize: 'vertical' }}
+                />
+                <button onClick={() => onOpenDispute(disputeReason.trim())} disabled={disputeReason.trim().length < 8} style={{ justifySelf: 'start', padding: '9px 14px', borderRadius: '99px', border: `1px solid ${DS.gold}`, background: 'transparent', color: DS.gold, cursor: disputeReason.trim().length < 8 ? 'not-allowed' : 'pointer', fontFamily: DS.F, fontWeight: 700, opacity: disputeReason.trim().length < 8 ? 0.55 : 1 }}>
+                  Open payment dispute and freeze escrow
+                </button>
+              </div>
             )}
           </div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', marginBottom: 16 }}>
