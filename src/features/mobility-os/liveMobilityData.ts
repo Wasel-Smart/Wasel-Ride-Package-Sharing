@@ -79,16 +79,6 @@ type BookingRow = {
   status: string | null;
 };
 
-type PackageRow = {
-  trip_id: string | null;
-  origin_name: string | null;
-  origin_location: string | null;
-  destination_name: string | null;
-  destination_location: string | null;
-  package_status: string | null;
-  status: string | null;
-};
-
 type PresenceRow = {
   trip_id: string;
   active_passengers: number;
@@ -472,12 +462,6 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
         .in('booking_status', ['confirmed', 'pending_driver'])
         .order('created_at', { ascending: false }),
       supabase
-        .from('packages')
-        .select(
-          'trip_id, origin_name, origin_location, destination_name, destination_location, package_status, status',
-        )
-        .in('package_status', ['created', 'assigned', 'in_transit']),
-      supabase
         .from('trip_presence')
         .select('trip_id, active_passengers, active_packages, last_location, last_heartbeat_at'),
     ]);
@@ -486,7 +470,6 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
   if (tripRows.length === 0) return null;
 
   const bookingRows = (Array.isArray(bookings) ? bookings : []) as BookingRow[];
-  const packageRows = (Array.isArray(packages) ? packages : []) as PackageRow[];
   const presenceRows = (Array.isArray(tripPresence) ? tripPresence : []) as PresenceRow[];
 
   const bookingsByTrip = new Map<string, BookingRow[]>();
@@ -494,14 +477,6 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
     const current = bookingsByTrip.get(row.trip_id) ?? [];
     current.push(row);
     bookingsByTrip.set(row.trip_id, current);
-  });
-
-  const packagesByTrip = new Map<string, PackageRow[]>();
-  packageRows.forEach(row => {
-    if (!row.trip_id) return;
-    const current = packagesByTrip.get(row.trip_id) ?? [];
-    current.push(row);
-    packagesByTrip.set(row.trip_id, current);
   });
 
   const presenceByTrip = new Map<string, PresenceRow>();
@@ -530,8 +505,7 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
       (sum, booking) => sum + Math.max(1, Number(booking.seats_requested ?? 1) || 1),
       0,
     );
-    const tripPackages = packagesByTrip.get(trip.trip_id) ?? [];
-    const packagesOnTrip = tripPackages.length;
+    const packagesOnTrip = 0;
     const presence = presenceByTrip.get(trip.trip_id);
     const seatsOpen = Math.max(0, Number(trip.available_seats ?? 0) || 0);
     const totalSeats = Math.max(seatsOpen + bookedSeats, Number(trip.total_seats ?? 0) || 0);
@@ -541,11 +515,11 @@ async function fetchMobilitySnapshot(ar: boolean): Promise<LiveMobilitySnapshot 
     );
     const packageSlotsOpen = Math.max(
       0,
-      Number(trip.package_slots_remaining ?? Math.max(packageCapacity - packagesOnTrip, 0)) || 0,
+      Number(trip.package_slots_remaining ?? 0) || 0,
     );
     const packageSlotsFilled = Math.max(
       0,
-      Math.max(packageCapacity - packageSlotsOpen, packagesOnTrip),
+      Math.max(packageCapacity - packageSlotsOpen, 0),
     );
 
     const current = corridorMap.get(routeId) ?? {
