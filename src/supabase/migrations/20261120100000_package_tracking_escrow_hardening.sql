@@ -192,6 +192,190 @@ $$;
 revoke all on function public.open_package_dispute(uuid, text) from public, anon;
 grant execute on function public.open_package_dispute(uuid, text) to authenticated;
 
+-- Private evidence storage. Uploads are issued through server-created signed URLs.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'package-evidence',
+  'package-evidence',
+  false,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp']
+)
+on conflict (id) do update
+set public = false,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+create or replace function public.app_verify_package_pickup(
+  p_package_id uuid,
+  p_driver_user_id uuid,
+  p_code_hash text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, private, pg_temp
+as $
+declare
+  v_package public.packages%rowtype;
+  v_secret private.package_handoff_secrets%rowtype;
+  v_is_driver boolean;
+  v_attempts integer;
+begin
+  if auth.role() <> 'service_role' then
+    raise exception 'Service role required' using errcode = '42501';
+  end if;
+
+  select * into v_package
+  from public.packages
+  where package_id = p_package_id
+  for update;
+  if not found then raise exception 'Package not found' using errcode = 'P0002'; end if;
+
+  select exists (
+    select 1 from public.trips t
+    join public.drivers d on d.driver_id = t.driver_id
+    where t.trip_id = v_package.trip_id and d.user_id = p_driver_user_id
+  ) into v_is_driver;
+
+  if not v_is_driver then raise exception 'Only the assigned driver can verify pickup' using errcode = '42501'; end if;
+  if v_package.package_status <> 'assigned'
+    or v_package.payment_status <> 'held'
+    or v_package.dispute_opened_at is not null then
+    raise exception 'Package is not eligible for pickup verification' using errcode = '23514';
+  end if;
+
+  select * into v_secret
+  from private.package_handoff_secrets
+  where package_id = p_package_id
+  for update;
+  if not found then raise exception 'Package handoff secret not found' using errcode = 'P0002'; end if;
+  if v_secret.locked_until is not null and v_secret.locked_until > now() then return false; end if;
+
+  if v_secret.pickup_code_hash <> p_code_hash then
+    v_attempts := v_secret.failed_attempts + 1;
+    update private.package_handoff_secrets
+    set failed_attempts = v_attempts,
+        locked_until = case when v_attempts >= 5 then now() + interval '15 minutes' else null end,
+        updated_at = timezone('utc', now())
+    where package_id = p_package_id;
+    return false;
+  end if;
+
+  update public.packages
+  set package_status = 'in_transit',
+      status = 'in_transit',
+      pickup_verified_at = timezone('utc', now()),
+      updated_at = timezone('utc', now())
+  where package_id = p_package_id;
+
+  update private.package_handoff_secrets
+  set pickup_verified_at = timezone('utc', now()),
+      failed_attempts = 0,
+      locked_until = null,
+      updated_at = timezone('utc', now())
+  where package_id = p_package_id;
+
+  insert into public.package_events (package_id, event_type, event_status, notes, created_by)
+  values (p_package_id, 'pickup_verified', 'in_transit', 'Pickup OTP verified by assigned driver', p_driver_user_id);
+
+  return true;
+end;
+$;
+
+create or replace function public.app_verify_package_delivery(
+  p_package_id uuid,
+  p_driver_user_id uuid,
+  p_code_hash text,
+  p_evidence_path text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, private, pg_temp
+as $
+declare
+  v_package public.packages%rowtype;
+  v_secret private.package_handoff_secrets%rowtype;
+  v_is_driver boolean;
+  v_attempts integer;
+begin
+  if auth.role() <> 'service_role' then
+    raise exception 'Service role required' using errcode = '42501';
+  end if;
+
+  select * into v_package
+  from public.packages
+  where package_id = p_package_id
+  for update;
+  if not found then raise exception 'Package not found' using errcode = 'P0002'; end if;
+
+  select exists (
+    select 1 from public.trips t
+    join public.drivers d on d.driver_id = t.driver_id
+    where t.trip_id = v_package.trip_id and d.user_id = p_driver_user_id
+  ) into v_is_driver;
+
+  if not v_is_driver then raise exception 'Only the assigned driver can verify delivery' using errcode = '42501'; end if;
+  if v_package.package_status <> 'in_transit'
+    or v_package.pickup_verified_at is null
+    or v_package.payment_status <> 'held'
+    or v_package.dispute_opened_at is not null then
+    raise exception 'Package is not eligible for delivery verification' using errcode = '23514';
+  end if;
+
+  if coalesce(trim(p_evidence_path), '') = ''
+    or length(p_evidence_path) > 512
+    or p_evidence_path not like p_package_id::text || '/%'
+    or p_evidence_path like '%..%' then
+    raise exception 'A valid package-scoped evidence path is required' using errcode = '22023';
+  end if;
+
+  select * into v_secret
+  from private.package_handoff_secrets
+  where package_id = p_package_id
+  for update;
+  if not found then raise exception 'Package handoff secret not found' using errcode = 'P0002'; end if;
+  if v_secret.locked_until is not null and v_secret.locked_until > now() then return false; end if;
+
+  if v_secret.delivery_code_hash <> p_code_hash then
+    v_attempts := v_secret.failed_attempts + 1;
+    update private.package_handoff_secrets
+    set failed_attempts = v_attempts,
+        locked_until = case when v_attempts >= 5 then now() + interval '15 minutes' else null end,
+        updated_at = timezone('utc', now())
+    where package_id = p_package_id;
+    return false;
+  end if;
+
+  update public.packages
+  set package_status = 'delivered',
+      status = 'delivered',
+      delivered_at = timezone('utc', now()),
+      delivery_verified_at = timezone('utc', now()),
+      delivery_evidence_url = p_evidence_path,
+      updated_at = timezone('utc', now())
+  where package_id = p_package_id;
+
+  update private.package_handoff_secrets
+  set delivery_verified_at = timezone('utc', now()),
+      failed_attempts = 0,
+      locked_until = null,
+      updated_at = timezone('utc', now())
+  where package_id = p_package_id;
+
+  insert into public.package_events (package_id, event_type, event_status, notes, created_by)
+  values (p_package_id, 'delivery_verified', 'delivered', 'Delivery OTP and private evidence verified', p_driver_user_id);
+
+  return true;
+end;
+$;
+
+revoke all on function public.app_verify_package_pickup(uuid, uuid, text) from public, anon, authenticated;
+revoke all on function public.app_verify_package_delivery(uuid, uuid, text, text) from public, anon, authenticated;
+grant execute on function public.app_verify_package_pickup(uuid, uuid, text) to service_role;
+grant execute on function public.app_verify_package_delivery(uuid, uuid, text, text) to service_role;
+
 comment on table private.package_handoff_secrets is
   'Private SHA-256 hashes for pickup and delivery OTPs; plaintext codes are never persisted.';
 comment on function public.open_package_dispute(uuid, text) is
