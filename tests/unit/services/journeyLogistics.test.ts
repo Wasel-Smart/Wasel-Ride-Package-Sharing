@@ -34,6 +34,7 @@ import {
   getConnectedRides,
   getPackageByTrackingId,
   openPackageDispute,
+  refundPackageEscrow,
   rotatePackageHandoffCodes,
   updatePackageVerification,
 } from '../../../src/services/journeyLogistics';
@@ -326,6 +327,63 @@ describe('journeyLogistics', () => {
     expect(JSON.parse(mockFetchWithRetry.mock.calls[1][1].body)).toEqual({
       reason: 'Package arrived damaged',
     });
+  });
+
+  it('requests a sender-only refund for a disputed package escrow', async () => {
+    mockFetchWithRetry
+      .mockResolvedValueOnce(response({
+        package: {
+          id: 'pkg-refund',
+          sender_id: 'user-123',
+          tracking_code: 'WSL-PKG-REFUND123',
+          from: 'Amman',
+          to: 'Aqaba',
+          status: 'matched',
+          trip_id: 'trip-refund',
+          payment_status: 'held',
+          created_at: '2026-03-27T00:00:00Z',
+        },
+      }))
+      .mockResolvedValueOnce(response({
+        package: {
+          id: 'pkg-refund',
+          sender_id: 'user-123',
+          tracking_code: 'WSL-PKG-REFUND123',
+          from: 'Amman',
+          to: 'Aqaba',
+          status: 'disputed',
+          trip_id: 'trip-refund',
+          payment_status: 'disputed',
+          created_at: '2026-03-27T00:00:00Z',
+        },
+      }))
+      .mockResolvedValueOnce(response({
+        package: {
+          id: 'pkg-refund',
+          sender_id: 'user-123',
+          tracking_code: 'WSL-PKG-REFUND123',
+          from: 'Amman',
+          to: 'Aqaba',
+          status: 'disputed',
+          trip_id: 'trip-refund',
+          payment_status: 'refunded',
+          created_at: '2026-03-27T00:00:00Z',
+        },
+        refundTransactionId: 'txn-refund',
+      }));
+
+    const created = await createConnectedPackage({
+      from: 'Amman',
+      to: 'Aqaba',
+      weight: '1 kg',
+      note: 'Fragile item',
+    });
+    await openPackageDispute(created.trackingId, 'Package arrived damaged');
+    const refunded = await refundPackageEscrow(created.trackingId);
+
+    expect(refunded?.paymentStatus).toBe('refunded');
+    expect(mockFetchWithRetry.mock.calls[2][0]).toContain('/refund');
+    expect(mockFetchWithRetry.mock.calls[2][1].method).toBe('POST');
   });
 
   it('loads tracking only from the authenticated server, not browser cache', async () => {
