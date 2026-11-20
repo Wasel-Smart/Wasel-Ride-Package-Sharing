@@ -895,6 +895,9 @@ async function reconcilePaymentIntentStatus(
 ) {
   const currentStatus = String(intent.status ?? 'processing');
   if (isFinalPaymentStatus(currentStatus)) {
+    if (currentStatus === 'failed' || currentStatus === 'cancelled') {
+      await markPackagePaymentFailed(admin, intent, normalizeString(intent.last_error));
+    }
     return { intent, settled: currentStatus === 'succeeded' };
   }
 
@@ -906,14 +909,24 @@ async function reconcilePaymentIntentStatus(
     if (String(intent.provider_name) === 'stripe') {
       const providerPaymentId = normalizeString(intent.provider_payment_id);
       if (providerPaymentId) {
-        const cancelled = await cancelStripePaymentIntent(providerPaymentId);
-        finalStatus = mapStripePaymentStatus(cancelled.status);
+        const currentStripeIntent = await retrieveStripePaymentIntent(providerPaymentId);
+        finalStatus = mapStripePaymentStatus(currentStripeIntent.status);
+
+        if (!isFinalPaymentStatus(finalStatus)) {
+          const cancelled = await cancelStripePaymentIntent(providerPaymentId);
+          finalStatus = mapStripePaymentStatus(cancelled.status);
+          lastError = normalizeString(
+            ((cancelled.last_payment_error as Record<string, unknown> | undefined)?.message),
+          ) ?? lastError;
+        } else {
+          lastError = normalizeString(
+            ((currentStripeIntent.last_payment_error as Record<string, unknown> | undefined)?.message),
+          ) ?? lastError;
+        }
+
         if (finalStatus === 'succeeded') {
           await settlePaymentIntent(admin, intent);
         }
-        lastError = normalizeString(
-          ((cancelled.last_payment_error as Record<string, unknown> | undefined)?.message),
-        ) ?? lastError;
       }
     }
 
