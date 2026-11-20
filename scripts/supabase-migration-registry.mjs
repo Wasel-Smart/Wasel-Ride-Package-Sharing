@@ -367,6 +367,15 @@ export const migrationCatalog = [
     category: 'hardening',
     naming: 'canonical',
   },
+  {
+    sequence: 40,
+    path: 'src/supabase/migrations/20261120100000_package_tracking_escrow_hardening.sql',
+    description: 'Add server-authoritative package escrow, append-only tracking events, and guarded delivery state transitions',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'hardening',
+    naming: 'canonical',
+  },
 ];
 
 export const operationalSeedFiles = [
