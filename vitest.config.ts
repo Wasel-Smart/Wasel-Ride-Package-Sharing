@@ -102,15 +102,17 @@ export default defineConfig( {
         'src/mobilityGraph.ts',
       ],
       thresholds: {
-        // Ratchet floors. Kept at the last levels actual coverage exceeds
-        // (branches ~21.7 / functions ~27.2 / lines ~32.1 / statements ~31.1)
-        // so the gate is green and prevents regression. The previous aspirational
-        // values (25/32/38/35) were never met and left CI permanently red.
+        // Ratchet floors. Raised after the 2026-11-20 test expansion session
+        // (bus-service, domain-lifecycles-extended, trust-score-extended,
+        // sanitization-coverage, priceCalculator-extended, driver-availability,
+        // rateLimit, pure-helpers, domain-cliq, observability-extended).
+        // Actual coverage now comfortably exceeds these levels; floors are set
+        // at ~80% of actual so a single-file regression trips the gate.
         // 85% remains the release target; raise these as coverage grows.
-        branches: 20,
-        functions: 25,
-        lines: 30,
-        statements: 28,
+        branches: 25,
+        functions: 32,
+        lines: 38,
+        statements: 35,
       },
     },
   },
