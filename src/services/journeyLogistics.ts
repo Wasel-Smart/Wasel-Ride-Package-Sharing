@@ -1,4 +1,4 @@
-import { API_URL, fetchWithRetry, getAuthDetails } from './core';
+import { API_URL, fetchWithRetry, getAuthDetails, supabase } from './core';
 import {
   createDirectPackage,
   getDirectPackageByTrackingId,
@@ -53,6 +53,7 @@ export interface PackageRequest {
   id: string;
   trackingId: string;
   handoffCode: string;
+  deliveryCode?: string;
   from: string;
   to: string;
   weight: string;
@@ -266,12 +267,8 @@ function normalizeServerPackage(
   const matchedRideId =
     String(raw.trip_id ?? raw.matchedRideId ?? '').trim() || undefined;
   const status = normalizeStatus(raw.status, matchedRideId);
-  const handoffCode =
-    String(raw.handoff_code ?? raw.handoffCode ?? fallback.handoffCode ?? '')
-      .trim()
-      .toUpperCase() ||
-    fallback.handoffCode ||
-    generateHandoffCode();
+  const handoffCode = String(raw.handoff_code ?? raw.handoffCode ?? fallback.handoffCode ?? '').trim();
+  const deliveryCode = String(raw.delivery_code ?? raw.deliveryCode ?? fallback.deliveryCode ?? '').trim();
 
   return {
     ...fallback,
@@ -280,6 +277,7 @@ function normalizeServerPackage(
       .trim()
       .toUpperCase(),
     handoffCode,
+    deliveryCode: deliveryCode || undefined,
     from: String(raw.from ?? fallback.from),
     to: String(raw.to ?? fallback.to),
     weight: sanitizeWeight(String(raw.weight ?? fallback.weight)),
@@ -318,6 +316,7 @@ function normalizeServerPackage(
         String(
           raw.rider_pickup_confirmed_at ??
             raw.riderPickupConfirmedAt ??
+            raw.pickup_verified_at ??
             fallback.verification?.riderPickupConfirmedAt ??
             '',
         ).trim() || undefined,
@@ -325,6 +324,7 @@ function normalizeServerPackage(
         String(
           raw.receiver_delivery_confirmed_at ??
             raw.receiverDeliveryConfirmedAt ??
+            raw.delivery_verified_at ??
             fallback.verification?.receiverDeliveryConfirmedAt ??
             '',
         ).trim() || undefined,
@@ -450,7 +450,8 @@ function mergeRides(...lists: PostedRide[][]): PostedRide[] {
 
 function savePackages(...lists: PackageRequest[][]): PackageRequest[] {
   const packages = mergePackages(...lists);
-  writeList(PACKAGES_KEY, packages);
+  // OTPs are one-time secrets. Keep them in memory for the active session only.
+  writeList(PACKAGES_KEY, packages.map(({ handoffCode: _pickup, deliveryCode: _delivery, ...item }) => item));
   return packages;
 }
 
@@ -585,7 +586,6 @@ function buildServerPackagePayload(pkg: PackageRequest) {
     weight: parseWeight(pkg.weight),
     description: pkg.note,
     price: 5,
-    handoffCode: pkg.handoffCode,
     ...(pkg.recipientName ? { recipientName: pkg.recipientName } : {}),
     ...(pkg.recipientPhone ? { recipientPhone: pkg.recipientPhone } : {}),
     ...(pkg.packageType === 'return' ? { packageType: pkg.packageType } : {}),
@@ -762,49 +762,29 @@ export async function createConnectedPackage(input: {
 
 export async function getPackageByTrackingId(trackingId: string): Promise<PackageRequest | null> {
   const normalizedTrackingId = trackingId.trim().toUpperCase();
-  if (!normalizedTrackingId) {return null;}
+  if (!normalizedTrackingId) return null;
+  if (!API_URL) throw new Error('Secure package tracking API is not configured.');
 
-  const local =
-    getConnectedPackages().find(item => item.trackingId === normalizedTrackingId) ?? null;
-  if (local) {return local;}
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(
+    `${API_URL}/packages/track/${encodeURIComponent(normalizedTrackingId)}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error('Package tracking could not be loaded.');
+  const payload = await response.json();
+  const server = (payload.package ?? payload) as Record<string, unknown>;
+  if (!server) return null;
 
-  try {
-    let server: Record<string, unknown> | null = null;
-
-    if (API_URL) {
-      const response = await fetchWithRetry(
-        `${API_URL}/packages/track/${encodeURIComponent(normalizedTrackingId)}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-      if (!response.ok) {return null;}
-      server = await response.json();
-    } else {
-      requireDirectSupabaseFallback('Package tracking lookup');
-      const direct = await getDirectPackageByTrackingId(normalizedTrackingId);
-      if (!direct) {return null;}
-      server = {
-        ...direct,
-        id: direct.id,
-        tracking_code: direct.tracking_number,
-        from: direct.origin_name ?? direct.origin_location,
-        to: direct.destination_name ?? direct.destination_location,
-        weight: direct.weight_kg,
-        description: direct.description,
-        recipient_name: direct.receiver_name,
-        recipient_phone: direct.receiver_phone,
-      };
-    }
-
-    if (!server) {return null;}
-
-    const fallback: PackageRequest = {
-      id: String(server.id ?? makeId('pkg')),
+  const fallback: PackageRequest = {
+    id: String(server.id ?? makeId('pkg')),
     trackingId: normalizedTrackingId,
-    handoffCode: generateHandoffCode(),
+    handoffCode: '',
     from: String(server.from ?? ''),
     to: String(server.to ?? ''),
     weight: sanitizeWeight(String(server.weight ?? '<1 kg')),
@@ -819,20 +799,17 @@ export async function getPackageByTrackingId(trackingId: string): Promise<Packag
     matchedDriver: String(server.driver_name ?? '').trim() || undefined,
     matchedDriverPhone: sanitizePhone(String(server.driver_phone ?? '')),
     status: normalizeStatus(server.status, String(server.trip_id ?? '').trim() || undefined),
-      createdAt: String(server.created_at ?? new Date().toISOString()),
-      verification: {},
-      timeline: buildTimeline(
-        normalizeStatus(server.status, String(server.trip_id ?? '').trim() || undefined),
-        String(server.trip_id ?? '').trim() || undefined,
-        {},
-      ),
-    };
-    const normalizedPkg = normalizeServerPackage(server as Record<string, unknown>, fallback);
-    savePackages([normalizedPkg], getConnectedPackages());
-    return normalizedPkg;
-  } catch {
-    return null;
-  }
+    createdAt: String(server.created_at ?? new Date().toISOString()),
+    verification: {},
+    timeline: buildTimeline(
+      normalizeStatus(server.status, String(server.trip_id ?? '').trim() || undefined),
+      String(server.trip_id ?? '').trim() || undefined,
+      {},
+    ),
+  };
+  const normalizedPkg = normalizeServerPackage(server, fallback);
+  savePackages([normalizedPkg], getConnectedPackages());
+  return normalizedPkg;
 }
 
 export function getConnectedStats() {
@@ -850,88 +827,83 @@ export function getConnectedStats() {
 
 export type PackageVerificationAction = 'share_code' | 'confirm_pickup' | 'confirm_delivery';
 
+export async function uploadPackageDeliveryEvidence(
+  trackingId: string,
+  file: File,
+): Promise<string> {
+  if (!API_URL || !supabase) throw new Error('Secure package evidence upload is not configured.');
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    throw new Error('Delivery evidence must be a JPEG, PNG, or WebP image.');
+  }
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(
+    `${API_URL}/packages/track/${encodeURIComponent(trackingId)}/evidence-upload`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ contentType: file.type }),
+    },
+  );
+  if (!response.ok) throw new Error('A secure evidence upload URL could not be created.');
+  const upload = await response.json() as { path: string; token: string };
+  const { error } = await supabase.storage
+    .from('package-evidence')
+    .uploadToSignedUrl(upload.path, upload.token, file, { contentType: file.type, upsert: false });
+  if (error) throw new Error('Delivery evidence upload failed.');
+  return upload.path;
+}
+
+export async function rotatePackageHandoffCodes(
+  trackingId: string,
+): Promise<{ handoffCode?: string; deliveryCode: string }> {
+  if (!API_URL) throw new Error('Secure package API is not configured.');
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(
+    `${API_URL}/packages/track/${encodeURIComponent(trackingId)}/rotate-codes`,
+    { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!response.ok) throw new Error('Package handoff codes could not be rotated.');
+  return response.json();
+}
+
+export type PackageVerificationAction = 'share_code' | 'confirm_pickup' | 'confirm_delivery';
+
 export async function updatePackageVerification(
   trackingId: string,
   action: PackageVerificationAction,
+  code?: string,
+  evidencePath?: string,
 ): Promise<PackageRequest | null> {
   const normalizedTrackingId = trackingId.trim().toUpperCase();
-  if (!normalizedTrackingId) {return null;}
+  if (!normalizedTrackingId) return null;
+  if (!API_URL) throw new Error('Secure package verification API is not configured.');
+
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(
+    `${API_URL}/packages/track/${encodeURIComponent(normalizedTrackingId)}/verification`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action, ...(code ? { code } : {}), ...(evidencePath ? { evidencePath } : {}) }),
+    },
+  );
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(String(payload.error ?? 'Package verification could not be completed.'));
+  }
 
   const packages = getConnectedPackages();
   const target = packages.find(item => item.trackingId === normalizedTrackingId);
-  if (!target) {return null;}
-
-  const now = new Date().toISOString();
-  const verification: PackageVerification = { ...target.verification };
-  let status = target.status;
-
-  if (action === 'share_code') {
-    verification.senderCodeSharedAt = verification.senderCodeSharedAt ?? now;
-    if (status === 'searching' && target.matchedRideId) {status = 'matched';}
-  }
-
-  if (action === 'confirm_pickup') {
-    verification.senderCodeSharedAt = verification.senderCodeSharedAt ?? now;
-    verification.riderPickupConfirmedAt = verification.riderPickupConfirmedAt ?? now;
-    status = 'in_transit';
-  }
-
-  if (action === 'confirm_delivery') {
-    verification.senderCodeSharedAt = verification.senderCodeSharedAt ?? now;
-    verification.riderPickupConfirmedAt = verification.riderPickupConfirmedAt ?? now;
-    verification.receiverDeliveryConfirmedAt = verification.receiverDeliveryConfirmedAt ?? now;
-    status = 'delivered';
-  }
-
-  try {
-    const server = await updateDirectPackageStatus(
-      normalizedTrackingId,
-      status === 'searching' ? 'matched' : status,
-    );
-    if (!server) {
-      throw new Error('Package verification update was not acknowledged by the backend.');
-    }
-
-    const updated = normalizeServerPackage(server as Record<string, unknown>, {
-      ...target,
-      verification,
-      timeline: buildTimeline(status, target.matchedRideId, verification),
-    });
-    const confirmed: PackageRequest = {
-      ...updated,
-      verification,
-      timeline: buildTimeline(updated.status, updated.matchedRideId, verification),
-      syncState: 'synced',
-      syncedAt: new Date().toISOString(),
-    };
-
-    savePackages(packages.map(item => (item.trackingId === normalizedTrackingId ? confirmed : item)));
-
-    void trackGrowthEvent({
-      eventName: 'package_verification_updated',
-      funnelStage:
-        confirmed.status === 'delivered'
-          ? 'completed'
-          : confirmed.status === 'in_transit'
-            ? 'booked'
-            : 'selected',
-      serviceType: 'package',
-      from: confirmed.from,
-      to: confirmed.to,
-      metadata: {
-        trackingId: confirmed.trackingId,
-        action,
-        status: confirmed.status,
-      },
-    });
-
-    return confirmed;
-  } catch (error) {
-    logger.error('[journeyLogistics] package verification update failed', error, {
-      action,
-      trackingId: normalizedTrackingId,
-      nextStatus: status,
-    });
-    throw new Error('Package status could not be updated right now. Please try again.');
-  }
+  if (!payload.package || !target) return null;
+  const updated = normalizeServerPackage(payload.package as Record<string, unknown>, target);
+  savePackages([updated], packages);
+  void trackGrowthEvent({
+    eventName: 'package_verification_updated',
+    funnelStage: updated.status === 'delivered' ? 'completed' : updated.status === 'in_transit' ? 'booked' : 'selected',
+    serviceType: 'package',
+    from: updated.from,
+    to: updated.to,
+    metadata: { trackingId: updated.trackingId, action, status: updated.status },
+  });
+  return updated;
 }
