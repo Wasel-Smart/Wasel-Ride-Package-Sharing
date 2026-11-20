@@ -155,7 +155,7 @@ function PaymentsPageContent() {
       setForm((current) => ({
         ...current,
         paymentMethodType: resolveDefaultPaymentMethodType(
-          enhancedDashboard.paymentMethods,
+          enhancedDashboard.paymentMethods.filter(method => method.type === 'card'),
           current.amount,
           enhancedDashboard.wallet.balance,
         ),
@@ -208,7 +208,7 @@ function PaymentsPageContent() {
       });
     }
 
-    (dashboard?.paymentMethods ?? []).forEach((method) => {
+    (dashboard?.paymentMethods ?? []).filter(method => method.type === 'card').forEach((method) => {
       const existing = methodsByType.get(method.type);
       if (!existing || method.isDefault) {
         methodsByType.set(method.type, {
