@@ -728,6 +728,7 @@ function mapNotificationRow(row: NotificationRow) {
 function mapPackageRow(row: PackageRow) {
   return {
     id: String(row.package_id ?? row.id ?? ''),
+    sender_id: row.sender_id ?? null,
     package_id: String(row.package_id ?? row.id ?? ''),
     tracking_code: String(row.tracking_number ?? row.package_code ?? ''),
     tracking_number: String(row.tracking_number ?? row.package_code ?? ''),
