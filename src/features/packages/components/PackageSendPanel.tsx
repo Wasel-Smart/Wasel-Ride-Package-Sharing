@@ -61,14 +61,18 @@ export function PackageSendPanel({
   const recipientWhatsAppUrl = trackedPackage
     ? buildPreferredWhatsAppUrl({
         phone: trackedPackage.recipientPhone,
-        message: `Hi ${trackedPackage.recipientName || 'there'}, your Wasel package ${trackedPackage.trackingId} is active from ${trackedPackage.from} to ${trackedPackage.to}.`,
+        message: trackedPackage.deliveryCode
+          ? `Hi ${trackedPackage.recipientName || 'there'}, your Wasel package ${trackedPackage.trackingId} is on the way from ${trackedPackage.from} to ${trackedPackage.to}. Your delivery verification code is ${trackedPackage.deliveryCode}.`
+          : `Hi ${trackedPackage.recipientName || 'there'}, your Wasel package ${trackedPackage.trackingId} is active from ${trackedPackage.from} to ${trackedPackage.to}.`,
         fallbackMessage: `Hi Wasel, I need WhatsApp support for package ${trackedPackage.trackingId}.`,
       })
     : '';
   const holderWhatsAppUrl = trackedPackage
     ? buildPreferredWhatsAppUrl({
         phone: trackedPackage.matchedDriverPhone,
-        message: `Hi ${trackedPackage.matchedDriver || 'captain'}, I am coordinating package ${trackedPackage.trackingId} on the ${trackedPackage.from} to ${trackedPackage.to} route.`,
+        message: trackedPackage.handoffCode
+          ? `Hi ${trackedPackage.matchedDriver || 'captain'}, please collect Wasel package ${trackedPackage.trackingId} on the ${trackedPackage.from} to ${trackedPackage.to} route. Pickup verification code: ${trackedPackage.handoffCode}.`
+          : `Hi ${trackedPackage.matchedDriver || 'captain'}, I am coordinating package ${trackedPackage.trackingId} on the ${trackedPackage.from} to ${trackedPackage.to} route.`,
         fallbackMessage: `Hi Wasel, I need holder coordination for package ${trackedPackage.trackingId}.`,
       })
     : '';
