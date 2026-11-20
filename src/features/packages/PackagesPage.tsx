@@ -29,6 +29,7 @@ import {
   updatePackageVerification,
   uploadPackageDeliveryEvidence,
   rotatePackageHandoffCodes,
+  openPackageDispute,
   type PackageRequest,
   type PostedRide,
 } from '../../services/journeyLogistics';
@@ -257,6 +258,18 @@ export function PackagesPage() {
       setTrackingMessage('New package handoff codes were generated. Share them only with the intended holder and receiver.');
     } catch (error) {
       setTrackingMessage(error instanceof Error ? error.message : 'Package codes could not be generated.');
+    }
+  };
+
+  const handleOpenDispute = async (reason: string) => {
+    if (!trackedPackage) return;
+    try {
+      const updated = await openPackageDispute(trackedPackage.trackingId, reason);
+      if (updated) setTrackedPackage(updated);
+      setTrackingMessage('A package dispute has been opened. Held escrow is frozen pending resolution.');
+      refreshPackageSnapshot();
+    } catch (error) {
+      setTrackingMessage(error instanceof Error ? error.message : 'The package dispute could not be opened.');
     }
   };
 
@@ -577,6 +590,7 @@ export function PackagesPage() {
               onVerificationAction={handleVerificationAction}
               onRotateCodes={handleRotateCodes}
               onPayPackage={handlePayPackage}
+              onOpenDispute={handleOpenDispute}
               onOpenSupport={handleOpenSupport}
               onOpenRecent={item => focusTrackingItem(item)}
             />
