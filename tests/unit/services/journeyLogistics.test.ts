@@ -266,18 +266,8 @@ describe('journeyLogistics', () => {
         },
       }))
       .mockResolvedValueOnce(response({
-        package: {
-          id: 'pkg-rotate',
-          tracking_code: 'WSL-PKG-ROTATE123',
-          from: 'Amman',
-          to: 'Aqaba',
-          status: 'matched',
-          trip_id: 'trip-rotate',
-          payment_status: 'unpaid',
-          handoffCode: '234567',
-          deliveryCode: '765432',
-          created_at: '2026-03-27T00:00:00Z',
-        },
+        handoffCode: '234567',
+        deliveryCode: '765432',
       }));
 
     const created = await createConnectedPackage({
