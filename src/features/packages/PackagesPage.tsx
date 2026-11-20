@@ -611,7 +611,7 @@ export function PackagesPage() {
               onPayPackage={handlePayPackage}
               onOpenDispute={handleOpenDispute}
               onRefundPackage={handleRefundPackage}
-              isSender={Boolean(user?.id && trackedPackage?.senderId === user.id)}
+              isSender={Boolean(user?.id && trackedPackage?.isSender === true)}
               onOpenSupport={handleOpenSupport}
               onOpenRecent={item => focusTrackingItem(item)}
             />
