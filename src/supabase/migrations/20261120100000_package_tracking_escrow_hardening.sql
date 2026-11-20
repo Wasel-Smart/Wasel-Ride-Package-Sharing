@@ -262,6 +262,74 @@ set public = false,
     file_size_limit = excluded.file_size_limit,
     allowed_mime_types = excluded.allowed_mime_types;
 
+-- Private-schema writes are exposed only through service-role RPCs because the
+-- private schema is intentionally not exposed through PostgREST.
+create or replace function public.app_store_package_handoff_secrets(
+  p_package_id uuid,
+  p_pickup_code_hash text,
+  p_delivery_code_hash text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, private, pg_temp
+as $
+begin
+  if auth.role() <> 'service_role' then
+    raise exception 'Service role required' using errcode = '42501';
+  end if;
+  if length(coalesce(p_pickup_code_hash, '')) <> 64
+    or length(coalesce(p_delivery_code_hash, '')) <> 64 then
+    raise exception 'Invalid package OTP hash' using errcode = '22023';
+  end if;
+
+  insert into private.package_handoff_secrets (
+    package_id, pickup_code_hash, delivery_code_hash, created_at, updated_at
+  ) values (
+    p_package_id, p_pickup_code_hash, p_delivery_code_hash,
+    timezone('utc', now()), timezone('utc', now())
+  );
+end;
+$;
+
+create or replace function public.app_rotate_package_handoff_secrets(
+  p_package_id uuid,
+  p_pickup_code_hash text,
+  p_delivery_code_hash text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, private, pg_temp
+as $
+begin
+  if auth.role() <> 'service_role' then
+    raise exception 'Service role required' using errcode = '42501';
+  end if;
+  if (p_pickup_code_hash is not null and length(p_pickup_code_hash) <> 64)
+    or length(coalesce(p_delivery_code_hash, '')) <> 64 then
+    raise exception 'Invalid package OTP hash' using errcode = '22023';
+  end if;
+
+  update private.package_handoff_secrets
+  set pickup_code_hash = coalesce(p_pickup_code_hash, pickup_code_hash),
+      delivery_code_hash = p_delivery_code_hash,
+      failed_attempts = 0,
+      locked_until = null,
+      updated_at = timezone('utc', now())
+  where package_id = p_package_id;
+
+  if not found then
+    raise exception 'Package handoff secrets not found' using errcode = 'P0002';
+  end if;
+end;
+$;
+
+revoke all on function public.app_store_package_handoff_secrets(uuid, text, text) from public, anon, authenticated;
+revoke all on function public.app_rotate_package_handoff_secrets(uuid, text, text) from public, anon, authenticated;
+grant execute on function public.app_store_package_handoff_secrets(uuid, text, text) to service_role;
+grant execute on function public.app_rotate_package_handoff_secrets(uuid, text, text) to service_role;
+
 create or replace function public.app_verify_package_pickup(
   p_package_id uuid,
   p_driver_user_id uuid,
@@ -433,7 +501,7 @@ grant execute on function public.app_verify_package_pickup(uuid, uuid, text) to 
 grant execute on function public.app_verify_package_delivery(uuid, uuid, text, text) to service_role;
 
 comment on table private.package_handoff_secrets is
-  'Private SHA-256 hashes for pickup and delivery OTPs; plaintext codes are never persisted.';
+  'Private HMAC-SHA-256 hashes for pickup and delivery OTPs; plaintext codes are never persisted.';
 comment on function public.open_package_dispute(uuid, text) is
   'Opens a participant dispute and freezes any held package escrow in the existing wallet ledger.';
 
