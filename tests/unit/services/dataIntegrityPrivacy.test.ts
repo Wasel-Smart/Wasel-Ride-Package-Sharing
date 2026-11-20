@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sanitizePayload } from '../../src/services/dataIntegrity';
+import { sanitizePayload } from '../../../src/services/dataIntegrity';
 
 describe('data-flow telemetry privacy', () => {
   it('redacts personal identifiers and credentials recursively', () => {
