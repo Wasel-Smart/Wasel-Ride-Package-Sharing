@@ -370,7 +370,7 @@ export const migrationCatalog = [
   {
     sequence: 40,
     path: 'src/supabase/migrations/20261120100000_package_tracking_escrow_hardening.sql',
-    description: 'Harden package custody and connect release conditions to the existing wallet escrow ledger',
+    description: 'Harden package OTP custody, automatic trip matching, and release conditions in the existing wallet escrow ledger',
     status: 'ready',
     phase: 'rollout',
     category: 'hardening',
