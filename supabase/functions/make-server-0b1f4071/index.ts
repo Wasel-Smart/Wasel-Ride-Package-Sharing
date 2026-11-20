@@ -2309,7 +2309,10 @@ async function handleUpdatePackageVerification(
       p_evidence_path: evidencePath,
     });
     if (error) throw new Error(error.message);
-    if (data !== true) return jsonResponse({ error: 'Delivery code is invalid or temporarily locked.' }, 400);
+    if (data !== true) {
+      await auth.admin.storage.from('package-evidence').remove([evidencePath]);
+      return jsonResponse({ error: 'Delivery code is invalid or temporarily locked.' }, 400);
+    }
   } else {
     return jsonResponse({ error: 'Unsupported package verification action.' }, 400);
   }
