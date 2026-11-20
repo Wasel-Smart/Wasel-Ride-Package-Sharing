@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { CheckCircle2, Search } from 'lucide-react';
 import { MapWrapper } from '../../../components/MapWrapper';
@@ -14,7 +15,8 @@ type PackageTrackPanelProps = {
   trackedStatusColor: string;
   recentPackages: PackageRequest[];
   onSearch: () => void;
-  onVerificationAction: (action: 'share_code' | 'confirm_pickup' | 'confirm_delivery') => void;
+  onVerificationAction: (action: 'share_code' | 'confirm_pickup' | 'confirm_delivery', code?: string, evidenceFile?: File) => void;
+  onRotateCodes: () => void;
   onOpenSupport: () => void;
   onOpenRecent: (item: PackageRequest) => void;
 };
@@ -29,9 +31,12 @@ export function PackageTrackPanel({
   recentPackages,
   onSearch,
   onVerificationAction,
+  onRotateCodes,
   onOpenSupport,
   onOpenRecent,
 }: PackageTrackPanelProps) {
+  const [verificationCode, setVerificationCode] = useState('');
+  const [deliveryEvidenceFile, setDeliveryEvidenceFile] = useState<File | undefined>();
   const holderWhatsAppUrl = trackedPackage
     ? buildPreferredWhatsAppUrl({
         phone: trackedPackage.matchedDriverPhone,
@@ -127,12 +132,22 @@ export function PackageTrackPanel({
             ))}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginBottom: 16 }}>
-            {[{ label: 'Handoff code', value: trackedPackage.handoffCode }, { label: 'Recipient handoff', value: trackedPackage.recipientName || 'Name pending' }].map((item) => (
+            {[
+              { label: 'Pickup code', value: trackedPackage.handoffCode || 'Not available' },
+              { label: 'Delivery code', value: trackedPackage.deliveryCode || 'Not available' },
+              { label: 'Recipient', value: trackedPackage.recipientName || 'Name pending' },
+            ].map((item) => (
               <div key={item.label} style={{ borderRadius: r(12), border: `1px solid ${DS.border}`, padding: '12px 13px', background: DS.card3 }}>
                 <div style={{ color: DS.muted, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{item.label}</div>
                 <div style={{ color: DS.text, fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>{item.value}</div>
               </div>
             ))}
+          </div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 }}>
+            <button onClick={onRotateCodes} style={{ padding: '8px 12px', borderRadius: '99px', border: `1px solid ${DS.border}`, background: DS.card3, color: DS.gold, cursor: 'pointer', fontFamily: DS.F, fontWeight: 700 }}>
+              Generate / rotate handoff codes
+            </button>
+            <span style={{ color: DS.muted, fontSize: '0.72rem' }}>Codes are shown once and are not saved in browser storage.</span>
           </div>
           <div
             className="pkg-track-meta-grid"
@@ -150,16 +165,37 @@ export function PackageTrackPanel({
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 18 }}>
-            <button onClick={() => onVerificationAction('share_code')} disabled={Boolean(trackedPackage.verification.senderCodeSharedAt)} style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: trackedPackage.verification.senderCodeSharedAt ? 'rgba(34,197,94,0.16)' : DS.gradG, color: '#fff', cursor: trackedPackage.verification.senderCodeSharedAt ? 'default' : 'pointer', fontFamily: DS.F, fontWeight: 700, opacity: trackedPackage.verification.senderCodeSharedAt ? 0.8 : 1 }}>
-              {trackedPackage.verification.senderCodeSharedAt ? 'OTP shared' : 'Share OTP handoff'}
-            </button>
-            <button onClick={() => onVerificationAction('confirm_pickup')} disabled={!trackedPackage.verification.senderCodeSharedAt || Boolean(trackedPackage.verification.riderPickupConfirmedAt)} style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: trackedPackage.verification.riderPickupConfirmedAt ? 'rgba(34,197,94,0.16)' : DS.gradC, color: '#fff', cursor: !trackedPackage.verification.senderCodeSharedAt || trackedPackage.verification.riderPickupConfirmedAt ? 'default' : 'pointer', fontFamily: DS.F, fontWeight: 700, opacity: !trackedPackage.verification.senderCodeSharedAt || trackedPackage.verification.riderPickupConfirmedAt ? 0.75 : 1 }}>
-              {trackedPackage.verification.riderPickupConfirmedAt ? 'Pickup confirmed' : 'Confirm rider pickup'}
-            </button>
-            <button onClick={() => onVerificationAction('confirm_delivery')} disabled={!trackedPackage.verification.riderPickupConfirmedAt || Boolean(trackedPackage.verification.receiverDeliveryConfirmedAt)} style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: trackedPackage.verification.receiverDeliveryConfirmedAt ? 'rgba(34,197,94,0.16)' : DS.gradG, color: '#fff', cursor: !trackedPackage.verification.riderPickupConfirmedAt || trackedPackage.verification.receiverDeliveryConfirmedAt ? 'default' : 'pointer', fontFamily: DS.F, fontWeight: 700, opacity: !trackedPackage.verification.riderPickupConfirmedAt || trackedPackage.verification.receiverDeliveryConfirmedAt ? 0.75 : 1 }}>
-              {trackedPackage.verification.receiverDeliveryConfirmedAt ? 'Delivery confirmed' : 'Confirm receiver handoff'}
-            </button>
+          <div style={{ display: 'grid', gap: 10, marginBottom: 18 }}>
+            <input
+              aria-label="Six-digit package handoff code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              value={verificationCode}
+              onChange={(event) => setVerificationCode(event.target.value.replace(/\\D/g, '').slice(0, 6))}
+              placeholder="Enter 6-digit pickup or delivery code"
+              style={{ width: '100%', boxSizing: 'border-box', padding: '12px 14px', borderRadius: r(10), border: `1px solid ${DS.border}`, background: DS.card3, color: DS.text, fontFamily: DS.F }}
+            />
+            {trackedPackage.verification.riderPickupConfirmedAt && !trackedPackage.verification.receiverDeliveryConfirmedAt && (
+              <input
+                aria-label="Private delivery evidence image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={(event) => setDeliveryEvidenceFile(event.target.files?.[0])}
+                style={{ color: DS.sub, fontSize: '0.78rem' }}
+              />
+            )}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              <button onClick={() => onVerificationAction('share_code')} disabled={Boolean(trackedPackage.verification.senderCodeSharedAt)} style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: trackedPackage.verification.senderCodeSharedAt ? 'rgba(34,197,94,0.16)' : DS.gradG, color: '#fff', cursor: trackedPackage.verification.senderCodeSharedAt ? 'default' : 'pointer', fontFamily: DS.F, fontWeight: 700, opacity: trackedPackage.verification.senderCodeSharedAt ? 0.8 : 1 }}>
+                {trackedPackage.verification.senderCodeSharedAt ? 'OTP shared' : 'Share OTP handoff'}
+              </button>
+              <button onClick={() => onVerificationAction('confirm_pickup', verificationCode)} disabled={!verificationCode || !trackedPackage.verification.senderCodeSharedAt || Boolean(trackedPackage.verification.riderPickupConfirmedAt)} style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: trackedPackage.verification.riderPickupConfirmedAt ? 'rgba(34,197,94,0.16)' : DS.gradC, color: '#fff', cursor: !verificationCode || !trackedPackage.verification.senderCodeSharedAt || trackedPackage.verification.riderPickupConfirmedAt ? 'default' : 'pointer', fontFamily: DS.F, fontWeight: 700, opacity: !verificationCode || !trackedPackage.verification.senderCodeSharedAt || trackedPackage.verification.riderPickupConfirmedAt ? 0.75 : 1 }}>
+                {trackedPackage.verification.riderPickupConfirmedAt ? 'Pickup confirmed' : 'Verify pickup'}
+              </button>
+              <button onClick={() => onVerificationAction('confirm_delivery', verificationCode, deliveryEvidenceFile)} disabled={!verificationCode || !deliveryEvidenceFile || !trackedPackage.verification.riderPickupConfirmedAt || Boolean(trackedPackage.verification.receiverDeliveryConfirmedAt)} style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: trackedPackage.verification.receiverDeliveryConfirmedAt ? 'rgba(34,197,94,0.16)' : DS.gradG, color: '#fff', cursor: !verificationCode || !deliveryEvidenceFile || !trackedPackage.verification.riderPickupConfirmedAt || trackedPackage.verification.receiverDeliveryConfirmedAt ? 'default' : 'pointer', fontFamily: DS.F, fontWeight: 700, opacity: !verificationCode || !deliveryEvidenceFile || !trackedPackage.verification.riderPickupConfirmedAt || trackedPackage.verification.receiverDeliveryConfirmedAt ? 0.75 : 1 }}>
+                {trackedPackage.verification.receiverDeliveryConfirmedAt ? 'Delivery confirmed' : 'Verify delivery'}
+              </button>
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
             <button onClick={onOpenSupport} style={{ padding: '10px 16px', borderRadius: '99px', border: `1px solid ${DS.border}`, background: DS.card2, color: DS.text, cursor: 'pointer', fontFamily: DS.F, fontWeight: 700 }}>
