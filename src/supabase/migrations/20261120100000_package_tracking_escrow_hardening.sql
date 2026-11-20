@@ -58,7 +58,7 @@ begin
     select package_id, trip_id
     from public.packages
     where package_status = 'assigned'
-      and payment_status in ('unpaid', 'pending')
+      and payment_status in ('unpaid', 'failed')
       and assignment_expires_at is not null
       and assignment_expires_at <= timezone('utc', now())
       and pickup_verified_at is null
@@ -68,6 +68,7 @@ begin
     set trip_id = null,
         package_status = 'created',
         status = 'searching',
+        payment_status = 'unpaid',
         assignment_expires_at = null,
         updated_at = timezone('utc', now())
     where package_id = v_package.package_id;
