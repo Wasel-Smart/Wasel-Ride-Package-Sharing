@@ -153,7 +153,8 @@ begin
       and d.user_id = v_actor
   ) into v_is_driver;
 
-  if v_actor not in (v_package.sender_id, coalesce(v_package.receiver_id, v_actor))
+  if v_actor <> v_package.sender_id
+    and (v_package.receiver_id is null or v_actor <> v_package.receiver_id)
     and not v_is_driver
     and not public.is_admin()
   then
