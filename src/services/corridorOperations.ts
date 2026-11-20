@@ -275,7 +275,8 @@ export async function buildBusinessAccountSnapshot(
     });
   }
   const linkedTracking = packageTrackingService.getPackage(tracking.id) ?? tracking;
-  // Payment and escrow stay unavailable until a server-verified provider flow is deployed.\n  const escrow: PackagePaymentEscrow | null = null;
+  // Payment and escrow stay unavailable until a server-verified provider flow is deployed.
+  const escrow: PackagePaymentEscrow | null = null;
   const liquidityHealth = calculateLiquidityHealth(18, 72, 54) as LiquidityMetrics & {
     routeId: string;
     averagePriceJOD: number;
