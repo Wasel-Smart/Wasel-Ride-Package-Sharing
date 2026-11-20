@@ -284,6 +284,7 @@ export function PackagesPage() {
       const updated = await refundPackageEscrow(trackedPackage.trackingId);
       if (updated) setTrackedPackage(updated);
       setTrackingMessage('Your package refund has been recorded.');
+      refreshPackageSnapshot();
     } catch (error) {
       setTrackingMessage(error instanceof Error ? error.message : 'Package refund could not be processed.');
     } finally {
