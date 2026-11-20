@@ -1,80 +1,12 @@
 // ─── Package & notification operations ───────────────────────────────────────
 
-import { getDb, packageSizeFromWeight } from './helpers';
+import { getDb } from './helpers';
 import { buildUserContext } from './userContext';
 import type {
   RawCommunicationDelivery,
   RawCommunicationPreferences,
   RawNotification,
-  RawPackage,
 } from './types';
-
-// ── Packages ──────────────────────────────────────────────────────────────────
-
-export async function createDirectPackage(input: {
-  userId: string;
-  trackingNumber: string;
-  from: string;
-  to: string;
-  weightKg: number;
-  description: string;
-  recipientName?: string;
-  recipientPhone?: string;
-}) {
-  const sender = await buildUserContext(input.userId);
-  const db = getDb();
-  const { data, error } = await db
-    .from('packages')
-    .insert({
-      tracking_number: input.trackingNumber,
-      package_code: input.trackingNumber,
-      qr_code: input.trackingNumber,
-      sender_id: sender.user.id,
-      receiver_name: input.recipientName || 'Recipient',
-      receiver_phone: input.recipientPhone || '',
-      origin_name: input.from,
-      origin_location: input.from,
-      destination_name: input.to,
-      destination_location: input.to,
-      size: packageSizeFromWeight(input.weightKg),
-      weight_kg: input.weightKg,
-      description: input.description,
-      fee_amount: 5,
-      delivery_fee: 5,
-      package_status: 'created',
-      status: 'requested',
-    })
-    .select('*')
-    .single();
-  if (error) {throw error;}
-  return data as RawPackage;
-}
-
-export async function getDirectPackageByTrackingId(trackingNumber: string) {
-  const db = getDb();
-  const { data, error } = await db
-    .from('packages')
-    .select('*')
-    .or(`tracking_number.eq.${trackingNumber},package_code.eq.${trackingNumber}`)
-    .maybeSingle();
-  if (error) {throw error;}
-  return (data as RawPackage | null) ?? null;
-}
-
-export async function updateDirectPackageStatus(
-  trackingNumber: string,
-  status: 'matched' | 'in_transit' | 'delivered',
-) {
-  const db = getDb();
-  const { data, error } = await db
-    .from('packages')
-    .update({ status, package_status: status })
-    .or(`tracking_number.eq.${trackingNumber},package_code.eq.${trackingNumber}`)
-    .select('*')
-    .maybeSingle();
-  if (error) {throw error;}
-  return (data as RawPackage | null) ?? null;
-}
 
 // ── Notifications ─────────────────────────────────────────────────────────────
 
