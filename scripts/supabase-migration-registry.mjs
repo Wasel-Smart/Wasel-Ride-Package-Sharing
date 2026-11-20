@@ -358,6 +358,15 @@ export const migrationCatalog = [
     category: 'runtime-contract',
     naming: 'canonical',
   },
+  {
+    sequence: 39,
+    path: 'src/supabase/migrations/20261120090000_enforce_no_self_booking.sql',
+    description: 'Replace the invalid subquery CHECK with race-safe booking ownership enforcement',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'hardening',
+    naming: 'canonical',
+  },
 ];
 
 export const operationalSeedFiles = [
