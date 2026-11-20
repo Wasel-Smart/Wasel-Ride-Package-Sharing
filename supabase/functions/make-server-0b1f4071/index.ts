@@ -1867,17 +1867,11 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
     return jsonResponse({ error: error.message }, 400);
   }
 
-  const { error: secretError } = await auth.admin
-    .schema('private')
-    .from('package_handoff_secrets')
-    .insert({
-      package_id: packageId,
-      pickup_code_hash: await sha256Hex(pickupCode),
-      delivery_code_hash: await sha256Hex(deliveryCode),
-      failed_attempts: 0,
-      created_at: now,
-      updated_at: now,
-    });
+  const { error: secretError } = await auth.admin.rpc('app_store_package_handoff_secrets', {
+    p_package_id: packageId,
+    p_pickup_code_hash: await sha256Hex(pickupCode),
+    p_delivery_code_hash: await sha256Hex(deliveryCode),
+  });
 
   if (secretError) {
     await auth.admin.from('packages').delete().eq('package_id', packageId);
@@ -2035,17 +2029,11 @@ async function handleRotatePackageCodes(auth: AuthenticatedRequest, trackingId: 
 
   const pickupCode = packageRow.pickup_verified_at ? null : generatePackageOtp();
   const deliveryCode = generatePackageOtp();
-  const { error: secretError } = await auth.admin
-    .schema('private')
-    .from('package_handoff_secrets')
-    .update({
-      ...(pickupCode ? { pickup_code_hash: await sha256Hex(pickupCode) } : {}),
-      delivery_code_hash: await sha256Hex(deliveryCode),
-      failed_attempts: 0,
-      locked_until: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('package_id', String(packageRow.package_id));
+  const { error: secretError } = await auth.admin.rpc('app_rotate_package_handoff_secrets', {
+    p_package_id: String(packageRow.package_id),
+    p_pickup_code_hash: pickupCode ? await sha256Hex(pickupCode) : null,
+    p_delivery_code_hash: await sha256Hex(deliveryCode),
+  });
   if (secretError) throw new Error(secretError.message);
 
   return jsonResponse({ handoffCode: pickupCode, deliveryCode });
