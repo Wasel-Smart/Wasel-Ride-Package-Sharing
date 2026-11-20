@@ -1780,6 +1780,9 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
   let reservedSlots: number | null = null;
 
   if (preferredRideId) {
+    const { error: expiryError } = await auth.admin.rpc('app_expire_unpaid_package_assignments');
+    if (expiryError) return jsonResponse({ error: expiryError.message }, 500);
+
     const { data: trip, error: tripError } = await auth.admin
       .from('trips')
       .select('trip_id, driver_id, origin_city, destination_city, trip_status, allow_packages, package_slots_remaining')
@@ -1832,6 +1835,7 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
       qr_code: tracking,
       sender_id: auth.canonicalUser.id,
       trip_id: assignedTripId,
+      assignment_expires_at: assignedTripId ? new Date(Date.now() + 15 * 60_000).toISOString() : null,
       receiver_name: normalizeString(body.recipientName) || 'Recipient',
       receiver_phone: normalizeString(body.recipientPhone) || '',
       origin_name: from,
