@@ -329,10 +329,30 @@ serve(async (req) => {
       console.error('Phone verification database confirmation failed', {
         code: confirmationError.code,
       });
-      return jsonResponse({ error: 'Verification succeeded but account update failed. Please contact support.' }, 500, headers);
+      return jsonResponse({ error: 'Unable to save phone verification. Please contact support.' }, 500, headers);
     }
 
-    return jsonResponse({ success: true, message: 'Phone verified successfully' }, 200, headers);
+    // Mirror the canonical private verification record into protected Auth app metadata.
+    // This is performed through the supported Auth Admin API, never by updating auth.users SQL.
+    const adminClient = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { error: metadataError } = await adminClient.auth.admin.updateUserById(user.id, {
+      app_metadata: {
+        ...(user.app_metadata ?? {}),
+        phone_number: phoneNumber,
+        phone_verified: true,
+      },
+    });
+    if (metadataError) {
+      console.error('Phone verification Auth metadata sync failed', {
+        name: metadataError.name,
+        status: metadataError.status,
+      });
+      return jsonResponse({ error: 'Phone verified but account status sync is pending. Please retry or contact support.' }, 503, headers);
+    }
+
+    return jsonResponse({ success: true, phone_verified: true, message: 'Phone verified successfully' }, 200, headers);
   } catch (error) {
     console.error('Phone verification request failed', {
       name: error instanceof Error ? error.name : 'UnknownError',
