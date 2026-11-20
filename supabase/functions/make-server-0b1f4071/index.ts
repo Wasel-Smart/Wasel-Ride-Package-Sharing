@@ -249,6 +249,10 @@ function normalizeBookingStatus(value: unknown): string {
   }
 }
 
+function hasPackageOtpPepper(): boolean {
+  return (Deno.env.get('PACKAGE_OTP_PEPPER') ?? '').length >= 32;
+}
+
 function generatePackageOtp(): string {
   const value = new Uint32Array(1);
   crypto.getRandomValues(value);
@@ -1769,6 +1773,10 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
     return jsonResponse({ error: 'Valid, different origin and destination values are required.' }, 400);
   }
 
+  if (!hasPackageOtpPepper()) {
+    return jsonResponse({ error: 'Secure package handoff is not configured. Contact support.' }, 503);
+  }
+
   const packageId = crypto.randomUUID();
   const tracking = `WSL-PKG-${crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
   const pickupCode = generatePackageOtp();
@@ -2012,6 +2020,9 @@ async function loadPackageForAssignedDriver(
 }
 
 async function handleRotatePackageCodes(auth: AuthenticatedRequest, trackingId: string) {
+  if (!hasPackageOtpPepper()) {
+    return jsonResponse({ error: 'Secure package handoff is not configured. Contact support.' }, 503);
+  }
   const tracking = normalizeTrackingNumber(trackingId);
   const { data: packageRow, error } = await auth.admin
     .from('packages')
@@ -2107,6 +2118,10 @@ async function handleUpdatePackageVerification(
   walletHandlers: ReturnType<typeof createWalletHandlers>,
 ) {
   const action = normalizeString(body.action);
+
+  if (action !== 'share_code' && !hasPackageOtpPepper()) {
+    return jsonResponse({ error: 'Secure package handoff is not configured. Contact support.' }, 503);
+  }
 
   if (action === 'share_code') {
     const tracking = normalizeTrackingNumber(trackingId);
