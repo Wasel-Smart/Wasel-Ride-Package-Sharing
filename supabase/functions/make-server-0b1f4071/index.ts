@@ -1266,6 +1266,11 @@ async function handleCreateTrip(auth: AuthenticatedRequest, body: Record<string,
     return jsonResponse({ error: error.message }, 400);
   }
 
+  const { error: matchError } = await auth.admin.rpc('app_match_waiting_packages_to_trip', {
+    p_trip_id: String(data.trip_id),
+  });
+  if (matchError) console.error('Waiting package match failed after trip creation:', matchError.message);
+
   const driverSummaries = await fetchDriverSummaries(auth.admin, [driver.driver_id]);
   return jsonResponse(
     mapTripRow(data as TripRow, driverSummaries.get(driver.driver_id) ?? null),
