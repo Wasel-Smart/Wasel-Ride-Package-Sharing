@@ -1612,6 +1612,14 @@ async function refundEscrow(
     throw new Error('Only the original payer can refund this escrow.');
   }
   if (String(escrow.escrow_state) === 'refunded') {
+    if (String(escrow.escrow_type) === 'package') {
+      const { error: repairError } = await admin
+        .from('packages')
+        .update({ payment_status: 'refunded', updated_at: new Date().toISOString() })
+        .eq('package_id', String(escrow.reference_id))
+        .in('package_status', ['disputed', 'cancelled']);
+      if (repairError) throw new Error(repairError.message);
+    }
     return String(escrow.refund_transaction_id ?? '');
   }
   if (String(escrow.escrow_state) !== 'held' && String(escrow.escrow_state) !== 'cancelled') {
