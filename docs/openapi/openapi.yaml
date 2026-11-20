@@ -19,6 +19,8 @@ tags:
     description: communications-platform
   - name: analytics
     description: insights-platform
+  - name: packages
+    description: mobility-platform
 components:
   securitySchemes:
     bearerAuth:
@@ -189,6 +191,126 @@ paths:
         - notifications
       operationId: markNotificationAsRead
       summary: Mark a notification as read.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/packages:
+    post:
+      tags:
+        - packages
+      operationId: createPackage
+      summary: Create a package request and optionally reserve an eligible trip.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/packages/track/{trackingId}:
+    get:
+      tags:
+        - packages
+      operationId: trackPackage
+      summary: Read package tracking for an authenticated participant.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/packages/track/{trackingId}/dispute:
+    post:
+      tags:
+        - packages
+      operationId: openPackageDispute
+      summary: Open a participant dispute and freeze held escrow.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/packages/track/{trackingId}/evidence-upload:
+    post:
+      tags:
+        - packages
+      operationId: createPackageEvidenceUpload
+      summary: Create a signed upload URL for private delivery evidence.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/packages/track/{trackingId}/rotate-codes:
+    post:
+      tags:
+        - packages
+      operationId: rotatePackageHandoffCodes
+      summary: Rotate pickup and delivery codes as the package sender.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
+  /v1/packages/track/{trackingId}/verification:
+    patch:
+      tags:
+        - packages
+      operationId: verifyPackageCustody
+      summary: Verify pickup or delivery with a one-time handoff code.
         security:
           - bearerAuth: []
           - requestSignature: []
