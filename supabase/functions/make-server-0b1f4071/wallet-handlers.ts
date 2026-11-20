@@ -2596,7 +2596,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       .maybeSingle();
 
     if (error) throw new Error(error.message);
-    if (!escrow) return { released: false, reason: 'not_funded' };
+    if (!escrow) throw new Error('Package is marked as escrow-funded but no wallet escrow record exists.');
     if (String(escrow.beneficiary_user_id) !== driverUserId) {
       throw new Error('Only the assigned driver can receive package escrow.');
     }
