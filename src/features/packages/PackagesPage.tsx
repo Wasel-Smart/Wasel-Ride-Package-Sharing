@@ -197,6 +197,9 @@ export function PackagesPage() {
           : 'No package was found for that tracking ID yet.',
       );
       refreshPackageSnapshot();
+    } catch (error) {
+      setTrackedPackage(null);
+      setTrackingMessage(error instanceof Error ? error.message : 'Package tracking could not be loaded.');
     } finally {
       setBusyState('idle');
     }
