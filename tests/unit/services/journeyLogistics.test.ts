@@ -33,6 +33,8 @@ import {
   getConnectedPackages,
   getConnectedRides,
   getPackageByTrackingId,
+  openPackageDispute,
+  rotatePackageHandoffCodes,
   updatePackageVerification,
 } from '../../../src/services/journeyLogistics';
 
@@ -244,6 +246,95 @@ describe('journeyLogistics', () => {
       action: 'confirm_delivery',
       code: '654321',
       evidencePath: 'pkg-verify/delivery.jpg',
+    });
+  });
+
+  it('rotates one-time handoff codes through the authenticated server', async () => {
+    mockFetchWithRetry
+      .mockResolvedValueOnce(response({
+        package: {
+          id: 'pkg-rotate',
+          tracking_code: 'WSL-PKG-ROTATE123',
+          from: 'Amman',
+          to: 'Aqaba',
+          status: 'matched',
+          trip_id: 'trip-rotate',
+          payment_status: 'unpaid',
+          handoffCode: '123456',
+          deliveryCode: '654321',
+          created_at: '2026-03-27T00:00:00Z',
+        },
+      }))
+      .mockResolvedValueOnce(response({
+        package: {
+          id: 'pkg-rotate',
+          tracking_code: 'WSL-PKG-ROTATE123',
+          from: 'Amman',
+          to: 'Aqaba',
+          status: 'matched',
+          trip_id: 'trip-rotate',
+          payment_status: 'unpaid',
+          handoffCode: '234567',
+          deliveryCode: '765432',
+          created_at: '2026-03-27T00:00:00Z',
+        },
+      }));
+
+    const created = await createConnectedPackage({
+      from: 'Amman',
+      to: 'Aqaba',
+      weight: '1 kg',
+      note: 'Small parcel',
+    });
+    const codes = await rotatePackageHandoffCodes(created.trackingId);
+
+    expect(codes).toEqual({ handoffCode: '234567', deliveryCode: '765432' });
+    expect(mockFetchWithRetry.mock.calls[1][1].method).toBe('POST');
+    expect(mockFetchWithRetry.mock.calls[1][0]).toContain('/rotate-codes');
+  });
+
+  it('opens disputes through the server and records the frozen state', async () => {
+    mockFetchWithRetry
+      .mockResolvedValueOnce(response({
+        package: {
+          id: 'pkg-dispute',
+          tracking_code: 'WSL-PKG-DISPUTE12',
+          from: 'Amman',
+          to: 'Aqaba',
+          status: 'matched',
+          trip_id: 'trip-dispute',
+          payment_status: 'held',
+          handoffCode: '123456',
+          deliveryCode: '654321',
+          created_at: '2026-03-27T00:00:00Z',
+        },
+      }))
+      .mockResolvedValueOnce(response({
+        package: {
+          id: 'pkg-dispute',
+          tracking_code: 'WSL-PKG-DISPUTE12',
+          from: 'Amman',
+          to: 'Aqaba',
+          status: 'disputed',
+          trip_id: 'trip-dispute',
+          payment_status: 'disputed',
+          created_at: '2026-03-27T00:00:00Z',
+        },
+      }));
+
+    const created = await createConnectedPackage({
+      from: 'Amman',
+      to: 'Aqaba',
+      weight: '1 kg',
+      note: 'Fragile item',
+    });
+    const updated = await openPackageDispute(created.trackingId, 'Package arrived damaged');
+
+    expect(updated?.status).toBe('disputed');
+    expect(updated?.paymentStatus).toBe('disputed');
+    expect(mockFetchWithRetry.mock.calls[1][1].method).toBe('POST');
+    expect(JSON.parse(mockFetchWithRetry.mock.calls[1][1].body)).toEqual({
+      reason: 'Package arrived damaged',
     });
   });
 
