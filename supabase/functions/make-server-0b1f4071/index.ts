@@ -2034,6 +2034,37 @@ async function handleRotatePackageCodes(auth: AuthenticatedRequest, trackingId: 
   return jsonResponse({ handoffCode: pickupCode, deliveryCode });
 }
 
+async function handleOpenPackageDispute(
+  request: Request,
+  auth: AuthenticatedRequest,
+  trackingId: string,
+  body: Record<string, unknown>,
+) {
+  const tracking = normalizeTrackingNumber(trackingId);
+  const { data: packageRow, error } = await auth.admin
+    .from('packages')
+    .select('package_id')
+    .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!packageRow) return jsonResponse({ error: 'Package not found.' }, 404);
+
+  const userClient = createUserScopedClient(request);
+  const { error: disputeError } = await userClient.rpc('open_package_dispute', {
+    p_package_id: String(packageRow.package_id),
+    p_reason: normalizeString(body.reason) ?? 'Package dispute opened by participant.',
+  });
+  if (disputeError) return jsonResponse({ error: disputeError.message }, 400);
+
+  const { data: updated, error: updatedError } = await auth.admin
+    .from('packages')
+    .select('*')
+    .eq('package_id', String(packageRow.package_id))
+    .single();
+  if (updatedError) throw new Error(updatedError.message);
+  return jsonResponse({ package: mapPackageRow(updated as PackageRow) });
+}
+
 async function handleCreatePackageEvidenceUpload(
   auth: AuthenticatedRequest,
   trackingId: string,
@@ -2685,6 +2716,16 @@ serve(async (req) => {
       return handleCreatePackageEvidenceUpload(
         auth,
         decodeURIComponent(packageEvidenceMatch[1]),
+        await readJsonBody(req),
+      );
+    }
+
+    const packageDisputeMatch = path.match(/^\/packages\/track\/([^/]+)\/dispute$/);
+    if (packageDisputeMatch && req.method === 'POST') {
+      return handleOpenPackageDispute(
+        req,
+        auth,
+        decodeURIComponent(packageDisputeMatch[1]),
         await readJsonBody(req),
       );
     }
