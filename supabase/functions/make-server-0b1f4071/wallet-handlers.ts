@@ -2857,6 +2857,33 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     return refundEscrow(admin, String(escrow.escrow_account_id), actorUserId);
   }
 
+  async function handleReconcileExpiredPaymentIntents() {
+    const now = new Date().toISOString();
+    const { data: expiredIntents, error } = await admin
+      .from('wallet_payment_intents')
+      .select('*')
+      .in('status', ['requires_confirmation', 'requires_action', 'processing'])
+      .lte('expires_at', now)
+      .order('expires_at', { ascending: true })
+      .limit(100);
+
+    if (error) return runtime.json({ error: error.message }, 500);
+
+    let processed = 0;
+    let failed = 0;
+    for (const intent of expiredIntents ?? []) {
+      try {
+        await reconcilePaymentIntentStatus(admin, intent as Record<string, unknown>);
+        processed += 1;
+      } catch (reconcileError) {
+        failed += 1;
+        console.error('Expired payment reconciliation failed:', reconcileError);
+      }
+    }
+
+    return runtime.json({ processed, failed, checkedAt: now });
+  }
+
   async function handleRefundEscrow(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
@@ -2878,6 +2905,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     handleCreatePaymentIntent,
     handleConfirmPayment,
     handleGetPaymentStatus,
+    handleReconcileExpiredPaymentIntents,
     handlePaymentWebhook,
     handleWalletDeposit,
     handleWalletTransfer,
