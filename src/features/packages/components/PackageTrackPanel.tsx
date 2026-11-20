@@ -17,6 +17,7 @@ type PackageTrackPanelProps = {
   onSearch: () => void;
   onVerificationAction: (action: 'share_code' | 'confirm_pickup' | 'confirm_delivery', code?: string, evidenceFile?: File) => void;
   onRotateCodes: () => void;
+  onPayPackage: () => void;
   onOpenSupport: () => void;
   onOpenRecent: (item: PackageRequest) => void;
 };
@@ -32,6 +33,7 @@ export function PackageTrackPanel({
   onSearch,
   onVerificationAction,
   onRotateCodes,
+  onPayPackage,
   onOpenSupport,
   onOpenRecent,
 }: PackageTrackPanelProps) {
@@ -86,6 +88,17 @@ export function PackageTrackPanel({
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, gap: 12, flexWrap: 'wrap' }}>
             <span style={{ color: DS.text, fontWeight: 800 }}>Package {trackedPackage.trackingId}</span>
             <span style={{ ...pill(trackedStatusColor) }}>{trackedPackage.status.replace('_', ' ')}</span>
+          </div>
+          <div style={{ marginBottom: 14, padding: '12px 14px', borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card3 }}>
+            <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Payment protection</div>
+            <div style={{ color: trackedPackage.paymentStatus === 'held' ? DS.green : trackedPackage.paymentStatus === 'released' ? DS.cyan : DS.gold, fontWeight: 800, marginTop: 6 }}>
+              {trackedPackage.paymentStatus === 'held' ? 'Payment held in escrow' : trackedPackage.paymentStatus === 'released' ? 'Escrow released after verified delivery' : trackedPackage.paymentStatus === 'disputed' ? 'Payment frozen during dispute' : 'Payment not yet held'}
+            </div>
+            {trackedPackage.matchedRideId && !['held', 'released', 'disputed'].includes(String(trackedPackage.paymentStatus)) && (
+              <button onClick={onPayPackage} style={{ marginTop: 10, padding: '9px 14px', borderRadius: '99px', border: 'none', background: DS.gradG, color: '#fff', cursor: 'pointer', fontFamily: DS.F, fontWeight: 700 }}>
+                Pay 5 JOD into escrow
+              </button>
+            )}
           </div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', marginBottom: 16 }}>
             {trackedPackage.matchedDriver
