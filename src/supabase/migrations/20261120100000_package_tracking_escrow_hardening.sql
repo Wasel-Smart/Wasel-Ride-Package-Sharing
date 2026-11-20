@@ -154,6 +154,12 @@ begin
     or not coalesce(v_trip.allow_packages, false)
     or coalesce(v_trip.package_slots_remaining, 0) < 1
     or v_trip.departure_time < timezone('utc', now()) + interval '24 hours'
+    or not exists (
+      select 1
+      from public.drivers d
+      where d.driver_id = v_trip.driver_id
+        and d.driver_status in ('approved', 'online', 'offline', 'busy')
+    )
   then
     return 0;
   end if;
