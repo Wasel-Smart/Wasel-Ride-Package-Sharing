@@ -135,7 +135,7 @@ security definer
 set search_path = public, pg_temp
 as $$
 begin
-  if auth.role() = 'authenticated'
+  if auth.role() in ('anon', 'authenticated')
     and coalesce(current_setting('wasel.package_rpc', true), 'off') <> 'on' then
     if tg_op = 'INSERT' then
       raise exception 'Package creation must use the authenticated server API'
