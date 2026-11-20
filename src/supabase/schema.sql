@@ -564,7 +564,7 @@ CREATE INDEX idx_analytics_event ON analytics_events(event_name, created_at DESC
 -- Lock the trip row while checking ownership so concurrent updates cannot
 -- change the driver during the booking decision.
 CREATE OR REPLACE FUNCTION prevent_self_booking()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $wasel$
 DECLARE
   trip_driver_id UUID;
 BEGIN
@@ -582,7 +582,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$ LANGUAGE plpgsql;
+$wasel$ LANGUAGE plpgsql;
 
 CREATE TRIGGER prevent_self_booking
 BEFORE INSERT OR UPDATE OF trip_id, passenger_id ON bookings
