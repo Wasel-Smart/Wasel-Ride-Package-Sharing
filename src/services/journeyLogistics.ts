@@ -44,7 +44,7 @@ export interface PackageVerification {
 
 export interface PackageRequest {
   id: string;
-  senderId?: string;
+  isSender?: boolean;
   trackingId: string;
   handoffCode: string;
   deliveryCode?: string;
@@ -183,7 +183,7 @@ function normalizeServerRide(raw: Record<string, unknown>, fallback: PostedRide)
   return {
     ...fallback,
     id: String(raw.id ?? raw.package_id ?? fallback.id),
-    senderId: String(raw.senderId ?? raw.sender_id ?? fallback.senderId ?? '') || undefined,
+    isSender: Boolean(raw.isSender ?? raw.is_sender ?? fallback.isSender ?? false),
     from: String(raw.from_location ?? raw.from ?? fallback.from),
     to: String(raw.to_location ?? raw.to ?? fallback.to),
     date: String(raw.departure_date ?? raw.date ?? fallback.date),
