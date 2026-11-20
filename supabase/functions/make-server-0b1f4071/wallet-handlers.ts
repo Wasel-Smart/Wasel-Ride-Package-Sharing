@@ -1076,14 +1076,33 @@ async function createEscrowForIntent(
   if (existingEscrowError) throw new Error(existingEscrowError.message);
   if (existingEscrow) {
     if (String(existingEscrow.escrow_type) === 'package') {
-      const { error: repairPackageError } = await admin
+      const { data: packageState, error: packageStateError } = await admin
         .from('packages')
-        .update({ payment_status: 'held', updated_at: new Date().toISOString() })
+        .select('package_status, dispute_opened_at')
         .eq('package_id', String(existingEscrow.reference_id))
-        .eq('sender_id', payerUserId)
-        .eq('package_status', 'assigned')
-        .in('payment_status', ['unpaid', 'pending', 'held']);
-      if (repairPackageError) throw new Error(repairPackageError.message);
+        .maybeSingle();
+      if (packageStateError) throw new Error(packageStateError.message);
+
+      if (
+        packageState?.dispute_opened_at ||
+        ['disputed', 'cancelled'].includes(String(packageState?.package_status))
+      ) {
+        const { error: freezeError } = await admin
+          .from('escrow_accounts')
+          .update({ escrow_state: 'cancelled', updated_at: new Date().toISOString() })
+          .eq('escrow_account_id', String(existingEscrow.escrow_account_id))
+          .eq('escrow_state', 'held');
+        if (freezeError) throw new Error(freezeError.message);
+      } else {
+        const { error: repairPackageError } = await admin
+          .from('packages')
+          .update({ payment_status: 'held', assignment_expires_at: null, updated_at: new Date().toISOString() })
+          .eq('package_id', String(existingEscrow.reference_id))
+          .eq('sender_id', payerUserId)
+          .eq('package_status', 'assigned')
+          .in('payment_status', ['unpaid', 'pending', 'held']);
+        if (repairPackageError) throw new Error(repairPackageError.message);
+      }
     }
     return { escrow: existingEscrow, transactionId: normalizeString(existingEscrow.hold_transaction_id) };
   }
@@ -1207,14 +1226,54 @@ async function createEscrowForIntent(
 
   if (escrowType === 'package') {
     const packageId = String(intent.reference_id);
-    const { error: packageUpdateError } = await admin
+    const { data: packageUpdated, error: packageUpdateError } = await admin
       .from('packages')
       .update({ payment_status: 'held', assignment_expires_at: null, updated_at: now })
       .eq('package_id', packageId)
       .eq('sender_id', payerUserId)
       .eq('package_status', 'assigned')
-      .in('payment_status', ['unpaid', 'pending']);
-    if (packageUpdateError) throw new Error(packageUpdateError.message);
+      .in('payment_status', ['unpaid', 'pending'])
+      .select('package_id')
+      .maybeSingle();
+
+    if (packageUpdateError || !packageUpdated) {
+      const { data: packageState, error: packageStateError } = await admin
+        .from('packages')
+        .select('package_status, dispute_opened_at')
+        .eq('package_id', packageId)
+        .maybeSingle();
+      if (packageStateError) throw new Error(packageStateError.message);
+
+      const isDisputed = Boolean(packageState?.dispute_opened_at)
+        || String(packageState?.package_status) === 'disputed';
+      const { error: freezeError } = await admin
+        .from('escrow_accounts')
+        .update({ escrow_state: 'cancelled', updated_at: now })
+        .eq('escrow_account_id', String(escrow.escrow_account_id))
+        .eq('escrow_state', 'held');
+      if (freezeError) throw new Error(freezeError.message);
+
+      if (packageState && !['delivered', 'disputed', 'cancelled'].includes(String(packageState.package_status))) {
+        await admin.from('packages').update({
+          package_status: 'cancelled',
+          status: 'cancelled',
+          payment_status: 'failed',
+          assignment_expires_at: null,
+          updated_at: now,
+        }).eq('package_id', packageId);
+      } else if (isDisputed) {
+        await admin.from('packages').update({
+          payment_status: 'disputed',
+          assignment_expires_at: null,
+          updated_at: now,
+        }).eq('package_id', packageId);
+      }
+
+      return {
+        escrow: { ...escrow, escrow_state: 'cancelled' },
+        transactionId,
+      };
+    }
 
     const { error: eventError } = await admin
       .from('package_events')
