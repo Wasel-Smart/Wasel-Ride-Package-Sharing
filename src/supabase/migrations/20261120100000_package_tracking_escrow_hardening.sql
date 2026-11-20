@@ -102,15 +102,8 @@ begin
   if auth.role() = 'authenticated'
     and coalesce(current_setting('wasel.package_rpc', true), 'off') <> 'on' then
     if tg_op = 'INSERT' then
-      if new.sender_id <> public.current_user_id()
-        or new.package_status <> 'created'
-        or new.payment_status <> 'unpaid'
-        or new.payment_transaction_id is not null
-        or new.trip_id is not null
-      then
-        raise exception 'Package creation contains server-managed fields'
-          using errcode = '42501';
-      end if;
+      raise exception 'Package creation must use the authenticated server API'
+        using errcode = '42501';
     elsif
       new.package_status is distinct from old.package_status
       or new.payment_status is distinct from old.payment_status
@@ -121,6 +114,10 @@ begin
       or new.delivery_evidence_url is distinct from old.delivery_evidence_url
       or new.dispute_opened_at is distinct from old.dispute_opened_at
       or new.trip_id is distinct from old.trip_id
+      or new.sender_id is distinct from old.sender_id
+      or new.package_code is distinct from old.package_code
+      or new.tracking_number is distinct from old.tracking_number
+      or new.qr_code is distinct from old.qr_code
       or new.fee_amount is distinct from old.fee_amount
     then
       raise exception 'Package assignment, tracking, and payment state are server-managed'
