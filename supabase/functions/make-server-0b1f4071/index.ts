@@ -2156,7 +2156,11 @@ async function handleOpenPackageDispute(
   return jsonResponse({ package: mapPackageRow(updated as PackageRow) });
 }
 
-async function handleRefundPackageEscrow(auth: AuthenticatedRequest, trackingId: string) {
+async function handleRefundPackageEscrow(
+  auth: AuthenticatedRequest,
+  trackingId: string,
+  walletHandlers: ReturnType<typeof createWalletHandlers>,
+) {
   const tracking = normalizeTrackingNumber(trackingId);
   if (!tracking) return jsonResponse({ error: 'A valid package tracking ID is required.' }, 400);
 
@@ -2893,7 +2897,7 @@ serve(async (req) => {
 
     const packageRefundMatch = path.match(/^\/packages\/track\/([^/]+)\/refund$/);
     if (packageRefundMatch && req.method === 'POST') {
-      return handleRefundPackageEscrow(auth, decodeURIComponent(packageRefundMatch[1]));
+      return handleRefundPackageEscrow(auth, decodeURIComponent(packageRefundMatch[1]), walletHandlers);
     }
 
     const packageRotateMatch = path.match(/^\/packages\/track\/([^/]+)\/rotate-codes$/);
