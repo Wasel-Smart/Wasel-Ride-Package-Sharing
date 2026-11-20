@@ -109,25 +109,36 @@ begin
     execute 'select cron.schedule(''wasel-package-reservation-expiry'', ''*/5 * * * *'', ''select public.app_expire_unpaid_package_assignments();'')';
 
     if to_regprocedure('net.http_post(text,jsonb,jsonb,jsonb,integer)') is not null
-      and nullif(current_setting('app.settings.supabase_url', true), '') is not null
-      and nullif(current_setting('app.settings.service_role_key', true), '') is not null then
-      execute 'select cron.unschedule(jobid) from cron.job where jobname = ''wasel-package-payment-reconciliation''';
-      execute $schedule$
-        select cron.schedule(
-          'wasel-package-payment-reconciliation',
-          '*/5 * * * *',
-          $command$
-            select net.http_post(
-              url := current_setting('app.settings.supabase_url') || '/functions/v1/make-server-0b1f4071/wallet/reconcile-expired',
-              headers := jsonb_build_object(
-                'Content-Type', 'application/json',
-                'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key')
-              ),
-              body := '{}'::jsonb
-            );
-          $command$
-        )
-      $schedule$;
+      and to_regclass('vault.decrypted_secrets') is not null then
+      declare
+        v_has_project_url boolean := false;
+        v_has_service_role_key boolean := false;
+      begin
+        execute 'select exists (select 1 from vault.decrypted_secrets where name = ''wasel_project_url'')'
+          into v_has_project_url;
+        execute 'select exists (select 1 from vault.decrypted_secrets where name = ''wasel_service_role_key'')'
+          into v_has_service_role_key;
+
+        if v_has_project_url and v_has_service_role_key then
+          execute 'select cron.unschedule(jobid) from cron.job where jobname = ''wasel-package-payment-reconciliation''';
+          execute $schedule$
+            select cron.schedule(
+              'wasel-package-payment-reconciliation',
+              '*/5 * * * *',
+              $command$
+                select net.http_post(
+                  url := (select decrypted_secret from vault.decrypted_secrets where name = 'wasel_project_url') || '/functions/v1/make-server-0b1f4071/wallet/reconcile-expired',
+                  headers := jsonb_build_object(
+                    'Content-Type', 'application/json',
+                    'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'wasel_service_role_key')
+                  ),
+                  body := '{}'::jsonb
+                );
+              $command$
+            )
+          $schedule$;
+        end if;
+      end;
     end if;
   end if;
 end;
