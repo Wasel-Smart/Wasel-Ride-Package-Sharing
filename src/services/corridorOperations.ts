@@ -14,11 +14,6 @@ import {
   type TripSummary,
 } from '../utils/routeIntelligence';
 import { SmartPricingEngine, type SeatPricingModel } from '../utils/pricing/SeatPricing';
-import {
-  packageTrackingService,
-  type PackagePaymentEscrow,
-  type PackageTracking,
-} from './packageTrackingService';
 import { generateId } from '../utils/api';
 
 export interface BusinessEmployee {
@@ -50,12 +45,6 @@ export interface BusinessAccountSnapshot {
   seatYield: SeatPricingModel[];
   passengerMatches: Array<{ trip: TripSummary; score: TripOptimizationScore }>;
   packageMatches: Array<{ trip: TripSummary; result: PackageCompatibilityResult }>;
-  packageOps: {
-    monthlyReturnVolume: number;
-    attachRatePercent: number;
-    tracking: PackageTracking;
-    escrow: PackagePaymentEscrow;
-  };
   monthlyInvoiceJOD: number;
   estimatedSavingsPercent: number;
   recurringDays: number;
@@ -255,27 +244,6 @@ export async function buildBusinessAccountSnapshot(
 
   const passengerMatches = rankTripsForPassenger(passengerTrips, passengerRequest);
   const packageMatches = rankTripsForPackage(packageTrips, packageRequest);
-  const tracking = await packageTrackingService.createPackage({
-    senderId: 'business-ops',
-    from: corridor.to,
-    to: corridor.from,
-    size: 'medium',
-    value: packageRequest.declaredValueJOD,
-    insurance: true,
-    description: `Corporate return lane on ${corridor.from} <> ${corridor.to}`,
-  });
-  const topPackageMatch = packageMatches[0];
-  if (topPackageMatch) {
-    await packageTrackingService.linkPackageToRide(tracking.id, {
-      rideId: topPackageMatch.trip.id,
-      driverId: generateId('driver'),
-      driverName: 'Wasel Corporate Lane',
-      driverPhone: '+962790123456',
-      vehicleInfo: 'Fleet return shuttle',
-    });
-  }
-  const linkedTracking = packageTrackingService.getPackage(tracking.id) ?? tracking;
-  const escrow = await packageTrackingService.processPayment(tracking.id, 'wallet');
   const liquidityHealth = calculateLiquidityHealth(18, 72, 54) as LiquidityMetrics & {
     routeId: string;
     averagePriceJOD: number;
@@ -294,12 +262,6 @@ export async function buildBusinessAccountSnapshot(
     seatYield,
     passengerMatches,
     packageMatches,
-    packageOps: {
-      monthlyReturnVolume: 46,
-      attachRatePercent: 68,
-      tracking: linkedTracking,
-      escrow,
-    },
     monthlyInvoiceJOD: computeBusinessInvoice(employees),
     estimatedSavingsPercent: 34,
     recurringDays: 22,
