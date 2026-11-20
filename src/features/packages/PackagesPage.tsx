@@ -27,6 +27,8 @@ import {
   getConnectedStats,
   getPackageByTrackingId,
   updatePackageVerification,
+  uploadPackageDeliveryEvidence,
+  rotatePackageHandoffCodes,
   type PackageRequest,
   type PostedRide,
 } from '../../services/journeyLogistics';
@@ -201,20 +203,37 @@ export function PackagesPage() {
 
   const handleVerificationAction = async (
     action: 'share_code' | 'confirm_pickup' | 'confirm_delivery',
+    code?: string,
+    evidenceFile?: File,
   ) => {
     if (!trackedPackage) return;
     try {
-      const updated = await updatePackageVerification(trackedPackage.trackingId, action);
+      let evidencePath: string | undefined;
+      if (action === 'confirm_delivery') {
+        if (!evidenceFile) throw new Error('Upload a delivery evidence photo before confirming delivery.');
+        evidencePath = await uploadPackageDeliveryEvidence(trackedPackage.trackingId, evidenceFile);
+      }
+
+      const updated = await updatePackageVerification(
+        trackedPackage.trackingId,
+        action,
+        code,
+        evidencePath,
+      );
       if (!updated) return;
 
-      setTrackedPackage(updated);
+      setTrackedPackage({
+        ...updated,
+        handoffCode: trackedPackage.handoffCode,
+        deliveryCode: trackedPackage.deliveryCode,
+      });
       setTrackId(updated.trackingId);
       setTrackingMessage(
         action === 'share_code'
-          ? `OTP handoff is now shared for ${updated.trackingId}.`
+          ? `Pickup code sharing recorded for ${updated.trackingId}.`
           : action === 'confirm_pickup'
-            ? `Rider pickup confirmed for ${updated.trackingId}.`
-            : `Delivery confirmed for ${updated.trackingId}.`,
+            ? `Pickup OTP verified for ${updated.trackingId}.`
+            : `Delivery OTP and evidence verified for ${updated.trackingId}.`,
       );
       refreshPackageSnapshot();
     } catch (error) {
@@ -223,6 +242,21 @@ export function PackagesPage() {
           ? error.message
           : 'Package status could not be updated right now.',
       );
+    }
+  };
+
+  const handleRotateCodes = async () => {
+    if (!trackedPackage) return;
+    try {
+      const codes = await rotatePackageHandoffCodes(trackedPackage.trackingId);
+      setTrackedPackage({
+        ...trackedPackage,
+        handoffCode: codes.handoffCode ?? trackedPackage.handoffCode,
+        deliveryCode: codes.deliveryCode,
+      });
+      setTrackingMessage('New package handoff codes were generated. Share them only with the intended holder and receiver.');
+    } catch (error) {
+      setTrackingMessage(error instanceof Error ? error.message : 'Package codes could not be generated.');
     }
   };
 
@@ -536,6 +570,7 @@ export function PackagesPage() {
               recentPackages={recentPackages}
               onSearch={handleTrackingSearch}
               onVerificationAction={handleVerificationAction}
+              onRotateCodes={handleRotateCodes}
               onOpenSupport={handleOpenSupport}
               onOpenRecent={item => focusTrackingItem(item)}
             />
