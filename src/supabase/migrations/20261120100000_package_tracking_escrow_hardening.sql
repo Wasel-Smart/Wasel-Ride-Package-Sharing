@@ -204,7 +204,7 @@ begin
   update public.packages
   set package_status = 'disputed',
       status = 'disputed',
-      payment_status = case when payment_status = 'held' then 'disputed' else payment_status end,
+      payment_status = case when payment_status in ('held', 'pending') then 'disputed' else payment_status end,
       dispute_opened_at = timezone('utc', now()),
       updated_at = timezone('utc', now())
   where package_id = p_package_id;
