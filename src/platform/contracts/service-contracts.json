@@ -199,6 +199,13 @@
         "operationId": "openPackageDispute",
         "path": "/v1/packages/track/{trackingId}/dispute",
         "summary": "Open a participant dispute and freeze held escrow."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "refundPackageEscrow",
+        "path": "/v1/packages/track/{trackingId}/refund",
+        "summary": "Request a sender-only refund for cancelled or dispute-frozen package escrow."
       }
     ]
   }
