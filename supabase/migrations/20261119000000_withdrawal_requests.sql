@@ -9,7 +9,7 @@
 
 CREATE TABLE IF NOT EXISTS public.withdrawal_requests (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id         UUID        NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  user_id         UUID        NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   amount_jod      NUMERIC(10,2) NOT NULL CHECK (amount_jod > 0),
   payout_method   TEXT        NOT NULL DEFAULT 'bank_transfer'
                   CHECK (payout_method IN ('bank_transfer', 'cliq_alias', 'cash_pickup')),
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.withdrawal_requests (
   pin_verified    BOOLEAN     NOT NULL DEFAULT FALSE,
   status          TEXT        NOT NULL DEFAULT 'pending'
                   CHECK (status IN ('pending', 'approved', 'rejected', 'completed', 'failed')),
-  reviewed_by     UUID        REFERENCES public.profiles(id),
+  reviewed_by     UUID        REFERENCES public.users(id),
   reviewed_at     TIMESTAMPTZ,
   operator_note   TEXT,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
