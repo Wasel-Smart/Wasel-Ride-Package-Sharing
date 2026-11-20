@@ -2308,7 +2308,9 @@ export function createWalletHandlers(runtime: WalletRuntime) {
           await settlePaymentIntent(admin, intent);
         }
 
-        const finalStatus = eventType === 'payment_intent.payment_failed' ? 'failed' : mappedStatus;
+        // A payment_failed event is retryable: Stripe returns the intent to requires_payment_method.
+        // Only an actually cancelled/expired intent releases the package reservation.
+        const finalStatus = mappedStatus;
         await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
           status: finalStatus,
           last_error: normalizeString(((object.last_payment_error as Record<string, unknown> | undefined)?.message)),
