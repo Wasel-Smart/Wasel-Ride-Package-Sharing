@@ -981,6 +981,25 @@ async function findBeneficiaryUserId(
     return findDriverUserIdForTrip(admin, String(data.trip_id));
   }
 
+  if (referenceType === 'package') {
+    const { data, error } = await admin
+      .from('packages')
+      .select('trip_id, sender_id, package_status, payment_status')
+      .eq('package_id', referenceId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data || String(data.sender_id) !== String(intent.user_id)) {
+      throw new Error('Package payment must be initiated by its sender.');
+    }
+    if (!data.trip_id || String(data.package_status) !== 'assigned') {
+      throw new Error('Package must be assigned to an approved driver before payment.');
+    }
+    if (!['unpaid', 'pending'].includes(String(data.payment_status))) {
+      throw new Error('Package payment is not eligible for a new escrow hold.');
+    }
+    return findDriverUserIdForTrip(admin, String(data.trip_id));
+  }
+
   return null;
 }
 
@@ -989,6 +1008,42 @@ async function createEscrowForIntent(
   intent: Record<string, unknown>,
 ) {
   const payerUserId = String(intent.user_id);
+  const paymentIntentId = String(intent.payment_intent_id);
+
+  const { data: existingEscrow, error: existingEscrowError } = await admin
+    .from('escrow_accounts')
+    .select('*')
+    .eq('payment_intent_id', paymentIntentId)
+    .maybeSingle();
+  if (existingEscrowError) throw new Error(existingEscrowError.message);
+  if (existingEscrow) {
+    return { escrow: existingEscrow, transactionId: normalizeString(existingEscrow.hold_transaction_id) };
+  }
+
+  if (String(intent.purpose) === 'package_payment') {
+    const packageId = normalizeString(intent.reference_id);
+    if (!packageId || normalizeString(intent.reference_type) !== 'package') {
+      throw new Error('Package payments require a package reference.');
+    }
+    const { data: packageRow, error: packageError } = await admin
+      .from('packages')
+      .select('sender_id, trip_id, package_status, payment_status, fee_amount')
+      .eq('package_id', packageId)
+      .maybeSingle();
+    if (packageError) throw new Error(packageError.message);
+    if (!packageRow || String(packageRow.sender_id) !== payerUserId) {
+      throw new Error('Package payment must be initiated by its sender.');
+    }
+    if (!packageRow.trip_id || String(packageRow.package_status) !== 'assigned') {
+      throw new Error('Package must be assigned before payment can be held.');
+    }
+    if (!['unpaid', 'pending'].includes(String(packageRow.payment_status))) {
+      throw new Error('Package already has a payment state.');
+    }
+    if (Math.round(toNumber(packageRow.fee_amount) * 1000) !== Math.round(toNumber(intent.amount) * 1000)) {
+      throw new Error('Payment amount does not match the package fee.');
+    }
+  }
   const beneficiaryUserId = await findBeneficiaryUserId(admin, intent);
   if (!beneficiaryUserId) {
     throw new Error('Could not resolve the escrow beneficiary for this payment.');
@@ -1080,6 +1135,29 @@ async function createEscrowForIntent(
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  if (escrowType === 'package') {
+    const packageId = String(intent.reference_id);
+    const { error: packageUpdateError } = await admin
+      .from('packages')
+      .update({ payment_status: 'held', updated_at: now })
+      .eq('package_id', packageId)
+      .eq('sender_id', payerUserId)
+      .eq('package_status', 'assigned')
+      .in('payment_status', ['unpaid', 'pending']);
+    if (packageUpdateError) throw new Error(packageUpdateError.message);
+
+    const { error: eventError } = await admin
+      .from('package_events')
+      .insert({
+        package_id: packageId,
+        event_type: 'payment_escrowed',
+        event_status: 'held',
+        notes: 'Payment verified and held in the wallet escrow ledger.',
+        created_by: payerUserId,
+      });
+    if (eventError) throw new Error(eventError.message);
   }
 
   return { escrow, transactionId };
@@ -1239,6 +1317,25 @@ async function releaseEscrow(
     throw new Error('Only held escrow balances can be released.');
   }
 
+  if (String(escrow.escrow_type) === 'package') {
+    const { data: packageRow, error: packageError } = await admin
+      .from('packages')
+      .select('package_status, delivered_at, delivery_verified_at, delivery_evidence_url, dispute_opened_at')
+      .eq('package_id', String(escrow.reference_id))
+      .maybeSingle();
+    if (packageError) throw new Error(packageError.message);
+    if (
+      !packageRow ||
+      String(packageRow.package_status) !== 'delivered' ||
+      !packageRow.delivered_at ||
+      !packageRow.delivery_verified_at ||
+      !normalizeString(packageRow.delivery_evidence_url) ||
+      packageRow.dispute_opened_at
+    ) {
+      throw new Error('Package escrow requires verified delivery evidence and no active dispute.');
+    }
+  }
+
   const releaseTransactionId = await postLedgerTransaction(admin, {
     transactionType: 'escrow_release',
     transactionStatus: 'completed',
@@ -1268,6 +1365,16 @@ async function releaseEscrow(
     })
     .eq('escrow_account_id', escrowId);
 
+  if (String(escrow.escrow_type) === 'package') {
+    const { error: packageUpdateError } = await admin
+      .from('packages')
+      .update({ payment_status: 'released', updated_at: new Date().toISOString() })
+      .eq('package_id', String(escrow.reference_id))
+      .eq('package_status', 'delivered')
+      .is('dispute_opened_at', null);
+    if (packageUpdateError) throw new Error(packageUpdateError.message);
+  }
+
   return releaseTransactionId;
 }
 
@@ -1287,8 +1394,20 @@ async function refundEscrow(
   if (String(escrow.payer_user_id) !== actorUserId) {
     throw new Error('Only the original payer can refund this escrow.');
   }
-  if (String(escrow.escrow_state) !== 'held') {
-    throw new Error('Only held escrow balances can be refunded.');
+  if (String(escrow.escrow_state) !== 'held' && String(escrow.escrow_state) !== 'cancelled') {
+    throw new Error('Only held or dispute-frozen escrow balances can be refunded.');
+  }
+
+  if (String(escrow.escrow_type) === 'package') {
+    const { data: packageRow, error: packageError } = await admin
+      .from('packages')
+      .select('package_status, dispute_opened_at')
+      .eq('package_id', String(escrow.reference_id))
+      .maybeSingle();
+    if (packageError) throw new Error(packageError.message);
+    if (!packageRow || !['disputed', 'cancelled'].includes(String(packageRow.package_status))) {
+      throw new Error('Package escrow can be refunded only after cancellation or an opened dispute.');
+    }
   }
 
   const destinationAccountId = String(escrow.payer_account_id);
