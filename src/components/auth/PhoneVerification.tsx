@@ -1,224 +1,75 @@
 import { useState } from 'react';
-import { API_URL, fetchWithRetry } from '@/services/core';
+import { supabase, supabaseUrl, supabaseAnonKey } from '@/utils/supabase/client';
 
-interface PhoneVerificationProps {
-  onVerified: () => void;
-  onSkip?: () => void;
+interface PhoneVerificationProps { onVerified: () => void; onSkip?: () => void; }
+
+function normalizeJordanMobile(value: string): string | null {
+  let digits = value.replace(/\D/g, '');
+  if (digits.startsWith('00962')) digits = digits.slice(2);
+  if (digits.startsWith('962')) digits = digits.slice(3);
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  return /^7\d{8}$/.test(digits) ? `+962${digits}` : null;
+}
+
+async function submitVerification(route: 'send-code' | 'verify-code', payload: Record<string,string>) {
+  if (!supabase || !supabaseUrl || !supabaseAnonKey) throw new Error('Authentication service is unavailable.');
+  const { data, error } = await supabase.auth.getSession();
+  if (error || !data.session?.access_token) throw new Error('Sign in again before verifying your phone.');
+  const response = await fetch(`${supabaseUrl}/functions/v1/sms-verification/${route}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${data.session.access_token}`, apikey: supabaseAnonKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(15000),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(typeof result.error === 'string' ? result.error : 'Phone verification failed.');
 }
 
 export function PhoneVerification({ onVerified, onSkip }: PhoneVerificationProps) {
-  const [step, setStep] = useState<'input' | 'verify'>('input');
+  const [step, setStep] = useState<'input'|'verify'>('input');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [normalizedPhone, setNormalizedPhone] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const formatPhoneNumber = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    if (cleaned.startsWith('962')) {
-      return '+' + cleaned;
-    }
-    if (cleaned.startsWith('0')) {
-      return '+962' + cleaned.slice(1);
-    }
-    return '+962' + cleaned;
-  };
-
-  const handleSendCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
+  const sendCode = async (e?: React.FormEvent|React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault(); setError(''); setSuccess('');
+    const phone = normalizeJordanMobile(phoneNumber);
+    if (!phone) { setError('Enter a valid Jordanian mobile number, for example 79 000 0000.'); return; }
     setLoading(true);
-
-    try {
-      const formatted = formatPhoneNumber(phoneNumber);
-      
-      const response = await fetchWithRetry(`${API_URL}/sms-verification/send-code`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone_number: formatted }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to send verification code');
-      }
-
-      setSuccess('Verification code sent to your phone');
-      setStep('verify');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to send code');
-    } finally {
-      setLoading(false);
-    }
+    try { await submitVerification('send-code', { phone_number: phone }); setNormalizedPhone(phone); setStep('verify'); setSuccess('Verification code sent.'); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Could not send code.'); }
+    finally { setLoading(false); }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  const verifyCode = async (e: React.FormEvent) => {
+    e.preventDefault(); setError(''); setSuccess('');
+    if (!/^\d{6}$/.test(code)) { setError('Enter the 6-digit verification code.'); return; }
     setLoading(true);
-
-    try {
-      const formatted = formatPhoneNumber(phoneNumber);
-      
-      const response = await fetchWithRetry(`${API_URL}/sms-verification/verify-code`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone_number: formatted, code }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Invalid verification code');
-      }
-
-      setSuccess('Phone verified successfully!');
-      setTimeout(() => onVerified(), 1000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Verification failed');
-    } finally {
-      setLoading(false);
-    }
+    try { await submitVerification('verify-code', { phone_number: normalizedPhone, code }); await supabase?.auth.refreshSession(); setCode(''); setSuccess('Phone verified successfully.'); onVerified(); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Verification failed.'); }
+    finally { setLoading(false); }
   };
 
-  return (
-    <div className="max-w-md mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-        Verify Your Phone Number
-      </h2>
-      
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-        Phone verification is required for booking rides and sending packages in Jordan.
-      </p>
-
-      {step === 'input' ? (
-        <form onSubmit={handleSendCode} className="space-y-4">
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Phone Number
-            </label>
-            <div className="flex">
-              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                +962
-              </span>
-              <input
-                id="phone"
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="79 000 0000"
-                className="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                required
-                pattern="[0-9]{9,10}"
-                disabled={loading}
-              />
-            </div>
-            <p className="mt-1 text-xs text-gray-500">
-              Enter your Jordanian mobile number
-            </p>
-          </div>
-
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
-          {success && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-              <p className="text-sm text-green-600">{success}</p>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={loading || !phoneNumber}
-              className="flex-1 bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            >
-              {loading ? 'Sending...' : 'Send Code'}
-            </button>
-            
-            {onSkip && (
-              <button
-                type="button"
-                onClick={onSkip}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                Skip
-              </button>
-            )}
-          </div>
-        </form>
-      ) : (
-        <form onSubmit={handleVerifyCode} className="space-y-4">
-          <div>
-            <label htmlFor="code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Verification Code
-            </label>
-            <input
-              id="code"
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="000000"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary dark:bg-gray-700 dark:border-gray-600 dark:text-white text-center text-2xl tracking-widest"
-              required
-              pattern="[0-9]{6}"
-              maxLength={6}
-              disabled={loading}
-              autoFocus
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Enter the 6-digit code sent to +962{phoneNumber}
-            </p>
-          </div>
-
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-
-          {success && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-              <p className="text-sm text-green-600">{success}</p>
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={loading || code.length !== 6}
-              className="flex-1 bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-            >
-              {loading ? 'Verifying...' : 'Verify'}
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => {
-                setStep('input');
-                setCode('');
-                setError('');
-              }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              Change Number
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleSendCode}
-            disabled={loading}
-            className="w-full text-sm text-primary hover:text-primary-dark disabled:opacity-50"
-          >
-            Resend Code
-          </button>
-        </form>
-      )}
-    </div>
-  );
+  return <div className="max-w-md mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+    <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Verify Your Phone Number</h2>
+    <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Phone verification is required for booking rides and sending packages in Jordan.</p>
+    {step === 'input' ? <form onSubmit={sendCode} className="space-y-4">
+      <label htmlFor="phone" className="block text-sm font-medium mb-2">Phone Number</label>
+      <div className="flex"><span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">+962</span>
+        <input id="phone" type="tel" inputMode="numeric" autoComplete="tel-national" value={phoneNumber} onChange={e=>setPhoneNumber(e.target.value.replace(/[^0-9]/g,'').slice(0,12))} placeholder="79 000 0000" required disabled={loading} className="flex-1 min-w-0 px-3 py-2 rounded-r-md border border-gray-300 dark:bg-gray-700 dark:text-white"/>
+      </div>
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}{success && <p role="status" className="text-sm text-green-600">{success}</p>}
+      <div className="flex gap-3"><button type="submit" disabled={loading||!phoneNumber.trim()} className="flex-1 bg-primary text-white py-2 px-4 rounded-md disabled:opacity-50">{loading?'Sending...':'Send Code'}</button>{onSkip && <button type="button" onClick={onSkip} disabled={loading}>Skip</button>}</div>
+    </form> : <form onSubmit={verifyCode} className="space-y-4">
+      <label htmlFor="code" className="block text-sm font-medium mb-2">Verification Code</label>
+      <input id="code" type="text" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,'').slice(0,6))} placeholder="000000" required pattern="[0-9]{6}" maxLength={6} disabled={loading} className="w-full px-3 py-2 border rounded-md text-center text-2xl tracking-widest dark:bg-gray-700 dark:text-white"/>
+      <p className="text-xs text-gray-500">Code sent to {normalizedPhone}.</p>
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}{success && <p role="status" className="text-sm text-green-600">{success}</p>}
+      <div className="flex gap-3"><button type="submit" disabled={loading||code.length!==6} className="flex-1 bg-primary text-white py-2 px-4 rounded-md disabled:opacity-50">{loading?'Verifying...':'Verify'}</button><button type="button" disabled={loading} onClick={()=>{setStep('input');setCode('');setError('');setSuccess('');}}>Change Number</button></div>
+      <button type="button" onClick={sendCode} disabled={loading} className="w-full text-sm text-primary">Resend Code</button>
+    </form>}
+  </div>;
 }
