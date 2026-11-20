@@ -1249,6 +1249,42 @@ async function activateSubscriptionForIntent(
   return data;
 }
 
+async function markPackagePaymentFailed(
+  admin: SupabaseClient,
+  intent: Record<string, unknown>,
+  reason?: string | null,
+) {
+  if (String(intent.purpose) !== 'package_payment' || String(intent.reference_type) !== 'package') return;
+  const packageId = normalizeString(intent.reference_id);
+  if (!packageId) return;
+
+  const now = new Date().toISOString();
+  const { error } = await admin
+    .from('packages')
+    .update({
+      payment_status: 'failed',
+      assignment_expires_at: now,
+      updated_at: now,
+    })
+    .eq('package_id', packageId)
+    .eq('payment_status', 'pending')
+    .eq('package_status', 'assigned');
+  if (error) throw new Error(error.message);
+
+  const { error: expiryError } = await admin.rpc('app_expire_unpaid_package_assignments');
+  if (expiryError) throw new Error(expiryError.message);
+
+  if (reason) {
+    await admin.from('package_events').insert({
+      package_id: packageId,
+      event_type: 'payment_failed',
+      event_status: 'failed',
+      notes: reason.slice(0, 500),
+      created_by: String(intent.user_id),
+    });
+  }
+}
+
 async function settlePaymentIntent(
   admin: SupabaseClient,
   intent: Record<string, unknown>,
@@ -1870,7 +1906,39 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         if (!packageRow.trip_id || String(packageRow.package_status) !== 'assigned') {
           return runtime.json({ error: 'The package must be assigned to a driver before payment.' }, 409);
         }
-        if (!['unpaid', 'pending'].includes(String(packageRow.payment_status))) {
+        if (String(packageRow.payment_status) === 'pending') {
+          const { data: existingIntent, error: existingIntentError } = await auth.admin
+            .from('wallet_payment_intents')
+            .select('*')
+            .eq('user_id', auth.canonicalUser.id)
+            .eq('purpose', 'package_payment')
+            .eq('reference_type', 'package')
+            .eq('reference_id', referenceId)
+            .in('status', ['requires_confirmation', 'requires_action', 'processing'])
+            .gt('expires_at', new Date().toISOString())
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (existingIntentError) throw new Error(existingIntentError.message);
+          if (existingIntent) {
+            return runtime.json({
+              id: String(existingIntent.payment_intent_id),
+              purpose: String(existingIntent.purpose),
+              status: String(existingIntent.status),
+              amount: toNumber(existingIntent.amount),
+              currency: normalizeCurrency(existingIntent.currency_code),
+              paymentMethodType: String(existingIntent.payment_method_type),
+              provider: String(existingIntent.provider_name),
+              clientSecret: normalizeString(existingIntent.provider_client_secret),
+              redirectUrl: normalizeString(existingIntent.redirect_url),
+              createdAt: String(existingIntent.created_at),
+              referenceType: normalizeString(existingIntent.reference_type),
+              referenceId: normalizeString(existingIntent.reference_id),
+            });
+          }
+          return runtime.json({ error: 'A package payment attempt is already pending. Wait for settlement or contact support.' }, 409);
+        }
+        if (String(packageRow.payment_status) !== 'unpaid') {
           return runtime.json({ error: 'This package is not eligible for another payment.' }, 409);
         }
         if (Math.round(toNumber(packageRow.fee_amount) * 1000) !== Math.round(amount * 1000)) {
@@ -1936,6 +2004,27 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         redirectUrl: normalizeString(((providerPayload.next_action as Record<string, unknown> | undefined)?.display_qr_code as Record<string, unknown> | undefined)?.image_url_png),
         status,
       });
+
+      if (purpose === 'package_payment' && referenceId) {
+        const { data: pendingPackage, error: pendingError } = await auth.admin
+          .from('packages')
+          .update({
+            payment_status: 'pending',
+            assignment_expires_at: new Date(Date.now() + 30 * 60_000).toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('package_id', referenceId)
+          .eq('sender_id', auth.canonicalUser.id)
+          .eq('package_status', 'assigned')
+          .eq('payment_status', 'unpaid')
+          .select('package_id')
+          .maybeSingle();
+        if (pendingError || !pendingPackage) {
+          await auth.admin.from('wallet_payment_intents').delete()
+            .eq('payment_intent_id', String(intent.payment_intent_id));
+          throw new Error(pendingError?.message ?? 'Package payment reservation changed. Retry the payment.');
+        }
+      }
 
       return runtime.json({
         id: String(intent.payment_intent_id),
@@ -2021,6 +2110,11 @@ export function createWalletHandlers(runtime: WalletRuntime) {
             ((stripePayload.last_payment_error as Record<string, unknown> | undefined)?.message),
           ),
         });
+        if (mappedStatus === 'failed' || mappedStatus === 'cancelled') {
+          await markPackagePaymentFailed(auth.admin, intent as Record<string, unknown>, normalizeString(
+            ((stripePayload.last_payment_error as Record<string, unknown> | undefined)?.message),
+          ));
+        }
 
         return runtime.json({
           id: String(updated.payment_intent_id),
@@ -2127,10 +2221,18 @@ export function createWalletHandlers(runtime: WalletRuntime) {
           await settlePaymentIntent(admin, intent);
         }
 
+        const finalStatus = eventType === 'payment_intent.payment_failed' ? 'failed' : mappedStatus;
         await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
-          status: eventType === 'payment_intent.payment_failed' ? 'failed' : mappedStatus,
+          status: finalStatus,
           last_error: normalizeString(((object.last_payment_error as Record<string, unknown> | undefined)?.message)),
         });
+        if (finalStatus === 'failed' || finalStatus === 'cancelled') {
+          await markPackagePaymentFailed(
+            admin,
+            intent,
+            normalizeString(((object.last_payment_error as Record<string, unknown> | undefined)?.message)),
+          );
+        }
       } else {
         const providerPaymentId = normalizeString(eventBody.providerPaymentId) ?? normalizeString(eventBody.paymentIntentId);
         if (!providerPaymentId) {
