@@ -279,7 +279,7 @@ export function PackagesPage() {
 
   const handleRefundPackage = async () => {
     if (!trackedPackage) return;
-    setBusyState('saving');
+    setBusyState('tracking');
     try {
       const updated = await refundPackageEscrow(trackedPackage.trackingId);
       if (updated) setTrackedPackage(updated);
