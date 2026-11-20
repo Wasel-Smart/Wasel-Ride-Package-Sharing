@@ -7,6 +7,7 @@ begin;
 alter table public.packages
   add column if not exists payment_status text not null default 'unpaid',
   add column if not exists sender_code_shared_at timestamptz,
+  add column if not exists assignment_expires_at timestamptz,
   add column if not exists pickup_verified_at timestamptz,
   add column if not exists delivery_verified_at timestamptz,
   add column if not exists delivery_evidence_url text,
@@ -37,6 +38,57 @@ create table if not exists private.package_handoff_secrets (
 
 revoke all on private.package_handoff_secrets from public, anon, authenticated;
 grant all on private.package_handoff_secrets to service_role;
+
+-- Release stale un-paid package reservations back to the driver's trip.
+create or replace function public.app_expire_unpaid_package_assignments()
+returns integer
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $
+declare
+  v_package record;
+  v_expired integer := 0;
+begin
+  if auth.role() <> 'service_role' then
+    raise exception 'Service role required' using errcode = '42501';
+  end if;
+
+  for v_package in
+    select package_id, trip_id
+    from public.packages
+    where package_status = 'assigned'
+      and payment_status in ('unpaid', 'pending')
+      and assignment_expires_at is not null
+      and assignment_expires_at <= timezone('utc', now())
+      and pickup_verified_at is null
+    for update skip locked
+  loop
+    update public.packages
+    set trip_id = null,
+        package_status = 'created',
+        status = 'searching',
+        assignment_expires_at = null,
+        updated_at = timezone('utc', now())
+    where package_id = v_package.package_id;
+
+    update public.trips
+    set package_slots_remaining = least(package_capacity, package_slots_remaining + 1),
+        updated_at = timezone('utc', now())
+    where trip_id = v_package.trip_id;
+
+    insert into public.package_events (package_id, event_type, event_status, notes)
+    values (v_package.package_id, 'assignment_expired', 'searching', 'Unpaid package reservation expired and capacity was returned.');
+
+    v_expired := v_expired + 1;
+  end loop;
+
+  return v_expired;
+end;
+$;
+
+revoke all on function public.app_expire_unpaid_package_assignments() from public, anon, authenticated;
+grant execute on function public.app_expire_unpaid_package_assignments() to service_role;
 
 -- A payment intent can back only one escrow account. This closes the duplicate
 -- webhook race in the existing wallet ledger.
