@@ -44,13 +44,13 @@ create or replace function public.app_expire_unpaid_package_assignments()
 returns integer
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   v_package record;
   v_expired integer := 0;
 begin
-  if auth.role() <> 'service_role' and session_user <> 'postgres' then
+  if coalesce(auth.jwt() ->> 'role', '') <> 'service_role' and session_user <> 'postgres' then
     raise exception 'Service role or scheduled database job required' using errcode = '42501';
   end if;
 
@@ -173,14 +173,14 @@ create or replace function public.app_match_waiting_packages_to_trip(p_trip_id u
 returns integer
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   v_trip public.trips%rowtype;
   v_package record;
   v_matched integer := 0;
 begin
-  if auth.role() <> 'service_role' then
+  if coalesce(auth.jwt() ->> 'role', '') <> 'service_role' then
     raise exception 'Service role required' using errcode = '42501';
   end if;
 
@@ -276,10 +276,10 @@ create or replace function public.guard_package_client_mutations()
 returns trigger
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 begin
-  if auth.role() in ('anon', 'authenticated')
+  if coalesce(auth.jwt() ->> 'role', '') in ('anon', 'authenticated')
     and coalesce(current_setting('wasel.package_rpc', true), 'off') <> 'on' then
     raise exception 'Package mutations must use the authenticated server API'
       using errcode = '42501';
@@ -292,6 +292,7 @@ drop trigger if exists trg_guard_package_client_mutations on public.packages;
 create trigger trg_guard_package_client_mutations
 before insert or update on public.packages
 for each row execute function public.guard_package_client_mutations();
+revoke all on function public.guard_package_client_mutations() from public, anon, authenticated;
 
 -- A dispute freezes held package funds in the existing ledger by moving its
 -- escrow state to cancelled. Refund is then handled by the wallet refund flow.
@@ -299,14 +300,17 @@ create or replace function public.open_package_dispute(p_package_id uuid, p_reas
 returns void
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = ''
 as $$
 declare
   v_package public.packages%rowtype;
   v_actor uuid := public.current_user_id();
   v_is_driver boolean;
 begin
-  if auth.role() <> 'authenticated' or v_actor is null then
+  if coalesce(auth.jwt() ->> 'role', '') <> 'authenticated'
+    or coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false)
+    or auth.uid() is null
+    or v_actor is null then
     raise exception 'Authenticated user required' using errcode = '42501';
   end if;
 
@@ -393,10 +397,10 @@ create or replace function public.app_store_package_handoff_secrets(
 returns void
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 begin
-  if auth.role() <> 'service_role' then
+  if coalesce(auth.jwt() ->> 'role', '') <> 'service_role' then
     raise exception 'Service role required' using errcode = '42501';
   end if;
   if length(coalesce(p_pickup_code_hash, '')) <> 64
@@ -421,10 +425,10 @@ create or replace function public.app_rotate_package_handoff_secrets(
 returns void
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 begin
-  if auth.role() <> 'service_role' then
+  if coalesce(auth.jwt() ->> 'role', '') <> 'service_role' then
     raise exception 'Service role required' using errcode = '42501';
   end if;
   if (p_pickup_code_hash is not null and length(p_pickup_code_hash) <> 64)
@@ -459,7 +463,7 @@ create or replace function public.app_verify_package_pickup(
 returns boolean
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 declare
   v_package public.packages%rowtype;
@@ -467,7 +471,7 @@ declare
   v_is_driver boolean;
   v_attempts integer;
 begin
-  if auth.role() <> 'service_role' then
+  if coalesce(auth.jwt() ->> 'role', '') <> 'service_role' then
     raise exception 'Service role required' using errcode = '42501';
   end if;
 
@@ -538,7 +542,7 @@ create or replace function public.app_verify_package_delivery(
 returns boolean
 language plpgsql
 security definer
-set search_path = public, private, pg_temp
+set search_path = ''
 as $$
 declare
   v_package public.packages%rowtype;
@@ -546,7 +550,7 @@ declare
   v_is_driver boolean;
   v_attempts integer;
 begin
-  if auth.role() <> 'service_role' then
+  if coalesce(auth.jwt() ->> 'role', '') <> 'service_role' then
     raise exception 'Service role required' using errcode = '42501';
   end if;
 
