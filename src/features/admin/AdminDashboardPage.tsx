@@ -6,6 +6,7 @@ import { RefreshCw, AlertTriangle, Users, Package, Car, DollarSign } from 'lucid
 import { tx } from '../../locales/tx';
 import { getAdminMetrics } from '../../services/adminApi';
 import { ListSkeleton } from '../home/HomePageShared';
+import { WaselErrorState } from '../../components/wasel-ui';
 
 interface AdminMetrics {
   activeTrips: number;
@@ -258,17 +259,11 @@ useEffect(() => {
 
         {/* ── Error state ── */}
         {error && (
-          <div
-            style={{
-              ...card({ padding: SPACE[4], radius: R.xl }),
-              borderColor: C.error,
-              background: C.errorDim,
-              color: C.error,
-              marginBottom: SPACE[5],
-            }}
-          >
-            {error}
-          </div>
+          <WaselErrorState
+            compact
+            icon={<AlertTriangle size={36} />}
+            title={error}
+          />
         )}
 
         {/* ── Metric grid ── */}

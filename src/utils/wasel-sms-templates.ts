@@ -6,13 +6,14 @@
  */
 
 import { sanitizeLogMessage } from './sanitization';
+import { C } from './wasel-ds';
 
 export const SMS_TOKENS = {
   brandName: 'Wasel',
   brandNameAr: 'واصل',
-  brandCyan: '#00E5FF',
-  brandLime: '#72C70D',
-  brandEmber: '#FF8A0B',
+  brandCyan: C.cyan,
+  brandLime: C.green,
+  brandEmber: C.orange,
 };
 
 export interface SmsTemplate {

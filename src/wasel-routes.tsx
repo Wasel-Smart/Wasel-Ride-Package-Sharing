@@ -373,7 +373,7 @@ export const waselRouter = createBrowserRouter([
     hydrateFallbackElement: <PageLoader />,
     errorElement: <RouteErrorFallback />,
     children: [
-      { index: true, lazy: lazy(() => import('./features/legal/TrustCenterPage'), 'TrustCenterPage') },
+      { index: true, lazy: lazy(() => import('./features/legal/TrustLandingPage'), 'TrustCenterPage') },
     ],
   },
   { path: '/security', Component: () => <RedirectTo to="/app/security" /> },

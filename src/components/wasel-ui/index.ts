@@ -24,3 +24,4 @@ export * from './WaselStatsGrid';
 export * from './WaselSelect';
 export * from './WaselSkeleton';
 export * from './OAuthStatus';
+export * from './WaselErrorState';

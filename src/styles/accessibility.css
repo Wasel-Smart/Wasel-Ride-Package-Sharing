@@ -30,7 +30,8 @@
   --text-muted-light: #64748b;
 
   /* Interactive elements for light mode */
-  --interactive-primary: #0369a1;
+  /* Light-surface primary, aliased to the token defined in globals.css. */
+  --interactive-primary: var(--wasel-primary-light, #0369a1);
   --interactive-hover: #0284c7;
   --interactive-active: #0c4a6e;
   --interactive-disabled: #cbd5e1;

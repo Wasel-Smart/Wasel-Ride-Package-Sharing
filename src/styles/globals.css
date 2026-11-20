@@ -341,7 +341,11 @@ input[type='submit'] {
   --card-foreground: #0c2132;
   --popover: #ffffff;
   --popover-foreground: #0c2132;
-  --primary: #0369a1;
+  /* Accessible light-surface primary: brand cyan #00E5FF reads 1.4:1 on white,
+     so light mode uses this WCAG-compliant deep cyan — the brand book's
+     sanctioned light variant of the primary. */
+  --wasel-primary-light: #0369a1;
+  --primary: var(--wasel-primary-light);
   --primary-foreground: #ffffff;
   --secondary: #eaf7ff;
   --secondary-foreground: #35556d;
@@ -354,8 +358,8 @@ input[type='submit'] {
   --border: rgba(8, 29, 57, 0.14);
   --input: rgba(8, 29, 57, 0.05);
   /* Solid blue ring — passes 3:1 non-text contrast on light surfaces. */
-  --ring: #0369a1;
-  --wasel-focus: #0369a1;
+  --ring: var(--wasel-primary-light);
+  --wasel-focus: var(--wasel-primary-light);
 
   /* Glassmorphism — light mode: frosted white panels */
   --wasel-glass-sm: rgba(255, 255, 255, 0.65);
@@ -384,7 +388,7 @@ input[type='submit'] {
   --wasel-sidebar-item-active: rgba(0, 229, 255, 0.1);
   --wasel-sidebar-active-rail: linear-gradient(180deg, #00E5FF, #72C70D);
   --wasel-sidebar-text: rgba(8, 29, 57, 0.85);
-  --wasel-sidebar-active-text: #0369a1;
+  --wasel-sidebar-active-text: var(--wasel-primary-light);
 
   /* Surfaces — light */
   --wasel-surface-0: #f5fbff;
