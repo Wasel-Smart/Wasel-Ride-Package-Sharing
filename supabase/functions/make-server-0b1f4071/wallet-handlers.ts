@@ -1083,17 +1083,34 @@ async function createEscrowForIntent(
         .maybeSingle();
       if (packageStateError) throw new Error(packageStateError.message);
 
-      if (
-        packageState?.dispute_opened_at ||
-        ['disputed', 'cancelled'].includes(String(packageState?.package_status))
-      ) {
+      const packageIsDisputed = Boolean(packageState?.dispute_opened_at)
+        || ['disputed', 'cancelled'].includes(String(packageState?.package_status));
+      const escrowWasCancelled = String(existingEscrow.escrow_state) === 'cancelled';
+
+      if (packageIsDisputed || escrowWasCancelled) {
         const { error: freezeError } = await admin
           .from('escrow_accounts')
           .update({ escrow_state: 'cancelled', updated_at: new Date().toISOString() })
           .eq('escrow_account_id', String(existingEscrow.escrow_account_id))
           .eq('escrow_state', 'held');
         if (freezeError) throw new Error(freezeError.message);
-      } else {
+
+        if (packageState && !['disputed', 'cancelled', 'delivered'].includes(String(packageState.package_status))) {
+          const now = new Date().toISOString();
+          const { error: freezePackageError } = await admin
+            .from('packages')
+            .update({
+              package_status: 'disputed',
+              status: 'disputed',
+              payment_status: 'disputed',
+              dispute_opened_at: now,
+              assignment_expires_at: null,
+              updated_at: now,
+            })
+            .eq('package_id', String(existingEscrow.reference_id));
+          if (freezePackageError) throw new Error(freezePackageError.message);
+        }
+      } else if (String(existingEscrow.escrow_state) === 'held') {
         const { error: repairPackageError } = await admin
           .from('packages')
           .update({ payment_status: 'held', assignment_expires_at: null, updated_at: new Date().toISOString() })
