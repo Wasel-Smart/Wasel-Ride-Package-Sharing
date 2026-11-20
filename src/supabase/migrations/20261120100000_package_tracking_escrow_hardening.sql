@@ -92,6 +92,7 @@ begin
       or new.status is distinct from old.status
       or new.payment_status is distinct from old.payment_status
       or new.payment_transaction_id is distinct from old.payment_transaction_id
+      or new.sender_code_shared_at is distinct from old.sender_code_shared_at
       or new.delivered_at is distinct from old.delivered_at
       or new.pickup_verified_at is distinct from old.pickup_verified_at
       or new.delivery_verified_at is distinct from old.delivery_verified_at
