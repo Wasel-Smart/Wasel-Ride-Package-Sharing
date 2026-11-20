@@ -728,6 +728,7 @@ function mapPackageRow(row: PackageRow) {
     payment_status: String((row as Record<string, unknown>).payment_status ?? 'unpaid'),
     pickup_verified_at: (row as Record<string, unknown>).pickup_verified_at ?? null,
     delivery_verified_at: (row as Record<string, unknown>).delivery_verified_at ?? null,
+    sender_code_shared_at: (row as Record<string, unknown>).sender_code_shared_at ?? null,
     created_at: String(row.created_at ?? new Date().toISOString()),
   };
 }
@@ -1918,6 +1919,40 @@ async function loadPackageForAssignedDriver(
   return packageRow as Record<string, unknown>;
 }
 
+async function handleRotatePackageCodes(auth: AuthenticatedRequest, trackingId: string) {
+  const tracking = normalizeTrackingNumber(trackingId);
+  const { data: packageRow, error } = await auth.admin
+    .from('packages')
+    .select('package_id, sender_id, package_status, pickup_verified_at')
+    .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!packageRow || String(packageRow.sender_id) !== auth.canonicalUser.id) {
+    return jsonResponse({ error: 'Only the sender can rotate package handoff codes.' }, 403);
+  }
+
+  if (['delivered', 'cancelled', 'disputed'].includes(String(packageRow.package_status))) {
+    return jsonResponse({ error: 'Closed or disputed package codes cannot be rotated.' }, 409);
+  }
+
+  const pickupCode = packageRow.pickup_verified_at ? null : generatePackageOtp();
+  const deliveryCode = generatePackageOtp();
+  const { error: secretError } = await auth.admin
+    .schema('private')
+    .from('package_handoff_secrets')
+    .update({
+      ...(pickupCode ? { pickup_code_hash: await sha256Hex(pickupCode) } : {}),
+      delivery_code_hash: await sha256Hex(deliveryCode),
+      failed_attempts: 0,
+      locked_until: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('package_id', String(packageRow.package_id));
+  if (secretError) throw new Error(secretError.message);
+
+  return jsonResponse({ handoffCode: pickupCode, deliveryCode });
+}
+
 async function handleCreatePackageEvidenceUpload(
   auth: AuthenticatedRequest,
   trackingId: string,
@@ -1954,8 +1989,49 @@ async function handleUpdatePackageVerification(
   body: Record<string, unknown>,
   walletHandlers: ReturnType<typeof createWalletHandlers>,
 ) {
-  const packageRow = await loadPackageForAssignedDriver(auth, trackingId);
   const action = normalizeString(body.action);
+
+  if (action === 'share_code') {
+    const tracking = normalizeTrackingNumber(trackingId);
+    const { data: senderPackage, error: senderError } = await auth.admin
+      .from('packages')
+      .select('package_id, sender_id')
+      .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
+      .maybeSingle();
+    if (senderError) throw new Error(senderError.message);
+    if (!senderPackage || String(senderPackage.sender_id) !== auth.canonicalUser.id) {
+      return jsonResponse({ error: 'Only the package sender can record handoff-code sharing.' }, 403);
+    }
+
+    const now = new Date().toISOString();
+    const { error: shareError } = await auth.admin
+      .from('packages')
+      .update({ sender_code_shared_at: now, updated_at: now })
+      .eq('package_id', String(senderPackage.package_id));
+    if (shareError) throw new Error(shareError.message);
+
+    const { error: eventError } = await auth.admin
+      .from('package_events')
+      .insert({
+        package_id: String(senderPackage.package_id),
+        event_type: 'handoff_code_shared',
+        event_status: 'shared',
+        notes: 'Sender recorded that the pickup code was shared with the assigned driver.',
+        created_by: auth.canonicalUser.id,
+        created_at: now,
+      });
+    if (eventError) throw new Error(eventError.message);
+
+    const { data: updated, error: updatedError } = await auth.admin
+      .from('packages')
+      .select('*')
+      .eq('package_id', String(senderPackage.package_id))
+      .single();
+    if (updatedError) throw new Error(updatedError.message);
+    return jsonResponse({ package: mapPackageRow(updated as PackageRow) });
+  }
+
+  const packageRow = await loadPackageForAssignedDriver(auth, trackingId);
   const code = normalizeString(body.code);
 
   if (!code || !/^\d{6}$/.test(code)) {
@@ -2530,6 +2606,11 @@ serve(async (req) => {
         decodeURIComponent(packageEvidenceMatch[1]),
         await readJsonBody(req),
       );
+    }
+
+    const packageRotateMatch = path.match(/^\/packages\/track\/([^/]+)\/rotate-codes$/);
+    if (packageRotateMatch && req.method === 'POST') {
+      return handleRotatePackageCodes(auth, decodeURIComponent(packageRotateMatch[1]));
     }
 
     const packageVerificationMatch = path.match(/^\/packages\/track\/([^/]+)\/verification$/);
