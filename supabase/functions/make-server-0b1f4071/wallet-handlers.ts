@@ -710,6 +710,26 @@ async function retrieveStripePaymentIntent(providerPaymentId: string) {
   return payload as Record<string, unknown>;
 }
 
+async function cancelStripePaymentIntent(providerPaymentId: string) {
+  if (!STRIPE_SECRET_KEY) {
+    throw new Error('Stripe is not configured for this environment.');
+  }
+
+  const response = await fetch(`https://api.stripe.com/v1/payment_intents/${providerPaymentId}/cancel`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams(),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(String((payload as { error?: { message?: string } }).error?.message ?? 'Stripe payment cancellation failed.'));
+  }
+  return payload as Record<string, unknown>;
+}
+
 async function createLocalGatewayIntent(args: {
   provider: Extract<WalletProviderName, 'cliq' | 'aman'>;
   amount: number;
@@ -874,32 +894,55 @@ async function reconcilePaymentIntentStatus(
   intent: Record<string, unknown>,
 ) {
   const currentStatus = String(intent.status ?? 'processing');
-  if (String(intent.provider_name) !== 'stripe' || isFinalPaymentStatus(currentStatus)) {
-    return {
-      intent,
-      settled: currentStatus === 'succeeded',
-    };
+  if (isFinalPaymentStatus(currentStatus)) {
+    return { intent, settled: currentStatus === 'succeeded' };
+  }
+
+  const expiresAt = Date.parse(String(intent.expires_at ?? ''));
+  if (Number.isFinite(expiresAt) && expiresAt <= Date.now()) {
+    let finalStatus = 'cancelled';
+    let lastError: string | null = 'Payment attempt expired before settlement.';
+
+    if (String(intent.provider_name) === 'stripe') {
+      const providerPaymentId = normalizeString(intent.provider_payment_id);
+      if (providerPaymentId) {
+        const cancelled = await cancelStripePaymentIntent(providerPaymentId);
+        finalStatus = mapStripePaymentStatus(cancelled.status);
+        if (finalStatus === 'succeeded') {
+          await settlePaymentIntent(admin, intent);
+        }
+        lastError = normalizeString(
+          ((cancelled.last_payment_error as Record<string, unknown> | undefined)?.message),
+        ) ?? lastError;
+      }
+    }
+
+    const updated = await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
+      status: finalStatus,
+      last_error: lastError,
+    });
+    if (finalStatus === 'failed' || finalStatus === 'cancelled') {
+      await markPackagePaymentFailed(admin, intent, lastError);
+    }
+    return { intent: updated as Record<string, unknown>, settled: finalStatus === 'succeeded' };
+  }
+
+  if (String(intent.provider_name) !== 'stripe') {
+    return { intent, settled: currentStatus === 'succeeded' };
   }
 
   const providerPaymentId = normalizeString(intent.provider_payment_id);
   if (!providerPaymentId) {
-    return {
-      intent,
-      settled: currentStatus === 'succeeded',
-    };
+    return { intent, settled: currentStatus === 'succeeded' };
   }
 
   const stripeIntent = await retrieveStripePaymentIntent(providerPaymentId);
   const providerStatus = mapStripePaymentStatus(stripeIntent.status);
-  const patch: Record<string, unknown> = {
-    status: providerStatus,
-  };
+  const patch: Record<string, unknown> = { status: providerStatus };
   const lastPaymentError = normalizeString(
     ((stripeIntent.last_payment_error as Record<string, unknown> | undefined)?.message),
   );
-  if (lastPaymentError) {
-    patch.last_error = lastPaymentError;
-  }
+  if (lastPaymentError) patch.last_error = lastPaymentError;
 
   if (providerStatus === 'succeeded' && currentStatus !== 'succeeded') {
     await settlePaymentIntent(admin, intent);
@@ -908,6 +951,10 @@ async function reconcilePaymentIntentStatus(
   const nextIntent = providerStatus === currentStatus && !patch.last_error
     ? intent
     : await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), patch);
+
+  if (providerStatus === 'failed' || providerStatus === 'cancelled') {
+    await markPackagePaymentFailed(admin, intent, lastPaymentError);
+  }
 
   return {
     intent: nextIntent as Record<string, unknown>,
