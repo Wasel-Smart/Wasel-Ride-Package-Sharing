@@ -127,7 +127,7 @@ begin
               '*/5 * * * *',
               $command$
                 select net.http_post(
-                  url := (select decrypted_secret from vault.decrypted_secrets where name = 'wasel_project_url') || '/functions/v1/make-server-0b1f4071/wallet/reconcile-expired',
+                  url := rtrim((select decrypted_secret from vault.decrypted_secrets where name = 'wasel_project_url'), '/') || '/functions/v1/make-server-0b1f4071/wallet/reconcile-expired',
                   headers := jsonb_build_object(
                     'Content-Type', 'application/json',
                     'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'wasel_service_role_key')
