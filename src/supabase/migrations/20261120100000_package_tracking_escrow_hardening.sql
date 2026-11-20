@@ -99,7 +99,8 @@ security definer
 set search_path = public, pg_temp
 as $$
 begin
-  if auth.role() = 'authenticated' then
+  if auth.role() = 'authenticated'
+    and coalesce(current_setting('wasel.package_rpc', true), 'off') <> 'on' then
     if tg_op = 'INSERT' then
       if new.sender_id <> public.current_user_id()
         or new.package_status <> 'created'
@@ -380,6 +381,8 @@ begin
   if v_package.package_status in ('delivered', 'cancelled') then
     raise exception 'A closed package cannot be disputed' using errcode = '23514';
   end if;
+
+  perform set_config('wasel.package_rpc', 'on', true);
 
   update public.packages
   set package_status = 'disputed',
