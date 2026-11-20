@@ -1,6 +1,7 @@
 import {
     json,
     authenticateRequest,
+    consumeRateLimit,
     matchesAuthenticatedUser,
     mapPackageRow,
     parseEntityRoute,
@@ -22,6 +23,17 @@ function randomVerificationCode (): string {
     v = buf[ 0 ] ?? 0;
   } while ( v >= limit );
   return String( 100000 + ( v % span ) );
+}
+
+/** Constant-time string compare so a wrong code leaks no per-position timing
+ * signal. Both inputs are already trimmed; the code length is fixed and not a secret. */
+function constantTimeEquals ( a: string, b: string ): boolean {
+  if ( a.length !== b.length ) {return false;}
+  let diff = 0;
+  for ( let i = 0; i < a.length; i += 1 ) {
+    diff |= a.charCodeAt( i ) ^ b.charCodeAt( i );
+  }
+  return diff === 0;
 }
 
 export async function handlePackageRequest ( request: Request, path: string ) {
@@ -342,7 +354,16 @@ export async function handlePackageRequest ( request: Request, path: string ) {
     const body = await request.json().catch( () => ( {} ) );
     const code = String( body.code ?? '' ).trim();
     if ( !code ) {return json( { error: 'A verification code is required.' }, 400 );}
-    if ( !pkg.pickup_verification_code || code !== pkg.pickup_verification_code ) {
+    // Rate-limit per package so the 6-digit code cannot be brute-forced. Fails
+    // closed: if the limiter is down, refuse rather than guess unguarded.
+    const limited = await consumeRateLimit(
+      auth.admin,
+      `package-verify-pickup:${ packageRoute.id }`,
+      10,
+      { windowSeconds: 600, failClosed: true },
+    );
+    if ( limited ) {return limited;}
+    if ( !pkg.pickup_verification_code || !constantTimeEquals( code, pkg.pickup_verification_code ) ) {
       return json( { error: 'Incorrect pickup code.' }, 403 );
     }
     const photo = typeof body.photo === 'string' ? body.photo.slice( 0, 1000 ) : null;
@@ -395,7 +416,16 @@ export async function handlePackageRequest ( request: Request, path: string ) {
     const body = await request.json().catch( () => ( {} ) );
     const code = String( body.code ?? '' ).trim();
     if ( !code ) {return json( { error: 'A verification code is required.' }, 400 );}
-    if ( !pkg.delivery_verification_code || code !== pkg.delivery_verification_code ) {
+    // Rate-limit per package so the delivery code cannot be brute-forced. The main
+    // threat is a carrier guessing the receiver's code to fake a hand-off.
+    const limited = await consumeRateLimit(
+      auth.admin,
+      `package-verify-delivery:${ packageRoute.id }`,
+      10,
+      { windowSeconds: 600, failClosed: true },
+    );
+    if ( limited ) {return limited;}
+    if ( !pkg.delivery_verification_code || !constantTimeEquals( code, pkg.delivery_verification_code ) ) {
       return json( { error: 'Incorrect delivery code.' }, 403 );
     }
     const photo = typeof body.photo === 'string' ? body.photo.slice( 0, 1000 ) : null;
