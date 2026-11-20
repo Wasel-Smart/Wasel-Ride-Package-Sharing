@@ -716,20 +716,8 @@ async function createLocalGatewayIntent(args: {
   currency: string;
   metadata: Record<string, string>;
 }) {
-  const providerPaymentId = `${args.provider}_${crypto.randomUUID()}`;
-  return {
-    id: providerPaymentId,
-    status: 'requires_action',
-    next_action: {
-      type: args.provider === 'cliq' ? 'display_qr_code' : 'await_bank_transfer',
-      display_qr_code: {
-        image_url_png: `https://payments.wasel.local/${providerPaymentId}/qr`,
-      },
-    },
-    amount: toMinorUnits(args.amount, args.currency),
-    currency: normalizeCurrency(args.currency).toLowerCase(),
-    metadata: args.metadata,
-  };
+  void args;
+  throw new Error('Local payment provider is not connected. Configure a contracted acquirer API before enabling CliQ or bank-transfer checkout.');
 }
 
 async function verifyStripeWebhookSignature(payload: string, signatureHeader: string | null) {
