@@ -728,7 +728,6 @@ function mapNotificationRow(row: NotificationRow) {
 function mapPackageRow(row: PackageRow) {
   return {
     id: String(row.package_id ?? row.id ?? ''),
-    sender_id: row.sender_id ?? null,
     package_id: String(row.package_id ?? row.id ?? ''),
     tracking_code: String(row.tracking_number ?? row.package_code ?? ''),
     tracking_number: String(row.tracking_number ?? row.package_code ?? ''),
@@ -1995,6 +1994,7 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
   return jsonResponse({
     package: {
       ...mapPackageRow(responsePackage),
+      is_sender: true,
       ...driverSummary,
       handoffCode: pickupCode,
       deliveryCode,
@@ -2054,7 +2054,7 @@ async function handleTrackPackage(auth: AuthenticatedRequest, trackingId: string
   }
 
   if (!isParticipant) return null;
-  return { ...mapPackageRow(data as PackageRow), ...driverSummary };
+  return { ...mapPackageRow(data as PackageRow), is_sender: String(row.sender_id ?? '') === canonicalUserId, ...driverSummary };
 }
 
 async function loadPackageForAssignedDriver(
@@ -2188,7 +2188,7 @@ async function handleRefundPackageEscrow(
   if (updatedError) throw new Error(updatedError.message);
 
   return jsonResponse({
-    package: mapPackageRow(updated as PackageRow),
+    package: { ...mapPackageRow(updated as PackageRow), is_sender: true },
     refundTransactionId,
   });
 }
