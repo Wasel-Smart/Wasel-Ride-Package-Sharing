@@ -249,6 +249,17 @@ function normalizeBookingStatus(value: unknown): string {
   }
 }
 
+function generatePackageOtp(): string {
+  const value = new Uint32Array(1);
+  crypto.getRandomValues(value);
+  return String(100000 + (value[0] % 900000));
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 function normalizeTrackingNumber(value: unknown): string {
   return String(value ?? '')
     .trim()
@@ -714,6 +725,9 @@ function mapPackageRow(row: PackageRow) {
     recipient_phone: row.receiver_phone ?? null,
     trip_id: row.trip_id ?? null,
     status: normalizePackageStatus(row.status ?? row.package_status),
+    payment_status: String((row as Record<string, unknown>).payment_status ?? 'unpaid'),
+    pickup_verified_at: (row as Record<string, unknown>).pickup_verified_at ?? null,
+    delivery_verified_at: (row as Record<string, unknown>).delivery_verified_at ?? null,
     created_at: String(row.created_at ?? new Date().toISOString()),
   };
 }
@@ -1737,16 +1751,22 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
   const from = normalizeString(body.from);
   const to = normalizeString(body.to);
   const description = normalizeString(body.description) || '';
-  const tracking = normalizeTrackingNumber(body.trackingNumber ?? body.tracking_code) || `PKG-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+  const weight = Math.max(0.1, toNumber(body.weight, 0.5));
 
-  if (!from || !to) {
-    return jsonResponse({ error: 'from and to are required.' }, 400);
+  if (!from || !to || from.toLowerCase() === to.toLowerCase()) {
+    return jsonResponse({ error: 'Valid, different origin and destination values are required.' }, 400);
   }
+
+  const packageId = crypto.randomUUID();
+  const tracking = `WSL-PKG-${crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
+  const pickupCode = generatePackageOtp();
+  const deliveryCode = generatePackageOtp();
+  const now = new Date().toISOString();
 
   const { data, error } = await auth.admin
     .from('packages')
     .insert({
-      package_id: crypto.randomUUID(),
+      package_id: packageId,
       tracking_number: tracking,
       package_code: tracking,
       qr_code: tracking,
@@ -1757,14 +1777,15 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
       origin_location: from,
       destination_name: to,
       destination_location: to,
-      size: 'medium',
-      weight_kg: Math.max(0.1, toNumber(body.weight, 0.5)),
+      size: weight <= 1 ? 'small' : weight <= 5 ? 'medium' : 'large',
+      weight_kg: weight,
       description,
       fee_amount: 5,
       delivery_fee: 5,
       package_status: 'created',
-      status: 'requested',
-      created_at: new Date().toISOString(),
+      status: 'searching',
+      created_at: now,
+      updated_at: now,
     })
     .select('*')
     .single();
@@ -1773,26 +1794,87 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
     return jsonResponse({ error: error.message }, 400);
   }
 
-  return jsonResponse({ package: mapPackageRow(data as PackageRow) }, 201);
-}
+  const { error: secretError } = await auth.admin
+    .schema('private')
+    .from('package_handoff_secrets')
+    .insert({
+      package_id: packageId,
+      pickup_code_hash: await sha256Hex(pickupCode),
+      delivery_code_hash: await sha256Hex(deliveryCode),
+      failed_attempts: 0,
+      created_at: now,
+      updated_at: now,
+    });
 
-async function handleTrackPackage(admin: SupabaseClientInstance, trackingId: string) {
-  const tracking = normalizeTrackingNumber(trackingId);
-  if (!tracking) {
-    return null;
+  if (secretError) {
+    await auth.admin.from('packages').delete().eq('package_id', packageId);
+    return jsonResponse({ error: 'Package security credentials could not be initialized.' }, 500);
   }
 
-  const { data, error } = await admin
+  const { error: eventError } = await auth.admin
+    .from('package_events')
+    .insert({
+      package_id: packageId,
+      event_type: 'created',
+      event_status: 'searching',
+      notes: 'Package request created by sender.',
+      created_by: auth.canonicalUser.id,
+      created_at: now,
+    });
+
+  if (eventError) {
+    await auth.admin.from('packages').delete().eq('package_id', packageId);
+    return jsonResponse({ error: 'Package tracking history could not be initialized.' }, 500);
+  }
+
+  return jsonResponse({
+    package: {
+      ...mapPackageRow(data as PackageRow),
+      handoffCode: pickupCode,
+      deliveryCode,
+    },
+  }, 201);
+}
+
+async function handleTrackPackage(auth: AuthenticatedRequest, trackingId: string) {
+  const tracking = normalizeTrackingNumber(trackingId);
+  if (!tracking) return null;
+
+  const { data, error } = await auth.admin
     .from('packages')
     .select('*')
     .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
     .maybeSingle();
 
-  if (error) {
-    throw new Error(error.message);
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const row = data as Record<string, unknown>;
+  const canonicalUserId = auth.canonicalUser.id;
+  let isParticipant = String(row.sender_id ?? '') === canonicalUserId
+    || String(row.receiver_id ?? '') === canonicalUserId;
+
+  if (!isParticipant && row.trip_id) {
+    const { data: trip, error: tripError } = await auth.admin
+      .from('trips')
+      .select('driver_id')
+      .eq('trip_id', String(row.trip_id))
+      .maybeSingle();
+    if (tripError) throw new Error(tripError.message);
+
+    if (trip?.driver_id) {
+      const { data: driver, error: driverError } = await auth.admin
+        .from('drivers')
+        .select('user_id')
+        .eq('driver_id', String(trip.driver_id))
+        .maybeSingle();
+      if (driverError) throw new Error(driverError.message);
+      isParticipant = String(driver?.user_id ?? '') === canonicalUserId;
+    }
   }
-  if (!data) {
-    return null;
+
+  if (!isParticipant) {
+    throw new Error('You are not a participant in this package.');
   }
 
   return mapPackageRow(data as PackageRow);
