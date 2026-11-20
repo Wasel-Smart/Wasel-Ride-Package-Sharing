@@ -102,6 +102,26 @@ paths:
           description: Rate limited
         '500':
           description: Internal platform error
+  /v1/packages/track/{trackingId}/refund:
+    post:
+      tags:
+        - packages
+      operationId: refundPackageEscrow
+      summary: Request a sender-only refund for cancelled or dispute-frozen package escrow.
+        security:
+          - bearerAuth: []
+          - requestSignature: []
+      responses:
+        '200':
+          description: Successful response
+        '400':
+          description: Invalid request
+        '401':
+          description: Authentication failed
+        '429':
+          description: Rate limited
+        '500':
+          description: Internal platform error
   /v1/packages/track/{trackingId}/rotate-codes:
     post:
       tags:
