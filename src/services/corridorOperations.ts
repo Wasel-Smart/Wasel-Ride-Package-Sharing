@@ -54,7 +54,7 @@ export interface BusinessAccountSnapshot {
     monthlyReturnVolume: number;
     attachRatePercent: number;
     tracking: PackageTracking;
-    escrow: PackagePaymentEscrow;
+    escrow: PackagePaymentEscrow | null;
   };
   monthlyInvoiceJOD: number;
   estimatedSavingsPercent: number;
@@ -275,7 +275,7 @@ export async function buildBusinessAccountSnapshot(
     });
   }
   const linkedTracking = packageTrackingService.getPackage(tracking.id) ?? tracking;
-  const escrow = await packageTrackingService.processPayment(tracking.id, 'wallet');
+  // Payment and escrow stay unavailable until a server-verified provider flow is deployed.\n  const escrow: PackagePaymentEscrow | null = null;
   const liquidityHealth = calculateLiquidityHealth(18, 72, 54) as LiquidityMetrics & {
     routeId: string;
     averagePriceJOD: number;
