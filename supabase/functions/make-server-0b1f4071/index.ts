@@ -2473,6 +2473,14 @@ serve(async (req) => {
       return walletHandlers.handlePaymentWebhook(req);
     }
 
+    if (routeMatches(path, '/wallet/reconcile-expired') && req.method === 'POST') {
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      if (!serviceRoleKey || req.headers.get('authorization') !== `Bearer ${serviceRoleKey}`) {
+        return unauthorizedResponse();
+      }
+      return walletHandlers.handleReconcileExpiredPaymentIntents();
+    }
+
     if (routeMatches(path, '/communications/webhooks/resend') && req.method === 'POST') {
       return communicationHandlers.handleResendWebhook(req);
     }
