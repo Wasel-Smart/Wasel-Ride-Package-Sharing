@@ -459,6 +459,7 @@ begin
   if not v_is_driver then raise exception 'Only the assigned driver can verify pickup' using errcode = '42501'; end if;
   if v_package.package_status <> 'assigned'
     or v_package.payment_status <> 'held'
+    or v_package.sender_code_shared_at is null
     or v_package.dispute_opened_at is not null then
     raise exception 'Package is not eligible for pickup verification' using errcode = '23514';
   end if;
