@@ -137,31 +137,8 @@ as $$
 begin
   if auth.role() in ('anon', 'authenticated')
     and coalesce(current_setting('wasel.package_rpc', true), 'off') <> 'on' then
-    if tg_op = 'INSERT' then
-      raise exception 'Package creation must use the authenticated server API'
-        using errcode = '42501';
-    elsif
-      new.package_status is distinct from old.package_status
-      or new.status is distinct from old.status
-      or new.payment_status is distinct from old.payment_status
-      or new.payment_transaction_id is distinct from old.payment_transaction_id
-      or new.sender_code_shared_at is distinct from old.sender_code_shared_at
-      or new.delivered_at is distinct from old.delivered_at
-      or new.pickup_verified_at is distinct from old.pickup_verified_at
-      or new.delivery_verified_at is distinct from old.delivery_verified_at
-      or new.delivery_evidence_url is distinct from old.delivery_evidence_url
-      or new.dispute_opened_at is distinct from old.dispute_opened_at
-      or new.trip_id is distinct from old.trip_id
-      or new.sender_id is distinct from old.sender_id
-      or new.package_code is distinct from old.package_code
-      or new.tracking_number is distinct from old.tracking_number
-      or new.qr_code is distinct from old.qr_code
-      or new.fee_amount is distinct from old.fee_amount
-      or new.delivery_fee is distinct from old.delivery_fee
-    then
-      raise exception 'Package assignment, tracking, custody and payment state are server-managed'
-        using errcode = '42501';
-    end if;
+    raise exception 'Package mutations must use the authenticated server API'
+      using errcode = '42501';
   end if;
   return new;
 end;
