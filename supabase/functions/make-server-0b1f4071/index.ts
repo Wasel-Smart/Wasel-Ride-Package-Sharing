@@ -1958,7 +1958,7 @@ async function handleUpdatePackageVerification(
   const action = normalizeString(body.action);
   const code = normalizeString(body.code);
 
-  if (!code || !/^\\d{6}$/.test(code)) {
+  if (!code || !/^\d{6}$/.test(code)) {
     return jsonResponse({ error: 'A valid six-digit handoff code is required.' }, 400);
   }
 
@@ -2515,7 +2515,7 @@ serve(async (req) => {
       }
     }
 
-    const packageTrackMatch = path.match(/^\\/packages\\/track\\/([^/]+)$/);
+    const packageTrackMatch = path.match(/^\/packages\/track\/([^/]+)$/);
     if (packageTrackMatch && req.method === 'GET') {
       const tracked = await handleTrackPackage(auth, decodeURIComponent(packageTrackMatch[1]));
       return tracked
@@ -2523,7 +2523,7 @@ serve(async (req) => {
         : jsonResponse({ error: 'Package not found.' }, 404);
     }
 
-    const packageEvidenceMatch = path.match(/^\\/packages\\/track\\/([^/]+)\\/evidence-upload$/);
+    const packageEvidenceMatch = path.match(/^\/packages\/track\/([^/]+)\/evidence-upload$/);
     if (packageEvidenceMatch && req.method === 'POST') {
       return handleCreatePackageEvidenceUpload(
         auth,
@@ -2532,7 +2532,7 @@ serve(async (req) => {
       );
     }
 
-    const packageVerificationMatch = path.match(/^\\/packages\\/track\\/([^/]+)\\/verification$/);
+    const packageVerificationMatch = path.match(/^\/packages\/track\/([^/]+)\/verification$/);
     if (packageVerificationMatch && req.method === 'PATCH') {
       return handleUpdatePackageVerification(
         auth,
