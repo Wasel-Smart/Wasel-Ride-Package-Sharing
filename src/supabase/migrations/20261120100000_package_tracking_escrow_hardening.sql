@@ -119,6 +119,7 @@ begin
       or new.tracking_number is distinct from old.tracking_number
       or new.qr_code is distinct from old.qr_code
       or new.fee_amount is distinct from old.fee_amount
+      or new.delivery_fee is distinct from old.delivery_fee
     then
       raise exception 'Package assignment, tracking, and payment state are server-managed'
         using errcode = '42501';
