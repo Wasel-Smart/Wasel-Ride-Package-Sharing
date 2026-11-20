@@ -2420,6 +2420,31 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     }
   }
 
+  async function releasePackageEscrowForVerifiedDelivery(packageId: string, driverUserId: string) {
+    const admin = runtime.getAdminClient();
+    const { data: escrow, error } = await admin
+      .from('escrow_accounts')
+      .select('escrow_account_id, beneficiary_user_id, escrow_state')
+      .eq('escrow_type', 'package')
+      .eq('reference_id', packageId)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    if (!escrow) return { released: false, reason: 'not_funded' };
+    if (String(escrow.beneficiary_user_id) !== driverUserId) {
+      throw new Error('Only the assigned driver can receive package escrow.');
+    }
+    if (String(escrow.escrow_state) === 'released') {
+      return { released: true, reason: 'already_released' };
+    }
+    if (String(escrow.escrow_state) !== 'held') {
+      return { released: false, reason: 'not_held' };
+    }
+
+    const transactionId = await releaseEscrow(admin, String(escrow.escrow_account_id), driverUserId);
+    return { released: true, transactionId };
+  }
+
   async function handleRefundEscrow(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
@@ -2449,5 +2474,6 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     handleWalletSettings,
     handleReleaseEscrow,
     handleRefundEscrow,
+    releasePackageEscrowForVerifiedDelivery,
   };
 }
