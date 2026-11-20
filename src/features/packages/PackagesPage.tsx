@@ -79,7 +79,7 @@ export function PackagesPage() {
       ? DS.green
       : trackedPackage?.status === 'in_transit'
         ? DS.cyan
-        : trackedPackage?.status === 'matched'
+        : trackedPackage?.status === 'matched' || trackedPackage?.status === 'disputed'
           ? DS.gold
           : DS.muted;
 
