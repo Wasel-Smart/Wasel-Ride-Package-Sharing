@@ -1115,7 +1115,7 @@ async function createEscrowForIntent(
     }
     const { data: packageRow, error: packageError } = await admin
       .from('packages')
-      .select('sender_id, trip_id, package_status, payment_status, fee_amount')
+      .select('sender_id, trip_id, package_status, payment_status, fee_amount, dispute_opened_at')
       .eq('package_id', packageId)
       .maybeSingle();
     if (packageError) throw new Error(packageError.message);
