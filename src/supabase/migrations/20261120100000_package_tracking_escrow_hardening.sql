@@ -24,6 +24,24 @@ alter table public.packages
 -- returned only at creation/rotation and are never stored in the database.
 create schema if not exists private;
 
+-- Private delivery evidence bucket. Signed upload URLs are minted only by the
+-- authenticated Edge Function after checking the assigned driver.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'package-evidence',
+  'package-evidence',
+  false,
+  10485760,
+  array['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
+)
+on conflict (id) do update
+set public = false,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+comment on table storage.buckets is
+  'Wasel package-evidence bucket is private and accepts only bounded image/PDF uploads via signed server-issued URLs.';
+
 create table if not exists private.package_handoff_secrets (
   package_id uuid primary key references public.packages(package_id) on delete cascade,
   pickup_code_hash text not null,
