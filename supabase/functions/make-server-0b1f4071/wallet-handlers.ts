@@ -1861,6 +1861,30 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         return runtime.json({ error: 'Amount must be greater than zero.' }, 400);
       }
 
+      if (purpose === 'package_payment') {
+        if (referenceType !== 'package' || !referenceId) {
+          return runtime.json({ error: 'Package payments require a package reference.' }, 400);
+        }
+        const { data: packageRow, error: packageError } = await auth.admin
+          .from('packages')
+          .select('sender_id, trip_id, package_status, payment_status, fee_amount')
+          .eq('package_id', referenceId)
+          .maybeSingle();
+        if (packageError) throw new Error(packageError.message);
+        if (!packageRow || String(packageRow.sender_id) !== auth.canonicalUser.id) {
+          return runtime.json({ error: 'Only the package sender can pay for this package.' }, 403);
+        }
+        if (!packageRow.trip_id || String(packageRow.package_status) !== 'assigned') {
+          return runtime.json({ error: 'The package must be assigned to a driver before payment.' }, 409);
+        }
+        if (!['unpaid', 'pending'].includes(String(packageRow.payment_status))) {
+          return runtime.json({ error: 'This package is not eligible for another payment.' }, 409);
+        }
+        if (Math.round(toNumber(packageRow.fee_amount) * 1000) !== Math.round(amount * 1000)) {
+          return runtime.json({ error: 'Payment amount does not match the package fee.' }, 400);
+        }
+      }
+
       let providerName: WalletProviderName;
       if (paymentMethodType === 'card') providerName = 'stripe';
       else if (paymentMethodType === 'cliq') providerName = 'cliq';
