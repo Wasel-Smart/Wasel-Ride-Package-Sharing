@@ -91,20 +91,47 @@ $$;
 revoke all on function public.app_expire_unpaid_package_assignments() from public, anon, authenticated;
 grant execute on function public.app_expire_unpaid_package_assignments() to service_role;
 
--- Schedule reservation cleanup when pg_cron is available in the target project.
-do $
+-- Schedule reservation cleanup and expired payment reconciliation when the
+-- Supabase pg_cron/pg_net extensions and app settings are available.
+do $wasel$
 begin
   if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
     execute 'create extension if not exists pg_cron';
+  end if;
+
+  if exists (select 1 from pg_available_extensions where name = 'pg_net') then
+    execute 'create extension if not exists pg_net';
   end if;
 
   if to_regclass('cron.job') is not null
     and to_regprocedure('cron.schedule(text,text,text)') is not null then
     execute 'select cron.unschedule(jobid) from cron.job where jobname = ''wasel-package-reservation-expiry''';
     execute 'select cron.schedule(''wasel-package-reservation-expiry'', ''*/5 * * * *'', ''select public.app_expire_unpaid_package_assignments();'')';
+
+    if to_regprocedure('net.http_post(text,jsonb,jsonb,jsonb,integer)') is not null
+      and nullif(current_setting('app.settings.supabase_url', true), '') is not null
+      and nullif(current_setting('app.settings.service_role_key', true), '') is not null then
+      execute 'select cron.unschedule(jobid) from cron.job where jobname = ''wasel-package-payment-reconciliation''';
+      execute $schedule$
+        select cron.schedule(
+          'wasel-package-payment-reconciliation',
+          '*/5 * * * *',
+          $command$
+            select net.http_post(
+              url := current_setting('app.settings.supabase_url') || '/functions/v1/make-server-0b1f4071/wallet/reconcile-expired',
+              headers := jsonb_build_object(
+                'Content-Type', 'application/json',
+                'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key')
+              ),
+              body := '{}'::jsonb
+            );
+          $command$
+        )
+      $schedule$;
+    end if;
   end if;
 end;
-$;
+$wasel$;
 
 -- A payment intent can back only one escrow account. This closes the duplicate
 -- webhook race in the existing wallet ledger.
