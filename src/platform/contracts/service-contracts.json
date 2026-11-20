@@ -152,5 +152,61 @@
         "summary": "Read growth and corridor metrics."
       }
     ]
+  },
+  {
+    "name": "packages",
+    "ownership": "mobility-platform",
+    "version": "v1",
+    "operations": [
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "createPackage",
+        "path": "/v1/packages",
+        "summary": "Create a package request and optionally reserve an eligible trip."
+      },
+      {
+        "authentication": "jwt",
+        "method": "GET",
+        "operationId": "trackPackage",
+        "path": "/v1/packages/track/{trackingId}",
+        "summary": "Read package tracking for an authenticated participant."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "createPackageEvidenceUpload",
+        "path": "/v1/packages/track/{trackingId}/evidence-upload",
+        "summary": "Create a signed upload URL for private delivery evidence."
+      },
+      {
+        "authentication": "jwt",
+        "method": "PATCH",
+        "operationId": "verifyPackageCustody",
+        "path": "/v1/packages/track/{trackingId}/verification",
+        "summary": "Verify pickup or delivery with a one-time handoff code."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "rotatePackageHandoffCodes",
+        "path": "/v1/packages/track/{trackingId}/rotate-codes",
+        "summary": "Rotate pickup and delivery codes as the package sender."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "openPackageDispute",
+        "path": "/v1/packages/track/{trackingId}/dispute",
+        "summary": "Open a participant dispute and freeze held escrow."
+      },
+      {
+        "authentication": "jwt",
+        "method": "POST",
+        "operationId": "refundPackageEscrow",
+        "path": "/v1/packages/track/{trackingId}/refund",
+        "summary": "Request a sender-only refund for cancelled or dispute-frozen package escrow."
+      }
+    ]
   }
 ]

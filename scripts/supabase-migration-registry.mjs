@@ -358,6 +358,24 @@ export const migrationCatalog = [
     category: 'runtime-contract',
     naming: 'canonical',
   },
+  {
+    sequence: 39,
+    path: 'src/supabase/migrations/20261120090000_enforce_no_self_booking.sql',
+    description: 'Replace the invalid subquery CHECK with race-safe booking ownership enforcement',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'hardening',
+    naming: 'canonical',
+  },
+  {
+    sequence: 40,
+    path: 'src/supabase/migrations/20261120100000_package_tracking_escrow_hardening.sql',
+    description: 'Harden package OTP custody, automatic trip matching, and release conditions in the existing wallet escrow ledger',
+    status: 'ready',
+    phase: 'rollout',
+    category: 'hardening',
+    naming: 'canonical',
+  },
 ];
 
 export const operationalSeedFiles = [

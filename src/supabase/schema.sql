@@ -122,6 +122,48 @@ CREATE TABLE vehicles (
   UNIQUE(license_plate)
 );
 
+-- Recurring Trips Table
+CREATE TABLE recurring_trips (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  driver_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  vehicle_id UUID REFERENCES vehicles(id) ON DELETE SET NULL,
+  
+  -- Schedule details
+  name TEXT NOT NULL,
+  trip_type trip_type NOT NULL,
+  is_active BOOLEAN DEFAULT TRUE,
+  
+  -- Route
+  from_location TEXT NOT NULL,
+  from_lat DECIMAL(10,8) NOT NULL,
+  from_lng DECIMAL(11,8) NOT NULL,
+  to_location TEXT NOT NULL,
+  to_lat DECIMAL(10,8) NOT NULL,
+  to_lng DECIMAL(11,8) NOT NULL,
+  
+  -- Recurrence
+  days_of_week INTEGER[] NOT NULL CHECK (array_length(days_of_week, 1) > 0), -- 0=Sunday, 6=Saturday
+  departure_time TIME NOT NULL,
+  
+  -- Capacity & Pricing
+  available_seats INTEGER NOT NULL CHECK (available_seats >= 1),
+  price_per_seat DECIMAL(10,2) NOT NULL CHECK (price_per_seat >= 0),
+  
+  -- Statistics
+  total_trips_created INTEGER DEFAULT 0,
+  total_bookings INTEGER DEFAULT 0,
+  
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  paused_at TIMESTAMPTZ,
+  
+  -- Validity period
+  valid_from DATE DEFAULT CURRENT_DATE,
+  valid_until DATE
+);
+
+
 -- Trips Table (offered rides)
 CREATE TABLE trips (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -234,48 +276,6 @@ CREATE TABLE bookings (
   cancellation_reason TEXT,
   
   UNIQUE(trip_id, passenger_id),
-  CONSTRAINT no_self_booking CHECK (passenger_id != (SELECT driver_id FROM trips WHERE id = trip_id))
-);
-
--- Recurring Trips Table
-CREATE TABLE recurring_trips (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  driver_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  vehicle_id UUID REFERENCES vehicles(id) ON DELETE SET NULL,
-  
-  -- Schedule details
-  name TEXT NOT NULL,
-  trip_type trip_type NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  
-  -- Route
-  from_location TEXT NOT NULL,
-  from_lat DECIMAL(10,8) NOT NULL,
-  from_lng DECIMAL(11,8) NOT NULL,
-  to_location TEXT NOT NULL,
-  to_lat DECIMAL(10,8) NOT NULL,
-  to_lng DECIMAL(11,8) NOT NULL,
-  
-  -- Recurrence
-  days_of_week INTEGER[] NOT NULL CHECK (array_length(days_of_week, 1) > 0), -- 0=Sunday, 6=Saturday
-  departure_time TIME NOT NULL,
-  
-  -- Capacity & Pricing
-  available_seats INTEGER NOT NULL CHECK (available_seats >= 1),
-  price_per_seat DECIMAL(10,2) NOT NULL CHECK (price_per_seat >= 0),
-  
-  -- Statistics
-  total_trips_created INTEGER DEFAULT 0,
-  total_bookings INTEGER DEFAULT 0,
-  
-  -- Metadata
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  paused_at TIMESTAMPTZ,
-  
-  -- Validity period
-  valid_from DATE DEFAULT CURRENT_DATE,
-  valid_until DATE
 );
 
 -- Reviews & Ratings Table
@@ -559,6 +559,34 @@ CREATE INDEX idx_analytics_event ON analytics_events(event_name, created_at DESC
 -- ============================================================================
 -- TRIGGERS & FUNCTIONS
 -- ============================================================================
+
+-- Enforce that a passenger cannot book their own trip.
+-- Lock the trip row while checking ownership so concurrent updates cannot
+-- change the driver during the booking decision.
+CREATE OR REPLACE FUNCTION prevent_self_booking()
+RETURNS TRIGGER AS $wasel$
+DECLARE
+  trip_driver_id UUID;
+BEGIN
+  SELECT driver_id
+    INTO trip_driver_id
+    FROM trips
+   WHERE id = NEW.trip_id
+   FOR UPDATE;
+
+  IF trip_driver_id IS NOT NULL AND trip_driver_id = NEW.passenger_id THEN
+    RAISE EXCEPTION 'A driver cannot book their own trip'
+      USING ERRCODE = '23514',
+            CONSTRAINT = 'no_self_booking';
+  END IF;
+
+  RETURN NEW;
+END;
+$wasel$ LANGUAGE plpgsql;
+
+CREATE TRIGGER prevent_self_booking
+BEFORE INSERT OR UPDATE OF trip_id, passenger_id ON bookings
+FOR EACH ROW EXECUTE FUNCTION prevent_self_booking();
 
 -- Update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -954,17 +982,8 @@ $$ LANGUAGE plpgsql;
 -- INITIAL DATA / SEED DATA
 -- ============================================================================
 
--- Insert default admin user (you'll need to create this in Supabase Auth first)
--- This is just a placeholder
-INSERT INTO profiles (id, email, full_name, phone_verified, email_verified, is_verified)
-VALUES (
-  '00000000-0000-0000-0000-000000000000',
-  'admin@wassel.app',
-  'Wassel Admin',
-  TRUE,
-  TRUE,
-  TRUE
-) ON CONFLICT (id) DO NOTHING;
+-- Admin accounts must be provisioned through Supabase Auth and an audited
+-- server-side role-assignment process. Never seed a synthetic auth.users identity.
 
 -- ============================================================================
 -- VIEWS FOR COMMON QUERIES

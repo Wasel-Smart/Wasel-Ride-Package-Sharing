@@ -27,6 +27,10 @@ import {
   getConnectedStats,
   getPackageByTrackingId,
   updatePackageVerification,
+  uploadPackageDeliveryEvidence,
+  rotatePackageHandoffCodes,
+  openPackageDispute,
+  refundPackageEscrow,
   type PackageRequest,
   type PostedRide,
 } from '../../services/journeyLogistics';
@@ -76,7 +80,7 @@ export function PackagesPage() {
       ? DS.green
       : trackedPackage?.status === 'in_transit'
         ? DS.cyan
-        : trackedPackage?.status === 'matched'
+        : trackedPackage?.status === 'matched' || trackedPackage?.status === 'disputed'
           ? DS.gold
           : DS.muted;
 
@@ -194,6 +198,9 @@ export function PackagesPage() {
           : 'No package was found for that tracking ID yet.',
       );
       refreshPackageSnapshot();
+    } catch (error) {
+      setTrackedPackage(null);
+      setTrackingMessage(error instanceof Error ? error.message : 'Package tracking could not be loaded.');
     } finally {
       setBusyState('idle');
     }
@@ -201,20 +208,37 @@ export function PackagesPage() {
 
   const handleVerificationAction = async (
     action: 'share_code' | 'confirm_pickup' | 'confirm_delivery',
+    code?: string,
+    evidenceFile?: File,
   ) => {
     if (!trackedPackage) return;
     try {
-      const updated = await updatePackageVerification(trackedPackage.trackingId, action);
+      let evidencePath: string | undefined;
+      if (action === 'confirm_delivery') {
+        if (!evidenceFile) throw new Error('Upload a delivery evidence photo before confirming delivery.');
+        evidencePath = await uploadPackageDeliveryEvidence(trackedPackage.trackingId, evidenceFile);
+      }
+
+      const updated = await updatePackageVerification(
+        trackedPackage.trackingId,
+        action,
+        code,
+        evidencePath,
+      );
       if (!updated) return;
 
-      setTrackedPackage(updated);
+      setTrackedPackage({
+        ...updated,
+        handoffCode: trackedPackage.handoffCode,
+        deliveryCode: trackedPackage.deliveryCode,
+      });
       setTrackId(updated.trackingId);
       setTrackingMessage(
         action === 'share_code'
-          ? `OTP handoff is now shared for ${updated.trackingId}.`
+          ? `Pickup code sharing recorded for ${updated.trackingId}.`
           : action === 'confirm_pickup'
-            ? `Rider pickup confirmed for ${updated.trackingId}.`
-            : `Delivery confirmed for ${updated.trackingId}.`,
+            ? `Pickup OTP verified for ${updated.trackingId}.`
+            : `Delivery OTP and evidence verified for ${updated.trackingId}.`,
       );
       refreshPackageSnapshot();
     } catch (error) {
@@ -224,6 +248,53 @@ export function PackagesPage() {
           : 'Package status could not be updated right now.',
       );
     }
+  };
+
+  const handleRotateCodes = async () => {
+    if (!trackedPackage) return;
+    try {
+      const codes = await rotatePackageHandoffCodes(trackedPackage.trackingId);
+      setTrackedPackage({
+        ...trackedPackage,
+        handoffCode: codes.handoffCode ?? trackedPackage.handoffCode,
+        deliveryCode: codes.deliveryCode,
+      });
+      setTrackingMessage('New package handoff codes were generated. Share them only with the intended holder and receiver.');
+    } catch (error) {
+      setTrackingMessage(error instanceof Error ? error.message : 'Package codes could not be generated.');
+    }
+  };
+
+  const handleOpenDispute = async (reason: string) => {
+    if (!trackedPackage) return;
+    try {
+      const updated = await openPackageDispute(trackedPackage.trackingId, reason);
+      if (updated) setTrackedPackage(updated);
+      setTrackingMessage('A package dispute has been opened. Held escrow is frozen pending resolution.');
+      refreshPackageSnapshot();
+    } catch (error) {
+      setTrackingMessage(error instanceof Error ? error.message : 'The package dispute could not be opened.');
+    }
+  };
+
+  const handleRefundPackage = async () => {
+    if (!trackedPackage) return;
+    setBusyState('tracking');
+    try {
+      const updated = await refundPackageEscrow(trackedPackage.trackingId);
+      if (updated) setTrackedPackage(updated);
+      setTrackingMessage('Your package refund has been recorded.');
+      refreshPackageSnapshot();
+    } catch (error) {
+      setTrackingMessage(error instanceof Error ? error.message : 'Package refund could not be processed.');
+    } finally {
+      setBusyState('idle');
+    }
+  };
+
+  const handlePayPackage = () => {
+    if (!trackedPackage?.id) return;
+    nav(`/app/payments?purpose=package_payment&referenceType=package&referenceId=${encodeURIComponent(trackedPackage.id)}`);
   };
 
   const handleOpenSupport = () => {
@@ -536,6 +607,11 @@ export function PackagesPage() {
               recentPackages={recentPackages}
               onSearch={handleTrackingSearch}
               onVerificationAction={handleVerificationAction}
+              onRotateCodes={handleRotateCodes}
+              onPayPackage={handlePayPackage}
+              onOpenDispute={handleOpenDispute}
+              onRefundPackage={handleRefundPackage}
+              isSender={Boolean(user?.id && trackedPackage?.isSender === true)}
               onOpenSupport={handleOpenSupport}
               onOpenRecent={item => focusTrackingItem(item)}
             />

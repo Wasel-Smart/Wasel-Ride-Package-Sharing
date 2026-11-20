@@ -61,14 +61,18 @@ export function PackageSendPanel({
   const recipientWhatsAppUrl = trackedPackage
     ? buildPreferredWhatsAppUrl({
         phone: trackedPackage.recipientPhone,
-        message: `Hi ${trackedPackage.recipientName || 'there'}, your Wasel package ${trackedPackage.trackingId} is active from ${trackedPackage.from} to ${trackedPackage.to}.`,
+        message: trackedPackage.deliveryCode
+          ? `Hi ${trackedPackage.recipientName || 'there'}, your Wasel package ${trackedPackage.trackingId} is on the way from ${trackedPackage.from} to ${trackedPackage.to}. Your delivery verification code is ${trackedPackage.deliveryCode}.`
+          : `Hi ${trackedPackage.recipientName || 'there'}, your Wasel package ${trackedPackage.trackingId} is active from ${trackedPackage.from} to ${trackedPackage.to}.`,
         fallbackMessage: `Hi Wasel, I need WhatsApp support for package ${trackedPackage.trackingId}.`,
       })
     : '';
   const holderWhatsAppUrl = trackedPackage
     ? buildPreferredWhatsAppUrl({
         phone: trackedPackage.matchedDriverPhone,
-        message: `Hi ${trackedPackage.matchedDriver || 'captain'}, I am coordinating package ${trackedPackage.trackingId} on the ${trackedPackage.from} to ${trackedPackage.to} route.`,
+        message: trackedPackage.handoffCode
+          ? `Hi ${trackedPackage.matchedDriver || 'captain'}, please collect Wasel package ${trackedPackage.trackingId} on the ${trackedPackage.from} to ${trackedPackage.to} route. Pickup verification code: ${trackedPackage.handoffCode}.`
+          : `Hi ${trackedPackage.matchedDriver || 'captain'}, I am coordinating package ${trackedPackage.trackingId} on the ${trackedPackage.from} to ${trackedPackage.to} route.`,
         fallbackMessage: `Hi Wasel, I need holder coordination for package ${trackedPackage.trackingId}.`,
       })
     : '';
@@ -97,9 +101,13 @@ export function PackageSendPanel({
           <p style={{ color: DS.cyan, fontWeight: 800, fontSize: '1.2rem', letterSpacing: '0.1em' }}>
             {pkg.trackingId}
           </p>
-          <p style={{ color: DS.muted, fontSize: '0.75rem', margin: '14px 0 4px' }}>Handoff code</p>
+          <p style={{ color: DS.muted, fontSize: '0.75rem', margin: '14px 0 4px' }}>Pickup code (share with assigned driver)</p>
           <p style={{ color: DS.gold, fontWeight: 800, fontSize: '1.05rem', letterSpacing: '0.08em' }}>
-            {trackedPackage?.handoffCode || 'Pending assignment'}
+            {trackedPackage?.handoffCode || 'Not available'}
+          </p>
+          <p style={{ color: DS.muted, fontSize: '0.75rem', margin: '14px 0 4px' }}>Delivery code (share with recipient)</p>
+          <p style={{ color: DS.cyan, fontWeight: 800, fontSize: '1.05rem', letterSpacing: '0.08em' }}>
+            {trackedPackage?.deliveryCode || 'Not available'}
           </p>
           <p style={{ color: DS.sub, fontSize: '0.8rem', marginTop: 8 }}>
             {trackedPackage?.matchedDriver
@@ -107,7 +115,7 @@ export function PackageSendPanel({
               : 'Waiting for route assignment'}
           </p>
           <p style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 10 }}>
-            Share this OTP on WhatsApp with the holder and receiver, then confirm pickup and delivery from tracking.
+            Share each code only with its intended recipient. The assigned driver must enter the pickup and delivery codes in the app. Codes are shown once and are not stored in browser storage.
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>

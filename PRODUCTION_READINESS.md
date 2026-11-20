@@ -25,6 +25,9 @@ This checklist is the single source of truth. Do not claim "production-ready" or
 - [ ] Integration tests cover cross-device persistence, forged status attempts, webhook replay, and isolation.
 - [ ] UI copy no longer presents simulated tracking/escrow as live.
 
+
+**Implementation note (feature branch only):** `docs/PACKAGE_ESCROW_HARDENING.md` documents the new package API, HMAC OTP storage, trip-capacity reservation, private evidence upload, dispute freeze, and existing wallet-ledger integration. Browser-local package tracking and the legacy standalone webhook have been disabled. The migration has not been applied, `PACKAGE_OTP_PEPPER` is not configured, the real Jordanian acquirer is not connected, and database/RLS/end-to-end tests have not passed. Keep #241 open and do not deploy until those gates pass.
+
 ### 3. Canonical production environment (#240)
 - [ ] The exact Supabase project used by `wasel14.online` is identified and documented (project ref only, no secrets).
 - [ ] Repository ruleset requires pull requests + required CI/security status checks before merge to `master`.

@@ -249,6 +249,32 @@ function normalizeBookingStatus(value: unknown): string {
   }
 }
 
+function hasPackageOtpPepper(): boolean {
+  return (Deno.env.get('PACKAGE_OTP_PEPPER') ?? '').length >= 32;
+}
+
+function generatePackageOtp(): string {
+  const value = new Uint32Array(1);
+  crypto.getRandomValues(value);
+  return String(100000 + (value[0] % 900000));
+}
+
+async function sha256Hex(value: string): Promise<string> {
+  const pepper = Deno.env.get('PACKAGE_OTP_PEPPER') ?? '';
+  if (pepper.length < 32) {
+    throw new Error('Package OTP security secret is not configured.');
+  }
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(pepper),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const digest = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
 function normalizeTrackingNumber(value: unknown): string {
   return String(value ?? '')
     .trim()
@@ -714,6 +740,10 @@ function mapPackageRow(row: PackageRow) {
     recipient_phone: row.receiver_phone ?? null,
     trip_id: row.trip_id ?? null,
     status: normalizePackageStatus(row.status ?? row.package_status),
+    payment_status: String((row as Record<string, unknown>).payment_status ?? 'unpaid'),
+    pickup_verified_at: (row as Record<string, unknown>).pickup_verified_at ?? null,
+    delivery_verified_at: (row as Record<string, unknown>).delivery_verified_at ?? null,
+    sender_code_shared_at: (row as Record<string, unknown>).sender_code_shared_at ?? null,
     created_at: String(row.created_at ?? new Date().toISOString()),
   };
 }
@@ -1236,6 +1266,11 @@ async function handleCreateTrip(auth: AuthenticatedRequest, body: Record<string,
     return jsonResponse({ error: error.message }, 400);
   }
 
+  const { error: matchError } = await auth.admin.rpc('app_match_waiting_packages_to_trip', {
+    p_trip_id: String(data.trip_id),
+  });
+  if (matchError) console.error('Waiting package match failed after trip creation:', matchError.message);
+
   const driverSummaries = await fetchDriverSummaries(auth.admin, [driver.driver_id]);
   return jsonResponse(
     mapTripRow(data as TripRow, driverSummaries.get(driver.driver_id) ?? null),
@@ -1737,65 +1772,607 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
   const from = normalizeString(body.from);
   const to = normalizeString(body.to);
   const description = normalizeString(body.description) || '';
-  const tracking = normalizeTrackingNumber(body.trackingNumber ?? body.tracking_code) || `PKG-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+  const weight = Math.max(0.1, toNumber(body.weight, 0.5));
 
-  if (!from || !to) {
-    return jsonResponse({ error: 'from and to are required.' }, 400);
+  if (!from || !to || from.toLowerCase() === to.toLowerCase()) {
+    return jsonResponse({ error: 'Valid, different origin and destination values are required.' }, 400);
+  }
+
+  if (!hasPackageOtpPepper()) {
+    return jsonResponse({ error: 'Secure package handoff is not configured. Contact support.' }, 503);
+  }
+
+  const packageId = crypto.randomUUID();
+  const tracking = `WSL-PKG-${crypto.randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
+  const pickupCode = generatePackageOtp();
+  const deliveryCode = generatePackageOtp();
+  const now = new Date().toISOString();
+  const preferredRideId = normalizeString(body.preferredRideId);
+  let assignedTripId: string | null = null;
+  let assignedDriver: Record<string, unknown> | null = null;
+  let reservedSlots: number | null = null;
+
+  if (preferredRideId) {
+    const { error: expiryError } = await auth.admin.rpc('app_expire_unpaid_package_assignments');
+    if (expiryError) return jsonResponse({ error: expiryError.message }, 500);
+
+    const { data: trip, error: tripError } = await auth.admin
+      .from('trips')
+      .select('trip_id, driver_id, origin_city, destination_city, departure_time, trip_status, allow_packages, package_slots_remaining')
+      .eq('trip_id', preferredRideId)
+      .maybeSingle();
+    if (tripError) return jsonResponse({ error: tripError.message }, 400);
+    if (!trip || String(trip.trip_status) !== 'open' || trip.allow_packages !== true) {
+      return jsonResponse({ error: 'The selected trip is not accepting packages.' }, 409);
+    }
+    const departureAt = trip.departure_time ? new Date(String(trip.departure_time)).getTime() : 0;
+    if (!departureAt || departureAt < Date.now() + 24 * 60 * 60_000) {
+      return jsonResponse({ error: 'Package-sharing trips must depart at least 24 hours in advance.' }, 409);
+    }
+    if (String(trip.origin_city ?? '').trim().toLowerCase() !== from.toLowerCase()
+      || String(trip.destination_city ?? '').trim().toLowerCase() !== to.toLowerCase()) {
+      return jsonResponse({ error: 'The selected trip does not match the package route.' }, 400);
+    }
+    reservedSlots = Math.max(0, toNumber(trip.package_slots_remaining, 0));
+    if (reservedSlots < 1) {
+      return jsonResponse({ error: 'The selected trip has no package capacity remaining.' }, 409);
+    }
+
+    const { data: driver, error: driverError } = await auth.admin
+      .from('drivers')
+      .select('driver_id, user_id, driver_status')
+      .eq('driver_id', String(trip.driver_id))
+      .maybeSingle();
+    if (driverError) return jsonResponse({ error: driverError.message }, 400);
+    if (!driver || !['approved', 'online', 'offline', 'busy'].includes(String(driver.driver_status))) {
+      return jsonResponse({ error: 'The selected trip driver is not approved.' }, 409);
+    }
+
+    const { data: reserved, error: reserveError } = await auth.admin
+      .from('trips')
+      .update({ package_slots_remaining: reservedSlots - 1, updated_at: now })
+      .eq('trip_id', preferredRideId)
+      .eq('package_slots_remaining', reservedSlots)
+      .gt('package_slots_remaining', 0)
+      .select('trip_id')
+      .maybeSingle();
+    if (reserveError) return jsonResponse({ error: reserveError.message }, 400);
+    if (!reserved) return jsonResponse({ error: 'Package capacity was just taken. Select another trip.' }, 409);
+
+    assignedTripId = String(trip.trip_id);
+    assignedDriver = driver as Record<string, unknown>;
   }
 
   const { data, error } = await auth.admin
     .from('packages')
     .insert({
-      package_id: crypto.randomUUID(),
+      package_id: packageId,
       tracking_number: tracking,
       package_code: tracking,
       qr_code: tracking,
       sender_id: auth.canonicalUser.id,
+      trip_id: assignedTripId,
+      assignment_expires_at: assignedTripId ? new Date(Date.now() + 15 * 60_000).toISOString() : null,
       receiver_name: normalizeString(body.recipientName) || 'Recipient',
       receiver_phone: normalizeString(body.recipientPhone) || '',
       origin_name: from,
       origin_location: from,
       destination_name: to,
       destination_location: to,
-      size: 'medium',
-      weight_kg: Math.max(0.1, toNumber(body.weight, 0.5)),
+      weight_kg: weight,
       description,
       fee_amount: 5,
       delivery_fee: 5,
-      package_status: 'created',
-      status: 'requested',
-      created_at: new Date().toISOString(),
+      package_status: assignedTripId ? 'assigned' : 'created',
+      status: assignedTripId ? 'matched' : 'searching',
+      created_at: now,
+      updated_at: now,
     })
     .select('*')
     .single();
 
   if (error) {
+    if (assignedTripId && reservedSlots !== null) {
+      await auth.admin.from('trips')
+        .update({ package_slots_remaining: reservedSlots, updated_at: now })
+        .eq('trip_id', assignedTripId)
+        .eq('package_slots_remaining', reservedSlots - 1);
+    }
     return jsonResponse({ error: error.message }, 400);
   }
 
-  return jsonResponse({ package: mapPackageRow(data as PackageRow) }, 201);
-}
+  const { error: secretError } = await auth.admin.rpc('app_store_package_handoff_secrets', {
+    p_package_id: packageId,
+    p_pickup_code_hash: await sha256Hex(pickupCode),
+    p_delivery_code_hash: await sha256Hex(deliveryCode),
+  });
 
-async function handleTrackPackage(admin: SupabaseClientInstance, trackingId: string) {
-  const tracking = normalizeTrackingNumber(trackingId);
-  if (!tracking) {
-    return null;
+  if (secretError) {
+    await auth.admin.from('packages').delete().eq('package_id', packageId);
+    if (assignedTripId && reservedSlots !== null) {
+      await auth.admin.from('trips')
+        .update({ package_slots_remaining: reservedSlots, updated_at: now })
+        .eq('trip_id', assignedTripId)
+        .eq('package_slots_remaining', reservedSlots - 1);
+    }
+    return jsonResponse({ error: 'Package security credentials could not be initialized.' }, 500);
   }
 
-  const { data, error } = await admin
+  const { error: eventError } = await auth.admin
+    .from('package_events')
+    .insert({
+      package_id: packageId,
+      event_type: 'created',
+      event_status: assignedTripId ? 'assigned' : 'searching',
+      notes: assignedTripId ? 'Package request created and assigned to the selected driver trip.' : 'Package request created by sender.',
+      created_by: auth.canonicalUser.id,
+      created_at: now,
+    });
+
+  if (eventError) {
+    await auth.admin.from('packages').delete().eq('package_id', packageId);
+    if (assignedTripId && reservedSlots !== null) {
+      await auth.admin.from('trips')
+        .update({ package_slots_remaining: reservedSlots, updated_at: now })
+        .eq('trip_id', assignedTripId)
+        .eq('package_slots_remaining', reservedSlots - 1);
+    }
+    return jsonResponse({ error: 'Package tracking history could not be initialized.' }, 500);
+  }
+
+  let responsePackage = data as PackageRow;
+  if (!assignedTripId) {
+    const { error: expiryError } = await auth.admin.rpc('app_expire_unpaid_package_assignments');
+    if (expiryError) console.error('Package reservation expiry failed before auto-match:', expiryError.message);
+    const minDeparture = new Date(Date.now() + 24 * 60 * 60_000).toISOString();
+    const { data: candidateTrips, error: candidateError } = await auth.admin
+      .from('trips')
+      .select('trip_id')
+      .eq('trip_status', 'open')
+      .eq('allow_packages', true)
+      .ilike('origin_city', from)
+      .ilike('destination_city', to)
+      .gte('departure_time', minDeparture)
+      .gt('package_slots_remaining', 0)
+      .order('departure_time', { ascending: true })
+      .limit(10);
+    if (candidateError) console.error('Package auto-match discovery failed:', candidateError.message);
+
+    for (const candidate of candidateTrips ?? []) {
+      const { error: matchError } = await auth.admin.rpc('app_match_waiting_packages_to_trip', {
+        p_trip_id: String(candidate.trip_id),
+      });
+      if (matchError) {
+        console.error('Package auto-match failed:', matchError.message);
+        continue;
+      }
+      const { data: refreshed, error: refreshError } = await auth.admin
+        .from('packages')
+        .select('*')
+        .eq('package_id', packageId)
+        .single();
+      if (refreshError) throw new Error(refreshError.message);
+      if (refreshed) {
+        responsePackage = refreshed as PackageRow;
+        if (responsePackage.trip_id) {
+          assignedTripId = String(responsePackage.trip_id);
+          break;
+        }
+      }
+    }
+  }
+
+  if (assignedTripId && !assignedDriver) {
+    const { data: tripForDriver } = await auth.admin
+      .from('trips')
+      .select('driver_id')
+      .eq('trip_id', assignedTripId)
+      .maybeSingle();
+    if (tripForDriver?.driver_id) {
+      const { data: driverForTrip } = await auth.admin
+        .from('drivers')
+        .select('user_id')
+        .eq('driver_id', String(tripForDriver.driver_id))
+        .maybeSingle();
+      if (driverForTrip?.user_id) assignedDriver = driverForTrip as Record<string, unknown>;
+    }
+  }
+
+  let driverSummary: Record<string, unknown> = {};
+  if (assignedDriver?.user_id) {
+    const { data: driverUser } = await auth.admin
+      .from('users')
+      .select('full_name, phone_number')
+      .eq('id', String(assignedDriver.user_id))
+      .maybeSingle();
+    driverSummary = {
+      driver_name: driverUser?.full_name ?? null,
+      driver_phone: driverUser?.phone_number ?? null,
+    };
+  }
+
+  return jsonResponse({
+    package: {
+      ...mapPackageRow(responsePackage),
+      is_sender: true,
+      ...driverSummary,
+      handoffCode: pickupCode,
+      deliveryCode,
+    },
+  }, 201);
+}
+
+async function handleTrackPackage(auth: AuthenticatedRequest, trackingId: string) {
+  const tracking = normalizeTrackingNumber(trackingId);
+  if (!tracking) return null;
+
+  const { data, error } = await auth.admin
     .from('packages')
     .select('*')
     .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
     .maybeSingle();
 
-  if (error) {
-    throw new Error(error.message);
-  }
-  if (!data) {
-    return null;
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  const row = data as Record<string, unknown>;
+  const canonicalUserId = auth.canonicalUser.id;
+  let isParticipant = String(row.sender_id ?? '') === canonicalUserId
+    || String(row.receiver_id ?? '') === canonicalUserId;
+  let driverSummary: Record<string, unknown> = {};
+
+  if (row.trip_id) {
+    const { data: trip, error: tripError } = await auth.admin
+      .from('trips')
+      .select('driver_id')
+      .eq('trip_id', String(row.trip_id))
+      .maybeSingle();
+    if (tripError) throw new Error(tripError.message);
+
+    if (trip?.driver_id) {
+      const { data: driver, error: driverError } = await auth.admin
+        .from('drivers')
+        .select('user_id')
+        .eq('driver_id', String(trip.driver_id))
+        .maybeSingle();
+      if (driverError) throw new Error(driverError.message);
+
+      if (String(driver?.user_id ?? '') === canonicalUserId) isParticipant = true;
+      if (driver?.user_id) {
+        const { data: driverUser, error: driverUserError } = await auth.admin
+          .from('users')
+          .select('full_name, phone_number')
+          .eq('id', String(driver.user_id))
+          .maybeSingle();
+        if (driverUserError) throw new Error(driverUserError.message);
+        driverSummary = {
+          driver_name: driverUser?.full_name ?? null,
+          driver_phone: driverUser?.phone_number ?? null,
+        };
+      }
+    }
   }
 
-  return mapPackageRow(data as PackageRow);
+  if (!isParticipant) return null;
+  return { ...mapPackageRow(data as PackageRow), is_sender: String(row.sender_id ?? '') === canonicalUserId, ...driverSummary };
+}
+
+async function loadPackageForAssignedDriver(
+  auth: AuthenticatedRequest,
+  trackingId: string,
+) {
+  const tracking = normalizeTrackingNumber(trackingId);
+  if (!tracking) throw new Error('A valid tracking ID is required.');
+
+  const { data: packageRow, error } = await auth.admin
+    .from('packages')
+    .select('package_id, trip_id, package_status, payment_status, tracking_number, pickup_verified_at, delivery_verified_at, delivery_evidence_url')
+    .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!packageRow) throw new Error('Package not found.');
+  if (!packageRow.trip_id) throw new Error('Package has not been assigned to a driver.');
+
+  const { data: trip, error: tripError } = await auth.admin
+    .from('trips')
+    .select('driver_id')
+    .eq('trip_id', String(packageRow.trip_id))
+    .maybeSingle();
+  if (tripError) throw new Error(tripError.message);
+  if (!trip?.driver_id) throw new Error('Assigned trip is not available.');
+
+  const { data: driver, error: driverError } = await auth.admin
+    .from('drivers')
+    .select('user_id')
+    .eq('driver_id', String(trip.driver_id))
+    .maybeSingle();
+  if (driverError) throw new Error(driverError.message);
+  if (String(driver?.user_id ?? '') !== auth.canonicalUser.id) {
+    throw new Error('Only the assigned driver can perform package custody actions.');
+  }
+
+  return packageRow as Record<string, unknown>;
+}
+
+async function handleRotatePackageCodes(auth: AuthenticatedRequest, trackingId: string) {
+  if (!hasPackageOtpPepper()) {
+    return jsonResponse({ error: 'Secure package handoff is not configured. Contact support.' }, 503);
+  }
+  const tracking = normalizeTrackingNumber(trackingId);
+  const { data: packageRow, error } = await auth.admin
+    .from('packages')
+    .select('package_id, sender_id, package_status, pickup_verified_at')
+    .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!packageRow || String(packageRow.sender_id) !== auth.canonicalUser.id) {
+    return jsonResponse({ error: 'Only the sender can rotate package handoff codes.' }, 403);
+  }
+
+  if (['delivered', 'cancelled', 'disputed'].includes(String(packageRow.package_status))) {
+    return jsonResponse({ error: 'Closed or disputed package codes cannot be rotated.' }, 409);
+  }
+
+  const pickupCode = packageRow.pickup_verified_at ? null : generatePackageOtp();
+  const deliveryCode = generatePackageOtp();
+  const { error: secretError } = await auth.admin.rpc('app_rotate_package_handoff_secrets', {
+    p_package_id: String(packageRow.package_id),
+    p_pickup_code_hash: pickupCode ? await sha256Hex(pickupCode) : null,
+    p_delivery_code_hash: await sha256Hex(deliveryCode),
+  });
+  if (secretError) throw new Error(secretError.message);
+
+  return jsonResponse({ handoffCode: pickupCode, deliveryCode });
+}
+
+async function handleOpenPackageDispute(
+  request: Request,
+  auth: AuthenticatedRequest,
+  trackingId: string,
+  body: Record<string, unknown>,
+) {
+  const tracking = normalizeTrackingNumber(trackingId);
+  const { data: packageRow, error } = await auth.admin
+    .from('packages')
+    .select('package_id')
+    .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!packageRow) return jsonResponse({ error: 'Package not found.' }, 404);
+
+  const userClient = createUserScopedClient(request);
+  const { error: disputeError } = await userClient.rpc('open_package_dispute', {
+    p_package_id: String(packageRow.package_id),
+    p_reason: normalizeString(body.reason) ?? 'Package dispute opened by participant.',
+  });
+  if (disputeError) return jsonResponse({ error: disputeError.message }, 400);
+
+  const { data: updated, error: updatedError } = await auth.admin
+    .from('packages')
+    .select('*')
+    .eq('package_id', String(packageRow.package_id))
+    .single();
+  if (updatedError) throw new Error(updatedError.message);
+  return jsonResponse({ package: mapPackageRow(updated as PackageRow) });
+}
+
+async function handleRefundPackageEscrow(
+  auth: AuthenticatedRequest,
+  trackingId: string,
+  walletHandlers: ReturnType<typeof createWalletHandlers>,
+) {
+  const tracking = normalizeTrackingNumber(trackingId);
+  if (!tracking) return jsonResponse({ error: 'A valid package tracking ID is required.' }, 400);
+
+  const { data: packageRow, error } = await auth.admin
+    .from('packages')
+    .select('package_id, sender_id')
+    .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!packageRow) return jsonResponse({ error: 'Package not found.' }, 404);
+  if (String(packageRow.sender_id) !== auth.canonicalUser.id) {
+    return jsonResponse({ error: 'Only the original sender can request this refund.' }, 403);
+  }
+
+  const refundTransactionId = await walletHandlers.refundPackageEscrow(
+    String(packageRow.package_id),
+    auth.canonicalUser.id,
+  );
+  const { data: updated, error: updatedError } = await auth.admin
+    .from('packages')
+    .select('*')
+    .eq('package_id', String(packageRow.package_id))
+    .single();
+  if (updatedError) throw new Error(updatedError.message);
+
+  return jsonResponse({
+    package: { ...mapPackageRow(updated as PackageRow), is_sender: true },
+    refundTransactionId,
+  });
+}
+
+async function handleCreatePackageEvidenceUpload(
+  auth: AuthenticatedRequest,
+  trackingId: string,
+  body: Record<string, unknown>,
+) {
+  const packageRow = await loadPackageForAssignedDriver(auth, trackingId);
+  if (String(packageRow.package_status) !== 'in_transit') {
+    return jsonResponse({ error: 'Evidence can be uploaded only after verified pickup.' }, 409);
+  }
+
+  const contentType = normalizeString(body.contentType)?.toLowerCase() ?? '';
+  const extensionByType: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  };
+  const extension = extensionByType[contentType];
+  if (!extension) {
+    return jsonResponse({ error: 'Evidence must be a JPEG, PNG, or WebP image.' }, 400);
+  }
+
+  const path = `${String(packageRow.package_id)}/${crypto.randomUUID()}.${extension}`;
+  const { data, error } = await auth.admin.storage
+    .from('package-evidence')
+    .createSignedUploadUrl(path, { upsert: false });
+
+  if (error) throw new Error(error.message);
+  return jsonResponse({ path, token: data.token, signedUrl: data.signedUrl, contentType });
+}
+
+async function handleUpdatePackageVerification(
+  auth: AuthenticatedRequest,
+  trackingId: string,
+  body: Record<string, unknown>,
+  walletHandlers: ReturnType<typeof createWalletHandlers>,
+) {
+  const action = normalizeString(body.action);
+
+  if (action !== 'share_code' && !hasPackageOtpPepper()) {
+    return jsonResponse({ error: 'Secure package handoff is not configured. Contact support.' }, 503);
+  }
+
+  if (action === 'share_code') {
+    const tracking = normalizeTrackingNumber(trackingId);
+    const { data: senderPackage, error: senderError } = await auth.admin
+      .from('packages')
+      .select('package_id, sender_id, trip_id, package_status')
+      .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
+      .maybeSingle();
+    if (senderError) throw new Error(senderError.message);
+    if (!senderPackage || String(senderPackage.sender_id) !== auth.canonicalUser.id) {
+      return jsonResponse({ error: 'Only the package sender can record handoff-code sharing.' }, 403);
+    }
+    if (!senderPackage.trip_id || String(senderPackage.package_status) !== 'assigned') {
+      return jsonResponse({ error: 'Assign the package to a driver before sharing the pickup code.' }, 409);
+    }
+
+    const now = new Date().toISOString();
+    const { error: shareError } = await auth.admin
+      .from('packages')
+      .update({ sender_code_shared_at: now, updated_at: now })
+      .eq('package_id', String(senderPackage.package_id));
+    if (shareError) throw new Error(shareError.message);
+
+    const { error: eventError } = await auth.admin
+      .from('package_events')
+      .insert({
+        package_id: String(senderPackage.package_id),
+        event_type: 'handoff_code_shared',
+        event_status: 'shared',
+        notes: 'Sender recorded that the pickup code was shared with the assigned driver.',
+        created_by: auth.canonicalUser.id,
+        created_at: now,
+      });
+    if (eventError) throw new Error(eventError.message);
+
+    const { data: updated, error: updatedError } = await auth.admin
+      .from('packages')
+      .select('*')
+      .eq('package_id', String(senderPackage.package_id))
+      .single();
+    if (updatedError) throw new Error(updatedError.message);
+    return jsonResponse({ package: mapPackageRow(updated as PackageRow) });
+  }
+
+  const packageRow = await loadPackageForAssignedDriver(auth, trackingId);
+  const packageId = String(packageRow.package_id);
+
+  if (action === 'confirm_pickup' && packageRow.pickup_verified_at) {
+    const { data: alreadyPickedUp, error: pickupReadError } = await auth.admin
+      .from('packages')
+      .select('*')
+      .eq('package_id', packageId)
+      .single();
+    if (pickupReadError) throw new Error(pickupReadError.message);
+    return jsonResponse({ package: mapPackageRow(alreadyPickedUp as PackageRow), idempotent: true });
+  }
+
+  if (action === 'confirm_delivery' && packageRow.delivery_verified_at && packageRow.delivery_evidence_url) {
+    const escrowSettlement = await walletHandlers.releasePackageEscrowForVerifiedDelivery(
+      packageId,
+      auth.canonicalUser.id,
+    );
+    const { data: alreadyDelivered, error: deliveryReadError } = await auth.admin
+      .from('packages')
+      .select('*')
+      .eq('package_id', packageId)
+      .single();
+    if (deliveryReadError) throw new Error(deliveryReadError.message);
+    return jsonResponse({
+      package: mapPackageRow(alreadyDelivered as PackageRow),
+      escrowSettlement,
+      idempotent: true,
+    });
+  }
+
+  const code = normalizeString(body.code);
+  if (!code || !/^\d{6}$/.test(code)) {
+    return jsonResponse({ error: 'A valid six-digit handoff code is required.' }, 400);
+  }
+
+  const codeHash = await sha256Hex(code);
+
+  if (action === 'confirm_pickup') {
+    const { data, error } = await auth.admin.rpc('app_verify_package_pickup', {
+      p_package_id: packageId,
+      p_driver_user_id: auth.canonicalUser.id,
+      p_code_hash: codeHash,
+    });
+    if (error) throw new Error(error.message);
+    if (data !== true) return jsonResponse({ error: 'Pickup code is invalid or temporarily locked.' }, 400);
+  } else if (action === 'confirm_delivery') {
+    const evidencePath = normalizeString(body.evidencePath);
+    if (!evidencePath || !evidencePath.startsWith(`${packageId}/`) || evidencePath.includes('..')) {
+      return jsonResponse({ error: 'A valid private delivery evidence upload is required.' }, 400);
+    }
+
+    const evidenceName = evidencePath.slice(packageId.length + 1);
+    const { data: files, error: listError } = await auth.admin.storage
+      .from('package-evidence')
+      .list(packageId, { search: evidenceName, limit: 100 });
+    if (listError) throw new Error(listError.message);
+    if (!Array.isArray(files) || !files.some((file) => file.name === evidenceName)) {
+      return jsonResponse({ error: 'Delivery evidence was not found in private storage.' }, 400);
+    }
+
+    const { data, error } = await auth.admin.rpc('app_verify_package_delivery', {
+      p_package_id: packageId,
+      p_driver_user_id: auth.canonicalUser.id,
+      p_code_hash: codeHash,
+      p_evidence_path: evidencePath,
+    });
+    if (error) throw new Error(error.message);
+    if (data !== true) {
+      await auth.admin.storage.from('package-evidence').remove([evidencePath]);
+      return jsonResponse({ error: 'Delivery code is invalid or temporarily locked.' }, 400);
+    }
+  } else {
+    return jsonResponse({ error: 'Unsupported package verification action.' }, 400);
+  }
+
+  const { data: updatedPackage, error: updatedError } = await auth.admin
+    .from('packages')
+    .select('*')
+    .eq('package_id', packageId)
+    .single();
+  if (updatedError) throw new Error(updatedError.message);
+
+  let escrowSettlement: unknown = null;
+  if (action === 'confirm_delivery') {
+    escrowSettlement = await walletHandlers.releasePackageEscrowForVerifiedDelivery(
+      packageId,
+      auth.canonicalUser.id,
+    );
+  }
+
+  return jsonResponse({
+    package: mapPackageRow(updatedPackage as PackageRow),
+    escrowSettlement,
+  });
 }
 
 async function handleCreateReview(
@@ -1894,6 +2471,14 @@ serve(async (req) => {
 
     if (routeMatches(path, '/payments/webhook') && req.method === 'POST') {
       return walletHandlers.handlePaymentWebhook(req);
+    }
+
+    if (routeMatches(path, '/wallet/reconcile-expired') && req.method === 'POST') {
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      if (!serviceRoleKey || req.headers.get('authorization') !== `Bearer ${serviceRoleKey}`) {
+        return unauthorizedResponse();
+      }
+      return walletHandlers.handleReconcileExpiredPaymentIntents();
     }
 
     if (routeMatches(path, '/communications/webhooks/resend') && req.method === 'POST') {
@@ -2290,6 +2875,53 @@ serve(async (req) => {
         await handleClearActiveTrip(auth);
         return jsonResponse({ success: true });
       }
+    }
+
+    const packageTrackMatch = path.match(/^\/packages\/track\/([^/]+)$/);
+    if (packageTrackMatch && req.method === 'GET') {
+      const tracked = await handleTrackPackage(auth, decodeURIComponent(packageTrackMatch[1]));
+      return tracked
+        ? jsonResponse({ package: tracked })
+        : jsonResponse({ error: 'Package not found.' }, 404);
+    }
+
+    const packageEvidenceMatch = path.match(/^\/packages\/track\/([^/]+)\/evidence-upload$/);
+    if (packageEvidenceMatch && req.method === 'POST') {
+      return handleCreatePackageEvidenceUpload(
+        auth,
+        decodeURIComponent(packageEvidenceMatch[1]),
+        await readJsonBody(req),
+      );
+    }
+
+    const packageDisputeMatch = path.match(/^\/packages\/track\/([^/]+)\/dispute$/);
+    if (packageDisputeMatch && req.method === 'POST') {
+      return handleOpenPackageDispute(
+        req,
+        auth,
+        decodeURIComponent(packageDisputeMatch[1]),
+        await readJsonBody(req),
+      );
+    }
+
+    const packageRefundMatch = path.match(/^\/packages\/track\/([^/]+)\/refund$/);
+    if (packageRefundMatch && req.method === 'POST') {
+      return handleRefundPackageEscrow(auth, decodeURIComponent(packageRefundMatch[1]), walletHandlers);
+    }
+
+    const packageRotateMatch = path.match(/^\/packages\/track\/([^/]+)\/rotate-codes$/);
+    if (packageRotateMatch && req.method === 'POST') {
+      return handleRotatePackageCodes(auth, decodeURIComponent(packageRotateMatch[1]));
+    }
+
+    const packageVerificationMatch = path.match(/^\/packages\/track\/([^/]+)\/verification$/);
+    if (packageVerificationMatch && req.method === 'PATCH') {
+      return handleUpdatePackageVerification(
+        auth,
+        decodeURIComponent(packageVerificationMatch[1]),
+        await readJsonBody(req),
+        walletHandlers,
+      );
     }
 
     if (routeMatches(path, '/packages') && req.method === 'POST') {

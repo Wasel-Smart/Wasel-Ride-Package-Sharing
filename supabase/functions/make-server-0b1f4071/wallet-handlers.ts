@@ -710,26 +710,64 @@ async function retrieveStripePaymentIntent(providerPaymentId: string) {
   return payload as Record<string, unknown>;
 }
 
+async function cancelStripePaymentIntent(providerPaymentId: string) {
+  if (!STRIPE_SECRET_KEY) {
+    throw new Error('Stripe is not configured for this environment.');
+  }
+
+  const response = await fetch(`https://api.stripe.com/v1/payment_intents/${providerPaymentId}/cancel`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams(),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(String((payload as { error?: { message?: string } }).error?.message ?? 'Stripe payment cancellation failed.'));
+  }
+  return payload as Record<string, unknown>;
+}
+
+async function createStripeRefund(
+  providerPaymentId: string,
+  amount: number,
+  currencyCode: string,
+  idempotencyKey: string,
+) {
+  if (!STRIPE_SECRET_KEY) {
+    throw new Error('Stripe refund is not configured for this environment.');
+  }
+
+  const response = await fetch('https://api.stripe.com/v1/refunds', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Idempotency-Key': idempotencyKey,
+    },
+    body: new URLSearchParams({
+      payment_intent: providerPaymentId,
+      amount: String(toMinorUnits(amount, currencyCode)),
+      reason: 'requested_by_customer',
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(String((payload as { error?: { message?: string } }).error?.message ?? 'Stripe refund failed.'));
+  }
+  return payload as Record<string, unknown>;
+}
+
 async function createLocalGatewayIntent(args: {
   provider: Extract<WalletProviderName, 'cliq' | 'aman'>;
   amount: number;
   currency: string;
   metadata: Record<string, string>;
 }) {
-  const providerPaymentId = `${args.provider}_${crypto.randomUUID()}`;
-  return {
-    id: providerPaymentId,
-    status: 'requires_action',
-    next_action: {
-      type: args.provider === 'cliq' ? 'display_qr_code' : 'await_bank_transfer',
-      display_qr_code: {
-        image_url_png: `https://payments.wasel.local/${providerPaymentId}/qr`,
-      },
-    },
-    amount: toMinorUnits(args.amount, args.currency),
-    currency: normalizeCurrency(args.currency).toLowerCase(),
-    metadata: args.metadata,
-  };
+  void args;
+  throw new Error('Local payment provider is not connected. Configure a contracted acquirer API before enabling CliQ or bank-transfer checkout.');
 }
 
 async function verifyStripeWebhookSignature(payload: string, signatureHeader: string | null) {
@@ -886,32 +924,78 @@ async function reconcilePaymentIntentStatus(
   intent: Record<string, unknown>,
 ) {
   const currentStatus = String(intent.status ?? 'processing');
-  if (String(intent.provider_name) !== 'stripe' || isFinalPaymentStatus(currentStatus)) {
-    return {
-      intent,
-      settled: currentStatus === 'succeeded',
-    };
+  if (isFinalPaymentStatus(currentStatus)) {
+    if (currentStatus === 'failed' || currentStatus === 'cancelled') {
+      await markPackagePaymentFailed(admin, intent, normalizeString(intent.last_error));
+    } else if (currentStatus === 'succeeded' && String(intent.purpose) === 'package_payment') {
+      const { data: packageRow, error } = await admin
+        .from('packages')
+        .select('payment_status')
+        .eq('package_id', String(intent.reference_id))
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      if (packageRow && String(packageRow.payment_status) === 'pending') {
+        await settlePaymentIntent(admin, intent);
+      }
+    }
+    return { intent, settled: currentStatus === 'succeeded' };
+  }
+
+  const expiresAt = Date.parse(String(intent.expires_at ?? ''));
+  if (Number.isFinite(expiresAt) && expiresAt <= Date.now()) {
+    let finalStatus = 'cancelled';
+    let lastError: string | null = 'Payment attempt expired before settlement.';
+
+    if (String(intent.provider_name) === 'stripe') {
+      const providerPaymentId = normalizeString(intent.provider_payment_id);
+      if (providerPaymentId) {
+        const currentStripeIntent = await retrieveStripePaymentIntent(providerPaymentId);
+        finalStatus = mapStripePaymentStatus(currentStripeIntent.status);
+
+        if (!isFinalPaymentStatus(finalStatus)) {
+          const cancelled = await cancelStripePaymentIntent(providerPaymentId);
+          finalStatus = mapStripePaymentStatus(cancelled.status);
+          lastError = normalizeString(
+            ((cancelled.last_payment_error as Record<string, unknown> | undefined)?.message),
+          ) ?? lastError;
+        } else {
+          lastError = normalizeString(
+            ((currentStripeIntent.last_payment_error as Record<string, unknown> | undefined)?.message),
+          ) ?? lastError;
+        }
+
+        if (finalStatus === 'succeeded') {
+          await settlePaymentIntent(admin, intent);
+        }
+      }
+    }
+
+    const updated = await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
+      status: finalStatus,
+      last_error: lastError,
+    });
+    if (finalStatus === 'failed' || finalStatus === 'cancelled') {
+      await markPackagePaymentFailed(admin, intent, lastError);
+    }
+    return { intent: updated as Record<string, unknown>, settled: finalStatus === 'succeeded' };
+  }
+
+  if (String(intent.provider_name) !== 'stripe') {
+    return { intent, settled: currentStatus === 'succeeded' };
   }
 
   const providerPaymentId = normalizeString(intent.provider_payment_id);
   if (!providerPaymentId) {
-    return {
-      intent,
-      settled: currentStatus === 'succeeded',
-    };
+    return { intent, settled: currentStatus === 'succeeded' };
   }
 
   const stripeIntent = await retrieveStripePaymentIntent(providerPaymentId);
   const providerStatus = mapStripePaymentStatus(stripeIntent.status);
-  const patch: Record<string, unknown> = {
-    status: providerStatus,
-  };
+  const patch: Record<string, unknown> = { status: providerStatus };
   const lastPaymentError = normalizeString(
     ((stripeIntent.last_payment_error as Record<string, unknown> | undefined)?.message),
   );
-  if (lastPaymentError) {
-    patch.last_error = lastPaymentError;
-  }
+  if (lastPaymentError) patch.last_error = lastPaymentError;
 
   if (providerStatus === 'succeeded' && currentStatus !== 'succeeded') {
     await settlePaymentIntent(admin, intent);
@@ -920,6 +1004,10 @@ async function reconcilePaymentIntentStatus(
   const nextIntent = providerStatus === currentStatus && !patch.last_error
     ? intent
     : await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), patch);
+
+  if (providerStatus === 'failed' || providerStatus === 'cancelled') {
+    await markPackagePaymentFailed(admin, intent, lastPaymentError);
+  }
 
   return {
     intent: nextIntent as Record<string, unknown>,
@@ -981,6 +1069,25 @@ async function findBeneficiaryUserId(
     return findDriverUserIdForTrip(admin, String(data.trip_id));
   }
 
+  if (referenceType === 'package') {
+    const { data, error } = await admin
+      .from('packages')
+      .select('trip_id, sender_id, package_status, payment_status')
+      .eq('package_id', referenceId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data || String(data.sender_id) !== String(intent.user_id)) {
+      throw new Error('Package payment must be initiated by its sender.');
+    }
+    if (!data.trip_id || !['assigned', 'disputed'].includes(String(data.package_status))) {
+      throw new Error('Package must remain assigned to an approved driver before payment settlement.');
+    }
+    if (!['unpaid', 'pending', 'disputed'].includes(String(data.payment_status))) {
+      throw new Error('Package payment is not eligible for an escrow hold.');
+    }
+    return findDriverUserIdForTrip(admin, String(data.trip_id));
+  }
+
   return null;
 }
 
@@ -989,6 +1096,92 @@ async function createEscrowForIntent(
   intent: Record<string, unknown>,
 ) {
   const payerUserId = String(intent.user_id);
+  const paymentIntentId = String(intent.payment_intent_id);
+
+  const { data: existingEscrow, error: existingEscrowError } = await admin
+    .from('escrow_accounts')
+    .select('*')
+    .eq('payment_intent_id', paymentIntentId)
+    .maybeSingle();
+  if (existingEscrowError) throw new Error(existingEscrowError.message);
+  if (existingEscrow) {
+    if (String(existingEscrow.escrow_type) === 'package') {
+      const { data: packageState, error: packageStateError } = await admin
+        .from('packages')
+        .select('package_status, dispute_opened_at')
+        .eq('package_id', String(existingEscrow.reference_id))
+        .maybeSingle();
+      if (packageStateError) throw new Error(packageStateError.message);
+
+      const packageIsDisputed = Boolean(packageState?.dispute_opened_at)
+        || ['disputed', 'cancelled'].includes(String(packageState?.package_status));
+      const escrowWasCancelled = String(existingEscrow.escrow_state) === 'cancelled';
+
+      if (packageIsDisputed || escrowWasCancelled) {
+        const { error: freezeError } = await admin
+          .from('escrow_accounts')
+          .update({ escrow_state: 'cancelled', updated_at: new Date().toISOString() })
+          .eq('escrow_account_id', String(existingEscrow.escrow_account_id))
+          .eq('escrow_state', 'held');
+        if (freezeError) throw new Error(freezeError.message);
+
+        if (packageState && !['disputed', 'cancelled'].includes(String(packageState.package_status))) {
+          const now = new Date().toISOString();
+          const { error: freezePackageError } = await admin
+            .from('packages')
+            .update({
+              package_status: 'disputed',
+              status: 'disputed',
+              payment_status: 'disputed',
+              dispute_opened_at: now,
+              assignment_expires_at: null,
+              updated_at: now,
+            })
+            .eq('package_id', String(existingEscrow.reference_id));
+          if (freezePackageError) throw new Error(freezePackageError.message);
+        }
+      } else if (String(existingEscrow.escrow_state) === 'held') {
+        const { error: repairPackageError } = await admin
+          .from('packages')
+          .update({ payment_status: 'held', assignment_expires_at: null, updated_at: new Date().toISOString() })
+          .eq('package_id', String(existingEscrow.reference_id))
+          .eq('sender_id', payerUserId)
+          .eq('package_status', 'assigned')
+          .in('payment_status', ['unpaid', 'pending', 'held']);
+        if (repairPackageError) throw new Error(repairPackageError.message);
+      }
+    }
+    return { escrow: existingEscrow, transactionId: normalizeString(existingEscrow.hold_transaction_id) };
+  }
+
+  let packageDisputed = false;
+  if (String(intent.purpose) === 'package_payment') {
+    const packageId = normalizeString(intent.reference_id);
+    if (!packageId || normalizeString(intent.reference_type) !== 'package') {
+      throw new Error('Package payments require a package reference.');
+    }
+    const { data: packageRow, error: packageError } = await admin
+      .from('packages')
+      .select('sender_id, trip_id, package_status, payment_status, fee_amount, dispute_opened_at')
+      .eq('package_id', packageId)
+      .maybeSingle();
+    if (packageError) throw new Error(packageError.message);
+    if (!packageRow || String(packageRow.sender_id) !== payerUserId) {
+      throw new Error('Package payment must be initiated by its sender.');
+    }
+    if (!packageRow.trip_id || !['assigned', 'disputed'].includes(String(packageRow.package_status))) {
+      throw new Error('Package must remain assigned to a driver before payment settlement.');
+    }
+    packageDisputed = String(packageRow.package_status) === 'disputed'
+      || String(packageRow.payment_status) === 'disputed'
+      || Boolean(packageRow.dispute_opened_at);
+    if (!['unpaid', 'pending', 'disputed'].includes(String(packageRow.payment_status))) {
+      throw new Error('Package already has a payment state.');
+    }
+    if (Math.round(toNumber(packageRow.fee_amount) * 1000) !== Math.round(toNumber(intent.amount) * 1000)) {
+      throw new Error('Payment amount does not match the package fee.');
+    }
+  }
   const beneficiaryUserId = await findBeneficiaryUserId(admin, intent);
   if (!beneficiaryUserId) {
     throw new Error('Could not resolve the escrow beneficiary for this payment.');
@@ -1066,7 +1259,7 @@ async function createEscrowForIntent(
       reference_id: intent.reference_id,
       amount,
       currency_code: intent.currency_code,
-      escrow_state: 'held',
+      escrow_state: packageDisputed ? 'cancelled' : 'held',
       held_at: now,
       created_at: now,
       updated_at: now,
@@ -1080,6 +1273,72 @@ async function createEscrowForIntent(
 
   if (error) {
     throw new Error(error.message);
+  }
+
+  if (escrowType === 'package') {
+    const packageId = String(intent.reference_id);
+    const { data: packageUpdated, error: packageUpdateError } = await admin
+      .from('packages')
+      .update({ payment_status: 'held', assignment_expires_at: null, updated_at: now })
+      .eq('package_id', packageId)
+      .eq('sender_id', payerUserId)
+      .eq('package_status', 'assigned')
+      .in('payment_status', ['unpaid', 'pending'])
+      .select('package_id')
+      .maybeSingle();
+
+    if (packageUpdateError || !packageUpdated) {
+      const { data: packageState, error: packageStateError } = await admin
+        .from('packages')
+        .select('package_status, dispute_opened_at')
+        .eq('package_id', packageId)
+        .maybeSingle();
+      if (packageStateError) throw new Error(packageStateError.message);
+
+      const isDisputed = Boolean(packageState?.dispute_opened_at)
+        || ['disputed', 'delivered'].includes(String(packageState?.package_status));
+      const { error: freezeError } = await admin
+        .from('escrow_accounts')
+        .update({ escrow_state: 'cancelled', updated_at: now })
+        .eq('escrow_account_id', String(escrow.escrow_account_id))
+        .eq('escrow_state', 'held');
+      if (freezeError) throw new Error(freezeError.message);
+
+      if (packageState && !['delivered', 'disputed', 'cancelled'].includes(String(packageState.package_status))) {
+        await admin.from('packages').update({
+          package_status: 'cancelled',
+          status: 'cancelled',
+          payment_status: 'failed',
+          assignment_expires_at: null,
+          updated_at: now,
+        }).eq('package_id', packageId);
+      } else if (isDisputed) {
+        await admin.from('packages').update({
+          package_status: 'disputed',
+          status: 'disputed',
+          payment_status: 'disputed',
+          dispute_opened_at: now,
+          assignment_expires_at: null,
+          updated_at: now,
+        }).eq('package_id', packageId);
+      }
+
+      return {
+        escrow: { ...escrow, escrow_state: 'cancelled' },
+        transactionId,
+      };
+    }
+
+    const { error: eventError } = await admin
+      .from('package_events')
+      .insert({
+        package_id: packageId,
+        event_type: 'payment_escrowed',
+        event_status: 'held',
+        notes: 'Payment verified and held in the wallet escrow ledger.',
+        created_by: payerUserId,
+      });
+    if (eventError) throw new Error(eventError.message);
   }
 
   return { escrow, transactionId };
@@ -1173,6 +1432,42 @@ async function activateSubscriptionForIntent(
   return data;
 }
 
+async function markPackagePaymentFailed(
+  admin: SupabaseClient,
+  intent: Record<string, unknown>,
+  reason?: string | null,
+) {
+  if (String(intent.purpose) !== 'package_payment' || String(intent.reference_type) !== 'package') return;
+  const packageId = normalizeString(intent.reference_id);
+  if (!packageId) return;
+
+  const now = new Date().toISOString();
+  const { error } = await admin
+    .from('packages')
+    .update({
+      payment_status: 'failed',
+      assignment_expires_at: now,
+      updated_at: now,
+    })
+    .eq('package_id', packageId)
+    .eq('payment_status', 'pending')
+    .eq('package_status', 'assigned');
+  if (error) throw new Error(error.message);
+
+  const { error: expiryError } = await admin.rpc('app_expire_unpaid_package_assignments');
+  if (expiryError) throw new Error(expiryError.message);
+
+  if (reason) {
+    await admin.from('package_events').insert({
+      package_id: packageId,
+      event_type: 'payment_failed',
+      event_status: 'failed',
+      notes: reason.slice(0, 500),
+      created_by: String(intent.user_id),
+    });
+  }
+}
+
 async function settlePaymentIntent(
   admin: SupabaseClient,
   intent: Record<string, unknown>,
@@ -1239,6 +1534,25 @@ async function releaseEscrow(
     throw new Error('Only held escrow balances can be released.');
   }
 
+  if (String(escrow.escrow_type) === 'package') {
+    const { data: packageRow, error: packageError } = await admin
+      .from('packages')
+      .select('package_status, delivered_at, delivery_verified_at, delivery_evidence_url, dispute_opened_at')
+      .eq('package_id', String(escrow.reference_id))
+      .maybeSingle();
+    if (packageError) throw new Error(packageError.message);
+    if (
+      !packageRow ||
+      String(packageRow.package_status) !== 'delivered' ||
+      !packageRow.delivered_at ||
+      !packageRow.delivery_verified_at ||
+      !normalizeString(packageRow.delivery_evidence_url) ||
+      packageRow.dispute_opened_at
+    ) {
+      throw new Error('Package escrow requires verified delivery evidence and no active dispute.');
+    }
+  }
+
   const releaseTransactionId = await postLedgerTransaction(admin, {
     transactionType: 'escrow_release',
     transactionStatus: 'completed',
@@ -1268,6 +1582,16 @@ async function releaseEscrow(
     })
     .eq('escrow_account_id', escrowId);
 
+  if (String(escrow.escrow_type) === 'package') {
+    const { error: packageUpdateError } = await admin
+      .from('packages')
+      .update({ payment_status: 'released', updated_at: new Date().toISOString() })
+      .eq('package_id', String(escrow.reference_id))
+      .eq('package_status', 'delivered')
+      .is('dispute_opened_at', null);
+    if (packageUpdateError) throw new Error(packageUpdateError.message);
+  }
+
   return releaseTransactionId;
 }
 
@@ -1287,21 +1611,85 @@ async function refundEscrow(
   if (String(escrow.payer_user_id) !== actorUserId) {
     throw new Error('Only the original payer can refund this escrow.');
   }
-  if (String(escrow.escrow_state) !== 'held') {
-    throw new Error('Only held escrow balances can be refunded.');
+  if (String(escrow.escrow_state) === 'refunded') {
+    if (String(escrow.escrow_type) === 'package') {
+      const { error: repairError } = await admin
+        .from('packages')
+        .update({ payment_status: 'refunded', updated_at: new Date().toISOString() })
+        .eq('package_id', String(escrow.reference_id))
+        .in('package_status', ['disputed', 'cancelled']);
+      if (repairError) throw new Error(repairError.message);
+    }
+    return String(escrow.refund_transaction_id ?? '');
+  }
+  if (String(escrow.escrow_state) !== 'held' && String(escrow.escrow_state) !== 'cancelled') {
+    throw new Error('Only held or dispute-frozen escrow balances can be refunded.');
   }
 
-  const destinationAccountId = String(escrow.payer_account_id);
+  if (String(escrow.escrow_type) === 'package') {
+    const { data: packageRow, error: packageError } = await admin
+      .from('packages')
+      .select('package_status, dispute_opened_at')
+      .eq('package_id', String(escrow.reference_id))
+      .maybeSingle();
+    if (packageError) throw new Error(packageError.message);
+    if (!packageRow || !['disputed', 'cancelled'].includes(String(packageRow.package_status))) {
+      throw new Error('Package escrow can be refunded only after cancellation or an opened dispute.');
+    }
+  }
+
+  const { data: paymentIntent, error: intentError } = await admin
+    .from('wallet_payment_intents')
+    .select('provider_name, provider_payment_id, payment_method_type')
+    .eq('payment_intent_id', String(escrow.payment_intent_id))
+    .maybeSingle();
+  if (intentError) throw new Error(intentError.message);
+  if (!paymentIntent) throw new Error('Original payment details are unavailable; support intervention is required.');
+
+  const providerName = String(paymentIntent.provider_name ?? '');
+  const paymentMethodType = String(paymentIntent.payment_method_type ?? '');
+  const currencyCode = String(escrow.currency_code);
+  let destinationAccountId = String(escrow.payer_account_id);
+  let description = 'Escrow refunded to Wasel wallet';
+  let providerRefundId: string | null = null;
+
+  if (providerName === 'stripe' && paymentMethodType === 'card') {
+    const providerPaymentId = normalizeString(paymentIntent.provider_payment_id);
+    if (!providerPaymentId) throw new Error('Original Stripe payment reference is unavailable.');
+    const providerRefund = await createStripeRefund(
+      providerPaymentId,
+      toNumber(escrow.amount),
+      currencyCode,
+      `wasel-escrow-refund-${escrowId}`,
+    );
+    providerRefundId = normalizeString(providerRefund.id);
+    const providerStatus = String(providerRefund.status ?? '');
+    if (!providerRefundId || !['succeeded', 'pending'].includes(providerStatus)) {
+      throw new Error('Stripe has not accepted the refund request.');
+    }
+    const providerClearing = await getSystemAccount(admin, 'provider_clearing', currencyCode);
+    destinationAccountId = String(providerClearing.account_id);
+    description = providerStatus === 'succeeded'
+      ? 'Package escrow refunded to original card'
+      : 'Package card refund initiated and pending';
+  } else if (providerName !== 'wallet' || paymentMethodType !== 'wallet') {
+    throw new Error('This payment provider does not support automated refunds; contact Wasel support.');
+  }
+
   const refundTransactionId = await postLedgerTransaction(admin, {
     transactionType: 'refund',
     transactionStatus: 'completed',
     initiatedByUserId: actorUserId,
     amount: toNumber(escrow.amount),
-    currencyCode: String(escrow.currency_code),
-    description: 'Escrow refunded to payer',
+    currencyCode,
+    description,
     referenceType: String(escrow.escrow_type),
     referenceId: String(escrow.reference_id),
-    metadata: { escrowAccountId: escrowId },
+    metadata: {
+      escrowAccountId: escrowId,
+      providerName,
+      providerRefundId,
+    },
     entries: [
       { account_id: String(escrow.ledger_account_id), entry_side: 'debit', amount: toNumber(escrow.amount) },
       { account_id: destinationAccountId, entry_side: 'credit', amount: toNumber(escrow.amount) },
@@ -1311,15 +1699,30 @@ async function refundEscrow(
     idempotencyKey: `escrow-refund:${escrowId}`,
   });
 
-  await admin
+  const { error: escrowUpdateError } = await admin
     .from('escrow_accounts')
     .update({
       escrow_state: 'refunded',
       refunded_at: new Date().toISOString(),
       refund_transaction_id: refundTransactionId,
       updated_at: new Date().toISOString(),
+      metadata: {
+        ...(escrow.metadata && typeof escrow.metadata === 'object' ? escrow.metadata : {}),
+        providerRefundId,
+        providerRefundStatus: providerRefundId ? 'submitted' : 'wallet_credited',
+      },
     })
     .eq('escrow_account_id', escrowId);
+  if (escrowUpdateError) throw new Error(escrowUpdateError.message);
+
+  if (String(escrow.escrow_type) === 'package') {
+    const { error: packageUpdateError } = await admin
+      .from('packages')
+      .update({ payment_status: 'refunded', updated_at: new Date().toISOString() })
+      .eq('package_id', String(escrow.reference_id))
+      .in('package_status', ['disputed', 'cancelled']);
+    if (packageUpdateError) throw new Error(packageUpdateError.message);
+  }
 
   return refundTransactionId;
 }
@@ -1723,6 +2126,84 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         return runtime.json({ error: 'Amount must be greater than zero.' }, 400);
       }
 
+      if (purpose === 'package_payment') {
+        const { error: expiryError } = await auth.admin.rpc('app_expire_unpaid_package_assignments');
+        if (expiryError) throw new Error(expiryError.message);
+        if (currency !== 'JOD') {
+          return runtime.json({ error: 'Package payments must be settled in JOD.' }, 400);
+        }
+        if (referenceType !== 'package' || !referenceId) {
+          return runtime.json({ error: 'Package payments require a package reference.' }, 400);
+        }
+        const { data: packageRow, error: packageError } = await auth.admin
+          .from('packages')
+          .select('sender_id, trip_id, package_status, payment_status, fee_amount')
+          .eq('package_id', referenceId)
+          .maybeSingle();
+        if (packageError) throw new Error(packageError.message);
+        if (!packageRow || String(packageRow.sender_id) !== auth.canonicalUser.id) {
+          return runtime.json({ error: 'Only the package sender can pay for this package.' }, 403);
+        }
+        if (!packageRow.trip_id || String(packageRow.package_status) !== 'assigned') {
+          return runtime.json({ error: 'The package must be assigned to a driver before payment.' }, 409);
+        }
+        if (String(packageRow.payment_status) === 'pending') {
+          const { data: existingIntent, error: existingIntentError } = await auth.admin
+            .from('wallet_payment_intents')
+            .select('*')
+            .eq('user_id', auth.canonicalUser.id)
+            .eq('purpose', 'package_payment')
+            .eq('reference_type', 'package')
+            .eq('reference_id', referenceId)
+            .in('status', ['requires_confirmation', 'requires_action', 'processing'])
+            .gt('expires_at', new Date().toISOString())
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (existingIntentError) throw new Error(existingIntentError.message);
+          if (existingIntent) {
+            const reconciled = await reconcilePaymentIntentStatus(auth.admin, existingIntent as Record<string, unknown>);
+            const currentIntent = reconciled.intent as Record<string, unknown>;
+            return runtime.json({
+              id: String(currentIntent.payment_intent_id),
+              purpose: String(currentIntent.purpose),
+              status: String(currentIntent.status),
+              amount: toNumber(currentIntent.amount),
+              currency: normalizeCurrency(currentIntent.currency_code),
+              paymentMethodType: String(currentIntent.payment_method_type),
+              provider: String(currentIntent.provider_name),
+              clientSecret: normalizeString(currentIntent.provider_client_secret),
+              redirectUrl: normalizeString(currentIntent.redirect_url),
+              createdAt: String(currentIntent.created_at),
+              referenceType: normalizeString(currentIntent.reference_type),
+              referenceId: normalizeString(currentIntent.reference_id),
+            });
+          }
+
+          const { data: latestIntent, error: latestError } = await auth.admin
+            .from('wallet_payment_intents')
+            .select('*')
+            .eq('user_id', auth.canonicalUser.id)
+            .eq('purpose', 'package_payment')
+            .eq('reference_type', 'package')
+            .eq('reference_id', referenceId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (latestError) throw new Error(latestError.message);
+          if (latestIntent) {
+            await reconcilePaymentIntentStatus(auth.admin, latestIntent as Record<string, unknown>);
+          }
+          return runtime.json({ error: 'The previous package payment attempt has expired or failed. The package reservation has been released; create a new package request.' }, 409);
+        }
+        if (String(packageRow.payment_status) !== 'unpaid') {
+          return runtime.json({ error: 'This package is not eligible for another payment.' }, 409);
+        }
+        if (Math.round(toNumber(packageRow.fee_amount) * 1000) !== Math.round(amount * 1000)) {
+          return runtime.json({ error: 'Payment amount does not match the package fee.' }, 400);
+        }
+      }
+
       let providerName: WalletProviderName;
       if (paymentMethodType === 'card') providerName = 'stripe';
       else if (paymentMethodType === 'cliq') providerName = 'cliq';
@@ -1781,6 +2262,27 @@ export function createWalletHandlers(runtime: WalletRuntime) {
         redirectUrl: normalizeString(((providerPayload.next_action as Record<string, unknown> | undefined)?.display_qr_code as Record<string, unknown> | undefined)?.image_url_png),
         status,
       });
+
+      if (purpose === 'package_payment' && referenceId) {
+        const { data: pendingPackage, error: pendingError } = await auth.admin
+          .from('packages')
+          .update({
+            payment_status: 'pending',
+            assignment_expires_at: new Date(Date.now() + 30 * 60_000).toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('package_id', referenceId)
+          .eq('sender_id', auth.canonicalUser.id)
+          .eq('package_status', 'assigned')
+          .eq('payment_status', 'unpaid')
+          .select('package_id')
+          .maybeSingle();
+        if (pendingError || !pendingPackage) {
+          await auth.admin.from('wallet_payment_intents').delete()
+            .eq('payment_intent_id', String(intent.payment_intent_id));
+          throw new Error(pendingError?.message ?? 'Package payment reservation changed. Retry the payment.');
+        }
+      }
 
       return runtime.json({
         id: String(intent.payment_intent_id),
@@ -1866,6 +2368,11 @@ export function createWalletHandlers(runtime: WalletRuntime) {
             ((stripePayload.last_payment_error as Record<string, unknown> | undefined)?.message),
           ),
         });
+        if (mappedStatus === 'failed' || mappedStatus === 'cancelled') {
+          await markPackagePaymentFailed(auth.admin, intent as Record<string, unknown>, normalizeString(
+            ((stripePayload.last_payment_error as Record<string, unknown> | undefined)?.message),
+          ));
+        }
 
         return runtime.json({
           id: String(updated.payment_intent_id),
@@ -1972,10 +2479,20 @@ export function createWalletHandlers(runtime: WalletRuntime) {
           await settlePaymentIntent(admin, intent);
         }
 
+        // A payment_failed event is retryable: Stripe returns the intent to requires_payment_method.
+        // Only an actually cancelled/expired intent releases the package reservation.
+        const finalStatus = mappedStatus;
         await updatePaymentIntentRecord(admin, String(intent.payment_intent_id), {
-          status: eventType === 'payment_intent.payment_failed' ? 'failed' : mappedStatus,
+          status: finalStatus,
           last_error: normalizeString(((object.last_payment_error as Record<string, unknown> | undefined)?.message)),
         });
+        if (finalStatus === 'failed' || finalStatus === 'cancelled') {
+          await markPackagePaymentFailed(
+            admin,
+            intent,
+            normalizeString(((object.last_payment_error as Record<string, unknown> | undefined)?.message)),
+          );
+        }
       } else {
         const providerPaymentId = normalizeString(eventBody.providerPaymentId) ?? normalizeString(eventBody.paymentIntentId);
         if (!providerPaymentId) {
@@ -2282,6 +2799,92 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     }
   }
 
+  async function releasePackageEscrowForVerifiedDelivery(packageId: string, driverUserId: string) {
+    const admin = runtime.getAdminClient();
+    const { data: escrow, error } = await admin
+      .from('escrow_accounts')
+      .select('escrow_account_id, beneficiary_user_id, escrow_state')
+      .eq('escrow_type', 'package')
+      .eq('reference_id', packageId)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    if (!escrow) throw new Error('Package is marked as escrow-funded but no wallet escrow record exists.');
+    if (String(escrow.beneficiary_user_id) !== driverUserId) {
+      throw new Error('Only the assigned driver can receive package escrow.');
+    }
+    if (String(escrow.escrow_state) === 'released') {
+      const { error: repairError } = await admin
+        .from('packages')
+        .update({ payment_status: 'released', updated_at: new Date().toISOString() })
+        .eq('package_id', packageId)
+        .eq('package_status', 'delivered')
+        .is('dispute_opened_at', null);
+      if (repairError) throw new Error(repairError.message);
+      return { released: true, reason: 'already_released' };
+    }
+    if (String(escrow.escrow_state) !== 'held') {
+      return { released: false, reason: 'not_held' };
+    }
+
+    const transactionId = await releaseEscrow(admin, String(escrow.escrow_account_id), driverUserId);
+    return { released: true, transactionId };
+  }
+
+  async function refundPackageEscrow(packageId: string, actorUserId: string) {
+    const { data: packageRow, error: packageError } = await admin
+      .from('packages')
+      .select('sender_id, package_status')
+      .eq('package_id', packageId)
+      .maybeSingle();
+    if (packageError) throw new Error(packageError.message);
+    if (!packageRow || String(packageRow.sender_id) !== actorUserId) {
+      throw new Error('Only the package sender can request an escrow refund.');
+    }
+    if (!['disputed', 'cancelled'].includes(String(packageRow.package_status))) {
+      throw new Error('Package must be disputed or cancelled before a refund can be requested.');
+    }
+
+    const { data: escrow, error: escrowError } = await admin
+      .from('escrow_accounts')
+      .select('escrow_account_id')
+      .eq('escrow_type', 'package')
+      .eq('reference_id', packageId)
+      .maybeSingle();
+    if (escrowError) throw new Error(escrowError.message);
+    if (!escrow) throw new Error('No package escrow exists for this request.');
+
+    return refundEscrow(admin, String(escrow.escrow_account_id), actorUserId);
+  }
+
+  async function handleReconcileExpiredPaymentIntents() {
+    const now = new Date().toISOString();
+    const { data: expiredIntents, error } = await admin
+      .from('wallet_payment_intents')
+      .select('*')
+      .eq('purpose', 'package_payment')
+      .in('status', ['requires_confirmation', 'requires_action', 'processing'])
+      .lte('expires_at', now)
+      .order('expires_at', { ascending: true })
+      .limit(100);
+
+    if (error) return runtime.json({ error: error.message }, 500);
+
+    let processed = 0;
+    let failed = 0;
+    for (const intent of expiredIntents ?? []) {
+      try {
+        await reconcilePaymentIntentStatus(admin, intent as Record<string, unknown>);
+        processed += 1;
+      } catch (reconcileError) {
+        failed += 1;
+        console.error('Expired payment reconciliation failed:', reconcileError);
+      }
+    }
+
+    return runtime.json({ processed, failed, checkedAt: now });
+  }
+
   async function handleRefundEscrow(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
@@ -2303,6 +2906,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     handleCreatePaymentIntent,
     handleConfirmPayment,
     handleGetPaymentStatus,
+    handleReconcileExpiredPaymentIntents,
     handlePaymentWebhook,
     handleWalletDeposit,
     handleWalletTransfer,
@@ -2311,5 +2915,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     handleWalletSettings,
     handleReleaseEscrow,
     handleRefundEscrow,
+    refundPackageEscrow,
+    releasePackageEscrowForVerifiedDelivery,
   };
 }

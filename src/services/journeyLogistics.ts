@@ -1,19 +1,12 @@
-import { API_URL, fetchWithRetry, getAuthDetails } from './core';
-import {
-  createDirectPackage,
-  getDirectPackageByTrackingId,
-  updateDirectPackageStatus,
-} from './directSupabase';
+import { API_URL, fetchWithRetry, getAuthDetails, supabase } from './core';
 import { trackGrowthEvent } from './growthEngine';
 import { triggerPackageConfirmationEmail } from './transactionalEmailTriggers';
 import { tripsAPI } from './trips';
 import {
   normalizeJordanLocation,
   routeEndpointsAreDistinct,
-  routeMatchesLocationPair,
 } from '../utils/jordanLocations';
 import { logger } from '../utils/logging';
-import { requireDirectSupabaseFallback } from './runtimePolicy';
 
 export type RecordSyncState = 'local-only' | 'syncing' | 'synced' | 'sync-error';
 
@@ -41,7 +34,7 @@ export interface PostedRide {
   syncedAt?: string;
 }
 
-export type PackageStatus = 'searching' | 'matched' | 'in_transit' | 'delivered';
+export type PackageStatus = 'searching' | 'matched' | 'in_transit' | 'delivered' | 'disputed' | 'cancelled';
 
 export interface PackageVerification {
   senderCodeSharedAt?: string;
@@ -51,8 +44,11 @@ export interface PackageVerification {
 
 export interface PackageRequest {
   id: string;
+  isSender?: boolean;
   trackingId: string;
   handoffCode: string;
+  deliveryCode?: string;
+  paymentStatus?: string;
   from: string;
   to: string;
   weight: string;
@@ -99,10 +95,6 @@ function makeId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 }
 
-function generateHandoffCode(): string {
-  return `HC-${Math.floor(100000 + Math.random() * 900000)}`;
-}
-
 function parseWeight(weight: string): number {
   const matches = weight.match(/\d+(?:\.\d+)?/g);
   if (!matches) {return 0.5;}
@@ -146,6 +138,8 @@ function isPersistedPackageVisible(pkg: PackageRequest): boolean {
 function normalizeStatus(value: unknown, matchedRideId?: string): PackageStatus {
   const status = String(value ?? '').toLowerCase();
   if (status === 'delivered') {return 'delivered';}
+  if (status === 'disputed') {return 'disputed';}
+  if (status === 'cancelled') {return 'cancelled';}
   if (status === 'in_transit' || status === 'picked_up') {return 'in_transit';}
   if (
     status === 'searching' ||
@@ -188,7 +182,8 @@ function normalizeServerRide(raw: Record<string, unknown>, fallback: PostedRide)
   const rawStatus = String(raw.status ?? '').toLowerCase();
   return {
     ...fallback,
-    id: String(raw.id ?? fallback.id),
+    id: String(raw.id ?? raw.package_id ?? fallback.id),
+    isSender: Boolean(raw.isSender ?? raw.is_sender ?? fallback.isSender ?? false),
     from: String(raw.from_location ?? raw.from ?? fallback.from),
     to: String(raw.to_location ?? raw.to ?? fallback.to),
     date: String(raw.departure_date ?? raw.date ?? fallback.date),
@@ -266,12 +261,8 @@ function normalizeServerPackage(
   const matchedRideId =
     String(raw.trip_id ?? raw.matchedRideId ?? '').trim() || undefined;
   const status = normalizeStatus(raw.status, matchedRideId);
-  const handoffCode =
-    String(raw.handoff_code ?? raw.handoffCode ?? fallback.handoffCode ?? '')
-      .trim()
-      .toUpperCase() ||
-    fallback.handoffCode ||
-    generateHandoffCode();
+  const handoffCode = String(raw.handoff_code ?? raw.handoffCode ?? fallback.handoffCode ?? '').trim();
+  const deliveryCode = String(raw.delivery_code ?? raw.deliveryCode ?? fallback.deliveryCode ?? '').trim();
 
   return {
     ...fallback,
@@ -280,6 +271,8 @@ function normalizeServerPackage(
       .trim()
       .toUpperCase(),
     handoffCode,
+    deliveryCode: deliveryCode || undefined,
+    paymentStatus: String(raw.payment_status ?? fallback.paymentStatus ?? 'unpaid'),
     from: String(raw.from ?? fallback.from),
     to: String(raw.to ?? fallback.to),
     weight: sanitizeWeight(String(raw.weight ?? fallback.weight)),
@@ -318,6 +311,7 @@ function normalizeServerPackage(
         String(
           raw.rider_pickup_confirmed_at ??
             raw.riderPickupConfirmedAt ??
+            raw.pickup_verified_at ??
             fallback.verification?.riderPickupConfirmedAt ??
             '',
         ).trim() || undefined,
@@ -325,6 +319,7 @@ function normalizeServerPackage(
         String(
           raw.receiver_delivery_confirmed_at ??
             raw.receiverDeliveryConfirmedAt ??
+            raw.delivery_verified_at ??
             fallback.verification?.receiverDeliveryConfirmedAt ??
             '',
         ).trim() || undefined,
@@ -367,10 +362,7 @@ function normalizeLocalPackage(raw: Partial<PackageRequest>): PackageRequest | n
 
   const matchedRideId = String(raw.matchedRideId ?? '').trim() || undefined;
   const status = normalizeStatus(raw.status, matchedRideId);
-  const handoffCode =
-    String(raw.handoffCode ?? '')
-      .trim()
-      .toUpperCase() || generateHandoffCode();
+  const handoffCode = String(raw.handoffCode ?? '').trim().toUpperCase();
 
   return {
     id: String(raw.id ?? makeId('pkg')),
@@ -450,7 +442,8 @@ function mergeRides(...lists: PostedRide[][]): PostedRide[] {
 
 function savePackages(...lists: PackageRequest[][]): PackageRequest[] {
   const packages = mergePackages(...lists);
-  writeList(PACKAGES_KEY, packages);
+  // OTPs are one-time secrets. Keep them in memory for the active session only.
+  writeList(PACKAGES_KEY, packages.map(({ handoffCode: _pickup, deliveryCode: _delivery, ...item }) => item));
   return packages;
 }
 
@@ -460,36 +453,6 @@ function saveRides(...lists: PostedRide[][]): PostedRide[] {
   return rides;
 }
 
-function findBestMatchingRide(
-  rides: PostedRide[],
-  input: { from: string; to: string; weight: string; preferredRideId?: string },
-): PostedRide | undefined {
-  const requestedWeight = parseWeight(input.weight);
-  const capacityRank = { small: 1, medium: 5, large: 10 };
-  const preferredRide = input.preferredRideId
-    ? rides.find(
-        ride =>
-          ride.id === input.preferredRideId &&
-          ride.acceptsPackages &&
-          routeMatchesLocationPair(ride.from, ride.to, input.from, input.to, {
-            allowReverse: false,
-          }) &&
-          capacityRank[ride.packageCapacity] >= requestedWeight,
-      )
-    : undefined;
-
-  if (preferredRide) {
-    return preferredRide;
-  }
-
-  return sortByCreatedAtDesc(rides)
-    .filter(
-      ride =>
-        ride.acceptsPackages &&
-        routeMatchesLocationPair(ride.from, ride.to, input.from, input.to, { allowReverse: false }),
-    )
-    .find(ride => capacityRank[ride.packageCapacity] >= requestedWeight);
-}
 
 export function getConnectedRides(): PostedRide[] {
   const rides = mergeRides(readList<PostedRide>(RIDES_KEY)).filter(isPersistedRideVisible);
@@ -578,14 +541,14 @@ export function getConnectedPackages(): PackageRequest[] {
   return packages;
 }
 
-function buildServerPackagePayload(pkg: PackageRequest) {
+function buildServerPackagePayload(pkg: PackageRequest, preferredRideId?: string) {
   return {
     from: pkg.from,
     to: pkg.to,
     weight: parseWeight(pkg.weight),
     description: pkg.note,
     price: 5,
-    handoffCode: pkg.handoffCode,
+    ...(preferredRideId ? { preferredRideId } : {}),
     ...(pkg.recipientName ? { recipientName: pkg.recipientName } : {}),
     ...(pkg.recipientPhone ? { recipientPhone: pkg.recipientPhone } : {}),
     ...(pkg.packageType === 'return' ? { packageType: pkg.packageType } : {}),
@@ -616,19 +579,12 @@ export async function createConnectedPackage(input: {
     throw new Error('Sender and receiver locations must be different.');
   }
 
-  const rides = getConnectedRides();
-  const matchedRide = findBestMatchingRide(rides, {
-    from,
-    to,
-    weight: input.weight,
-    preferredRideId: input.preferredRideId,
-  });
-  const trackingId = `PKG-${Math.floor(10000 + Math.random() * 90000)}`;
+  const trackingId = '';
 
   const pkg: PackageRequest = {
     id: makeId('pkg'),
     trackingId,
-    handoffCode: generateHandoffCode(),
+    handoffCode: '',
     from,
     to,
     weight: sanitizeWeight(input.weight),
@@ -650,102 +606,56 @@ export async function createConnectedPackage(input: {
   };
 
   try {
+    if (!API_URL) throw new Error('Secure package creation API is not configured.');
     const { token, userId } = await getAuthDetails();
+    const response = await fetchWithRetry(`${API_URL}/packages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(buildServerPackagePayload(pkg, input.preferredRideId)),
+    });
 
-    if (API_URL) {
-      const response = await fetchWithRetry(`${API_URL}/packages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(buildServerPackagePayload(pkg)),
-      });
-
-      if (!response.ok) {
-        throw new Error('Package request could not be created.');
-      }
-
-      const server = await response.json();
-      const created = normalizeServerPackage(server.package as Record<string, unknown>, pkg);
-      savePackages([created], getConnectedPackages());
-      void trackGrowthEvent({
-        userId,
-        eventName: 'package_request_created',
-        funnelStage: created.matchedRideId ? 'selected' : 'searched',
-        serviceType: 'package',
-        from: created.from,
-        to: created.to,
-        valueJod: 5,
-        metadata: {
-          trackingId: created.trackingId,
-          packageType: created.packageType,
-        },
-      });
-      if (input.senderEmail) {
-        triggerPackageConfirmationEmail({
-          senderEmail: input.senderEmail,
-          senderName: input.senderName ?? 'Wasel sender',
-          trackingId: created.trackingId,
-          handoffCode: created.handoffCode,
-          from: created.from,
-          to_city: created.to,
-          weight: created.weight,
-          recipientName: created.recipientName,
-          matchedDriver: created.matchedDriver,
-          status: created.status === 'matched' ? 'matched' : 'searching',
-        });
-      }
-      return created;
-    } else {
-      requireDirectSupabaseFallback('Package creation');
-      const createdDirect = await createDirectPackage({
-        userId,
-        trackingNumber: pkg.trackingId,
-        from: pkg.from,
-        to: pkg.to,
-        weightKg: parseWeight(pkg.weight),
-        description: pkg.note,
-        recipientName: pkg.recipientName,
-        recipientPhone: pkg.recipientPhone,
-      });
-
-      const created = normalizeServerPackage(createdDirect as Record<string, unknown>, {
-        ...pkg,
-        from: String(createdDirect.origin_name ?? pkg.from),
-        to: String(createdDirect.destination_name ?? pkg.to),
-        weight: sanitizeWeight(String(createdDirect.weight_kg ?? pkg.weight)),
-      });
-      savePackages([created], getConnectedPackages());
-      void trackGrowthEvent({
-        userId,
-        eventName: 'package_request_created',
-        funnelStage: created.matchedRideId ? 'selected' : 'searched',
-        serviceType: 'package',
-        from: created.from,
-        to: created.to,
-        valueJod: 5,
-        metadata: {
-          trackingId: created.trackingId,
-          packageType: created.packageType,
-        },
-      });
-      if (input.senderEmail) {
-        triggerPackageConfirmationEmail({
-          senderEmail: input.senderEmail,
-          senderName: input.senderName ?? 'Wasel sender',
-          trackingId: created.trackingId,
-          handoffCode: created.handoffCode,
-          from: created.from,
-          to_city: created.to,
-          weight: created.weight,
-          recipientName: created.recipientName,
-          matchedDriver: created.matchedDriver,
-          status: created.status === 'matched' ? 'matched' : 'searching',
-        });
-      }
-      return created;
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(String(payload.error ?? 'Package request could not be created.'));
     }
+
+    const created = normalizeServerPackage(payload.package as Record<string, unknown>, pkg);
+    if (!created.trackingId || !created.handoffCode || !created.deliveryCode) {
+      throw new Error('The server did not return secure package tracking and handoff credentials.');
+    }
+
+    savePackages([created], getConnectedPackages());
+    void trackGrowthEvent({
+      userId,
+      eventName: 'package_request_created',
+      funnelStage: 'searched',
+      serviceType: 'package',
+      from: created.from,
+      to: created.to,
+      valueJod: 5,
+      metadata: {
+        trackingId: created.trackingId,
+        packageType: created.packageType,
+      },
+    });
+    if (input.senderEmail) {
+      triggerPackageConfirmationEmail({
+        senderEmail: input.senderEmail,
+        senderName: input.senderName ?? 'Wasel sender',
+        trackingId: created.trackingId,
+        handoffCode: created.handoffCode,
+        from: created.from,
+        to_city: created.to,
+        weight: created.weight,
+        recipientName: created.recipientName,
+        matchedDriver: created.matchedDriver,
+        status: 'searching',
+      });
+    }
+    return created;
   } catch (error) {
     logger.error('[journeyLogistics] package creation failed', error, {
       from: pkg.from,
@@ -754,7 +664,6 @@ export async function createConnectedPackage(input: {
       recipientPhone: pkg.recipientPhone ?? null,
       packageType: pkg.packageType,
       preferredRideId: input.preferredRideId ?? null,
-      matchedRideCandidateId: matchedRide?.id ?? null,
     });
     throw new Error('Package request could not be created right now. Please try again.');
   }
@@ -762,49 +671,29 @@ export async function createConnectedPackage(input: {
 
 export async function getPackageByTrackingId(trackingId: string): Promise<PackageRequest | null> {
   const normalizedTrackingId = trackingId.trim().toUpperCase();
-  if (!normalizedTrackingId) {return null;}
+  if (!normalizedTrackingId) return null;
+  if (!API_URL) throw new Error('Secure package tracking API is not configured.');
 
-  const local =
-    getConnectedPackages().find(item => item.trackingId === normalizedTrackingId) ?? null;
-  if (local) {return local;}
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(
+    `${API_URL}/packages/track/${encodeURIComponent(normalizedTrackingId)}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error('Package tracking could not be loaded.');
+  const payload = await response.json();
+  const server = (payload.package ?? payload) as Record<string, unknown>;
+  if (!server) return null;
 
-  try {
-    let server: Record<string, unknown> | null = null;
-
-    if (API_URL) {
-      const response = await fetchWithRetry(
-        `${API_URL}/packages/track/${encodeURIComponent(normalizedTrackingId)}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-      if (!response.ok) {return null;}
-      server = await response.json();
-    } else {
-      requireDirectSupabaseFallback('Package tracking lookup');
-      const direct = await getDirectPackageByTrackingId(normalizedTrackingId);
-      if (!direct) {return null;}
-      server = {
-        ...direct,
-        id: direct.id,
-        tracking_code: direct.tracking_number,
-        from: direct.origin_name ?? direct.origin_location,
-        to: direct.destination_name ?? direct.destination_location,
-        weight: direct.weight_kg,
-        description: direct.description,
-        recipient_name: direct.receiver_name,
-        recipient_phone: direct.receiver_phone,
-      };
-    }
-
-    if (!server) {return null;}
-
-    const fallback: PackageRequest = {
-      id: String(server.id ?? makeId('pkg')),
+  const fallback: PackageRequest = {
+    id: String(server.id ?? makeId('pkg')),
     trackingId: normalizedTrackingId,
-    handoffCode: generateHandoffCode(),
+    handoffCode: '',
     from: String(server.from ?? ''),
     to: String(server.to ?? ''),
     weight: sanitizeWeight(String(server.weight ?? '<1 kg')),
@@ -819,20 +708,17 @@ export async function getPackageByTrackingId(trackingId: string): Promise<Packag
     matchedDriver: String(server.driver_name ?? '').trim() || undefined,
     matchedDriverPhone: sanitizePhone(String(server.driver_phone ?? '')),
     status: normalizeStatus(server.status, String(server.trip_id ?? '').trim() || undefined),
-      createdAt: String(server.created_at ?? new Date().toISOString()),
-      verification: {},
-      timeline: buildTimeline(
-        normalizeStatus(server.status, String(server.trip_id ?? '').trim() || undefined),
-        String(server.trip_id ?? '').trim() || undefined,
-        {},
-      ),
-    };
-    const normalizedPkg = normalizeServerPackage(server as Record<string, unknown>, fallback);
-    savePackages([normalizedPkg], getConnectedPackages());
-    return normalizedPkg;
-  } catch {
-    return null;
-  }
+    createdAt: String(server.created_at ?? new Date().toISOString()),
+    verification: {},
+    timeline: buildTimeline(
+      normalizeStatus(server.status, String(server.trip_id ?? '').trim() || undefined),
+      String(server.trip_id ?? '').trim() || undefined,
+      {},
+    ),
+  };
+  const normalizedPkg = normalizeServerPackage(server, fallback);
+  savePackages([normalizedPkg], getConnectedPackages());
+  return normalizedPkg;
 }
 
 export function getConnectedStats() {
@@ -850,88 +736,119 @@ export function getConnectedStats() {
 
 export type PackageVerificationAction = 'share_code' | 'confirm_pickup' | 'confirm_delivery';
 
+export async function uploadPackageDeliveryEvidence(
+  trackingId: string,
+  file: File,
+): Promise<string> {
+  if (!API_URL || !supabase) throw new Error('Secure package evidence upload is not configured.');
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    throw new Error('Delivery evidence must be a JPEG, PNG, or WebP image.');
+  }
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(
+    `${API_URL}/packages/track/${encodeURIComponent(trackingId)}/evidence-upload`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ contentType: file.type }),
+    },
+  );
+  if (!response.ok) throw new Error('A secure evidence upload URL could not be created.');
+  const upload = await response.json() as { path: string; token: string };
+  const { error } = await supabase.storage
+    .from('package-evidence')
+    .uploadToSignedUrl(upload.path, upload.token, file, { contentType: file.type, upsert: false });
+  if (error) throw new Error('Delivery evidence upload failed.');
+  return upload.path;
+}
+
+export async function openPackageDispute(trackingId: string, reason: string): Promise<PackageRequest | null> {
+  if (!API_URL) throw new Error('Secure package dispute API is not configured.');
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(
+    `${API_URL}/packages/track/${encodeURIComponent(trackingId)}/dispute`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ reason }),
+    },
+  );
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(String(payload.error ?? 'Package dispute could not be opened.'));
+  const packages = getConnectedPackages();
+  const target = packages.find(item => item.trackingId === trackingId);
+  if (!payload.package || !target) return null;
+  const updated = normalizeServerPackage(payload.package as Record<string, unknown>, target);
+  savePackages([updated], packages);
+  return updated;
+}
+
+export async function refundPackageEscrow(trackingId: string): Promise<PackageRequest | null> {
+  if (!API_URL) throw new Error('Secure package refund API is not configured.');
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(
+    `${API_URL}/packages/track/${encodeURIComponent(trackingId)}/refund`,
+    { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
+  );
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(String(payload.error ?? 'Package refund could not be processed.'));
+  const packages = getConnectedPackages();
+  const target = packages.find(item => item.trackingId === trackingId);
+  if (!payload.package || !target) return null;
+  const updated = normalizeServerPackage(payload.package as Record<string, unknown>, target);
+  savePackages([updated], packages);
+  return updated;
+}
+
+export async function rotatePackageHandoffCodes(
+  trackingId: string,
+): Promise<{ handoffCode?: string; deliveryCode: string }> {
+  if (!API_URL) throw new Error('Secure package API is not configured.');
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(
+    `${API_URL}/packages/track/${encodeURIComponent(trackingId)}/rotate-codes`,
+    { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!response.ok) throw new Error('Package handoff codes could not be rotated.');
+  return response.json();
+}
+
 export async function updatePackageVerification(
   trackingId: string,
   action: PackageVerificationAction,
+  code?: string,
+  evidencePath?: string,
 ): Promise<PackageRequest | null> {
   const normalizedTrackingId = trackingId.trim().toUpperCase();
-  if (!normalizedTrackingId) {return null;}
+  if (!normalizedTrackingId) return null;
+  if (!API_URL) throw new Error('Secure package verification API is not configured.');
+
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(
+    `${API_URL}/packages/track/${encodeURIComponent(normalizedTrackingId)}/verification`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ action, ...(code ? { code } : {}), ...(evidencePath ? { evidencePath } : {}) }),
+    },
+  );
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(String(payload.error ?? 'Package verification could not be completed.'));
+  }
 
   const packages = getConnectedPackages();
   const target = packages.find(item => item.trackingId === normalizedTrackingId);
-  if (!target) {return null;}
-
-  const now = new Date().toISOString();
-  const verification: PackageVerification = { ...target.verification };
-  let status = target.status;
-
-  if (action === 'share_code') {
-    verification.senderCodeSharedAt = verification.senderCodeSharedAt ?? now;
-    if (status === 'searching' && target.matchedRideId) {status = 'matched';}
-  }
-
-  if (action === 'confirm_pickup') {
-    verification.senderCodeSharedAt = verification.senderCodeSharedAt ?? now;
-    verification.riderPickupConfirmedAt = verification.riderPickupConfirmedAt ?? now;
-    status = 'in_transit';
-  }
-
-  if (action === 'confirm_delivery') {
-    verification.senderCodeSharedAt = verification.senderCodeSharedAt ?? now;
-    verification.riderPickupConfirmedAt = verification.riderPickupConfirmedAt ?? now;
-    verification.receiverDeliveryConfirmedAt = verification.receiverDeliveryConfirmedAt ?? now;
-    status = 'delivered';
-  }
-
-  try {
-    const server = await updateDirectPackageStatus(
-      normalizedTrackingId,
-      status === 'searching' ? 'matched' : status,
-    );
-    if (!server) {
-      throw new Error('Package verification update was not acknowledged by the backend.');
-    }
-
-    const updated = normalizeServerPackage(server as Record<string, unknown>, {
-      ...target,
-      verification,
-      timeline: buildTimeline(status, target.matchedRideId, verification),
-    });
-    const confirmed: PackageRequest = {
-      ...updated,
-      verification,
-      timeline: buildTimeline(updated.status, updated.matchedRideId, verification),
-      syncState: 'synced',
-      syncedAt: new Date().toISOString(),
-    };
-
-    savePackages(packages.map(item => (item.trackingId === normalizedTrackingId ? confirmed : item)));
-
-    void trackGrowthEvent({
-      eventName: 'package_verification_updated',
-      funnelStage:
-        confirmed.status === 'delivered'
-          ? 'completed'
-          : confirmed.status === 'in_transit'
-            ? 'booked'
-            : 'selected',
-      serviceType: 'package',
-      from: confirmed.from,
-      to: confirmed.to,
-      metadata: {
-        trackingId: confirmed.trackingId,
-        action,
-        status: confirmed.status,
-      },
-    });
-
-    return confirmed;
-  } catch (error) {
-    logger.error('[journeyLogistics] package verification update failed', error, {
-      action,
-      trackingId: normalizedTrackingId,
-      nextStatus: status,
-    });
-    throw new Error('Package status could not be updated right now. Please try again.');
-  }
+  if (!payload.package || !target) return null;
+  const updated = normalizeServerPackage(payload.package as Record<string, unknown>, target);
+  savePackages([updated], packages);
+  void trackGrowthEvent({
+    eventName: 'package_verification_updated',
+    funnelStage: updated.status === 'delivered' ? 'completed' : updated.status === 'in_transit' ? 'booked' : 'selected',
+    serviceType: 'package',
+    from: updated.from,
+    to: updated.to,
+    metadata: { trackingId: updated.trackingId, action, status: updated.status },
+  });
+  return updated;
 }
