@@ -126,6 +126,102 @@ revoke insert, update, delete on public.package_events from anon, authenticated;
 grant select on public.package_events to authenticated;
 grant all on public.package_events to service_role;
 
+-- Match waiting package requests when a new eligible trip is published.
+create or replace function public.app_match_waiting_packages_to_trip(p_trip_id uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $
+declare
+  v_trip public.trips%rowtype;
+  v_package record;
+  v_matched integer := 0;
+begin
+  if auth.role() <> 'service_role' then
+    raise exception 'Service role required' using errcode = '42501';
+  end if;
+
+  perform public.app_expire_unpaid_package_assignments();
+
+  select * into v_trip
+  from public.trips
+  where trip_id = p_trip_id
+  for update;
+
+  if not found
+    or v_trip.trip_status <> 'open'
+    or not coalesce(v_trip.allow_packages, false)
+    or coalesce(v_trip.package_slots_remaining, 0) < 1
+    or v_trip.departure_time < timezone('utc', now()) + interval '24 hours'
+  then
+    return 0;
+  end if;
+
+  for v_package in
+    select package_id, sender_id
+    from public.packages
+    where package_status = 'created'
+      and status = 'searching'
+      and payment_status = 'unpaid'
+      and trip_id is null
+      and lower(trim(origin_name)) = lower(trim(v_trip.origin_city))
+      and lower(trim(destination_name)) = lower(trim(v_trip.destination_city))
+    order by created_at asc
+    for update skip locked
+  loop
+    exit when v_trip.package_slots_remaining < 1;
+
+    update public.packages
+    set trip_id = p_trip_id,
+        package_status = 'assigned',
+        status = 'matched',
+        assignment_expires_at = timezone('utc', now()) + interval '15 minutes',
+        updated_at = timezone('utc', now())
+    where package_id = v_package.package_id
+      and package_status = 'created'
+      and trip_id is null
+      and payment_status = 'unpaid';
+
+    if found then
+      update public.trips
+      set package_slots_remaining = package_slots_remaining - 1,
+          updated_at = timezone('utc', now())
+      where trip_id = p_trip_id
+        and package_slots_remaining > 0;
+
+      if not found then
+        update public.packages
+        set trip_id = null,
+            package_status = 'created',
+            status = 'searching',
+            assignment_expires_at = null,
+            updated_at = timezone('utc', now())
+        where package_id = v_package.package_id;
+        exit;
+      end if;
+
+      v_trip.package_slots_remaining := v_trip.package_slots_remaining - 1;
+
+      insert into public.package_events (package_id, event_type, event_status, notes)
+      values (
+        v_package.package_id,
+        'assigned',
+        'assigned',
+        'Package automatically matched to an eligible trip.'
+      );
+
+      v_matched := v_matched + 1;
+    end if;
+  end loop;
+
+  return v_matched;
+end;
+$;
+
+revoke all on function public.app_match_waiting_packages_to_trip(uuid) from public, anon, authenticated;
+grant execute on function public.app_match_waiting_packages_to_trip(uuid) to service_role;
+
 -- Package creation, assignment, custody state and payment state must go
 -- through the authenticated server API. Browser clients cannot forge them.
 create or replace function public.guard_package_client_mutations()
