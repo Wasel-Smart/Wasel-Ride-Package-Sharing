@@ -45,7 +45,7 @@ returns integer
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $$
 declare
   v_package record;
   v_expired integer := 0;
@@ -86,7 +86,7 @@ begin
 
   return v_expired;
 end;
-$;
+$$;
 
 revoke all on function public.app_expire_unpaid_package_assignments() from public, anon, authenticated;
 grant execute on function public.app_expire_unpaid_package_assignments() to service_role;
@@ -132,7 +132,7 @@ returns integer
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $$
 declare
   v_trip public.trips%rowtype;
   v_package record;
@@ -223,7 +223,7 @@ begin
 
   return v_matched;
 end;
-$;
+$$;
 
 revoke all on function public.app_match_waiting_packages_to_trip(uuid) from public, anon, authenticated;
 grant execute on function public.app_match_waiting_packages_to_trip(uuid) to service_role;
@@ -352,7 +352,7 @@ returns void
 language plpgsql
 security definer
 set search_path = public, private, pg_temp
-as $
+as $$
 begin
   if auth.role() <> 'service_role' then
     raise exception 'Service role required' using errcode = '42501';
@@ -369,7 +369,7 @@ begin
     timezone('utc', now()), timezone('utc', now())
   );
 end;
-$;
+$$;
 
 create or replace function public.app_rotate_package_handoff_secrets(
   p_package_id uuid,
@@ -380,7 +380,7 @@ returns void
 language plpgsql
 security definer
 set search_path = public, private, pg_temp
-as $
+as $$
 begin
   if auth.role() <> 'service_role' then
     raise exception 'Service role required' using errcode = '42501';
@@ -402,7 +402,7 @@ begin
     raise exception 'Package handoff secrets not found' using errcode = 'P0002';
   end if;
 end;
-$;
+$$;
 
 revoke all on function public.app_store_package_handoff_secrets(uuid, text, text) from public, anon, authenticated;
 revoke all on function public.app_rotate_package_handoff_secrets(uuid, text, text) from public, anon, authenticated;
@@ -418,7 +418,7 @@ returns boolean
 language plpgsql
 security definer
 set search_path = public, private, pg_temp
-as $
+as $$
 declare
   v_package public.packages%rowtype;
   v_secret private.package_handoff_secrets%rowtype;
@@ -484,7 +484,7 @@ begin
 
   return true;
 end;
-$;
+$$;
 
 create or replace function public.app_verify_package_delivery(
   p_package_id uuid,
@@ -496,7 +496,7 @@ returns boolean
 language plpgsql
 security definer
 set search_path = public, private, pg_temp
-as $
+as $$
 declare
   v_package public.packages%rowtype;
   v_secret private.package_handoff_secrets%rowtype;
@@ -572,7 +572,7 @@ begin
 
   return true;
 end;
-$;
+$$;
 
 revoke all on function public.app_verify_package_pickup(uuid, uuid, text) from public, anon, authenticated;
 revoke all on function public.app_verify_package_delivery(uuid, uuid, text, text) from public, anon, authenticated;
