@@ -1245,7 +1245,7 @@ async function createEscrowForIntent(
       if (packageStateError) throw new Error(packageStateError.message);
 
       const isDisputed = Boolean(packageState?.dispute_opened_at)
-        || String(packageState?.package_status) === 'disputed';
+        || ['disputed', 'delivered'].includes(String(packageState?.package_status));
       const { error: freezeError } = await admin
         .from('escrow_accounts')
         .update({ escrow_state: 'cancelled', updated_at: now })
@@ -1263,7 +1263,10 @@ async function createEscrowForIntent(
         }).eq('package_id', packageId);
       } else if (isDisputed) {
         await admin.from('packages').update({
+          package_status: 'disputed',
+          status: 'disputed',
           payment_status: 'disputed',
+          dispute_opened_at: now,
           assignment_expires_at: null,
           updated_at: now,
         }).eq('package_id', packageId);
