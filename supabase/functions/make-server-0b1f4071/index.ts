@@ -1880,6 +1880,147 @@ async function handleTrackPackage(auth: AuthenticatedRequest, trackingId: string
   return mapPackageRow(data as PackageRow);
 }
 
+async function loadPackageForAssignedDriver(
+  auth: AuthenticatedRequest,
+  trackingId: string,
+) {
+  const tracking = normalizeTrackingNumber(trackingId);
+  if (!tracking) throw new Error('A valid tracking ID is required.');
+
+  const { data: packageRow, error } = await auth.admin
+    .from('packages')
+    .select('package_id, trip_id, package_status, payment_status, tracking_number')
+    .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!packageRow) throw new Error('Package not found.');
+  if (!packageRow.trip_id) throw new Error('Package has not been assigned to a driver.');
+
+  const { data: trip, error: tripError } = await auth.admin
+    .from('trips')
+    .select('driver_id')
+    .eq('trip_id', String(packageRow.trip_id))
+    .maybeSingle();
+  if (tripError) throw new Error(tripError.message);
+  if (!trip?.driver_id) throw new Error('Assigned trip is not available.');
+
+  const { data: driver, error: driverError } = await auth.admin
+    .from('drivers')
+    .select('user_id')
+    .eq('driver_id', String(trip.driver_id))
+    .maybeSingle();
+  if (driverError) throw new Error(driverError.message);
+  if (String(driver?.user_id ?? '') !== auth.canonicalUser.id) {
+    throw new Error('Only the assigned driver can perform package custody actions.');
+  }
+
+  return packageRow as Record<string, unknown>;
+}
+
+async function handleCreatePackageEvidenceUpload(
+  auth: AuthenticatedRequest,
+  trackingId: string,
+  body: Record<string, unknown>,
+) {
+  const packageRow = await loadPackageForAssignedDriver(auth, trackingId);
+  if (String(packageRow.package_status) !== 'in_transit') {
+    return jsonResponse({ error: 'Evidence can be uploaded only after verified pickup.' }, 409);
+  }
+
+  const contentType = normalizeString(body.contentType)?.toLowerCase() ?? '';
+  const extensionByType: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+  };
+  const extension = extensionByType[contentType];
+  if (!extension) {
+    return jsonResponse({ error: 'Evidence must be a JPEG, PNG, or WebP image.' }, 400);
+  }
+
+  const path = `${String(packageRow.package_id)}/${crypto.randomUUID()}.${extension}`;
+  const { data, error } = await auth.admin.storage
+    .from('package-evidence')
+    .createSignedUploadUrl(path, { upsert: false });
+
+  if (error) throw new Error(error.message);
+  return jsonResponse({ path, token: data.token, signedUrl: data.signedUrl, contentType });
+}
+
+async function handleUpdatePackageVerification(
+  auth: AuthenticatedRequest,
+  trackingId: string,
+  body: Record<string, unknown>,
+  walletHandlers: ReturnType<typeof createWalletHandlers>,
+) {
+  const packageRow = await loadPackageForAssignedDriver(auth, trackingId);
+  const action = normalizeString(body.action);
+  const code = normalizeString(body.code);
+
+  if (!code || !/^\\d{6}$/.test(code)) {
+    return jsonResponse({ error: 'A valid six-digit handoff code is required.' }, 400);
+  }
+
+  const codeHash = await sha256Hex(code);
+  const packageId = String(packageRow.package_id);
+
+  if (action === 'confirm_pickup') {
+    const { data, error } = await auth.admin.rpc('app_verify_package_pickup', {
+      p_package_id: packageId,
+      p_driver_user_id: auth.canonicalUser.id,
+      p_code_hash: codeHash,
+    });
+    if (error) throw new Error(error.message);
+    if (data !== true) return jsonResponse({ error: 'Pickup code is invalid or temporarily locked.' }, 400);
+  } else if (action === 'confirm_delivery') {
+    const evidencePath = normalizeString(body.evidencePath);
+    if (!evidencePath || !evidencePath.startsWith(`${packageId}/`) || evidencePath.includes('..')) {
+      return jsonResponse({ error: 'A valid private delivery evidence upload is required.' }, 400);
+    }
+
+    const evidenceName = evidencePath.slice(packageId.length + 1);
+    const { data: files, error: listError } = await auth.admin.storage
+      .from('package-evidence')
+      .list(packageId, { search: evidenceName, limit: 100 });
+    if (listError) throw new Error(listError.message);
+    if (!Array.isArray(files) || !files.some((file) => file.name === evidenceName)) {
+      return jsonResponse({ error: 'Delivery evidence was not found in private storage.' }, 400);
+    }
+
+    const { data, error } = await auth.admin.rpc('app_verify_package_delivery', {
+      p_package_id: packageId,
+      p_driver_user_id: auth.canonicalUser.id,
+      p_code_hash: codeHash,
+      p_evidence_path: evidencePath,
+    });
+    if (error) throw new Error(error.message);
+    if (data !== true) return jsonResponse({ error: 'Delivery code is invalid or temporarily locked.' }, 400);
+  } else {
+    return jsonResponse({ error: 'Unsupported package verification action.' }, 400);
+  }
+
+  const { data: updatedPackage, error: updatedError } = await auth.admin
+    .from('packages')
+    .select('*')
+    .eq('package_id', packageId)
+    .single();
+  if (updatedError) throw new Error(updatedError.message);
+
+  let escrowSettlement: unknown = null;
+  if (action === 'confirm_delivery') {
+    escrowSettlement = await walletHandlers.releasePackageEscrowForVerifiedDelivery(
+      packageId,
+      auth.canonicalUser.id,
+    );
+  }
+
+  return jsonResponse({
+    package: mapPackageRow(updatedPackage as PackageRow),
+    escrowSettlement,
+  });
+}
+
 async function handleCreateReview(
   request: Request,
   auth: AuthenticatedRequest,
@@ -2372,6 +2513,33 @@ serve(async (req) => {
         await handleClearActiveTrip(auth);
         return jsonResponse({ success: true });
       }
+    }
+
+    const packageTrackMatch = path.match(/^\\/packages\\/track\\/([^/]+)$/);
+    if (packageTrackMatch && req.method === 'GET') {
+      const tracked = await handleTrackPackage(auth, decodeURIComponent(packageTrackMatch[1]));
+      return tracked
+        ? jsonResponse({ package: tracked })
+        : jsonResponse({ error: 'Package not found.' }, 404);
+    }
+
+    const packageEvidenceMatch = path.match(/^\\/packages\\/track\\/([^/]+)\\/evidence-upload$/);
+    if (packageEvidenceMatch && req.method === 'POST') {
+      return handleCreatePackageEvidenceUpload(
+        auth,
+        decodeURIComponent(packageEvidenceMatch[1]),
+        await readJsonBody(req),
+      );
+    }
+
+    const packageVerificationMatch = path.match(/^\\/packages\\/track\\/([^/]+)\\/verification$/);
+    if (packageVerificationMatch && req.method === 'PATCH') {
+      return handleUpdatePackageVerification(
+        auth,
+        decodeURIComponent(packageVerificationMatch[1]),
+        await readJsonBody(req),
+        walletHandlers,
+      );
     }
 
     if (routeMatches(path, '/packages') && req.method === 'POST') {
