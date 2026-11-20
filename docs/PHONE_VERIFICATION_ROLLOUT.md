@@ -1,54 +1,60 @@
 # Wasel phone verification rollout
 
-Wasel phone verification now uses **Twilio Verify**. The Edge Function no longer generates or stores OTPs. Twilio owns code generation, delivery, expiry, and verification.
+Wasel uses Twilio Verify for OTP generation, delivery, expiry, and verification. Wasel does not generate or store OTP values.
 
-## Required Edge Function secrets
+## Live backend architecture
 
-Set these in Supabase Dashboard → Edge Functions → Secrets:
+The confirmed production project is KV-backed and exposes the `make-server-0b1f4071` Hono function. Phone verification is deployed separately as `sms-verification`; it must not replace the existing mobility function.
 
-- \`TWILIO_ACCOUNT_SID\`
-- \`TWILIO_AUTH_TOKEN\`
-- \`TWILIO_VERIFY_SERVICE_SID\` (Twilio Verify Service SID, normally starts with \`VA\`)
-- \`SUPABASE_PUBLISHABLE_KEYS\` and \`SUPABASE_SECRET_KEYS\` are provisioned by Supabase for projects using the new key format. The function retains compatibility fallbacks to \`SUPABASE_ANON_KEY\` and \`SUPABASE_SERVICE_ROLE_KEY\`.
+The additive database migration creates:
+- `phone_verification_private.rate_limits`: atomic 15-minute per-user/per-phone counters.
+- `phone_verification_private.verified_phones`: canonical verified phone assignment, unique by user and phone.
+- Service-role-only SECURITY DEFINER RPCs for consuming limits and confirming a verified phone.
+- RLS enabled with no client policies on both private tables. Only the function owner accesses these tables through the RPCs.
 
-Do not add secret values to Git, Vite variables, client bundles, issue comments, or logs. The existing \`TWILIO_MESSAGING_SERVICE_SID\` / \`TWILIO_SMS_FROM\` settings remain in use by the separate communications worker; they are not used for phone verification.
+After Twilio approves a code, the function writes the canonical private record and mirrors `phone_number` and `phone_verified=true` into protected Auth app metadata using the Auth Admin API. It does not directly modify Supabase-managed `auth.users` tables.
 
-## Twilio Verify service setup
+## Required Supabase Edge Function secrets
 
-1. Create a Verify Service in the Twilio Console.
-2. Enable SMS as a verification channel and configure the service for a six-digit code.
-3. Enable the destination-country permissions needed for Wasel users, including Jordan.
-4. Configure fraud prevention / service rate limits in Twilio as an additional provider-side control.
-5. Copy the Verify Service SID into \`TWILIO_VERIFY_SERVICE_SID\`.
-6. Confirm the Twilio account is enabled for production traffic and has the required billing/payment configuration.
+Configure these in Supabase Dashboard → Edge Functions → Secrets:
+- `TWILIO_VERIFY_SERVICE_SID` (Twilio Verify Service SID, normally starts with `VA`)
+- Either `TWILIO_API_KEY_SID` + `TWILIO_API_KEY_SECRET`, or `TWILIO_ACCOUNT_SID` + `TWILIO_AUTH_TOKEN`
+- Supabase-provisioned `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`, or the supported publishable/secret key-set variables.
 
-## Application-side limits
+Never place credentials in Vite variables, Git, browser code, logs, or support tickets.
 
-The database migration adds atomic, server-only limits per authenticated user and phone number:
+## Twilio Verify setup
 
-- Up to 3 SMS sends per phone number per 15 minutes.
-- Up to 5 SMS sends per user per 15 minutes.
-- Up to 5 verification checks per phone number per 15 minutes.
-- Up to 10 verification checks per user per 15 minutes.
+1. Create a Verify Service in Twilio Console.
+2. Enable SMS and configure a six-digit code.
+3. Enable destination-country permissions for Jordan.
+4. Enable provider-side fraud prevention and rate limits.
+5. Confirm production account status and billing.
 
-Twilio's own service limits and fraud controls should remain enabled as a second layer.
+## Application limits
+
+- 3 SMS sends per phone number per 15 minutes.
+- 5 SMS sends per authenticated user per 15 minutes.
+- 5 verification checks per phone number per 15 minutes.
+- 10 verification checks per authenticated user per 15 minutes.
+
+Twilio's own limits are an additional layer.
 
 ## Deployment order
 
-1. Configure and verify the Twilio Verify Service and Edge Function secrets.
-2. Apply the migration \`20261120000000_secure_phone_verification.sql\`.
-3. Deploy the updated \`sms-verification\` Edge Function with JWT verification enabled.
-4. Deploy the updated web frontend.
-5. Test an authenticated Jordanian mobile number end-to-end in a controlled test account.
-6. Confirm the profile's \`phone_verified\` field and the latest \`user_verifications\` phone record are updated only after Twilio returns \`approved\`.
-7. Confirm invalid codes, expired codes, rate limits, unauthenticated requests, and disallowed browser origins fail safely.
+1. Confirm the migration is present in the live project and verify RLS and RPC grants.
+2. Configure the Twilio Verify and Supabase secrets.
+3. Deploy `sms-verification` with JWT verification enabled.
+4. Deploy the frontend with authenticated requests to `/functions/v1/sms-verification`.
+5. Test send, invalid code, expired code, rate limit, duplicate phone, unauthenticated request, disallowed origin, and successful confirmation.
+6. Confirm both the private verified-phone record and protected Auth app metadata after approval.
+7. Confirm the existing `make-server-0b1f4071` mobility API remains healthy.
 
-The migration deletes legacy rows from \`phone_verifications\`, because they contain plaintext OTPs and are no longer used. It removes client access to that legacy table and installs an atomic database confirmation function plus private rate-limit storage.
+## Security notes
 
-## Operational notes
-
-- The Edge Function expects E.164 phone numbers. The Jordan-specific UI normalizes local mobile numbers to \`+9627XXXXXXXX\`.
-- The API response never returns Twilio's raw error body.
-- Application logs record provider status/error codes only, not phone numbers, OTPs, or credentials.
-- If the Twilio Verify service is unavailable or not configured, the function fails closed with a generic error.
-- Do not disable Edge Function JWT verification to work around authentication errors.
+- The frontend sends the active Supabase access token and public API key.
+- The function independently validates the access token with Supabase Auth.
+- Only allowlisted browser origins are accepted.
+- Requests are size-limited and phone numbers must be E.164.
+- No OTP or provider credential is stored or logged.
+- Do not disable Edge Function JWT verification.
