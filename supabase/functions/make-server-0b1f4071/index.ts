@@ -1763,6 +1763,54 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
   const pickupCode = generatePackageOtp();
   const deliveryCode = generatePackageOtp();
   const now = new Date().toISOString();
+  const preferredRideId = normalizeString(body.preferredRideId);
+  let assignedTripId: string | null = null;
+  let assignedDriver: Record<string, unknown> | null = null;
+  let reservedSlots: number | null = null;
+
+  if (preferredRideId) {
+    const { data: trip, error: tripError } = await auth.admin
+      .from('trips')
+      .select('trip_id, driver_id, origin_city, destination_city, trip_status, allow_packages, package_slots_remaining')
+      .eq('trip_id', preferredRideId)
+      .maybeSingle();
+    if (tripError) return jsonResponse({ error: tripError.message }, 400);
+    if (!trip || String(trip.trip_status) !== 'open' || trip.allow_packages !== true) {
+      return jsonResponse({ error: 'The selected trip is not accepting packages.' }, 409);
+    }
+    if (String(trip.origin_city ?? '').trim().toLowerCase() !== from.toLowerCase()
+      || String(trip.destination_city ?? '').trim().toLowerCase() !== to.toLowerCase()) {
+      return jsonResponse({ error: 'The selected trip does not match the package route.' }, 400);
+    }
+    reservedSlots = Math.max(0, toNumber(trip.package_slots_remaining, 0));
+    if (reservedSlots < 1) {
+      return jsonResponse({ error: 'The selected trip has no package capacity remaining.' }, 409);
+    }
+
+    const { data: driver, error: driverError } = await auth.admin
+      .from('drivers')
+      .select('driver_id, user_id, driver_status')
+      .eq('driver_id', String(trip.driver_id))
+      .maybeSingle();
+    if (driverError) return jsonResponse({ error: driverError.message }, 400);
+    if (!driver || !['approved', 'online', 'offline', 'busy'].includes(String(driver.driver_status))) {
+      return jsonResponse({ error: 'The selected trip driver is not approved.' }, 409);
+    }
+
+    const { data: reserved, error: reserveError } = await auth.admin
+      .from('trips')
+      .update({ package_slots_remaining: reservedSlots - 1, updated_at: now })
+      .eq('trip_id', preferredRideId)
+      .eq('package_slots_remaining', reservedSlots)
+      .gt('package_slots_remaining', 0)
+      .select('trip_id')
+      .maybeSingle();
+    if (reserveError) return jsonResponse({ error: reserveError.message }, 400);
+    if (!reserved) return jsonResponse({ error: 'Package capacity was just taken. Select another trip.' }, 409);
+
+    assignedTripId = String(trip.trip_id);
+    assignedDriver = driver as Record<string, unknown>;
+  }
 
   const { data, error } = await auth.admin
     .from('packages')
@@ -1772,6 +1820,7 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
       package_code: tracking,
       qr_code: tracking,
       sender_id: auth.canonicalUser.id,
+      trip_id: assignedTripId,
       receiver_name: normalizeString(body.recipientName) || 'Recipient',
       receiver_phone: normalizeString(body.recipientPhone) || '',
       origin_name: from,
@@ -1783,8 +1832,8 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
       description,
       fee_amount: 5,
       delivery_fee: 5,
-      package_status: 'created',
-      status: 'searching',
+      package_status: assignedTripId ? 'assigned' : 'created',
+      status: assignedTripId ? 'matched' : 'searching',
       created_at: now,
       updated_at: now,
     })
@@ -1792,6 +1841,12 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
     .single();
 
   if (error) {
+    if (assignedTripId && reservedSlots !== null) {
+      await auth.admin.from('trips')
+        .update({ package_slots_remaining: reservedSlots, updated_at: now })
+        .eq('trip_id', assignedTripId)
+        .eq('package_slots_remaining', reservedSlots - 1);
+    }
     return jsonResponse({ error: error.message }, 400);
   }
 
@@ -1809,6 +1864,12 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
 
   if (secretError) {
     await auth.admin.from('packages').delete().eq('package_id', packageId);
+    if (assignedTripId && reservedSlots !== null) {
+      await auth.admin.from('trips')
+        .update({ package_slots_remaining: reservedSlots, updated_at: now })
+        .eq('trip_id', assignedTripId)
+        .eq('package_slots_remaining', reservedSlots - 1);
+    }
     return jsonResponse({ error: 'Package security credentials could not be initialized.' }, 500);
   }
 
@@ -1825,12 +1886,32 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
 
   if (eventError) {
     await auth.admin.from('packages').delete().eq('package_id', packageId);
+    if (assignedTripId && reservedSlots !== null) {
+      await auth.admin.from('trips')
+        .update({ package_slots_remaining: reservedSlots, updated_at: now })
+        .eq('trip_id', assignedTripId)
+        .eq('package_slots_remaining', reservedSlots - 1);
+    }
     return jsonResponse({ error: 'Package tracking history could not be initialized.' }, 500);
+  }
+
+  let driverSummary: Record<string, unknown> = {};
+  if (assignedDriver?.user_id) {
+    const { data: driverUser } = await auth.admin
+      .from('users')
+      .select('full_name, phone_number')
+      .eq('id', String(assignedDriver.user_id))
+      .maybeSingle();
+    driverSummary = {
+      driver_name: driverUser?.full_name ?? null,
+      driver_phone: driverUser?.phone_number ?? null,
+    };
   }
 
   return jsonResponse({
     package: {
       ...mapPackageRow(data as PackageRow),
+      ...driverSummary,
       handoffCode: pickupCode,
       deliveryCode,
     },
