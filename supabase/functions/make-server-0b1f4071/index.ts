@@ -1922,6 +1922,8 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
 
   let responsePackage = data as PackageRow;
   if (!assignedTripId) {
+    const { error: expiryError } = await auth.admin.rpc('app_expire_unpaid_package_assignments');
+    if (expiryError) console.error('Package reservation expiry failed before auto-match:', expiryError.message);
     const minDeparture = new Date(Date.now() + 24 * 60 * 60_000).toISOString();
     const { data: candidateTrips, error: candidateError } = await auth.admin
       .from('trips')
