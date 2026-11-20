@@ -2641,6 +2641,13 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       throw new Error('Only the assigned driver can receive package escrow.');
     }
     if (String(escrow.escrow_state) === 'released') {
+      const { error: repairError } = await admin
+        .from('packages')
+        .update({ payment_status: 'released', updated_at: new Date().toISOString() })
+        .eq('package_id', packageId)
+        .eq('package_status', 'delivered')
+        .is('dispute_opened_at', null);
+      if (repairError) throw new Error(repairError.message);
       return { released: true, reason: 'already_released' };
     }
     if (String(escrow.escrow_state) !== 'held') {
