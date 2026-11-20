@@ -1,53 +1,59 @@
 # Package tracking and escrow hardening
 
-## What this rollout adds
+## Architecture
 
-Migration `20261120100000_package_tracking_escrow_hardening.sql` adds a server-authoritative escrow ledger for the canonical `public.packages` model.
+Package payments use the existing double-entry wallet ledger and `public.escrow_accounts`. This rollout does not introduce a second package-specific financial ledger.
 
-- `public.package_escrows` records one escrow per package, with a JOD amount, payer, assigned driver account, provider payment reference, provider event reference, lifecycle status, and timestamps.
-- Provider payment and event identifiers are unique, so the database rejects duplicate funding records.
-- Package payment state is constrained to unpaid, pending, held, released, refunded, failed, or disputed.
-- Package status transitions are constrained to the supported delivery lifecycle.
-- Authenticated clients cannot directly change package assignment, delivery verification, delivery evidence, payment status, or escrow-related state.
-- Package timeline events are participant-readable and client append/update/delete access is revoked.
-- `record_package_escrow_payment` is service-role-only and must be called only after the payment provider signature, amount, currency, and package reference have been verified.
-- `release_package_escrow` is service-role-only and requires delivered status, a delivery verification timestamp, evidence URL, and no active dispute.
-- `open_package_dispute` is callable by an authenticated package participant and freezes a held escrow.
+The migration `20261120100000_package_tracking_escrow_hardening.sql` adds:
+- A constrained package payment state.
+- A private `private.package_handoff_secrets` table containing only pickup/delivery OTP hashes, failed-attempt counters, and lock state.
+- Participant-readable, client-append-only package timeline events.
+- A trigger that blocks authenticated clients from creating packages directly or changing assignment, tracking, custody, evidence, or financial state.
+- A dispute RPC that freezes held package escrow in the existing ledger by moving the escrow state to `cancelled`; the wallet refund flow must then resolve the dispute.
 
-## Important integration boundary
+The wallet service changes add:
+- Package beneficiary resolution through the package's assigned trip and driver.
+- Sender ownership, assigned-trip, payment-state, and fee-amount checks before package escrow is funded.
+- Idempotent lookup by payment-intent ID before creating a second escrow.
+- A delivery-evidence and no-dispute gate before package escrow can be released.
+- Refund eligibility for cancelled/disputed package escrow only.
 
-This migration supplies database enforcement primitives. It does **not** by itself:
-- configure or activate Stripe or a Jordanian payment acquirer;
-- validate provider webhook signatures;
-- connect the existing payment webhook handler to `record_package_escrow_payment`;
-- implement server-side pickup/delivery OTP verification or evidence upload;
-- replace the legacy browser `PackageTrackingService` localStorage implementation;
-- deploy the migration to the live Supabase project.
+## Critical remaining implementation
 
-Do not represent payment as held or released in the UI until the verified webhook and trusted delivery-verification paths call these database functions successfully.
+The database and wallet-service guards are not the whole package workflow. Before enabling package payments:
+1. The package creation endpoint must generate pickup and delivery OTPs on the server, store only hashes in the private table, and return the codes once to the sender.
+2. The package tracking endpoint must require authentication and verify sender, recipient, or assigned-driver participation. It must not expose OTP hashes or private contact data publicly.
+3. Pickup and delivery endpoints must verify the OTP server-side, rate-limit failures, enforce the assigned-driver identity, and update package state atomically.
+4. Delivery evidence must be uploaded to a private Storage bucket through a signed upload URL. The server must verify that the object exists before marking delivery verified.
+5. The package UI must collect the driver/receiver-provided OTP and evidence; it must not mark status complete from a local button press.
+6. The unified wallet payment-intent endpoint must be called with `purpose=package_payment`, `reference_type=package`, and the canonical package ID. The signed provider webhook must settle the payment intent; browser code must never mark funds held.
+7. Add integration tests for webhook replay, payment amount mismatch, wrong currency, unassigned package, wrong sender, invalid/locked OTP, wrong driver, missing evidence, active dispute, duplicate release, and refund after dispute.
 
-## Rollout dependencies
+## Rollout dependencies and production state
 
-The canonical rollout must apply the operating-model migration and runtime-contract migration before this migration, because it depends on:
-- `public.users`, `public.drivers`, `public.trips`, and `public.packages`;
-- `public.package_events`;
+This migration depends on the canonical rollout migrations that create:
+- `public.users`, `public.drivers`, `public.trips`, `public.packages`, and `public.package_events`;
+- `public.escrow_accounts` and the wallet ledger tables;
 - `public.current_user_id()` and `public.is_admin()`;
-- the `package_status_v2` enum.
+- the `package_status_v2` and `wallet_escrow_status` enums.
+
+The connected production project currently has no canonical application tables or Auth users. Its migration history does not match the repository registry. Do not apply the package migration by itself or run the rollout script against production until the actual Vercel Supabase target is confirmed and the full baseline/rollout chain has been tested against a disposable database.
 
 ## Required verification before merge or production rollout
 
 1. Run `npm run sync:supabase-migration-docs` and `npm run verify:supabase-rollout`.
-2. Apply the entire canonical rollout chain to a fresh disposable Supabase/Postgres database.
-3. Confirm the migration applies when `package_escrows` and the new package columns do not yet exist.
-4. Verify sender, recipient, assigned driver, unrelated user, and admin read access for package, escrow, and timeline records.
-5. Verify authenticated clients cannot insert forged escrow rows, forge timeline events, alter package status, alter payment state, change the assigned trip, or set delivery evidence.
-6. Verify duplicate provider event IDs and duplicate provider payment IDs cannot create a second escrow.
-7. Verify amount mismatch, wrong currency, unassigned package, cancelled package, and missing driver account all fail closed.
-8. Verify escrow cannot be released before delivery, without verification timestamp/evidence, during a dispute, or more than once.
-9. Verify a participant dispute freezes held funds and blocks release.
-10. Add integration tests for the real provider webhook and server-side pickup/delivery verification before declaring issue #241 complete.
-11. Review the SQL against the actual production schema and prepare a backup and compensating migration before deployment.
+2. Apply the complete canonical migration chain to a disposable Supabase/Postgres environment, not just this migration.
+3. Verify the package secret table is not exposed through PostgREST and is inaccessible to `anon` and `authenticated`.
+4. Verify clients cannot insert packages, alter package status, alter payment state, change assigned trip, change tracking identifiers, or forge timeline events.
+5. Verify only the sender can create/pay for their package and only the assigned driver can verify pickup/delivery.
+6. Verify wrong OTP attempts are rate-limited and locked; valid OTPs are single-use.
+7. Verify missing or cross-package evidence paths are rejected.
+8. Verify webhook replay cannot create duplicate wallet ledger holds or escrow accounts.
+9. Verify escrow cannot be released before delivery verification, without stored evidence, or during a dispute.
+10. Verify a dispute freezes held escrow and that only the payer can receive a permitted refund.
+11. Run type checks, lint, unit tests, edge-function tests, RLS tests, and end-to-end package journeys.
+12. Confirm the production target, backup, migration order, and compensating rollback plan before deployment.
 
 ## Current status
 
-Code authored on a feature branch. Database execution, provider integration, end-to-end tests, and production rollout remain outstanding. This is not a claim that live package escrow is active.
+Database hardening and wallet-ledger release guards have been authored on a feature branch. The server-generated OTP workflow, authenticated package endpoints, private evidence upload, full integration tests, complete baseline rollout, and production deployment remain outstanding. Live package payments are not enabled by these changes.
