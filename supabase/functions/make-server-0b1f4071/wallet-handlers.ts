@@ -730,6 +730,36 @@ async function cancelStripePaymentIntent(providerPaymentId: string) {
   return payload as Record<string, unknown>;
 }
 
+async function createStripeRefund(
+  providerPaymentId: string,
+  amount: number,
+  currencyCode: string,
+  idempotencyKey: string,
+) {
+  if (!STRIPE_SECRET_KEY) {
+    throw new Error('Stripe refund is not configured for this environment.');
+  }
+
+  const response = await fetch('https://api.stripe.com/v1/refunds', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Idempotency-Key': idempotencyKey,
+    },
+    body: new URLSearchParams({
+      payment_intent: providerPaymentId,
+      amount: String(toMinorUnits(amount, currencyCode)),
+      reason: 'requested_by_customer',
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(String((payload as { error?: { message?: string } }).error?.message ?? 'Stripe refund failed.'));
+  }
+  return payload as Record<string, unknown>;
+}
+
 async function createLocalGatewayIntent(args: {
   provider: Extract<WalletProviderName, 'cliq' | 'aman'>;
   amount: number;
@@ -1581,6 +1611,9 @@ async function refundEscrow(
   if (String(escrow.payer_user_id) !== actorUserId) {
     throw new Error('Only the original payer can refund this escrow.');
   }
+  if (String(escrow.escrow_state) === 'refunded') {
+    return String(escrow.refund_transaction_id ?? '');
+  }
   if (String(escrow.escrow_state) !== 'held' && String(escrow.escrow_state) !== 'cancelled') {
     throw new Error('Only held or dispute-frozen escrow balances can be refunded.');
   }
@@ -1597,17 +1630,58 @@ async function refundEscrow(
     }
   }
 
-  const destinationAccountId = String(escrow.payer_account_id);
+  const { data: paymentIntent, error: intentError } = await admin
+    .from('wallet_payment_intents')
+    .select('provider_name, provider_payment_id, payment_method_type')
+    .eq('payment_intent_id', String(escrow.payment_intent_id))
+    .maybeSingle();
+  if (intentError) throw new Error(intentError.message);
+  if (!paymentIntent) throw new Error('Original payment details are unavailable; support intervention is required.');
+
+  const providerName = String(paymentIntent.provider_name ?? '');
+  const paymentMethodType = String(paymentIntent.payment_method_type ?? '');
+  const currencyCode = String(escrow.currency_code);
+  let destinationAccountId = String(escrow.payer_account_id);
+  let description = 'Escrow refunded to Wasel wallet';
+  let providerRefundId: string | null = null;
+
+  if (providerName === 'stripe' && paymentMethodType === 'card') {
+    const providerPaymentId = normalizeString(paymentIntent.provider_payment_id);
+    if (!providerPaymentId) throw new Error('Original Stripe payment reference is unavailable.');
+    const providerRefund = await createStripeRefund(
+      providerPaymentId,
+      toNumber(escrow.amount),
+      currencyCode,
+      `wasel-escrow-refund-${escrowId}`,
+    );
+    providerRefundId = normalizeString(providerRefund.id);
+    const providerStatus = String(providerRefund.status ?? '');
+    if (!providerRefundId || !['succeeded', 'pending'].includes(providerStatus)) {
+      throw new Error('Stripe has not accepted the refund request.');
+    }
+    const providerClearing = await getSystemAccount(admin, 'provider_clearing', currencyCode);
+    destinationAccountId = String(providerClearing.account_id);
+    description = providerStatus === 'succeeded'
+      ? 'Package escrow refunded to original card'
+      : 'Package card refund initiated and pending';
+  } else if (providerName !== 'wallet' || paymentMethodType !== 'wallet') {
+    throw new Error('This payment provider does not support automated refunds; contact Wasel support.');
+  }
+
   const refundTransactionId = await postLedgerTransaction(admin, {
     transactionType: 'refund',
     transactionStatus: 'completed',
     initiatedByUserId: actorUserId,
     amount: toNumber(escrow.amount),
-    currencyCode: String(escrow.currency_code),
-    description: 'Escrow refunded to payer',
+    currencyCode,
+    description,
     referenceType: String(escrow.escrow_type),
     referenceId: String(escrow.reference_id),
-    metadata: { escrowAccountId: escrowId },
+    metadata: {
+      escrowAccountId: escrowId,
+      providerName,
+      providerRefundId,
+    },
     entries: [
       { account_id: String(escrow.ledger_account_id), entry_side: 'debit', amount: toNumber(escrow.amount) },
       { account_id: destinationAccountId, entry_side: 'credit', amount: toNumber(escrow.amount) },
@@ -1617,15 +1691,21 @@ async function refundEscrow(
     idempotencyKey: `escrow-refund:${escrowId}`,
   });
 
-  await admin
+  const { error: escrowUpdateError } = await admin
     .from('escrow_accounts')
     .update({
       escrow_state: 'refunded',
       refunded_at: new Date().toISOString(),
       refund_transaction_id: refundTransactionId,
       updated_at: new Date().toISOString(),
+      metadata: {
+        ...(escrow.metadata && typeof escrow.metadata === 'object' ? escrow.metadata : {}),
+        providerRefundId,
+        providerRefundStatus: providerRefundId ? 'submitted' : 'wallet_credited',
+      },
     })
     .eq('escrow_account_id', escrowId);
+  if (escrowUpdateError) throw new Error(escrowUpdateError.message);
 
   if (String(escrow.escrow_type) === 'package') {
     const { error: packageUpdateError } = await admin
@@ -2743,6 +2823,32 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     return { released: true, transactionId };
   }
 
+  async function refundPackageEscrow(packageId: string, actorUserId: string) {
+    const { data: packageRow, error: packageError } = await admin
+      .from('packages')
+      .select('sender_id, package_status')
+      .eq('package_id', packageId)
+      .maybeSingle();
+    if (packageError) throw new Error(packageError.message);
+    if (!packageRow || String(packageRow.sender_id) !== actorUserId) {
+      throw new Error('Only the package sender can request an escrow refund.');
+    }
+    if (!['disputed', 'cancelled'].includes(String(packageRow.package_status))) {
+      throw new Error('Package must be disputed or cancelled before a refund can be requested.');
+    }
+
+    const { data: escrow, error: escrowError } = await admin
+      .from('escrow_accounts')
+      .select('escrow_account_id')
+      .eq('escrow_type', 'package')
+      .eq('reference_id', packageId)
+      .maybeSingle();
+    if (escrowError) throw new Error(escrowError.message);
+    if (!escrow) throw new Error('No package escrow exists for this request.');
+
+    return refundEscrow(admin, String(escrow.escrow_account_id), actorUserId);
+  }
+
   async function handleRefundEscrow(request: Request) {
     const auth = await runtime.authenticateRequest(request);
     if ('error' in auth) return auth.error;
@@ -2772,6 +2878,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     handleWalletSettings,
     handleReleaseEscrow,
     handleRefundEscrow,
+    refundPackageEscrow,
     releasePackageEscrowForVerifiedDelivery,
   };
 }
