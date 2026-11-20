@@ -71,7 +71,7 @@ Historical files that predate the current standards remain frozen and explicitly
 | 37 | `20241201000002_bus_services_tables.sql` | schema | Legacy bus operations schema retained while canonical runtime contracts evolve | Applied |
 | 38 | `20260324005540_kv_store.sql` | runtime-contract | Production KV store for feature flags and app configuration | Applied |
 | 39 | `20261120090000_enforce_no_self_booking.sql` | hardening | Replace the invalid subquery CHECK with race-safe booking ownership enforcement | Ready |
-| 40 | `20261120100000_package_tracking_escrow_hardening.sql` | hardening | Add server-authoritative package escrow, append-only tracking events, and guarded delivery state transitions | Ready |
+| 40 | `20261120100000_package_tracking_escrow_hardening.sql` | hardening | Harden package custody and connect release conditions to the existing wallet escrow ledger | Ready |
 
 ## Rollout Sequence
 
