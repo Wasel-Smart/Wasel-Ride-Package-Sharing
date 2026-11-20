@@ -2862,6 +2862,7 @@ export function createWalletHandlers(runtime: WalletRuntime) {
     const { data: expiredIntents, error } = await admin
       .from('wallet_payment_intents')
       .select('*')
+      .eq('purpose', 'package_payment')
       .in('status', ['requires_confirmation', 'requires_action', 'processing'])
       .lte('expires_at', now)
       .order('expires_at', { ascending: true })
