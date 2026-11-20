@@ -48,6 +48,7 @@ export interface PackageRequest {
   trackingId: string;
   handoffCode: string;
   deliveryCode?: string;
+  paymentStatus?: string;
   from: string;
   to: string;
   weight: string;
@@ -272,6 +273,7 @@ function normalizeServerPackage(
       .toUpperCase(),
     handoffCode,
     deliveryCode: deliveryCode || undefined,
+    paymentStatus: String(raw.payment_status ?? fallback.paymentStatus ?? 'unpaid'),
     from: String(raw.from ?? fallback.from),
     to: String(raw.to ?? fallback.to),
     weight: sanitizeWeight(String(raw.weight ?? fallback.weight)),
