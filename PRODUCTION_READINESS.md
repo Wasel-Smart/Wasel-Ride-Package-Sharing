@@ -25,6 +25,9 @@ This checklist is the single source of truth. Do not claim "production-ready" or
 - [ ] Integration tests cover cross-device persistence, forged status attempts, webhook replay, and isolation.
 - [ ] UI copy no longer presents simulated tracking/escrow as live.
 
+
+**Implementation note:** Database hardening primitives are being added in `docs/PACKAGE_ESCROW_HARDENING.md`. The issue remains open until the provider webhook, trusted delivery verification, RLS/integration tests, and production rollout are verified.
+
 ### 3. Canonical production environment (#240)
 - [ ] The exact Supabase project used by `wasel14.online` is identified and documented (project ref only, no secrets).
 - [ ] Repository ruleset requires pull requests + required CI/security status checks before merge to `master`.
