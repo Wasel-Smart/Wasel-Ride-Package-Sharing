@@ -12,7 +12,7 @@ CREATE OR REPLACE FUNCTION public.prevent_self_booking()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = ''
 AS $$
 DECLARE
   trip_driver_id UUID;
@@ -45,6 +45,8 @@ BEFORE INSERT OR UPDATE OF trip_id, passenger_id
 ON public.bookings
 FOR EACH ROW
 EXECUTE FUNCTION public.prevent_self_booking();
+
+REVOKE ALL ON FUNCTION public.prevent_self_booking() FROM PUBLIC, anon, authenticated;
 
 COMMENT ON FUNCTION public.prevent_self_booking() IS
   'Rejects bookings where the passenger is the trip owner; locks the trip row during validation.';
