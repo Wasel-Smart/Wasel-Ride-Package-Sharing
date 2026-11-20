@@ -382,6 +382,10 @@ begin
     raise exception 'A closed package cannot be disputed' using errcode = '23514';
   end if;
 
+  if v_package.package_status = 'disputed' then
+    return;
+  end if;
+
   perform set_config('wasel.package_rpc', 'on', true);
 
   update public.packages
