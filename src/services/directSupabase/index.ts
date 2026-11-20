@@ -73,9 +73,6 @@ export {
 } from './referrals';
 
 export {
-  createDirectPackage,
-  getDirectPackageByTrackingId,
-  updateDirectPackageStatus,
   getDirectCommunicationDeliveries,
   getDirectCommunicationPreferences,
   getDirectNotifications,
