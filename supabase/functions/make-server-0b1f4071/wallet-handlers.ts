@@ -1095,7 +1095,7 @@ async function createEscrowForIntent(
           .eq('escrow_state', 'held');
         if (freezeError) throw new Error(freezeError.message);
 
-        if (packageState && !['disputed', 'cancelled', 'delivered'].includes(String(packageState.package_status))) {
+        if (packageState && !['disputed', 'cancelled'].includes(String(packageState.package_status))) {
           const now = new Date().toISOString();
           const { error: freezePackageError } = await admin
             .from('packages')
