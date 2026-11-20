@@ -90,6 +90,22 @@ function PaymentsPageContent() {
     setPaymentAttemptKey(null);
   }, [form.amount, form.paymentMethodType, form.purpose, form.referenceId, form.referenceType]);
 
+  useEffect(() => {
+    const purpose = searchParams.get('purpose');
+    const referenceType = searchParams.get('referenceType');
+    const referenceId = searchParams.get('referenceId');
+    if (purpose !== 'package_payment' || referenceType !== 'package' || !referenceId) return;
+
+    setForm((current) => ({
+      ...current,
+      purpose: 'package_payment',
+      amount: 5,
+      referenceType: 'package',
+      referenceId,
+      description: 'Package payment held in escrow until verified delivery',
+    }));
+  }, [searchParams]);
+
   function updateIntentStatus(paymentIntentId: string, status: string, clientSecret?: string | null) {
     setIntentSession((current) => {
       if (!current || current.transaction.id !== paymentIntentId) {
