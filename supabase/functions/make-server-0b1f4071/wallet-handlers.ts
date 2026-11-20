@@ -897,6 +897,16 @@ async function reconcilePaymentIntentStatus(
   if (isFinalPaymentStatus(currentStatus)) {
     if (currentStatus === 'failed' || currentStatus === 'cancelled') {
       await markPackagePaymentFailed(admin, intent, normalizeString(intent.last_error));
+    } else if (currentStatus === 'succeeded' && String(intent.purpose) === 'package_payment') {
+      const { data: packageRow, error } = await admin
+        .from('packages')
+        .select('payment_status')
+        .eq('package_id', String(intent.reference_id))
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      if (packageRow && String(packageRow.payment_status) === 'pending') {
+        await settlePaymentIntent(admin, intent);
+      }
     }
     return { intent, settled: currentStatus === 'succeeded' };
   }
@@ -1981,22 +1991,39 @@ export function createWalletHandlers(runtime: WalletRuntime) {
             .maybeSingle();
           if (existingIntentError) throw new Error(existingIntentError.message);
           if (existingIntent) {
+            const reconciled = await reconcilePaymentIntentStatus(auth.admin, existingIntent as Record<string, unknown>);
+            const currentIntent = reconciled.intent as Record<string, unknown>;
             return runtime.json({
-              id: String(existingIntent.payment_intent_id),
-              purpose: String(existingIntent.purpose),
-              status: String(existingIntent.status),
-              amount: toNumber(existingIntent.amount),
-              currency: normalizeCurrency(existingIntent.currency_code),
-              paymentMethodType: String(existingIntent.payment_method_type),
-              provider: String(existingIntent.provider_name),
-              clientSecret: normalizeString(existingIntent.provider_client_secret),
-              redirectUrl: normalizeString(existingIntent.redirect_url),
-              createdAt: String(existingIntent.created_at),
-              referenceType: normalizeString(existingIntent.reference_type),
-              referenceId: normalizeString(existingIntent.reference_id),
+              id: String(currentIntent.payment_intent_id),
+              purpose: String(currentIntent.purpose),
+              status: String(currentIntent.status),
+              amount: toNumber(currentIntent.amount),
+              currency: normalizeCurrency(currentIntent.currency_code),
+              paymentMethodType: String(currentIntent.payment_method_type),
+              provider: String(currentIntent.provider_name),
+              clientSecret: normalizeString(currentIntent.provider_client_secret),
+              redirectUrl: normalizeString(currentIntent.redirect_url),
+              createdAt: String(currentIntent.created_at),
+              referenceType: normalizeString(currentIntent.reference_type),
+              referenceId: normalizeString(currentIntent.reference_id),
             });
           }
-          return runtime.json({ error: 'A package payment attempt is already pending. Wait for settlement or contact support.' }, 409);
+
+          const { data: latestIntent, error: latestError } = await auth.admin
+            .from('wallet_payment_intents')
+            .select('*')
+            .eq('user_id', auth.canonicalUser.id)
+            .eq('purpose', 'package_payment')
+            .eq('reference_type', 'package')
+            .eq('reference_id', referenceId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (latestError) throw new Error(latestError.message);
+          if (latestIntent) {
+            await reconcilePaymentIntentStatus(auth.admin, latestIntent as Record<string, unknown>);
+          }
+          return runtime.json({ error: 'The previous package payment attempt has expired or failed. The package reservation has been released; create a new package request.' }, 409);
         }
         if (String(packageRow.payment_status) !== 'unpaid') {
           return runtime.json({ error: 'This package is not eligible for another payment.' }, 409);
