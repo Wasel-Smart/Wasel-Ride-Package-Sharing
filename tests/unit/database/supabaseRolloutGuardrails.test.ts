@@ -133,7 +133,7 @@ describe('Supabase rollout guardrails', () => {
     const bookingMigration = read(
       'src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql',
     );
-    expect(bookingMigration).toContain("v_trip.trip_status not in ('open', 'booked')");
+    expect(bookingMigration).toContain("coalesce(v_trip.trip_status::text, '') not in ('open', 'booked')");
     expect(bookingMigration).toContain('Booking requires a verified phone number');
     expect(bookingMigration).toContain("v_wallet_status = 'frozen'");
     expect(bookingMigration).toContain('Drivers cannot book their own trips');
