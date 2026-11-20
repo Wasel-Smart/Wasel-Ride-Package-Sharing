@@ -1920,6 +1920,62 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
     return jsonResponse({ error: 'Package tracking history could not be initialized.' }, 500);
   }
 
+  let responsePackage = data as PackageRow;
+  if (!assignedTripId) {
+    const minDeparture = new Date(Date.now() + 24 * 60 * 60_000).toISOString();
+    const { data: candidateTrips, error: candidateError } = await auth.admin
+      .from('trips')
+      .select('trip_id')
+      .eq('trip_status', 'open')
+      .eq('allow_packages', true)
+      .ilike('origin_city', from)
+      .ilike('destination_city', to)
+      .gte('departure_time', minDeparture)
+      .gt('package_slots_remaining', 0)
+      .order('departure_time', { ascending: true })
+      .limit(10);
+    if (candidateError) console.error('Package auto-match discovery failed:', candidateError.message);
+
+    for (const candidate of candidateTrips ?? []) {
+      const { error: matchError } = await auth.admin.rpc('app_match_waiting_packages_to_trip', {
+        p_trip_id: String(candidate.trip_id),
+      });
+      if (matchError) {
+        console.error('Package auto-match failed:', matchError.message);
+        continue;
+      }
+      const { data: refreshed, error: refreshError } = await auth.admin
+        .from('packages')
+        .select('*')
+        .eq('package_id', packageId)
+        .single();
+      if (refreshError) throw new Error(refreshError.message);
+      if (refreshed) {
+        responsePackage = refreshed as PackageRow;
+        if (responsePackage.trip_id) {
+          assignedTripId = String(responsePackage.trip_id);
+          break;
+        }
+      }
+    }
+  }
+
+  if (assignedTripId && !assignedDriver) {
+    const { data: tripForDriver } = await auth.admin
+      .from('trips')
+      .select('driver_id')
+      .eq('trip_id', assignedTripId)
+      .maybeSingle();
+    if (tripForDriver?.driver_id) {
+      const { data: driverForTrip } = await auth.admin
+        .from('drivers')
+        .select('user_id')
+        .eq('driver_id', String(tripForDriver.driver_id))
+        .maybeSingle();
+      if (driverForTrip?.user_id) assignedDriver = driverForTrip as Record<string, unknown>;
+    }
+  }
+
   let driverSummary: Record<string, unknown> = {};
   if (assignedDriver?.user_id) {
     const { data: driverUser } = await auth.admin
@@ -1935,7 +1991,7 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
 
   return jsonResponse({
     package: {
-      ...mapPackageRow(data as PackageRow),
+      ...mapPackageRow(responsePackage),
       ...driverSummary,
       handoffCode: pickupCode,
       deliveryCode,
