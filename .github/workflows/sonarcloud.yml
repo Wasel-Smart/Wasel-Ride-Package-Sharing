@@ -30,7 +30,7 @@ jobs:
           [ -n "$SONAR_PROJECT_KEY" ] || missing+=("Actions variable SONAR_PROJECT_KEY")
           [ -n "$SONAR_ORGANIZATION" ] || missing+=("Actions variable SONAR_ORGANIZATION")
           if [ "${#missing[@]}" -gt 0 ]; then
-            printf 'Missing required SonarCloud configuration: %s\\n' "${missing[@]}"
+            printf '%s\n' "Missing required SonarCloud configuration:" "${missing[@]}"
             exit 1
           fi
 
