@@ -30,6 +30,7 @@ import {
   uploadPackageDeliveryEvidence,
   rotatePackageHandoffCodes,
   openPackageDispute,
+  refundPackageEscrow,
   type PackageRequest,
   type PostedRide,
 } from '../../services/journeyLogistics';
@@ -273,6 +274,20 @@ export function PackagesPage() {
       refreshPackageSnapshot();
     } catch (error) {
       setTrackingMessage(error instanceof Error ? error.message : 'The package dispute could not be opened.');
+    }
+  };
+
+  const handleRefundPackage = async () => {
+    if (!trackedPackage) return;
+    setBusyState('saving');
+    try {
+      const updated = await refundPackageEscrow(trackedPackage.trackingId);
+      if (updated) setTrackedPackage(updated);
+      setTrackingMessage('Your package refund has been recorded.');
+    } catch (error) {
+      setTrackingMessage(error instanceof Error ? error.message : 'Package refund could not be processed.');
+    } finally {
+      setBusyState('idle');
     }
   };
 
@@ -594,6 +609,8 @@ export function PackagesPage() {
               onRotateCodes={handleRotateCodes}
               onPayPackage={handlePayPackage}
               onOpenDispute={handleOpenDispute}
+            onRefundPackage={handleRefundPackage}
+            isSender={Boolean(user?.id && trackedPackage?.senderId === user.id)}
               onOpenSupport={handleOpenSupport}
               onOpenRecent={item => focusTrackingItem(item)}
             />
