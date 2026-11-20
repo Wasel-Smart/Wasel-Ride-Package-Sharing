@@ -2156,6 +2156,38 @@ async function handleOpenPackageDispute(
   return jsonResponse({ package: mapPackageRow(updated as PackageRow) });
 }
 
+async function handleRefundPackageEscrow(auth: AuthenticatedRequest, trackingId: string) {
+  const tracking = normalizeTrackingNumber(trackingId);
+  if (!tracking) return jsonResponse({ error: 'A valid package tracking ID is required.' }, 400);
+
+  const { data: packageRow, error } = await auth.admin
+    .from('packages')
+    .select('package_id, sender_id')
+    .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!packageRow) return jsonResponse({ error: 'Package not found.' }, 404);
+  if (String(packageRow.sender_id) !== auth.canonicalUser.id) {
+    return jsonResponse({ error: 'Only the original sender can request this refund.' }, 403);
+  }
+
+  const refundTransactionId = await walletHandlers.refundPackageEscrow(
+    String(packageRow.package_id),
+    auth.canonicalUser.id,
+  );
+  const { data: updated, error: updatedError } = await auth.admin
+    .from('packages')
+    .select('*')
+    .eq('package_id', String(packageRow.package_id))
+    .single();
+  if (updatedError) throw new Error(updatedError.message);
+
+  return jsonResponse({
+    package: mapPackageRow(updated as PackageRow),
+    refundTransactionId,
+  });
+}
+
 async function handleCreatePackageEvidenceUpload(
   auth: AuthenticatedRequest,
   trackingId: string,
@@ -2857,6 +2889,11 @@ serve(async (req) => {
         decodeURIComponent(packageDisputeMatch[1]),
         await readJsonBody(req),
       );
+    }
+
+    const packageRefundMatch = path.match(/^\/packages\/track\/([^/]+)\/refund$/);
+    if (packageRefundMatch && req.method === 'POST') {
+      return handleRefundPackageEscrow(auth, decodeURIComponent(packageRefundMatch[1]));
     }
 
     const packageRotateMatch = path.match(/^\/packages\/track\/([^/]+)\/rotate-codes$/);
