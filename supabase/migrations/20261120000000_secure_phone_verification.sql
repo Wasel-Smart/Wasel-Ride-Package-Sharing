@@ -28,7 +28,7 @@ DECLARE v_allowed boolean := false;
 BEGIN
   IF p_user_id IS NULL OR p_phone_number IS NULL OR p_action NOT IN ('send','verify')
      OR p_limit NOT BETWEEN 1 AND 10
-     OR (p_phone_number <> '*' AND p_phone_number !~ '^\\+[1-9][0-9]{7,14}$') THEN
+     OR (p_phone_number <> '*' AND p_phone_number !~ '^[+][1-9][0-9]{7,14}$') THEN
     RAISE EXCEPTION 'Invalid rate-limit input' USING ERRCODE = '22023';
   END IF;
   INSERT INTO phone_verification_private.rate_limits AS limits
@@ -54,7 +54,7 @@ SET search_path = pg_catalog, public
 AS $$
 BEGIN
   IF p_user_id IS NULL OR p_phone_number IS NULL
-     OR p_phone_number !~ '^\\+[1-9][0-9]{7,14}$' THEN
+     OR p_phone_number !~ '^[+][1-9][0-9]{7,14}$' THEN
     RAISE EXCEPTION 'Invalid phone verification input' USING ERRCODE = '22023';
   END IF;
   UPDATE auth.users
