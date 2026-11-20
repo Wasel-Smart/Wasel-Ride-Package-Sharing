@@ -19,6 +19,8 @@ type PackageTrackPanelProps = {
   onRotateCodes: () => void;
   onPayPackage: () => void;
   onOpenDispute: (reason: string) => void;
+  onRefundPackage: () => void;
+  isSender: boolean;
   onOpenSupport: () => void;
   onOpenRecent: (item: PackageRequest) => void;
 };
@@ -36,6 +38,8 @@ export function PackageTrackPanel({
   onRotateCodes,
   onPayPackage,
   onOpenDispute,
+  onRefundPackage,
+  isSender,
   onOpenSupport,
   onOpenRecent,
 }: PackageTrackPanelProps) {
@@ -94,10 +98,10 @@ export function PackageTrackPanel({
           </div>
           <div style={{ marginBottom: 14, padding: '12px 14px', borderRadius: r(12), border: `1px solid ${DS.border}`, background: DS.card3 }}>
             <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Payment protection</div>
-            <div style={{ color: trackedPackage.paymentStatus === 'held' ? DS.green : trackedPackage.paymentStatus === 'released' ? DS.cyan : DS.gold, fontWeight: 800, marginTop: 6 }}>
-              {trackedPackage.paymentStatus === 'held' ? 'Payment held in escrow' : trackedPackage.paymentStatus === 'released' ? 'Escrow released after verified delivery' : trackedPackage.paymentStatus === 'disputed' ? 'Payment frozen during dispute' : 'Payment not yet held'}
+            <div style={{ color: ['held', 'refunded'].includes(String(trackedPackage.paymentStatus)) ? DS.green : trackedPackage.paymentStatus === 'released' ? DS.cyan : DS.gold, fontWeight: 800, marginTop: 6 }}>
+              {trackedPackage.paymentStatus === 'held' ? 'Payment held in escrow' : trackedPackage.paymentStatus === 'released' ? 'Escrow released after verified delivery' : trackedPackage.paymentStatus === 'disputed' ? 'Payment frozen during dispute' : trackedPackage.paymentStatus === 'refunded' ? 'Refund recorded' : 'Payment not yet held'}
             </div>
-            {trackedPackage.matchedRideId && !['held', 'released', 'disputed'].includes(String(trackedPackage.paymentStatus)) && (
+            {trackedPackage.matchedRideId && !['held', 'released', 'disputed', 'refunded'].includes(String(trackedPackage.paymentStatus)) && (
               <button onClick={onPayPackage} style={{ marginTop: 10, padding: '9px 14px', borderRadius: '99px', border: 'none', background: DS.gradG, color: '#fff', cursor: 'pointer', fontFamily: DS.F, fontWeight: 700 }}>
                 Pay 5 JOD into escrow
               </button>
@@ -116,6 +120,15 @@ export function PackageTrackPanel({
                   Open payment dispute and freeze escrow
                 </button>
               </div>
+            )}
+            {trackedPackage.paymentStatus === 'disputed' && isSender && (
+              <button
+                onClick={onRefundPackage}
+                disabled={busyState === 'tracking'}
+                style={{ marginTop: 12, padding: '9px 14px', borderRadius: '99px', border: `1px solid ${DS.gold}`, background: 'transparent', color: DS.gold, cursor: busyState === 'tracking' ? 'not-allowed' : 'pointer', fontFamily: DS.F, fontWeight: 700, opacity: busyState === 'tracking' ? 0.6 : 1 }}
+              >
+                Request refund
+              </button>
             )}
           </div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', marginBottom: 16 }}>
