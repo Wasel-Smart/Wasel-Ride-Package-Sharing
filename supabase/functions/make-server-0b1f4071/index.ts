@@ -1785,12 +1785,15 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
 
     const { data: trip, error: tripError } = await auth.admin
       .from('trips')
-      .select('trip_id, driver_id, origin_city, destination_city, trip_status, allow_packages, package_slots_remaining')
+      .select('trip_id, driver_id, origin_city, destination_city, departure_time, trip_status, allow_packages, package_slots_remaining')
       .eq('trip_id', preferredRideId)
       .maybeSingle();
     if (tripError) return jsonResponse({ error: tripError.message }, 400);
     if (!trip || String(trip.trip_status) !== 'open' || trip.allow_packages !== true) {
       return jsonResponse({ error: 'The selected trip is not accepting packages.' }, 409);
+    }
+    if (!trip.departure_time || new Date(String(trip.departure_time)).getTime() <= Date.now()) {
+      return jsonResponse({ error: 'The selected trip departure time has already passed.' }, 409);
     }
     if (String(trip.origin_city ?? '').trim().toLowerCase() !== from.toLowerCase()
       || String(trip.destination_city ?? '').trim().toLowerCase() !== to.toLowerCase()) {
