@@ -9,6 +9,7 @@ import { getRideBookings, type RideBookingRecord } from '../../services/rideLife
 import { supabase } from '../../utils/supabase/client';
 import { C, F, R, TYPE } from '../../utils/wasel-ds';
 import { PageShell, SectionCard, StatusBadge } from '../../components/wasel-ui/WaselPagePrimitives';
+import { WaselButton, WaselEmptyState } from '../../components/wasel-ui';
 
 type ItemKind = 'ride' | 'package' | 'bus' | 'scheduled';
 
@@ -280,62 +281,27 @@ export function ActivityPage() {
 
         {/* Timeline */}
         {filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-            {filter !== 'all' &&
-              (() => {
-                const cta = EMPTY_CTA[filter as ItemKind];
-                const KindIcon =
-                  { ride: Car, package: Package, bus: Bus, scheduled: Calendar }[
-                    filter as ItemKind
-                  ] ?? Package;
-                return (
-                  <>
-                    <KindIcon size={32} color={C.textDim} />
-                    <div
-                      style={{
-                        marginTop: 12,
-                        color: C.textMuted,
-                        fontFamily: F,
-                        fontSize: TYPE.size.base,
-                      }}
-                    >
-                      {t('activity.noItemsYet')}
-                    </div>
-                    <button
-                      onClick={() => { void nav(cta.path); }}
-                      style={{
-                        marginTop: 16,
-                        padding: '8px 20px',
-                        borderRadius: R.full,
-                        border: 'none',
-                        background: C.cyan,
-                        color: C.bg,
-                        fontWeight: TYPE.weight.bold,
-                        cursor: 'pointer',
-                        fontSize: TYPE.size.sm,
-                      }}
-                    >
+          (() => {
+            const cta = EMPTY_CTA[filter as ItemKind];
+            const KindIcon =
+              filter === 'all'
+                ? Car
+                : { ride: Car, package: Package, bus: Bus, scheduled: Calendar }[filter as ItemKind] ??
+                  Car;
+            return (
+              <WaselEmptyState
+                icon={<KindIcon size={36} />}
+                title={t(filter === 'all' ? 'activity.noActivityYet' : 'activity.noItemsYet')}
+                action={
+                  filter !== 'all' ? (
+                    <WaselButton onClick={() => { void nav(cta.path); }}>
                       {ar ? cta.ar : cta.en}
-                    </button>
-                  </>
-                );
-              })()}
-            {filter === 'all' && (
-              <>
-                <Car size={32} color={C.textDim} />
-                <div
-                  style={{
-                    marginTop: 12,
-                    color: C.textMuted,
-                    fontFamily: F,
-                    fontSize: TYPE.size.base,
-                  }}
-                >
-                  {t('activity.noActivityYet')}
-                </div>
-              </>
-            )}
-          </div>
+                    </WaselButton>
+                  ) : undefined
+                }
+              />
+            );
+          })()
         ) : (
           <div style={{ marginTop: 16 }}>
             {grouped.map(group => (

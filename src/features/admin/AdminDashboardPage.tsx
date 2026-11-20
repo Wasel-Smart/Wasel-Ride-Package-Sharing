@@ -5,6 +5,7 @@ import { C, R, SPACE, TYPE, card, pillStyle } from '../../utils/wasel-ds';
 import { RefreshCw, AlertTriangle, Users, Package, Car, DollarSign } from 'lucide-react';
 import { tx } from '../../locales/tx';
 import { getAdminMetrics } from '../../services/adminApi';
+import { ListSkeleton } from '../home/HomePageShared';
 
 interface AdminMetrics {
   activeTrips: number;
@@ -272,9 +273,7 @@ useEffect(() => {
 
         {/* ── Metric grid ── */}
         {loading ? (
-          <div style={{ color: C.textMuted, textAlign: 'center', padding: SPACE[12] }}>
-            {tx('adminDashboardPage.loading_metrics')}
-          </div>
+          <ListSkeleton count={4} />
         ) : metrics ? (
           <div
             style={{

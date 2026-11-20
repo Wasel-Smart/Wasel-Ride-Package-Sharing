@@ -7,6 +7,7 @@ interface WaselEmptyStateProps {
   description?: string;
   action?: ReactNode;
   accent?: string;
+  compact?: boolean;
 }
 
 export function WaselEmptyState ({
@@ -15,6 +16,7 @@ export function WaselEmptyState ({
   description,
   action,
   accent = C.cyan,
+  compact = false,
 }: WaselEmptyStateProps) {
   return (
     <div
@@ -24,8 +26,8 @@ export function WaselEmptyState ({
         alignItems: 'center',
         justifyContent: 'center',
         textAlign: 'center',
-        padding: `${SPACE[ 16 ]} ${SPACE[ 8 ]}`,
-        minHeight: '50vh',
+        padding: compact ? `${SPACE[ 10 ]} ${SPACE[ 8 ]}` : `${SPACE[ 16 ]} ${SPACE[ 8 ]}`,
+        minHeight: compact ? 'auto' : '50vh',
       } }
     >
       <div

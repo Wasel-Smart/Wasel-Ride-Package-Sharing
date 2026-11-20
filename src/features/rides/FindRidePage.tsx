@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRideFilters } from './hooks/useRideFilters';
@@ -970,7 +970,7 @@ export function FindRidePage() {
                       border: `1px solid ${DS.border}`,
                     }}
                   >
-                    <div style={{ fontSize: '3rem', marginBottom: 16 }}>{copy.noResultsIcon}</div>
+                    <div style={{ fontSize: '3rem', marginBottom: 16 }} aria-hidden='true'>{copy.noResultsIcon}</div>
                     <h3 style={{ color: C.text, fontWeight: 800, marginBottom: 8 }}>
                       {inventoryError ? copy.inventoryErrorTitle : t.noRidesFound}
                     </h3>
