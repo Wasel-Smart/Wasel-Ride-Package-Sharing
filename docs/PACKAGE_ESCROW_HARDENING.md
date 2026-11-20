@@ -6,7 +6,7 @@ Package payments use the existing double-entry wallet ledger and `public.escrow_
 
 The migration `20261120100000_package_tracking_escrow_hardening.sql` adds:
 - A constrained package payment state.
-- A private `private.package_handoff_secrets` table containing only pickup/delivery OTP hashes, failed-attempt counters, and lock state.
+- A private `private.package_handoff_secrets` table containing only HMAC-SHA-256 pickup/delivery OTP hashes, failed-attempt counters, and lock state. The Edge Function requires a high-entropy `PACKAGE_OTP_PEPPER` secret (at least 32 characters), which must be configured in Supabase Function Secrets before deployment.
 - Participant-readable, client-append-only package timeline events.
 - A trigger that blocks authenticated clients from creating packages directly or changing assignment, tracking, custody, evidence, or financial state.
 - A dispute RPC that freezes held package escrow in the existing ledger by moving the escrow state to `cancelled`; the wallet refund flow must then resolve the dispute.
@@ -21,7 +21,7 @@ The wallet service changes add:
 ## Critical remaining implementation
 
 The database and wallet-service guards are not the whole package workflow. Before enabling package payments:
-1. The package creation endpoint must generate pickup and delivery OTPs on the server, store only hashes in the private table, and return the codes once to the sender.
+1. Configure `PACKAGE_OTP_PEPPER` as a random, high-entropy Supabase Edge Function secret. The package creation endpoint generates pickup and delivery OTPs on the server, stores only peppered hashes in the private table, and returns the codes once to the sender.
 2. The package tracking endpoint must require authentication and verify sender, recipient, or assigned-driver participation. It must not expose OTP hashes or private contact data publicly.
 3. Pickup and delivery endpoints must verify the OTP server-side, rate-limit failures, enforce the assigned-driver identity, and update package state atomically.
 4. Delivery evidence must be uploaded to a private Storage bucket through a signed upload URL. The server must verify that the object exists before marking delivery verified.
@@ -56,4 +56,4 @@ The connected production project currently has no canonical application tables o
 
 ## Current status
 
-Database hardening and wallet-ledger release guards have been authored on a feature branch. The server-generated OTP workflow, authenticated package endpoints, private evidence upload, full integration tests, complete baseline rollout, and production deployment remain outstanding. Live package payments are not enabled by these changes.
+Database hardening, wallet-ledger package payment/release guards, authenticated package tracking, server-generated pickup/delivery OTPs, driver-only verification, private evidence upload, and participant dispute controls have been authored on a feature branch. The `PACKAGE_OTP_PEPPER` secret is not configured, the canonical database rollout has not been applied, integration tests have not passed, and the backend has not been deployed. Live package payments are not enabled by these changes.
