@@ -50,8 +50,8 @@ declare
   v_package record;
   v_expired integer := 0;
 begin
-  if auth.role() <> 'service_role' then
-    raise exception 'Service role required' using errcode = '42501';
+  if auth.role() <> 'service_role' and session_user <> 'postgres' then
+    raise exception 'Service role or scheduled database job required' using errcode = '42501';
   end if;
 
   for v_package in
@@ -90,6 +90,21 @@ $$;
 
 revoke all on function public.app_expire_unpaid_package_assignments() from public, anon, authenticated;
 grant execute on function public.app_expire_unpaid_package_assignments() to service_role;
+
+-- Schedule reservation cleanup when pg_cron is available in the target project.
+do $
+begin
+  if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+    execute 'create extension if not exists pg_cron';
+  end if;
+
+  if to_regclass('cron.job') is not null
+    and to_regprocedure('cron.schedule(text,text,text)') is not null then
+    execute 'select cron.unschedule(jobid) from cron.job where jobname = ''wasel-package-reservation-expiry''';
+    execute 'select cron.schedule(''wasel-package-reservation-expiry'', ''*/5 * * * *'', ''select public.app_expire_unpaid_package_assignments();'')';
+  end if;
+end;
+$;
 
 -- A payment intent can back only one escrow account. This closes the duplicate
 -- webhook race in the existing wallet ledger.
