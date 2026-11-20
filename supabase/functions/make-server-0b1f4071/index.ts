@@ -1988,7 +1988,7 @@ async function loadPackageForAssignedDriver(
 
   const { data: packageRow, error } = await auth.admin
     .from('packages')
-    .select('package_id, trip_id, package_status, payment_status, tracking_number')
+    .select('package_id, trip_id, package_status, payment_status, tracking_number, pickup_verified_at, delivery_verified_at, delivery_evidence_url')
     .or(`tracking_number.eq.${tracking},package_code.eq.${tracking}`)
     .maybeSingle();
 
@@ -2165,14 +2165,42 @@ async function handleUpdatePackageVerification(
   }
 
   const packageRow = await loadPackageForAssignedDriver(auth, trackingId);
-  const code = normalizeString(body.code);
+  const packageId = String(packageRow.package_id);
 
+  if (action === 'confirm_pickup' && packageRow.pickup_verified_at) {
+    const { data: alreadyPickedUp, error: pickupReadError } = await auth.admin
+      .from('packages')
+      .select('*')
+      .eq('package_id', packageId)
+      .single();
+    if (pickupReadError) throw new Error(pickupReadError.message);
+    return jsonResponse({ package: mapPackageRow(alreadyPickedUp as PackageRow), idempotent: true });
+  }
+
+  if (action === 'confirm_delivery' && packageRow.delivery_verified_at && packageRow.delivery_evidence_url) {
+    const escrowSettlement = await walletHandlers.releasePackageEscrowForVerifiedDelivery(
+      packageId,
+      auth.canonicalUser.id,
+    );
+    const { data: alreadyDelivered, error: deliveryReadError } = await auth.admin
+      .from('packages')
+      .select('*')
+      .eq('package_id', packageId)
+      .single();
+    if (deliveryReadError) throw new Error(deliveryReadError.message);
+    return jsonResponse({
+      package: mapPackageRow(alreadyDelivered as PackageRow),
+      escrowSettlement,
+      idempotent: true,
+    });
+  }
+
+  const code = normalizeString(body.code);
   if (!code || !/^\d{6}$/.test(code)) {
     return jsonResponse({ error: 'A valid six-digit handoff code is required.' }, 400);
   }
 
   const codeHash = await sha256Hex(code);
-  const packageId = String(packageRow.package_id);
 
   if (action === 'confirm_pickup') {
     const { data, error } = await auth.admin.rpc('app_verify_package_pickup', {
