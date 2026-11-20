@@ -175,7 +175,7 @@ export function PackageTrackPanel({
             ))}
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 }}>
-            <button onClick={onRotateCodes} style={{ padding: '8px 12px', borderRadius: '99px', border: `1px solid ${DS.border}`, background: DS.card3, color: DS.gold, cursor: 'pointer', fontFamily: DS.F, fontWeight: 700 }}>
+            <button onClick={onRotateCodes} disabled={['delivered', 'cancelled', 'disputed'].includes(trackedPackage.status)} style={{ padding: '8px 12px', borderRadius: '99px', border: `1px solid ${DS.border}`, background: DS.card3, color: DS.gold, cursor: 'pointer', fontFamily: DS.F, fontWeight: 700 }}>
               Generate / rotate handoff codes
             </button>
             <span style={{ color: DS.muted, fontSize: '0.72rem' }}>Codes are shown once and are not saved in browser storage.</span>
@@ -217,7 +217,7 @@ export function PackageTrackPanel({
               />
             )}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-              <button onClick={() => onVerificationAction('share_code')} disabled={Boolean(trackedPackage.verification.senderCodeSharedAt)} style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: trackedPackage.verification.senderCodeSharedAt ? 'rgba(34,197,94,0.16)' : DS.gradG, color: '#fff', cursor: trackedPackage.verification.senderCodeSharedAt ? 'default' : 'pointer', fontFamily: DS.F, fontWeight: 700, opacity: trackedPackage.verification.senderCodeSharedAt ? 0.8 : 1 }}>
+              <button onClick={() => onVerificationAction('share_code')} disabled={!trackedPackage.matchedRideId || Boolean(trackedPackage.verification.senderCodeSharedAt)} style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: trackedPackage.verification.senderCodeSharedAt ? 'rgba(34,197,94,0.16)' : DS.gradG, color: '#fff', cursor: !trackedPackage.matchedRideId || trackedPackage.verification.senderCodeSharedAt ? 'default' : 'pointer', fontFamily: DS.F, fontWeight: 700, opacity: !trackedPackage.matchedRideId || trackedPackage.verification.senderCodeSharedAt ? 0.8 : 1 }}>
                 {trackedPackage.verification.senderCodeSharedAt ? 'OTP shared' : 'Share OTP handoff'}
               </button>
               <button onClick={() => onVerificationAction('confirm_pickup', verificationCode)} disabled={!verificationCode || !trackedPackage.verification.senderCodeSharedAt || Boolean(trackedPackage.verification.riderPickupConfirmedAt)} style={{ padding: '10px 16px', borderRadius: '99px', border: 'none', background: trackedPackage.verification.riderPickupConfirmedAt ? 'rgba(34,197,94,0.16)' : DS.gradC, color: '#fff', cursor: !verificationCode || !trackedPackage.verification.senderCodeSharedAt || trackedPackage.verification.riderPickupConfirmedAt ? 'default' : 'pointer', fontFamily: DS.F, fontWeight: 700, opacity: !verificationCode || !trackedPackage.verification.senderCodeSharedAt || trackedPackage.verification.riderPickupConfirmedAt ? 0.75 : 1 }}>
