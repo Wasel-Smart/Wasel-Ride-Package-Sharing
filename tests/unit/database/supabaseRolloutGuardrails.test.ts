@@ -179,7 +179,7 @@ describe('Supabase rollout guardrails', () => {
     const bookingSql = read(
       'src/supabase/migrations/20261117090000_booking_authorization_and_distributed_rate_limits.sql',
     );
-    expect(bookingSql.trimStart().startsWith('begin;')).toBe(true);
+    expect(bookingSql).toMatch(/^begin;$/m);
     expect(bookingSql.trimEnd().endsWith('commit;')).toBe(true);
     expect(bookingSql).toContain("app_consume_user_rate_limit('booking_create')");
     expect(bookingSql).toContain("app_consume_user_rate_limit('booking_update')");
