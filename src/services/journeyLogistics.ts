@@ -793,6 +793,27 @@ export async function uploadPackageDeliveryEvidence(
   return upload.path;
 }
 
+export async function openPackageDispute(trackingId: string, reason: string): Promise<PackageRequest | null> {
+  if (!API_URL) throw new Error('Secure package dispute API is not configured.');
+  const { token } = await getAuthDetails();
+  const response = await fetchWithRetry(
+    `${API_URL}/packages/track/${encodeURIComponent(trackingId)}/dispute`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ reason }),
+    },
+  );
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(String(payload.error ?? 'Package dispute could not be opened.'));
+  const packages = getConnectedPackages();
+  const target = packages.find(item => item.trackingId === trackingId);
+  if (!payload.package || !target) return null;
+  const updated = normalizeServerPackage(payload.package as Record<string, unknown>, target);
+  savePackages([updated], packages);
+  return updated;
+}
+
 export async function rotatePackageHandoffCodes(
   trackingId: string,
 ): Promise<{ handoffCode?: string; deliveryCode: string }> {
