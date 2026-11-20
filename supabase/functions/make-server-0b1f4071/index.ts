@@ -1800,8 +1800,9 @@ async function handleCreatePackage(auth: AuthenticatedRequest, body: Record<stri
     if (!trip || String(trip.trip_status) !== 'open' || trip.allow_packages !== true) {
       return jsonResponse({ error: 'The selected trip is not accepting packages.' }, 409);
     }
-    if (!trip.departure_time || new Date(String(trip.departure_time)).getTime() <= Date.now()) {
-      return jsonResponse({ error: 'The selected trip departure time has already passed.' }, 409);
+    const departureAt = trip.departure_time ? new Date(String(trip.departure_time)).getTime() : 0;
+    if (!departureAt || departureAt < Date.now() + 24 * 60 * 60_000) {
+      return jsonResponse({ error: 'Package-sharing trips must depart at least 24 hours in advance.' }, 409);
     }
     if (String(trip.origin_city ?? '').trim().toLowerCase() !== from.toLowerCase()
       || String(trip.destination_city ?? '').trim().toLowerCase() !== to.toLowerCase()) {
