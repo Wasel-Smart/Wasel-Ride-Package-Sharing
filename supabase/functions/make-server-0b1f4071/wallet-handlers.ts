@@ -1017,6 +1017,16 @@ async function createEscrowForIntent(
     .maybeSingle();
   if (existingEscrowError) throw new Error(existingEscrowError.message);
   if (existingEscrow) {
+    if (String(existingEscrow.escrow_type) === 'package') {
+      const { error: repairPackageError } = await admin
+        .from('packages')
+        .update({ payment_status: 'held', updated_at: new Date().toISOString() })
+        .eq('package_id', String(existingEscrow.reference_id))
+        .eq('sender_id', payerUserId)
+        .eq('package_status', 'assigned')
+        .in('payment_status', ['unpaid', 'pending', 'held']);
+      if (repairPackageError) throw new Error(repairPackageError.message);
+    }
     return { escrow: existingEscrow, transactionId: normalizeString(existingEscrow.hold_transaction_id) };
   }
 
@@ -1439,6 +1449,15 @@ async function refundEscrow(
       updated_at: new Date().toISOString(),
     })
     .eq('escrow_account_id', escrowId);
+
+  if (String(escrow.escrow_type) === 'package') {
+    const { error: packageUpdateError } = await admin
+      .from('packages')
+      .update({ payment_status: 'refunded', updated_at: new Date().toISOString() })
+      .eq('package_id', String(escrow.reference_id))
+      .in('package_status', ['disputed', 'cancelled']);
+    if (packageUpdateError) throw new Error(packageUpdateError.message);
+  }
 
   return refundTransactionId;
 }
