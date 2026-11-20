@@ -1151,7 +1151,7 @@ async function createEscrowForIntent(
     const packageId = String(intent.reference_id);
     const { error: packageUpdateError } = await admin
       .from('packages')
-      .update({ payment_status: 'held', updated_at: now })
+      .update({ payment_status: 'held', assignment_expires_at: null, updated_at: now })
       .eq('package_id', packageId)
       .eq('sender_id', payerUserId)
       .eq('package_status', 'assigned')
@@ -1862,6 +1862,11 @@ export function createWalletHandlers(runtime: WalletRuntime) {
       }
 
       if (purpose === 'package_payment') {
+        const { error: expiryError } = await auth.admin.rpc('app_expire_unpaid_package_assignments');
+        if (expiryError) throw new Error(expiryError.message);
+        if (currency !== 'JOD') {
+          return runtime.json({ error: 'Package payments must be settled in JOD.' }, 400);
+        }
         if (referenceType !== 'package' || !referenceId) {
           return runtime.json({ error: 'Package payments require a package reference.' }, 400);
         }
