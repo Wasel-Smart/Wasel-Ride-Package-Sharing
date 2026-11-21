@@ -22,7 +22,7 @@ export function WaselStatsGrid ({
   return (
     <div style={{ width: '100%' }}>
       {title ? (
-        <div style={{ marginBottom: SPACE[4], fontSize: '0.875rem', fontWeight: 700, color: C.textSub }}>
+        <div style={{ marginBottom: SPACE[4], fontSize: '0.875rem', fontWeight: 700, color: `var(--foreground)` }}>
           {title}
         </div>
       ) : null}

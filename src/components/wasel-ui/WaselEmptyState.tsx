@@ -51,7 +51,7 @@ export function WaselEmptyState ({
           margin: `0 0 ${SPACE[ 2 ]}`,
           fontSize: TYPE.size.lg,
           fontWeight: TYPE.weight.bold,
-          color: C.text,
+          color: `var(--foreground)`,
           lineHeight: TYPE.lineHeight.tight,
         } }
       >
@@ -62,7 +62,7 @@ export function WaselEmptyState ({
           style={ {
             margin: `0 0 ${SPACE[ 5 ]}`,
             fontSize: TYPE.size.base,
-            color: C.textMuted,
+            color: `var(--muted-foreground)`,
             lineHeight: TYPE.lineHeight.relaxed,
             maxWidth: 400,
           } }
