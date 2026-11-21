@@ -44,7 +44,7 @@ export const TX_ICONS: Record<string, TxIconConfig> = {
   payment: PAYMENT_TX_ICON,
   earning: { icon: TrendingUp, color: WaselColors.teal, bg: 'bg-teal-500/10' },
   withdrawal: { icon: ArrowUpRight, color: WaselColors.warning, bg: 'bg-orange-500/10' },
-  refund: { icon: RefreshCw, color: WaselColors.info, bg: 'bg-blue-500/10' },
+  refund: { icon: RefreshCw, color: WaselColors.info, bg: 'bg-cyan-500/10' },
   send: { icon: Send, color: WaselColors.bronze, bg: 'bg-amber-500/10' },
   receive: { icon: ArrowDownLeft, color: WaselColors.success, bg: 'bg-green-500/10' },
   reward: { icon: Gift, color: C.purple, bg: 'bg-purple-500/10' },

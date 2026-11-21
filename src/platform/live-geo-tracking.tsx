@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Live Geo-Streaming Integration
  * Production-ready driver location tracking with WebSocket real-time updates
  */
@@ -288,7 +288,7 @@ function MapPlaceholder({
           {drivers.length} {tx('liveGeoTracking.drivers_tracked')}
         </div>
         {selectedDriver ? (
-          <div className="mt-1 text-xs text-blue-600">
+          <div className="mt-1 text-xs text-[var(--wasel-cyan)]">
             {tx('liveGeoTracking.selected_driver')}
             {selectedDriver}
           </div>
@@ -296,7 +296,7 @@ function MapPlaceholder({
         {drivers.length > 0 ? (
           <button
             type="button"
-            className="mt-3 rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white"
+            className="mt-3 rounded bg-[var(--wasel-cyan)] px-3 py-1 text-xs font-medium text-[var(--wasel-ink)]"
             onClick={() => {
               const nearest = drivers[0];
               if (nearest) {onDriverClick(nearest);}
@@ -330,7 +330,7 @@ function DriverCard({
       onClick={() => { void onClick(); }}
       className={`w-full rounded-lg border-2 p-2 text-left transition-all ${
         isSelected
-          ? 'border-blue-500 bg-blue-50'
+          ? 'border-[var(--wasel-cyan)] bg-[var(--wasel-cyan)]/10'
           : 'border-transparent bg-[#050B12] hover:bg-[#050B12]'
       }`}
     >
