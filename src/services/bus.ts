@@ -379,10 +379,8 @@ export async function createBusBooking(payload: BusBookingPayload): Promise<BusB
     // Fail closed: a real user whose seat could not be reserved must see the
     // failure, never a fabricated "confirmed" ticket. Only the server can hold
     // a seat, so a server failure means no seat exists.
-    throw error instanceof Error
-      ? error
-      : new Error(
-          'Your bus seat could not be confirmed. No charge was made — please try again.',
-        );
+    throw new Error(
+      'Your bus seat could not be confirmed. No charge was made — please try again.',
+    );
   }
 }

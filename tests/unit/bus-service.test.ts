@@ -315,6 +315,12 @@ describe('bus service -- createBusBooking validation', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('bus service -- getStoredBusBookings', () => {
+  beforeEach(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('wasel-bus-bookings');
+    }
+  });
+
   afterEach(() => {
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem('wasel-bus-bookings');

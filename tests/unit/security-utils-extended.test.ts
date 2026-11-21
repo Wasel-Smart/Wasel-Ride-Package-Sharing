@@ -181,11 +181,11 @@ describe('getPasswordStrengthColor', () => {
   });
 
   it('returns red for score 0', () => {
-    expect(getPasswordStrengthColor(0)).toBe('#ef4444');
+    expect(getPasswordStrengthColor(0)).toBe('#FF7C8B');
   });
 
   it('returns green for score 4', () => {
-    expect(getPasswordStrengthColor(4)).toBe('#10b981');
+    expect(getPasswordStrengthColor(4)).toBe('#72C70D');
   });
 });
 

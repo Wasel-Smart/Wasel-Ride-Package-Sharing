@@ -2,7 +2,7 @@
 // Source of truth for all phone validation across web, mobile, and server.
 
 const JORDAN_MOBILE_REGEX = /^(\+?962|0)(7[0-9]\d{7}|[0-9]\d{6})$/;
-const JORDAN_LANDLINE_REGEX = /^(\+?962|0)(6\d{6})$/;
+const JORDAN_LANDLINE_REGEX = /^(\+?962|0)(6\d{7})$/;
 const IRAQ_MOBILE_REGEX = /^(\+?964|0)(7[0-9]\d{8,9})$/;
 
 export function normalizePhone(phone: string): string {

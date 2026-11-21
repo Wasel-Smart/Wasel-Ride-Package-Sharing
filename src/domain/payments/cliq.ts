@@ -37,7 +37,8 @@ export function isValidJordanCliqPhone ( phone: string ): boolean {
  */
 export function isValidJordanIban ( iban: string ): boolean {
   const cleaned = iban.replace( /\s/g, '' ).toUpperCase();
-  return /^JO\d{2}[A-Z]{4}\d{20}$/.test( cleaned );
+  // JO IBANs are exactly 30 characters: JO(2) + check(2) + bank(4) + account(22)
+  return /^JO\d{2}[A-Z]{4}\d{22}$/.test( cleaned );
 }
 
 /**

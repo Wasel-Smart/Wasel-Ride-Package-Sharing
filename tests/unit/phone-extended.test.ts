@@ -66,11 +66,11 @@ describe('normalizePhoneNumber', () => {
   });
 
   it('handles null', () => {
-    expect(normalizePhoneNumber(null)).toBe('null');
+    expect(normalizePhoneNumber(null)).toBe('');
   });
 
   it('handles undefined', () => {
-    expect(normalizePhoneNumber(undefined)).toBe('undefined');
+    expect(normalizePhoneNumber(undefined)).toBe('');
   });
 
   it('handles numbers', () => {

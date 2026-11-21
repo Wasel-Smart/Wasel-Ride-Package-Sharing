@@ -31,7 +31,10 @@ export interface TrustScoreFactor {
 
 const finiteNumber = (value: unknown, fallback = 0) => {
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
+  // Allow +Infinity so that Math.min(trips, 50) can cap it correctly;
+  // NaN and -Infinity both fall back to 0.
+  if (Number.isNaN(parsed) || parsed === -Infinity) return fallback;
+  return parsed;
 };
 
 /**
