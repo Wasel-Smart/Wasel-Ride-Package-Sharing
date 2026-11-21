@@ -17,7 +17,7 @@ export function CorporatePage() {
 
   return (
     <PageShell maxWidth={1000} dir={dir}>
-      <div style={{ padding: 24, minHeight: '80vh', color: '#fff' }}>
+      <div style={{ padding: 24, minHeight: '80vh', color: 'var(--foreground)' }}>
         {/* Hero Section */}
         <div
           style={{
@@ -101,7 +101,7 @@ export function CorporatePage() {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, color: '#fff' }}>
+              <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 20, color: 'var(--foreground)' }}>
                 {ar ? 'اطلب استشارة أو عرض أسعار' : 'Request Corporate Quote & Demo'}
               </h2>
               <div
@@ -128,7 +128,7 @@ export function CorporatePage() {
                       backgroundColor: 'var(--background)',
                       border: '1px solid ' + 'var(--border)',
                       borderRadius: 8,
-                      color: '#fff',
+                      color: 'var(--foreground)',
                     }}
                   />
                 </div>
@@ -149,7 +149,7 @@ export function CorporatePage() {
                       backgroundColor: 'var(--background)',
                       border: '1px solid ' + 'var(--border)',
                       borderRadius: 8,
-                      color: '#fff',
+                      color: 'var(--foreground)',
                     }}
                   />
                 </div>
@@ -177,7 +177,7 @@ export function CorporatePage() {
                       backgroundColor: 'var(--background)',
                       border: '1px solid ' + 'var(--border)',
                       borderRadius: 8,
-                      color: '#fff',
+                      color: 'var(--foreground)',
                     }}
                   >
                     <option>10 - 50</option>
@@ -201,7 +201,7 @@ export function CorporatePage() {
                       backgroundColor: 'var(--background)',
                       border: '1px solid ' + 'var(--border)',
                       borderRadius: 8,
-                      color: '#fff',
+                      color: 'var(--foreground)',
                     }}
                   >
                     <option>{ar ? 'يومي (ذهاب وإياب)' : 'Daily Round-trip'}</option>
@@ -265,7 +265,7 @@ function FeatureCard({
       >
         {icon}
       </div>
-      <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: '#fff' }}>{title}</h3>
+      <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: 'var(--foreground)' }}>{title}</h3>
       <p style={{ color: 'var(--muted-foreground)', fontSize: 14, lineHeight: 1.5 }}>{description}</p>
     </div>
   );
