@@ -3,7 +3,7 @@ import { useNotifications } from '../../hooks/useNotifications';
 import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Bell } from 'lucide-react';
-import { R, SPACE, TYPE  } from '../../utils/wasel-ds';
+import { C,  R, SPACE, TYPE  } from '../../utils/wasel-ds';
 
 export function NotificationsPage() {
   const { language: _language, dir, t } = useLanguage();

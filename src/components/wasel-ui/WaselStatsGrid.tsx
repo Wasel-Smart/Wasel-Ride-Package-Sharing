@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { WaselStatCard } from './WaselStatCard';
-import { SPACE  } from '@/utils/wasel-ds';
+import { C,  SPACE  } from '@/utils/wasel-ds';
 
 interface WaselStatsGridProps {
   stats: Array<{

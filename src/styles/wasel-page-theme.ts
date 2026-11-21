@@ -1,4 +1,4 @@
-import { F, FA, GRAD, GRAD_GOLD, GRAD_GREEN, GRAD_HERO, GRAD_NAVY, R  } from '../utils/wasel-ds';
+import { C,  F, FA, GRAD, GRAD_GOLD, GRAD_GREEN, GRAD_HERO, GRAD_NAVY, R  } from '../utils/wasel-ds';
 
 export const PAGE_DS = {
   bg: C.bg,

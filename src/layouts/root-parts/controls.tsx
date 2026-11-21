@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { CurrencyService, type SupportedCurrency } from '../../utils/currency';
-import { F, R  } from '../../utils/wasel-ds';
+import { C,  F, R  } from '../../utils/wasel-ds';
 
 export function CurrencySwitcher({ ar }: { ar: boolean }) {
   const [cur, setCur] = useState<SupportedCurrency>(CurrencyService.getInstance().current);

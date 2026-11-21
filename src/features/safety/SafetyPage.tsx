@@ -6,7 +6,7 @@ import {
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { R, SH, SPACE, TYPE, card, pillStyle  } from '../../utils/wasel-ds';
+import { C,  R, SH, SPACE, TYPE, card, pillStyle  } from '../../utils/wasel-ds';
 
 export default function SafetyPage() {
   const { language, t } = useLanguage();

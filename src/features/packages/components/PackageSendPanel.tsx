@@ -3,7 +3,7 @@ import { CheckCircle2, Shield } from 'lucide-react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { CITIES } from '../../../pages/waselCoreRideData';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
-import { SH  } from '../../../utils/wasel-ds';
+import { C,  SH  } from '../../../utils/wasel-ds';
 import type { PackageRequest } from '../../../services/journeyLogistics';
 import {
   PACKAGE_EXCELLENCE_POINTS_AR,

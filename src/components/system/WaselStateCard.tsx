@@ -1,6 +1,6 @@
 import { memo, type ReactNode } from 'react';
 import { LoaderCircle, type LucideIcon } from 'lucide-react';
-import { F, GRAD, R, SH  } from '../../utils/wasel-ds';
+import { C,  F, GRAD, R, SH  } from '../../utils/wasel-ds';
 
 type WaselStateTone = 'default' | 'warning' | 'danger' | 'success';
 

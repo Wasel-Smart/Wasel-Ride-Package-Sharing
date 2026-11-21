@@ -1,4 +1,4 @@
-import { F, GRAD, GRAD_GOLD, GRAD_GREEN, R, SH  } from '../utils/wasel-ds';
+import { C,  F, GRAD, GRAD_GOLD, GRAD_GREEN, R, SH  } from '../utils/wasel-ds';
 
 export const WaselColors = {
   spaceDeep: C.bg,

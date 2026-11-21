@@ -5,7 +5,7 @@ import {
   subscribeAvailability,
   type AvailabilitySnapshot,
 } from '../../services/core';
-import { F  } from '../../utils/wasel-ds';
+import { C,  F  } from '../../utils/wasel-ds';
 
 interface AvailabilityBannerProps {
   ar?: boolean;

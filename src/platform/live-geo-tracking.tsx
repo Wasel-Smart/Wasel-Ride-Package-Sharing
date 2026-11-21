@@ -320,7 +320,7 @@ function DriverCard({
   onClick: () => void;
 }) {
   const statusColor = {
-    available: 'bg-green-100 text-green-800',
+    available: 'bg-[#72C70D]/15 text-[#72C70D]',
     on_trip: 'bg-[#00E5FF]/15 text-[#00E5FF]',
     offline: 'bg-[#050B12] text-[#95b2c9]',
   };

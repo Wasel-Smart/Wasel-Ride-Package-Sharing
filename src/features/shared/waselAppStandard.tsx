@@ -16,7 +16,7 @@
  */
 
 import { type CSSProperties, type ReactNode } from 'react';
-import { R, SH, GRAD_GREEN, GRAD_GOLD  } from '../../utils/wasel-ds';
+import { C,  R, SH, GRAD_GREEN, GRAD_GOLD  } from '../../utils/wasel-ds';
 
 // ─── Re-export DS tokens used everywhere ────────────────────────────────────
 export { C, R, SH };

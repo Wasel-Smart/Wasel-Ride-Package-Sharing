@@ -4,7 +4,7 @@ import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
 import { WaselEmptyState } from '../../components/wasel-ui';
 import { getDisputes, resolveDispute } from '../../services/adminApi';
 import { tx } from '../../locales/tx';
-import { R, SPACE, TYPE, card  } from '../../utils/wasel-ds';
+import { C,  R, SPACE, TYPE, card  } from '../../utils/wasel-ds';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { userHasPermission } from '../../platform/rbac';
 import {

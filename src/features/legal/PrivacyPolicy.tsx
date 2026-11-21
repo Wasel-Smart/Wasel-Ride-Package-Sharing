@@ -11,7 +11,7 @@ import { WaselLogo } from '../../components/wasel-ui/WaselLogo';
 import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { R, SH, SPACE, TYPE  } from '../../utils/wasel-ds';
+import { C,  R, SH, SPACE, TYPE  } from '../../utils/wasel-ds';
 
 function policyCardStyle(accent: string) {
   return {

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import type { CSSProperties, ReactNode } from 'react';
-import { TYPE, SPACE, R  } from '@/utils/wasel-ds';
+import { C,  TYPE, SPACE, R  } from '@/utils/wasel-ds';
 
 interface WaselStatCardProps {
   value: string | number;

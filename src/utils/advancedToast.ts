@@ -1,4 +1,4 @@
-import { SH, R, F  } from './wasel-ds';
+import { C, SH, R, F } from './wasel-ds';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 export type ToastPosition = 'top' | 'bottom';

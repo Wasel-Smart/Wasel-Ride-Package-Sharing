@@ -18,7 +18,7 @@ import { DS, midpoint, pill, r, resolveCityCoord } from '../../../pages/waselSer
 import { getMovementPriceQuote } from '../../../services/movementPricing';
 import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
 import { createGenderMeta, type Ride } from '../../../pages/waselCoreRideData';
-import { GRAD_HERO  } from '../../../utils/wasel-ds';
+import { C,  GRAD_HERO  } from '../../../utils/wasel-ds';
 import { getCurrentLang, tx } from '../../../locales/tx';
 
 const GENDER_META = createGenderMeta(DS);

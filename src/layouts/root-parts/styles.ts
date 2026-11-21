@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { F, GRAD, R  } from '../../utils/wasel-ds';
+import { C,  F, GRAD, R  } from '../../utils/wasel-ds';
 
 interface ToolbarButtonOptions {
   background: string;

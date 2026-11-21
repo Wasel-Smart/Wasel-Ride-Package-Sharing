@@ -4,7 +4,7 @@
 
 import { Eye, EyeOff } from 'lucide-react';
 import { type InputHTMLAttributes, type ReactNode, useId, useState } from 'react';
-import { F, R, TYPE  } from '../../utils/wasel-ds';
+import { C,  F, R, TYPE  } from '../../utils/wasel-ds';
 import { sanitizeHtml } from '../../utils/sanitization';
 
 // Focus / error styling lives in CSS (:focus-within) instead of React state, so it

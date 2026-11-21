@@ -1,4 +1,4 @@
-import { } from '../utils/wasel-ds';
+import { C,  } from '../utils/wasel-ds';
 
 export type NavItem = {
   emoji: string;

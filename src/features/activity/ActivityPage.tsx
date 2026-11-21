@@ -7,7 +7,7 @@ import { getStoredBusBookings, type StoredBusBooking } from '../../services/bus'
 import { getConnectedPackages, type PackageRequest } from '../../services/journeyLogistics';
 import { getRideBookings, type RideBookingRecord } from '../../services/rideLifecycle';
 import { supabase } from '../../utils/supabase/client';
-import { F, R, TYPE  } from '../../utils/wasel-ds';
+import { C,  F, R, TYPE  } from '../../utils/wasel-ds';
 import { PageShell, SectionCard, StatusBadge } from '../../components/wasel-ui/WaselPagePrimitives';
 import { WaselButton, WaselEmptyState } from '../../components/wasel-ui';
 

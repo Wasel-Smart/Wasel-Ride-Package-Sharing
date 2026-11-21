@@ -78,7 +78,7 @@ export function getPasswordRuleIssue(password: string): PasswordRuleIssue {
  * A password that fails getPasswordRuleIssue can never score above "Fair", so
  * the meter never says "Strong" for something the form will reject.
  */
-import { } from '../utils/wasel-ds';
+import { C } from '../utils/wasel-ds';
 
 export function pwStrength(password: string): { score: number; label: string; color: string } {
   if (!password) {return { score: 0, label: '', color: C.textMuted };}

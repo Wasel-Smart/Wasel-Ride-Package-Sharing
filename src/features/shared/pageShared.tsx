@@ -11,7 +11,7 @@ import { ProtectedPagePreview } from '../../components/system/ProtectedPagePrevi
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { PAGE_DS } from '../../styles/wasel-page-theme';
-import { GRAD, GRAD_HERO, R, SH  } from '../../utils/wasel-ds';
+import { C,  GRAD, GRAD_HERO, R, SH  } from '../../utils/wasel-ds';
 
 // Design-system shorthand
 export const DS = PAGE_DS;

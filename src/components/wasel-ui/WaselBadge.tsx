@@ -4,7 +4,7 @@
 
 import { Brain, Radio, Zap } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
-import { F, R, TYPE  } from '../../utils/wasel-ds';
+import { C,  F, R, TYPE  } from '../../utils/wasel-ds';
 
 type BadgeVariant = 'live' | 'ai' | 'new' | 'hot' | 'custom';
 

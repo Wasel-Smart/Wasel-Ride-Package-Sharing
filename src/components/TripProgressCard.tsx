@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { Car, Clock, Package } from 'lucide-react';
 import { getRideBookings } from '../services/rideLifecycle';
 import { getConnectedPackages } from '../services/journeyLogistics';
-import { F, R, TYPE  } from '../utils/wasel-ds';
+import { C,  F, R, TYPE  } from '../utils/wasel-ds';
 import { tx } from '../locales/tx';
 
 type ActiveItem = {

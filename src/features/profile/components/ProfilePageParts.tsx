@@ -6,7 +6,7 @@ import {
   SectionCard,
   StatusBadge,
 } from '../../../components/wasel-ui/WaselPagePrimitives';
-import { F, R, SH, SPACE, TYPE  } from '../../../utils/wasel-ds';
+import { C,  F, R, SH, SPACE, TYPE  } from '../../../utils/wasel-ds';
 
 export interface StatCardProps {
   label: string;

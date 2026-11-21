@@ -17,7 +17,7 @@ import {
   PRODUCT_NAV_GROUPS,
 } from '../waselRootConfig';
 import { CurrencyService } from '../../utils/currency';
-import { F, GRAD, R, Z  } from '../../utils/wasel-ds';
+import { C,  F, GRAD, R, Z  } from '../../utils/wasel-ds';
 import { CurrencySwitcher, LangToggle, OnlineToggle } from './controls';
 import { Badge, SocialLinks, getDrawerSectionLabel } from './shared';
 

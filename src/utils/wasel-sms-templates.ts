@@ -6,7 +6,7 @@
  */
 
 import { sanitizeLogMessage } from './sanitization';
-import { } from './wasel-ds';
+import { C } from './wasel-ds';
 
 export const SMS_TOKENS = {
   brandName: 'Wasel',

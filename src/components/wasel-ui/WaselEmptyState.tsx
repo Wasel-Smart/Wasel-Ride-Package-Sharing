@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { R, TYPE, SPACE  } from '@/utils/wasel-ds';
+import { C,  R, TYPE, SPACE  } from '@/utils/wasel-ds';
 
 interface WaselEmptyStateProps {
   icon: ReactNode;

@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { } from '@/utils/wasel-ds';
+import { C } from '@/utils/wasel-ds';
 
 interface WaselLogoProps {
   size?: number;

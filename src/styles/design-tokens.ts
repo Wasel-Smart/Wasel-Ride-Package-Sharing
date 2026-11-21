@@ -2,7 +2,7 @@
  * Design tokens re-exported from the canonical wasel-ds source.
  * WaselMap and other components import from here.
  */
-import { TYPE, R, SH, GRAD  } from '../utils/wasel-ds';
+import { C,  TYPE, R, SH, GRAD  } from '../utils/wasel-ds';
 
 export const colors = {
   background: {

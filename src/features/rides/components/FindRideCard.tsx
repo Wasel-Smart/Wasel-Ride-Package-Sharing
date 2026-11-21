@@ -1,7 +1,7 @@
 import React from 'react';
 import { Brain, CheckCircle2, Clock, Package, Star, Users } from 'lucide-react';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
-import { } from '../../../utils/wasel-ds';
+import { C,  } from '../../../utils/wasel-ds';
 import { getCorridorOpportunity } from '../../../config/wasel-movement-network';
 import { getMovementPriceQuote } from '../../../services/movementPricing';
 import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';

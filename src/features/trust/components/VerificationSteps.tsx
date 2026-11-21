@@ -1,4 +1,4 @@
-import { F, FA, R, SPACE, TYPE  } from '../../../utils/wasel-ds';
+import { C,  F, FA, R, SPACE, TYPE  } from '../../../utils/wasel-ds';
 import type { TrustStepState } from '../../../services/trustCenterModel';
 
 export type { TrustStepState } from '../../../services/trustCenterModel';

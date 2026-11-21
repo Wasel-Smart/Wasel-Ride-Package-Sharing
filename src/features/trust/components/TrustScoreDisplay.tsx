@@ -1,4 +1,4 @@
-import { F, FA, R, TYPE  } from '../../../utils/wasel-ds';
+import { C,  F, FA, R, TYPE  } from '../../../utils/wasel-ds';
 
 const RING_SIZE = 120;
 const STROKE = 10;
