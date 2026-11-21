@@ -9,11 +9,13 @@ export default mergeConfig(baseConfig, {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov', 'json-summary', 'json'],
       reportsDirectory: './coverage',
+      // Non-zero baseline prevents coverage from silently becoming a no-op.
+      // Ratchet these floors upward after collecting the first stable CI baseline.
       thresholds: {
-        lines: 0,
-        functions: 0,
-        branches: 0,
-        statements: 0,
+        lines: 10,
+        functions: 10,
+        branches: 10,
+        statements: 10,
       },
       all: true,
       include: ['src/**/*.{ts,tsx}'],
