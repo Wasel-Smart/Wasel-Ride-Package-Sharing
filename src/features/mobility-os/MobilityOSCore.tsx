@@ -923,7 +923,7 @@ export default function MobilityOSCore() {
     <div
       className={styles.page}
       style={{
-        background: `\, radial-gradient(circle at 16% 14%, \, transparent 20%), radial-gradient(circle at 84% 18%, \, transparent 22%), var(--background)`,
+        background: `radial-gradient(circle at 16% 14%, ${C.cyanDim}, transparent 20%), radial-gradient(circle at 84% 18%, ${C.goldDim}, transparent 22%), var(--background)`,
         fontFamily: F,
       }}
     >
