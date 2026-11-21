@@ -220,7 +220,7 @@ export function LiveDriverMap({
   return (
     <div className="relative h-full w-full">
       {/* Connection Status */}
-      <div className="absolute right-4 top-4 z-10 flex items-center gap-2 rounded-lg bg-white px-3 py-2 shadow-lg">
+      <div className="absolute right-4 top-4 z-10 flex items-center gap-2 rounded-lg bg-[var(--wasel-card)] px-3 py-2 shadow-lg">
         <div
           className={`h-2 w-2 rounded-full ${
             isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
@@ -232,7 +232,7 @@ export function LiveDriverMap({
       </div>
 
       {/* Driver Count */}
-      <div className="absolute left-4 top-4 z-10 rounded-lg bg-white px-3 py-2 shadow-lg">
+      <div className="absolute left-4 top-4 z-10 rounded-lg bg-[var(--wasel-card)] px-3 py-2 shadow-lg">
         <div className="text-sm text-[#95b2c9]">{tx('liveGeoTracking.available_drivers')}</div>
         <div className="text-2xl font-bold">
           {drivers.filter(d => d.status === 'available').length}
@@ -250,7 +250,7 @@ export function LiveDriverMap({
       </div>
 
       {/* Driver List */}
-      <div className="absolute bottom-4 left-4 right-4 z-10 max-h-48 overflow-y-auto rounded-lg bg-white p-4 shadow-lg">
+      <div className="absolute bottom-4 left-4 right-4 z-10 max-h-48 overflow-y-auto rounded-lg bg-[var(--wasel-card)] p-4 shadow-lg">
         <h3 className="mb-2 font-semibold">
           {tx('liveGeoTracking.nearby_drivers')}
           {drivers.length})
@@ -382,7 +382,7 @@ export function DriverTracking({ driverId, showHistory = false }: DriverTracking
   return (
     <div className="space-y-4">
       {/* Current Location */}
-      <div className="rounded-lg bg-white p-4 shadow">
+      <div className="rounded-lg bg-[var(--wasel-card)] p-4 shadow">
         <div className="mb-2 flex items-center justify-between">
           <h3 className="font-semibold">{tx('liveGeoTracking.driver_location')}</h3>
           <div
@@ -419,7 +419,7 @@ export function DriverTracking({ driverId, showHistory = false }: DriverTracking
 
       {/* Location History */}
       {showHistory && history.length > 0 && (
-        <div className="rounded-lg bg-white p-4 shadow">
+        <div className="rounded-lg bg-[var(--wasel-card)] p-4 shadow">
           <h3 className="mb-2 font-semibold">{tx('liveGeoTracking.location_history')}</h3>
           <div className="max-h-48 space-y-2 overflow-y-auto">
             {history.reverse().map((loc, index) => (
