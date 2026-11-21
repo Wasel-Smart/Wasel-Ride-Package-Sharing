@@ -5,7 +5,7 @@
 
 import { DataExportButton } from '@/components/gdpr/DataExportButton';
 import { AccountDeletionDialog } from '@/components/gdpr/AccountDeletionDialog';
-import { C, R } from '../../utils/wasel-ds';
+import { R  } from '../../utils/wasel-ds';
 import { tx } from '../../locales/tx';
 
 export function PrivacySettings() {
@@ -122,3 +122,4 @@ export function PrivacySettings() {
     </div>
   );
 }
+

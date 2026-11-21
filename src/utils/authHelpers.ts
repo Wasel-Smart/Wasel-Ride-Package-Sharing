@@ -20,6 +20,7 @@ const AUTH_ERROR_MATCHES: AuthErrorMatch[] = [
   { patterns: ['invalid api key'], code: 'invalid_api_key', message: 'Sign-in service is misconfigured (invalid API key). Please contact support.' },
   { patterns: ['access-control-allow-headers', 'access-control-request-headers'], code: 'cors_rejected', message: 'Sign-in request was blocked by the network policy. Please contact support.' },
   { patterns: ['fetch failed'], code: 'network_error', message: 'Cannot reach the sign-in service. Check your connection and try again.' },
+  { patterns: ['captcha protection', 'captcha_failed', 'no captcha_token', 'captcha verification failed'], code: 'captcha_failed', message: 'Sign-in is temporarily unavailable. Please contact support.' },
 ];
 
 function matchAuthError(lower: string, normalizedCode: string | undefined): string | undefined {
@@ -101,3 +102,4 @@ export function pwStrength(password: string): { score: number; label: string; co
 
   return map[Math.min(score, 5)] ?? { score: 0, label: '', color: C.textMuted };
 }
+

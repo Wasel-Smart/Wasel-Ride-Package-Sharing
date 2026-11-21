@@ -20,7 +20,7 @@ import {
   PageShell,
   StatusBadge,
 } from '../../components/wasel-ui/WaselPagePrimitives';
-import { C, SPACE } from '../../utils/wasel-ds';
+import { C,  SPACE  } from '../../utils/wasel-ds';
 import { useWalletDashboardController } from './useWalletDashboardController.js';
 import { OverviewTab } from './components/OverviewTab';
 import { SettingsTab } from './components/SettingsTab';
@@ -538,3 +538,4 @@ export function WalletDashboard() {
     </PageShell>
   );
 }
+

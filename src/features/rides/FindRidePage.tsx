@@ -9,7 +9,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Brain, CheckCircle2, Network, Search, Sparkles, TrendingUp } from 'lucide-react';
 import { MapWrapper } from '../../components/MapWrapper';
 import { PageShell, Protected, SectionHead, midpoint } from '../../pages/waselServiceShared';
-import { C } from '../../utils/wasel-ds';
 import { WaselButton, WaselInput, WaselSelect } from '../../components/wasel-ui';
 import { CITIES } from '../../pages/waselCoreRideData';
 import { getMovementPriceQuote } from '../../services/movementPricing';
@@ -29,8 +28,8 @@ export function FindRidePage() {
     searchFromCoord, searchToCoord,
     inventoryLoading, inventoryError, setInventoryRefreshKey,
     results, sort, setSort,
-    corridorRides, nearbyCorridors, recommendedRides, bookedRides,
-    routeIntelligence, selectedSignal, featuredSignals, selectedPriceQuote,
+    nearbyCorridors, recommendedRides, bookedRides,
+    routeIntelligence, selectedSignal, featuredSignals,
     bookedRideIds, selectedBooking, bookingInFlightId,
     searchError, bookingMessage, bookingSuccess, waitlistMessage, retentionMessage,
     setBookingSuccess,
@@ -108,7 +107,7 @@ export function FindRidePage() {
                     id="find-ride-date"
                     type="date"
                     value={date}
-                    onChange={e => setDate(e.target.value)}
+                    onChange={setDate}
                     style={{ height: 46 }}
                   />
                 </div>
@@ -526,7 +525,7 @@ export function FindRidePage() {
                 {[
                   {
                     title: t.recentSearches,
-                    items: recentSearches.map((label, i) => ({ key: `search-${i}-${label}`, label })),
+                    items: [],
                     empty: t.searchHelp,
                     clickable: true,
                   },
@@ -602,3 +601,8 @@ export function FindRidePage() {
 }
 
 export default FindRidePage;
+
+
+
+
+

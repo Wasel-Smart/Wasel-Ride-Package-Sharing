@@ -1,6 +1,6 @@
 import { BadgeCheck, Building2, CreditCard, LifeBuoy, ScrollText, ShieldCheck } from 'lucide-react';
 import { WaselLogo } from '../../../components/wasel-ui';
-import { C, R, TYPE } from '../HomePageShared';
+import { R, TYPE } from '../HomePageShared';
 
 interface LandingLegalFooterProps {
   ar: boolean;

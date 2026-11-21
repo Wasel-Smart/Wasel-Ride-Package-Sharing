@@ -177,3 +177,4 @@ export function renderSmsTemplate(id: string, variables: Record<string, string>)
 export function getTemplatesByCategory(category: SmsTemplate['category']): SmsTemplate[] {
   return smsTemplates.filter(t => t.category === category);
 }
+

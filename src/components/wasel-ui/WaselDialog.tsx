@@ -4,7 +4,7 @@
 
 import { X } from 'lucide-react';
 import { type CSSProperties, type ReactNode, useEffect, useId, useRef } from 'react';
-import { ANIM, C, F, R, SH, TYPE, Z } from '../../utils/wasel-ds';
+import { ANIM, F, R, SH, TYPE, Z } from '../../utils/wasel-ds';
 import { lockBodyScroll } from '../../utils/bodyScrollLock';
 import { WaselButton } from './WaselButton';
 
@@ -131,7 +131,7 @@ export function WaselDialog({
         style={{
           width: '100%',
           maxWidth: widthBySize[size],
-          maxHeight: 'min(720px, calc(100dvh - 48px))',
+          maxHeight: 'min(720pxalc(100dvh - 48px))',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
@@ -214,3 +214,4 @@ export function WaselDialog({
     </div>
   );
 }
+

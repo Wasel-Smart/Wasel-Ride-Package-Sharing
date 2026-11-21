@@ -19,7 +19,7 @@ import {
   type NotificationFilter,
 } from '../../features/notifications/notificationCenterModel';
 import { WaselBadge, WaselButton, WaselCard } from '../wasel-ui';
-import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { C,  R, SH, SPACE, TYPE  } from '../../utils/wasel-ds';
 import { CATEGORY_ICON, formatRelativeTimestamp } from './notificationHelpers';
 
 type FilterConfig = { value: NotificationFilter; label: string };
@@ -260,3 +260,4 @@ export const NotificationItem = React.memo(({
     </motion.div>
   );
 });
+

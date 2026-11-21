@@ -1,4 +1,4 @@
-import { C, F, R, SPACE, TYPE } from '../../../utils/wasel-ds';
+import { F, R, SPACE, TYPE  } from '../../../utils/wasel-ds';
 import { TRUST_SCORE_MAX, type TrustScoreFactor } from '../../../domain/trust/score';
 
 export function TrustScoreExplanation({

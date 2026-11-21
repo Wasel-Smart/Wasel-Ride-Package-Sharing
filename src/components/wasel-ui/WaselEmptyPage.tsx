@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { PageShell } from './WaselPagePrimitives';
 import { WaselEmptyState } from './WaselEmptyState';
-import { C } from '@/utils/wasel-ds';
+import { C,  } from '@/utils/wasel-ds';
 
 interface WaselEmptyPageProps {
   icon: ReactNode;
@@ -34,3 +34,4 @@ export function WaselEmptyPage ({
     </PageShell>
   );
 }
+

@@ -18,7 +18,7 @@ import { DS, midpoint, pill, r, resolveCityCoord } from '../../../pages/waselSer
 import { getMovementPriceQuote } from '../../../services/movementPricing';
 import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
 import { createGenderMeta, type Ride } from '../../../pages/waselCoreRideData';
-import { C, GRAD_HERO } from '../../../utils/wasel-ds';
+import { C,  GRAD_HERO  } from '../../../utils/wasel-ds';
 import { getCurrentLang, tx } from '../../../locales/tx';
 
 const GENDER_META = createGenderMeta(DS);
@@ -170,7 +170,7 @@ export function FindRideTripDetailModal({
         style={{
           position: 'fixed',
           inset: 0,
-          background: rgba(0,0,0,0.5),
+          background: 'rgba(0,0,0,0.5)',
           backdropFilter: 'blur(6px)',
           zIndex: 2000,
           display: 'flex',
@@ -761,3 +761,5 @@ export function FindRideTripDetailModal({
     </AnimatePresence>
   );
 }
+
+

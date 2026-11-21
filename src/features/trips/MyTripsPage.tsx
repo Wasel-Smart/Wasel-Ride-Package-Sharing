@@ -41,7 +41,7 @@ import {
   type SupportStatus,
   type SupportTicket,
 } from '../../services/supportInbox';
-import { C, F, R, SPACE, TYPE } from '../../utils/wasel-ds';
+import { C,  F, R, SPACE, TYPE  } from '../../utils/wasel-ds';
 
 const CARD = 'var(--card)';
 const CARD_ALT = 'var(--secondary)';
@@ -1282,3 +1282,4 @@ export default function MyTripsPage() {
     </PageShell>
   );
 }
+

@@ -12,7 +12,7 @@ import { WaselLogo } from '../../components/wasel-ui';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { C,  R, SH, SPACE, TYPE  } from '../../utils/wasel-ds';
 import { useState, useCallback } from 'react';
 import {
   disable2FA,
@@ -579,3 +579,4 @@ function TwoFactorSection() {
     </SectionCard>
   );
 }
+

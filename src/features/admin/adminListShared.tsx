@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
-import { C, R, SPACE, TYPE, card } from '../../utils/wasel-ds';
+import { C,  R, SPACE, TYPE, card  } from '../../utils/wasel-ds';
 
 export interface AdminListMeta {
   total: number;
@@ -269,3 +269,4 @@ export function AdminActionButton({
     </button>
   );
 }
+

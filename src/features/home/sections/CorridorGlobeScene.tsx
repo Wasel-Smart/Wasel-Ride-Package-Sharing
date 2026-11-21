@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, QuadraticBezierLine } from '@react-three/drei';
 import * as THREE from 'three';
-import { C } from '../../../utils/wasel-ds';
+import { C,  } from '../../../utils/wasel-ds';
 import { POPULAR_ROUTES } from '../HomePageShared';
 
 // QuadraticBezierCurve3 exists at runtime in three@0.182 but was removed from
@@ -210,3 +210,4 @@ export default function CorridorGlobeScene({ reduceMotion }: { reduceMotion: boo
     </Canvas>
   );
 }
+

@@ -1,5 +1,5 @@
 import { WaselSkeleton } from '../../../components/wasel-ui';
-import { C, R, SPACE } from '../../../utils/wasel-ds';
+import { R, SPACE  } from '../../../utils/wasel-ds';
 
 export function TrustSkeleton () {
   return (
@@ -44,4 +44,5 @@ export function TrustSkeleton () {
     </div>
   );
 }
+
 

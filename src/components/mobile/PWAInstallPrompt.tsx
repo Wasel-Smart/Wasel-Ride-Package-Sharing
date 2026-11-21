@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Download, X } from 'lucide-react';
-import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { C,  R, SH, SPACE, TYPE  } from '../../utils/wasel-ds';
 import { WaselButton } from '../wasel-ui/WaselButton';
 import { tx } from '../../locales/tx';
 
@@ -206,3 +206,4 @@ function PWAInstallPromptCard ( props: { visible: boolean; onDismiss: () => void
     </div>
   );
 }
+

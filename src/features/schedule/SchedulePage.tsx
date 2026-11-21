@@ -13,7 +13,7 @@ import {
 import { supabase } from '../../utils/supabase/client';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
-import { C, F, R, TYPE } from '../../utils/wasel-ds';
+import { C,  F, R, TYPE  } from '../../utils/wasel-ds';
 import { PageShell, SectionCard } from '../../components/wasel-ui/WaselPagePrimitives';
 import { WaselEmptyState } from '../../components/wasel-ui/WaselEmptyState';
 import { ListSkeleton } from '../home/HomePageShared';
@@ -719,5 +719,6 @@ export function SchedulePage() {
     </PageShell>
   );
 }
+
 
 

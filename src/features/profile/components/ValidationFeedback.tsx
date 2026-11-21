@@ -1,4 +1,4 @@
-import { C, F } from '../../../utils/wasel-ds';
+import { C,  F  } from '../../../utils/wasel-ds';
 
 interface ValidationFeedbackProps {
   error?: string;
@@ -203,3 +203,4 @@ if (typeof document !== 'undefined' && !document.getElementById('validation-anim
   `;
   document.head.appendChild(style);
 }
+

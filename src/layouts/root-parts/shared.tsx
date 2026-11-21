@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { type LucideIcon } from 'lucide-react';
-import { C, F, R } from '../../utils/wasel-ds';
+import { C,  F, R  } from '../../utils/wasel-ds';
 
 function FacebookIcon() {
   return (
@@ -169,3 +169,4 @@ export function SocialLinks({
     </div>
   );
 }
+

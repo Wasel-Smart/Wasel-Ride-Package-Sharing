@@ -125,3 +125,4 @@ export function WaselHeroMark({ size = 120 }: { size?: number }) {
 export function WaselIcon({ size = 20 }: { size?: number }) {
   return <WaselLogo size={size} showWordmark={false} />;
 }
+

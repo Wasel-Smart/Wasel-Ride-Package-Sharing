@@ -56,7 +56,8 @@ import {
   type TrustStepState,
 } from '../../services/trustCenterModel';
 import { evaluateTrustCapability } from '../../services/trustRules';
-import { C, F, GRAD_AURORA, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { C,  F, R, SH, SPACE, TYPE  } from '../../utils/wasel-ds'
+import { GRAD_AURORA } from '../../utils/wasel-ds';;
 
 function toErrorMessage ( error: unknown ): string {
   if ( error instanceof Error ) { return error.message; }
@@ -1308,3 +1309,6 @@ export default function TrustCenterPage () {
     </PageShell>
   );
 }
+
+
+

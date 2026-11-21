@@ -264,3 +264,4 @@ export function showInfoToast(message: string, action?: ToastAction): string {
 export function dismissAllToasts(): void {
   activeToasts.forEach((_, id) => dismissToast(id));
 }
+

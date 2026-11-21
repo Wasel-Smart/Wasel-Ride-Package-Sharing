@@ -302,20 +302,20 @@ export function NotificationCenter() {
 
       {/* ── Error banner ── */}
       {errorMessage && (
-        <Card className="border-amber-400/25 bg-amber-400/10">
-          <CardContent className="flex flex-col gap-3 pt-6 text-sm text-amber-50 md:flex-row md:items-center md:justify-between">
+        <Card className="border-[#FFBE5C]/25 bg-[#FFBE5C]/10">
+          <CardContent className="flex flex-col gap-3 pt-6 text-sm text-[#FFF8EC] md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
               <div className="space-y-1">
                 <p className="font-semibold">{labels.serviceUnavailable}</p>
-                <p className="text-amber-100/90">{errorMessage}</p>
+                <p className="text-[#FFF8EC]/80">{errorMessage}</p>
               </div>
             </div>
             <Button
               variant="outline"
               size="sm"
               onClick={() => void refresh()}
-              className="border-amber-200/30 bg-transparent text-amber-50 hover:bg-amber-300/10"
+              className="border-[#FFBE5C]/30 bg-transparent text-[#FFF8EC] hover:bg-[#FFBE5C]/10"
             >
               <RefreshCw className="size-4" />
               {labels.refresh}

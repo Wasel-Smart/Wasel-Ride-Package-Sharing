@@ -54,7 +54,7 @@ import {
   scoreRideForRecommendation,
 } from '../../../pages/waselCorePageHelpers';
 import { readStoredStringList, writeStoredStringList } from '../../../pages/waselCoreStorage';
-import { DS, midpoint, resolveCityCoord } from '../../../pages/waselServiceShared';
+import { DS, resolveCityCoord } from '../../../pages/waselServiceShared';
 import { getFindRideStaticCopy } from '../findRideContent';
 import { useRideInventory } from '../useRideInventory';
 
@@ -346,14 +346,16 @@ export function useFindRideController() {
     try {
       const booking = await createRideBooking({
         rideId: ride.id,
-        userId: bookingUser.id,
         from:   ride.from,
         to:     ride.to,
-        seats:  1,
-        priceJod: finalPrice,
+        seatsRequested:  1,
         driverName: ride.driver.name,
+        passengerName: bookingUser?.name ?? '',
+        date: ride.date ?? '',
+        time: ride.time ?? '',
+        pricePerSeatJod: finalPrice,
+        routeMode: 'network_inventory',
       });
-      setRideBookings(getRideBookings());
       setBookingSuccess({
         status: booking.status as BookingSuccessState['status'],
         routeLabel: t.routeLabel(ride.from, ride.to),
@@ -361,11 +363,6 @@ export function useFindRideController() {
         priceJod: finalPrice,
         ticketCode: booking.ticketCode,
       });
-      setBookingMessage(
-        booking.status === 'pending_driver'
-          ? t.bookingRequestSent(ride.from, ride.to)
-          : t.seatConfirmed(ride.from, ride.to),
-      );
 
       if (booking.status === 'confirmed') {
         try {
@@ -551,7 +548,7 @@ export function useFindRideController() {
     pkg, setPkg,
     // display helpers
     statCards, intelligenceLines,
-    corridorPlan, marketplaceNodes: marketplaceNodes,
+    corridorPlan,
     // selected ride (for modal)
     selected, setSelected,
     // event handlers
@@ -562,3 +559,9 @@ export function useFindRideController() {
     permission,
   };
 }
+
+
+
+
+
+

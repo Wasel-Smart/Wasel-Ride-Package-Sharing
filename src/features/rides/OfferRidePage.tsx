@@ -7,7 +7,7 @@
 
 import { Brain, CheckCircle2, Network } from 'lucide-react';
 import { PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
-import { C } from '../../utils/wasel-ds';
+import { C,  } from '../../utils/wasel-ds';
 import { OfferRideFormPanel } from './components/OfferRideFormPanel';
 import { OfferRideIncomingRequests } from './components/OfferRideIncomingRequests';
 import { useOfferRideController } from './hooks/useOfferRideController';
@@ -390,3 +390,4 @@ export function OfferRidePage() {
 }
 
 export default OfferRidePage;
+

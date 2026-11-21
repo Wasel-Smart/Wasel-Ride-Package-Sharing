@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react';
 import { type ReactNode } from 'react';
 import { WaselButton, WaselInput, WaselSelect } from '../../../components/wasel-ui';
 import styles from '../../../styles/app-shell.module.css';
-import { C, R, TYPE } from '../../../utils/wasel-ds';
+import { R, TYPE  } from '../../../utils/wasel-ds';
 
 export function Section({ icon, title, children }: { icon: ReactNode; title: string; children: ReactNode }) {
   return (
@@ -147,3 +147,4 @@ export function FormField({
 }) {
   return <WaselInput type={type} value={value} onChange={onChange} placeholder={placeholder} />;
 }
+

@@ -10,7 +10,7 @@ import {
   useId,
   useState,
 } from 'react';
-import { ANIM, C, F, R, TYPE } from '../../utils/wasel-ds';
+import { ANIM, F, R, TYPE } from '../../utils/wasel-ds';
 
 export interface WaselSelectOption {
   value: string;

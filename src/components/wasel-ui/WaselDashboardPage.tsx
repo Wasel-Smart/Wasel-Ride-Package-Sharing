@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { PageShell, PageHero, MetricCard } from './WaselPagePrimitives';
-import { C, SPACE } from '@/utils/wasel-ds';
+import { C,  SPACE  } from '@/utils/wasel-ds';
 
 interface WaselDashboardPageProps {
   icon: ReactNode;
@@ -57,3 +57,4 @@ export function WaselDashboardPage ({
     </PageShell>
   );
 }
+

@@ -26,7 +26,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
-import { C, GRAD, R, SH, SPACE } from '../../utils/wasel-ds';
+import { C,  GRAD, R, SH, SPACE  } from '../../utils/wasel-ds';
 import { getProfileInitials } from './profileUtils';
 import {
   InsightCard as SharedInsightCard,
@@ -759,3 +759,4 @@ function ProfilePageContent({
     </PageShell>
   );
 }
+

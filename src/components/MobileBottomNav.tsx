@@ -8,7 +8,7 @@ import { useLocation } from 'react-router';
 import { CORE_NAV_ITEMS } from '../config/user-navigation';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useIframeSafeNavigate, type SafeNavigate } from '../hooks/useIframeSafeNavigate';
-import { C, F, GRAD_GOLD, TYPE, Z } from '../utils/wasel-ds';
+import { C,  F, GRAD_GOLD, TYPE, Z  } from '../utils/wasel-ds';
 
 const BG = 'rgba(8,29,57,0.96)';
 const CYAN = C.cyan;
@@ -197,3 +197,4 @@ export function MobileBottomNav({ language }: MobileBottomNavProps) {
     </>
   );
 }
+

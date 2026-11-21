@@ -14,7 +14,8 @@ import {
   Users,
 } from 'lucide-react';
 import { WaselButton, WaselLogo } from '../../components/wasel-ui';
-import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
+import { C,  F, FM, R, SH  } from '../../utils/wasel-ds'
+import { GRAD_AURORA } from '../../utils/wasel-ds';;
 import { tx } from '../../locales/tx';
 
 type Accent = 'cyan' | 'green' | 'gold' | 'purple';
@@ -1008,3 +1009,6 @@ export default function MobilityOSPage() {
     </div>
   );
 }
+
+
+

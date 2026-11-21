@@ -3,7 +3,7 @@ import { CheckCircle2, Search } from 'lucide-react';
 import { MapWrapper } from '../../../components/MapWrapper';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { DS, midpoint, pill, r, resolveCityCoord } from '../../../pages/waselServiceShared';
-import { C, SH } from '../../../utils/wasel-ds';
+import { C,  SH  } from '../../../utils/wasel-ds';
 import type { PackageRequest } from '../../../services/journeyLogistics';
 import { tx } from '../../../locales/tx';
 
@@ -591,3 +591,4 @@ export function PackageTrackPanel({
     </div>
   );
 }
+
