@@ -101,12 +101,26 @@ export function mapBookingRow ( row: Record<string, unknown> ) {
     amount,
     status: String( row.booking_status ?? row.status ?? 'pending' ),
     booking_status: String( row.booking_status ?? row.status ?? 'pending' ),
+    service_type: String( row.service_type ?? 'ride' ),
+    schedule_date: row.schedule_date ?? null,
+    departure_time: row.departure_time ?? null,
+    seat_preference: row.seat_preference ?? null,
+    schedule_mode: row.schedule_mode ?? null,
   };
 }
 
 export function mapPackageRow ( row: Record<string, unknown> ) {
+  // Strip the single-use hand-off codes so they never travel in a list/get/verify
+  // response. Only the create endpoint returns them once (to the sender). This
+  // stops a carrier from reading the delivery code through the API and faking a
+  // hand-off to release escrow.
+  const {
+    pickup_verification_code: _pickupCode,
+    delivery_verification_code: _deliveryCode,
+    ...rest
+  } = row;
   return {
-    ...row,
+    ...rest,
     id: String( row.package_id ?? row.id ?? '' ),
     package_id: String( row.package_id ?? row.id ?? '' ),
     tracking_number: String( row.tracking_number ?? '' ),
