@@ -45,7 +45,7 @@ export function ObservabilityDashboard() {
         </h1>
         <div className="flex items-center gap-2">
           <div
-            className={`h-3 w-3 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
+            className={`h-3 w-3 rounded-full ${isLive ? 'bg-[var(--wasel-green)] animate-pulse' : 'bg-[var(--wasel-error)]'}`}
           />
           <span className="text-sm text-[var(--wasel-text-muted)]">{isLive ? 'Live' : 'Disconnected'}</span>
         </div>
@@ -175,7 +175,7 @@ function QueueHealthCard({ queue, lagMs }: { queue: string; lagMs: number }) {
         {lagMs}
         {tx('observabilityDashboard.ms')}
       </div>
-      <div className="text-xs text-gray-500">{tx('observabilityDashboard.processing_lag')}</div>
+      <div className="text-xs text-[var(--wasel-text-dim)]">{tx('observabilityDashboard.processing_lag')}</div>
     </div>
   );
 }

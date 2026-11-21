@@ -158,7 +158,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
             <button
               onClick={() => (window.location.href = '/')}
-              className="w-full mt-3 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              className="w-full mt-3 px-4 py-2 text-sm text-[var(--wasel-text-muted)] hover:text-[var(--wasel-text)] transition-colors"
             >
               {tx('errors.goHome')}
             </button>
@@ -186,7 +186,7 @@ export function RouteErrorBoundary({ children }: { children: ReactNode }): JSX.E
             <p className="text-[var(--wasel-text-muted)] mb-4">{tx('errorBoundary.page_error_description')}</p>
             <button
               onClick={() => (window.location.href = '/app')}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-6 py-2 bg-[var(--wasel-cyan)] text-[var(--wasel-ink)] rounded-lg hover:bg-[var(--wasel-cyan-bright)]"
             >
               {tx('errorBoundary.go_to_dashboard')}
             </button>
@@ -206,8 +206,8 @@ export function FeatureErrorBoundary({ children }: { children: ReactNode }): JSX
   return (
     <ErrorBoundary
       fallback={
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">
+        <div className="p-4 bg-[var(--wasel-error)]/10 border border-[var(--wasel-error)]/30 rounded-lg">
+          <p className="text-sm text-[var(--wasel-error)]">
             {tx('errorBoundary.feature_temporarily_unavailable')}
           </p>
         </div>

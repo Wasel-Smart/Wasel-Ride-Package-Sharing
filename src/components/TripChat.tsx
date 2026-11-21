@@ -122,7 +122,7 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
                   {message.sender?.avatar_url ? (
                     <img src={message.sender.avatar_url} alt={message.sender.full_name} />
                   ) : (
-                    <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white text-sm">
+                    <div className="w-full h-full bg-[var(--wasel-cyan)] flex items-center justify-center text-[var(--wasel-ink)] text-sm">
                       {message.sender?.full_name?.[0] || '?'}
                     </div>
                   )}
@@ -158,7 +158,7 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
             onChange={e => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder={tx('messages.typeMessage')}
-            className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--wasel-cyan)] focus:border-transparent"
             disabled={sending}
           />
           <Button onClick={() => { void handleSend(); }} disabled={!newMessage.trim() || sending} className="px-4">

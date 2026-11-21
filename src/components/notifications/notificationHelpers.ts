@@ -27,7 +27,7 @@ export const CATEGORY_ICON: Record<NotificationCategory, typeof CarFront> = {
 
 export const CATEGORY_ACCENT: Record<NotificationCategory, string> = {
   rides: 'from-cyan-500/25 to-sky-500/5 text-cyan-300 border-cyan-500/20',
-  messages: 'from-blue-500/25 to-indigo-500/5 text-blue-300 border-blue-500/20',
+  messages: 'from-cyan-500/25 to-cyan-400/5 text-cyan-300 border-cyan-500/20',
   wallet: 'from-emerald-500/25 to-lime-500/5 text-emerald-300 border-emerald-500/20',
   trust: 'from-amber-500/25 to-orange-500/5 text-amber-300 border-amber-500/20',
   support: 'from-rose-500/25 to-pink-500/5 text-rose-300 border-rose-500/20',
