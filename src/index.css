@@ -14,7 +14,7 @@
  * This block is the single bridge. `inline` keeps the values as references to the
  * existing `:root` custom properties instead of emitting a second copy of each
  * colour, so `globals.css` stays the only source of truth and the runtime
- * `.light` overrides keep working. Do not move these colours back into a
+ * `[data-theme="light"]` overrides keep working. Do not move these colours back into a
  * Tailwind config file.
  */
 @theme inline {

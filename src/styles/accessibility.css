@@ -23,7 +23,7 @@
   --interactive-disabled: rgba(196,220,238,0.35);
 }
 
-.light {
+[data-theme="light"] {
   /* Text on light backgrounds - minimum 4.5:1 contrast */
   --text-primary-light: #0f172a;
   --text-secondary-light: rgba(8,29,57,0.68);
@@ -386,15 +386,15 @@ tr:hover {
   color: var(--text-muted-dark);
 }
 
-.light .text-contrast-high {
+[data-theme="light"] .text-contrast-high {
   color: var(--text-primary-light);
 }
 
-.light .text-contrast-medium {
+[data-theme="light"] .text-contrast-medium {
   color: var(--text-secondary-light);
 }
 
-.light .text-contrast-low {
+[data-theme="light"] .text-contrast-low {
   color: var(--text-muted-light);
 }
 
