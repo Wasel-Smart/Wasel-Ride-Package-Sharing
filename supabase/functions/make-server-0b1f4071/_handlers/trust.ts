@@ -135,7 +135,8 @@ async function startPhoneVerification ( request: Request ) {
   const expiresAt = new Date(
     Date.now() + PHONE_VERIFICATION_TTL_MINUTES * 60 * 1000,
   ).toISOString();
-  const useTwilioVerify = hasTwilioVerifyRuntime();
+  const devMode = Deno.env.get( 'PHONE_OTP_DEV_MODE' ) === 'true';
+  const useTwilioVerify = hasTwilioVerifyRuntime() && !devMode;
   const code = useTwilioVerify ? null : generateOtpCode();
   const otpHash = useTwilioVerify ? `twilio-verify:${ TWILIO_VERIFY_SERVICE_SID }` : await hashOtpCode( code ?? '' );
 
@@ -212,6 +213,20 @@ async function startPhoneVerification ( request: Request ) {
         expiresAt,
         channel: requestedChannel,
         provider: 'twilio_verify',
+      },
+      202,
+    );
+  }
+
+  if ( devMode ) {
+    console.log( `[DEV] phone OTP for ${ phoneNumber }: ${ code }` );
+    return json(
+      {
+        started: true,
+        phoneNumber,
+        expiresAt,
+        provider: 'dev_otp',
+        devCode: code,
       },
       202,
     );
