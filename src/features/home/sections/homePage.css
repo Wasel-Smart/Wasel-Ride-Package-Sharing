@@ -12,7 +12,8 @@
    ────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  color-scheme: dark;
+  /* color-scheme follows the active [data-theme] attribute set by ThemeContext */
+  color-scheme: dark light;
   --wasel-glass: rgba(8, 29, 57, 0.88);
   --wasel-text: #f8fbff;
   --wasel-border-hov: rgba(0, 229, 255, 0.28);
@@ -594,3 +595,289 @@ a.wasel-home-section-action {
 
 /* Phone frame gentle float */
 .wasel-home-phone-frame { animation: wasel-float-soft 6s ease-in-out infinite; }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LIGHT MODE OVERRIDES
+   All selectors below are scoped to [data-theme="light"] so dark mode
+   is completely unaffected. The shell switches from navy to a fresh-sky
+   gradient; every card/surface/text colour follows the token layer in
+   globals.css [data-theme="light"].
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Global :root flips for light mode ─────────────────────────────────── */
+[data-theme="light"] {
+  color-scheme: light;
+  --wasel-glass: rgba(255, 255, 255, 0.88);
+  --wasel-text: #081523;
+  --wasel-border-hov: rgba(3, 105, 161, 0.32);
+  --wasel-cyan: #0369a1;
+}
+
+/* ── Shell background ───────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-home-shell {
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -15%, rgba(3, 105, 161, 0.08), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 90% 40%, rgba(255, 138, 11, 0.04), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 10% 70%, rgba(63, 110, 6, 0.04), transparent 70%),
+    linear-gradient(180deg, #eaf7ff 0%, #f5fbff 30%, #ffffff 70%, #f0f8ff 100%);
+}
+[data-theme="light"] .wasel-home-shell::before {
+  background-image:
+    linear-gradient(rgba(3, 105, 161, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(3, 105, 161, 0.025) 1px, transparent 1px);
+}
+[data-theme="light"] .wasel-home-shell::after {
+  background:
+    linear-gradient(115deg, rgba(3, 105, 161, 0.05), transparent 30%, transparent 70%, rgba(255, 138, 11, 0.03)),
+    linear-gradient(180deg, transparent 0%, rgba(230, 245, 255, 0.4) 92%);
+}
+[data-theme="light"] .wasel-home-aurora-cyan { background: radial-gradient(circle, rgba(3, 105, 161, 0.18) 0%, transparent 70%); opacity: 0.25; }
+[data-theme="light"] .wasel-home-aurora-green { background: radial-gradient(circle, rgba(63, 110, 6, 0.15) 0%, transparent 70%); opacity: 0.2; }
+[data-theme="light"] .wasel-home-aurora-orange { background: radial-gradient(circle, rgba(255, 138, 11, 0.12) 0%, transparent 70%); opacity: 0.18; }
+
+/* ── Typography ─────────────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-home-title,
+[data-theme="light"] .wasel-home-section-title,
+[data-theme="light"] .wasel-home-action-title,
+[data-theme="light"] .wasel-home-corridor-title,
+[data-theme="light"] .wasel-home-stat-value,
+[data-theme="light"] .wasel-home-step-title,
+[data-theme="light"] .wasel-home-testimonial-name,
+[data-theme="light"] .wasel-home-outcome-title,
+[data-theme="light"] .wasel-home-trust-card-title,
+[data-theme="light"] .wasel-home-demo-card-title,
+[data-theme="light"] .wasel-home-proof-metric-label,
+[data-theme="light"] .wasel-home-proof-hero-title,
+[data-theme="light"] .wasel-home-preview-title,
+[data-theme="light"] .wasel-home-corridor-name,
+[data-theme="light"] .wasel-coverage-title,
+[data-theme="light"] .wasel-bento-tile-title,
+[data-theme="light"] .wasel-home-window-route,
+[data-theme="light"] .wasel-home-phone-screen strong,
+[data-theme="light"] .wasel-coverage-region-name,
+[data-theme="light"] .wasel-home-cta-title { color: #081523; }
+
+[data-theme="light"] .wasel-home-lead,
+[data-theme="light"] .wasel-home-start-text,
+[data-theme="light"] .wasel-home-action-desc,
+[data-theme="light"] .wasel-home-action-outcome,
+[data-theme="light"] .wasel-home-corridor-detail,
+[data-theme="light"] .wasel-home-corridor-insight,
+[data-theme="light"] .wasel-home-stat-label,
+[data-theme="light"] .wasel-home-step-desc,
+[data-theme="light"] .wasel-home-testimonial-text,
+[data-theme="light"] .wasel-home-testimonial-role,
+[data-theme="light"] .wasel-home-outcome-detail,
+[data-theme="light"] .wasel-home-trust-card-detail,
+[data-theme="light"] .wasel-home-demo-card-detail,
+[data-theme="light"] .wasel-home-proof-metric-detail,
+[data-theme="light"] .wasel-home-proof-hero-desc,
+[data-theme="light"] .wasel-home-window-toolbar,
+[data-theme="light"] .wasel-home-phone-screen p,
+[data-theme="light"] .wasel-coverage-subtitle,
+[data-theme="light"] .wasel-coverage-region-status,
+[data-theme="light"] .wasel-coverage-note,
+[data-theme="light"] .wasel-bento-tile-desc,
+[data-theme="light"] .wasel-home-cta-subtitle { color: #35556d; }
+
+[data-theme="light"] .wasel-home-kicker,
+[data-theme="light"] .wasel-home-eyebrow { color: #35556d; background: rgba(3, 105, 161, 0.07); border-color: rgba(3, 105, 161, 0.18); }
+[data-theme="light"] .wasel-home-action-kicker { color: #5d7d96; }
+[data-theme="light"] .wasel-home-demo-card-number { color: #5d7d96; }
+[data-theme="light"] .wasel-home-step-number { color: #0369a1; }
+[data-theme="light"] .wasel-coverage-kicker { color: #0369a1; }
+[data-theme="light"] .wasel-home-proof-metric-value { color: #0369a1; }
+
+/* ── Gradient text — shift to dark brand gradient for legibility ─────────── */
+[data-theme="light"] .wasel-home-gradient-text {
+  background: linear-gradient(100deg, #081523 0%, #0369a1 30%, #0284c7 55%, #0ea5e9 75%, #081523 100%);
+  background-size: 220% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+[data-theme="light"] .wasel-home-hero-title {
+  background: linear-gradient(100deg, #081523 0%, #0369a1 40%, #0284c7 65%, #0c4a6e 85%, #081523 100%);
+  background-size: 240% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* ── Cards / surfaces ───────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-home-action-card,
+[data-theme="light"] .wasel-home-corridor { background: #ffffff; border-color: rgba(8, 29, 57, 0.1); }
+[data-theme="light"] .wasel-home-action-card:hover,
+[data-theme="light"] .wasel-home-corridor:hover { border-color: rgba(3, 105, 161, 0.35); box-shadow: 0 8px 24px rgba(8, 29, 57, 0.08); }
+
+[data-theme="light"] .wasel-home-stat-item { background: #ffffff; border-color: rgba(8, 29, 57, 0.1); }
+[data-theme="light"] .wasel-home-step { background: #ffffff; border-color: rgba(8, 29, 57, 0.1); }
+[data-theme="light"] .wasel-home-testimonial { background: #ffffff; border-color: rgba(8, 29, 57, 0.08); }
+[data-theme="light"] .wasel-home-testimonial-author { border-top-color: rgba(8, 29, 57, 0.08); }
+
+[data-theme="light"] .wasel-home-demo-card { background: #ffffff; border-color: rgba(8, 29, 57, 0.1); }
+[data-theme="light"] .wasel-home-demo-card-icon { background: rgba(3, 105, 161, 0.07); border-color: rgba(3, 105, 161, 0.14); color: #0369a1; }
+
+[data-theme="light"] .wasel-home-outcome-card {
+  background: linear-gradient(180deg, #ffffff 0%, rgba(240, 248, 255, 0.6) 100%);
+  border-color: rgba(8, 29, 57, 0.1);
+}
+[data-theme="light"] .wasel-home-outcome-card:hover { border-color: rgba(3, 105, 161, 0.35); box-shadow: 0 8px 24px rgba(8, 29, 57, 0.08); }
+
+[data-theme="light"] .wasel-home-trust-card { background: #ffffff; border-color: rgba(8, 29, 57, 0.1); }
+[data-theme="light"] .wasel-home-trust-card:hover { border-color: rgba(3, 105, 161, 0.35); }
+
+[data-theme="light"] .wasel-home-proof-pill { background: rgba(3, 105, 161, 0.05); border-color: rgba(3, 105, 161, 0.14); }
+[data-theme="light"] .wasel-home-proof-pill:hover { background: rgba(3, 105, 161, 0.08); border-color: rgba(3, 105, 161, 0.24); }
+
+[data-theme="light"] .wasel-home-proof-metric-card { background: #ffffff; border-color: rgba(8, 29, 57, 0.1); }
+[data-theme="light"] .wasel-home-proof-hero-card { /* inherits inline background color — no override needed */ }
+
+[data-theme="light"] .wasel-home-utility-card { background: #ffffff; border-color: rgba(8, 29, 57, 0.1); }
+[data-theme="light"] .wasel-home-utility-card--accent { background: rgba(3, 105, 161, 0.06); border-color: rgba(3, 105, 161, 0.2); }
+
+[data-theme="light"] .wasel-home-outcome-strip-card { background: rgba(3, 105, 161, 0.04); border-color: rgba(3, 105, 161, 0.14); }
+
+[data-theme="light"] .wasel-home-start-panel { border-top-color: rgba(3, 105, 161, 0.18); }
+
+[data-theme="light"] .wasel-home-assurance-strip span {
+  background: rgba(3, 105, 161, 0.05);
+  border-color: rgba(3, 105, 161, 0.18);
+  color: #35556d;
+}
+
+/* ── Section action button ──────────────────────────────────────────────── */
+[data-theme="light"] .wasel-home-section-action {
+  background: rgba(3, 105, 161, 0.06);
+  border-color: rgba(3, 105, 161, 0.22);
+  color: #35556d;
+}
+[data-theme="light"] .wasel-home-section-action:hover { background: rgba(3, 105, 161, 0.1); border-color: rgba(3, 105, 161, 0.36); }
+
+[data-theme="light"] .wasel-home-section-icon {
+  background: rgba(3, 105, 161, 0.08);
+  border-color: rgba(3, 105, 161, 0.14);
+  color: #0369a1;
+}
+
+/* ── Preview panel ──────────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-home-preview-panel {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f8ff 100%);
+  border-color: rgba(8, 29, 57, 0.1);
+  box-shadow: 0 32px 80px rgba(8, 29, 57, 0.08);
+}
+[data-theme="light"] .wasel-home-window-route {
+  background: rgba(3, 105, 161, 0.07);
+  border-color: rgba(3, 105, 161, 0.18);
+  color: #081523;
+}
+[data-theme="light"] .wasel-home-window-toolbar { color: #5d7d96; }
+[data-theme="light"] .wasel-home-window-toolbar strong { color: #081523; }
+[data-theme="light"] .wasel-home-window-toolbar span { background: rgba(8, 29, 57, 0.18); }
+[data-theme="light"] .wasel-home-window-grid div {
+  background: rgba(3, 105, 161, 0.04);
+  border-color: rgba(3, 105, 161, 0.1);
+}
+[data-theme="light"] .wasel-home-window-progress { background: rgba(8, 29, 57, 0.1); }
+[data-theme="light"] .wasel-home-product-window { background: #ffffff; border-color: rgba(8, 29, 57, 0.1); box-shadow: 0 18px 38px rgba(8, 29, 57, 0.06); }
+
+[data-theme="light"] .wasel-home-phone-frame { background: #ffffff; border-color: rgba(8, 29, 57, 0.1); box-shadow: 0 18px 38px rgba(8, 29, 57, 0.06); }
+[data-theme="light"] .wasel-home-phone-notch { background: rgba(8, 29, 57, 0.15); }
+[data-theme="light"] .wasel-home-phone-screen {
+  background: linear-gradient(180deg, #eaf7ff 0%, #f5fbff 100%);
+}
+[data-theme="light"] .wasel-home-phone-screen strong { color: #081523; }
+[data-theme="light"] .wasel-home-phone-screen p { color: #5d7d96; }
+[data-theme="light"] .wasel-home-phone-tags span {
+  background: rgba(3, 105, 161, 0.06);
+  border-color: rgba(3, 105, 161, 0.16);
+  color: #35556d;
+}
+[data-theme="light"] .wasel-home-phone-status { color: #a24d00; }
+
+/* ── Mode buttons ───────────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-home-mode-button { background: #ffffff; }
+
+/* ── Sticky CTA ─────────────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-home-sticky-cta {
+  background: rgba(245, 251, 255, 0.97);
+  border-top-color: rgba(8, 29, 57, 0.1);
+}
+
+/* ── CTA banner ─────────────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-home-cta-banner {
+  background: linear-gradient(180deg, rgba(3, 105, 161, 0.07) 0%, rgba(234, 247, 255, 0.9) 100%);
+  border-color: rgba(3, 105, 161, 0.2);
+}
+
+/* ── Map border ─────────────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-home-map-frame { border-color: rgba(3, 105, 161, 0.2); }
+
+/* ── Ticker ─────────────────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-ticker {
+  background: rgba(245, 251, 255, 0.85);
+  border-color: rgba(3, 105, 161, 0.14);
+}
+[data-theme="light"] .wasel-ticker-label {
+  background: rgba(240, 248, 255, 0.95);
+  border-inline-end-color: rgba(63, 110, 6, 0.22);
+  color: #3f6e06;
+}
+[data-theme="light"] .wasel-ticker-toggle {
+  background: #ffffff;
+  border-color: rgba(3, 105, 161, 0.3);
+  color: #35556d;
+}
+[data-theme="light"] .wasel-ticker-toggle:hover { background: #eaf7ff; }
+[data-theme="light"] .wasel-ticker-item { color: #35556d; }
+[data-theme="light"] .wasel-ticker-item small { color: #5d7d96; }
+[data-theme="light"] .wasel-ticker-item .wasel-ticker-route { color: #0369a1; }
+[data-theme="light"] .wasel-ticker-item .wasel-ticker-price { color: #a24d00; }
+[data-theme="light"] .wasel-ticker-item .wasel-ticker-sep { color: rgba(3, 105, 161, 0.3); }
+
+/* ── Coverage block ─────────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-coverage {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f8ff 100%);
+  border-color: rgba(3, 105, 161, 0.14);
+  box-shadow: 0 30px 70px rgba(8, 29, 57, 0.07);
+}
+[data-theme="light"] .wasel-coverage-region {
+  background: rgba(3, 105, 161, 0.04);
+  border-color: rgba(3, 105, 161, 0.14);
+}
+[data-theme="light"] .wasel-coverage-region:hover { background: rgba(3, 105, 161, 0.07); border-color: rgba(3, 105, 161, 0.3); }
+[data-theme="light"] .wasel-coverage-region.is-live {
+  background: linear-gradient(135deg, rgba(3, 105, 161, 0.08), rgba(63, 110, 6, 0.06));
+  border-color: rgba(3, 105, 161, 0.3);
+}
+[data-theme="light"] .wasel-coverage-region-dot { background: rgba(8, 29, 57, 0.25); }
+
+/* ── Destination marquee ────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-dest-marquee {
+  background: rgba(234, 247, 255, 0.5);
+  border-color: rgba(3, 105, 161, 0.1);
+}
+[data-theme="light"] .wasel-dest-item { color: #35556d; }
+[data-theme="light"] .wasel-dest-item svg { color: rgba(3, 105, 161, 0.5); }
+
+/* ── Bento tiles ────────────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-bento-tile {
+  background: #ffffff;
+  border-color: rgba(8, 29, 57, 0.1);
+}
+[data-theme="light"] .wasel-bento-tile:hover { border-color: rgba(3, 105, 161, 0.3); box-shadow: 0 16px 38px rgba(8, 29, 57, 0.08); }
+[data-theme="light"] .wasel-bento-tile::before {
+  background: radial-gradient(ellipse 90% 60% at 50% -20%, var(--tile-accent-dim, rgba(3, 105, 161, 0.06)), transparent 70%);
+}
+[data-theme="light"] .wasel-bento-tile--hero {
+  background: radial-gradient(ellipse 80% 60% at 20% 0%, rgba(3, 105, 161, 0.1), transparent 60%), linear-gradient(180deg, #ffffff 0%, #eaf7ff 100%);
+  border-color: rgba(3, 105, 161, 0.22);
+}
+[data-theme="light"] .wasel-bento-point { color: #35556d; }
+
+/* ── First-only badge ───────────────────────────────────────────────────── */
+[data-theme="light"] .wasel-first-only-badge {
+  background: linear-gradient(120deg, rgba(3, 105, 161, 0.1), rgba(63, 110, 6, 0.07));
+  border-color: rgba(3, 105, 161, 0.3);
+  box-shadow: 0 8px 22px rgba(8, 29, 57, 0.08);
+}
+[data-theme="light"] .wasel-first-only-badge-label { color: #35556d; }
+[data-theme="light"] .wasel-first-only-badge-label strong {
+  background: linear-gradient(90deg, #0369a1, #0ea5e9);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
