@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+﻿import { useEffect, useRef, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { Shield } from 'lucide-react';
 import { useLocalAuth } from '../contexts/LocalAuth';
@@ -273,7 +273,7 @@ export function SectionHead({
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h1 style={{ fontSize: '1.55rem', fontWeight: 900, color: '#fff', margin: 0 }}>
+              <h1 style={{ fontSize: '1.55rem', fontWeight: 800, color: '#fff', margin: 0 }}>
                 {displayTitle}
               </h1>
             </div>
@@ -337,3 +337,4 @@ export function CoreExperienceBanner({
     </div>
   );
 }
+

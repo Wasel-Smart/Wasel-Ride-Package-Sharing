@@ -1,4 +1,4 @@
-/**
+﻿/**
  * LiveTripTracking - Real-time trip progress screen
  *
  * ✅ Animated progress tracker
@@ -158,20 +158,20 @@ function ETACard({
           {timeLeft}
           {tx('liveTripTracking.m')}
         </div>
-        <div className="text-[10px] text-slate-500">{tx('liveTripTracking.to_arrive')}</div>
+        <div className="text-[10px] text-[#95b2c9]">{tx('liveTripTracking.to_arrive')}</div>
       </div>
       <div className="flex-1">
         <div className="text-white font-bold">
           {tx('liveTripTracking.eta')}
           {eta}
         </div>
-        <div className="text-slate-500 text-xs mt-0.5">
+        <div className="text-[#95b2c9] text-xs mt-0.5">
           {totalDistanceKm.toFixed(1)} {tx('liveTripTracking.km_total')}
           {price.toFixed(3)} JOD
         </div>
         <div className="flex items-center gap-1 mt-1">
-          <Leaf className="w-3 h-3 text-emerald-400" />
-          <span className="text-[10px] text-emerald-400">
+          <Leaf className="w-3 h-3 text-[#72C70D]" />
+          <span className="text-[10px] text-[#72C70D]">
             {telemetryFresh ? 'Live telemetry active' : 'Waiting for fresh telemetry'}
           </span>
         </div>
@@ -355,8 +355,8 @@ function TripRatingSheet({
                 <p className="text-[#95b2c9] text-sm">
                   {tx('liveTripTracking.with')}
                   <span className="text-primary font-semibold">{driverName}</span>
-                  <span className="text-slate-600 mx-1.5">·</span>
-                  <span className="text-emerald-400 font-semibold">{fare} JOD</span>
+                  <span className="text-[#7a9ab5] mx-1.5">·</span>
+                  <span className="text-[#72C70D] font-semibold">{fare} JOD</span>
                 </p>
               </div>
             </div>
@@ -381,7 +381,7 @@ function TripRatingSheet({
                   {[1, 2, 3, 4, 5].indexOf(s) >= 0 && (
                     <Star
                       className={`w-4 h-4 transition-colors ${
-                        s <= active ? 'fill-amber-400 text-amber-400' : 'text-border'
+                        s <= active ? 'fill-[#FFBE5C] text-[#FFBE5C]' : 'text-border'
                       }`}
                     />
                   )}
@@ -400,7 +400,7 @@ function TripRatingSheet({
                   className="text-center"
                 >
                   <span className="text-white font-bold">{emojiData.label}</span>
-                  <span className="text-slate-500 ml-2 text-sm" dir="rtl">
+                  <span className="text-[#95b2c9] ml-2 text-sm" dir="rtl">
                     {emojiData.labelAr}
                   </span>
                 </motion.div>
@@ -414,7 +414,7 @@ function TripRatingSheet({
                 onChange={e => setComment(e.target.value)}
                 placeholder={tx('liveTripTracking.add_a_comment_optional')}
                 rows={2}
-                className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-primary/30 resize-none"
+                className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm text-[#c4dcee] placeholder:text-[#7a9ab5] focus:outline-none focus:border-primary/30 resize-none"
               />
             </div>
 
@@ -447,9 +447,9 @@ function TripRatingSheet({
             </div>
 
             {/* Loyalty nudge */}
-            <p className="text-center text-[11px] text-slate-600">
+            <p className="text-center text-[11px] text-[#7a9ab5]">
               {tx('liveTripTracking.ratings_earn_you')}{' '}
-              <span className="text-amber-400 font-semibold">
+              <span className="text-[#FFBE5C] font-semibold">
                 {tx('liveTripTracking.10_wasel_points')}
               </span>{' '}
               {tx('liveTripTracking.toward_gold_tier')}
@@ -771,16 +771,16 @@ export function LiveTripTracking() {
         {/* Live badge overlay */}
         <div className="absolute top-4 left-4 z-10 flex flex-wrap items-center gap-2">
           <WaselBadge variant="live" label={tx('liveTripTracking.live_tracking')} />
-          <div className="rounded-full border border-cyan-400/20 bg-slate-950/70 px-3 py-1.5 text-[11px] font-semibold text-slate-100 backdrop-blur-md">
+          <div className="rounded-full border border-[#00E5FF]/20 bg-[#050B12]/70 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur-md">
             {trip.from} {tx('liveTripTracking.to')}
             {trip.to}
           </div>
-          <div className="rounded-full border border-white/10 bg-slate-950/70 px-3 py-1.5 text-[11px] font-semibold text-cyan-300 backdrop-blur-md">
+          <div className="rounded-full border border-white/10 bg-[#050B12]/70 px-3 py-1.5 text-[11px] font-semibold text-[#66E0FF] backdrop-blur-md">
             {tx('liveTripTracking.driver_near')}{' '}
             {waypoints[Math.min(currentLegIndex + 1, waypoints.length - 1)]?.label ?? trip.to}
           </div>
           {liveTrip && !liveTrip.telemetryFresh ? (
-            <div className="rounded-full border border-amber-400/20 bg-slate-950/70 px-3 py-1.5 text-[11px] font-semibold text-amber-300 backdrop-blur-md">
+            <div className="rounded-full border border-[#FFBE5C]/20 bg-[#050B12]/70 px-3 py-1.5 text-[11px] font-semibold text-amber-300 backdrop-blur-md">
               {tx('liveTripTracking.waiting_for_fresh_gps_heartbeat')}
             </div>
           ) : null}
@@ -837,7 +837,7 @@ export function LiveTripTracking() {
           </div>
           <button
             onClick={() => { void navigate(-1); }}
-            className="text-slate-500 hover:text-white transition-colors"
+            className="text-[#95b2c9] hover:text-white transition-colors"
             aria-label="Close trip tracking"
           >
             <X className="w-4 h-4" />
@@ -856,7 +856,7 @@ export function LiveTripTracking() {
 
           {/* Progress bar */}
           <div className="space-y-1.5">
-            <div className="flex justify-between text-xs text-slate-500">
+            <div className="flex justify-between text-xs text-[#95b2c9]">
               <span>{tx('liveTripTracking.trip_progress')}</span>
               <span className="text-primary font-semibold">{Math.round(progress)}%</span>
             </div>
@@ -888,13 +888,13 @@ export function LiveTripTracking() {
                   <span className="text-white font-bold text-sm">{trip.driver.name}</span>
                   <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[#95b2c9]">
                   {trip.vehicle.model} · {trip.vehicle.plate}
                 </p>
                 <div className="flex items-center gap-1 mt-0.5">
-                  <Star className="w-3 h-3 text-amber-400 fill-current" />
-                  <span className="text-xs text-amber-400 font-semibold">{trip.driver.rating}</span>
-                  <span className="text-xs text-slate-600">
+                  <Star className="w-3 h-3 text-[#FFBE5C] fill-current" />
+                  <span className="text-xs text-[#FFBE5C] font-semibold">{trip.driver.rating}</span>
+                  <span className="text-xs text-[#7a9ab5]">
                     · {trip.driver.trips.toLocaleString()} {tx('liveTripTracking.trips')}
                   </span>
                 </div>
@@ -934,11 +934,11 @@ export function LiveTripTracking() {
             className="w-full flex items-center gap-2 bg-card border border-border rounded-xl px-3 py-2.5 hover:border-muted-foreground/30 transition-all group"
           >
             <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-            <span className="text-xs text-slate-500 flex-1 text-left">
+            <span className="text-xs text-[#95b2c9] flex-1 text-left">
               {tx('liveTripTracking.safety_code')}
               <strong className="text-white font-mono">{trip.shareCode}</strong>
             </span>
-            <Copy className="w-3.5 h-3.5 text-slate-600 group-hover:text-[#95b2c9] transition-colors" />
+            <Copy className="w-3.5 h-3.5 text-[#7a9ab5] group-hover:text-[#95b2c9] transition-colors" />
           </button>
 
           {/* Toggle trip details */}
@@ -972,11 +972,11 @@ export function LiveTripTracking() {
                       key={label}
                       className={`flex justify-between items-start px-3 py-2 text-xs ${i > 0 ? 'border-t border-border' : ''}`}
                     >
-                      <span className="text-slate-500">{label}</span>
+                      <span className="text-[#95b2c9]">{label}</span>
                       <div className="text-right">
-                        <span className="text-slate-200">{value}</span>
+                        <span className="text-white">{value}</span>
                         {valueAr && (
-                          <p className="text-slate-600 text-[10px]" dir="rtl">
+                          <p className="text-[#7a9ab5] text-[10px]" dir="rtl">
                             {valueAr}
                           </p>
                         )}
@@ -998,7 +998,7 @@ export function LiveTripTracking() {
                 className="flex items-start gap-2 bg-cyan-500/5 border border-cyan-500/10 rounded-xl px-3 py-2.5"
               >
                 <Brain className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-slate-500 flex-1">
+                <p className="text-xs text-[#95b2c9] flex-1">
                   <span className="text-cyan-400 font-semibold">
                     {tx('liveTripTracking.ai_tip')}
                   </span>
@@ -1018,7 +1018,7 @@ export function LiveTripTracking() {
                 </p>
                 <button
                   onClick={() => { void setAiTip(false); }}
-                  className="text-slate-700 hover:text-slate-500"
+                  className="text-[#95b2c9] hover:text-[#95b2c9]"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -1040,7 +1040,7 @@ export function LiveTripTracking() {
               })
             }
             variant="ghost"
-            className="w-full h-10 border border-border text-slate-300 hover:text-white hover:border-muted-foreground/30 rounded-xl text-sm font-medium"
+            className="w-full h-10 border border-border text-[#c4dcee] hover:text-white hover:border-muted-foreground/30 rounded-xl text-sm font-medium"
           >
             <Share2 className="w-3.5 h-3.5 mr-2" />
             {tx('liveTripTracking.share_live_location')}
@@ -1092,3 +1092,4 @@ export function LiveTripTracking() {
     </div>
   );
 }
+

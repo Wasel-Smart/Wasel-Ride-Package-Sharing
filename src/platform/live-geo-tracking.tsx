@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Live Geo-Streaming Integration
  * Production-ready driver location tracking with WebSocket real-time updates
  */
@@ -233,7 +233,7 @@ export function LiveDriverMap({
 
       {/* Driver Count */}
       <div className="absolute left-4 top-4 z-10 rounded-lg bg-white px-3 py-2 shadow-lg">
-        <div className="text-sm text-gray-600">{tx('liveGeoTracking.available_drivers')}</div>
+        <div className="text-sm text-[#95b2c9]">{tx('liveGeoTracking.available_drivers')}</div>
         <div className="text-2xl font-bold">
           {drivers.filter(d => d.status === 'available').length}
         </div>
@@ -280,11 +280,11 @@ function MapPlaceholder({
   onDriverClick: (driver: DriverLocation) => void;
 }) {
   return (
-    <div className="flex h-full items-center justify-center bg-gray-100">
+    <div className="flex h-full items-center justify-center bg-[#050B12]">
       <div className="text-center">
         <div className="text-4xl">🗺️</div>
-        <div className="mt-2 text-gray-600">{tx('liveGeoTracking.live_driver_map')}</div>
-        <div className="mt-1 text-sm text-gray-500">
+        <div className="mt-2 text-[#95b2c9]">{tx('liveGeoTracking.live_driver_map')}</div>
+        <div className="mt-1 text-sm text-[#95b2c9]">
           {drivers.length} {tx('liveGeoTracking.drivers_tracked')}
         </div>
         {selectedDriver ? (
@@ -322,7 +322,7 @@ function DriverCard({
   const statusColor = {
     available: 'bg-green-100 text-green-800',
     on_trip: 'bg-blue-100 text-blue-800',
-    offline: 'bg-gray-100 text-gray-800',
+    offline: 'bg-[#050B12] text-[#95b2c9]',
   };
 
   return (
@@ -331,7 +331,7 @@ function DriverCard({
       className={`w-full rounded-lg border-2 p-2 text-left transition-all ${
         isSelected
           ? 'border-blue-500 bg-blue-50'
-          : 'border-transparent bg-gray-50 hover:bg-gray-100'
+          : 'border-transparent bg-[#050B12] hover:bg-[#050B12]'
       }`}
     >
       <div className="flex items-center justify-between">
@@ -340,7 +340,7 @@ function DriverCard({
             {tx('trips.driver')}
             {driver.driverId.slice(-6)}
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-[#95b2c9]">
             {driver.speed ? `${Math.round(driver.speed)} km/h` : 'Stationary'}
           </div>
         </div>
@@ -371,7 +371,7 @@ export function DriverTracking({ driverId, showHistory = false }: DriverTracking
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="text-4xl">📍</div>
-          <div className="mt-2 text-gray-600">
+          <div className="mt-2 text-[#95b2c9]">
             {tx('liveGeoTracking.waiting_for_driver_location')}
           </div>
         </div>
@@ -399,19 +399,19 @@ export function DriverTracking({ driverId, showHistory = false }: DriverTracking
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <div className="text-sm text-gray-600">{tx('liveGeoTracking.latitude')}</div>
+            <div className="text-sm text-[#95b2c9]">{tx('liveGeoTracking.latitude')}</div>
             <div className="font-mono">{location.lat.toFixed(6)}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-600">{tx('liveGeoTracking.longitude')}</div>
+            <div className="text-sm text-[#95b2c9]">{tx('liveGeoTracking.longitude')}</div>
             <div className="font-mono">{location.lng.toFixed(6)}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-600">{tx('liveGeoTracking.speed')}</div>
+            <div className="text-sm text-[#95b2c9]">{tx('liveGeoTracking.speed')}</div>
             <div>{location.speed ? `${Math.round(location.speed)} km/h` : 'Stationary'}</div>
           </div>
           <div>
-            <div className="text-sm text-gray-600">{tx('liveGeoTracking.heading')}</div>
+            <div className="text-sm text-[#95b2c9]">{tx('liveGeoTracking.heading')}</div>
             <div>{location.heading ? `${Math.round(location.heading)}°` : 'N/A'}</div>
           </div>
         </div>
@@ -424,13 +424,13 @@ export function DriverTracking({ driverId, showHistory = false }: DriverTracking
           <div className="max-h-48 space-y-2 overflow-y-auto">
             {history.reverse().map((loc, index) => (
               <div key={index} className="flex justify-between border-b py-2 text-sm">
-                <span className="font-mono text-gray-600">
+                <span className="font-mono text-[#95b2c9]">
                   {new Date(loc.timestamp).toLocaleTimeString()}
                 </span>
                 <span>
                   {loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}
                 </span>
-                <span className="text-gray-500">
+                <span className="text-[#95b2c9]">
                   {loc.speed ? `${Math.round(loc.speed)} km/h` : '-'}
                 </span>
               </div>
@@ -460,3 +460,4 @@ if (typeof window !== 'undefined' && import.meta.env.MODE === 'production' && ge
       telemetry.recordMetric('geo_stream.connection_error', 1, 'count');
     });
 }
+
