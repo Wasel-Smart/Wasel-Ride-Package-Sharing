@@ -93,8 +93,8 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
             gap: 14,
             padding: '16px 20px',
             borderRadius: R.md,
-            background: C.elevated,
-            border: `1px solid ${C.borderHov}`,
+            background: var(--secondary),
+            border: `1px solid ${var(--border)}`,
             boxShadow: `0 10px 24px ${item.statusColor}10`,
             cursor: 'pointer',
             textAlign: 'left',
@@ -129,7 +129,7 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
               <span
                 style={{
                   fontWeight: TYPE.weight.ultra,
-                  color: C.text,
+                  color: var(--foreground),
                   fontFamily: F,
                   fontSize: TYPE.size.base,
                   overflow: 'hidden',
@@ -156,7 +156,7 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
             </div>
             <div
               style={{
-                color: C.textMuted,
+                color: var(--muted-foreground),
                 fontSize: TYPE.size.sm,
                 marginTop: 2,
                 overflow: 'hidden',
@@ -168,7 +168,7 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
             </div>
             <div
               style={{
-                color: C.textDim,
+                color: var(--muted-foreground),
                 fontSize: TYPE.size.xs,
                 marginTop: 6,
                 display: 'flex',
@@ -182,7 +182,7 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
                 {item.eta}
               </span>
               {item.timeLeftMinutes > 0 && (
-                <span style={{ fontWeight: TYPE.weight.bold, color: C.textMuted }}>
+                <span style={{ fontWeight: TYPE.weight.bold, color: var(--muted-foreground) }}>
                   {item.timeLeftMinutes}
                   {tx('tripProgressCard.m_left')}
                 </span>

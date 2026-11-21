@@ -49,15 +49,15 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
           height: 34,
           padding: '0 10px',
           borderRadius: R.md,
-          background: open ? C.cyanDim : C.card,
-          border: `1px solid ${open ? C.borderHov : C.border}`,
+          background: open ? C.cyanDim : var(--card),
+          border: `1px solid ${open ? var(--border) : var(--border)}`,
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           gap: 5,
           fontSize: '0.75rem',
           fontWeight: 700,
-          color: open ? C.text : C.textSub,
+          color: open ? var(--foreground) : var(--muted-foreground),
           fontFamily: F,
           transition: 'all 0.14s',
         }}
@@ -87,9 +87,9 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
             top: 'calc(100% + 8px)',
             insetInlineEnd: 0,
             width: 200,
-            background: C.bg,
+            background: var(--background),
             backdropFilter: 'blur(24px)',
-            border: `1px solid ${C.border}`,
+            border: `1px solid ${var(--border)}`,
             borderRadius: 14,
             boxShadow: '0 16px 48px rgba(8,29,57,0.7)',
             overflow: 'hidden',
@@ -102,7 +102,7 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
               padding: '8px 12px 4px',
               fontSize: '0.6rem',
               fontWeight: 700,
-              color: C.textMuted,
+              color: var(--muted-foreground),
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               fontFamily: F,
@@ -125,13 +125,13 @@ export function CurrencySwitcher({ ar }: { ar: boolean }) {
                 cursor: 'pointer',
                 fontSize: '0.8rem',
                 fontWeight: cur === code ? 700 : 500,
-                color: cur === code ? C.text : C.textSub,
+                color: cur === code ? var(--foreground) : var(--muted-foreground),
                 fontFamily: F,
                 transition: 'background 0.12s',
               }}
             >
               <span>{ar ? currencyNamesAr[code] ?? code : code}</span>
-              <span style={{ fontSize: '0.7rem', color: C.textMuted, fontFamily: F }}>
+              <span style={{ fontSize: '0.7rem', color: var(--muted-foreground), fontFamily: F }}>
                 {CurrencyService.getInstance().getSymbol(code)}
               </span>
             </button>
@@ -154,15 +154,15 @@ export function OnlineToggle({ ar }: { ar: boolean }) {
         height: 34,
         padding: '0 12px',
         borderRadius: R.full,
-        background: online ? C.greenDim : C.card,
-        border: `1.5px solid ${online ? `${C.green}66` : C.border}`,
+        background: online ? C.greenDim : var(--card),
+        border: `1.5px solid ${online ? `${C.green}66` : var(--border)}`,
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
         gap: 6,
         fontSize: '0.72rem',
         fontWeight: 700,
-        color: online ? C.green : C.textMuted,
+        color: online ? C.green : var(--muted-foreground),
         fontFamily: F,
         transition: 'all 0.2s',
       }}
@@ -172,7 +172,7 @@ export function OnlineToggle({ ar }: { ar: boolean }) {
           width: 8,
           height: 8,
           borderRadius: '50%',
-          background: online ? C.green : C.textMuted,
+          background: online ? C.green : var(--muted-foreground),
           boxShadow: online ? `0 0 8px ${C.green}` : 'none',
           flexShrink: 0,
           transition: 'all 0.2s',
@@ -213,15 +213,15 @@ export function LangToggle() {
           height: 34,
           padding: '0 10px',
           borderRadius: R.md,
-          background: open ? C.cyanDim : C.card,
-          border: `1px solid ${open ? C.borderHov : C.border}`,
+          background: open ? C.cyanDim : var(--card),
+          border: `1px solid ${open ? var(--border) : var(--border)}`,
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           gap: 6,
           fontSize: '0.75rem',
           fontWeight: 700,
-          color: open ? C.text : C.textSub,
+          color: open ? var(--foreground) : var(--muted-foreground),
           fontFamily: F,
           transition: 'all 0.14s',
         }}
@@ -253,9 +253,9 @@ export function LangToggle() {
             top: 'calc(100% + 8px)',
             insetInlineEnd: 0,
             width: 180,
-            background: C.bg,
+            background: var(--background),
             backdropFilter: 'blur(24px)',
-            border: `1px solid ${C.border}`,
+            border: `1px solid ${var(--border)}`,
             borderRadius: 14,
             boxShadow: '0 16px 48px rgba(8,29,57,0.7)',
             overflow: 'hidden',
@@ -268,7 +268,7 @@ export function LangToggle() {
               padding: '8px 12px 4px',
               fontSize: '0.6rem',
               fontWeight: 700,
-              color: C.textMuted,
+              color: var(--muted-foreground),
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               fontFamily: F,
@@ -294,7 +294,7 @@ export function LangToggle() {
                 cursor: 'pointer',
                 fontSize: '0.82rem',
                 fontWeight: language === lang.code ? 700 : 500,
-                color: language === lang.code ? C.text : C.textSub,
+                color: language === lang.code ? var(--foreground) : var(--muted-foreground),
                 fontFamily: F,
                 transition: 'background 0.12s',
               }}
@@ -303,7 +303,7 @@ export function LangToggle() {
                 {lang.flag}
               </span>
               <span>{ar ? lang.labelAr : lang.label}</span>
-              <span style={{ marginLeft: 'auto', fontSize: '0.7rem', color: C.textMuted }}>
+              <span style={{ marginLeft: 'auto', fontSize: '0.7rem', color: var(--muted-foreground) }}>
                 {ar ? lang.label : lang.labelAr}
               </span>
             </button>

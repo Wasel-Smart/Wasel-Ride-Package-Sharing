@@ -170,7 +170,7 @@ export function FindRideTripDetailModal({
         style={{
           position: 'fixed',
           inset: 0,
-          background: C.overlay,
+          background: rgba(0,0,0,0.5),
           backdropFilter: 'blur(6px)',
           zIndex: 2000,
           display: 'flex',

@@ -390,7 +390,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
               lineHeight: TYPE.lineHeight.relaxed,
             }}
           >
-            <strong style={{ color: C.textSub }}>{unlockLabel}</strong>{' '}
+            <strong style={{ color: var(--muted-foreground) }}>{unlockLabel}</strong>{' '}
             {ar
               ? 'نُبقي تجربة واصل قابلة للاستكشاف قبل تسجيل الدخول، لكن الحجوزات والبيانات الشخصية والإجراءات الحساسة تبقى خلف الحساب.'
               : 'Wasel stays explorable before sign-in, but bookings, personal data, and sensitive actions stay behind your account.'}

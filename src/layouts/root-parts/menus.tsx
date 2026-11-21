@@ -47,7 +47,7 @@ export function NavDropdown({
         top: 'calc(100% + 10px)',
         ...posStyle,
         background: 'rgba(8,22,35,0.98)',
-        border: `1px solid ${C.border}`,
+        border: `1px solid ${var(--border)}`,
         borderRadius: 18,
         boxShadow: '0 24px 64px rgba(8,29,57,0.65)',
         padding: 12,
@@ -79,8 +79,8 @@ export function NavDropdown({
             gap: 4,
             padding: '11px 13px',
             borderRadius: 12,
-            background: C.card,
-            border: `1px solid ${C.borderFaint}`,
+            background: var(--card),
+            border: `1px solid ${var(--border)}`,
             cursor: 'pointer',
             textAlign: ar ? 'right' : 'left',
             transition: 'all 0.14s ease',
@@ -99,10 +99,10 @@ export function NavDropdown({
             />
             {item.badge && <Badge label={ar && item.badge === 'LIVE' ? 'مباشر' : item.badge} color={item.color} />}
           </div>
-          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: C.text, fontFamily: F }}>
+          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: var(--foreground), fontFamily: F }}>
             {ar ? item.labelAr : item.label}
           </div>
-          <div style={{ fontSize: '0.7rem', color: C.textMuted, fontFamily: F, lineHeight: 1.4 }}>
+          <div style={{ fontSize: '0.7rem', color: var(--muted-foreground), fontFamily: F, lineHeight: 1.4 }}>
             {ar ? item.descAr : item.desc}
           </div>
         </button>
@@ -161,8 +161,8 @@ export function UserMenu({
           gap: 8,
           padding: '5px 12px 5px 5px',
           borderRadius: 9999,
-          background: open ? C.cyanDim : C.card,
-          border: `1px solid ${open ? C.borderHov : C.border}`,
+          background: open ? C.cyanDim : var(--card),
+          border: `1px solid ${open ? var(--border) : var(--border)}`,
           cursor: 'pointer',
           transition: 'all 0.15s',
         }}
@@ -179,7 +179,7 @@ export function UserMenu({
             justifyContent: 'center',
             fontSize: '0.68rem',
             fontWeight: 800,
-            color: C.bg,
+            color: var(--background),
             flexShrink: 0,
           }}
         >
@@ -189,7 +189,7 @@ export function UserMenu({
           style={{
             fontSize: '0.82rem',
             fontWeight: 600,
-            color: C.text,
+            color: var(--foreground),
             fontFamily: F,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -209,7 +209,7 @@ export function UserMenu({
             insetInlineEnd: 0,
             width: 272,
             background: 'rgba(8,22,35,0.98)',
-            border: `1px solid ${C.border}`,
+            border: `1px solid ${var(--border)}`,
             borderRadius: 16,
             boxShadow: '0 24px 64px rgba(8,29,57,0.75)',
             overflow: 'hidden',
@@ -221,13 +221,13 @@ export function UserMenu({
             style={{
               padding: '14px 16px',
               background: 'linear-gradient(180deg, rgba(88,221,255,0.08), rgba(11,29,45,0.18))',
-              borderBottom: `1px solid ${C.border}`,
+              borderBottom: `1px solid ${var(--border)}`,
             }}
           >
-            <div style={{ fontWeight: 700, color: C.text, fontSize: '0.875rem', fontFamily: F }}>
+            <div style={{ fontWeight: 700, color: var(--foreground), fontSize: '0.875rem', fontFamily: F }}>
               {user.name}
             </div>
-            <div style={{ fontSize: '0.68rem', color: C.textMuted, fontFamily: F, marginTop: 1 }}>
+            <div style={{ fontSize: '0.68rem', color: var(--muted-foreground), fontFamily: F, marginTop: 1 }}>
               {user.email}
             </div>
             <div
@@ -235,26 +235,26 @@ export function UserMenu({
                 display: 'flex',
                 gap: 0,
                 marginTop: 12,
-                background: C.card,
+                background: var(--card),
                 borderRadius: 10,
                 overflow: 'hidden',
-                border: `1px solid ${C.borderFaint}`,
+                border: `1px solid ${var(--border)}`,
               }}
             >
               <div
                 style={{
                   flex: 1,
                   padding: '8px 12px',
-                  borderInlineEnd: `1px solid ${C.borderFaint}`,
+                  borderInlineEnd: `1px solid ${var(--border)}`,
                 }}
               >
-                <div style={{ fontSize: '1rem', fontWeight: 900, color: C.text, fontFamily: F }}>
+                <div style={{ fontSize: '1rem', fontWeight: 900, color: var(--foreground), fontFamily: F }}>
                   {user.trips}
                 </div>
                 <div
                   style={{
                     fontSize: '0.58rem',
-                    color: C.textMuted,
+                    color: var(--muted-foreground),
                     fontFamily: F,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
@@ -270,7 +270,7 @@ export function UserMenu({
                 <div
                   style={{
                     fontSize: '0.58rem',
-                    color: C.textMuted,
+                    color: var(--muted-foreground),
                     fontFamily: F,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
@@ -300,7 +300,7 @@ export function UserMenu({
                 textAlign: ar ? 'right' : 'left',
                 fontSize: '0.82rem',
                 fontWeight: 500,
-                color: C.textSub,
+                color: var(--muted-foreground),
                 fontFamily: F,
                 cursor: 'pointer',
               }}
@@ -309,7 +309,7 @@ export function UserMenu({
               {item.label}
             </button>
           ))}
-          <div style={{ height: 1, background: C.borderFaint, margin: '0 16px' }} />
+          <div style={{ height: 1, background: var(--border), margin: '0 16px' }} />
           <button
             onClick={() => {
               onSignOut();
@@ -383,8 +383,8 @@ export function MobileDrawer({
           width: 300,
           height: '100dvh',
           minHeight: '-webkit-fill-available',
-          background: C.bg,
-          borderInlineStart: `1px solid ${C.border}`,
+          background: var(--background),
+          borderInlineStart: `1px solid ${var(--border)}`,
           boxShadow: ar ? '20px 0 60px rgba(8,29,57,0.7)' : '-20px 0 60px rgba(8,29,57,0.7)',
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
@@ -398,7 +398,7 @@ export function MobileDrawer({
         <div
           style={{
             padding: '16px 20px',
-            borderBottom: `1px solid ${C.borderFaint}`,
+            borderBottom: `1px solid ${var(--border)}`,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -410,13 +410,13 @@ export function MobileDrawer({
             onClick={() => { void onClose(); }}
             aria-label={ar ? 'إغلاق القائمة' : 'Close menu'}
             style={{
-              background: C.card,
-              border: `1px solid ${C.borderFaint}`,
+              background: var(--card),
+              border: `1px solid ${var(--border)}`,
               borderRadius: R.md,
               width: 32,
               height: 32,
               cursor: 'pointer',
-              color: C.textSub,
+              color: var(--muted-foreground),
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -428,7 +428,7 @@ export function MobileDrawer({
         <div
           style={{
             padding: '10px 20px',
-            borderBottom: `1px solid ${C.borderFaint}`,
+            borderBottom: `1px solid ${var(--border)}`,
             display: 'flex',
             gap: 8,
             alignItems: 'center',
@@ -442,13 +442,13 @@ export function MobileDrawer({
             style={{
               padding: '14px 20px',
               background: 'linear-gradient(180deg, rgba(88,221,255,0.08), rgba(11,29,45,0.18))',
-              borderBottom: `1px solid ${C.borderFaint}`,
+              borderBottom: `1px solid ${var(--border)}`,
             }}
           >
-            <div style={{ fontWeight: 700, color: C.text, fontFamily: F, fontSize: '0.9rem' }}>
+            <div style={{ fontWeight: 700, color: var(--foreground), fontFamily: F, fontSize: '0.9rem' }}>
               {user.name}
             </div>
-            <div style={{ fontSize: '0.72rem', color: C.textMuted, fontFamily: F }}>
+            <div style={{ fontSize: '0.72rem', color: var(--muted-foreground), fontFamily: F }}>
               {user.email}
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
@@ -462,13 +462,13 @@ export function MobileDrawer({
             group => (
               <div
                 key={group.id}
-                style={{ padding: '12px 20px', borderBottom: `1px solid ${C.borderFaint}` }}
+                style={{ padding: '12px 20px', borderBottom: `1px solid ${var(--border)}` }}
               >
                 <div
                   style={{
                     fontSize: '0.6rem',
                     fontWeight: 700,
-                    color: C.textMuted,
+                    color: var(--muted-foreground),
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     marginBottom: 8,
@@ -512,7 +512,7 @@ export function MobileDrawer({
                         style={{
                           fontSize: '0.875rem',
                           fontWeight: 700,
-                          color: C.text,
+                          color: var(--foreground),
                           fontFamily: F,
                         }}
                       >
@@ -521,7 +521,7 @@ export function MobileDrawer({
                       <span
                         style={{
                           fontSize: '0.72rem',
-                          color: C.textMuted,
+                          color: var(--muted-foreground),
                           fontFamily: F,
                           lineHeight: 1.5,
                         }}
@@ -575,7 +575,7 @@ export function MobileDrawer({
                         style={{
                           fontSize: '0.84rem',
                           fontWeight: 500,
-                          color: C.textSub,
+                          color: var(--muted-foreground),
                           fontFamily: F,
                         }}
                       >
@@ -590,7 +590,7 @@ export function MobileDrawer({
           )}
         </div>
         <div
-          style={{ padding: '16px 20px', flexShrink: 0, borderTop: `1px solid ${C.borderFaint}` }}
+          style={{ padding: '16px 20px', flexShrink: 0, borderTop: `1px solid ${var(--border)}` }}
         >
           <SocialLinks ar={ar} variant="drawer" />
           {user ? (
@@ -603,7 +603,7 @@ export function MobileDrawer({
                 width: '100%',
                 height: 42,
                 borderRadius: R.md,
-                background: C.errorDim,
+                background: var(--destructive),
                 border: `1px solid ${C.error}55`,
                 color: C.error,
                 fontWeight: 700,
@@ -625,8 +625,8 @@ export function MobileDrawer({
                   height: 42,
                   borderRadius: R.md,
                   background: 'transparent',
-                  border: `1.5px solid ${C.border}`,
-                  color: C.text,
+                  border: `1.5px solid ${var(--border)}`,
+                  color: var(--foreground),
                   fontWeight: 600,
                   fontFamily: F,
                   fontSize: '0.875rem',
@@ -645,7 +645,7 @@ export function MobileDrawer({
                   borderRadius: R.md,
                   background: GRAD,
                   border: 'none',
-                  color: C.bg,
+                  color: var(--background),
                   fontWeight: 700,
                   fontFamily: F,
                   fontSize: '0.875rem',
