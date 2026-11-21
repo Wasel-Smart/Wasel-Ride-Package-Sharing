@@ -16,6 +16,7 @@ import {
 import { WaselButton, WaselLogo } from '../../components/wasel-ui';
 import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
 import { tx } from '../../locales/tx';
+import styles from './MobilityOSPage.module.css';
 
 type Accent = 'cyan' | 'green' | 'gold' | 'purple';
 type UnitType = 'ride' | 'package' | 'bus';
