@@ -334,7 +334,7 @@ input[type='submit'] {
 }
 
 /* ── LIGHT THEME ─────────────────────────────────────────────────────────── */
-.light {
+[data-theme="light"] {
   --background: #f5fbff;
   --foreground: #081523;
   --card: #ffffff;
@@ -408,71 +408,71 @@ input[type='submit'] {
 }
 
 /* ── Light mode overrides for sidebar ───────────────────────────────────── */
-.light .sidebar-glass {
+[data-theme="light"] .sidebar-glass {
   background: var(--wasel-sidebar-bg);
   border-right: 1px solid var(--wasel-sidebar-border);
   box-shadow: 4px 0 24px rgba(8, 29, 57, 0.06);
 }
 
-.light .sidebar-item {
+[data-theme="light"] .sidebar-item {
   color: var(--wasel-sidebar-text);
 }
 
-.light .sidebar-item:hover {
+[data-theme="light"] .sidebar-item:hover {
   background: var(--wasel-sidebar-item-hover);
   color: #081d39;
 }
 
-.light .sidebar-item.active {
+[data-theme="light"] .sidebar-item.active {
   background: var(--wasel-sidebar-item-active);
   color: var(--wasel-sidebar-active-text);
 }
 
-.light .sidebar-item.active::before {
+[data-theme="light"] .sidebar-item.active::before {
   background: var(--wasel-sidebar-active-rail);
 }
 
-.light .sidebar-divider {
+[data-theme="light"] .sidebar-divider {
   background: linear-gradient(90deg, transparent, rgba(8, 29, 57, 0.06), transparent);
 }
 
-.light .sidebar-section-label {
+[data-theme="light"] .sidebar-section-label {
   color: rgba(100, 116, 139, 1);
 }
 
 /* ── Light mode glass & cards ────────────────────────────────────────────── */
-.light .glass {
+[data-theme="light"] .glass {
   background: rgba(255, 255, 255, 0.75);
   border: 1px solid rgba(8, 29, 57, 0.08);
 }
 
-.light .glass-card {
+[data-theme="light"] .glass-card {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(8, 29, 57, 0.06);
   box-shadow: 0 4px 24px rgba(8, 29, 57, 0.07);
 }
 
-.light .wasel-card {
+[data-theme="light"] .wasel-card {
   background: linear-gradient(145deg, #ffffff 0%, #f5fbff 100%);
   border: 1px solid rgba(8, 29, 57, 0.07);
   box-shadow: 0 4px 24px rgba(8, 29, 57, 0.06);
 }
 
-.light .input-premium {
+[data-theme="light"] .input-premium {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(8, 29, 57, 0.12);
   color: #081d39;
 }
 
-.light .input-premium::placeholder {
+[data-theme="light"] .input-premium::placeholder {
   color: rgba(100, 116, 139, 1);
 }
 
-.light .skeleton-base {
+[data-theme="light"] .skeleton-base {
   background: rgba(241, 245, 249, 0.9);
 }
 
-.light .skeleton-base::after {
+[data-theme="light"] .skeleton-base::after {
   background: linear-gradient(90deg,
       transparent 0%,
       rgba(255, 255, 255, 0.6) 40%,
@@ -481,54 +481,54 @@ input[type='submit'] {
       transparent 100%);
 }
 
-.light .skeleton-ride-card {
+[data-theme="light"] .skeleton-ride-card {
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 /* ── Light mode pill badges ──────────────────────────────────────────────── */
-.light .pill-teal {
+[data-theme="light"] .pill-teal {
   background: rgba(3, 105, 161, 0.08);
   color: #035a8a;
   border-color: rgba(3, 105, 161, 0.22);
 }
 
-.light .pill-green {
+[data-theme="light"] .pill-green {
   background: rgba(63, 110, 6, 0.08);
   color: #3f6e06;
   border-color: rgba(63, 110, 6, 0.22);
 }
 
-.light .pill-bronze,
-.light .pill-amber {
+[data-theme="light"] .pill-bronze,
+[data-theme="light"] .pill-amber {
   background: rgba(194, 87, 10, 0.08);
   color: #a24d00;
   border-color: rgba(194, 87, 10, 0.24);
 }
 
-.light .pill-pink {
+[data-theme="light"] .pill-pink {
   background: rgba(194, 24, 49, 0.07);
   color: #b4142c;
   border-color: rgba(194, 24, 49, 0.22);
 }
 
-.light .pill-slate {
+[data-theme="light"] .pill-slate {
   background: rgba(241, 245, 249, 0.8);
   color: #64748b;
   border-color: rgba(15, 23, 42, 0.1);
 }
 
 /* ── Light mode step progress ────────────────────────────────────────────── */
-.light .step-progress-track {
+[data-theme="light"] .step-progress-track {
   background: rgba(15, 23, 42, 0.08);
 }
 
 /* ── Light mode scrollbar ────────────────────────────────────────────────── */
-.light .scrollbar-thin {
+[data-theme="light"] .scrollbar-thin {
   scrollbar-color: #cbd5e1 transparent;
 }
 
-.light .scrollbar-thin::-webkit-scrollbar-thumb {
+[data-theme="light"] .scrollbar-thin::-webkit-scrollbar-thumb {
   background: #cbd5e1;
 }
 
@@ -569,41 +569,41 @@ input[type='submit'] {
 }
 
 /* ── Surface utility classes (light overrides) ───────────────────────────── */
-.light .surface-0 {
+[data-theme="light"] .surface-0 {
   background: var(--wasel-surface-0);
 }
 
-.light .surface-1 {
+[data-theme="light"] .surface-1 {
   background: var(--wasel-surface-1);
 }
 
-.light .surface-2 {
+[data-theme="light"] .surface-2 {
   background: var(--wasel-surface-2);
 }
 
-.light .surface-3 {
+[data-theme="light"] .surface-3 {
   background: var(--wasel-surface-3);
 }
 
 /* ── Light mode: modal / dialog overrides ────────────────────────────────── */
-.light .modal-overlay {
+[data-theme="light"] .modal-overlay {
   background: rgba(6, 15, 30, 0.45);
 }
 
 /* ── Light mode: page/card defaults ──────────────────────────────────────── */
-.light body {
+[data-theme="light"] body {
   background-color: var(--wasel-surface-0);
   color: var(--foreground);
 }
 
 /* ── Light mode btn-primary ─────────────────────────────────────────────── */
-.light .btn-wasel-primary {
+[data-theme="light"] .btn-wasel-primary {
   background: linear-gradient(135deg, #00E5FF 0%, #38beff 55%, #32d8a6 100%);
   color: #081d39;
 }
 
 /* ── Logo / brand mark light mode overrides ──────────────────────────────── */
-.light .wasel-mark-core {
+[data-theme="light"] .wasel-mark-core {
   background: linear-gradient(135deg, #e8f7f9 0%, #ffffff 100%) !important;
 }
 

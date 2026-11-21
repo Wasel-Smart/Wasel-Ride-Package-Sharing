@@ -171,7 +171,7 @@ export type AdminClient = ReturnType<typeof getAdminClient>;
 /**
  * Row shape of the canonical `public.users` record that every request resolves
  * to. Typed explicitly so that `authenticateRequest` returns a properly
- * discriminated union â€” without it, `'error' in auth` cannot narrow and every
+ * discriminated union — without it, `'error' in auth` cannot narrow and every
  * caller's `auth.error` becomes `Response | undefined`.
  */
 export interface CanonicalUserRow {
@@ -624,14 +624,21 @@ export function enforceRequestSecurity ( request: Request, path: string ): Respo
   return null;
 }
 
+// Module-level singleton — avoids creating a new HTTP connection pool on every
+// request.  Deno edge functions share module state across invocations within the
+// same isolate, so this is safe and strongly recommended by the Supabase docs.
+let _adminClientSingleton: ReturnType<typeof createClient> | null = null;
+
 export function getAdminClient () {
   if ( !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY ) {
     throw new Error( 'SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not configured' );
   }
-
-  return createClient( SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  } );
+  if ( !_adminClientSingleton ) {
+    _adminClientSingleton = createClient( SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    } );
+  }
+  return _adminClientSingleton;
 }
 
 /**
@@ -2773,7 +2780,7 @@ export function cityCoord ( city: string | null | undefined ) {
 // ── Provider webhook signature verification ───────────────────────────────────────────────────────
 // Replaces URL-token-only authentication for Resend and Twilio delivery
 // receipts. The token-in-URL pattern is replayable, gets logged by proxies/CDNs,
-// and was previously leaked from this repo (see docs/SECURITY.md â†’ rotate
+// and was previously leaked from this repo (see docs/SECURITY.md → rotate
 // `COMMUNICATION_WEBHOOK_TOKEN`).
 
 function bytesToBase64 ( bytes: Uint8Array ): string {
