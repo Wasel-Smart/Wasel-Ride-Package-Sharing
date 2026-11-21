@@ -111,10 +111,6 @@ const MAX_WALLET_TOPUP_JOD = 2000;
 const MAX_WALLET_AUTO_TOPUP_THRESHOLD_JOD = 1000;
 const PIN_MAX_ATTEMPTS = 5;
 const PIN_LOCKOUT_SECONDS = 15 * 60;
-// A wallet with no PIN has no second factor on money-out. Until a PIN is set, a
-// stolen session may move only a small amount per request; larger transfers and
-// withdrawals require the owner to set a PIN first.
-const MAX_NO_PIN_MONEY_OUT_JOD = 25;
 // New and existing PINs may be 4 or 6 digits. Existing 4-digit PINs keep working;
 // 6 digits raises the guess space 100x for users who opt in.
 const PIN_PATTERN = /^\d{4}(?:\d{2})?$/;
@@ -134,11 +130,9 @@ export type IdempotencyKeyResult =
  * Reads the client's idempotency key for a money-out request.
  *
  * The key travels in the JSON body (not a header) so it needs no CORS allow-list
- * change. A missing key is tolerated until WALLET_REQUIRE_IDEMPOTENCY_KEY=true is
- * set, which lets older clients keep working while the rollout completes; a
- * malformed key is always rejected.
+ * change. A missing key is now required for all money-out operations.
  */
-export function parseWalletIdempotencyKey ( raw: unknown, required = false ): IdempotencyKeyResult {
+export function parseWalletIdempotencyKey ( raw: unknown, required = true ): IdempotencyKeyResult {
   if ( raw === undefined || raw === null || raw === '' ) {
     return required
       ? { ok: false, response: json( { error: 'An idempotency key is required for this request.', code: 'IDEMPOTENCY_KEY_REQUIRED' }, 400 ) }
@@ -154,7 +148,7 @@ export function parseWalletIdempotencyKey ( raw: unknown, required = false ): Id
 /**
  * Legacy PINs were stored as a single unsalted SHA-256. verifyWalletPinHash still
  * accepts them, so once a correct PIN has been presented, re-hash it with PBKDF2.
- * Best effort: an upgrade failure must never fail the operation that triggered it.
+ * This is now mandatory — a failed upgrade fails the operation.
  */
 async function upgradeLegacyPinHash (
   admin: Parameters<typeof consumeRateLimit>[ 0 ],
@@ -163,14 +157,10 @@ async function upgradeLegacyPinHash (
   pin: string,
 ): Promise<void> {
   if ( !storedHash || String( storedHash ).startsWith( 'pbkdf2_sha256$' ) ) {return;}
-  try {
-    await admin
-      .from( 'wallets' )
-      .update( { pin_hash: await hashWalletPin( pin ), updated_at: new Date().toISOString() } )
-      .eq( 'user_id', userId );
-  } catch ( error ) {
-    console.warn( '[wallet] legacy PIN hash upgrade skipped', error instanceof Error ? error.message : String( error ) );
-  }
+  await admin
+    .from( 'wallets' )
+    .update( { pin_hash: await hashWalletPin( pin ), updated_at: new Date().toISOString() } )
+    .eq( 'user_id', userId );
 }
 
 function walletOperationFailed ( scope: string, error: unknown ): Response {
@@ -198,16 +188,13 @@ export async function enforceWalletPin (
   amountJod = 0,
 ): Promise<Response | null> {
   if ( !wallet.pin_hash ) {
-    if ( amountJod > MAX_NO_PIN_MONEY_OUT_JOD ) {
-      return json(
-        {
-          error: `Set a wallet PIN to move more than JOD ${ MAX_NO_PIN_MONEY_OUT_JOD } at a time.`,
-          code: 'PIN_SETUP_REQUIRED',
-        },
-        403,
-      );
-    }
-    return null;
+    return json(
+      {
+        error: 'A wallet PIN is required for all money-out operations. Please set a PIN first.',
+        code: 'PIN_SETUP_REQUIRED',
+      },
+      403,
+    );
   }
 
   const pin = typeof rawPin === 'string' ? rawPin.trim() : '';
@@ -251,6 +238,9 @@ export async function handleWalletWithdraw ( request: Request, requestedUserId: 
   // Limit withdrawal requests to 5 per hour per user to prevent queue flooding.
   const throttled = await consumeRateLimit( auth.admin, `wallet-withdraw:${ auth.canonicalUser.id }`, 5, { windowSeconds: 3600, failClosed: true } );
   if ( throttled ) {return throttled;}
+
+  const idempotency = parseWalletIdempotencyKey( body.idempotencyKey, true );
+  if ( !idempotency.ok ) {return idempotency.response;}
 
   try {
     const wallet = await ensureWalletForUser( auth.admin, auth.canonicalUser.id );
@@ -315,10 +305,7 @@ export async function handleWalletSend ( request: Request, requestedUserId: stri
   if ( amountJod > MAX_WALLET_SEND_JOD ) {
     return json( { error: `Transfers are limited to JOD ${ MAX_WALLET_SEND_JOD } per request.` }, 400 );
   }
-  const idempotency = parseWalletIdempotencyKey(
-    body.idempotencyKey,
-    Deno.env.get( 'WALLET_REQUIRE_IDEMPOTENCY_KEY' ) === 'true',
-  );
+  const idempotency = parseWalletIdempotencyKey( body.idempotencyKey, true );
   if ( !idempotency.ok ) {return idempotency.response;}
 
   const throttled = await consumeRateLimit( auth.admin, `wallet-send:${ auth.canonicalUser.id }`, 20, { windowSeconds: 3600, failClosed: true } );

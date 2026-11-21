@@ -33,7 +33,8 @@ const WEBSITE_SCHEMA = {
     '@type': 'SearchAction',
     target: {
       '@type': 'EntryPoint',
-      urlTemplate: 'https://wasel14.online/find-ride?from={from}&to={to}&search=1',
+      // The public route explorer is the crawlable search surface.
+      urlTemplate: 'https://wasel14.online/app/routes?from={from}&to={to}',
     },
     'query-input': 'required name=from, name=to',
   },
@@ -85,12 +86,12 @@ const SERVICE_SCHEMA = {
 };
 
 function createBreadcrumbSchema(ar: boolean) {
+  // Only public, crawlable routes — mirrors public/robots.txt and sitemap.xml.
   const items = [
     { name: ar ? 'الرئيسية' : 'Home', url: 'https://wasel14.online' },
-    { name: ar ? 'الخدمات' : 'Services', url: 'https://wasel14.online/app/services' },
-    { name: ar ? 'البحث عن رحلة' : 'Find a Ride', url: 'https://wasel14.online/find-ride' },
-    { name: ar ? 'عرض المقاعد' : 'Offer Seats', url: 'https://wasel14.online/offer-ride' },
-    { name: ar ? 'إرسال طرد' : 'Send Package', url: 'https://wasel14.online/packages' },
+    { name: ar ? 'المسارات' : 'Routes', url: 'https://wasel14.online/app/routes' },
+    { name: ar ? 'مركز الثقة' : 'Trust Center', url: 'https://wasel14.online/trust' },
+    { name: ar ? 'الدعم' : 'Support', url: 'https://wasel14.online/app/support' },
   ];
 
   return {
@@ -165,14 +166,6 @@ export function StructuredData({ ar }: StructuredDataProps) {
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }}
         />
       ))}
-      <meta name="description" content={ar
-        ? 'وصل يربط الركاب والسائقين عبر مسارات مشتركة لتقليل التكلفة. احجز رحلة، اعرض مسارًا، أو انضم للشبكة في الأردن.'
-        : 'Wasel connects riders and drivers through shared routes to reduce cost. Book a ride, offer a route, or join the network across Jordan.'}
-      />
-      <meta name="keywords" content={ar
-        ? 'وصل، الأردن، تنقل، رحلات مشتركة، توصيل طرود، ركوب مشترك'
-        : 'Wasel, Jordan, mobility, ridesharing, package delivery, carpool, intercity rides'}
-      />
     </>
   );
 }

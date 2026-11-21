@@ -8,7 +8,8 @@ import { PrivilegedMfaGate } from './components/PrivilegedMfaGate';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
-import { C, F } from './utils/wasel-ds';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { F } from './utils/wasel-ds';
 
 import { validateRuntimeConfiguration } from './utils/env';
 import { DEFAULT_QUERY_OPTIONS } from './utils/performance/cacheStrategy';
@@ -40,17 +41,18 @@ function scheduleWhenIdle(callback: () => void): () => void {
 ---------------------------*/
 function BrandToaster() {
   const { dir } = useLanguage();
+  const { resolvedTheme } = useTheme();
 
   return (
     <Toaster
       position="bottom-center"
-      theme="dark"
+      theme={resolvedTheme}
       dir={dir}
       toastOptions={{
         style: {
-          background: C.cardSolid,
-          border: '1px solid rgba(0,229,255,0.25)',
-          color: C.text,
+          background: 'var(--card)',
+          border: '1px solid var(--border)',
+          color: 'var(--foreground)',
           fontFamily: F,
         },
       }}
@@ -63,12 +65,14 @@ function BrandToaster() {
 ---------------------------*/
 function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <PrivilegedMfaGate>{children}</PrivilegedMfaGate>
-        <BrandToaster />
-      </AuthProvider>
-    </LanguageProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <PrivilegedMfaGate>{children}</PrivilegedMfaGate>
+          <BrandToaster />
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }
 

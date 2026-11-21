@@ -16,6 +16,7 @@ import { useLocalAuth } from '../../contexts/LocalAuth';
 import { C, F, R, TYPE } from '../../utils/wasel-ds';
 import { PageShell, SectionCard } from '../../components/wasel-ui/WaselPagePrimitives';
 import { WaselEmptyState } from '../../components/wasel-ui/WaselEmptyState';
+import { ListSkeleton } from '../home/HomePageShared';
 import { ScheduleItemCard } from './ScheduleItemCard';
 
 export type ScheduleItem = {
@@ -589,12 +590,7 @@ export function SchedulePage() {
           title={t('scheduleExpanded.scheduling')}
           subtitle={t('scheduleExpanded.loadingYourSchedule')}
         >
-          <div style={{ textAlign: 'center', padding: '40px 20px', color: C.textMuted }}>
-            <Calendar size={32} color={C.textDim} />
-            <div style={{ marginTop: 12, fontFamily: F, fontSize: TYPE.size.base }}>
-              {t('scheduleExpanded.loading')}
-            </div>
-          </div>
+          <ListSkeleton count={3} />
         </SectionCard>
       ) : upcoming.length > 0 ? (
         <SectionCard title={t('scheduleExpanded.upcoming')} contentPadding="0">

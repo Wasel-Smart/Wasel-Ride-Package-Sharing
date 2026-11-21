@@ -8,6 +8,7 @@ export * from './CorridorsSection';
 export * from './ConversionSections';
 export * from './UtilitySections';
 export * from './LandingSections';
+export * from './LandingLegalFooter';
 export * from './StructuredData';
 export * from './TestimonialsSection';
 export * from './FinalCtaBanner';

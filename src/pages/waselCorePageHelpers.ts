@@ -359,7 +359,7 @@ export function validateOfferRideStep(form: OfferRideForm, targetStep: number, a
     if (form.seats < 1 || form.seats > 7) {
       return tr(ar, 'Seats should be between 1 and 7.', 'يجب أن يكون عدد المقاعد بين ١ و٧.');
     }
-    // NOTE: date and time are only required from step 2 onward (tests expect step 1 to pass without them)
+    // NOTE: date and time are only required from step 2 onward (tests expect step 1 to pass without them)
   }
 
   // Step 2: schedule details (date & time)

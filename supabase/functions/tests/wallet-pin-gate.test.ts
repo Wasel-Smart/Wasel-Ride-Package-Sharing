@@ -4,10 +4,8 @@
  * Run with:
  *   npm run test:edge -- wallet-pin-gate
  *
- * A wallet without a PIN has no second factor, so only small amounts may leave it
- * until the owner sets one. These tests cover the no-PIN branch, which needs no
- * database; the PIN-present branch is rate-limited in Postgres and is exercised
- * by the integration suite.
+ * All money-out operations now require a wallet PIN. These tests cover the
+ * PIN gate behavior after the security hardening that removed the no-PIN cap.
  *
  * `_handlers/shared.ts` reads its environment at module scope, so the variables it
  * needs are set before the first import (same pattern as payments.test.ts).
@@ -30,14 +28,18 @@ const untouchedAdmin = new Proxy({}, {
   },
 }) as unknown as Admin;
 
-Deno.test('enforceWalletPin — a small amount may leave a wallet that has no PIN', async () => {
+Deno.test('enforceWalletPin — a wallet without PIN is refused with PIN_SETUP_REQUIRED', async () => {
   const denied = await enforceWalletPin(untouchedAdmin, 'user-1', { pin_hash: null }, undefined, 10);
-  assertEquals(denied, null);
+  assertEquals(denied?.status, 403);
+  const body = await denied?.json();
+  assertEquals(body.code, 'PIN_SETUP_REQUIRED');
 });
 
-Deno.test('enforceWalletPin — setting the first PIN (amount 0) is allowed without one', async () => {
+Deno.test('enforceWalletPin — setting the first PIN (amount 0) requires a PIN', async () => {
   const denied = await enforceWalletPin(untouchedAdmin, 'user-1', { pin_hash: null }, undefined);
-  assertEquals(denied, null);
+  assertEquals(denied?.status, 403);
+  const body = await denied?.json();
+  assertEquals(body.code, 'PIN_SETUP_REQUIRED');
 });
 
 Deno.test('enforceWalletPin — a large amount from a wallet with no PIN is refused with PIN_SETUP_REQUIRED', async () => {
@@ -47,10 +49,11 @@ Deno.test('enforceWalletPin — a large amount from a wallet with no PIN is refu
   assertEquals(body.code, 'PIN_SETUP_REQUIRED');
 });
 
-Deno.test('enforceWalletPin — the cap is inclusive at JOD 25', async () => {
-  assertEquals(await enforceWalletPin(untouchedAdmin, 'user-1', { pin_hash: null }, undefined, 25), null);
-  const over = await enforceWalletPin(untouchedAdmin, 'user-1', { pin_hash: null }, undefined, 25.01);
-  assertEquals(over?.status, 403);
+Deno.test('enforceWalletPin — PIN is always required regardless of amount', async () => {
+  const denied = await enforceWalletPin(untouchedAdmin, 'user-1', { pin_hash: null }, undefined, 25);
+  assertEquals(denied?.status, 403);
+  const body = await denied?.json();
+  assertEquals(body.code, 'PIN_SETUP_REQUIRED');
 });
 
 Deno.test('enforceWalletPin — a wallet with a PIN refuses a missing or malformed PIN before any lookup', async () => {

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { RefreshCw, Users as UsersIcon } from 'lucide-react';
 import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
+import { WaselEmptyState } from '../../components/wasel-ui';
 import { getUsers, setUserStatus } from '../../services/adminApi';
 import { tx } from '../../locales/tx';
 import { C, R, SPACE, TYPE, card } from '../../utils/wasel-ds';
@@ -259,9 +260,11 @@ export function AdminUsersPage() {
               {tx('adminUsersPage.loading')}
             </div>
           ) : rows.length === 0 ? (
-            <div style={{ padding: SPACE[8], textAlign: 'center', color: C.textMuted }}>
-              {tx('adminUsersPage.empty')}
-            </div>
+            <WaselEmptyState
+              compact
+              icon={<UsersIcon size={36} />}
+              title={tx('adminUsersPage.empty')}
+            />
           ) : (
             <table style={tableStyles.table}>
               <thead>

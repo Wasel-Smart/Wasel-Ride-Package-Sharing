@@ -2,7 +2,7 @@
 import type * as CoreModule from '../core';
 import type * as BackendWorkflowModule from '../backendWorkflow';
 
-// â”€â”€ Hoisted mocks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Hoisted mocks ────────────────────────────────────────────────────────────
 
 const mocks = vi.hoisted(() => {
   const mockSignIn = vi.fn();
@@ -54,7 +54,7 @@ import { authAPI, redactAuthErrorText } from '../auth';
 import { getAuthDetails } from '../core';
 import { runBackendWorkflow } from '../backendWorkflow';
 
-// â”€â”€ redactAuthErrorText â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── redactAuthErrorText ──────────────────────────────────────────────────────
 
 describe('redactAuthErrorText', () => {
   it('returns empty string for undefined', () => {
@@ -95,7 +95,7 @@ describe('redactAuthErrorText', () => {
   });
 });
 
-// â”€â”€ authAPI.signIn â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── authAPI.signIn ────────────────────────────────────────────────────────────
 
 describe('authAPI.signIn', () => {
   afterEach(() => vi.clearAllMocks());
@@ -139,7 +139,7 @@ describe('authAPI.signIn', () => {
   });
 });
 
-// â”€â”€ authAPI.signUp â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── authAPI.signUp ────────────────────────────────────────────────────────────
 
 describe('authAPI.signUp', () => {
   afterEach(() => vi.clearAllMocks());
@@ -167,7 +167,7 @@ describe('authAPI.signUp', () => {
   });
 });
 
-// â”€â”€ authAPI.signOut â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── authAPI.signOut ──────────────────────────────────────────────────────────
 
 describe('authAPI.signOut', () => {
   it('resolves without error on success', async () => {
@@ -181,7 +181,7 @@ describe('authAPI.signOut', () => {
   });
 });
 
-// â”€â”€ authAPI.getSession â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── authAPI.getSession ────────────────────────────────────────────────────────
 
 describe('authAPI.getSession', () => {
   it('returns session data', async () => {
@@ -197,7 +197,7 @@ describe('authAPI.getSession', () => {
   });
 });
 
-// â”€â”€ authAPI.getProfile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── authAPI.getProfile ────────────────────────────────────────────────────────
 
 describe('authAPI.getProfile', () => {
   beforeEach(() => {
@@ -218,7 +218,7 @@ describe('authAPI.getProfile', () => {
   });
 });
 
-// â”€â”€ authAPI.updateProfile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── authAPI.updateProfile ────────────────────────────────────────────────────
 
 describe('authAPI.updateProfile', () => {
   it('returns success:true with profile on success', async () => {
@@ -235,3 +235,4 @@ describe('authAPI.updateProfile', () => {
     expect((result as { success: false; error: string }).error).toContain('DB error');
   });
 });
+

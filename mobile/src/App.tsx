@@ -8,6 +8,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { queryClient } from './lib/queryClient';
 import { waselMobileConfig } from './lib/config';
 import { AuthProvider } from './providers/AuthProvider';
+import { WaselThemeProvider, useTheme } from './providers/ThemeProvider';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { AppNavigator } from './navigation/AppNavigator';
 import { navigationRef } from './navigation/ref';
@@ -98,33 +99,42 @@ const App = () => {
         urlScheme={APP_SCHEME}
       >
         <SafeAreaProvider>
-          <MobileErrorBoundary>
-            <LanguageProvider>
-              <RTLProvider>
-                <AuthProvider>
-                  <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-                    <StatusBar backgroundColor={colors.bg} barStyle="light-content" />
-                    <OfflineBanner />
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    <NavigationContainer linking={linking} fallback={<View style={{ flex: 1, backgroundColor: colors.bg }} />} {...({ ref: navigationRef } as any)}>
-                      <AppNavigator />
-                    </NavigationContainer>
-                  </SafeAreaView>
-                </AuthProvider>
-              </RTLProvider>
-            </LanguageProvider>
-          </MobileErrorBoundary>
+          <WaselThemeProvider>
+            <MobileErrorBoundary>
+              <LanguageProvider>
+                <RTLProvider>
+                  <AuthProvider>
+                    <AppShell linking={linking} />
+                  </AuthProvider>
+                </RTLProvider>
+              </LanguageProvider>
+            </MobileErrorBoundary>
+          </WaselThemeProvider>
         </SafeAreaProvider>
       </StripeProvider>
     </QueryClientProvider>
   );
 };
 
+/** Inner shell — lives inside WaselThemeProvider so it can call useTheme(). */
+function AppShell({ linking }: { linking: Parameters<typeof NavigationContainer>[0]['linking'] }) {
+  const { colors: themeColors, isDark } = useTheme();
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.bg }} edges={['top', 'left', 'right']}>
+      <StatusBar
+        backgroundColor={themeColors.bg}
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+      />
+      <OfflineBanner />
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      <NavigationContainer linking={linking} fallback={<View style={{ flex: 1, backgroundColor: themeColors.bg }} />} {...({ ref: navigationRef } as any)}>
+        <AppNavigator />
+      </NavigationContainer>
+    </SafeAreaView>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
   configurationError: {
     flex: 1,
     alignItems: 'center',

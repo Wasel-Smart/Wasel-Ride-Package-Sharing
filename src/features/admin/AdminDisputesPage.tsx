@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
+import { WaselEmptyState } from '../../components/wasel-ui';
 import { getDisputes, resolveDispute } from '../../services/adminApi';
 import { tx } from '../../locales/tx';
 import { C, R, SPACE, TYPE, card } from '../../utils/wasel-ds';
@@ -275,9 +276,11 @@ export function AdminDisputesPage() {
               {tx('adminDisputesPage.loading')}
             </div>
           ) : rows.length === 0 ? (
-            <div style={{ padding: SPACE[8], textAlign: 'center', color: C.textMuted }}>
-              {tx('adminDisputesPage.empty')}
-            </div>
+            <WaselEmptyState
+              compact
+              icon={<AlertTriangle size={36} />}
+              title={tx('adminDisputesPage.empty')}
+            />
           ) : (
             <table style={tableStyles.table}>
               <thead>

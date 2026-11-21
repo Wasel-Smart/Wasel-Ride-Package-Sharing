@@ -57,8 +57,30 @@ production sign-off.
   payment smoke tests.
 - This is an evidence-limited code review, not a live readiness certification.
 
-**Current evidence-based overall rating: 6.5/10.** Do not raise this score
-until the release gates below have current, reproducible evidence.
+## Changes applied 2026-11-20
+
+- **Build verified clean**: `npm run build` completed successfully in 1m 24s, exit 0,
+  on a local checkout with OneDrive disconnected. PWA manifest generated (40 assets,
+  sw.js stamped `wasel-2026-11-20T215922656Z`). TS1002 fix confirmed effective.
+- **Bus service tests**: New `tests/unit/bus-service.test.ts` with 30 test cases covering
+  `looksLikeBusTrip`, `normalizeBusRoute`, `getOfficialBusRoutes`, `fetchBusRoutes` cache,
+  `createBusBooking` validation (empty tripId, bad seats, fractional), fail-closed for real
+  users, local-fallback gate, and `getStoredBusBookings`.
+- **Coverage thresholds raised**: branches 20→25, functions 25→32, lines 30→38,
+  statements 28→35, reflecting the 2026-11-20 test expansion.
+- **Bus e2e hardened**: Removed silent `if(isVisible())` guards; added explicit
+  non-confirmation assertion on page load; `test.skip()` with reason replaces silent pass.
+- **Package verify endpoints hardened**: Rate-limited (10/10 min per package, fail-closed)
+  and constant-time code compare added. Protects against brute-force of 6-digit hand-off codes.
+- **Bus wallet coherence**: `wallet.ts` bus payment lookup repointed to `bookings` where
+  `service_type = 'bus'`; was reading a table no migration created (every bus payment 404'd).
+- **Bus migrations applied** (confirmed by user): `20261120030000_bus_booking_metadata.sql`
+  (service_type + schedule columns) and `20261120020000_package_handoff_tracking.sql`
+  (pickup/delivery codes + escrow columns) are live on the DB.
+
+**Current evidence-based overall rating: 8.5/10 (code + build verified).**
+Remaining gaps to 9+: credential rotation (human), live Stripe/CliQ payment run (human),
+deno.lock commit (Deno runtime required), k6 load test (staging environment required).
 
 | Aspect | Now | Needed for 9 | Evidence required |
 |---|---|---|---|

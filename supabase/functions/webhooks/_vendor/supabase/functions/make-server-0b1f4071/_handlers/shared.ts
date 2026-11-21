@@ -1,4 +1,4 @@
-// GENERATED FILE — DO NOT EDIT.
+﻿// GENERATED FILE — DO NOT EDIT.
 // Vendored from supabase/functions/make-server-0b1f4071/_handlers/shared.ts
 // by scripts/prepare-edge-bundles.mjs so that this function is a closed,
 // self-contained module graph. Edit the source of truth instead.
@@ -52,7 +52,7 @@ import {
 } from '../_shared/pure-helpers.ts';
 
 
-// â”€â”€ Runtime barrel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Runtime barrel ───────────────────────────────────────────────────────────
 // Every handler module imports its helpers from './shared.ts', so this module
 // re-exports the pure runtimes from ../_shared/ as well. Keeping the barrel
 // here means a handler never has to know whether a helper lives in shared.ts or
@@ -220,7 +220,7 @@ export type AuthResult = AuthFailure | AuthSuccess;
 const CANONICAL_USER_COLUMNS =
   'id, auth_user_id, email, phone_number, full_name, role, verification_level, phone_verified_at, profile_status, updated_at';
 
-// â”€â”€ Domain limits and messages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Domain limits and messages ───────────────────────────────────────────────
 // A pending driver-document review that never resolves would leave the trust
 // surface permanently in limbo, so stale pending rows are failed closed after
 // this many hours.
@@ -242,7 +242,7 @@ export const ALLOWED_PAYMENT_CURRENCIES: ReadonlySet<string> = new Set( [
   'kwd', 'bhd', 'qar', 'omr', 'mad', 'tnd', 'iqd',
 ] );
 
-// â”€â”€ Wallet row shapes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Wallet row shapes ────────────────────────────────────────────────────────
 // All three are read with `select('*')`, so the records carry more columns than
 // the platform names. The index signature models that honestly instead of
 // pretending the table has only the fields listed here.
@@ -2774,7 +2774,7 @@ export function cityCoord ( city: string | null | undefined ) {
   return coords[ String( city ?? '' ).toLowerCase() ] ?? coords.amman;
 }
 
-// â”€â”€ Provider webhook signature verification â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Provider webhook signature verification ───────────────────────────────────────────────────────
 // Replaces URL-token-only authentication for Resend and Twilio delivery
 // receipts. The token-in-URL pattern is replayable, gets logged by proxies/CDNs,
 // and was previously leaked from this repo (see docs/SECURITY.md â†’ rotate
@@ -3163,3 +3163,5 @@ export async function reverseStripeTopUpRefund ( args: {
 
   return { outcome };
 }
+
+

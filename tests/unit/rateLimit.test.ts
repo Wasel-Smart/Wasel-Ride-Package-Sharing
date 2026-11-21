@@ -19,7 +19,9 @@ function makeMemoryStore(): RateLimitStore {
   return {
     async get(key) {
       const entry = store.get(key);
-      if (!entry || Date.now() > entry.resetAt) return null;
+      if (!entry || Date.now() > entry.resetAt) {
+        return null;
+      }
       return entry.count;
     },
     async set(key, value, ttl) {
