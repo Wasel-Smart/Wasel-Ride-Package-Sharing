@@ -10,10 +10,11 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { toAppHref, useIframeSafeNavigate } from '../hooks/useIframeSafeNavigate';
 import { handleSpaLinkClick } from '../utils/linkNavigation';
 import { useRoutePrefetch } from '../hooks/useRoutePrefetch';
-import { C, F, FA, GLOBAL_STYLES, R, Z } from '../utils/wasel-ds';
+import { F, FA, GLOBAL_STYLES, R, Z } from '../utils/wasel-ds';
 import { trackPageView } from '../platform/telemetry';
 import { getRouteMeta } from '../router/routeMeta';
 import { WaselRouteTransition } from '../components/wasel-ui/WaselRouteTransition';
+import { ThemeToggle } from '../components/wasel-ui/ThemeToggle';
 import { resetBodyScrollLock } from '../utils/bodyScrollLock';
 import { useSeo, OrganizationJsonLd, WebSiteJsonLd } from '../utils/seo';
 import { CurrencySwitcher, LangToggle, OnlineToggle } from './waselRootParts';
@@ -58,25 +59,25 @@ const BACKGROUND_OVERLAY_STYLE: React.CSSProperties = {
 
 const GLOBAL_HEADER_STYLES = `
   .wrl-header {
-    background: linear-gradient(180deg, rgba(8,29,57,0.92), rgba(8,29,57,0.86));
+    background: var(--wasel-header-bg);
     -webkit-backdrop-filter: blur(14px);
     backdrop-filter: blur(14px);
-    border-bottom: 1px solid ${ C.border };
-    box-shadow: 0 6px 18px rgba(8,29,57,0.18);
+    border-bottom: 1px solid var(--wasel-header-border);
+    box-shadow: 0 6px 18px var(--wasel-header-shadow, rgba(8,29,57,0.18));
   }
   .wrl-header.scrolled {
-    background: linear-gradient(180deg, rgba(8,29,57,0.98), rgba(8,29,57,0.95));
-    border-bottom: 1px solid ${ C.borderHov };
-    box-shadow: 0 12px 34px rgba(8,29,57,0.34);
+    background: var(--wasel-header-bg-scrolled);
+    border-bottom: 1px solid var(--wasel-header-border-scrolled);
+    box-shadow: 0 12px 34px var(--wasel-header-shadow, rgba(8,29,57,0.34));
   }
   .wrl-header button:focus-visible,
   .wrl-header a:focus-visible {
-    /* Solid cyan: the old 20%-alpha glow outline was far below 3:1 on the header. */
-    outline: 2px solid ${ C.cyan };
+    /* Focus ring follows the theme focus token (3:1+ on both themes). */
+    outline: 2px solid var(--wasel-focus);
     outline-offset: 2px;
   }
   .wrl-dropdown-item:hover {
-    background: ${ C.cardSolid };
+    background: var(--card);
     transform: translateY(-1px);
   }
   .wrl-desk-nav {
@@ -97,7 +98,8 @@ const GLOBAL_HEADER_STYLES = `
     border: none;
     border-radius: 12px;
     background: transparent;
-    color: ${ C.textSub };
+    color: var(--foreground);
+    opacity: 0.86;
     font-family: inherit;
     font-size: 0.9rem;
     font-weight: 600;
@@ -106,10 +108,10 @@ const GLOBAL_HEADER_STYLES = `
     cursor: pointer;
     transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1);
   }
-  .wrl-desk-link:hover { background: ${ C.cyanDim }; color: ${ C.text }; }
-  .wrl-desk-link[aria-current='page'] { color: ${ C.cyan }; background: ${ C.cyanDim }; }
-  .wrl-desk-link:focus-visible { outline: 2px solid ${ C.cyan }; outline-offset: 2px; }
-  .wrl-desk-link[data-accent='gold'][aria-current='page'] { color: ${ C.gold }; background: ${ C.goldDim }; }
+  .wrl-desk-link:hover { background: var(--wasel-header-icon-hover); opacity: 1; }
+  .wrl-desk-link[aria-current='page'] { color: var(--wasel-nav-active, #00e5ff); background: var(--wasel-header-icon-hover); opacity: 1; }
+  .wrl-desk-link:focus-visible { outline: 2px solid var(--wasel-focus); outline-offset: 2px; }
+  .wrl-desk-link[data-accent='gold'][aria-current='page'] { color: var(--wasel-gold); background: var(--wasel-header-icon-hover); }
   .wrl-desk-link[aria-current='page']::after {
     content: '';
     position: absolute;
@@ -191,6 +193,9 @@ const WaselRootInner = memo( () => {
           description: meta.description,
           descriptionAr: meta.descriptionAr,
           canonical: `https://wasel14.online${ meta.path }`,
+          // Signed-in-only screens (wallet, admin, live trip...) have no
+          // crawlable value; robots.txt blocks them, the meta tag follows.
+          noIndex: meta.requiresAuth === true,
         }
         : undefined,
     [ meta ],
@@ -254,7 +259,7 @@ const WaselRootInner = memo( () => {
       <div
         style={ {
           minHeight: '100dvh',
-          background: C.bg,
+          background: 'var(--background, #081D39)',
           fontFamily: ar ? FA : F,
           direction: ar ? 'rtl' : 'ltr',
         } }
@@ -320,15 +325,16 @@ const WaselRootInner = memo( () => {
                     width: 44,
                     height: 44,
                     borderRadius: R.md,
-                    background: C.card,
-                    border: `1px solid ${ C.border }`,
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--foreground)',
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   } }
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ C.textSub } strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" />
                   </svg>
                 </button>
@@ -343,9 +349,9 @@ const WaselRootInner = memo( () => {
                   width: 44,
                   height: 44,
                   borderRadius: R.md,
-                  background: C.card,
-                  border: `1px solid ${ C.border }`,
-                  color: C.text,
+                  background: 'var(--card)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--foreground)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -364,10 +370,11 @@ const WaselRootInner = memo( () => {
                 alignItems: 'center',
                 flexShrink: 0,
                 paddingInlineStart: 10,
-                borderInlineStart: `1px solid ${ C.borderFaint }`,
+                borderInlineStart: '1px solid var(--border)',
               } }
             >
               <LangToggle />
+              <ThemeToggle ar={ ar } />
               { user ? <CurrencySwitcher ar={ ar } /> : null }
               { user && isDriverMode ? <OnlineToggle ar={ ar } /> : null }
 
@@ -382,8 +389,9 @@ const WaselRootInner = memo( () => {
                       width: 40,
                       height: 40,
                       borderRadius: R.md,
-                      background: C.card,
-                      border: `1px solid ${ C.border }`,
+                      background: 'var(--card)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--foreground)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -396,7 +404,7 @@ const WaselRootInner = memo( () => {
                       height="15"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke={ C.textSub }
+                      stroke="currentColor"
                       strokeWidth="2"
                       strokeLinecap="round"
                       aria-hidden="true"
@@ -470,8 +478,8 @@ const WaselRootInner = memo( () => {
               left: 0,
               right: 0,
               height: `calc(56px + env(safe-area-inset-bottom, 0px))`,
-              background: 'rgba(8,29,57,0.96)',
-              borderTop: '1px solid rgba(0,229,255,0.16)',
+              background: 'var(--card, rgba(8,29,57,0.96))',
+              borderTop: '1px solid var(--border)',
               zIndex: 100,
             }}
           />

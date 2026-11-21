@@ -2385,3 +2385,78 @@ nav,
 @media (prefers-reduced-motion: reduce) {
   .wasel-route-enter { animation: none; }
 }
+
+/* ========================================
+   THEME MODE SUPPORT (dark default + light)
+   Applied via [data-theme] on <html> by ThemeContext.
+   Dark is the default (values above); light re-maps the SAME semantic
+   tokens so components that already use vars flip automatically.
+   ======================================== */
+
+:root {
+  /* Vars referenced by layout chrome that had no token yet. */
+  --wasel-nav-active: #00e5ff;
+  --wasel-header-shadow: rgba(8, 29, 57, 0.18);
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+
+  /* Semantic surfaces — light map on the same brand ink. */
+  --background: #f4f8fc;
+  --foreground: #081d39;
+  --card: #ffffff;
+  --card-foreground: #081d39;
+  --popover: #ffffff;
+  --popover-foreground: #081d39;
+  --primary: #0079a8;
+  --primary-foreground: #ffffff;
+  --secondary: #e6eff7;
+  --secondary-foreground: #35506b;
+  --muted: #e6eff7;
+  --muted-foreground: #4a6076;
+  --accent: #d97706;
+  --destructive: #c2334a;
+  --destructive-foreground: #ffffff;
+  --border: rgba(8, 29, 57, 0.14);
+  --input: rgba(8, 29, 57, 0.12);
+  /* Darker cyan ring: #00E5FF is below 3:1 on white. */
+  --ring: #0079a8;
+  --wasel-focus: #0079a8;
+  --wasel-nav-active: #0079a8;
+
+  /* Header tokens */
+  --wasel-header-bg: rgba(255, 255, 255, 0.92);
+  --wasel-header-bg-scrolled: rgba(255, 255, 255, 0.97);
+  --wasel-header-border: rgba(8, 29, 57, 0.08);
+  --wasel-header-border-scrolled: rgba(8, 29, 57, 0.14);
+  --wasel-header-icon-bg: rgba(8, 29, 57, 0.05);
+  --wasel-header-icon-hover: rgba(0, 121, 168, 0.1);
+  --wasel-header-search-bg: rgba(8, 29, 57, 0.04);
+  --wasel-header-search-border: rgba(8, 29, 57, 0.12);
+  --wasel-header-shadow: rgba(8, 29, 57, 0.08);
+
+  /* Sidebar tokens */
+  --wasel-sidebar-bg: rgba(255, 255, 255, 0.98);
+  --wasel-sidebar-border: rgba(8, 29, 57, 0.1);
+  --wasel-sidebar-item-hover: rgba(0, 121, 168, 0.08);
+  --wasel-sidebar-item-active: rgba(0, 121, 168, 0.14);
+  --wasel-sidebar-text: #35506b;
+  --wasel-sidebar-active-text: #0079a8;
+
+  /* Surface ramp */
+  --wasel-surface-0: #f4f8fc;
+  --wasel-surface-1: #ffffff;
+  --wasel-surface-2: #eef4fa;
+  --wasel-surface-3: #e6eff7;
+  --wasel-surface-4: #dbe7f2;
+
+  /* Softer shadows on light surfaces */
+  --wasel-shadow-sm: 0 1px 4px rgba(8, 29, 57, 0.12);
+  --wasel-shadow-md: 0 4px 20px rgba(8, 29, 57, 0.12);
+  --wasel-shadow-lg: 0 8px 40px rgba(8, 29, 57, 0.14);
+  --wasel-shadow-xl: 0 16px 60px rgba(8, 29, 57, 0.16);
+  --wasel-shadow-cyan: 0 4px 28px rgba(0, 121, 168, 0.14);
+  --wasel-shadow-lime: 0 4px 28px rgba(78, 138, 10, 0.14);
+  --wasel-shadow-ember: 0 4px 28px rgba(217, 119, 6, 0.16);
+}

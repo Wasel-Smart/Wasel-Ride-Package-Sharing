@@ -24,6 +24,7 @@ import {
   FinalCtaBanner,
   HomeHeroSection,
   HomePageStyles,
+  LandingLegalFooter,
   LandingSections,
   OnboardingDemoSection,
   ProofSection,
@@ -627,6 +628,8 @@ export function HomePage () {
           <HomePageAudienceSections { ...audienceSectionProps } placement="closing" />
 
           <LandingSections ar={ ar } onNavigate={ handleNavigate } />
+
+          <LandingLegalFooter ar={ ar } onNavigate={ handleNavigate } />
 
           { /* Accent policy (BRAND_GUIDELINES.md): cyan = primary actions, orange =
                parcels, green = bus/success. Quick actions follow it.

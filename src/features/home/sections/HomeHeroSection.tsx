@@ -17,6 +17,7 @@ import {
 import type { User } from '@supabase/auth-js';
 import { WaselLogo } from '../../../components/wasel-ui';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
+import { ThemeToggle } from '../../../components/wasel-ui/ThemeToggle';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { tx } from '../../../locales/tx';
 import { API_URL } from '../../../services/core';
@@ -287,6 +288,7 @@ export function HomeHeroSection ( {
           </div>
           <div className="wasel-home-nav-actions">
             <LangToggle />
+            <ThemeToggle ar={ ar } />
             { user ? <InlineCurrencySwitcher ar={ ar } /> : null }
           </div>
         </div>
