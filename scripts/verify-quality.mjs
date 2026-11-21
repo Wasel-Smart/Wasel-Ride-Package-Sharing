@@ -6,6 +6,7 @@ import { execSync } from 'node:child_process';
 
 const ROOT = process.cwd();
 const REQUIRED_BUILD_ARTIFACTS = ['dist/index.html', 'dist/assets'];
+const COVERAGE_METRICS = ['lines', 'branches', 'functions', 'statements'];
 
 function checkExists(relativePath) {
   return fs.existsSync(path.join(ROOT, relativePath));
@@ -27,11 +28,7 @@ function readJson(relativePath) {
 function getLighthouseArtifacts() {
   const manifest = readJson('.lighthouseci/manifest.json');
   if (Array.isArray(manifest) && manifest.length > 0) {
-    return {
-      hasResults: true,
-      count: manifest.length,
-      source: 'manifest.json',
-    };
+    return { hasResults: true, count: manifest.length, source: 'manifest.json' };
   }
 
   const lighthouseDir = path.join(ROOT, '.lighthouseci');
@@ -49,29 +46,31 @@ function getLighthouseArtifacts() {
 
 async function verifyQuality() {
   console.log('\nQuality Verification\n');
-
   let allPassed = true;
 
   console.log('Build Artifacts:');
   for (const artifact of REQUIRED_BUILD_ARTIFACTS) {
     const exists = checkExists(artifact);
-    console.log(`  ${exists ? 'OK' : 'MISSING'} ${artifact}`);
-    if (!exists) {
-      allPassed = false;
-    }
+    console.log('  ' + (exists ? 'OK' : 'MISSING') + ' ' + artifact);
+    if (!exists) allPassed = false;
   }
 
   console.log('\nCoverage:');
   const coverageSummary = readJson('coverage/coverage-summary.json');
-  if (coverageSummary?.total) {
-    console.log('  OK coverage-summary.json exists');
-    console.log(`     Lines: ${coverageSummary.total.lines.pct}%`);
-    console.log(`     Branches: ${coverageSummary.total.branches.pct}%`);
-    console.log(`     Functions: ${coverageSummary.total.functions.pct}%`);
-    console.log(`     Statements: ${coverageSummary.total.statements.pct}%`);
+  if (!coverageSummary?.total) {
+    console.error('  FAIL coverage/coverage-summary.json is missing or invalid.');
+    console.error('       Run: npm run test:coverage');
+    allPassed = false;
   } else {
-    console.log('  WARN coverage-summary.json missing or invalid');
-    console.log('     Run: npm run test:coverage');
+    for (const metric of COVERAGE_METRICS) {
+      const percentage = coverageSummary.total[metric]?.pct;
+      if (typeof percentage !== 'number' || !Number.isFinite(percentage) || percentage < 0 || percentage > 100) {
+        console.error('  FAIL coverage metric "' + metric + '" is missing or invalid.');
+        allPassed = false;
+        continue;
+      }
+      console.log('  OK ' + metric + ': ' + percentage + '%');
+    }
   }
 
   console.log('\nPlaywright:');
@@ -79,26 +78,26 @@ async function verifyQuality() {
   if (playwrightResults) {
     const stats = playwrightResults.stats ?? {};
     console.log('  OK results.json exists');
-    console.log(`     Expected: ${stats.expected ?? 0}`);
-    console.log(`     Unexpected: ${stats.unexpected ?? 0}`);
-    console.log(`     Flaky: ${stats.flaky ?? 0}`);
+    console.log('     Expected: ' + (stats.expected ?? 0));
+    console.log('     Unexpected: ' + (stats.unexpected ?? 0));
+    console.log('     Flaky: ' + (stats.flaky ?? 0));
     if ((stats.unexpected ?? 0) > 0) {
-      console.log('  WARN some Playwright tests failed');
+      console.error('  FAIL one or more Playwright tests failed.');
       allPassed = false;
     }
   } else {
-    console.log('  WARN results.json missing');
-    console.log('     Run: npm run test:e2e');
+    // Core, accessibility, and RTL E2E suites run in separate CI jobs.
+    console.log('  INFO no local Playwright report; E2E suites are gated by their own CI jobs.');
   }
 
   console.log('\nLighthouse:');
   const lighthouseArtifacts = getLighthouseArtifacts();
   if (lighthouseArtifacts.hasResults) {
-    console.log(`  OK ${lighthouseArtifacts.source} exists`);
-    console.log(`     Reports: ${lighthouseArtifacts.count}`);
+    console.log('  OK ' + lighthouseArtifacts.source + ' exists');
+    console.log('     Reports: ' + lighthouseArtifacts.count);
   } else {
-    console.log('  WARN no Lighthouse artifacts found');
-    console.log('     Run: npm run test:lhci');
+    // Lighthouse runs in a separate CI job and is not expected in this job's workspace.
+    console.log('  INFO no local Lighthouse artifacts; the dedicated Lighthouse CI job is authoritative.');
   }
 
   console.log('\nGenerating quality report...');
@@ -109,13 +108,14 @@ async function verifyQuality() {
     });
     console.log('  OK quality-report.json generated');
   } catch {
-    console.log('  FAIL failed to generate quality report');
+    console.error('  FAIL failed to generate quality report.');
     allPassed = false;
   }
 
-  console.log(`\n${'='.repeat(50)}`);
-  console.log(allPassed ? 'All quality checks passed.\n' : 'Some quality checks need attention.\n');
+  console.log('\n' + '='.repeat(50));
+  console.log(allPassed ? 'All quality checks passed.\n' : 'Quality verification failed.\n');
+  return allPassed;
 }
 
-await verifyQuality();
-process.exit(0);
+const passed = await verifyQuality();
+process.exitCode = passed ? 0 : 1;
