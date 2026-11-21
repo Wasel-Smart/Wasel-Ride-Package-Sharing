@@ -104,7 +104,7 @@ export function UserMenu({
     textAlign: 'start',
     fontSize: '0.875rem',
     fontWeight: 500,
-    color: var(--muted-foreground),
+    color: 'var(--muted-foreground)',
     fontFamily: F,
     cursor: 'pointer',
   };
@@ -127,7 +127,7 @@ export function UserMenu({
           paddingInlineEnd: 12,
           borderRadius: 9999,
           background: open ? C.cyanDim : 'var(--card)',
-          border: `1px solid ${open ? var(--border) : var(--border)}`,
+          border: `1px solid ${open ? 'var(--border)' : var(--border)}`,
           cursor: 'pointer',
           transition: 'background 0.15s, border-color 0.15s',
         }}
@@ -145,7 +145,7 @@ export function UserMenu({
             justifyContent: 'center',
             fontSize: '0.72rem',
             fontWeight: 800,
-            color: var(--background),
+            color: 'var(--background)',
             flexShrink: 0,
           }}
         >
@@ -155,7 +155,7 @@ export function UserMenu({
           style={{
             fontSize: '0.875rem',
             fontWeight: 600,
-            color: var(--foreground),
+            color: 'var(--foreground)',
             fontFamily: F,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -192,27 +192,27 @@ export function UserMenu({
               borderBottom: `1px solid ${var(--border)}`,
             }}
           >
-            <div style={{ fontWeight: 700, color: var(--foreground), fontSize: '0.9rem', fontFamily: F }}>
+            <div style={{ fontWeight: 700, color: 'var(--foreground)', fontSize: '0.9rem', fontFamily: F }}>
               {user.name}
             </div>
-            <div style={{ fontSize: '0.75rem', color: var(--muted-foreground), fontFamily: F, marginTop: 1 }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', fontFamily: F, marginTop: 1 }}>
               {user.email}
             </div>
             <div
               style={{
                 display: 'flex',
                 marginTop: 12,
-                background: var(--card),
+                background: 'var(--card)',
                 borderRadius: 10,
                 overflow: 'hidden',
                 border: `1px solid ${var(--border)}`,
               }}
             >
               <div style={{ flex: 1, padding: '8px 12px', borderInlineEnd: `1px solid ${var(--border)}` }}>
-                <div style={{ fontSize: '1rem', fontWeight: 800, color: var(--foreground), fontFamily: F }}>
+                <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--foreground)', fontFamily: F }}>
                   {user.trips}
                 </div>
-                <div style={{ fontSize: '0.72rem', color: var(--muted-foreground), fontFamily: F }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)', fontFamily: F }}>
                   {ar ? 'الرحلات' : 'Trips'}
                 </div>
               </div>
@@ -220,7 +220,7 @@ export function UserMenu({
                 <div style={{ fontSize: '0.9rem', fontWeight: 800, color: C.gold, fontFamily: F }}>
                   {balanceDisplay}
                 </div>
-                <div style={{ fontSize: '0.72rem', color: var(--muted-foreground), fontFamily: F }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)', fontFamily: F }}>
                   {ar ? 'المحفظة' : 'Wallet'}
                 </div>
               </div>
@@ -241,7 +241,7 @@ export function UserMenu({
               {item.label}
             </button>
           ))}
-          <div style={{ height: 1, background: var(--border), margin: '0 16px' }} />
+          <div style={{ height: 1, background: 'var(--border)', margin: '0 16px' }} />
           <button
             type="button"
             role="menuitem"
@@ -249,7 +249,7 @@ export function UserMenu({
               onSignOut();
               setOpen(false);
             }}
-            style={{ ...itemStyle, fontWeight: 600, color: var(--destructive) }}
+            style={{ ...itemStyle, fontWeight: 600, color: 'var(--destructive)' }}
           >
             <X size={16} aria-hidden="true" />
             {ar ? 'تسجيل الخروج' : 'Sign out'}
@@ -337,7 +337,7 @@ export function MobileDrawer({
   const sectionLabelStyle: React.CSSProperties = {
     fontSize: '0.72rem',
     fontWeight: 700,
-    color: var(--muted-foreground),
+    color: 'var(--muted-foreground)',
     letterSpacing: ar ? 0 : '0.1em',
     textTransform: ar ? 'none' : 'uppercase',
     marginBottom: 6,
@@ -384,7 +384,7 @@ export function MobileDrawer({
           insetInlineEnd: 0,
           width: 'min(320px, 88vw)',
           height: '100dvh',
-          background: var(--background),
+          background: 'var(--background)',
           borderInlineStart: `1px solid ${var(--border)}`,
           boxShadow: '0 0 60px rgba(4,10,18,0.6)',
           overflowY: 'auto',
@@ -411,13 +411,13 @@ export function MobileDrawer({
             onClick={() => onClose()}
             aria-label={ar ? 'إغلاق القائمة' : 'Close menu'}
             style={{
-              background: var(--card),
+              background: 'var(--card)',
               border: `1px solid ${var(--border)}`,
               borderRadius: R.md,
               width: 44,
               height: 44,
               cursor: 'pointer',
-              color: var(--muted-foreground),
+              color: 'var(--muted-foreground)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -450,10 +450,10 @@ export function MobileDrawer({
               borderBottom: `1px solid ${var(--border)}`,
             }}
           >
-            <div style={{ fontWeight: 700, color: var(--foreground), fontFamily: F, fontSize: '0.95rem' }}>
+            <div style={{ fontWeight: 700, color: 'var(--foreground)', fontFamily: F, fontSize: '0.95rem' }}>
               {user.name}
             </div>
-            <div style={{ fontSize: '0.78rem', color: var(--muted-foreground), fontFamily: F }}>{user.email}</div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--muted-foreground)', fontFamily: F }}>{user.email}</div>
           </div>
         )}
 
@@ -470,7 +470,7 @@ export function MobileDrawer({
                     ...rowStyle,
                     fontSize: '0.92rem',
                     fontWeight: 500,
-                    color: var(--muted-foreground),
+                    color: 'var(--muted-foreground)',
                     fontFamily: F,
                   }}
                 >
@@ -500,10 +500,10 @@ export function MobileDrawer({
                     }}
                   />
                   <span style={{ display: 'grid', gap: 4, flex: 1 }}>
-                    <span style={{ fontSize: '0.92rem', fontWeight: 700, color: var(--foreground), fontFamily: F }}>
+                    <span style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--foreground)', fontFamily: F }}>
                       {ar ? group.labelAr : group.label}
                     </span>
-                    <span style={{ fontSize: '0.78rem', color: var(--muted-foreground), fontFamily: F, lineHeight: 1.5 }}>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--muted-foreground)', fontFamily: F, lineHeight: 1.5 }}>
                       {ar ? (group as { descAr?: string }).descAr : (group as { desc?: string }).desc}
                     </span>
                   </span>
@@ -524,7 +524,7 @@ export function MobileDrawer({
                       aria-hidden="true"
                       style={{ width: 8, height: 8, borderRadius: '50%', background: item.color, flexShrink: 0 }}
                     />
-                    <span style={{ fontSize: '0.9rem', fontWeight: 500, color: var(--muted-foreground), fontFamily: F }}>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--muted-foreground)', fontFamily: F }}>
                       {ar ? item.labelAr : item.label}
                     </span>
                     {item.badge && (
@@ -550,9 +550,9 @@ export function MobileDrawer({
                 width: '100%',
                 height: 46,
                 borderRadius: R.md,
-                background: var(--destructive),
+                background: 'var(--destructive)',
                 border: `1px solid ${C.error}55`,
-                color: var(--destructive),
+                color: 'var(--destructive)',
                 fontWeight: 700,
                 fontFamily: F,
                 fontSize: '0.9rem',
@@ -571,7 +571,7 @@ export function MobileDrawer({
                   borderRadius: R.md,
                   background: 'transparent',
                   border: `1.5px solid ${var(--border)}`,
-                  color: var(--foreground),
+                  color: 'var(--foreground)',
                   fontWeight: 600,
                   fontFamily: F,
                   fontSize: '0.9rem',
@@ -588,7 +588,7 @@ export function MobileDrawer({
                   borderRadius: R.md,
                   background: GRAD,
                   border: 'none',
-                  color: var(--background),
+                  color: 'var(--background)',
                   fontWeight: 700,
                   fontFamily: F,
                   fontSize: '0.9rem',
@@ -604,3 +604,5 @@ export function MobileDrawer({
     </div>
   );
 }
+
+

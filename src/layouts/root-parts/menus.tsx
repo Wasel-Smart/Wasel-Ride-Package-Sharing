@@ -162,7 +162,7 @@ export function UserMenu({
           padding: '5px 12px 5px 5px',
           borderRadius: 9999,
           background: open ? C.cyanDim : 'var(--card)',
-          border: `1px solid ${open ? var(--border) : var(--border)}`,
+          border: `1px solid ${open ? 'var(--border)' : 'var(--border)'}`,
           cursor: 'pointer',
           transition: 'all 0.15s',
         }}
@@ -179,7 +179,7 @@ export function UserMenu({
             justifyContent: 'center',
             fontSize: '0.68rem',
             fontWeight: 800,
-            color: var(--background),
+            color: 'var(--background)',
             flexShrink: 0,
           }}
         >
@@ -221,7 +221,7 @@ export function UserMenu({
             style={{
               padding: '14px 16px',
               background: 'linear-gradient(180deg, rgba(88,221,255,0.08), rgba(11,29,45,0.18))',
-              borderBottom: `1px solid ${var(--border)}`,
+              borderBottom: `1px solid ${'var(--border)'}`,
             }}
           >
             <div style={{ fontWeight: 700, color: 'var(--foreground)', fontSize: '0.875rem', fontFamily: F }}>
@@ -245,7 +245,7 @@ export function UserMenu({
                 style={{
                   flex: 1,
                   padding: '8px 12px',
-                  borderInlineEnd: `1px solid ${var(--border)}`,
+                  borderInlineEnd: `1px solid ${'var(--border)'}`,
                 }}
               >
                 <div style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--foreground)', fontFamily: F }}>
@@ -309,7 +309,7 @@ export function UserMenu({
               {item.label}
             </button>
           ))}
-          <div style={{ height: 1, background: var(--border), margin: '0 16px' }} />
+          <div style={{ height: 1, background: 'var(--border)', margin: '0 16px' }} />
           <button
             onClick={() => {
               onSignOut();
@@ -383,8 +383,8 @@ export function MobileDrawer({
           width: 300,
           height: '100dvh',
           minHeight: '-webkit-fill-available',
-          background: var(--background),
-          borderInlineStart: `1px solid ${var(--border)}`,
+          background: 'var(--background)',
+          borderInlineStart: `1px solid ${'var(--border)'}`,
           boxShadow: ar ? '20px 0 60px rgba(8,29,57,0.7)' : '-20px 0 60px rgba(8,29,57,0.7)',
           overflowY: 'auto',
           WebkitOverflowScrolling: 'touch',
@@ -398,7 +398,7 @@ export function MobileDrawer({
         <div
           style={{
             padding: '16px 20px',
-            borderBottom: `1px solid ${var(--border)}`,
+            borderBottom: `1px solid ${'var(--border)'}`,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -428,7 +428,7 @@ export function MobileDrawer({
         <div
           style={{
             padding: '10px 20px',
-            borderBottom: `1px solid ${var(--border)}`,
+            borderBottom: `1px solid ${'var(--border)'}`,
             display: 'flex',
             gap: 8,
             alignItems: 'center',
@@ -442,7 +442,7 @@ export function MobileDrawer({
             style={{
               padding: '14px 20px',
               background: 'linear-gradient(180deg, rgba(88,221,255,0.08), rgba(11,29,45,0.18))',
-              borderBottom: `1px solid ${var(--border)}`,
+              borderBottom: `1px solid ${'var(--border)'}`,
             }}
           >
             <div style={{ fontWeight: 700, color: 'var(--foreground)', fontFamily: F, fontSize: '0.9rem' }}>
@@ -462,7 +462,7 @@ export function MobileDrawer({
             group => (
               <div
                 key={group.id}
-                style={{ padding: '12px 20px', borderBottom: `1px solid ${var(--border)}` }}
+                style={{ padding: '12px 20px', borderBottom: `1px solid ${'var(--border)'}` }}
               >
                 <div
                   style={{
@@ -590,7 +590,7 @@ export function MobileDrawer({
           )}
         </div>
         <div
-          style={{ padding: '16px 20px', flexShrink: 0, borderTop: `1px solid ${var(--border)}` }}
+          style={{ padding: '16px 20px', flexShrink: 0, borderTop: `1px solid ${'var(--border)'}` }}
         >
           <SocialLinks ar={ar} variant="drawer" />
           {user ? (
@@ -603,7 +603,7 @@ export function MobileDrawer({
                 width: '100%',
                 height: 42,
                 borderRadius: R.md,
-                background: var(--destructive),
+                background: 'var(--destructive)',
                 border: `1px solid ${C.error}55`,
                 color: C.error,
                 fontWeight: 700,
@@ -625,7 +625,7 @@ export function MobileDrawer({
                   height: 42,
                   borderRadius: R.md,
                   background: 'transparent',
-                  border: `1.5px solid ${var(--border)}`,
+                  border: `1.5px solid ${'var(--border)'}`,
                   color: 'var(--foreground)',
                   fontWeight: 600,
                   fontFamily: F,
@@ -645,7 +645,7 @@ export function MobileDrawer({
                   borderRadius: R.md,
                   background: GRAD,
                   border: 'none',
-                  color: var(--background),
+                  color: 'var(--background)',
                   fontWeight: 700,
                   fontFamily: F,
                   fontSize: '0.875rem',
@@ -661,3 +661,5 @@ export function MobileDrawer({
     </div>
   );
 }
+
+

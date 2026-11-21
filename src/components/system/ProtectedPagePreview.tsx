@@ -260,7 +260,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
           padding: `${SPACE[7]} ${SPACE[6]}`,
           color: C.text,
           fontFamily: F,
-        }}>
+        }}
       >
         <div
           aria-hidden="true"
@@ -291,7 +291,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
               letterSpacing: TYPE.letterSpacing.wider,
               textTransform: 'uppercase',
             }}
-  
+          >
             <Lock size={14} />
             {config.eyebrow}
           </div>
