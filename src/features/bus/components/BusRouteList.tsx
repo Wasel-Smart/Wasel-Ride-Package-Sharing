@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { Bus, MapPin, Calendar, Award } from 'lucide-react';
 import type { BusRoute } from '../../../services/bus';
-import { } from '../../../utils/wasel-ds';
 import { DS, r, pill } from '../../shared/pageShared';
 import { tx } from '../../../locales/tx';
 import '../../../styles/animations.css';
@@ -325,4 +324,5 @@ export function BusRouteList({
     </div>
   );
 }
+
 

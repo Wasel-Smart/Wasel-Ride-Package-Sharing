@@ -1,6 +1,5 @@
 import { ArrowRight, Clock, MapPin } from 'lucide-react';
 import { MapWrapper } from '../../../components/MapWrapper';
-import { } from '../../../utils/wasel-ds';
 import { DS, midpoint, r } from '../../shared/pageShared';
 import { tx } from '../../../locales/tx';
 
@@ -108,4 +107,5 @@ export function BusMap({
     </div>
   );
 }
+
 

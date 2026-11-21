@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
 import type { BusRoute } from '../../../services/bus';
-import { } from '../../../utils/wasel-ds';
 import { DS, r, pill } from '../../shared/pageShared';
 import { tx } from '../../../locales/tx';
 
@@ -191,4 +190,5 @@ export function BusSchedule({
     </div>
   );
 }
+
 

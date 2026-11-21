@@ -10,7 +10,8 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import { C,  F, FM, GRAD_AURORA, GRAD_HERO, R, SH  } from '../../utils/wasel-ds';
+import { C,  F, FM, R, SH  } from '../../utils/wasel-ds'
+import { GRAD_HERO } from '../../utils/wasel-ds';;
 import { MobilityOSLandingMap } from '../home/MobilityOSLandingMap';
 import type { BookingType, CorridorProjection } from './model';
 import { useMobilityOSServerState } from './serverState';
@@ -1086,4 +1087,6 @@ export default function MobilityOSCore() {
     </div>
   );
 }
+
+
 

@@ -341,3 +341,4 @@ export const GLOBAL_STYLES = `
   50% { transform: translate(30px, -20px); }
 }
 `;
+

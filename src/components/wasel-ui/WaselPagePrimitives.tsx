@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { ChevronRight, type LucideIcon } from 'lucide-react';
-import { ANIM, C, F, FA, GRAD_HERO, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { ANIM, C, F, FA, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 
 interface PageShellProps {
   children: ReactNode;
@@ -545,5 +545,6 @@ export function StatusBadge({ label, accent = C.cyan }: { label: string; accent?
 export function iconNode(Icon: LucideIcon, color: string) {
   return <Icon size={18} color={color} />;
 }
+
 
 

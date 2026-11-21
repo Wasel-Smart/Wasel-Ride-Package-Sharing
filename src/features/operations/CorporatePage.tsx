@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Briefcase, Building, Users, MapPin, CheckCircle } from 'lucide-react';
-import { } from '../../utils/wasel-ds';
 
 export function CorporatePage() {
   const { language, dir } = useLanguage();
@@ -270,4 +269,5 @@ function FeatureCard({
     </div>
   );
 }
+
 

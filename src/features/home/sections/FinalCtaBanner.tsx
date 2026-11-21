@@ -2,7 +2,6 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Globe2, Route } from 'lucide-react';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../../contexts/LanguageContext';
-import { C } from '../HomePageShared';
 
 interface FinalCtaBannerProps {
   ar: boolean;

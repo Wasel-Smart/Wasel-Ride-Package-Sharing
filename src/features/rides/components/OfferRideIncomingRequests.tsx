@@ -2,7 +2,6 @@ import { notificationsAPI } from '../../../services/notifications.js';
 import { getConnectedRides, updateConnectedRide } from '../../../services/journeyLogistics';
 import { updateRideBooking, type RideBookingRecord } from '../../../services/rideLifecycle';
 import { DS, r } from '../../../pages/waselServiceShared';
-import { } from '../../../utils/wasel-ds';
 import { tx } from '../../../locales/tx';
 
 type OfferRideIncomingRequestsProps = {
@@ -144,4 +143,5 @@ export function OfferRideIncomingRequests({
     </div>
   );
 }
+
 
