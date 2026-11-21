@@ -142,6 +142,17 @@ const ERROR_RULES: Array<{
       lower.includes('not allowed by access-control-allow-headers'),
     message: 'Sign-in request was blocked by the network policy. Please contact support.',
   },
+  {
+    // Supabase Auth has captcha enabled but the app sent no token.
+    // This means captcha is on in the Dashboard but not wired in the UI.
+    // Fix: disable captcha in Supabase Dashboard > Auth > Security.
+    test: (lower, code) =>
+      code === 'captcha_failed' ||
+      lower.includes('captcha protection') ||
+      lower.includes('no captcha_token') ||
+      lower.includes('captcha verification failed'),
+    message: 'Sign-in is temporarily unavailable. Please contact support.',
+  },
 ];
 
 /**
