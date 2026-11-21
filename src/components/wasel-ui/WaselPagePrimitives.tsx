@@ -255,7 +255,7 @@ export function SectionCard({
             <p
               style={{
                 margin: '6px 0 0',
-                color: C.textMuted,
+                color: `var(--muted-foreground)`,
                 fontSize: TYPE.size.sm,
                 lineHeight: TYPE.lineHeight.relaxed,
               }}
@@ -268,8 +268,8 @@ export function SectionCard({
       </div>
       <div
         style={{
-          background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
-          border: `1px solid ${C.border}`,
+          background: `var(--card)`,
+          border: `1px solid var(--border)`,
           borderRadius: R.xl,
           boxShadow: SH.sm,
           overflow: 'hidden',
@@ -292,7 +292,7 @@ export function MetricCard({ label, value, detail, accent = C.cyan, icon }: Metr
         borderStyle: 'solid',
         borderWidth: 1,
         borderRadius: R.xl,
-        background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
+        background: `var(--card)`,
         boxShadow: SH.sm,
       }}
     >
@@ -327,7 +327,7 @@ export function MetricCard({ label, value, detail, accent = C.cyan, icon }: Metr
             fontWeight: TYPE.weight.bold,
             letterSpacing: 0,
             textTransform: 'uppercase',
-            color: C.textMuted,
+            color: `var(--muted-foreground)`,
           }}
         >
           {label}
@@ -335,7 +335,7 @@ export function MetricCard({ label, value, detail, accent = C.cyan, icon }: Metr
       </div>
       <div
         style={{
-          color: C.text,
+          color: `var(--foreground)`,
           fontSize: TYPE.size['2xl'],
           fontWeight: TYPE.weight.ultra,
           lineHeight: TYPE.lineHeight.tight,
@@ -347,7 +347,7 @@ export function MetricCard({ label, value, detail, accent = C.cyan, icon }: Metr
         <div
           style={{
             marginTop: SPACE[2],
-            color: C.textMuted,
+            color: `var(--muted-foreground)`,
             fontSize: TYPE.size.sm,
             lineHeight: TYPE.lineHeight.relaxed,
           }}
@@ -371,8 +371,8 @@ export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: Ac
         padding: `${SPACE[4]} ${SPACE[4]}`,
         borderRadius: R.xl,
         border: `1px solid ${accent}1f`,
-        background: C.card,
-        color: C.text,
+        background: `var(--card)`,
+        color: `var(--foreground)`,
         cursor: clickable ? 'pointer' : 'default',
         textAlign: 'start',
         transition: `transform ${ANIM.dur.normal} ${ANIM.ease.default}, border-color ${ANIM.dur.normal} ${ANIM.ease.default}, box-shadow ${ANIM.dur.normal} ${ANIM.ease.default}`,
@@ -421,7 +421,7 @@ export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: Ac
           marginTop: SPACE[4],
           fontSize: TYPE.size.base,
           fontWeight: TYPE.weight.bold,
-          color: C.text,
+          color: `var(--foreground)`,
         }}
       >
         {label}
@@ -432,7 +432,7 @@ export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: Ac
             marginTop: SPACE[2],
             fontSize: TYPE.size.sm,
             lineHeight: TYPE.lineHeight.relaxed,
-            color: C.textMuted,
+            color: `var(--muted-foreground)`,
           }}
         >
           {detail}
@@ -457,13 +457,13 @@ export function DataRow({ label, value, sub, icon, badge, onClick, danger = fals
         padding: `${SPACE[4]} ${SPACE[4]}`,
         background: 'transparent',
         border: 'none',
-        borderBottom: `1px solid ${C.borderFaint}`,
+        borderBottom: `1px solid var(--border)`,
         textAlign: 'start',
         cursor: onClick ? 'pointer' : 'default',
         transition: `background ${ANIM.dur.normal} ${ANIM.ease.default}`,
       }}
       onMouseEnter={event => {
-        if (onClick) {event.currentTarget.style.background = C.elevated;}
+        if (onClick) {event.currentTarget.style.background = 'var(--secondary)';}
       }}
       onMouseLeave={event => {
         event.currentTarget.style.background = 'transparent';
@@ -490,7 +490,7 @@ export function DataRow({ label, value, sub, icon, badge, onClick, danger = fals
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
-            color: danger ? C.error : C.text,
+            color: danger ? 'var(--destructive)' : 'var(--foreground)',
             fontSize: TYPE.size.base,
             fontWeight: TYPE.weight.semibold,
           }}
@@ -498,13 +498,13 @@ export function DataRow({ label, value, sub, icon, badge, onClick, danger = fals
           {label}
         </div>
         {value ? (
-          <div style={{ marginTop: 3, color: C.textMuted, fontSize: TYPE.size.sm }}>{value}</div>
+          <div style={{ marginTop: 3, color: `var(--muted-foreground)`, fontSize: TYPE.size.sm }}>{value}</div>
         ) : null}
         {sub ? (
           <div
             style={{
               marginTop: 4,
-              color: C.textDim,
+              color: `var(--muted-foreground)`,
               fontSize: TYPE.size.xs,
               lineHeight: TYPE.lineHeight.relaxed,
             }}
