@@ -28,11 +28,7 @@ function readJson(relativePath) {
 function getLighthouseArtifacts() {
   const manifest = readJson('.lighthouseci/manifest.json');
   if (Array.isArray(manifest) && manifest.length > 0) {
-    return {
-      hasResults: true,
-      count: manifest.length,
-      source: 'manifest.json',
-    };
+    return { hasResults: true, count: manifest.length, source: 'manifest.json' };
   }
 
   const lighthouseDir = path.join(ROOT, '.lighthouseci');
@@ -50,16 +46,13 @@ function getLighthouseArtifacts() {
 
 async function verifyQuality() {
   console.log('\nQuality Verification\n');
-
   let allPassed = true;
 
   console.log('Build Artifacts:');
   for (const artifact of REQUIRED_BUILD_ARTIFACTS) {
     const exists = checkExists(artifact);
-    console.log(\`  \${exists ? 'OK' : 'MISSING'} \${artifact}\`);
-    if (!exists) {
-      allPassed = false;
-    }
+    console.log('  ' + (exists ? 'OK' : 'MISSING') + ' ' + artifact);
+    if (!exists) allPassed = false;
   }
 
   console.log('\nCoverage:');
@@ -72,12 +65,11 @@ async function verifyQuality() {
     for (const metric of COVERAGE_METRICS) {
       const percentage = coverageSummary.total[metric]?.pct;
       if (typeof percentage !== 'number' || !Number.isFinite(percentage) || percentage < 0 || percentage > 100) {
-        console.error(\`  FAIL coverage metric "\${metric}" is missing or invalid.\`);
+        console.error('  FAIL coverage metric "' + metric + '" is missing or invalid.');
         allPassed = false;
         continue;
       }
-
-      console.log(\`  OK \${metric}: \${percentage}%\`);
+      console.log('  OK ' + metric + ': ' + percentage + '%');
     }
   }
 
@@ -86,9 +78,9 @@ async function verifyQuality() {
   if (playwrightResults) {
     const stats = playwrightResults.stats ?? {};
     console.log('  OK results.json exists');
-    console.log(\`     Expected: \${stats.expected ?? 0}\`);
-    console.log(\`     Unexpected: \${stats.unexpected ?? 0}\`);
-    console.log(\`     Flaky: \${stats.flaky ?? 0}\`);
+    console.log('     Expected: ' + (stats.expected ?? 0));
+    console.log('     Unexpected: ' + (stats.unexpected ?? 0));
+    console.log('     Flaky: ' + (stats.flaky ?? 0));
     if ((stats.unexpected ?? 0) > 0) {
       console.error('  FAIL one or more Playwright tests failed.');
       allPassed = false;
@@ -101,8 +93,8 @@ async function verifyQuality() {
   console.log('\nLighthouse:');
   const lighthouseArtifacts = getLighthouseArtifacts();
   if (lighthouseArtifacts.hasResults) {
-    console.log(\`  OK \${lighthouseArtifacts.source} exists\`);
-    console.log(\`     Reports: \${lighthouseArtifacts.count}\`);
+    console.log('  OK ' + lighthouseArtifacts.source + ' exists');
+    console.log('     Reports: ' + lighthouseArtifacts.count);
   } else {
     // Lighthouse runs in a separate CI job and is not expected in this job's workspace.
     console.log('  INFO no local Lighthouse artifacts; the dedicated Lighthouse CI job is authoritative.');
@@ -120,7 +112,7 @@ async function verifyQuality() {
     allPassed = false;
   }
 
-  console.log(\`\n\${'='.repeat(50)}\`);
+  console.log('\n' + '='.repeat(50));
   console.log(allPassed ? 'All quality checks passed.\n' : 'Quality verification failed.\n');
   return allPassed;
 }
