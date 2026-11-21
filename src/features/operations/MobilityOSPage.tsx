@@ -650,33 +650,6 @@ export default function MobilityOSPage() {
                 >
                   {tx('mobilityOSPage.score_0_38_demand_0_34_reliability_0_28_velocity')}
                 </div>
-                {/* Live backend data indicator */}
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '7px 11px',
-                    borderRadius: 14,
-                    background: liveCorridors ? ${C.green}18 : C.overlay,
-                    border: 1px solid ,
-                    fontSize: '0.72rem',
-                    color: liveCorridors ? C.green : C.textMuted,
-                    transition: 'all 0.4s ease',
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: '50%',
-                      background: liveCorridors ? C.green : C.textDim,
-                      boxShadow: liveCorridors ?   0 6px  : 'none',
-                      flexShrink: 0,
-                    }}
-                  />
-                  {liveCorridors ? Live \u2014  corridors : 'Simulation mode'}
-                </div>
               </div>
 
               <svg

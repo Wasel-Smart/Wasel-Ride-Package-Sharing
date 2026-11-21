@@ -207,7 +207,7 @@ type RouteRowProps = { ride: Ride };
 
 function RouteRow({ ride }: RouteRowProps) {
   return (
-    <div style={{ background: C.overlay, borderRadius: r(14), padding: '14px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div style={{ background: rgba(0,0,0,0.5), borderRadius: r(14), padding: '14px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 800, color: 'var(--foreground)', fontSize: '0.92rem' }}>{cityLabel(ride.from)}</div>
         <div style={{ color: DS.muted, fontSize: '0.8125rem', marginTop: 1 }}>

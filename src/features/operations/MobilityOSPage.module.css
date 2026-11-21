@@ -1,0 +1,454 @@
+/* MobilityOSPage.module.css — layout, structure and static styles.
+   Dynamic (accent/load-dependent) values stay as inline styles in the component. */
+
+/* ── Page shell ──────────────────────────────────────────────────── */
+.page {
+  min-height: var(--app-min-height);
+  color: var(--foreground);
+  padding: 24px 16px 44px;
+}
+
+.inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+/* ── Header panel ─────────────────────────────────────────────────── */
+.headerPanel {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  box-shadow: var(--shadow-lg, 0 24px 64px rgba(8,29,57,0.45));
+  overflow: hidden;
+  padding: 26px;
+}
+
+.headerBody {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.headerText {
+  max-width: 840px;
+  display: grid;
+  gap: 12px;
+}
+
+.logoWrap {
+  display: inline-flex;
+  padding: 10px 14px;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  width: fit-content;
+}
+
+.eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.headline {
+  margin: 0;
+  font-size: clamp(2.2rem, 4vw, 4rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.subhead {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.75;
+  font-size: 1.02rem;
+  max-width: 760px;
+}
+
+.headerActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+/* ── KPI strip ───────────────────────────────────────────────────── */
+.kpiStrip {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.kpiCard {
+  position: relative;
+  background: var(--card);
+  border-radius: 22px;
+  box-shadow: var(--shadow-lg, 0 18px 42px rgba(8,29,57,0.3));
+  overflow: hidden;
+  padding: 18px;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.kpiCard:hover {
+  transform: translateY(-3px);
+}
+
+.kpiLabel {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.kpiValue {
+  margin-top: 12px;
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.kpiDetail {
+  margin-top: 10px;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+/* ── Map + leaderboard section ───────────────────────────────────── */
+.mapSection {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.9fr);
+}
+
+.mapPanel {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  box-shadow: var(--shadow-lg, 0 24px 64px rgba(8,29,57,0.45));
+  overflow: hidden;
+  padding: 18px;
+  min-height: 620px;
+}
+
+.mapHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.mapMeta {
+  flex: 1;
+  min-width: 0;
+}
+
+.mapLens {
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+}
+
+.mapTitle {
+  margin: 10px 0 6px;
+  font-size: 1.4rem;
+}
+
+.mapDesc {
+  margin: 0;
+  color: var(--muted-foreground);
+  max-width: 620px;
+  line-height: 1.65;
+}
+
+.tabRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.tabBtn {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.svgWrap {
+  position: relative;
+  min-height: 520px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+/* Overlay badges (top-left corner of the SVG wrapper) */
+.mapOverlay {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+}
+
+.overlayChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--overlay, rgba(5,11,18,0.72));
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  backdrop-filter: blur(8px);
+}
+
+.overlayFormula {
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: var(--overlay, rgba(5,11,18,0.72));
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-size: 0.78rem;
+  backdrop-filter: blur(8px);
+}
+
+.liveChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border-radius: 14px;
+  font-size: 0.72rem;
+  transition: background 0.4s ease, border-color 0.4s ease, color 0.4s ease;
+  backdrop-filter: blur(8px);
+}
+
+.liveDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* SVG */
+.svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Sidebar (leaderboard + decisions) */
+.sidebar {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.sidePanel {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg, 0 24px 64px rgba(8,29,57,0.45));
+  overflow: hidden;
+  padding: 18px;
+}
+
+.sidePanelHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidePanelTitle {
+  margin: 0;
+  font-size: 1.02rem;
+}
+
+.leaderList {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.routeCard {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: var(--secondary);
+}
+
+.routeCardTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.routeName {
+  font-weight: 800;
+}
+
+.routeMeta {
+  margin-top: 4px;
+  color: var(--muted-foreground);
+  font-size: 0.82rem;
+}
+
+.routeScore {
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.metricRows {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.metricRow {}
+
+.metricRowHead {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--muted-foreground);
+}
+
+.metricTrack {
+  margin-top: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.metricFill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+/* Decision engine */
+.decisionList {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.decisionCard {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--secondary);
+  color: var(--muted-foreground);
+  line-height: 1.65;
+}
+
+/* ── Bottom stat cards ───────────────────────────────────────────── */
+.statStrip {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.statCard {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-lg, 0 24px 64px rgba(8,29,57,0.45));
+  overflow: hidden;
+  padding: 18px;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-3px);
+}
+
+.statCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.statIconWrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statValue {
+  font-size: 1.24rem;
+  font-weight: 800;
+}
+
+.statTitle {
+  margin: 14px 0 8px;
+  font-size: 1rem;
+}
+
+.statBody {
+  margin: 0;
+  color: var(--muted-foreground);
+  line-height: 1.62;
+  font-size: 0.92rem;
+}
+
+/* ── Mobile layout (≤ 768 px) ────────────────────────────────────── */
+@media (max-width: 768px) {
+  .page { padding: 16px 12px 36px; }
+  .inner { gap: 14px; }
+
+  .headerPanel { padding: 18px 16px; border-radius: 24px; }
+  .headline { font-size: clamp(1.6rem, 7vw, 2.4rem); }
+  .subhead { font-size: 0.94rem; }
+
+  .kpiStrip { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .kpiCard { padding: 14px; }
+  .kpiValue { font-size: 1.6rem; }
+
+  .mapSection {
+    grid-template-columns: 1fr;  /* stack map above sidebar */
+  }
+
+  .mapPanel {
+    min-height: 440px;
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .svgWrap { min-height: 360px; }
+
+  .sidebar { grid-template-columns: 1fr; }
+
+  .statStrip { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .statCard { padding: 14px; }
+}
+
+/* ── Narrow mobile (≤ 400 px) ────────────────────────────────────── */
+@media (max-width: 400px) {
+  .kpiStrip { grid-template-columns: 1fr; }
+  .statStrip { grid-template-columns: 1fr; }
+  .mapOverlay { display: none; }   /* hide overlay at very small sizes */
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .kpiCard, .statCard {
+    transition: none;
+  }
+}

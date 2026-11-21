@@ -328,3 +328,6 @@ vitest.config.mjs
 # NOTE: do not add a trailing `.env*` or a second `.vercel` here. A later pattern overrides
 # the `!.env.example` / `!.env.*.template` negations above and would hide the committed
 # templates from git. `.vercel` is already ignored in the Vercel section.
+
+.vercel
+.env*

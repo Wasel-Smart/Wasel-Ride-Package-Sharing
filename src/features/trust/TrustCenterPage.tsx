@@ -383,9 +383,15 @@ export default function TrustCenterPage () {
     await runAction( 'phone-start', async () => {
       const result = await startTrustPhoneVerification( { phoneNumber: normalizedPhone } );
       updateUser( { phone: result.phoneNumber, phoneVerified: false } );
+      // Dev-mode: auto-fill the code so the user can confirm without an SMS.
+      if ( result.devCode ) {
+        setPhoneCode( result.devCode );
+        toast.success( `[DEV] Code auto-filled: ${ result.devCode }` );
+      } else {
+        toast.success( t( 'trustCenterExpanded.sendCode' ) + ' ' + result.phoneNumber );
+      }
       await refreshProfile();
       await reloadTrustStatus( true );
-      toast.success( t( 'trustCenterExpanded.sendCode' ) + ' ' + result.phoneNumber );
     }, ( current ) => applyOptimisticStepUpdate( current, 'phone', 'in_progress' ) );
   };
 
