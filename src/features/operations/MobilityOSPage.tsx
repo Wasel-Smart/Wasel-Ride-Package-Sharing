@@ -569,7 +569,7 @@ export default function MobilityOSPage() {
             },
           ].map(card => (
             <div
-              key={card.label}
+              key={card.label} className="wasel-creative-stat-card"
               style={panelStyle({
                 padding: 18,
                 borderRadius: 22,
@@ -593,7 +593,7 @@ export default function MobilityOSPage() {
                   marginTop: 12,
                   fontSize: '2rem',
                   lineHeight: 1,
-                  fontWeight: 900,
+                  fontWeight: 800,
                   color: accentColor(card.accent),
                 }}
               >
@@ -743,7 +743,7 @@ export default function MobilityOSPage() {
                         stroke={accentColor(route.accent)}
                         strokeWidth={active ? 1.8 : 1.1}
                         strokeLinecap="round"
-                        strokeOpacity={active ? 0.44 + route.load * 0.3 : 0.14}
+                        strokeOpacity={active ? 0.44 + route.load * 0.3 : 0.14} className="wasel-creative-route-flow"
                       />
                       {(tab === 'math' || tab === 'recovery') && (
                         <g>
@@ -772,7 +772,7 @@ export default function MobilityOSPage() {
                 })}
                 {NODES.map(node => (
                   <g key={node.id}>
-                    <circle cx={node.x} cy={node.y} r={7} fill={`${accentColor(node.accent)}18`} />
+                    <circle cx={node.x} cy={node.y} r={7} fill={`${accentColor(node.accent)}18`} className="wasel-creative-node-glow" />
                     <circle cx={node.x} cy={node.y} r={3.2} fill={accentColor(node.accent)} />
                     <circle cx={node.x} cy={node.y} r={1.1} fill={C.text} />
                     <text
@@ -898,7 +898,7 @@ export default function MobilityOSPage() {
                       <div
                         style={{
                           fontSize: '1.2rem',
-                          fontWeight: 900,
+                          fontWeight: 800,
                           color: accentColor(route.accent),
                         }}
                       >
@@ -1031,7 +1031,7 @@ export default function MobilityOSPage() {
               accent: C.cyan,
             },
           ].map(card => (
-            <article key={card.title} style={panelStyle({ padding: 18, borderRadius: 22 })}>
+            <article key={card.title} className="wasel-creative-stat-card" style={panelStyle({ padding: 18, borderRadius: 22 })}>
               <div
                 style={{
                   display: 'flex',
@@ -1054,7 +1054,7 @@ export default function MobilityOSPage() {
                 >
                   <card.icon size={18} color={card.accent} />
                 </div>
-                <div style={{ fontSize: '1.24rem', fontWeight: 900, color: card.accent }}>
+                <div style={{ fontSize: '1.24rem', fontWeight: 800, color: card.accent }}>
                   {card.value}
                 </div>
               </div>
@@ -1090,7 +1090,7 @@ export default function MobilityOSPage() {
               accent: C.green,
             },
           ].map(item => (
-            <article key={item.title} style={panelStyle({ padding: 18, borderRadius: 22 })}>
+            <article key={item.title} className="wasel-creative-stat-card" style={panelStyle({ padding: 18, borderRadius: 22 })}>
               <div
                 style={{
                   display: 'inline-flex',

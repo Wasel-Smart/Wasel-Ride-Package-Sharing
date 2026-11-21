@@ -1,4 +1,4 @@
-﻿import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -274,6 +274,7 @@ export function HomeHeroSection ( {
       <span className="wasel-home-aurora wasel-home-aurora-cyan" aria-hidden="true" />
       <span className="wasel-home-aurora wasel-home-aurora-green" aria-hidden="true" />
       <span className="wasel-home-aurora wasel-home-aurora-orange" aria-hidden="true" />
+      <span className="wasel-home-aurora wasel-home-aurora-gold" aria-hidden="true" />
 
       <div className="wasel-home-hero-copy">
         <div className="wasel-home-nav">

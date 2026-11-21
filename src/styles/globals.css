@@ -2508,3 +2508,44 @@ nav,
                      text-align: left; cursor: pointer; display: flex; align-items: center;
                      justify-content: space-between; gap: 0.5rem; }
 .wsl-clickable-row:hover { border-color: var(--ring); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WASEL CREATIVE VISUAL LAYER
+   Motion, depth, and light system built on brand tokens.
+   All animations respect prefers-reduced-motion (global override above).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Breathing glow — for live indicators, status pills, network nodes */
+@keyframes wasel-glow-breathe { 0%, 100% { opacity: 0.22; } 50% { opacity: 0.65; } }
+
+/* Soft float — subtle vertical drift for frames and mockups */
+@keyframes wasel-float-soft { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+/* Gradient flow — slow color sweep for headings */
+@keyframes wasel-gradient-flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+/* Shimmer sweep — diagonal light pass for cards and panels */
+@keyframes wasel-shimmer-sweep { 0% { transform: translateX(-150%) skewX(-20deg); } 100% { transform: translateX(150%) skewX(-20deg); } }
+
+/* Route flow — marching dashes for SVG route paths */
+@keyframes wasel-route-flow { to { stroke-dashoffset: -10; } }
+
+/* Floating element */
+.wasel-creative-float { animation: wasel-float-soft 6s ease-in-out infinite; }
+
+/* Animated gradient text */
+.wasel-creative-gradient-text { background-size: 250% auto; animation: wasel-gradient-flow 12s ease-in-out infinite; }
+
+/* Shimmer overlay */
+.wasel-creative-shimmer { position: relative; overflow: hidden; }
+.wasel-creative-shimmer::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 30%, rgba(0,229,255,0.1) 50%, transparent 70%); animation: wasel-shimmer-sweep 3s ease-in-out infinite; }
+
+/* Stat card depth — hover lift */
+.wasel-creative-stat-card { transition: transform 200ms cubic-bezier(0.4,0,0.2,1), box-shadow 200ms cubic-bezier(0.4,0,0.2,1); }
+.wasel-creative-stat-card:hover { transform: translateY(-3px); }
+
+/* SVG node glow — breathing pulse ring */
+.wasel-creative-node-glow { animation: wasel-glow-breathe 3s ease-in-out infinite; }
+
+/* SVG route flow — marching dashes */
+.wasel-creative-route-flow { stroke-dasharray: 2 1.5; animation: wasel-route-flow 1s linear infinite; }

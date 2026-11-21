@@ -52,7 +52,7 @@
     "test:load:realistic": "k6 run tests/load/k6-realistic.js",
     "test:load:soak": "k6 run tests/load/k6-soak.js",
     "test:load:production": "k6 run tests/load/k6-production.js",
-    "test:contracts": "vitest run tests/integration/openapi-contract.test.ts tests/integration/api-endpoints-contract.test.ts && npm run verify:contracts",
+    "test:contracts": "vitest run tests/integration/openapi-contract.test.ts tests/integration/api-endpoints-contract.test.ts tests/integration/service-contracts.test.ts && npm run verify:contracts",
     "test:contracts:live": "npm run test:contracts && node scripts/verify-frontend-backend-wiring.mjs",
     "type-check:app": "tsc -p tsconfig.build.json --noEmit",
     "type-check:test": "tsc -p tsconfig.tests.json --noEmit",
