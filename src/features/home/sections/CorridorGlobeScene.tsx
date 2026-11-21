@@ -19,7 +19,7 @@ const GLOBE_RADIUS = 1.6;
 // (docs/BRAND_GUIDELINES.md). Per the token file's own guidance, info/map/
 // data-viz surfaces reference `teal` rather than the `cyan` compatibility alias.
 const GLOBE_SHELL_COLOR = C.teal;
-const GLOBE_CORE_COLOR = C.navyMid;
+const GLOBE_CORE_COLOR = 'var(--muted)';
 const HUB_COLOR = C.gold;
 
 // The hub is referenced directly (arcs and its marker), so it is a named

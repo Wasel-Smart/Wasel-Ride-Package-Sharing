@@ -100,9 +100,9 @@ function getStepBadge ( state: TrustStepState, t: ( key: string ) => string ) {
     case 'completed':
       return { label: t( 'trustCenterExpanded.completed' ), accent: C.green };
     case 'in_progress':
-      return { label: t( 'trustCenterExpanded.inProgress' ), accent: C.cyan };
+      return { label: t( 'trustCenterExpanded.inProgress' ), accent: 'var(--primary)' };
     case 'failed':
-      return { label: t( 'trustCenterExpanded.failed' ), accent: C.error };
+      return { label: t( 'trustCenterExpanded.failed' ), accent: 'var(--destructive)' };
     default:
       return { label: t( 'trustCenterExpanded.notStarted' ), accent: C.gold };
   }
@@ -293,18 +293,18 @@ export default function TrustCenterPage () {
   const walletStep = effectiveStatus?.steps.walletStanding;
   const walletTone =
     walletStep?.meta.walletStatus === 'closed'
-      ? { label: t( 'trustCenterExpanded.closed' ), color: C.error }
+      ? { label: t( 'trustCenterExpanded.closed' ), color: 'var(--destructive)' }
       : walletStep?.meta.walletStatus === 'frozen'
-        ? { label: t( 'trustCenterExpanded.frozen' ), color: C.error }
+        ? { label: t( 'trustCenterExpanded.frozen' ), color: 'var(--destructive)' }
         : walletStep?.meta.walletStatus === 'limited'
           ? { label: t( 'trustCenterExpanded.limited' ), color: C.gold }
           : walletStep?.meta.walletStatus === 'unavailable'
-            ? { label: t( 'trustCenterExpanded.unavailable' ), color: C.error }
+            ? { label: t( 'trustCenterExpanded.unavailable' ), color: 'var(--destructive)' }
             : { label: t( 'trustCenterExpanded.active' ), color: C.green };
   const heroAccent = effectiveStatus?.blockedSteps.length
-    ? C.error
+    ? 'var(--destructive)'
     : effectiveStatus?.nextStepId
-      ? C.cyan
+      ? 'var(--primary)'
       : C.green;
   const heroLabel = effectiveStatus?.blockedSteps.length
     ? t( 'trustCenterExpanded.needsReview' )
@@ -589,7 +589,7 @@ export default function TrustCenterPage () {
                             .replace( '{completed}', '0' )
                             .replace( '{total}', '4' )
                       }
-                      accent={ C.cyan }
+                      accent={ 'var(--primary)' }
                     />
                     <StatusBadge
                       label={ t( 'trustCenterExpanded.unlocked' ).replace(
@@ -622,7 +622,7 @@ export default function TrustCenterPage () {
                     t={ t }
                     compact
                   />
-                  <div style={ { color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: TYPE.lineHeight.relaxed, fontFamily: F } }>
+                  <div style={ { color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: TYPE.lineHeight.relaxed, fontFamily: F } }>
                     { t( 'trustCenterExpanded.eachCardShowsState' ) }
                   </div>
                 </div>
@@ -635,9 +635,9 @@ export default function TrustCenterPage () {
                 style={ {
                   padding: `${ SPACE[ 3 ] } ${ SPACE[ 4 ] }`,
                   borderRadius: R.lg,
-                  border: `1px solid ${ C.cyan }33`,
-                  background: `${ C.cyan }12`,
-                  color: C.cyan,
+                  border: `1px solid ${ 'var(--primary)' }33`,
+                  background: `${ 'var(--primary)' }12`,
+                  color: 'var(--primary)',
                   fontSize: TYPE.size.sm,
                   fontFamily: F,
                 } }
@@ -677,14 +677,14 @@ export default function TrustCenterPage () {
                 }
                 detail={ t( 'trustCenterExpanded.checksDoneDetail' ) }
                 icon={ <CheckCircle2 size={ 18 } /> }
-                accent={ C.cyan }
+                accent={ 'var(--primary)' }
               />
               <MetricCard
                 label={ t( 'trustCenterExpanded.blockedChecks' ) }
                 value={ `${ effectiveStatus?.blockedSteps.length ?? 0 }` }
                 detail={ t( 'trustCenterExpanded.failedStepsDetail' ) }
                 icon={ <Activity size={ 18 } /> }
-                accent={ ( effectiveStatus?.blockedSteps.length ?? 0 ) > 0 ? C.error : C.green }
+                accent={ ( effectiveStatus?.blockedSteps.length ?? 0 ) > 0 ? 'var(--destructive)' : C.green }
               />
               <MetricCard
                 label={ t( 'trustCenterExpanded.walletStatus' ) }
@@ -715,7 +715,7 @@ export default function TrustCenterPage () {
                     padding: SPACE[ 5 ],
                     borderRadius: R.xxl,
                     border: `1px solid ${ heroAccent }24`,
-                    background: `radial-gradient(circle at top left, ${ heroAccent }12, transparent 34%), ${ C.card }`,
+                    background: `radial-gradient(circle at top left, ${ heroAccent }12, transparent 34%), ${ 'var(--card)' }`,
                     boxShadow: SH.md,
                   } }
                 >
@@ -733,7 +733,7 @@ export default function TrustCenterPage () {
                   </div>
                   <div
                     style={ {
-                      color: C.text,
+                      color: 'var(--foreground)',
                       fontSize: TYPE.size.xl,
                       fontWeight: TYPE.weight.ultra,
                       fontFamily: F,
@@ -743,7 +743,7 @@ export default function TrustCenterPage () {
                   </div>
                   <div
                     style={ {
-                      color: C.textMuted,
+                      color: 'var(--muted-foreground)',
                       fontSize: TYPE.size.sm,
                       lineHeight: 1.7,
                       fontFamily: F,
@@ -759,10 +759,10 @@ export default function TrustCenterPage () {
                         gap: SPACE[ 3 ],
                         padding: `${ SPACE[ 3 ] } ${ SPACE[ 4 ] }`,
                         borderRadius: R.lg,
-                        border: `1px solid ${ C.error }33`,
-                        borderInlineStart: `3px solid ${ C.error }`,
-                        background: `${ C.error }12`,
-                        color: C.error,
+                        border: `1px solid ${ 'var(--destructive)' }33`,
+                        borderInlineStart: `3px solid ${ 'var(--destructive)' }`,
+                        background: `${ 'var(--destructive)' }12`,
+                        color: 'var(--destructive)',
                         fontSize: TYPE.size.sm,
                         lineHeight: TYPE.lineHeight.relaxed,
                         fontFamily: F,
@@ -785,14 +785,14 @@ export default function TrustCenterPage () {
                     gap: SPACE[ 4 ],
                     padding: SPACE[ 5 ],
                     borderRadius: R.xxl,
-                    border: `1px solid ${ C.border }`,
-                    background: `linear-gradient(180deg, ${ C.card }, rgba(9,22,34,0.92))`,
+                    border: `1px solid ${ 'var(--border)' }`,
+                    background: `linear-gradient(180deg, ${ 'var(--card)' }, rgba(9,22,34,0.92))`,
                     boxShadow: SH.sm,
                   } }
                 >
                   <div
                     style={ {
-                      color: C.cyan,
+                      color: 'var(--primary)',
                       fontSize: TYPE.size.xs,
                       fontWeight: TYPE.weight.bold,
                       textTransform: 'uppercase',
@@ -813,9 +813,9 @@ export default function TrustCenterPage () {
                           gap: SPACE[ 3 ],
                           padding: `${ SPACE[ 3 ] } ${ SPACE[ 4 ] }`,
                           borderRadius: R.lg,
-                          border: `1px solid ${ C.border }`,
+                          border: `1px solid ${ 'var(--border)' }`,
                           borderInlineStart: `3px solid ${ heroAccent }`,
-                          background: C.card,
+                          background: 'var(--card)',
                           flexWrap: 'wrap',
                         } }
                       >
@@ -836,7 +836,7 @@ export default function TrustCenterPage () {
                           >
                             { item.icon }
                           </span>
-                          <span style={ { color: C.text, fontSize: TYPE.size.sm, fontFamily: F } }>
+                          <span style={ { color: 'var(--foreground)', fontSize: TYPE.size.sm, fontFamily: F } }>
                             { item.title }
                           </span>
                         </div>
@@ -849,7 +849,7 @@ export default function TrustCenterPage () {
                   ) : (
                     <div
                       style={ {
-                        color: C.textMuted,
+                        color: 'var(--muted-foreground)',
                         fontSize: TYPE.size.sm,
                         lineHeight: TYPE.lineHeight.relaxed,
                         fontFamily: F,
@@ -866,7 +866,7 @@ export default function TrustCenterPage () {
               <SectionCard
                 title={ t( 'trustCenterExpanded.subtitle' ) }
                 subtitle={ t( 'trustCenterExpanded.workflowStepSubtitle' ) }
-                icon={ <Activity size={ 16 } color={ C.cyan } /> }
+                icon={ <Activity size={ 16 } color={ 'var(--primary)' } /> }
               >
                 <div style={ { display: 'grid', gap: SPACE[ 4 ] } }>
                   <div ref={ contactRef }>
@@ -891,7 +891,7 @@ export default function TrustCenterPage () {
                               ? t( 'trustCenterExpanded.inProgress' )
                               : t( 'trustCenterExpanded.notStarted' )
                       }
-                      icon={ <MailCheck size={ 16 } color={ C.cyan } /> }
+                      icon={ <MailCheck size={ 16 } color={ 'var(--primary)' } /> }
                     >
                       <div
                         style={ {
@@ -918,14 +918,14 @@ export default function TrustCenterPage () {
                               flexWrap: 'wrap',
                             } }
                           >
-                            <div style={ { color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F } }>
+                            <div style={ { color: 'var(--foreground)', fontWeight: TYPE.weight.bold, fontFamily: F } }>
                               { t( 'trustCenterExpanded.emailConfirmation' ) }
                             </div>
                             <StatusBadge label={ emailBadge.label } accent={ emailBadge.accent } />
                           </div>
                           <div
                             style={ {
-                              color: C.textMuted,
+                              color: 'var(--muted-foreground)',
                               fontSize: TYPE.size.sm,
                               fontFamily: F,
                               lineHeight: 1.6,
@@ -933,7 +933,7 @@ export default function TrustCenterPage () {
                           >
                             { effectiveStatus?.steps.email.detail }
                           </div>
-                          <div style={ { color: C.text, fontSize: TYPE.size.sm, fontFamily: F } }>
+                          <div style={ { color: 'var(--foreground)', fontSize: TYPE.size.sm, fontFamily: F } }>
                             { user.email || effectiveStatus?.steps.email.meta.email || t( 'trustCenterExpanded.email' ) }
                           </div>
                           <TrustActionRow
@@ -972,14 +972,14 @@ export default function TrustCenterPage () {
                               flexWrap: 'wrap',
                             } }
                           >
-                            <div style={ { color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F } }>
+                            <div style={ { color: 'var(--foreground)', fontWeight: TYPE.weight.bold, fontFamily: F } }>
                               { t( 'trustCenterExpanded.phoneConfirmation' ) }
                             </div>
                             <StatusBadge label={ phoneBadge.label } accent={ phoneBadge.accent } />
                           </div>
                           <div
                             style={ {
-                              color: C.textMuted,
+                              color: 'var(--muted-foreground)',
                               fontSize: TYPE.size.sm,
                               fontFamily: F,
                               lineHeight: 1.6,
@@ -1001,7 +1001,7 @@ export default function TrustCenterPage () {
                             aria-describedby="phone-number-error"
                           />
                           { validationErrors.phone ? (
-                            <div id="phone-number-error" style={ { color: C.error, fontSize: TYPE.size.xs, fontFamily: F, marginTop: SPACE[ 1 ] } }>
+                            <div id="phone-number-error" style={ { color: 'var(--destructive)', fontSize: TYPE.size.xs, fontFamily: F, marginTop: SPACE[ 1 ] } }>
                               { validationErrors.phone }
                             </div>
                           ) : null }
@@ -1034,7 +1034,7 @@ export default function TrustCenterPage () {
                                 aria-describedby="phone-code-error"
                               />
                               { validationErrors.phoneCode ? (
-                                <div id="phone-code-error" style={ { color: C.error, fontSize: TYPE.size.xs, fontFamily: F, marginTop: SPACE[ 1 ] } }>
+                                <div id="phone-code-error" style={ { color: 'var(--destructive)', fontSize: TYPE.size.xs, fontFamily: F, marginTop: SPACE[ 1 ] } }>
                                   { validationErrors.phoneCode }
                                 </div>
                               ) : null }
@@ -1049,7 +1049,7 @@ export default function TrustCenterPage () {
                                 { t( 'trustCenterExpanded.confirmPhone' ) }
                               </WaselButton>
                               { formatTimestamp( phoneStep?.meta.expiresAt ) ? (
-                                <div style={ { color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F } }>
+                                <div style={ { color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, fontFamily: F } }>
                                   { t( 'trustCenterExpanded.codeExpires' ) }{ ' ' }
                                   { formatTimestamp( phoneStep?.meta.expiresAt ) }
                                 </div>
@@ -1117,7 +1117,7 @@ export default function TrustCenterPage () {
                               aria-describedby="driver-license-error"
                             />
                             { validationErrors.licenseNumber ? (
-                              <div id="driver-license-error" style={ { color: C.error, fontSize: TYPE.size.xs, fontFamily: F, marginTop: SPACE[ 1 ] } }>
+                              <div id="driver-license-error" style={ { color: 'var(--destructive)', fontSize: TYPE.size.xs, fontFamily: F, marginTop: SPACE[ 1 ] } }>
                                 { validationErrors.licenseNumber }
                               </div>
                             ) : null }
@@ -1150,7 +1150,7 @@ export default function TrustCenterPage () {
                           </>
                         ) }
                         { formatTimestamp( driverStep?.updatedAt ) ? (
-                          <div style={ { color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F } }>
+                          <div style={ { color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, fontFamily: F } }>
                             { t( 'trustCenterExpanded.lastUpdate' ) } { formatTimestamp( driverStep?.updatedAt ) }
                           </div>
                         ) : null }
@@ -1202,7 +1202,7 @@ export default function TrustCenterPage () {
             <SectionCard
               title={ t( 'trustCenterExpanded.reviewHistoryTitle' ) }
               subtitle={ t( 'trustCenterExpanded.reviewHistorySubtitle' ) }
-              icon={ <Activity size={ 16 } color={ C.cyan } /> }
+              icon={ <Activity size={ 16 } color={ 'var(--primary)' } /> }
             >
               <ReviewTimeline items={ reviewHistory } t={ t } />
             </SectionCard>
@@ -1223,9 +1223,9 @@ export default function TrustCenterPage () {
                       alignItems: 'center',
                       padding: `${ SPACE[ 4 ] } ${ SPACE[ 4 ] }`,
                       borderRadius: R.xl,
-                      border: `1px solid ${ item.gate.allowed ? C.green : C.cyan }24`,
-                      borderInlineStart: `3px solid ${ item.gate.allowed ? C.green : C.cyan }`,
-                      background: `linear-gradient(180deg, ${ C.card }, rgba(9,22,34,0.92))`,
+                      border: `1px solid ${ item.gate.allowed ? C.green : 'var(--primary)' }24`,
+                      borderInlineStart: `3px solid ${ item.gate.allowed ? C.green : 'var(--primary)' }`,
+                      background: `linear-gradient(180deg, ${ 'var(--card)' }, rgba(9,22,34,0.92))`,
                       boxShadow: SH.sm,
                       flexWrap: 'wrap',
                     } }
@@ -1239,21 +1239,21 @@ export default function TrustCenterPage () {
                           width: 42,
                           height: 42,
                           borderRadius: R.lg,
-                          color: item.gate.allowed ? C.green : C.cyan,
-                          background: `${ item.gate.allowed ? C.green : C.cyan }18`,
-                          border: `1px solid ${ item.gate.allowed ? C.green : C.cyan }28`,
+                          color: item.gate.allowed ? C.green : 'var(--primary)',
+                          background: `${ item.gate.allowed ? C.green : 'var(--primary)' }18`,
+                          border: `1px solid ${ item.gate.allowed ? C.green : 'var(--primary)' }28`,
                           flexShrink: 0,
                         } }
                       >
                         { item.icon }
                       </span>
                       <div style={ { display: 'grid', gap: 4, minWidth: 0 } }>
-                        <div style={ { color: C.text, fontWeight: TYPE.weight.bold, fontFamily: F } }>
+                        <div style={ { color: 'var(--foreground)', fontWeight: TYPE.weight.bold, fontFamily: F } }>
                           { item.title }
                         </div>
                         <div
                           style={ {
-                            color: C.textMuted,
+                            color: 'var(--muted-foreground)',
                             fontSize: TYPE.size.sm,
                             fontFamily: F,
                             lineHeight: TYPE.lineHeight.relaxed,
@@ -1269,7 +1269,7 @@ export default function TrustCenterPage () {
                     </div>
                     <StatusBadge
                       label={ item.gate.allowed ? t( 'trustCenterExpanded.open' ) : t( 'trustCenterExpanded.locked' ) }
-                      accent={ item.gate.allowed ? C.green : C.cyan }
+                      accent={ item.gate.allowed ? C.green : 'var(--primary)' }
                     />
                   </div>
                 ) ) }

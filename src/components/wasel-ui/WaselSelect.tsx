@@ -51,7 +51,7 @@ function SelectLabel({ label, description, selectId }: {
           style={{
             fontSize: TYPE.size.sm,
             fontWeight: TYPE.weight.bold,
-            color: C.textSub,
+            color: `var(--foreground)`,
             fontFamily: F,
             lineHeight: 1.4,
           }}
@@ -62,7 +62,7 @@ function SelectLabel({ label, description, selectId }: {
       {description && (
         <span
           id={`${selectId}-description`}
-          style={{ fontSize: TYPE.size.xs, color: C.textMuted, fontFamily: F }}
+          style={{ fontSize: TYPE.size.xs, color: `var(--muted-foreground)`, fontFamily: F }}
         >
           {description}
         </span>
@@ -97,7 +97,7 @@ function SelectField({ focused, disabled, hasError, borderColor, boxShadow, styl
         alignItems: 'center',
         minHeight: '50px',
         borderRadius: R.lg,
-        background: focused ? C.card2 : C.cardSolid,
+        background: focused ? `var(--muted)` : `var(--card)`,
         border: `1.5px solid ${borderColor}`,
         boxShadow,
         transition: `border-color ${ANIM.dur.normal} ${ANIM.ease.default}, box-shadow ${ANIM.dur.normal} ${ANIM.ease.default}, background ${ANIM.dur.normal} ${ANIM.ease.default}`,
@@ -128,7 +128,7 @@ function SelectField({ focused, disabled, hasError, borderColor, boxShadow, styl
           border: 'none',
           outline: 'none',
           background: 'transparent',
-          color: C.text,
+          color: `var(--foreground)`,
           fontSize: TYPE.size.base,
           fontFamily: F,
           cursor: disabled ? 'not-allowed' : 'pointer',
@@ -154,7 +154,7 @@ function SelectField({ focused, disabled, hasError, borderColor, boxShadow, styl
           position: 'absolute',
           insetInlineEnd: '14px',
           pointerEvents: 'none',
-          color: C.textMuted,
+          color: `var(--muted-foreground)`,
         }}
       />
     </div>
@@ -183,11 +183,11 @@ export function WaselSelect({
   const [focused, setFocused] = useState(false);
 
   const hasError = Boolean(error);
-  const borderColor = hasError ? C.error : focused ? C.cyan : C.border;
+  const borderColor = hasError ? `var(--destructive)` : focused ? `var(--primary)` : `var(--border)`;
   const boxShadow = hasError
-    ? `0 0 0 3px ${C.errorDim}`
+    ? `0 0 0 3px color-mix(in srgb, var(--destructive) 20%, transparent)`
     : focused
-      ? `0 0 0 3px ${C.cyanGlow}`
+      ? `0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent)`
       : 'none';
   const describedBy = [
     rest['aria-describedby'],
@@ -233,7 +233,7 @@ export function WaselSelect({
       />
 
       {error && (
-        <span id={`${selectId}-error`} role="alert" style={{ fontSize: TYPE.size.xs, color: C.error, fontFamily: F }}>
+        <span id={`${selectId}-error`} role="alert" style={{ fontSize: TYPE.size.xs, color: `var(--destructive)`, fontFamily: F }}>
           {error}
         </span>
       )}

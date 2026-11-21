@@ -57,14 +57,14 @@ export function Row({ label, value, icon, onClick, danger, badge }: RowProps) {
 export function VerificationBadge({
   level,
   ar = false,
-  accent = C.cyan,
+  accent = 'var(--primary)',
 }: {
   level: string;
   ar?: boolean;
   accent?: string;
 }) {
   const map = {
-    level_0: { label: ar ? 'غير موثق' : 'Unverified', color: C.textDim },
+    level_0: { label: ar ? 'غير موثق' : 'Unverified', color: 'var(--muted-foreground)' },
     level_1: { label: ar ? 'موثق الهاتف' : 'Phone Verified', color: C.gold },
     level_2: { label: ar ? 'موثق الهوية' : 'ID Verified', color: accent },
     level_3: { label: ar ? 'موثوق' : 'Trusted', color: C.green },
@@ -93,14 +93,14 @@ export function InsightCard({ label, value, detail, color }: InsightCardProps) {
         padding: `${SPACE[4]} ${SPACE[4]}`,
         borderRadius: R.xxl,
         border: `1px solid ${color}28`,
-        background: `radial-gradient(circle at top left, ${color}14, transparent 34%), ${C.card}`,
+        background: `radial-gradient(circle at top left, ${color}14, transparent 34%), ${'var(--card)'}`,
         boxShadow: SH.card,
       }}
     >
       <div
         style={{
           marginBottom: SPACE[3],
-          color: C.textMuted,
+          color: 'var(--muted-foreground)',
           fontFamily: F,
           fontSize: TYPE.size.xs,
           fontWeight: TYPE.weight.bold,
@@ -124,7 +124,7 @@ export function InsightCard({ label, value, detail, color }: InsightCardProps) {
       </div>
       <div
         style={{
-          color: C.textMuted,
+          color: 'var(--muted-foreground)',
           fontFamily: F,
           fontSize: TYPE.size.sm,
           lineHeight: TYPE.lineHeight.relaxed,

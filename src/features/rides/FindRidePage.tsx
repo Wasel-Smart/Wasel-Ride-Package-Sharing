@@ -58,7 +58,7 @@ export function FindRidePage() {
           <div className="wsl-banner-green">
             <div className="wsl-row">
               <CheckCircle2 size={16} color={DS.green} />
-              <span style={{ color: C.text, fontSize: '0.84rem', fontWeight: 700 }}>
+              <span style={{ color: 'var(--foreground)', fontSize: '0.84rem', fontWeight: 700 }}>
                 {bookedRideIds.size} active booking{bookedRideIds.size > 1 ? 's' : ''} in progress
               </span>
             </div>
@@ -127,8 +127,8 @@ export function FindRidePage() {
                     aria-label={t.searching}
                     style={{
                       width: 20, height: 20,
-                      border: `2px solid ${C.border}`,
-                      borderTop: `2px solid ${C.text}`,
+                      border: `2px solid ${'var(--border)'}`,
+                      borderTop: `2px solid ${'var(--foreground)'}`,
                       borderRadius: '50%',
                       display: 'inline-block',
                     }}
@@ -299,7 +299,7 @@ export function FindRidePage() {
                             >
                               <div className="wsl-row-between">
                                 <div>
-                                  <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>
+                                  <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.84rem' }}>
                                     {ride.from} to {ride.to}
                                   </div>
                                   <div className="wsl-micro">{ride.time} | {ride.driver.name}</div>
@@ -352,7 +352,7 @@ export function FindRidePage() {
                 </div>
                 <div className="wsl-grid-auto">
                   {intelligenceLines.map(line => (
-                    <div key={line} className="wsl-card2" style={{ fontSize: '0.82rem', lineHeight: 1.65, color: C.text }}>
+                    <div key={line} className="wsl-card2" style={{ fontSize: '0.82rem', lineHeight: 1.65, color: 'var(--foreground)' }}>
                       {line}
                     </div>
                   ))}
@@ -388,7 +388,7 @@ export function FindRidePage() {
                       >
                         <div className="wsl-row-between">
                           <div>
-                            <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>{corridor.label}</div>
+                            <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.84rem' }}>{corridor.label}</div>
                             <div className="wsl-micro">
                               {t.demandScore} {corridor.forecastDemandScore} | {t.formatCurrency(corridor.priceQuote.finalPriceJod)} | {corridor.routeOwnershipScore} {t.ownershipScore}
                             </div>
@@ -414,7 +414,7 @@ export function FindRidePage() {
                   <div className="wsl-grid-auto">
                     {marketplaceNodes.map(node => (
                       <div key={node.id} className="wsl-card2">
-                        <div style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem' }}>{node.title}</div>
+                        <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.82rem' }}>{node.title}</div>
                         <div className="wsl-micro" style={{ lineHeight: 1.55 }}>{node.summary}</div>
                       </div>
                     ))}
@@ -436,7 +436,7 @@ export function FindRidePage() {
                         <div key={suggestion.corridorId} className="wsl-card2">
                           <div className="wsl-row-between">
                             <div>
-                              <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>{suggestion.label}</div>
+                              <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.84rem' }}>{suggestion.label}</div>
                               <div className="wsl-micro">
                                 {suggestion.confidenceScore}/100 | {t.formatCurrency(suggestion.priceQuote.finalPriceJod)} | {t.weeklySignals(suggestion.weeklyFrequency)}
                               </div>
@@ -474,7 +474,7 @@ export function FindRidePage() {
                   <div className="wsl-grid-auto">
                     {savedReminders.slice(0, 4).map(reminder => (
                       <div key={reminder.id} className="wsl-card-sm">
-                        <div style={{ color: C.text, fontWeight: 700, fontSize: '0.8rem' }}>{reminder.label}</div>
+                        <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.8rem' }}>{reminder.label}</div>
                         <div className="wsl-micro">{formatRouteReminderSchedule(reminder)}</div>
                       </div>
                     ))}
@@ -507,7 +507,7 @@ export function FindRidePage() {
                       >
                         <div className="wsl-row-between">
                           <div>
-                            <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div>
+                            <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.84rem' }}>{ride.from} to {ride.to}</div>
                             <div className="wsl-micro">
                               {ride.time} | {ride.driver.name} | {rideSignal ? `${rideSignal.routeOwnershipScore}/100 ${t.ownershipScore}` : ride.car}
                             </div>

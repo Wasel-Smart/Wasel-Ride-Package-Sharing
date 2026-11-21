@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { useLocation } from 'react-router';
 import { Shield } from 'lucide-react';
 import { useLocalAuth } from '../contexts/LocalAuth';
@@ -93,7 +93,7 @@ export function Protected({ children }: { children: ReactNode }) {
           >
             <Shield size={24} />
           </div>
-          <div style={{ color: '#fff', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>
+          <div style={{ color: 'var(--foreground)', fontSize: '1rem', fontWeight: 800, marginBottom: 8 }}>
             {t('waselServiceShared.sign_in_required')}
           </div>
           <div style={{ color: DS.sub, fontFamily: DS.F, fontSize: '0.85rem', lineHeight: 1.7 }}>
@@ -273,7 +273,7 @@ export function SectionHead({
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <h1 style={{ fontSize: '1.55rem', fontWeight: 800, color: '#fff', margin: 0 }}>
+              <h1 style={{ fontSize: '1.55rem', fontWeight: 800, color: 'var(--foreground)', margin: 0 }}>
                 {displayTitle}
               </h1>
             </div>
@@ -294,7 +294,7 @@ export function SectionHead({
               borderRadius: '99px',
               border: 'none',
               background: DS.gradC,
-              color: '#fff',
+              color: 'var(--foreground)',
               fontWeight: 700,
               fontSize: '0.875rem',
               boxShadow: `0 4px 16px ${DS.cyan}30`,
@@ -333,7 +333,7 @@ export function CoreExperienceBanner({
       }}
     >
       <Shield size={16} color={tone} style={{ flexShrink: 0 }} />
-      <div style={{ color: '#fff', fontWeight: 700, fontSize: '0.9rem' }}>{title}</div>
+      <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.9rem' }}>{title}</div>
     </div>
   );
 }

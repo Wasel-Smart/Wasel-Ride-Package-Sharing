@@ -43,17 +43,17 @@ import {
 } from '../../services/supportInbox';
 import { C, F, R, SPACE, TYPE } from '../../utils/wasel-ds';
 
-const CARD = C.card;
-const CARD_ALT = C.elevated;
-const BORDER = C.border;
-const CYAN = C.cyan;
+const CARD = 'var(--card)';
+const CARD_ALT = 'var(--secondary)';
+const BORDER = 'var(--border)';
+const CYAN = 'var(--primary)';
 const GOLD = C.gold;
 const GREEN = C.green;
-const RED = C.error;
+const RED = 'var(--destructive)';
 const AMBER = C.warning;
-const TEXT = C.text;
-const MUTED = C.textMuted;
-const DIM = C.textDim;
+const TEXT = 'var(--foreground)';
+const MUTED = 'var(--muted-foreground)';
+const DIM = 'var(--muted-foreground)';
 const FONT = F;
 
 type TripLifecycle = 'active' | 'attention' | 'completed' | 'cancelled';
@@ -112,7 +112,7 @@ function lifecycleConfig(
     cancelled: {
       label: ar ? 'ملغية' : 'Cancelled',
       color: RED,
-      bg: C.errorDim,
+      bg: 'color-mix(in srgb, var(--destructive) 14%, transparent)',
       icon: <XCircle size={12} />,
     },
   };
@@ -127,8 +127,8 @@ function paymentConfig(
     authorized: { label: ar ? 'الدفع مصرّح' : 'Payment authorized', color: CYAN, bg: C.cyanDim },
     captured: { label: ar ? 'تمت التسوية' : 'Settlement captured', color: GREEN, bg: C.greenDim },
     refunded: { label: ar ? 'تم الاسترداد' : 'Refund completed', color: CYAN, bg: C.blueDim },
-    failed: { label: ar ? 'مشكلة دفع' : 'Payment issue', color: RED, bg: C.errorDim },
-    'n/a': { label: ar ? 'لا توجد حالة دفع' : 'No payment state', color: MUTED, bg: C.elevated },
+    failed: { label: ar ? 'مشكلة دفع' : 'Payment issue', color: RED, bg: 'color-mix(in srgb, var(--destructive) 14%, transparent)' },
+    'n/a': { label: ar ? 'لا توجد حالة دفع' : 'No payment state', color: MUTED, bg: 'var(--secondary)' },
   };
 }
 
@@ -141,7 +141,7 @@ function supportStatusConfig(
     investigating: { label: ar ? 'قيد المراجعة' : 'Investigating', color: AMBER, bg: C.goldDim },
     waiting_on_user: { label: ar ? 'بانتظارك' : 'Waiting on you', color: GOLD, bg: C.goldDim },
     resolved: { label: ar ? 'محلول' : 'Resolved', color: GREEN, bg: C.greenDim },
-    closed: { label: ar ? 'مغلق' : 'Closed', color: MUTED, bg: C.elevated },
+    closed: { label: ar ? 'مغلق' : 'Closed', color: MUTED, bg: 'var(--secondary)' },
   };
 }
 
@@ -507,7 +507,7 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
             <span style={{ fontWeight: 800, color: TEXT, fontFamily: FONT, fontSize: '0.92rem' }}>
               {trip.from}
             </span>
-            <span style={{ color: C.textDim, fontSize: '0.78rem' }}>{t('myTripsPage.to')}</span>
+            <span style={{ color: 'var(--muted-foreground)', fontSize: '0.78rem' }}>{t('myTripsPage.to')}</span>
             <span style={{ fontWeight: 800, color: TEXT, fontFamily: FONT, fontSize: '0.92rem' }}>
               {trip.to}
             </span>
@@ -518,7 +518,7 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
           <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <span style={pill(routeAccent)}>{trip.primaryStatus}</span>
             {trip.ticketLabel ? (
-              <span style={pill(C.text, C.elevated)}>
+              <span style={pill('var(--foreground)', 'var(--secondary)')}>
                 <Ticket size={12} />
                 {trip.ticketLabel}
               </span>
@@ -541,7 +541,7 @@ function TripCard({ trip, onOpen }: { trip: TripItem; onOpen: () => void }) {
         </div>
         <ChevronRight
           size={14}
-          color={C.textDim}
+          color={'var(--muted-foreground)'}
           style={{
             flexShrink: 0,
             transform: expanded ? 'rotate(90deg)' : 'none',
@@ -903,7 +903,7 @@ export default function MyTripsPage() {
                   >
                     <div
                       style={{
-                        color: C.text,
+                        color: 'var(--foreground)',
                         fontSize: TYPE.size.xl,
                         fontWeight: 900,
                         lineHeight: 1.1,
@@ -991,7 +991,7 @@ export default function MyTripsPage() {
           >
             <div
               style={{
-                background: `linear-gradient(135deg, ${C.cyanDim}, ${C.elevated})`,
+                background: `linear-gradient(135deg, ${C.cyanDim}, ${'var(--secondary)'})`,
                 border: `1px solid ${nextPriorityTrip?.lifecycle === 'attention' ? AMBER : CYAN}24`,
                 borderRadius: 18,
                 padding: '18px 18px 16px',
@@ -1240,10 +1240,10 @@ export default function MyTripsPage() {
             <WaselEmptyState
               icon={
                 tab === 'rides'
-                  ? <Car size={42} color={C.textDim} />
+                  ? <Car size={42} color={'var(--muted-foreground)'} />
                   : tab === 'packages'
-                    ? <Package size={42} color={C.textDim} />
-                    : <Bus size={42} color={C.textDim} />
+                    ? <Package size={42} color={'var(--muted-foreground)'} />
+                    : <Bus size={42} color={'var(--muted-foreground)'} />
               }
               title={`${t('common.no')} ${tripKindLabel(tab, language)}`}
               description={t('myTripsPage.match_this_lifecycle_filter_yet')}
@@ -1266,7 +1266,7 @@ export default function MyTripsPage() {
                         : 'Find a bus'}
                 </WaselButton>
               }
-              accent={C.textDim}
+              accent={'var(--muted-foreground)'}
             />
           ) : (
             filtered.map(trip => (

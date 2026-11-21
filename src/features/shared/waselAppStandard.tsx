@@ -276,9 +276,9 @@ export const fieldStyle: CSSProperties = {
   width: '100%',
   padding: '12px 14px',
   borderRadius: R.md,
-  border: `1px solid ${C.border}`,
-  background: C.card2,
-  color: C.text,
+  border: `1px solid ${'var(--border)'}`,
+  background: 'var(--muted)',
+  color: 'var(--foreground)',
   fontFamily: "'Plus Jakarta Sans','Cairo','Tajawal','Inter',sans-serif",
   fontSize: '0.9rem',
   outline: 'none',
@@ -288,7 +288,7 @@ export const fieldStyle: CSSProperties = {
 
 export const labelStyle: CSSProperties = {
   display: 'block',
-  color: C.textMuted,
+  color: 'var(--muted-foreground)',
   fontSize: '0.7rem',
   fontWeight: 700,
   textTransform: 'uppercase',
@@ -320,9 +320,9 @@ export function StatStrip({ stats, cols = 4 }: { stats: StatItem[]; cols?: 2 | 3
           key={s.label}
           className="w2-card-hover"
           style={{
-            background: C.card,
+            background: 'var(--card)',
             borderRadius: R.xl,
-            border: `1px solid ${C.border}`,
+            border: `1px solid ${'var(--border)'}`,
             padding: `${SP[4]}px ${SP[5]}px`,
             boxShadow: SH.sm,
           }}
@@ -338,7 +338,7 @@ export function StatStrip({ stats, cols = 4 }: { stats: StatItem[]; cols?: 2 | 3
             {s.value === null ? (
               <span
                 className="w2-skeleton"
-                style={{ color: C.textMuted, fontSize: '0.9rem' }}
+                style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem' }}
               >
                 —
               </span>
@@ -346,7 +346,7 @@ export function StatStrip({ stats, cols = 4 }: { stats: StatItem[]; cols?: 2 | 3
               s.value
             )}
           </div>
-          <div style={{ color: C.textMuted, fontSize: '0.78rem', fontWeight: 600 }}>
+          <div style={{ color: 'var(--muted-foreground)', fontSize: '0.78rem', fontWeight: 600 }}>
             {s.label}
           </div>
         </div>
@@ -377,10 +377,10 @@ export function TabBar<T extends string>({
       style={{
         display: 'flex',
         gap: SP[2] - 2,
-        background: C.card2,
+        background: 'var(--muted)',
         borderRadius: R.xl,
         padding: 5,
-        border: `1px solid ${C.border}`,
+        border: `1px solid ${'var(--border)'}`,
         marginBottom: SP[5],
       }}
     >
@@ -401,7 +401,7 @@ export function TabBar<T extends string>({
               fontWeight: isActive ? 800 : 600,
               fontSize: '0.85rem',
               background: isActive ? accentGrad : 'transparent',
-              color: isActive ? C.text : C.textMuted,
+              color: isActive ? 'var(--foreground)' : 'var(--muted-foreground)',
               transition: 'all 0.18s',
               position: 'relative',
             }}
@@ -425,10 +425,10 @@ export function PanelCard({
   return (
     <div
       style={{
-        background: C.card,
+        background: 'var(--card)',
         borderRadius: R.xxl,
         padding: `${SP[7]}px ${SP[6]}px`,
-        border: `1px solid ${C.border}`,
+        border: `1px solid ${'var(--border)'}`,
         boxShadow: SH.card,
         marginBottom: SP[6],
         ...style,
@@ -454,10 +454,10 @@ export function SidebarCard({
   return (
     <div
       style={{
-        background: C.card2,
+        background: 'var(--muted)',
         borderRadius: R.xl,
         padding: SP[5] - 2,
-        border: `1px solid ${C.border}`,
+        border: `1px solid ${'var(--border)'}`,
       }}
     >
       {(title || icon) && (
@@ -486,7 +486,7 @@ export function SidebarCard({
             </div>
           )}
           <div
-            style={{ color: C.text, fontWeight: 800, fontSize: '0.9rem' }}
+            style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.9rem' }}
           >
             {title}
           </div>
@@ -583,10 +583,10 @@ export function EmptyState({
       >
         {icon}
       </div>
-      <div style={{ color: C.text, fontWeight: 800, fontSize: '1rem' }}>{title}</div>
+      <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '1rem' }}>{title}</div>
       <div
         style={{
-          color: C.textMuted,
+          color: 'var(--muted-foreground)',
           fontSize: '0.82rem',
           lineHeight: 1.6,
           maxWidth: 300,
@@ -603,7 +603,7 @@ export function SkeletonDash() {
   return (
     <span
       className="w2-skeleton"
-      style={{ color: C.textMuted, fontSize: '0.9rem' }}
+      style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem' }}
     >
       —
     </span>
@@ -622,7 +622,7 @@ export function ErrorBanner({ message, icon }: { message: string; icon?: ReactNo
         border: `1px solid ${C.gold}30`,
         borderRadius: R.lg,
         padding: `${SP[3]}px ${SP[4] - 2}px`,
-        color: C.text,
+        color: 'var(--foreground)',
         fontSize: '0.84rem',
         marginBottom: SP[4],
       }}
@@ -663,11 +663,11 @@ export function StepList({
             {i + 1}
           </div>
           <div>
-            <div style={{ color: C.text, fontSize: '0.82rem', fontWeight: 700 }}>
+            <div style={{ color: 'var(--foreground)', fontSize: '0.82rem', fontWeight: 700 }}>
               {step.title}
             </div>
             <div
-              style={{ color: C.textMuted, fontSize: '0.74rem', marginTop: 2, lineHeight: 1.5 }}
+              style={{ color: 'var(--muted-foreground)', fontSize: '0.74rem', marginTop: 2, lineHeight: 1.5 }}
             >
               {step.desc}
             </div>
@@ -697,8 +697,8 @@ export function ProgressBar({
             flex: 1,
             height: 4,
             borderRadius: 999,
-            background: i < current ? accent : C.elevated,
-            border: `1px solid ${i < current ? accent : C.border}`,
+            background: i < current ? accent : 'var(--secondary)',
+            border: `1px solid ${i < current ? accent : 'var(--border)'}`,
             transition: 'background 0.25s',
           }}
         />
@@ -758,8 +758,8 @@ export function CTAButton({
         height: 52,
         borderRadius: R.lg,
         border: 'none',
-        background: disabled ? C.card2 : grad,
-        color: disabled ? C.textMuted : C.text,
+        background: disabled ? 'var(--muted)' : grad,
+        color: disabled ? 'var(--muted-foreground)' : 'var(--foreground)',
         fontWeight: 800,
         fontFamily: "'Plus Jakarta Sans','Cairo','Tajawal','Inter',sans-serif",
         fontSize: '0.95rem',
@@ -782,7 +782,7 @@ export function CTAButton({
 export function GhostButton({
   children,
   onClick,
-  color = C.textMuted,
+  color = 'var(--muted-foreground)',
 }: {
   children: ReactNode;
   onClick: () => void;
@@ -795,7 +795,7 @@ export function GhostButton({
       style={{
         padding: '9px 18px',
         borderRadius: R.full,
-        border: `1px solid ${C.border}`,
+        border: `1px solid ${'var(--border)'}`,
         background: 'transparent',
         color,
         cursor: 'pointer',

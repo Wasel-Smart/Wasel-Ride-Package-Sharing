@@ -18,7 +18,7 @@ const controls = [
     titleAr: 'تشفير النقل والتخزين',
     detail: 'TLS 1.2+ for all data in transit and AES-256 encryption for sensitive account, wallet, and verification records at rest.',
     detailAr: 'TLS 1.2+ لجميع البيانات أثناء النقل وتشفير AES-256 للسجلات الحساسة للحساب والمحفظة والتوثيق.',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
   {
     icon: Fingerprint,
@@ -61,7 +61,7 @@ const complianceItems = [
     titleAr: 'قوانين حماية البيانات الأردنية',
     detail: 'Compliance with local data protection regulations for data collection, processing, and cross-border transfer.',
     detailAr: 'الامتثال للوائح حماية البيانات المحلية لجمع البيانات ومعالجتها والنقل عبر الحدود.',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
   {
     icon: ShieldCheck,
@@ -80,7 +80,7 @@ const trustSteps = [
     titleAr: 'فحوصات الهوية والثقة',
     detail: 'Account trust uses email, phone, driver documents, and wallet-standing checks.',
     detailAr: 'تعتمد الثقة على البريد والهاتف ووثائق السائق وحالة المحفظة.',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
   {
     icon: Mail,
@@ -137,7 +137,7 @@ const dataResidencyItems = [
     titleAr: 'المنطقة الأساسية',
     detail: 'User data is hosted in AWS me-south-1 (Bahrain) with Vercel Edge Network CDN and Supabase Middle East database.',
     detailAr: 'بيانات المستخدم مستضافة في AWS me-south-1 (البحرين) مع شبكة Vercel Edge وقاعدة بيانات Supabase في الشرق الأوسط.',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
   {
     icon: MapPinned,
@@ -164,7 +164,7 @@ const subProcessorItems = [
     titleAr: 'Supabase',
     detail: 'Authentication, database, and edge functions. Data processed under Supabase privacy policy and DPA.',
     detailAr: 'مصادقة وقاعدة بيانات ووظائف حافة. تتم المعالجة بموجب سياسة خصوصية Supabase واتفاقية معالجة البيانات.',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
   {
     icon: Server,
@@ -207,7 +207,7 @@ const auditItems = [
     titleAr: 'مراجعة التبعيات',
     detail: 'GitHub CodeQL and dependency review run on every PR. Secret scanning is enforced in CI.',
     detailAr: 'CodeQL ومراجعة التبعيات يعملان على كل طلب سحب. فحص الأسرار مفروض في التكامل المستمر.',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
   {
     icon: Lock,
@@ -232,7 +232,7 @@ const statusItems = [
     titleAr: 'خدمة الهوية',
     value: '99.95%',
     detail: 'p95 < 200ms',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
   {
     title: 'Ride matching',
@@ -281,7 +281,7 @@ export function TrustCenterPage() {
                 type="button"
                 variant="outline"
                 onClick={() => { void nav('/app/support'); }}
-                style={{ background: C.elevated, color: C.text }}
+                style={{ background: 'var(--secondary)', color: 'var(--foreground)' }}
               >
                 {ar ? 'تواصل مع الدعم' : 'Contact support'}
               </WaselButton>
@@ -293,7 +293,7 @@ export function TrustCenterPage() {
                 label={ar ? 'منصة تنقل موثوقة' : 'Trusted mobility platform'}
                 accent={C.green}
               />
-              <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+              <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
                 {ar
                   ? 'كل طبقة أمان مصممة لحماية الحسابات والرحلات والطرود والمدفوعات.'
                   : 'Every security layer is designed to protect accounts, rides, parcels, and payments.'}
@@ -314,7 +314,7 @@ export function TrustCenterPage() {
             label={ar ? 'فحوصات الثقة' : 'Trust checks'}
             value="5"
             detail={ar ? 'هوية، بريد، هاتف، وثائق، محفظة' : 'Identity, email, phone, documents, wallet'}
-            accent={C.cyan}
+            accent={'var(--primary)'}
             icon={<Fingerprint size={18} />}
           />
           <MetricCard
@@ -364,7 +364,7 @@ export function TrustCenterPage() {
                   style={{
                     borderRadius: R.xxl,
                     border: `1px solid ${item.accent}24`,
-                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${'var(--card)'}`,
                     boxShadow: SH.md,
                     padding: SPACE[5],
                   }}
@@ -391,11 +391,11 @@ export function TrustCenterPage() {
                     >
                       <Icon size={18} />
                     </span>
-                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                    <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black }}>
                       {ar ? item.titleAr : item.title}
                     </div>
                   </div>
-                  <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+                  <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
                     {ar ? item.detailAr : item.detail}
                   </div>
                 </div>
@@ -411,7 +411,7 @@ export function TrustCenterPage() {
               ? 'الثقة بتزيد لما تكون المتطلبات القانونية سهلة القراءة.'
               : 'Trust improves when legal expectations are easy to scan.'
           }
-          icon={<ShieldCheck size={18} color={C.cyan} />}
+          icon={<ShieldCheck size={18} color={'var(--primary)'} />}
         >
           <div
             style={{
@@ -428,7 +428,7 @@ export function TrustCenterPage() {
                   style={{
                     borderRadius: R.xxl,
                     border: `1px solid ${item.accent}24`,
-                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${'var(--card)'}`,
                     boxShadow: SH.md,
                     padding: SPACE[5],
                   }}
@@ -455,11 +455,11 @@ export function TrustCenterPage() {
                     >
                       <Icon size={18} />
                     </span>
-                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                    <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black }}>
                       {ar ? item.titleAr : item.title}
                     </div>
                   </div>
-                  <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+                  <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
                     {ar ? item.detailAr : item.detail}
                   </div>
                 </div>
@@ -475,7 +475,7 @@ export function TrustCenterPage() {
               ? '٥ بوابات تحقق واضحة تفتح القدرات بالتدريج.'
               : '5 clear verification gates unlock capabilities progressively.'
           }
-          icon={<Fingerprint size={18} color={C.cyan} />}
+          icon={<Fingerprint size={18} color={'var(--primary)'} />}
         >
           <div
             style={{
@@ -492,7 +492,7 @@ export function TrustCenterPage() {
                   style={{
                     borderRadius: R.xxl,
                     border: `1px solid ${step.accent}24`,
-                    background: `radial-gradient(circle at top left, ${step.accent}12, transparent 34%), ${C.card}`,
+                    background: `radial-gradient(circle at top left, ${step.accent}12, transparent 34%), ${'var(--card)'}`,
                     boxShadow: SH.md,
                     padding: SPACE[5],
                   }}
@@ -519,11 +519,11 @@ export function TrustCenterPage() {
                     >
                       <Icon size={18} />
                     </span>
-                    <div style={{ color: C.text, fontWeight: TYPE.weight.black, fontSize: TYPE.size.sm }}>
+                    <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black, fontSize: TYPE.size.sm }}>
                       {ar ? step.titleAr : step.title}
                     </div>
                   </div>
-                  <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+                  <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
                     {ar ? step.detailAr : step.detail}
                   </div>
                 </div>
@@ -551,8 +551,8 @@ export function TrustCenterPage() {
                   gap: 12,
                   alignItems: 'center',
                   borderRadius: R.xl,
-                  border: `1px solid ${C.borderFaint}`,
-                  background: C.elevated,
+                  border: `1px solid ${'var(--border)'}`,
+                  background: 'var(--secondary)',
                   padding: `${SPACE[3]} ${SPACE[4]}`,
                 }}
               >
@@ -571,7 +571,7 @@ export function TrustCenterPage() {
                 >
                   {index + 1}
                 </div>
-                <div style={{ color: C.text, fontSize: TYPE.size.sm, lineHeight: 1.65 }}>
+                <div style={{ color: 'var(--foreground)', fontSize: TYPE.size.sm, lineHeight: 1.65 }}>
                   {step}
                 </div>
               </div>
@@ -598,18 +598,18 @@ export function TrustCenterPage() {
             <div
               style={{
                 borderRadius: R.xxl,
-                border: `1px solid ${C.border}`,
-                background: C.card,
+                border: `1px solid ${'var(--border)'}`,
+                background: 'var(--card)',
                 boxShadow: SH.md,
                 padding: SPACE[5],
                 display: 'grid',
                 gap: SPACE[3],
               }}
             >
-              <div style={{ color: C.text, fontWeight: TYPE.weight.black, fontSize: TYPE.size.base }}>
+              <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black, fontSize: TYPE.size.base }}>
                 {ar ? 'كيف تبلغ عن ثغرة' : 'How to report a vulnerability'}
               </div>
-              <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+              <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
                 {ar
                   ? 'أرسل تفاصيل الثغرة إلى فريق الأمان لدينا. نرد خلال 72 ساعة ونعمل معك على جدول زمني معقول للإصلاح.'
                   : 'Send vulnerability details to our security team. We respond within 72 hours and work with you on a reasonable fix timeline.'}
@@ -626,18 +626,18 @@ export function TrustCenterPage() {
             <div
               style={{
                 borderRadius: R.xxl,
-                border: `1px solid ${C.border}`,
-                background: C.card,
+                border: `1px solid ${'var(--border)'}`,
+                background: 'var(--card)',
                 boxShadow: SH.md,
                 padding: SPACE[5],
                 display: 'grid',
                 gap: SPACE[3],
               }}
             >
-              <div style={{ color: C.text, fontWeight: TYPE.weight.black, fontSize: TYPE.size.base }}>
+              <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black, fontSize: TYPE.size.base }}>
                 {ar ? 'قواعد المسؤولية' : 'Responsible disclosure rules'}
               </div>
-              <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+              <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
                 {ar
                   ? 'لا تكنفذ هجمات حجب الخدمة أو تعدل بيانات مستخدمين آخرين. ركز على إثبات المشكلة بأقل تأثير ممكن.'
                   : 'Do not run denial-of-service attacks or modify other user data. Focus on proving the issue with minimal impact.'}
@@ -653,7 +653,7 @@ export function TrustCenterPage() {
               ? 'واصل يحترم سيادة البيانات ويخزنها في المنطقة الأقرب للمستخدم.'
               : 'Wasel respects data sovereignty and stores data in the region closest to the user.'
           }
-          icon={<Globe2 size={18} color={C.cyan} />}
+          icon={<Globe2 size={18} color={'var(--primary)'} />}
         >
           <div
             style={{
@@ -670,7 +670,7 @@ export function TrustCenterPage() {
                   style={{
                     borderRadius: R.xxl,
                     border: `1px solid ${item.accent}24`,
-                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${'var(--card)'}`,
                     boxShadow: SH.md,
                     padding: SPACE[5],
                   }}
@@ -697,11 +697,11 @@ export function TrustCenterPage() {
                     >
                       <Icon size={18} />
                     </span>
-                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                    <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black }}>
                       {ar ? item.titleAr : item.title}
                     </div>
                   </div>
-                  <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+                  <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
                     {ar ? item.detailAr : item.detail}
                   </div>
                 </div>
@@ -734,7 +734,7 @@ export function TrustCenterPage() {
                   style={{
                     borderRadius: R.xxl,
                     border: `1px solid ${item.accent}24`,
-                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${'var(--card)'}`,
                     boxShadow: SH.md,
                     padding: SPACE[5],
                   }}
@@ -761,11 +761,11 @@ export function TrustCenterPage() {
                     >
                       <Icon size={18} />
                     </span>
-                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                    <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black }}>
                       {ar ? item.titleAr : item.title}
                     </div>
                   </div>
-                  <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+                  <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
                     {ar ? item.detailAr : item.detail}
                   </div>
                 </div>
@@ -798,7 +798,7 @@ export function TrustCenterPage() {
                   style={{
                     borderRadius: R.xxl,
                     border: `1px solid ${item.accent}24`,
-                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${'var(--card)'}`,
                     boxShadow: SH.md,
                     padding: SPACE[5],
                   }}
@@ -825,11 +825,11 @@ export function TrustCenterPage() {
                     >
                       <Icon size={18} />
                     </span>
-                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                    <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black }}>
                       {ar ? item.titleAr : item.title}
                     </div>
                   </div>
-                  <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+                  <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
                     {ar ? item.detailAr : item.detail}
                   </div>
                 </div>
@@ -860,20 +860,20 @@ export function TrustCenterPage() {
                 style={{
                   borderRadius: R.xxl,
                   border: `1px solid ${item.accent}24`,
-                  background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+                  background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${'var(--card)'}`,
                   boxShadow: SH.md,
                   padding: SPACE[5],
                   display: 'grid',
                   gap: 6,
                 }}
               >
-                <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, textTransform: 'uppercase', letterSpacing: TYPE.letterSpacing.wide }}>
+                <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, textTransform: 'uppercase', letterSpacing: TYPE.letterSpacing.wide }}>
                   {ar ? item.titleAr : item.title}
                 </div>
                 <div style={{ color: item.accent, fontSize: TYPE.size.xl, fontWeight: TYPE.weight.ultra }}>
                   {item.value}
                 </div>
-                <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>
+                <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm }}>
                   {item.detail}
                 </div>
               </div>

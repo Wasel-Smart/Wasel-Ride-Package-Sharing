@@ -66,9 +66,9 @@ function statusAccent(status: string | null): string {
     case 'suspended':
       return C.orange;
     case 'blocked':
-      return C.error;
+      return 'var(--destructive)';
     default:
-      return C.textDim;
+      return 'var(--muted-foreground)';
   }
 }
 
@@ -182,10 +182,10 @@ export function AdminUsersPage() {
                 alignItems: 'center',
                 gap: SPACE[2],
                 borderRadius: R.full,
-                border: `1px solid ${C.borderHov}`,
+                border: `1px solid ${'var(--border)'}`,
                 background: C.cyanDim,
                 padding: '4px 12px',
-                color: C.cyan,
+                color: 'var(--primary)',
                 fontSize: TYPE.size.xs,
                 fontWeight: TYPE.weight.bold,
                 textTransform: 'uppercase',
@@ -198,14 +198,14 @@ export function AdminUsersPage() {
             <h1
               style={{
                 margin: 0,
-                color: C.text,
+                color: 'var(--foreground)',
                 fontSize: TYPE.size['2xl'],
                 fontWeight: TYPE.weight.ultra,
               }}
             >
               {tx('adminUsersPage.title')}
             </h1>
-            <p style={{ margin: `${SPACE[2]} 0 0`, color: C.textMuted, fontSize: TYPE.size.sm }}>
+            <p style={{ margin: `${SPACE[2]} 0 0`, color: 'var(--muted-foreground)', fontSize: TYPE.size.sm }}>
               {tx('adminUsersPage.subtitle')}
             </p>
           </div>
@@ -219,10 +219,10 @@ export function AdminUsersPage() {
               alignItems: 'center',
               gap: SPACE[2],
               padding: `${SPACE[2]} ${SPACE[4]}`,
-              background: C.elevated,
-              border: `1px solid ${C.border}`,
+              background: 'var(--secondary)',
+              border: `1px solid ${'var(--border)'}`,
               borderRadius: R.lg,
-              color: C.textSub,
+              color: 'var(--foreground)',
               fontSize: TYPE.size.sm,
               cursor: loading || !canRead ? 'not-allowed' : 'pointer',
             }}
@@ -245,7 +245,7 @@ export function AdminUsersPage() {
             marginBottom: SPACE[5],
           }}
         >
-          <SummaryTile label={tx('adminUsersPage.total_users')} value={meta.total} accent={C.cyan} />
+          <SummaryTile label={tx('adminUsersPage.total_users')} value={meta.total} accent={'var(--primary)'} />
           <SummaryTile label={tx('adminUsersPage.active_count')} value={activeCount} accent={C.green} />
           <SummaryTile
             label={tx('adminUsersPage.inactive_count')}
@@ -256,7 +256,7 @@ export function AdminUsersPage() {
 
         <div style={{ ...card({ padding: SPACE[2], radius: R.xxl }), overflowX: 'auto' }}>
           {loading && rows.length === 0 ? (
-            <div style={{ padding: SPACE[8], textAlign: 'center', color: C.textMuted }}>
+            <div style={{ padding: SPACE[8], textAlign: 'center', color: 'var(--muted-foreground)' }}>
               {tx('adminUsersPage.loading')}
             </div>
           ) : rows.length === 0 ? (
@@ -280,13 +280,13 @@ export function AdminUsersPage() {
                 {rows.map(row => (
                   <tr key={row.id}>
                     <td style={tableStyles.cell}>
-                      <div style={{ color: C.text, fontWeight: TYPE.weight.semibold }}>
+                      <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.semibold }}>
                         {row.full_name ?? '—'}
                       </div>
-                      <div style={{ color: C.textDim, fontSize: TYPE.size.xs, marginTop: 2 }}>
+                      <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, marginTop: 2 }}>
                         {row.email ?? '—'}
                       </div>
-                      <div style={{ color: C.textDim, fontSize: TYPE.size.xs, marginTop: 2 }}>
+                      <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, marginTop: 2 }}>
                         {row.phone_number ?? tx('adminUsersPage.no_phone')}
                       </div>
                     </td>
@@ -344,10 +344,10 @@ function SummaryTile({ label, value, accent }: { label: string; value: number; a
         gap: SPACE[2],
       }}
     >
-      <span style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontWeight: TYPE.weight.medium }}>
+      <span style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, fontWeight: TYPE.weight.medium }}>
         {label}
       </span>
-      <span style={{ color: C.text, fontSize: TYPE.size['2xl'], fontWeight: TYPE.weight.ultra }}>
+      <span style={{ color: 'var(--foreground)', fontSize: TYPE.size['2xl'], fontWeight: TYPE.weight.ultra }}>
         {value.toLocaleString()}
       </span>
     </div>

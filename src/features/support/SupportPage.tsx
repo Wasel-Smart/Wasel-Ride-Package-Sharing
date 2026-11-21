@@ -39,7 +39,7 @@ const supportTopics = [
     titleAr: 'مشكلة رحلة أو مسار',
     detail: 'Booking changes, missing route context, live tracking, arrival, or safety escalation.',
     detailAr: 'تغيير حجز، سياق مسار ناقص، تتبع مباشر، وصول، أو تصعيد سلامة.',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
   {
     icon: PackageCheck,
@@ -71,7 +71,7 @@ function topicStyle(accent: string) {
   return {
     borderRadius: R.xxl,
     border: `1px solid ${accent}24`,
-    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${C.card}`,
+    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${'var(--card)'}`,
     boxShadow: SH.md,
     padding: SPACE[5],
   } as const;
@@ -124,9 +124,9 @@ function SupportChannel({
         {icon}
       </span>
       <span style={{ display: 'grid', gap: 4 }}>
-        <span style={{ color: C.text, fontWeight: TYPE.weight.black, fontFamily: F }}>{label}</span>
+        <span style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black, fontFamily: F }}>{label}</span>
         <span
-          style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.5, fontFamily: F }}
+          style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.5, fontFamily: F }}
         >
           {disabled ? unavailable : detail}
         </span>
@@ -195,8 +195,8 @@ function FaqItem({ q, a }: { q: string; a: string }) {
     <div
       style={{
         borderRadius: R.xl,
-        border: `1px solid ${C.borderFaint}`,
-        background: C.elevated,
+        border: `1px solid ${'var(--border)'}`,
+        background: 'var(--secondary)',
         overflow: 'hidden',
       }}
     >
@@ -210,7 +210,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
           alignItems: 'center',
           background: 'transparent',
           border: 'none',
-          color: C.text,
+          color: 'var(--foreground)',
           fontFamily: F,
           fontSize: TYPE.size.base,
           fontWeight: TYPE.weight.bold,
@@ -224,8 +224,8 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         <div
           style={{
             padding: `${SPACE[3]} ${SPACE[4]}`,
-            borderTop: `1px solid ${C.borderFaint}`,
-            color: C.textMuted,
+            borderTop: `1px solid ${'var(--border)'}`,
+            color: 'var(--muted-foreground)',
             fontSize: TYPE.size.sm,
             lineHeight: 1.7,
             fontFamily: F,
@@ -246,7 +246,7 @@ function FAQSection({ ar }: { ar: boolean }) {
       subtitle={
         ar ? 'إجابات سريعة على أكثر الأسئلة تكراراً.' : 'Quick answers to the most common issues.'
       }
-      icon={<HelpCircle size={18} color={C.cyan} />}
+      icon={<HelpCircle size={18} color={'var(--primary)'} />}
     >
       <div style={{ display: 'grid', gap: 8 }}>
         {FAQS.map(item => (
@@ -318,7 +318,7 @@ export function SupportPage() {
                 type="button"
                 variant="outline"
                 onClick={() => { nav('/app/settings'); }}
-                style={{ background: C.elevated, color: C.text }}
+                style={{ background: 'var(--secondary)', color: 'var(--foreground)' }}
               >
                 {ar ? 'إعدادات الحساب' : 'Account settings'}
               </WaselButton>
@@ -336,7 +336,7 @@ export function SupportPage() {
               />
               <div
                 style={{
-                  color: C.textMuted,
+                  color: 'var(--muted-foreground)',
                   fontSize: TYPE.size.sm,
                   lineHeight: 1.7,
                   fontFamily: F,
@@ -357,7 +357,7 @@ export function SupportPage() {
               ? 'معلومات تسجيل الشركة للشفافية والامتثال.'
               : 'Company registration details for transparency and compliance.'
           }
-          icon={<ShieldCheck size={18} color={C.cyan} />}
+          icon={<ShieldCheck size={18} color={'var(--primary)'} />}
         >
           <div
             style={{
@@ -377,15 +377,15 @@ export function SupportPage() {
                 key={item.label}
                 style={{
                   borderRadius: R.xl,
-                  border: `1px solid ${C.borderFaint}`,
-                  background: C.elevated,
+                  border: `1px solid ${'var(--border)'}`,
+                  background: 'var(--secondary)',
                   padding: `${SPACE[3]} ${SPACE[4]}`,
                 }}
               >
-                <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, textTransform: 'uppercase', letterSpacing: TYPE.letterSpacing.wide, marginBottom: 4 }}>
+                <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, textTransform: 'uppercase', letterSpacing: TYPE.letterSpacing.wide, marginBottom: 4 }}>
                   {item.label}
                 </div>
-                <div style={{ color: C.text, fontSize: TYPE.size.sm, fontWeight: TYPE.weight.bold, fontFamily: F }}>
+                <div style={{ color: 'var(--foreground)', fontSize: TYPE.size.sm, fontWeight: TYPE.weight.bold, fontFamily: F }}>
                   {item.value}
                 </div>
               </div>
@@ -418,7 +418,7 @@ export function SupportPage() {
                   : 'Best for non-urgent issues with detail.'
               }
               href={emailUrl}
-              accent={C.cyan}
+              accent={'var(--primary)'}
               unavailable={ar ? 'مش مفعّل في هاي البيئة.' : 'Not configured in this environment.'}
             />
             <SupportChannel
@@ -465,7 +465,7 @@ export function SupportPage() {
               ? 'مواضيع الدعم مرتبة حسب نتيجة الخدمة.'
               : 'Support topics grouped by product outcome.'
           }
-          icon={<HelpCircle size={18} color={C.cyan} />}
+          icon={<HelpCircle size={18} color={'var(--primary)'} />}
         >
           <div
             style={{
@@ -493,14 +493,14 @@ export function SupportPage() {
                     >
                       <Icon size={18} />
                     </span>
-                    <div style={{ color: C.text, fontWeight: TYPE.weight.black, fontFamily: F }}>
+                    <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black, fontFamily: F }}>
                       {ar ? topic.titleAr : topic.title}
                     </div>
                   </div>
                   <div
                     style={{
                       marginTop: SPACE[3],
-                      color: C.textMuted,
+                      color: 'var(--muted-foreground)',
                       fontSize: TYPE.size.sm,
                       lineHeight: 1.7,
                       fontFamily: F,
@@ -523,7 +523,7 @@ export function SupportPage() {
               ? 'بنرد خلال ساعتين ضمن ساعات العمل.'
               : 'We will answer within 2 hours during business hours.'
           }
-          icon={<Send size={18} color={C.cyan} />}
+          icon={<Send size={18} color={'var(--primary)'} />}
         >
           {submitted ? (
             <div
@@ -539,7 +539,7 @@ export function SupportPage() {
               <CheckCircle size={40} color={C.green} />
               <div
                 style={{
-                  color: C.text,
+                  color: 'var(--foreground)',
                   fontWeight: TYPE.weight.bold,
                   fontSize: TYPE.size.lg,
                   fontFamily: F,
@@ -547,9 +547,9 @@ export function SupportPage() {
               >
                 {t('supportPage.message_received')}
               </div>
-              <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F }}>
+              <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, fontFamily: F }}>
                 {t('supportPage.we_ll_reply_to')}
-                <strong style={{ color: C.text }}>{formEmail}</strong>{' '}
+                <strong style={{ color: 'var(--foreground)' }}>{formEmail}</strong>{' '}
                 {t('supportPage.within_2_hours')}
               </div>
               <button
@@ -561,9 +561,9 @@ export function SupportPage() {
                 style={{
                   padding: `${SPACE[2]} ${SPACE[5]}`,
                   borderRadius: R.full,
-                  background: C.elevated,
-                  border: `1px solid ${C.border}`,
-                  color: C.text,
+                  background: 'var(--secondary)',
+                  border: `1px solid ${'var(--border)'}`,
+                  color: 'var(--foreground)',
                   fontFamily: F,
                   fontSize: TYPE.size.sm,
                   cursor: 'pointer',
@@ -585,9 +585,9 @@ export function SupportPage() {
                   height: 46,
                   padding: '0 14px',
                   borderRadius: R.lg,
-                  border: `1px solid ${C.border}`,
-                  background: C.card,
-                  color: C.text,
+                  border: `1px solid ${'var(--border)'}`,
+                  background: 'var(--card)',
+                  color: 'var(--foreground)',
                   fontFamily: F,
                   boxSizing: 'border-box',
                 }}
@@ -602,9 +602,9 @@ export function SupportPage() {
                     height: 46,
                     padding: '0 14px',
                     borderRadius: R.lg,
-                    border: `1px solid ${C.border}`,
-                    background: C.card,
-                    color: formTopic ? C.text : C.textMuted,
+                    border: `1px solid ${'var(--border)'}`,
+                    background: 'var(--card)',
+                    color: formTopic ? 'var(--foreground)' : 'var(--muted-foreground)',
                     fontFamily: F,
                   }}
                 >
@@ -627,7 +627,7 @@ export function SupportPage() {
                       alignItems: 'center',
                       gap: 6,
                       marginTop: 6,
-                      color: C.cyan,
+                      color: 'var(--primary)',
                       fontSize: TYPE.size.xs,
                       fontFamily: F,
                       textDecoration: 'none',
@@ -649,9 +649,9 @@ export function SupportPage() {
                   minHeight: 110,
                   padding: 14,
                   borderRadius: R.lg,
-                  border: `1px solid ${C.border}`,
-                  background: C.card,
-                  color: C.text,
+                  border: `1px solid ${'var(--border)'}`,
+                  background: 'var(--card)',
+                  color: 'var(--foreground)',
                   fontFamily: F,
                   resize: 'vertical',
                   boxSizing: 'border-box',
@@ -667,7 +667,7 @@ export function SupportPage() {
         <p
           style={{
             textAlign: 'center',
-            color: C.textDim,
+            color: 'var(--muted-foreground)',
             fontSize: TYPE.size.xs,
             marginTop: SPACE[6],
             fontFamily: F,

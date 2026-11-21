@@ -27,7 +27,7 @@ import {
 } from '../../services/serviceProviderWorkflows';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 import { C, F, GRAD_HERO, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
-const CYAN = C.cyan;
+const CYAN = 'var(--primary)';
 const GOLD = C.gold;
 const GREEN = C.green;
 const BLUE = C.blue;
@@ -94,7 +94,7 @@ const CONFIG: Record<string, SurfaceConfig> = {
 function cardStyle() {
   return {
     background: GRAD_HERO,
-    border: `1px solid ${C.border}`,
+    border: `1px solid ${'var(--border)'}`,
     borderRadius: R.xl,
     padding: '18px 18px 16px',
     boxShadow: SH.card,
@@ -143,11 +143,11 @@ function HeroMetric({
         padding: '12px 14px',
       }}
     >
-      <div style={{ color: C.text, fontSize: TYPE.size.lg, fontWeight: 900 }}>{value}</div>
+      <div style={{ color: 'var(--foreground)', fontSize: TYPE.size.lg, fontWeight: 900 }}>{value}</div>
       <div
         style={{
           marginTop: 4,
-          color: C.textMuted,
+          color: 'var(--muted-foreground)',
           fontSize: TYPE.size.xs,
           textTransform: 'uppercase',
           letterSpacing: TYPE.letterSpacing.wide,
@@ -158,7 +158,7 @@ function HeroMetric({
       <div
         style={{
           marginTop: 6,
-          color: C.textSub,
+          color: 'var(--foreground)',
           fontSize: TYPE.size.xs,
           lineHeight: TYPE.lineHeight.relaxed,
         }}
@@ -432,7 +432,7 @@ export default function OperationsOverviewPage() {
               </div>
               <div
                 style={{
-                  color: C.textSub,
+                  color: 'var(--foreground)',
                   fontFamily: F,
                   fontSize: TYPE.size.sm,
                   lineHeight: TYPE.lineHeight.relaxed,
@@ -502,14 +502,14 @@ export default function OperationsOverviewPage() {
             <Section title={t('operationsOverviewPage.public_workflow')}>
               <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 12 }}>
                 <div style={cardStyle()}>
-                  <div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>
+                  <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 10 }}>
                     {t('operationsOverviewPage.public_rider_snapshot')}
                   </div>
                   <div style={{ display: 'grid', gap: 10 }}>
                     {businessSnapshot.policyHighlights.map(line => (
                       <div
                         key={line}
-                        style={{ color: C.textSub, fontSize: '0.8rem', lineHeight: 1.6 }}
+                        style={{ color: 'var(--foreground)', fontSize: '0.8rem', lineHeight: 1.6 }}
                       >
                         {line}
                       </div>
@@ -528,17 +528,17 @@ export default function OperationsOverviewPage() {
                         key={employee.id}
                         style={{
                           borderRadius: 14,
-                          border: `1px solid ${C.borderFaint}`,
-                          background: C.elevated,
+                          border: `1px solid ${'var(--border)'}`,
+                          background: 'var(--secondary)',
                           padding: '12px 13px',
                         }}
                       >
-                        <div style={{ color: C.text, fontWeight: 800, fontSize: '0.82rem' }}>
+                        <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.82rem' }}>
                           {employee.name}
                         </div>
                         <div
                           style={{
-                            color: C.textMuted,
+                            color: 'var(--muted-foreground)',
                             fontSize: '0.74rem',
                             marginTop: 4,
                           }}
@@ -553,14 +553,14 @@ export default function OperationsOverviewPage() {
                 </div>
 
                 <div style={cardStyle()}>
-                  <div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>
+                  <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 10 }}>
                     {t('operationsOverviewPage.service_provider_workflow')}
                   </div>
                   <div style={{ display: 'grid', gap: 10 }}>
                     {serviceSnapshot.workflowSteps.map(step => (
                       <div
                         key={step}
-                        style={{ color: C.textSub, fontSize: '0.8rem', lineHeight: 1.6 }}
+                        style={{ color: 'var(--foreground)', fontSize: '0.8rem', lineHeight: 1.6 }}
                       >
                         {step}
                       </div>
@@ -572,17 +572,17 @@ export default function OperationsOverviewPage() {
                         key={window.label}
                         style={{
                           borderRadius: 14,
-                          border: `1px solid ${C.borderFaint}`,
-                          background: C.elevated,
+                          border: `1px solid ${'var(--border)'}`,
+                          background: 'var(--secondary)',
                           padding: '12px 13px',
                         }}
                       >
-                        <div style={{ color: C.text, fontWeight: 800, fontSize: '0.82rem' }}>
+                        <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.82rem' }}>
                           {window.label}
                         </div>
                         <div
                           style={{
-                            color: C.textMuted,
+                            color: 'var(--muted-foreground)',
                             fontSize: '0.74rem',
                             lineHeight: 1.55,
                             marginTop: 4,
@@ -603,7 +603,7 @@ export default function OperationsOverviewPage() {
             <Section title={t('operationsOverviewPage.lane_economics')}>
               <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 1.1fr', gap: 12 }}>
                 <div style={cardStyle()}>
-                  <div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>
+                  <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 10 }}>
                     {t('operationsOverviewPage.seat_yield_and_backhauls')}
                   </div>
                   <div style={{ display: 'grid', gap: 8 }}>
@@ -614,7 +614,7 @@ export default function OperationsOverviewPage() {
                           display: 'flex',
                           justifyContent: 'space-between',
                           gap: 10,
-                          color: C.textSub,
+                          color: 'var(--foreground)',
                           fontSize: '0.8rem',
                         }}
                       >
@@ -622,7 +622,7 @@ export default function OperationsOverviewPage() {
                           {t('operationsOverviewPage.seat')}
                           {tier.seatIndex}
                         </span>
-                        <strong style={{ color: C.text }}>{tier.price.toFixed(2)} JOD</strong>
+                        <strong style={{ color: 'var(--foreground)' }}>{tier.price.toFixed(2)} JOD</strong>
                       </div>
                     ))}
                   </div>
@@ -630,14 +630,14 @@ export default function OperationsOverviewPage() {
                     {t('operationsOverviewPage.backhaul_attach_rate')}
                     {serviceSnapshot.packageBackhaulPercent}%
                   </div>
-                  <div style={{ color: C.textMuted, fontSize: '0.75rem', marginTop: 6 }}>
+                  <div style={{ color: 'var(--muted-foreground)', fontSize: '0.75rem', marginTop: 6 }}>
                     {t('operationsOverviewPage.invoice_cadence')}
                     {serviceSnapshot.invoiceCadence}
                   </div>
                 </div>
 
                 <div style={cardStyle()}>
-                  <div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>
+                  <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 10 }}>
                     {t('operationsOverviewPage.provider_roster')}
                   </div>
                   <div style={{ display: 'grid', gap: 10 }}>
@@ -646,8 +646,8 @@ export default function OperationsOverviewPage() {
                         key={provider.name}
                         style={{
                           borderRadius: 14,
-                          border: `1px solid ${C.borderFaint}`,
-                          background: C.elevated,
+                          border: `1px solid ${'var(--border)'}`,
+                          background: 'var(--secondary)',
                           padding: '12px 13px',
                         }}
                       >
@@ -660,12 +660,12 @@ export default function OperationsOverviewPage() {
                           }}
                         >
                           <div>
-                            <div style={{ color: C.text, fontWeight: 800, fontSize: '0.82rem' }}>
+                            <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.82rem' }}>
                               {provider.name}
                             </div>
                             <div
                               style={{
-                                color: C.textMuted,
+                                color: 'var(--muted-foreground)',
                                 fontSize: '0.74rem',
                                 marginTop: 4,
                               }}
@@ -678,7 +678,7 @@ export default function OperationsOverviewPage() {
                             {t('operationsOverviewPage.utilized')}
                           </div>
                         </div>
-                        <div style={{ color: C.textSub, fontSize: '0.75rem', marginTop: 6 }}>
+                        <div style={{ color: 'var(--foreground)', fontSize: '0.75rem', marginTop: 6 }}>
                           {provider.weeklyStops} {t('operationsOverviewPage.weekly_stops')}
                           {provider.serviceLevel}
                         </div>
@@ -703,10 +703,10 @@ export default function OperationsOverviewPage() {
                         }}
                       >
                         <div>
-                          <div style={{ color: C.text, fontWeight: 800 }}>{row.corridor}</div>
+                          <div style={{ color: 'var(--foreground)', fontWeight: 800 }}>{row.corridor}</div>
                           <div
                             style={{
-                              color: C.textMuted,
+                              color: 'var(--muted-foreground)',
                               fontSize: '0.74rem',
                               marginTop: 4,
                             }}
@@ -788,7 +788,7 @@ export default function OperationsOverviewPage() {
             <Section title={t('operationsOverviewPage.recurring_school_workflow')}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div style={cardStyle()}>
-                  <div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>
+                  <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 10 }}>
                     {t('operationsOverviewPage.guardian_and_student_roster')}
                   </div>
                   <div style={{ display: 'grid', gap: 10 }}>
@@ -797,17 +797,17 @@ export default function OperationsOverviewPage() {
                         key={student.id}
                         style={{
                           borderRadius: 14,
-                          border: `1px solid ${C.borderFaint}`,
-                          background: C.elevated,
+                          border: `1px solid ${'var(--border)'}`,
+                          background: 'var(--secondary)',
                           padding: '12px 13px',
                         }}
                       >
-                        <div style={{ color: C.text, fontWeight: 800, fontSize: '0.82rem' }}>
+                        <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.82rem' }}>
                           {student.name}
                         </div>
                         <div
                           style={{
-                            color: C.textMuted,
+                            color: 'var(--muted-foreground)',
                             fontSize: '0.74rem',
                             marginTop: 4,
                           }}
@@ -821,14 +821,14 @@ export default function OperationsOverviewPage() {
                 </div>
 
                 <div style={cardStyle()}>
-                  <div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>
+                  <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 10 }}>
                     {t('operationsOverviewPage.safety_and_route_discipline')}
                   </div>
                   <div style={{ display: 'grid', gap: 10 }}>
                     {schoolSnapshot.safetyChecklist.map(line => (
                       <div
                         key={line}
-                        style={{ color: C.textSub, fontSize: '0.8rem', lineHeight: 1.6 }}
+                        style={{ color: 'var(--foreground)', fontSize: '0.8rem', lineHeight: 1.6 }}
                       >
                         {line}
                       </div>
@@ -841,12 +841,12 @@ export default function OperationsOverviewPage() {
                         style={{
                           display: 'flex',
                           justifyContent: 'space-between',
-                          color: C.textSub,
+                          color: 'var(--foreground)',
                           fontSize: '0.78rem',
                         }}
                       >
                         <span>{day}</span>
-                        <strong style={{ color: C.text }}>{t('common.active')}</strong>
+                        <strong style={{ color: 'var(--foreground)' }}>{t('common.active')}</strong>
                       </div>
                     ))}
                   </div>
@@ -920,10 +920,10 @@ export default function OperationsOverviewPage() {
                       }}
                     >
                       <div>
-                        <div style={{ color: C.text, fontWeight: 800 }}>{signal.label}</div>
+                        <div style={{ color: 'var(--foreground)', fontWeight: 800 }}>{signal.label}</div>
                         <div
                           style={{
-                            color: C.textMuted,
+                            color: 'var(--muted-foreground)',
                             fontSize: '0.74rem',
                             marginTop: 4,
                           }}
@@ -935,7 +935,7 @@ export default function OperationsOverviewPage() {
                         <div style={{ color: CYAN, fontWeight: 900 }}>
                           {signal.priceQuote.finalPriceJod} JOD
                         </div>
-                        <div style={{ color: C.textMuted, fontSize: '0.72rem' }}>
+                        <div style={{ color: 'var(--muted-foreground)', fontSize: '0.72rem' }}>
                           {t('operationsOverviewPage.owns')}
                           {signal.routeOwnershipScore}/100
                         </div>
@@ -971,17 +971,17 @@ export default function OperationsOverviewPage() {
                           key={metric.label}
                           style={{
                             borderRadius: 14,
-                            border: `1px solid ${C.borderFaint}`,
-                            background: C.elevated,
+                            border: `1px solid ${'var(--border)'}`,
+                            background: 'var(--secondary)',
                             padding: '10px 11px',
                           }}
                         >
-                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>
+                          <div style={{ color: 'var(--muted-foreground)', fontSize: '0.68rem' }}>
                             {metric.label}
                           </div>
                           <div
                             style={{
-                              color: C.text,
+                              color: 'var(--foreground)',
                               fontWeight: 800,
                               fontSize: '0.8rem',
                               marginTop: 5,
@@ -994,7 +994,7 @@ export default function OperationsOverviewPage() {
                     </div>
                     <div
                       style={{
-                        color: C.textSub,
+                        color: 'var(--foreground)',
                         fontSize: '0.78rem',
                         lineHeight: 1.6,
                         marginTop: 10,
@@ -1021,10 +1021,10 @@ export default function OperationsOverviewPage() {
                         }}
                       >
                         <div>
-                          <div style={{ color: C.text, fontWeight: 800 }}>{row.corridor}</div>
+                          <div style={{ color: 'var(--foreground)', fontWeight: 800 }}>{row.corridor}</div>
                           <div
                             style={{
-                              color: C.textMuted,
+                              color: 'var(--muted-foreground)',
                               fontSize: '0.74rem',
                               marginTop: 4,
                             }}
@@ -1040,7 +1040,7 @@ export default function OperationsOverviewPage() {
                             {row.savingsPercent}
                             {t('operationsOverviewPage.cheaper')}
                           </div>
-                          <div style={{ color: C.textMuted, fontSize: '0.72rem' }}>
+                          <div style={{ color: 'var(--muted-foreground)', fontSize: '0.72rem' }}>
                             {t('operationsOverviewPage.match')}
                             {row.predictedMatchMinutes} {t('operationsOverviewPage.min_vs')}
                             {row.benchmarkMatchMinutes} {t('services.publicBus.minutes')}
@@ -1058,15 +1058,15 @@ export default function OperationsOverviewPage() {
                         <div
                           style={{
                             borderRadius: 14,
-                            border: `1px solid ${C.borderFaint}`,
-                            background: C.elevated,
+                            border: `1px solid ${'var(--border)'}`,
+                            background: 'var(--secondary)',
                             padding: '10px 11px',
                           }}
                         >
-                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>Wasel</div>
+                          <div style={{ color: 'var(--muted-foreground)', fontSize: '0.68rem' }}>Wasel</div>
                           <div
                             style={{
-                              color: C.text,
+                              color: 'var(--foreground)',
                               fontWeight: 800,
                               fontSize: '0.8rem',
                               marginTop: 5,
@@ -1078,17 +1078,17 @@ export default function OperationsOverviewPage() {
                         <div
                           style={{
                             borderRadius: 14,
-                            border: `1px solid ${C.borderFaint}`,
-                            background: C.elevated,
+                            border: `1px solid ${'var(--border)'}`,
+                            background: 'var(--secondary)',
                             padding: '10px 11px',
                           }}
                         >
-                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>
+                          <div style={{ color: 'var(--muted-foreground)', fontSize: '0.68rem' }}>
                             {t('operationsOverviewPage.benchmark')}
                           </div>
                           <div
                             style={{
-                              color: C.text,
+                              color: 'var(--foreground)',
                               fontWeight: 800,
                               fontSize: '0.8rem',
                               marginTop: 5,
@@ -1100,17 +1100,17 @@ export default function OperationsOverviewPage() {
                         <div
                           style={{
                             borderRadius: 14,
-                            border: `1px solid ${C.borderFaint}`,
-                            background: C.elevated,
+                            border: `1px solid ${'var(--border)'}`,
+                            background: 'var(--secondary)',
                             padding: '10px 11px',
                           }}
                         >
-                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>
+                          <div style={{ color: 'var(--muted-foreground)', fontSize: '0.68rem' }}>
                             {t('operationsOverviewPage.ownership')}
                           </div>
                           <div
                             style={{
-                              color: C.text,
+                              color: 'var(--foreground)',
                               fontWeight: 800,
                               fontSize: '0.8rem',
                               marginTop: 5,
@@ -1122,12 +1122,12 @@ export default function OperationsOverviewPage() {
                         <div
                           style={{
                             borderRadius: 14,
-                            border: `1px solid ${C.borderFaint}`,
-                            background: C.elevated,
+                            border: `1px solid ${'var(--border)'}`,
+                            background: 'var(--secondary)',
                             padding: '10px 11px',
                           }}
                         >
-                          <div style={{ color: C.textMuted, fontSize: '0.68rem' }}>
+                          <div style={{ color: 'var(--muted-foreground)', fontSize: '0.68rem' }}>
                             {t('operationsOverviewPage.mode')}
                           </div>
                           <div
@@ -1146,7 +1146,7 @@ export default function OperationsOverviewPage() {
                       </div>
                       <div
                         style={{
-                          color: C.textSub,
+                          color: 'var(--foreground)',
                           fontSize: '0.78rem',
                           lineHeight: 1.6,
                           marginTop: 12,
@@ -1156,7 +1156,7 @@ export default function OperationsOverviewPage() {
                       </div>
                       <div
                         style={{
-                          color: C.textMuted,
+                          color: 'var(--muted-foreground)',
                           fontSize: '0.73rem',
                           lineHeight: 1.6,
                           marginTop: 6,

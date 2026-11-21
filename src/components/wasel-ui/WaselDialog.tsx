@@ -116,7 +116,7 @@ export function WaselDialog({
         alignItems: 'center',
         justifyContent: 'center',
         padding: '24px',
-        background: C.overlay,
+        background: 'rgba(0,0,0,0.6)',
         backdropFilter: 'blur(14px)',
         WebkitBackdropFilter: 'blur(14px)',
       }}
@@ -136,10 +136,10 @@ export function WaselDialog({
           display: 'flex',
           flexDirection: 'column',
           borderRadius: R.xxl,
-          background: C.glass,
-          border: `1px solid ${C.borderHov}`,
+          background: 'var(--card)',
+          border: `1px solid var(--border)`,
           boxShadow: SH.xl,
-          color: C.text,
+          color: 'var(--foreground)',
           fontFamily: F,
           animation: `scale-in ${ANIM.dur.slow} ${ANIM.ease.decel}`,
           ...style,
@@ -152,7 +152,7 @@ export function WaselDialog({
             justifyContent: 'space-between',
             gap: '16px',
             padding: '20px 20px 14px',
-            borderBottom: `1px solid ${C.borderFaint}`,
+            borderBottom: `1px solid var(--border)`,
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
@@ -160,8 +160,7 @@ export function WaselDialog({
               id={titleId}
               style={{
                 margin: 0,
-                color: C.text,
-                fontSize: TYPE.size.xl,
+                color: 'var(--foreground)',
                 fontWeight: TYPE.weight.ultra,
                 lineHeight: TYPE.lineHeight.snug,
                 letterSpacing: TYPE.letterSpacing.normal,
@@ -174,7 +173,7 @@ export function WaselDialog({
                 id={descriptionId}
                 style={{
                   margin: 0,
-                  color: C.textMuted,
+                  color: 'var(--muted-foreground)',
                   fontSize: TYPE.size.sm,
                   lineHeight: TYPE.lineHeight.normal,
                 }}
@@ -205,7 +204,7 @@ export function WaselDialog({
               justifyContent: 'flex-end',
               gap: '10px',
               padding: '14px 20px 20px',
-              borderTop: `1px solid ${C.borderFaint}`,
+              borderTop: `1px solid var(--border)`,
             }}
           >
             {footer}

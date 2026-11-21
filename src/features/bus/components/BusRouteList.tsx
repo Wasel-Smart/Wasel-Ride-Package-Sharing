@@ -146,7 +146,7 @@ export function BusRouteList({
                   <div style={{ minWidth: 0 }}>
                     <div
                       style={{
-                        color: C.text,
+                        color: 'var(--foreground)',
                         fontWeight: 900,
                         fontSize: '1.05rem',
                         letterSpacing: 0,
@@ -258,7 +258,7 @@ export function BusRouteList({
                   <div
                     key={item.label}
                     style={{
-                      background: C.elevated,
+                      background: 'var(--secondary)',
                       border: `1px solid ${DS.border}`,
                       borderRadius: r(12),
                       padding: '12px 13px',
@@ -280,7 +280,7 @@ export function BusRouteList({
                     </div>
                     <div
                       style={{
-                        color: C.text,
+                        color: 'var(--foreground)',
                         fontWeight: 700,
                         fontSize: '0.8rem',
                         lineHeight: 1.35,

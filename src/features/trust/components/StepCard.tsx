@@ -49,7 +49,7 @@ export function StepCard({
         padding: SPACE[5],
         borderRadius: R.xxl,
         border: `1px solid ${accent}24`,
-        background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${C.card}`,
+        background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${'var(--card)'}`,
         boxShadow: SH.md,
       }}
     >
@@ -68,7 +68,7 @@ export function StepCard({
               display: 'flex',
               alignItems: 'center',
               gap: SPACE[3],
-              color: C.text,
+              color: 'var(--foreground)',
               fontWeight: TYPE.weight.bold,
               fontFamily: F,
             }}
@@ -77,7 +77,7 @@ export function StepCard({
             <span>{title}</span>
           </div>
           <div
-            style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F, lineHeight: TYPE.lineHeight.relaxed }}
+            style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, fontFamily: F, lineHeight: TYPE.lineHeight.relaxed }}
           >
             {subtitle}
           </div>

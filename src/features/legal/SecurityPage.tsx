@@ -30,7 +30,7 @@ const controls = [
     detail:
       'Wasel uses TLS in transit and encrypted handling for sensitive account, wallet, and verification records.',
     detailAr: 'واصل يستخدم TLS أثناء النقل وتعامل مشفّر مع سجلات الحساب والمحفظة والتوثيق الحساسة.',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
   {
     icon: Fingerprint,
@@ -85,7 +85,7 @@ function SecurityControlCard({ item, ar }: { item: (typeof controls)[number]; ar
       style={{
         borderRadius: R.xxl,
         border: `1px solid ${item.accent}24`,
-        background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+        background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${'var(--card)'}`,
         boxShadow: SH.md,
         padding: SPACE[5],
       }}
@@ -112,11 +112,11 @@ function SecurityControlCard({ item, ar }: { item: (typeof controls)[number]; ar
         >
           <Icon size={18} />
         </span>
-        <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+        <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black }}>
           {ar ? item.titleAr : item.title}
         </div>
       </div>
-      <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+      <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
         {ar ? item.detailAr : item.detail}
       </div>
     </div>
@@ -154,7 +154,7 @@ export function SecurityPage() {
                 type="button"
                 variant="outline"
                 onClick={() => { void nav('/trust'); }}
-                style={{ background: C.elevated, color: C.text }}
+                style={{ background: 'var(--secondary)', color: 'var(--foreground)' }}
               >
                 {ar ? 'افتح مركز الثقة' : 'Open trust center'}
               </WaselButton>
@@ -171,7 +171,7 @@ export function SecurityPage() {
                 }
                 accent={C.green}
               />
-              <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
+              <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.7 }}>
                 {ar
                   ? 'الأمان مش مخبّى داخل نصوص السياسات. بظهر في بوابات التوثيق، حالة المحفظة، تصعيد الدعم، ومراقبة الأداء المبنية على الموافقة.'
                   : 'Security is not hidden in policy copy. It appears in verification gates, wallet standing, support escalation, and consent-based performance monitoring.'}
@@ -207,7 +207,7 @@ export function SecurityPage() {
                 ? 'هوية، بريد، هاتف، وثائق، وحالة المحفظة.'
                 : 'Identity, email, phone, documents, and wallet standing.'
             }
-            accent={C.cyan}
+            accent={'var(--primary)'}
             icon={<Fingerprint size={18} />}
           />
           <MetricCard
@@ -275,8 +275,8 @@ export function SecurityPage() {
                   gap: 12,
                   alignItems: 'center',
                   borderRadius: R.xl,
-                  border: `1px solid ${C.borderFaint}`,
-                  background: C.elevated,
+                  border: `1px solid ${'var(--border)'}`,
+                  background: 'var(--secondary)',
                   padding: `${SPACE[3]} ${SPACE[4]}`,
                 }}
               >
@@ -295,7 +295,7 @@ export function SecurityPage() {
                 >
                   {index + 1}
                 </div>
-                <div style={{ color: C.text, fontSize: TYPE.size.sm, lineHeight: 1.65 }}>
+                <div style={{ color: 'var(--foreground)', fontSize: TYPE.size.sm, lineHeight: 1.65 }}>
                   {step}
                 </div>
               </div>
@@ -423,14 +423,14 @@ function TwoFactorSection() {
         {unavailableReason ? (
           <div
             role="status"
-            style={{ color: C.textMuted, fontSize: TYPE.size.sm, padding: SPACE[3], background: C.elevated, borderRadius: R.lg }}
+            style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, padding: SPACE[3], background: 'var(--secondary)', borderRadius: R.lg }}
           >
             {unavailableReason}
           </div>
         ) : null}
 
         {error ? (
-          <div style={{ color: C.error, fontSize: TYPE.size.sm, padding: SPACE[3], background: `${C.error}15`, borderRadius: R.lg }}>
+          <div style={{ color: 'var(--destructive)', fontSize: TYPE.size.sm, padding: SPACE[3], background: `${'var(--destructive)'}15`, borderRadius: R.lg }}>
             {error}
           </div>
         ) : null}
@@ -451,14 +451,14 @@ function TwoFactorSection() {
         ) : null}
 
         {setup ? (
-          <div style={{ display: 'grid', gap: SPACE[4], padding: SPACE[4], background: C.elevated, borderRadius: R.xl, border: `1px solid ${C.border}` }}>
+          <div style={{ display: 'grid', gap: SPACE[4], padding: SPACE[4], background: 'var(--secondary)', borderRadius: R.xl, border: `1px solid ${'var(--border)'}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-              <QrCode size={24} color={C.cyan} />
+              <QrCode size={24} color={'var(--primary)'} />
               <div>
-                <div style={{ color: C.text, fontWeight: TYPE.weight.black, fontSize: TYPE.size.sm }}>
+                <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black, fontSize: TYPE.size.sm }}>
                   {ar ? 'مسح رمز QR' : 'Scan QR Code'}
                 </div>
-                <div style={{ color: C.textMuted, fontSize: TYPE.size.xs }}>
+                <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs }}>
                   {ar ? 'استخدم تطبيق المصادقة لمسح الرمز' : 'Use an authenticator app to scan the code'}
                 </div>
               </div>
@@ -476,7 +476,7 @@ function TwoFactorSection() {
 
             {setup.secret ? (
               <div style={{ display: 'grid', gap: 6 }}>
-                <div style={{ color: C.textMuted, fontSize: TYPE.size.xs }}>
+                <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs }}>
                   {ar
                     ? 'أو أدخل هاد المفتاح يدوياً في تطبيق المصادقة:'
                     : 'Or enter this key manually in your authenticator app:'}
@@ -484,12 +484,12 @@ function TwoFactorSection() {
                 <code
                   dir="ltr"
                   style={{
-                    background: C.bgAlt,
+                    background: 'var(--background)',
                     borderRadius: R.md,
                     padding: `${SPACE[2]} ${SPACE[3]}`,
                     fontFamily: 'monospace',
                     fontSize: TYPE.size.sm,
-                    color: C.text,
+                    color: 'var(--foreground)',
                     overflowWrap: 'anywhere',
                     userSelect: 'all',
                   }}
@@ -522,12 +522,12 @@ function TwoFactorSection() {
 
             {setup.backupCodes && setup.backupCodes.length > 0 ? (
               <div>
-                <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, marginBottom: SPACE[2] }}>
+                <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, marginBottom: SPACE[2] }}>
                   {ar ? 'أكواد الاحتياطية (احفظها في مكان آمن):' : 'Backup codes (save these in a safe place):'}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: SPACE[2] }}>
                   {setup.backupCodes.map((bc, i) => (
-                    <div key={i} style={{ background: C.bgAlt, borderRadius: R.md, padding: `${SPACE[2]} ${SPACE[3]}`, fontFamily: 'monospace', fontSize: TYPE.size.sm, color: C.text, textAlign: 'center' }}>
+                    <div key={i} style={{ background: 'var(--background)', borderRadius: R.md, padding: `${SPACE[2]} ${SPACE[3]}`, fontFamily: 'monospace', fontSize: TYPE.size.sm, color: 'var(--foreground)', textAlign: 'center' }}>
                       {bc}
                     </div>
                   ))}
@@ -536,7 +536,7 @@ function TwoFactorSection() {
                   type="button"
                   variant="outline"
                   onClick={() => { void handleCopyBackupCodes(); }}
-                  style={{ marginTop: SPACE[3], background: C.elevated, color: C.text }}
+                  style={{ marginTop: SPACE[3], background: 'var(--secondary)', color: 'var(--foreground)' }}
                   icon={<RefreshCw size={14} />}
                 >
                   {ar ? 'انسخ الأكواد' : 'Copy codes'}
@@ -568,7 +568,7 @@ function TwoFactorSection() {
                 onClick={() => { void handleDisable(); }}
                 loading={verifying}
                 disabled={verifying}
-                style={{ background: `${C.error}15`, borderColor: `${C.error}40`, color: C.error }}
+                style={{ background: `${'var(--destructive)'}15`, borderColor: `${'var(--destructive)'}40`, color: 'var(--destructive)' }}
               >
                 {ar ? 'عطّل' : 'Disable'}
               </WaselButton>

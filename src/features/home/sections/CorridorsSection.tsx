@@ -1,4 +1,4 @@
-﻿import { useId } from 'react';
+import { useId } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ChevronRight, Route } from 'lucide-react';
 import { C } from '../HomePageShared';
@@ -133,7 +133,7 @@ export function CorridorsSection({ corridorCards, onNavigate }: CorridorsSection
           onClick={event => handleSpaLinkClick(event, () => { void onNavigate('/app/find-ride', 'corridors_browse_all'); })}
         >
           {tx('homeSections.browseRides')}
-          <ChevronRight size={12} color={C.cyan} />
+          <ChevronRight size={12} color={'var(--primary)'} />
         </a>
       </div>
       <div className="wasel-home-corridors">
@@ -147,9 +147,9 @@ export function CorridorsSection({ corridorCards, onNavigate }: CorridorsSection
               padding: 0,
               overflow: 'hidden',
               background: card.featured
-                ? `linear-gradient(180deg, ${C.cyanDim}, ${C.card})`
+                ? `linear-gradient(180deg, ${C.cyanDim}, ${'var(--card)'})`
                 : undefined,
-              border: `1px solid ${card.featured ? C.borderHov : C.border}`,
+              border: `1px solid ${card.featured ? 'var(--border)' : 'var(--border)'}`,
             }}
           >
             <DestinationScenery title={card.title} />

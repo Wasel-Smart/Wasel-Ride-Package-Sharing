@@ -20,7 +20,7 @@ function directionIcon(direction: PriceDirection) {
 function directionColor(direction: PriceDirection): string {
   if (direction === 'up') {return C.gold;}
   if (direction === 'down') {return C.green;}
-  return C.textMuted;
+  return 'var(--muted-foreground)';
 }
 
 export interface CorridorCardProps {
@@ -42,11 +42,11 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
         width: '100%',
         textAlign: 'left',
         borderRadius: R.xxl,
-        border: `1px solid ${selected ? C.cyan : C.border}`,
-        background: selected ? `linear-gradient(180deg, ${C.cyanDim}, ${C.card})` : C.card,
+        border: `1px solid ${selected ? 'var(--primary)' : 'var(--border)'}`,
+        background: selected ? `linear-gradient(180deg, ${C.cyanDim}, ${'var(--card)'})` : 'var(--card)',
         boxShadow: selected ? SH.blueL : SH.card,
         padding: 18,
-        color: C.text,
+        color: 'var(--foreground)',
         cursor: 'pointer',
         display: 'grid',
         gap: 14,
@@ -66,16 +66,16 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
               fontSize: '0.74rem',
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
-              color: C.textMuted,
+              color: 'var(--muted-foreground)',
             }}
           >
             {tx('corridorCard.corridor_instrument')}
           </div>
           <div style={{ marginTop: 6, fontSize: '1.08rem', fontWeight: 900 }}>
-            {projection.corridor.origin} <span style={{ color: C.textMuted }}>{'->'}</span>{' '}
+            {projection.corridor.origin} <span style={{ color: 'var(--muted-foreground)' }}>{'->'}</span>{' '}
             {projection.corridor.destination}
           </div>
-          <div style={{ marginTop: 5, color: C.textMuted, fontSize: '0.8rem' }}>
+          <div style={{ marginTop: 5, color: 'var(--muted-foreground)', fontSize: '0.8rem' }}>
             {projection.corridor.distance_km} {tx('corridorCard.km')}
             {projection.corridor.travel_time_min} {tx('services.publicBus.minutes')}
           </div>
@@ -84,11 +84,11 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
           style={{
             padding: '8px 10px',
             borderRadius: R.full,
-            border: `1px solid ${C.border}`,
-            background: C.elevated,
+            border: `1px solid ${'var(--border)'}`,
+            background: 'var(--secondary)',
             fontFamily: FM,
             fontSize: '0.74rem',
-            color: C.cyan,
+            color: 'var(--primary)',
           }}
         >
           {projection.corridor.id}
@@ -106,14 +106,14 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
             key={label}
             style={{
               borderRadius: 16,
-              border: `1px solid ${C.borderFaint}`,
-              background: C.elevated,
+              border: `1px solid ${'var(--border)'}`,
+              background: 'var(--secondary)',
               padding: '12px 12px 10px',
             }}
           >
             <div
               style={{
-                color: C.textMuted,
+                color: 'var(--muted-foreground)',
                 fontSize: '0.7rem',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
@@ -137,7 +137,7 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
         >
           <div
             style={{
-              color: C.textMuted,
+              color: 'var(--muted-foreground)',
               fontSize: '0.7rem',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
@@ -171,7 +171,7 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
         >
           <div
             style={{
-              color: C.textMuted,
+              color: 'var(--muted-foreground)',
               fontSize: '0.7rem',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',

@@ -84,7 +84,7 @@ export function PackageTrackPanel({
   return (
     <div style={{ textAlign: 'center', width: '100%', maxWidth: 560, margin: '0 auto', padding: '20px 0' }}>
       <div style={{ fontSize: '2.5rem', marginBottom: 16 }}>{tx('packageTrackPanel.track')}</div>
-      <h3 style={{ color: C.text, fontWeight: 800, margin: '0 0 8px' }}>
+      <h3 style={{ color: 'var(--foreground)', fontWeight: 800, margin: '0 0 8px' }}>
         {tx('packageTrackPanel.track_your_package')}
       </h3>
       <p style={{ color: DS.sub, marginBottom: 20 }}>
@@ -104,7 +104,7 @@ export function PackageTrackPanel({
             borderRadius: r(12),
             border: `1px solid ${DS.border}`,
             background: DS.card2,
-            color: C.text,
+            color: 'var(--foreground)',
             fontFamily: DS.F,
             fontSize: '0.95rem',
             outline: 'none',
@@ -120,7 +120,7 @@ export function PackageTrackPanel({
             borderRadius: r(12),
             border: 'none',
             background: DS.gradC,
-            color: C.text,
+            color: 'var(--foreground)',
             fontWeight: 800,
             fontFamily: DS.F,
             cursor: busyState === 'tracking' ? 'wait' : 'pointer',
@@ -147,7 +147,7 @@ export function PackageTrackPanel({
           animate={{ opacity: 1, y: 0 }}
           style={{
             marginTop: 20,
-            background: C.elevated,
+            background: 'var(--secondary)',
             borderRadius: r(16),
             padding: '20px',
             border: `1px solid ${DS.border}`,
@@ -164,7 +164,7 @@ export function PackageTrackPanel({
               flexWrap: 'wrap',
             }}
           >
-            <span style={{ color: C.text, fontWeight: 800 }}>
+            <span style={{ color: 'var(--foreground)', fontWeight: 800 }}>
               {tx('activity.packageTitle')}
               {trackedPackage.trackingId}
             </span>
@@ -252,7 +252,7 @@ export function PackageTrackPanel({
                   borderRadius: r(12),
                   border: `1px solid ${item.tone}35`,
                   padding: '12px 13px',
-                  background: C.elevated,
+                  background: 'var(--secondary)',
                 }}
               >
                 <div
@@ -299,7 +299,7 @@ export function PackageTrackPanel({
                   borderRadius: r(12),
                   border: `1px solid ${DS.border}`,
                   padding: '12px 13px',
-                  background: C.elevated,
+                  background: 'var(--secondary)',
                 }}
               >
                 <div
@@ -312,7 +312,7 @@ export function PackageTrackPanel({
                 >
                   {item.label}
                 </div>
-                <div style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>
+                <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>
                   {item.value}
                 </div>
               </div>
@@ -354,7 +354,7 @@ export function PackageTrackPanel({
                   borderRadius: r(12),
                   border: `1px solid ${DS.border}`,
                   padding: '12px 13px',
-                  background: C.elevated,
+                  background: 'var(--secondary)',
                 }}
               >
                 <div
@@ -367,7 +367,7 @@ export function PackageTrackPanel({
                 >
                   {item.label}
                 </div>
-                <div style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>
+                <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>
                   {item.value}
                 </div>
               </div>
@@ -382,7 +382,7 @@ export function PackageTrackPanel({
                 borderRadius: '99px',
                 border: 'none',
                 background: trackedPackage.verification.senderCodeSharedAt ? C.greenDim : DS.gradG,
-                color: C.text,
+                color: 'var(--foreground)',
                 cursor: trackedPackage.verification.senderCodeSharedAt ? 'default' : 'pointer',
                 fontFamily: DS.F,
                 fontWeight: 700,
@@ -410,7 +410,7 @@ export function PackageTrackPanel({
                 background: trackedPackage.verification.riderPickupConfirmedAt
                   ? C.greenDim
                   : DS.gradC,
-                color: C.text,
+                color: 'var(--foreground)',
                 cursor:
                   !trackedPackage.verification.senderCodeSharedAt ||
                   trackedPackage.verification.riderPickupConfirmedAt
@@ -446,7 +446,7 @@ export function PackageTrackPanel({
                 background: trackedPackage.verification.receiverDeliveryConfirmedAt
                   ? C.greenDim
                   : DS.gradG,
-                color: C.text,
+                color: 'var(--foreground)',
                 cursor:
                   !trackedPackage.verification.riderPickupConfirmedAt ||
                   trackedPackage.verification.receiverDeliveryConfirmedAt
@@ -478,7 +478,7 @@ export function PackageTrackPanel({
                 borderRadius: '99px',
                 border: `1px solid ${DS.border}`,
                 background: DS.card2,
-                color: C.text,
+                color: 'var(--foreground)',
                 cursor: 'pointer',
                 fontFamily: DS.F,
                 fontWeight: 700,
@@ -502,11 +502,11 @@ export function PackageTrackPanel({
                   flexShrink: 0,
                 }}
               >
-                {step.complete && <CheckCircle2 size={11} color={C.text} />}
+                {step.complete && <CheckCircle2 size={11} color={'var(--foreground)'} />}
               </div>
               <span
                 style={{
-                  color: step.complete ? C.text : DS.muted,
+                  color: step.complete ? 'var(--foreground)' : DS.muted,
                   fontSize: '0.85rem',
                   alignSelf: 'center',
                 }}
@@ -549,7 +549,7 @@ export function PackageTrackPanel({
       )}
       {recentPackages.length > 0 && (
         <div style={{ marginTop: 24, textAlign: 'left' }}>
-          <div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>
+          <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 10 }}>
             {tx('packageTrackPanel.recent_tracking_shortcuts')}
           </div>
           <div style={{ display: 'grid', gap: 10 }}>
@@ -572,7 +572,7 @@ export function PackageTrackPanel({
                 }}
               >
                 <div>
-                  <div style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem' }}>
+                  <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.82rem' }}>
                     {item.trackingId}
                   </div>
                   <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>

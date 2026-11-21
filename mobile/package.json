@@ -77,5 +77,21 @@
     "jest-expo": "~55.0.0",
     "typescript": "^5.3.3"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "uuid": "^9.0.1",
+    "decode-uri-component": "^0.2.2",
+    "zod": "^3.25.76",
+    "fast-uri": "^3.1.9",
+    "glob": "^10.4.5",
+    "minimatch": "^9.0.5",
+    "semver": "^7.6.3",
+    "@fastify/busboy": "^2.1.1",
+    "ws": "^8.18.1",
+    "micromatch": "^4.0.8",
+    "braces": "^3.0.3",
+    "path-to-regexp": "^0.1.12",
+    "express": "^4.21.2",
+    "follow-redirects": "^1.15.9"
+  }
 }

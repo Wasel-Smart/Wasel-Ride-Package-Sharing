@@ -34,7 +34,7 @@ export function BusMap({
         padding: '18px 18px 16px',
       }}
     >
-      <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>
+      <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 12 }}>
         {tx('busPage.live_route_view')}
       </div>
       <div style={{ color: DS.sub, fontSize: '0.76rem', marginTop: 4, marginBottom: 12 }}>
@@ -98,7 +98,7 @@ export function BusMap({
               <div style={{ color: DS.muted, fontSize: '0.68rem', fontWeight: 700 }}>
                 {item.label}
               </div>
-              <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>
+              <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.84rem' }}>
                 {item.value}
               </div>
             </div>

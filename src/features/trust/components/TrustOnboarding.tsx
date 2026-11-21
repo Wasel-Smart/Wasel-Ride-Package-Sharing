@@ -16,9 +16,9 @@ export function TrustOnboarding({
         position: 'relative',
         padding: SPACE[6],
         borderRadius: R.xxl,
-        border: `1px solid ${C.cyan}33`,
-        background: `linear-gradient(180deg, ${C.cyan}08, ${C.card})`,
-        boxShadow: `0 0 0 1px ${C.cyan}12, 0 8px 24px rgba(8,29,57,0.25)`,
+        border: `1px solid ${'var(--primary)'}33`,
+        background: `linear-gradient(180deg, ${'var(--primary)'}08, ${'var(--card)'})`,
+        boxShadow: `0 0 0 1px ${'var(--primary)'}12, 0 8px 24px rgba(8,29,57,0.25)`,
       }}
     >
       <div
@@ -30,7 +30,7 @@ export function TrustOnboarding({
       >
         <div
           style={{
-            color: C.cyan,
+            color: 'var(--primary)',
             fontSize: TYPE.size.xs,
             fontWeight: TYPE.weight.bold,
             textTransform: 'uppercase',
@@ -42,7 +42,7 @@ export function TrustOnboarding({
         </div>
         <div
           style={{
-            color: C.text,
+            color: 'var(--foreground)',
             fontSize: TYPE.size.lg,
             fontWeight: TYPE.weight.ultra,
             fontFamily: F,
@@ -53,7 +53,7 @@ export function TrustOnboarding({
         </div>
         <div
           style={{
-            color: C.textMuted,
+            color: 'var(--muted-foreground)',
             fontSize: TYPE.size.sm,
             fontFamily: F,
             lineHeight: 1.6,

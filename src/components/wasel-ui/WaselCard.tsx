@@ -41,27 +41,27 @@ interface WaselCardProps extends HTMLAttributes<HTMLDivElement> {
 
 const variantMap: Record<CardVariant, CSSProperties> = {
   default: {
-    background: C.card,
-    border: `1px solid ${C.border}`,
+    background: 'var(--card)',
+    border: `1px solid var(--border)`,
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
     boxShadow: SH.card,
   },
   solid: {
-    background: C.cardSolid,
-    border: `1px solid ${C.border}`,
+    background: 'var(--card)',
+    border: `1px solid var(--border)`,
     boxShadow: SH.card,
   },
   brand: {
     background: `linear-gradient(135deg, ${C.cyanDim} 0%, ${C.greenDim} 100%)`,
-    border: `1px solid ${C.borderHov}`,
+    border: `1px solid var(--border)`,
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
     boxShadow: SH.blue,
   },
   elevated: {
-    background: C.elevated,
-    border: `1px solid ${C.borderFaint}`,
+    background: 'var(--secondary)',
+    border: `1px solid var(--border)`,
     boxShadow: SH.sm,
   },
 };

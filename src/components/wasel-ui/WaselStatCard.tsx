@@ -46,7 +46,7 @@ export function WaselStatCard ({
       ) : null}
       <div
         style={{
-          color: C.text,
+          color: `var(--foreground)`,
           fontSize: TYPE.size.lg,
           fontWeight: TYPE.weight.ultra,
           lineHeight: TYPE.lineHeight.tight,
@@ -57,7 +57,7 @@ export function WaselStatCard ({
       <div
         style={{
           marginTop: 4,
-          color: C.textMuted,
+          color: `var(--muted-foreground)`,
           fontSize: TYPE.size.xs,
           textTransform: 'uppercase',
           letterSpacing: TYPE.letterSpacing.wide,
@@ -66,7 +66,7 @@ export function WaselStatCard ({
         {label}
       </div>
       {sublabel ? (
-        <div style={{ marginTop: 2, color: C.textDim, fontSize: TYPE.size.xs }}>
+        <div style={{ marginTop: 2, color: `var(--muted-foreground)`, fontSize: TYPE.size.xs }}>
           {sublabel}
         </div>
       ) : null}

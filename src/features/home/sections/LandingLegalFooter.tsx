@@ -24,7 +24,7 @@ export function LandingLegalFooter( { ar, onNavigate }: LandingLegalFooterProps 
         background: 'none',
         border: 'none',
         padding: 0,
-        color: C.textMuted,
+        color: 'var(--muted-foreground)',
         cursor: 'pointer',
         fontSize: '0.875rem',
         textAlign: 'start',
@@ -93,7 +93,7 @@ export function LandingLegalFooter( { ar, onNavigate }: LandingLegalFooterProps 
       className="wasel-home-section"
       aria-label={ ar ? 'معلومات واصل القانونية والتشغيلية' : 'Wasel legal and operational information' }
       style={ {
-        borderTop: `1px solid ${ C.borderFaint }`,
+        borderTop: `1px solid ${ 'var(--border)' }`,
         marginTop: 40,
         paddingTop: 28,
         display: 'flex',
@@ -117,16 +117,16 @@ export function LandingLegalFooter( { ar, onNavigate }: LandingLegalFooterProps 
                 display: 'flex',
                 gap: 10,
                 alignItems: 'flex-start',
-                background: C.panel,
-                border: `1px solid ${ C.borderFaint }`,
+                background: 'var(--secondary)',
+                border: `1px solid ${ 'var(--border)' }`,
                 borderRadius: R.lg,
                 padding: '14px 16px',
               } }
             >
-              <Icon size={ 18 } color={ C.cyan } aria-hidden="true" />
+              <Icon size={ 18 } color={ 'var(--primary)' } aria-hidden="true" />
               <div>
-                <strong style={ { color: C.text, fontSize: TYPE.size.sm } }>{ item.title }</strong>
-                <p style={ { margin: '4px 0 0', color: C.textMuted, fontSize: '0.8rem', lineHeight: 1.55 } }>
+                <strong style={ { color: 'var(--foreground)', fontSize: TYPE.size.sm } }>{ item.title }</strong>
+                <p style={ { margin: '4px 0 0', color: 'var(--muted-foreground)', fontSize: '0.8rem', lineHeight: 1.55 } }>
                   { item.body }
                 </p>
               </div>
@@ -146,8 +146,8 @@ export function LandingLegalFooter( { ar, onNavigate }: LandingLegalFooterProps 
           const Icon = column.icon;
           return (
             <nav key={ column.title } aria-label={ column.title } style={ { display: 'flex', flexDirection: 'column', gap: 8 } }>
-              <div style={ { display: 'flex', alignItems: 'center', gap: 8, color: C.text }}>
-                <Icon size={ 14 } color={ C.cyan } aria-hidden="true" />
+              <div style={ { display: 'flex', alignItems: 'center', gap: 8, color: 'var(--foreground)' }}>
+                <Icon size={ 14 } color={ 'var(--primary)' } aria-hidden="true" />
                 <strong style={ { fontSize: TYPE.size.sm } }>{ column.title }</strong>
               </div>
               { column.items.map( item => link( item.en, item.arS, item.path, item.src ) ) }
@@ -157,7 +157,7 @@ export function LandingLegalFooter( { ar, onNavigate }: LandingLegalFooterProps 
 
         <div style={ { display: 'flex', flexDirection: 'column', gap: 8 } }>
           <WaselLogo size={ 32 } theme="light" variant="full" />
-          <p style={ { margin: 0, color: C.textMuted, fontSize: '0.8rem', lineHeight: 1.55 } }>
+          <p style={ { margin: 0, color: 'var(--muted-foreground)', fontSize: '0.8rem', lineHeight: 1.55 } }>
             { ar
               ? 'واصل — شبكة تنقل ثنائية اللغة في عمّان، الأردن. أرقام المعاينة على الصفحة الرئيسية موسومة «عيّنة» حتى تحميل البيانات المباشرة.'
               : 'Wasel — a bilingual mobility network based in Amman, Jordan. Preview figures on the home page are labelled "Sample" until live data loads.' }
@@ -172,7 +172,7 @@ export function LandingLegalFooter( { ar, onNavigate }: LandingLegalFooterProps 
           gap: 10,
           justifyContent: 'space-between',
           alignItems: 'center',
-          color: C.textDim,
+          color: 'var(--muted-foreground)',
           fontSize: '0.78rem',
         } }
       >

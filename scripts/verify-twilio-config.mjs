@@ -156,7 +156,7 @@ async function main() {
 
   let apiKeyAuthOk = false;
   try {
-    if (messagingServiceSid) {
+    if (messagingServiceSid && apiKeySid && apiKeySecret) {
       const service = await twilioGet(
         `https://messaging.twilio.com/v1/Services/${messagingServiceSid}`,
         apiKeyAuthHeader(),
@@ -166,11 +166,13 @@ async function main() {
       }
     }
 
-    const verifyService = await twilioGet(
-      `https://verify.twilio.com/v2/Services/${verifyServiceSid}`,
-      apiKeyAuthHeader(),
-    );
-    apiKeyAuthOk = verifyService.sid === verifyServiceSid;
+    if (verifyServiceSid && apiKeySid && apiKeySecret) {
+      const verifyService = await twilioGet(
+        `https://verify.twilio.com/v2/Services/${verifyServiceSid}`,
+        apiKeyAuthHeader(),
+      );
+      apiKeyAuthOk = verifyService.sid === verifyServiceSid;
+    }
   } catch {
     apiKeyAuthOk = false;
   }

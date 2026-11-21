@@ -16,12 +16,16 @@ const BTN_CSS = `
   .wbtn:focus-visible { outline: 2px solid var(--wasel-focus, #00E5FF); outline-offset: 3px; }
   /* Brand rule: soft navy/colour shadows, colour shifts for emphasis, no glow spreads. */
   .wbtn[data-variant='primary']:not(:disabled):hover { box-shadow: 0 8px 22px rgba(0,229,255,0.2); filter: brightness(1.05); }
-  .wbtn[data-variant='outline']:not(:disabled):hover { background: rgba(0,229,255,0.1) !important; border-color: rgba(0,229,255,0.5) !important; }
-  .wbtn[data-variant='ghost']:not(:disabled):hover { background: rgba(255,255,255,0.07) !important; color: #F8FBFF !important; }
+  .wbtn[data-variant='outline']:not(:disabled):hover { background: rgba(var(--wbtn-outline-hover-rgb, 0,229,255),0.1) !important; border-color: rgba(var(--wbtn-outline-hover-rgb, 0,229,255),0.5) !important; }
+  .wbtn[data-variant='ghost']:not(:disabled):hover { background: var(--wbtn-ghost-hover-bg, rgba(255,255,255,0.07)) !important; color: var(--foreground, #F8FBFF) !important; }
   .wbtn[data-variant='gold']:not(:disabled):hover { box-shadow: 0 8px 22px rgba(255,190,92,0.24); filter: brightness(1.04); }
   .wbtn[data-variant='danger']:not(:disabled):hover { background: rgba(255,124,139,0.22) !important; }
   @keyframes wbtn-spin { to { transform: rotate(360deg); } }
   .wbtn-spinner { animation: wbtn-spin 0.9s linear infinite; }
+  /* Light-mode adjustments */
+  [data-theme="light"] .wbtn[data-variant='ghost']:not(:disabled):hover { --wbtn-ghost-hover-bg: rgba(8,29,57,0.06); }
+  [data-theme="light"] .wbtn[data-variant='outline'] { color: var(--primary, #0369a1) !important; border-color: rgba(3,105,161,0.3) !important; }
+  [data-theme="light"] .wbtn[data-variant='outline']:not(:disabled):hover { --wbtn-outline-hover-rgb: 3,105,161; }
 `;
 
 if ( typeof document !== 'undefined' && !document.getElementById( STYLE_ID ) ) {
@@ -58,14 +62,14 @@ const variantStyles: Record<
   },
   outline: {
     background: 'transparent',
-    color: C.cyan,
-    border: `1px solid ${ C.border }`,
+    color: 'var(--primary, #00E5FF)',
+    border: `1px solid var(--border, ${ C.border })`,
     boxShadow: 'none',
     hoverShadow: SH.blue,
   },
   ghost: {
     background: 'transparent',
-    color: C.textSub,
+    color: 'var(--foreground, #F8FBFF)',
     border: 'none',
     boxShadow: 'none',
     hoverShadow: 'none',
@@ -78,9 +82,9 @@ const variantStyles: Record<
     hoverShadow: SH.gold,
   },
   danger: {
-    background: C.errorDim,
-    color: C.error,
-    border: `1px solid ${ C.errorDim }`,
+    background: 'color-mix(in srgb, var(--destructive) 14%, transparent)',
+    color: 'var(--destructive)',
+    border: `1px solid color-mix(in srgb, var(--destructive) 20%, transparent)`,
     boxShadow: 'none',
     hoverShadow: SH.sm,
   },

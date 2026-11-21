@@ -25,7 +25,7 @@ const featureCards = [
     icon: Shield,
     titleKey: 'featuresVerified',
     descKey: 'featuresVerifiedDesc',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
   {
     icon: CircleDollarSign,
@@ -76,7 +76,7 @@ const bentoTiles = [
       'homeSections.bentoRidersPoint3',
     ],
     ctaKey: 'homeSections.findRideCTA',
-    accent: C.cyan,
+    accent: 'var(--primary)',
     path: '/find-ride',
     hero: true,
   },
@@ -134,7 +134,7 @@ const CITY_COUNT = new Set(POPULAR_ROUTES.map(r => r.to)).size;
 const TRUST_CHECK_COUNT = 5;
 
 const stats = [
-  { value: String(SERVICE_COUNT), labelKey: 'statsServices', accent: C.cyan },
+  { value: String(SERVICE_COUNT), labelKey: 'statsServices', accent: 'var(--primary)' },
   { value: String(CORRIDOR_COUNT), labelKey: 'statsCorridors', accent: C.gold },
   { value: String(CITY_COUNT), labelKey: 'statsCities', accent: C.orange },
   { value: String(TRUST_CHECK_COUNT), labelKey: 'homeSections.statTrustChecks', accent: C.green },
@@ -150,7 +150,7 @@ export function LandingSections({ ar, onNavigate }: LandingSectionsProps) {
       >
         <div className="wasel-home-section-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div className="wasel-home-section-icon" style={{ color: C.cyan }}>
+            <div className="wasel-home-section-icon" style={{ color: 'var(--primary)' }}>
               <Shield size={16} />
             </div>
             <h2 id="features-heading" className="wasel-home-section-title">
@@ -176,7 +176,7 @@ export function LandingSections({ ar, onNavigate }: LandingSectionsProps) {
                 style={{
                   borderRadius: R.xl,
                   padding: '24px',
-                  background: C.card,
+                  background: 'var(--card)',
                   border: `1px solid ${feature.accent}24`,
                   boxShadow: SH.sm,
                   display: 'flex',
@@ -203,7 +203,7 @@ export function LandingSections({ ar, onNavigate }: LandingSectionsProps) {
                     margin: 0,
                     fontSize: '1.1rem',
                     fontWeight: TYPE.weight.black,
-                    color: C.text,
+                    color: 'var(--foreground)',
                     lineHeight: 1.3,
                   }}
                 >
@@ -212,7 +212,7 @@ export function LandingSections({ ar, onNavigate }: LandingSectionsProps) {
                 <p
                   style={{
                     margin: 0,
-                    color: C.textMuted,
+                    color: 'var(--muted-foreground)',
                     fontSize: '0.9rem',
                     lineHeight: 1.6,
                   }}
@@ -312,7 +312,7 @@ export function LandingSections({ ar, onNavigate }: LandingSectionsProps) {
           style={{
             borderRadius: R.xxl,
             padding: '32px 24px',
-            background: `linear-gradient(180deg, ${C.cyanDim}, ${C.card})`,
+            background: `linear-gradient(180deg, ${C.cyanDim}, ${'var(--card)'})`,
             border: `1px solid ${C.cyanDim}`,
             boxShadow: SH.lg,
           }}
@@ -329,7 +329,7 @@ export function LandingSections({ ar, onNavigate }: LandingSectionsProps) {
                 fontWeight: 800,
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
-                color: C.cyan,
+                color: 'var(--primary)',
                 marginBottom: 8,
               }}
             >
@@ -375,7 +375,7 @@ export function LandingSections({ ar, onNavigate }: LandingSectionsProps) {
                   style={{
                     marginTop: 6,
                     fontSize: '0.85rem',
-                    color: C.textMuted,
+                    color: 'var(--muted-foreground)',
                     fontWeight: TYPE.weight.medium,
                   }}
                 >

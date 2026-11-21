@@ -17,7 +17,7 @@ function policyCardStyle(accent: string) {
   return {
     borderRadius: R.xxl,
     border: `1px solid ${accent}24`,
-    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${C.card}`,
+    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${'var(--card)'}`,
     boxShadow: SH.md,
     padding: SPACE[5],
   } as const;
@@ -219,7 +219,7 @@ export function PrivacyPolicy() {
           icon={<Shield size={18} />}
           title={copy.title}
           description={copy.intro}
-          accent={C.cyan}
+          accent={'var(--primary)'}
           actions={
             <>
               <WaselButton
@@ -233,7 +233,7 @@ export function PrivacyPolicy() {
                 type="button"
                 variant="outline"
                 onClick={() => { void nav('/trust'); }}
-                style={{ background: C.elevated, color: C.text }}
+                style={{ background: 'var(--secondary)', color: 'var(--foreground)' }}
               >
                 {ar ? 'مركز الثقة' : 'Trust Center'}
               </WaselButton>
@@ -241,7 +241,7 @@ export function PrivacyPolicy() {
                 type="button"
                 variant="outline"
                 onClick={() => { void nav('/app/support'); }}
-                style={{ background: C.elevated, color: C.text }}
+                style={{ background: 'var(--secondary)', color: 'var(--foreground)' }}
               >
                 {ar ? 'تواصل مع الدعم' : 'Contact support'}
               </WaselButton>
@@ -250,7 +250,7 @@ export function PrivacyPolicy() {
           aside={
             <div style={{ display: 'grid', gap: SPACE[3] }}>
               <WaselLogo size={44} theme="light" variant="full" />
-              <StatusBadge label={copy.subtitle} accent={C.cyan} />
+              <StatusBadge label={copy.subtitle} accent={'var(--primary)'} />
               <div
                 style={{
                   display: 'grid',
@@ -262,7 +262,7 @@ export function PrivacyPolicy() {
                   {
                     label: ar ? 'مجموعات البيانات' : 'Data groups',
                     value: String(copy.sections.length),
-                    accent: C.cyan,
+                    accent: 'var(--primary)',
                   },
                   { label: ar ? 'حقوق المستخدم' : 'User rights', value: '6', accent: C.green },
                   { label: ar ? 'بيع للإعلانات' : 'Ad resale', value: '0', accent: C.gold },
@@ -283,7 +283,7 @@ export function PrivacyPolicy() {
                   >
                     <div
                       style={{
-                        color: C.text,
+                        color: 'var(--foreground)',
                         fontSize: TYPE.size.lg,
                         fontWeight: TYPE.weight.ultra,
                         lineHeight: TYPE.lineHeight.tight,
@@ -294,7 +294,7 @@ export function PrivacyPolicy() {
                     <div
                       style={{
                         marginTop: 4,
-                        color: C.textMuted,
+                        color: 'var(--muted-foreground)',
                         fontSize: TYPE.size.xs,
                         textTransform: 'uppercase',
                         letterSpacing: TYPE.letterSpacing.wide,
@@ -325,7 +325,7 @@ export function PrivacyPolicy() {
                 ? 'البيانات المجموعة مرتبة ضمن فئات واضحة.'
                 : 'Collected data is grouped into clear categories.'
             }
-            accent={C.cyan}
+            accent={'var(--primary)'}
             icon={<FileText size={18} />}
           />
           <MetricCard
@@ -366,7 +366,7 @@ export function PrivacyPolicy() {
               ? 'كتل قصيرة وسهلة القراءة بتخلي نموذج الخصوصية أوضح.'
               : 'Short, scannable blocks make the privacy model easier to understand.'
           }
-          icon={<Shield size={18} color={C.cyan} />}
+          icon={<Shield size={18} color={'var(--primary)'} />}
         >
           <div
             style={{
@@ -378,7 +378,7 @@ export function PrivacyPolicy() {
             {copy.sections.map(section => {
               const Icon = section.icon;
               return (
-                <div key={section.title} style={policyCardStyle(C.cyan)}>
+                <div key={section.title} style={policyCardStyle('var(--primary)')}>
                   <div
                     style={{
                       display: 'flex',
@@ -395,9 +395,9 @@ export function PrivacyPolicy() {
                         width: 40,
                         height: 40,
                         borderRadius: R.lg,
-                        background: `${C.cyan}18`,
-                        border: `1px solid ${C.cyan}28`,
-                        color: C.cyan,
+                        background: `${'var(--primary)'}18`,
+                        border: `1px solid ${'var(--primary)'}28`,
+                        color: 'var(--primary)',
                         flexShrink: 0,
                       }}
                     >
@@ -405,7 +405,7 @@ export function PrivacyPolicy() {
                     </span>
                     <div
                       style={{
-                        color: C.text,
+                        color: 'var(--foreground)',
                         fontSize: TYPE.size.base,
                         fontWeight: TYPE.weight.black,
                         lineHeight: TYPE.lineHeight.snug,
@@ -420,10 +420,10 @@ export function PrivacyPolicy() {
                         key={item}
                         style={{
                           borderRadius: R.xl,
-                          border: `1px solid ${C.borderFaint}`,
-                          background: C.elevated,
+                          border: `1px solid ${'var(--border)'}`,
+                          background: 'var(--secondary)',
                           padding: `${SPACE[3]} ${SPACE[4]}`,
-                          color: C.text,
+                          color: 'var(--foreground)',
                           fontSize: TYPE.size.sm,
                           lineHeight: TYPE.lineHeight.relaxed,
                         }}
@@ -448,31 +448,31 @@ export function PrivacyPolicy() {
           <SectionCard
             title={copy.contact.title}
             subtitle={copy.contact.subtitle}
-            icon={<Mail size={18} color={C.cyan} />}
+            icon={<Mail size={18} color={'var(--primary)'} />}
           >
             <div style={{ display: 'grid', gap: 12 }}>
               <a
                 href={`mailto:${copy.contact.email}`}
                 style={{
-                  ...policyCardStyle(C.cyan),
+                  ...policyCardStyle('var(--primary)'),
                   textDecoration: 'none',
                   color: 'inherit',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-                  <Mail size={18} color={C.cyan} />
+                  <Mail size={18} color={'var(--primary)'} />
                   <div>
-                    <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                    <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black }}>
                       {copy.contact.email}
                     </div>
-                    <div style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>
+                    <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm }}>
                       {t('common.email')}
                     </div>
                   </div>
                 </div>
               </a>
               <div style={policyCardStyle(C.green)}>
-                <div style={{ color: C.text, fontWeight: TYPE.weight.black }}>
+                <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black }}>
                   {copy.contact.address}
                 </div>
               </div>
@@ -508,13 +508,13 @@ export function PrivacyPolicy() {
                       >
                         <Icon size={16} />
                       </span>
-                      <div style={{ color: C.text, fontWeight: TYPE.weight.black, fontSize: TYPE.size.sm }}>
+                      <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.black, fontSize: TYPE.size.sm }}>
                         {item.title}
                       </div>
                     </div>
                     <div
                       style={{
-                        color: C.textMuted,
+                        color: 'var(--muted-foreground)',
                         fontSize: TYPE.size.sm,
                         lineHeight: TYPE.lineHeight.relaxed,
                       }}

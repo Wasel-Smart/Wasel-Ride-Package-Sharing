@@ -43,7 +43,7 @@ export function BusSchedule({
           padding: '18px 18px 16px',
         }}
       >
-        <div style={{ color: C.text, fontWeight: 800, marginBottom: 8 }}>
+        <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 8 }}>
           {tx('busPage.corridor_snapshot')}
         </div>
         <div style={{ display: 'grid', gap: 10 }}>
@@ -65,7 +65,7 @@ export function BusSchedule({
                 }}
               >
                 <div>
-                  <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>
+                  <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.84rem' }}>
                     {route.from} {tx('busPage.to_7')}
                     {route.to}
                   </div>
@@ -105,7 +105,7 @@ export function BusSchedule({
           padding: '18px 18px 16px',
         }}
       >
-        <div style={{ color: C.text, fontWeight: 800, marginBottom: 8 }}>
+        <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 8 }}>
           {tx('busPage.what_to_know_before_you_go')}
         </div>
         <div style={{ display: 'grid', gap: 10 }}>
@@ -141,7 +141,7 @@ export function BusSchedule({
             padding: '18px 18px 16px',
           }}
         >
-          <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>
+          <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 12 }}>
             {tx('busPage.if_this_coach_fills_up')}
           </div>
           <div style={{ display: 'grid', gap: 10 }}>
@@ -157,7 +157,7 @@ export function BusSchedule({
                   textAlign: 'left',
                   borderRadius: r(14),
                   border: `1px solid ${route.color ?? DS.cyan}24`,
-                  background: C.elevated,
+                  background: 'var(--secondary)',
                   padding: '12px 14px',
                   cursor: 'pointer',
                   display: 'grid',
@@ -172,7 +172,7 @@ export function BusSchedule({
                     alignItems: 'center',
                   }}
                 >
-                  <span style={{ color: C.text, fontWeight: 800, fontSize: '0.84rem' }}>
+                  <span style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.84rem' }}>
                     {route.company}
                   </span>
                   <span style={{ ...pill(route.color ?? DS.cyan), fontSize: '0.64rem' }}>

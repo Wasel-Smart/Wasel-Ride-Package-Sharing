@@ -218,7 +218,7 @@ export function FindRideTripDetailModal({
             >
               <h2
                 style={{
-                  color: C.text,
+                  color: 'var(--foreground)',
                   fontWeight: 900,
                   fontSize: '1.2rem',
                   margin: 0,
@@ -244,7 +244,7 @@ export function FindRideTripDetailModal({
               style={{ display: 'flex', alignItems: 'center', gap: 12 }}
             >
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontWeight: 800, color: C.text, fontSize: '1.1rem' }}>
+                <div style={{ fontWeight: 800, color: 'var(--foreground)', fontSize: '1.1rem' }}>
                   {cityLabel(ride.from)}
                 </div>
                 <div style={{ color: DS.cyan, fontSize: '0.75rem' }}>{ride.fromPoint}</div>
@@ -270,7 +270,7 @@ export function FindRideTripDetailModal({
                   {ride.duration} | {ride.distance} {tx('findRideTripDetailModal.km')}</span>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontWeight: 800, color: C.text, fontSize: '1.1rem' }}>{cityLabel(ride.to)}</div>
+                <div style={{ fontWeight: 800, color: 'var(--foreground)', fontSize: '1.1rem' }}>{cityLabel(ride.to)}</div>
                 <div style={{ color: DS.cyan, fontSize: '0.75rem' }}>{ride.toPoint}</div>
               </div>
             </div>
@@ -296,7 +296,7 @@ export function FindRideTripDetailModal({
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 900,
-                    color: C.text,
+                    color: 'var(--foreground)',
                     fontSize: '1.1rem',
                     flexShrink: 0,
                   }}
@@ -305,7 +305,7 @@ export function FindRideTripDetailModal({
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontWeight: 800, color: C.text, fontSize: '1.05rem' }}>
+                    <span style={{ fontWeight: 800, color: 'var(--foreground)', fontSize: '1.05rem' }}>
                       {ride.driver.name}
                     </span>
                     {ride.driver.verified && (
@@ -364,12 +364,12 @@ export function FindRideTripDetailModal({
                   alignItems: 'center',
                   gap: 8,
                   padding: '10px 14px',
-                  background: C.elevated,
+                  background: 'var(--secondary)',
                   borderRadius: r(10),
                 }}
               >
                 <Car size={14} color={DS.cyan} />
-                <span style={{ color: C.text, fontWeight: 600, fontSize: '0.85rem' }}>
+                <span style={{ color: 'var(--foreground)', fontWeight: 600, fontSize: '0.85rem' }}>
                   {ride.car}
                 </span>
               </div>
@@ -408,7 +408,7 @@ export function FindRideTripDetailModal({
                       {item.label}
                     </span>
                   </div>
-                  <div style={{ color: C.text, fontWeight: 700, fontSize: '0.9rem' }}>
+                  <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.9rem' }}>
                     {item.val}
                   </div>
                 </div>
@@ -424,7 +424,7 @@ export function FindRideTripDetailModal({
                   border: `1px solid ${DS.border}`,
                 }}
               >
-                <div style={{ color: C.text, fontWeight: 800, marginBottom: 10 }}>
+                <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 10 }}>
                   {ar ? 'نشاط المسار على جهازك' : 'Route activity on this device'}</div>
                 <div style={{ display: 'grid', gap: 8 }}>
                   {[
@@ -552,7 +552,7 @@ export function FindRideTripDetailModal({
                 >
                   {tx('findRideTripDetailModal.route_stops')}</p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ color: C.text, fontWeight: 600, fontSize: '0.82rem' }}>
+                  <span style={{ color: 'var(--foreground)', fontWeight: 600, fontSize: '0.82rem' }}>
                     {cityLabel(ride.from)}
                   </span>
                   {ride.intermediateStops.map(stop => (
@@ -565,7 +565,7 @@ export function FindRideTripDetailModal({
                   ))}
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <ChevronRight size={12} color={DS.muted} />
-                    <span style={{ color: C.text, fontWeight: 600, fontSize: '0.82rem' }}>
+                    <span style={{ color: 'var(--foreground)', fontWeight: 600, fontSize: '0.82rem' }}>
                       {cityLabel(ride.to)}
                     </span>
                   </span>
@@ -598,7 +598,7 @@ export function FindRideTripDetailModal({
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                      <span style={{ fontWeight: 700, color: C.text, fontSize: '0.85rem' }}>
+                      <span style={{ fontWeight: 700, color: 'var(--foreground)', fontSize: '0.85rem' }}>
                         {review.name}
                       </span>
                       <div style={{ display: 'flex', gap: 2 }}>
@@ -675,9 +675,9 @@ export function FindRideTripDetailModal({
                         ? DS.gradGold
                         : DS.gradG
                       : soldOut
-                        ? C.elevated
+                        ? 'var(--secondary)'
                         : DS.gradC,
-                    color: C.text,
+                    color: 'var(--foreground)',
                     fontWeight: 800,
                     fontSize: '0.95rem',
                     boxShadow: `0 8px 24px ${
@@ -686,7 +686,7 @@ export function FindRideTripDetailModal({
                           ? DS.gold
                           : DS.green
                         : soldOut
-                          ? C.border
+                          ? 'var(--border)'
                           : DS.cyan
                     }40`,
                     opacity: soldOut || isBooking ? 0.9 : 1,

@@ -9,8 +9,8 @@ import {
   Play,
   RotateCcw,
   ShieldCheck,
-  Sparkles,
-  TimerReset,
+
+
   Users,
 } from 'lucide-react';
 import { WaselButton, WaselLogo } from '../../components/wasel-ui';
@@ -18,7 +18,7 @@ import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
 import { tx } from '../../locales/tx';
 
 type Accent = 'cyan' | 'green' | 'gold' | 'purple';
-type UnitType = 'ride' | 'package';
+type UnitType = 'ride' | 'package' | 'bus';
 type TabKey = 'signal' | 'math' | 'fleet' | 'recovery';
 
 const NODES = [
@@ -207,77 +207,37 @@ const UNITS: {
     phase: 0.66,
     lane: 4,
     speed: 0.013,
-    dir: -1,
-  },
-  {
-    id: 'u3',
-    routeId: 'r2',
-    type: 'ride',
-    accent: 'green',
-    phase: 0.22,
-    lane: -5,
-    speed: 0.021,
     dir: 1,
   },
   {
-    id: 'u4',
-    routeId: 'r3',
-    type: 'ride',
-    accent: 'cyan',
-    phase: 0.34,
-    lane: -4,
-    speed: 0.018,
+    id: 'u10',
+    routeId: 'r6',
+    type: 'bus',
+    accent: 'gold',
+    phase: 0.12,
+    lane: 0,
+    speed: 0.008,
     dir: 1,
   },
   {
-    id: 'u5',
+    id: 'u11',
     routeId: 'r4',
-    type: 'package',
+    type: 'bus',
     accent: 'gold',
-    phase: 0.58,
-    lane: 5,
-    speed: 0.011,
+    phase: 0.55,
+    lane: 0,
+    speed: 0.01,
     dir: 1,
   },
   {
-    id: 'u6',
-    routeId: 'r5',
-    type: 'ride',
-    accent: 'green',
-    phase: 0.17,
-    lane: -6,
-    speed: 0.015,
-    dir: 1,
-  },
-  {
-    id: 'u7',
-    routeId: 'r6',
-    type: 'ride',
+    id: 'u12',
+    routeId: 'r1',
+    type: 'bus',
     accent: 'cyan',
-    phase: 0.52,
-    lane: -8,
-    speed: 0.014,
-    dir: 1,
-  },
-  {
-    id: 'u8',
-    routeId: 'r6',
-    type: 'package',
-    accent: 'gold',
-    phase: 0.78,
-    lane: 8,
+    phase: 0.8,
+    lane: 0,
     speed: 0.009,
     dir: -1,
-  },
-  {
-    id: 'u9',
-    routeId: 'r7',
-    type: 'ride',
-    accent: 'purple',
-    phase: 0.26,
-    lane: -5,
-    speed: 0.013,
-    dir: 1,
   },
 ];
 
@@ -303,14 +263,14 @@ function accentColor(accent: Accent) {
       ? C.gold
       : accent === 'purple'
         ? C.purple
-        : C.cyan;
+        : 'var(--primary)';
 }
 
 function panelStyle(extra: CSSProperties = {}) {
   return {
     position: 'relative',
-    background: C.card,
-    border: `1px solid ${C.border}`,
+    background: 'var(--card)',
+    border: `1px solid ${'var(--border)'}`,
     borderRadius: 24,
     boxShadow: SH.lg,
     overflow: 'hidden',
@@ -326,8 +286,11 @@ export default function MobilityOSPage() {
 
   useEffect(() => {
     if (paused) {return undefined;}
-    const loop = () => {
-      setTick(prev => (prev + 0.0035) % 1);
+    let lastTime = performance.now();
+    const loop = (now: number) => {
+      const dt = Math.min(0.1, (now - lastTime) / 1000);
+      lastTime = now;
+      setTick(prev => (prev + dt * 0.21) % 1);
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
@@ -433,8 +396,8 @@ export default function MobilityOSPage() {
     <div
       style={{
         minHeight: 'var(--app-min-height)',
-        background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, ${C.goldDim}, transparent 22%), ${C.bg}`,
-        color: C.text,
+        background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, ${C.goldDim}, transparent 22%), ${'var(--background)'}`,
+        color: 'var(--foreground)',
         fontFamily: F,
         padding: '24px 16px 44px',
       }}
@@ -450,8 +413,8 @@ export default function MobilityOSPage() {
                   display: 'inline-flex',
                   padding: '10px 14px',
                   borderRadius: R.full,
-                  border: `1px solid ${C.border}`,
-                  background: C.elevated,
+                  border: `1px solid ${'var(--border)'}`,
+                  background: 'var(--secondary)',
                   width: 'fit-content',
                 }}
               >
@@ -462,7 +425,7 @@ export default function MobilityOSPage() {
                   fontSize: '0.72rem',
                   letterSpacing: '0.18em',
                   textTransform: 'uppercase',
-                  color: C.cyan,
+                  color: 'var(--primary)',
                 }}
               >
                 {tx('mobilityOSPage.mobility_os_neural_corridor_engine')}
@@ -482,7 +445,7 @@ export default function MobilityOSPage() {
               <p
                 style={{
                   margin: 0,
-                  color: C.textSub,
+                  color: 'var(--foreground)',
                   lineHeight: 1.75,
                   fontSize: '1.02rem',
                   maxWidth: 760,
@@ -492,27 +455,6 @@ export default function MobilityOSPage() {
                   'mobilityOSPage.instead_of_generic_dashboard_cards_this_screen_simulates_route_pressure_reliability_package_synchrony_and_recovery_posture_so_users_feel_the_system_is_intelligently_coordinating_movement',
                 )}
               </p>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {[
-                  'I(t)=0.44S+0.24B+0.32V',
-                  'B(t)=100-sqrt(variance(load))',
-                  'ETA=f(speed,reliability,drift)',
-                ].map(formula => (
-                  <div
-                    key={formula}
-                    style={{
-                      padding: '10px 14px',
-                      borderRadius: 16,
-                      border: `1px solid ${C.border}`,
-                      background: C.elevated,
-                      fontFamily: FM,
-                      fontSize: '0.84rem',
-                    }}
-                  >
-                    {formula}
-                  </div>
-                ))}
-              </div>
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
               <WaselButton
@@ -575,7 +517,7 @@ export default function MobilityOSPage() {
                 borderRadius: 22,
                 border: `1px solid ${accentColor(card.accent)}30`,
                 boxShadow: `0 18px 42px ${accentColor(card.accent)}18`,
-                background: C.card,
+                background: 'var(--card)',
               })}
             >
               <div
@@ -583,7 +525,7 @@ export default function MobilityOSPage() {
                   fontSize: '0.72rem',
                   letterSpacing: '0.14em',
                   textTransform: 'uppercase',
-                  color: C.textMuted,
+                  color: 'var(--muted-foreground)',
                 }}
               >
                 {card.label}
@@ -599,7 +541,7 @@ export default function MobilityOSPage() {
               >
                 {card.value}
               </div>
-              <div style={{ marginTop: 10, color: C.textSub, lineHeight: 1.5, fontSize: '0.9rem' }}>
+              <div style={{ marginTop: 10, color: 'var(--foreground)', lineHeight: 1.5, fontSize: '0.9rem' }}>
                 {card.detail}
               </div>
             </div>
@@ -628,7 +570,7 @@ export default function MobilityOSPage() {
                   style={{
                     fontSize: '0.78rem',
                     letterSpacing: '0.16em',
-                    color: C.textMuted,
+                    color: 'var(--muted-foreground)',
                     textTransform: 'uppercase',
                   }}
                 >
@@ -637,7 +579,7 @@ export default function MobilityOSPage() {
                 <h2 style={{ margin: '10px 0 6px', fontSize: '1.4rem' }}>
                   {tx('mobilityOSPage.jordan_corridor_constellation')}
                 </h2>
-                <p style={{ margin: 0, color: C.textSub, maxWidth: 620, lineHeight: 1.65 }}>
+                <p style={{ margin: 0, color: 'var(--foreground)', maxWidth: 620, lineHeight: 1.65 }}>
                   {tx(
                     'mobilityOSPage.signal_view_exposes_route_health_as_a_legible_motion_field_while_math_fleet_and_recovery_modes_shift_the_explanation_layer_without_hiding_the_network',
                   )}
@@ -666,7 +608,7 @@ export default function MobilityOSPage() {
                 minHeight: 520,
                 padding: 0,
                 borderRadius: 24,
-                border: `1px solid ${C.borderFaint}`,
+                border: `1px solid ${'var(--border)'}`,
               })}
             >
               <div
@@ -687,11 +629,11 @@ export default function MobilityOSPage() {
                     padding: '8px 12px',
                     borderRadius: 14,
                     background: C.overlay,
-                    border: `1px solid ${C.border}`,
+                    border: `1px solid ${'var(--border)'}`,
                     fontSize: '0.78rem',
                   }}
                 >
-                  <Activity size={14} color={C.cyan} />
+                  <Activity size={14} color={'var(--primary)'} />
                   {tx('mobilityOSPage.live_phase')}
                   {(tick * 100).toFixed(1)}%
                 </div>
@@ -700,18 +642,47 @@ export default function MobilityOSPage() {
                     padding: '10px 12px',
                     borderRadius: 16,
                     background: C.overlay,
-                    border: `1px solid ${C.borderFaint}`,
+                    border: `1px solid ${'var(--border)'}`,
                     fontFamily: FM,
-                    color: C.textSub,
+                    color: 'var(--foreground)',
                     fontSize: '0.78rem',
                   }}
                 >
                   {tx('mobilityOSPage.score_0_38_demand_0_34_reliability_0_28_velocity')}
                 </div>
+                {/* Live backend data indicator */}
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '7px 11px',
+                    borderRadius: 14,
+                    background: liveCorridors ? ${C.green}18 : C.overlay,
+                    border: 1px solid ,
+                    fontSize: '0.72rem',
+                    color: liveCorridors ? C.green : C.textMuted,
+                    transition: 'all 0.4s ease',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: '50%',
+                      background: liveCorridors ? C.green : C.textDim,
+                      boxShadow: liveCorridors ?   0 6px  : 'none',
+                      flexShrink: 0,
+                    }}
+                  />
+                  {liveCorridors ? Live \u2014  corridors : 'Simulation mode'}
+                </div>
               </div>
 
               <svg
                 viewBox="0 0 100 110"
+                role="img"
+                aria-label="Jordan mobility network - live corridor simulation"
                 style={{ width: '100%', height: '100%', display: 'block' }}
               >
                 {routeStats.map(route => {
@@ -733,7 +704,7 @@ export default function MobilityOSPage() {
                       <path
                         d={`M ${from.x} ${from.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${to.x} ${to.y}`}
                         fill="none"
-                        stroke={C.borderFaint}
+                        stroke={'var(--border)'}
                         strokeWidth={0.85}
                         strokeLinecap="round"
                       />
@@ -760,7 +731,7 @@ export default function MobilityOSPage() {
                             x={(from.x + to.x) / 2}
                             y={(from.y + to.y) / 2 - 7.1}
                             textAnchor="middle"
-                            fill={C.text}
+                            fill={'var(--foreground)'}
                             fontSize="1.7"
                           >
                             {route.score}
@@ -774,12 +745,12 @@ export default function MobilityOSPage() {
                   <g key={node.id}>
                     <circle cx={node.x} cy={node.y} r={7} fill={`${accentColor(node.accent)}18`} className="wasel-creative-node-glow" />
                     <circle cx={node.x} cy={node.y} r={3.2} fill={accentColor(node.accent)} />
-                    <circle cx={node.x} cy={node.y} r={1.1} fill={C.text} />
+                    <circle cx={node.x} cy={node.y} r={1.1} fill={'var(--foreground)'} />
                     <text
                       x={node.x}
                       y={node.y - 8.4}
                       textAnchor="middle"
-                      fill={C.text}
+                      fill={'var(--foreground)'}
                       fontSize="2.5"
                     >
                       {node.name}
@@ -788,7 +759,7 @@ export default function MobilityOSPage() {
                       x={node.x}
                       y={node.y + 10.2}
                       textAnchor="middle"
-                      fill={C.textMuted}
+                      fill={'var(--muted-foreground)'}
                       fontSize="1.45"
                     >
                       {node.subtitle}
@@ -798,7 +769,7 @@ export default function MobilityOSPage() {
                 {UNITS.filter(
                   unit =>
                     tab === 'signal' ||
-                    (tab === 'fleet' && unit.type === 'ride') ||
+                    (tab === 'fleet' && (unit.type === 'ride' || unit.type === 'bus')) ||
                     (tab === 'recovery' && unit.type === 'package') ||
                     tab === 'math',
                 ).map((unit, index) => {
@@ -841,6 +812,7 @@ export default function MobilityOSPage() {
                       opacity={clamp(0.52 + Math.sin(tick * 14 + index) * 0.22, 0.36, 0.98)}
                     >
                       {unit.type === 'ride' ? (
+                        // ride: rounded pill (car silhouette)
                         <rect
                           x={-2.8}
                           y={-1.6}
@@ -849,8 +821,16 @@ export default function MobilityOSPage() {
                           rx={1.2}
                           fill={accentColor(unit.accent)}
                         />
+                      ) : unit.type === 'bus' ? (
+                        // bus: wider tall rect with two wheel dots
+                        <g>
+                          <rect x={-3.2} y={-2} width={6.4} height={4} rx={0.8} fill={C.gold} />
+                          <circle cx={-1.6} cy={2.2} r={0.9} fill={'var(--background)'} />
+                          <circle cx={1.6} cy={2.2} r={0.9} fill={'var(--background)'} />
+                        </g>
                       ) : (
-                        <rect x={-2} y={-2} width={4} height={4} rx={1.1} fill={C.gold} />
+                        // package: square
+                        <rect x={-2} y={-2} width={4} height={4} rx={1.1} fill={accentColor(unit.accent)} />
                       )}
                     </g>
                   );
@@ -862,7 +842,7 @@ export default function MobilityOSPage() {
           <div style={{ display: 'grid', gap: 14 }}>
             <div style={panelStyle({ padding: 18, borderRadius: 24 })}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Gauge size={18} color={C.cyan} />
+                <Gauge size={18} color={'var(--primary)'} />
                 <h3 style={{ margin: 0, fontSize: '1.02rem' }}>
                   {tx('mobilityOSPage.corridor_leaderboard')}
                 </h3>
@@ -875,7 +855,7 @@ export default function MobilityOSPage() {
                       padding: '12px 14px',
                       borderRadius: 18,
                       border: `1px solid ${accentColor(route.accent)}2a`,
-                      background: C.elevated,
+                      background: 'var(--secondary)',
                     }}
                   >
                     <div
@@ -890,7 +870,7 @@ export default function MobilityOSPage() {
                         <div style={{ fontWeight: 800 }}>
                           {route.fromNode.name} {'->'} {route.toNode.name}
                         </div>
-                        <div style={{ marginTop: 4, color: C.textMuted, fontSize: '0.82rem' }}>
+                        <div style={{ marginTop: 4, color: 'var(--muted-foreground)', fontSize: '0.82rem' }}>
                           {route.distance} {tx('mobilityOSPage.km_eta')}
                           {route.etaLive} {tx('services.publicBus.minutes')}
                         </div>
@@ -907,7 +887,7 @@ export default function MobilityOSPage() {
                     </div>
                     <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
                       {[
-                        { label: 'Load', value: route.load, color: C.cyan },
+                        { label: 'Load', value: route.load, color: 'var(--primary)' },
                         { label: 'Reliability', value: route.reliability, color: C.green },
                         { label: 'Package sync', value: route.packageSync, color: C.gold },
                       ].map(metric => (
@@ -917,7 +897,7 @@ export default function MobilityOSPage() {
                               display: 'flex',
                               justifyContent: 'space-between',
                               fontSize: '0.72rem',
-                              color: C.textMuted,
+                              color: 'var(--muted-foreground)',
                             }}
                           >
                             <span>{metric.label}</span>
@@ -928,7 +908,7 @@ export default function MobilityOSPage() {
                               marginTop: 6,
                               height: 6,
                               borderRadius: 999,
-                              background: C.borderFaint,
+                              background: 'var(--border)',
                             }}
                           >
                             <div
@@ -966,9 +946,9 @@ export default function MobilityOSPage() {
                     style={{
                       padding: '14px 16px',
                       borderRadius: 18,
-                      border: `1px solid ${index === 1 ? C.purpleDim : C.border}`,
-                      background: C.elevated,
-                      color: C.textSub,
+                      border: `1px solid ${index === 1 ? C.purpleDim : 'var(--border)'}`,
+                      background: 'var(--secondary)',
+                      color: 'var(--foreground)',
                       lineHeight: 1.65,
                     }}
                   >
@@ -988,13 +968,6 @@ export default function MobilityOSPage() {
           }}
         >
           {[
-            {
-              icon: TimerReset,
-              title: 'Scenario tuning',
-              value: TABS[tab],
-              body: 'The UI changes by operational lens without hiding the network.',
-              accent: C.cyan,
-            },
             {
               icon: Users,
               title: 'Agent synchrony',
@@ -1022,13 +995,6 @@ export default function MobilityOSPage() {
               value: `${Math.round(hottest.load * 100)}%`,
               body: `${hottest.fromNode.name} -> ${hottest.toNode.name} is carrying the highest live demand.`,
               accent: accentColor(hottest.accent),
-            },
-            {
-              icon: Activity,
-              title: 'Math core',
-              value: `${network.dispatchIQ}`,
-              body: 'Intelligence score blended from route score, balance, and velocity.',
-              accent: C.cyan,
             },
           ].map(card => (
             <article key={card.title} className="wasel-creative-stat-card" style={panelStyle({ padding: 18, borderRadius: 22 })}>
@@ -1059,63 +1025,9 @@ export default function MobilityOSPage() {
                 </div>
               </div>
               <h3 style={{ margin: '14px 0 8px', fontSize: '1rem' }}>{card.title}</h3>
-              <p style={{ margin: 0, color: C.textSub, lineHeight: 1.62, fontSize: '0.92rem' }}>
+              <p style={{ margin: 0, color: 'var(--foreground)', lineHeight: 1.62, fontSize: '0.92rem' }}>
                 {card.body}
               </p>
-            </article>
-          ))}
-        </section>
-
-        <section
-          style={{
-            display: 'grid',
-            gap: 14,
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          }}
-        >
-          {[
-            {
-              title: 'Signal equation',
-              formula: 'dispatchIQ = 0.44 * score + 0.24 * balance + 0.32 * velocity',
-              accent: C.cyan,
-            },
-            {
-              title: 'Balance equation',
-              formula: 'balance = 100 - sqrt(variance(load[1..n])) * 170',
-              accent: C.gold,
-            },
-            {
-              title: 'Recovery equation',
-              formula: 'resilience = nodeStability * 0.76 + (1 - load) * 0.24',
-              accent: C.green,
-            },
-          ].map(item => (
-            <article key={item.title} className="wasel-creative-stat-card" style={panelStyle({ padding: 18, borderRadius: 22 })}>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  color: item.accent,
-                  fontWeight: 800,
-                }}
-              >
-                <Sparkles size={15} />
-                {item.title}
-              </div>
-              <div
-                style={{
-                  marginTop: 14,
-                  padding: '12px 14px',
-                  borderRadius: 16,
-                  border: `1px solid ${item.accent}2c`,
-                  background: `${item.accent}14`,
-                  fontFamily: FM,
-                  fontSize: '0.9rem',
-                }}
-              >
-                {item.formula}
-              </div>
             </article>
           ))}
         </section>

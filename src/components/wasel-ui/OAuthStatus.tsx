@@ -29,7 +29,7 @@ export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatus
       style={{
         padding: SPACE[4],
         borderRadius: R.lg,
-        border: `1px solid ${status.connected ? `${providerColor}30` : C.border}`,
+        border: `1px solid ${status.connected ? `${providerColor}30` : `var(--border)`}`,
         background: status.connected ? `${providerColor}08` : C.elevated,
         display: 'flex',
         alignItems: 'center',
@@ -61,7 +61,7 @@ export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatus
           style={{
             fontSize: TYPE.size.base,
             fontWeight: TYPE.weight.bold,
-            color: C.text,
+            color: `var(--foreground)`,
             fontFamily: F,
             marginBottom: 2,
           }}
@@ -71,7 +71,7 @@ export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatus
         <div
           style={{
             fontSize: TYPE.size.sm,
-            color: C.textMuted,
+            color: `var(--muted-foreground)`,
             fontFamily: F,
           }}
         >
@@ -93,9 +93,9 @@ export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatus
         style={{
           padding: '8px 14px',
           borderRadius: R.md,
-          border: status.connected ? `1px solid ${C.error}40` : `1px solid ${providerColor}40`,
-          background: status.connected ? `${C.error}15` : `${providerColor}15`,
-          color: status.connected ? C.error : providerColor,
+          border: status.connected ? `1px solid color-mix(in srgb, var(--destructive) 40%, transparent)` : `1px solid ${providerColor}40`,
+          background: status.connected ? `color-mix(in srgb, var(--destructive) 15%, transparent)` : `${providerColor}15`,
+          color: status.connected ? `var(--destructive)` : providerColor,
           fontFamily: F,
           fontSize: TYPE.size.sm,
           fontWeight: TYPE.weight.bold,
@@ -129,7 +129,7 @@ export function OAuthStatusSection({
         <div
           style={{
             fontSize: TYPE.size.sm,
-            color: C.textMuted,
+            color: `var(--muted-foreground)`,
             fontFamily: F,
           }}
         >
@@ -151,7 +151,7 @@ export function OAuthStatusSection({
       <div
         style={{
           fontSize: TYPE.size.xs,
-          color: C.textDim,
+          color: `var(--muted-foreground)`,
           fontFamily: F,
           marginTop: SPACE[2],
         }}

@@ -79,10 +79,6 @@ export const bookingsAPI = {
   },
 
   async getUserBookings(): Promise<BookingListResponse> {
-    // Validate seat count before proceeding
-    if (input.seatsRequested < 1) {
-      throw new Error('seatsRequested must be at least 1');
-    }
     return runBackendWorkflow({
       operation: 'User booking loading',
       authMode: 'required',
@@ -99,10 +95,6 @@ export const bookingsAPI = {
   },
 
   async getTripBookings(tripId: string): Promise<BookingListResponse> {
-    // Validate seat count before proceeding
-    if (input.seatsRequested < 1) {
-      throw new Error('seatsRequested must be at least 1');
-    }
     return runBackendWorkflow({
       operation: 'Trip booking loading',
       authMode: 'required',
@@ -121,10 +113,6 @@ export const bookingsAPI = {
     bookingId: string,
     status: 'accepted' | 'rejected' | 'cancelled',
   ): Promise<BookingRecord> {
-    // Validate seat count before proceeding
-    if (input.seatsRequested < 1) {
-      throw new Error('seatsRequested must be at least 1');
-    }
     return runBackendWorkflow({
       operation: 'Booking update',
       authMode: 'required',

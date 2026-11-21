@@ -21,11 +21,11 @@ export function CorridorBetaCard({ corridor, ar, onNavigate }: CorridorBetaCardP
         textAlign: 'left',
         borderRadius: R.xxl,
         padding: 18,
-        background: `linear-gradient(180deg, ${accent}18, ${C.card})`,
+        background: `linear-gradient(180deg, ${accent}18, ${'var(--card)'})`,
         border: `1px solid ${accent}55`,
         boxShadow: SH.sm,
         cursor: 'pointer',
-        color: C.text,
+        color: 'var(--foreground)',
       }}
     >
       <div
@@ -57,7 +57,7 @@ export function CorridorBetaCard({ corridor, ar, onNavigate }: CorridorBetaCardP
             minWidth: 58,
             padding: '6px 8px',
             borderRadius: R.lg,
-            background: C.elevated,
+            background: 'var(--secondary)',
             border: `1px solid ${accent}44`,
             color: accent,
             fontWeight: TYPE.weight.black,
@@ -71,10 +71,10 @@ export function CorridorBetaCard({ corridor, ar, onNavigate }: CorridorBetaCardP
       <div
         style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}
       >
-        <div style={{ padding: 10, borderRadius: R.lg, background: C.elevated }}>
+        <div style={{ padding: 10, borderRadius: R.lg, background: 'var(--secondary)' }}>
           <div
             style={{
-              color: C.textMuted,
+              color: 'var(--muted-foreground)',
               fontSize: '0.66rem',
               fontWeight: TYPE.weight.semibold,
             }}
@@ -85,10 +85,10 @@ export function CorridorBetaCard({ corridor, ar, onNavigate }: CorridorBetaCardP
             weekly rides
           </div>
         </div>
-        <div style={{ padding: 10, borderRadius: R.lg, background: C.elevated }}>
+        <div style={{ padding: 10, borderRadius: R.lg, background: 'var(--secondary)' }}>
           <div
             style={{
-              color: C.textMuted,
+              color: 'var(--muted-foreground)',
               fontSize: '0.66rem',
               fontWeight: TYPE.weight.semibold,
             }}
@@ -104,7 +104,7 @@ export function CorridorBetaCard({ corridor, ar, onNavigate }: CorridorBetaCardP
       <p
         style={{
           margin: '14px 0 0',
-          color: C.textMuted,
+          color: 'var(--muted-foreground)',
           fontSize: TYPE.size.sm,
           lineHeight: 1.55,
         }}
@@ -116,7 +116,7 @@ export function CorridorBetaCard({ corridor, ar, onNavigate }: CorridorBetaCardP
         style={{
           marginTop: 14,
           paddingTop: 14,
-          borderTop: `1px solid ${C.borderFaint}`,
+          borderTop: `1px solid ${'var(--border)'}`,
           color: accent,
           fontSize: '0.76rem',
           fontWeight: TYPE.weight.bold,

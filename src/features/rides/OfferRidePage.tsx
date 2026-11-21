@@ -68,7 +68,7 @@ export function OfferRidePage() {
               border: `1px solid ${DS.gold}35`,
               borderRadius: r(18),
               padding: '16px 18px',
-              color: C.text,
+              color: 'var(--foreground)',
             }}
           >
             <div style={{ fontWeight: 800, marginBottom: 6 }}>
@@ -111,7 +111,7 @@ export function OfferRidePage() {
                       background: readinessStep.complete ? C.greenDim : DS.card2,
                       borderRadius: r(12),
                       padding: '9px 10px',
-                      color: readinessStep.complete ? C.text : DS.sub,
+                      color: readinessStep.complete ? 'var(--foreground)' : DS.sub,
                       fontSize: '0.72rem',
                       lineHeight: 1.35,
                     }}
@@ -124,7 +124,7 @@ export function OfferRidePage() {
                         flex: '0 0 20px',
                         height: 20,
                         borderRadius: '50%',
-                        background: readinessStep.complete ? DS.green : C.elevated,
+                        background: readinessStep.complete ? DS.green : 'var(--secondary)',
                         color: readinessStep.complete ? '#050B12' : DS.muted,
                         fontWeight: 800,
                         fontSize: '0.68rem',
@@ -149,7 +149,7 @@ export function OfferRidePage() {
                   borderRadius: '99px',
                   border: 'none',
                   background: DS.gradG,
-                  color: C.text,
+                  color: 'var(--foreground)',
                   fontWeight: 700,
                   cursor: 'pointer',
                 }}
@@ -167,7 +167,7 @@ export function OfferRidePage() {
                   borderRadius: '99px',
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: C.text,
+                  color: 'var(--foreground)',
                   fontWeight: 700,
                   cursor: 'pointer',
                 }}
@@ -188,7 +188,7 @@ export function OfferRidePage() {
                   flex: 1,
                   height: 5,
                   borderRadius: 999,
-                  background: s <= step ? DS.cyan : C.elevated,
+                  background: s <= step ? DS.cyan : 'var(--secondary)',
                   border: `1px solid ${s <= step ? DS.cyan : DS.border}`,
                   transition: 'background 0.25s',
                 }}
@@ -235,9 +235,9 @@ export function OfferRidePage() {
                   {tx('offerRidePage.ride_offer_is_live')}
                 </h2>
                 <p style={{ color: DS.sub, margin: 0 }}>
-                  <strong style={{ color: C.text }}>{city(form.from)}</strong>{' '}
+                  <strong style={{ color: 'var(--foreground)' }}>{city(form.from)}</strong>{' '}
                   {tx('offerRidePage.to')}{' '}
-                  <strong style={{ color: C.text }}>{city(form.to)}</strong>{' '}
+                  <strong style={{ color: 'var(--foreground)' }}>{city(form.to)}</strong>{' '}
                   {tx('offerRidePage.is_now_open_across_the_movement_network')}
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 12, marginTop: 22 }}>
@@ -248,14 +248,14 @@ export function OfferRidePage() {
                   ].map(item => (
                     <div key={item.label} style={{ background: DS.card2, borderRadius: r(16), padding: '14px 15px', border: `1px solid ${DS.border}` }}>
                       <div style={{ color: DS.muted, fontSize: '0.68rem', textTransform: 'uppercase' }}>{item.label}</div>
-                      <div style={{ color: C.text, fontWeight: 800, fontSize: '0.86rem', marginTop: 6 }}>{item.value}</div>
+                      <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.86rem', marginTop: 6 }}>{item.value}</div>
                     </div>
                   ))}
                 </div>
                 <button
                   aria-label={tx('offerRidePage.post_another_route')}
                   onClick={resetForm}
-                  style={{ height: 46, marginTop: 24, padding: '0 20px', borderRadius: '999px', border: 'none', background: DS.gradC, color: C.text, fontWeight: 800, cursor: 'pointer' }}
+                  style={{ height: 46, marginTop: 24, padding: '0 20px', borderRadius: '999px', border: 'none', background: DS.gradC, color: 'var(--foreground)', fontWeight: 800, cursor: 'pointer' }}
                 >
                   {tx('offerRidePage.post_another_route')}
                 </button>
@@ -282,11 +282,11 @@ export function OfferRidePage() {
           {/* ── Sidebar: route intel + quick actions ── */}
           <div style={{ display: 'grid', gap: 14 }}>
             {/* Route launch card */}
-            <div style={{ background: `linear-gradient(135deg, ${C.cyanDim}, ${C.cardSolid} 62%, ${C.goldDim})`, borderRadius: r(22), padding: '20px', border: `1px solid ${DS.border}` }}>
+            <div style={{ background: `linear-gradient(135deg, ${C.cyanDim}, ${'var(--card)'} 62%, ${C.goldDim})`, borderRadius: r(22), padding: '20px', border: `1px solid ${DS.border}` }}>
               <div style={{ color: DS.cyan, fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase' }}>
                 {tx('offerRidePage.launch_route')}
               </div>
-              <h2 style={{ color: C.text, fontWeight: 800, fontSize: '1.5rem', lineHeight: 1.1, margin: '8px 0 10px' }}>
+              <h2 style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '1.5rem', lineHeight: 1.1, margin: '8px 0 10px' }}>
                 {city(form.from)} {tx('offerRidePage.to_2')}{city(form.to)}
               </h2>
               <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.55 }}>
@@ -296,9 +296,9 @@ export function OfferRidePage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 16 }}>
                 {quickMetrics.map(item => (
-                  <div key={item.label} style={{ background: C.elevated, borderRadius: r(16), border: `1px solid ${DS.border}`, padding: '14px 14px 12px' }}>
+                  <div key={item.label} style={{ background: 'var(--secondary)', borderRadius: r(16), border: `1px solid ${DS.border}`, padding: '14px 14px 12px' }}>
                     <div style={{ color: item.color, fontWeight: 800, fontSize: '1rem' }}>{item.value}</div>
-                    <div style={{ color: C.text, fontWeight: 800, fontSize: '0.74rem', marginTop: 4 }}>{item.label}</div>
+                    <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.74rem', marginTop: 4 }}>{item.label}</div>
                   </div>
                 ))}
               </div>
@@ -308,7 +308,7 @@ export function OfferRidePage() {
             <div style={{ background: DS.card, borderRadius: r(20), padding: '18px', border: `1px solid ${DS.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <Brain size={18} color={DS.cyan} aria-hidden="true" />
-                <div style={{ color: C.text, fontWeight: 900 }}>{tx('offerRidePage.corridor_pulse')}</div>
+                <div style={{ color: 'var(--foreground)', fontWeight: 900 }}>{tx('offerRidePage.corridor_pulse')}</div>
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {[
@@ -324,7 +324,7 @@ export function OfferRidePage() {
                       ? ar ? `${driverPlan.emptySeatCostJod} دينار تكلفة المقعد الشاغر` : `${driverPlan.emptySeatCostJod} JOD lost per empty seat`
                       : ar ? 'تظهر معلومات المسار بعد الاختيار' : 'Route intelligence appears after lane selection',
                 ].map(line => (
-                  <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: C.text, fontSize: '0.78rem', lineHeight: 1.55 }}>
+                  <div key={line} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px', color: 'var(--foreground)', fontSize: '0.78rem', lineHeight: 1.55 }}>
                     {line}
                   </div>
                 ))}
@@ -335,12 +335,12 @@ export function OfferRidePage() {
             <div style={{ background: DS.card, borderRadius: r(20), padding: '18px', border: `1px solid ${DS.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <Network size={18} color={DS.green} aria-hidden="true" />
-                <div style={{ color: C.text, fontWeight: 900 }}>{tx('offerRidePage.add_on_demand')}</div>
+                <div style={{ color: 'var(--foreground)', fontWeight: 900 }}>{tx('offerRidePage.add_on_demand')}</div>
               </div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {marketplaceNodes.map(node => (
                   <div key={node.id} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
-                    <div style={{ color: C.text, fontWeight: 700, fontSize: '0.8rem' }}>{ar ? 'خدمة إضافية مرتبطة بالمسار' : node.title}</div>
+                    <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.8rem' }}>{ar ? 'خدمة إضافية مرتبطة بالمسار' : node.title}</div>
                     <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.5, marginTop: 4 }}>{ar ? 'اربط هذه الخدمة بنفس الممر لتبقى الحركة والطرود والدعم في سياق واحد.' : node.summary}</div>
                   </div>
                 ))}
@@ -349,11 +349,11 @@ export function OfferRidePage() {
 
             {/* Quick actions */}
             <div style={{ background: DS.card, borderRadius: r(20), padding: '18px', border: `1px solid ${DS.border}` }}>
-              <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>{tx('offerRidePage.quick_actions')}</div>
+              <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 12 }}>{tx('offerRidePage.quick_actions')}</div>
               <div style={{ display: 'grid', gap: 10 }}>
                 {driverReadiness.steps.filter(s => !s.complete).slice(0, 2).map(s => (
                   <div key={s.id} style={{ borderRadius: r(14), border: `1px solid ${DS.border}`, background: DS.card2, padding: '12px 14px' }}>
-                    <div style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem' }}>{s.label}</div>
+                    <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.8rem' }}>{s.label}</div>
                     <div style={{ color: DS.muted, fontSize: '0.74rem', lineHeight: 1.5, marginTop: 4 }}>{s.description}</div>
                   </div>
                 ))}
@@ -362,14 +362,14 @@ export function OfferRidePage() {
                 <button
                   aria-label={tx('offerRidePage.open_driver_console')}
                   onClick={() => { void nav('/app/driver'); }}
-                  style={{ height: 42, borderRadius: '999px', border: 'none', background: DS.gradC, color: C.text, fontWeight: 800, cursor: 'pointer' }}
+                  style={{ height: 42, borderRadius: '999px', border: 'none', background: DS.gradC, color: 'var(--foreground)', fontWeight: 800, cursor: 'pointer' }}
                 >
                   {tx('offerRidePage.open_driver_console')}
                 </button>
                 <button
                   aria-label={tx('offerRidePage.trust_center')}
                   onClick={() => { void nav('/app/trust'); }}
-                  style={{ height: 42, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: C.text, fontWeight: 800, cursor: 'pointer' }}
+                  style={{ height: 42, borderRadius: '999px', border: `1px solid ${DS.border}`, background: DS.card2, color: 'var(--foreground)', fontWeight: 800, cursor: 'pointer' }}
                 >
                   {tx('offerRidePage.trust_center')}
                 </button>

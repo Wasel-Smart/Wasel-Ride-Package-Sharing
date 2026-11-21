@@ -186,7 +186,7 @@ describe('bus service -- fetchBusRoutes cache', () => {
   });
 
   it('returns official routes when server returns empty list', async () => {
-    const { tripsAPI } = await import('@/services/trips') as { tripsAPI: { searchTrips: ReturnType<typeof vi.fn> } };
+    const { tripsAPI } = await import('@/services/trips') as unknown as { tripsAPI: { searchTrips: ReturnType<typeof vi.fn> } };
     tripsAPI.searchTrips.mockResolvedValueOnce([]);
 
     const { fetchBusRoutes } = await import('@/services/bus');
@@ -195,7 +195,7 @@ describe('bus service -- fetchBusRoutes cache', () => {
   });
 
   it('returns official routes when server throws', async () => {
-    const { tripsAPI } = await import('@/services/trips') as { tripsAPI: { searchTrips: ReturnType<typeof vi.fn> } };
+    const { tripsAPI } = await import('@/services/trips') as unknown as { tripsAPI: { searchTrips: ReturnType<typeof vi.fn> } };
     tripsAPI.searchTrips.mockRejectedValueOnce(new Error('network error'));
 
     const { fetchBusRoutes } = await import('@/services/bus');
@@ -204,7 +204,7 @@ describe('bus service -- fetchBusRoutes cache', () => {
   });
 
   it('filters live results to bus-only trips', async () => {
-    const { tripsAPI } = await import('@/services/trips') as { tripsAPI: { searchTrips: ReturnType<typeof vi.fn> } };
+    const { tripsAPI } = await import('@/services/trips') as unknown as { tripsAPI: { searchTrips: ReturnType<typeof vi.fn> } };
     tripsAPI.searchTrips.mockResolvedValueOnce([
       { id: 'bus-1', type: 'bus', from: 'Amman', to: 'Aqaba', price_per_seat: 5, seats_available: 10, departure_time: '08:00', arrival_time: '12:00' },
       { id: 'ride-1', type: 'ride', from: 'Amman', to: 'Aqaba', price_per_seat: 3, seats_available: 3 },
@@ -279,10 +279,10 @@ describe('bus service -- createBusBooking validation', () => {
   });
 
   it('fails closed when server rejects and user is NOT a local session', async () => {
-    const { bookingsAPI } = await import('@/services/bookings') as { bookingsAPI: { createBooking: ReturnType<typeof vi.fn> } };
+    const { bookingsAPI } = await import('@/services/bookings') as unknown as { bookingsAPI: { createBooking: ReturnType<typeof vi.fn> } };
     bookingsAPI.createBooking.mockRejectedValueOnce(new Error('server reject'));
 
-    const { isLocalOnlySession } = await import('@/utils/localSession') as { isLocalOnlySession: ReturnType<typeof vi.fn> };
+    const { isLocalOnlySession } = await import('@/utils/localSession') as unknown as { isLocalOnlySession: ReturnType<typeof vi.fn> };
     isLocalOnlySession.mockReturnValueOnce(false);
 
     const { createBusBooking } = await import('@/services/bus');
@@ -293,16 +293,16 @@ describe('bus service -- createBusBooking validation', () => {
 
   it('allows local fallback for local-only sessions on recoverable error', async () => {
     // Import the mocked BackendRequestError class
-    const workflow = await import('@/services/backendWorkflow') as {
+    const workflow = await import('@/services/backendWorkflow') as unknown as {
       BackendRequestError: new (msg: string, recoverable: boolean) => Error & { recoverable: boolean };
       bookingsAPI?: unknown;
     };
-    const { bookingsAPI } = await import('@/services/bookings') as { bookingsAPI: { createBooking: ReturnType<typeof vi.fn> } };
+    const { bookingsAPI } = await import('@/services/bookings') as unknown as { bookingsAPI: { createBooking: ReturnType<typeof vi.fn> } };
     bookingsAPI.createBooking.mockRejectedValueOnce(
       new workflow.BackendRequestError('unavailable', true),
     );
 
-    const { isLocalOnlySession } = await import('@/utils/localSession') as { isLocalOnlySession: ReturnType<typeof vi.fn> };
+    const { isLocalOnlySession } = await import('@/utils/localSession') as unknown as { isLocalOnlySession: ReturnType<typeof vi.fn> };
     isLocalOnlySession.mockReturnValueOnce(true);
 
     const { createBusBooking } = await import('@/services/bus');

@@ -25,7 +25,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
           radial-gradient(circle at 78% 72%, rgba(51,232,95,0.08), transparent 20%),
           #050B12
         `,
-        color: '#F8FBFF',
+        color: 'var(--foreground)',
         padding: 24,
         textAlign: 'center',
       }}
@@ -52,14 +52,14 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
             marginBottom: 12,
             letterSpacing: '0.14em',
             textTransform: 'uppercase',
-            color: '#FFBE5C',
+            color: 'var(--accent)',
             fontWeight: 800,
           }}
         >
           {tx('configErrorPage.configuration_error')}
         </div>
 
-        <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#F8FBFF', margin: '0 0 16px' }}>
+        <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--foreground)', margin: '0 0 16px' }}>
           {tx('configErrorPage.environment_configuration_errors')}
         </h2>
 
@@ -78,7 +78,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
               >
                 <div
                   style={{
-                    color: '#FF7C8B',
+                    color: 'var(--destructive)',
                     fontSize: '0.88rem',
                     fontWeight: 700,
                     marginBottom: 6,
@@ -98,7 +98,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
         {warnings.length > 0 && (
           <div style={{ textAlign: 'left', marginBottom: 24 }}>
             <div
-              style={{ color: '#FFBE5C', fontSize: '0.88rem', fontWeight: 700, marginBottom: 12 }}
+              style={{ color: 'var(--accent)', fontSize: '0.88rem', fontWeight: 700, marginBottom: 12 }}
             >
               {tx('configErrorPage.warnings')}
             </div>
@@ -145,7 +145,7 @@ export function ConfigErrorPage({ issues }: ConfigErrorPageProps) {
             lineHeight: 1.6,
           }}
         >
-          <div style={{ fontWeight: 700, marginBottom: 8, color: '#00E5FF' }}>
+          <div style={{ fontWeight: 700, marginBottom: 8, color: 'var(--primary)' }}>
             {tx('configErrorPage.for_vercel_deployments')}
           </div>
           <ol style={{ margin: 0, paddingLeft: 20 }}>

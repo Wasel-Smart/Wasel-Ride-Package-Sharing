@@ -27,8 +27,8 @@ export function TrustScoreExplanation({
         gap: SPACE[3],
         padding: compact ? SPACE[4] : SPACE[5],
         borderRadius: R.xl,
-        border: `1px solid ${C.border}`,
-        background: C.card,
+        border: `1px solid ${'var(--border)'}`,
+        background: 'var(--card)',
       }}
     >
       <div
@@ -42,7 +42,7 @@ export function TrustScoreExplanation({
       >
         <div
           style={{
-            color: C.text,
+            color: 'var(--foreground)',
             fontWeight: TYPE.weight.bold,
             fontSize: TYPE.size.sm,
             fontFamily: F,
@@ -50,7 +50,7 @@ export function TrustScoreExplanation({
         >
           {t('trustCenterExpanded.trustScoreBreakdownTitle')}
         </div>
-        <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
+        <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, fontFamily: F }}>
           {t('trustCenterExpanded.trustScoreCurrent')}: {clamped} / {t('trustCenterExpanded.trustScoreMax')}:{' '}
           {TRUST_SCORE_MAX}
         </div>
@@ -70,10 +70,10 @@ export function TrustScoreExplanation({
                       fontFamily: F,
                     }}
                   >
-                    <span style={{ color: C.textMuted }}>
+                    <span style={{ color: 'var(--muted-foreground)' }}>
                       {t(`trustCenterExpanded.trustScoreFactor${capitalize(factor.key)}`)}
                     </span>
-                    <span style={{ color: C.textSub, fontWeight: TYPE.weight.bold }}>
+                    <span style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.bold }}>
                       +{factor.value} / {factor.max}
                     </span>
                   </div>
@@ -81,7 +81,7 @@ export function TrustScoreExplanation({
                     style={{
                       height: 6,
                       borderRadius: 999,
-                      background: C.borderFaint,
+                      background: 'var(--border)',
                       overflow: 'hidden',
                     }}
                   >
@@ -90,7 +90,7 @@ export function TrustScoreExplanation({
                         height: '100%',
                         width: `${percentage}%`,
                         borderRadius: 999,
-                        background: C.cyan,
+                        background: 'var(--primary)',
                         transition: 'width 600ms ease-out',
                       }}
                     />
@@ -101,7 +101,7 @@ export function TrustScoreExplanation({
           </div>
           <div
             style={{
-              color: C.textMuted,
+              color: 'var(--muted-foreground)',
               fontSize: TYPE.size.xs,
               fontFamily: F,
               lineHeight: 1.6,
@@ -113,7 +113,7 @@ export function TrustScoreExplanation({
       ) : (
         <div
           style={{
-            color: C.textMuted,
+            color: 'var(--muted-foreground)',
             fontSize: TYPE.size.xs,
             fontFamily: F,
             lineHeight: 1.6,
@@ -124,7 +124,7 @@ export function TrustScoreExplanation({
       )}
       <div
         style={{
-          color: C.textMuted,
+          color: 'var(--muted-foreground)',
           fontSize: TYPE.size.xs,
           fontFamily: F,
           lineHeight: 1.6,
