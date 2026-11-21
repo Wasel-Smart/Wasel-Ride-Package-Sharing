@@ -82,9 +82,9 @@ const variantStyles: Record<
     hoverShadow: SH.gold,
   },
   danger: {
-    background: C.errorDim,
-    color: C.error,
-    border: `1px solid ${ C.errorDim }`,
+    background: 'color-mix(in srgb, var(--destructive) 14%, transparent)',
+    color: 'var(--destructive)',
+    border: `1px solid color-mix(in srgb, var(--destructive) 20%, transparent)`,
     boxShadow: 'none',
     hoverShadow: SH.sm,
   },
