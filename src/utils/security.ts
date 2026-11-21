@@ -178,7 +178,7 @@ export function getPasswordStrengthLabel(score: number): string {
 
 export function getPasswordStrengthColor(score: number): string {
   // Tailwind‑aligned palette: red‑600, orange‑500, amber‑400, lime‑500, green‑500
-  return ['#ef4444', '#f97316', '#facc15', '#84cc16', '#10b981'][score] ?? '#ef4444';
+  return ['#FF7C8B', '#FF8A0B', '#FFBE5C', '#A8E063', '#72C70D'][score] ?? '#FF7C8B';
 }
 
 export interface TwoFactorSetup {
