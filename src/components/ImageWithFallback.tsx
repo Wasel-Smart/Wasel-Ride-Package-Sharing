@@ -57,7 +57,7 @@ export function ImageWithFallback({
   if (didError) {
     return (
       <div
-        className={`inline-block bg-gray-100 text-center align-middle ${className ?? ''}`}
+        className={`inline-block bg-[var(--wasel-card)] text-center align-middle ${className ?? ''}`}
         style={style}
       >
         <div className="flex items-center justify-center w-full h-full">

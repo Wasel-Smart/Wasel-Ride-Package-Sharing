@@ -230,7 +230,7 @@ export function NotificationCenter() {
                 <CardTitle className="text-3xl font-semibold tracking-tight text-white">
                   {labels.title}
                 </CardTitle>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">{labels.subtitle}</p>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--wasel-text-muted)]">{labels.subtitle}</p>
               </div>
             </div>
 
@@ -241,7 +241,7 @@ export function NotificationCenter() {
                 {connectionStatus === 'syncing' && (
                   <RefreshCw className="size-3 animate-spin text-cyan-300" />
                 )}
-                <span className="text-slate-200">
+                <span className="text-[var(--wasel-text)]">
                   {connectionStatus === 'online'
                     ? labels.online
                     : connectionStatus === 'offline'
@@ -267,7 +267,7 @@ export function NotificationCenter() {
                 <Button
                   size="sm"
                   onClick={() => void markAllAsRead()}
-                  className="bg-cyan-400 text-slate-950 hover:bg-cyan-300"
+                  className="bg-[var(--wasel-cyan)] text-[var(--wasel-ink)] hover:bg-[var(--wasel-cyan-bright)]"
                 >
                   <CheckCheck className="size-4" />
                   {labels.markAllRead}

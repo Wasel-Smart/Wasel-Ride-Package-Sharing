@@ -102,7 +102,7 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
       <div className="flex items-center justify-between p-4 border-b">
         <h3 className="font-semibold">{tx('tripChat.trip_chat')}</h3>
         {onClose && (
-          <button onClick={() => { void onClose(); }} className="text-gray-500 hover:text-gray-700">
+          <button onClick={() => { void onClose(); }} className="text-[var(--wasel-text-dim)] hover:text-[var(--wasel-text)]">
             ✕
           </button>
         )}
@@ -110,7 +110,7 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
-          <div className="text-center text-gray-500 py-8">
+          <div className="text-center text-[var(--wasel-text-muted)] py-8">
             {tx('tripChat.no_messages_yet_start_the_conversation')}
           </div>
         ) : (
@@ -130,12 +130,12 @@ export function TripChat({ tripId, onClose }: TripChatProps) {
                 <div className={`flex-1 ${isOwn ? 'text-right' : ''}`}>
                   <div
                     className={`inline-block px-4 py-2 rounded-lg max-w-[70%] ${
-                      isOwn ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-900'
+                      isOwn ? 'bg-[var(--wasel-cyan)] text-[var(--wasel-ink)]' : 'bg-[var(--wasel-card)] text-[var(--wasel-text)]'
                     }`}
                   >
                     {message.content}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-[var(--wasel-text-muted)] mt-1">
                     {new Date(message.created_at).toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit',

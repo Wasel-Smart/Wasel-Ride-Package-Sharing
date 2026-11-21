@@ -156,7 +156,7 @@ export function WalletActionModals({
                   key={method.id}
                   type="button"
                   onClick={() => { void setTopUpMethod(method.id); }}
-                  className={`flex items-center gap-2 rounded-lg border p-3 text-sm transition-all ${topUpMethod === method.id ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-slate-500'}`}
+                  className={`flex items-center gap-2 rounded-lg border p-3 text-sm transition-all ${topUpMethod === method.id ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-[var(--wasel-cyan)]/60'}`}
                 >
                   <method.icon className="h-4 w-4" />
                   {method.label}
@@ -222,7 +222,7 @@ export function WalletActionModals({
                 type="button"
                 onClick={() => { void setWithdrawMethod(method.id); }}
                 disabled={!canWithdraw}
-                className={`rounded-lg border p-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${withdrawMethod === method.id ? 'border-primary bg-primary/10' : 'border-border hover:border-slate-500'}`}
+                className={`rounded-lg border p-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${withdrawMethod === method.id ? 'border-primary bg-primary/10' : 'border-border hover:border-[var(--wasel-cyan)]/60'}`}
               >
                 <p className="text-sm font-medium">{method.label}</p>
                 <p className="text-xs text-muted-foreground">{method.fee}</p>

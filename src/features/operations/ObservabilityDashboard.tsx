@@ -38,7 +38,7 @@ export function ObservabilityDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-[var(--wasel-bg)] p-8">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">
           {tx('observabilityDashboard.wasel_platform_observability')}
@@ -47,7 +47,7 @@ export function ObservabilityDashboard() {
           <div
             className={`h-3 w-3 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}
           />
-          <span className="text-sm text-gray-600">{isLive ? 'Live' : 'Disconnected'}</span>
+          <span className="text-sm text-[var(--wasel-text-muted)]">{isLive ? 'Live' : 'Disconnected'}</span>
         </div>
       </div>
 
@@ -112,7 +112,7 @@ export function ObservabilityDashboard() {
         <h2 className="mb-4 text-xl font-semibold">
           {tx('observabilityDashboard.slo_compliance_by_service')}
         </h2>
-        <div className="rounded-lg bg-white p-6 shadow">
+        <div className="rounded-lg bg-[var(--wasel-card)] p-6 shadow">
           <table className="w-full">
             <thead>
               <tr className="border-b text-left">
@@ -151,13 +151,13 @@ function MetricCard({
   status: 'healthy' | 'degraded' | 'down';
 }) {
   return (
-    <div className="rounded-lg bg-white p-6 shadow">
+    <div className="rounded-lg bg-[var(--wasel-card)] p-6 shadow">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-600">{title}</h3>
+        <h3 className="text-sm font-medium text-[var(--wasel-text-muted)]">{title}</h3>
         <StatusBadge status={status} />
       </div>
       <div className="text-3xl font-bold">{value}</div>
-      <div className="mt-1 text-xs text-gray-500">{subtitle}</div>
+      <div className="mt-1 text-xs text-[var(--wasel-text-dim)]">{subtitle}</div>
     </div>
   );
 }
@@ -166,7 +166,7 @@ function QueueHealthCard({ queue, lagMs }: { queue: string; lagMs: number }) {
   const status = lagMs < 5000 ? 'healthy' : lagMs < 60000 ? 'degraded' : 'down';
 
   return (
-    <div className="rounded-lg bg-white p-4 shadow">
+    <div className="rounded-lg bg-[var(--wasel-card)] p-4 shadow">
       <div className="mb-2 flex items-center justify-between">
         <span className="font-medium">{queue}</span>
         <StatusBadge status={status} />
@@ -188,7 +188,7 @@ function WorkerHealthCard({
   status: 'healthy' | 'degraded' | 'down';
 }) {
   return (
-    <div className="rounded-lg bg-white p-4 shadow">
+    <div className="rounded-lg bg-[var(--wasel-card)] p-4 shadow">
       <div className="mb-2 flex items-center justify-between">
         <span className="font-medium">{worker}</span>
         <StatusBadge status={status} />

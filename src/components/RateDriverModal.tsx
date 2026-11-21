@@ -75,7 +75,7 @@ export function RateDriverModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <Card className="w-full max-w-md p-6">
         <h2 className="text-2xl font-bold mb-4">{tx('rateDriverModal.rate_your_trip')}</h2>
-        <p className="text-gray-600 mb-6">
+        <p className="text-[var(--wasel-text-muted)] mb-6">
           {tx('rateDriverModal.how_was_your_experience_with')}
           {driverName}?
         </p>
@@ -95,7 +95,7 @@ export function RateDriverModal({
                 className={
                   star <= (hoveredRating || rating)
                     ? 'fill-yellow-400 text-yellow-400'
-                    : 'text-gray-300'
+                    : 'text-[var(--wasel-text-dim)]'
                 }
               />
             </button>
@@ -115,8 +115,8 @@ export function RateDriverModal({
                 onClick={() => { void toggleTag(tag); }}
                 className={`px-3 py-1 rounded-full text-sm transition-colors ${
                   selectedTags.includes(tag)
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    ? 'bg-[var(--wasel-cyan)] text-[var(--wasel-ink)]'
+                    : 'bg-[var(--wasel-card)] text-[var(--wasel-text)] hover:bg-[var(--wasel-border)]'
                 }`}
               >
                 {tag.replace('_', ' ')}
@@ -135,15 +135,15 @@ export function RateDriverModal({
             value={review}
             onChange={e => setReview(e.target.value)}
             placeholder={tx('rateDriverModal.share_more_about_your_experience')}
-            className="w-full p-3 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full p-3 border rounded-lg resize-none focus:ring-2 focus:ring-[var(--wasel-cyan)] focus:border-transparent"
             rows={4}
             maxLength={500}
           />
-          <p className="text-xs text-gray-500 mt-1">{review.length}/500</p>
+          <p className="text-xs text-[var(--wasel-text-muted)] mt-1">{review.length}/500</p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          <div className="mb-4 p-3 bg-[var(--wasel-error)]/10 border border-[var(--wasel-error)]/30 rounded-lg text-[var(--wasel-error)] text-sm">
             {error}
           </div>
         )}

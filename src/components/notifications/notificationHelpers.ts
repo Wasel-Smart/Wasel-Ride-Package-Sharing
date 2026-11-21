@@ -31,7 +31,7 @@ export const CATEGORY_ACCENT: Record<NotificationCategory, string> = {
   wallet: 'from-emerald-500/25 to-lime-500/5 text-emerald-300 border-emerald-500/20',
   trust: 'from-amber-500/25 to-orange-500/5 text-amber-300 border-amber-500/20',
   support: 'from-rose-500/25 to-pink-500/5 text-rose-300 border-rose-500/20',
-  system: 'from-slate-500/25 to-slate-400/5 text-slate-200 border-slate-500/20',
+  system: 'from-[var(--wasel-text-dim)]/20 to-[var(--wasel-text-dim)]/5 text-[var(--wasel-text-muted)] border-[var(--wasel-border)]',
 };
 
 // ── Timestamp formatter ───────────────────────────────────────────────────────

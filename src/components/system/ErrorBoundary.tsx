@@ -87,8 +87,8 @@ export class ErrorBoundary extends Component<Props, State> {
       const errorId = this.state.error ? `err_${Math.random().toString(36).slice(2, 8)}` : null;
 
       return (
-        <div className="min-h-[var(--app-min-height)] flex items-center justify-center bg-gray-50 px-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
+        <div className="min-h-[var(--app-min-height)] flex items-center justify-center bg-[var(--wasel-bg)] px-4">
+          <div className="max-w-md w-full bg-[var(--wasel-card)] rounded-lg shadow-lg p-6">
             <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
               <svg
                 className="w-6 h-6 text-red-600"
@@ -105,20 +105,20 @@ export class ErrorBoundary extends Component<Props, State> {
               </svg>
             </div>
 
-            <h2 className="text-xl font-semibold text-gray-900 text-center mb-2">
+            <h2 className="text-xl font-semibold text-[var(--wasel-text)] text-center mb-2">
               {tx('errors.somethingWrong')}
             </h2>
 
-            <p className="text-gray-600 text-center mb-6">
+            <p className="text-[var(--wasel-text-muted)] text-center mb-6">
               {tx('errorBoundary.we_re_sorry_for_the_inconvenience_please_try_refreshing_the_page')}
             </p>
 
             {errorId ? (
-              <div className="flex items-center justify-center gap-2 mb-4 text-xs text-gray-500 font-mono">
+              <div className="flex items-center justify-center gap-2 mb-4 text-xs text-[var(--wasel-text-dim)] font-mono">
                 <span>{tx('errorBoundary.error_id')} {errorId}</span>
                 <button
                   onClick={() => void navigator.clipboard?.writeText(errorId)}
-                  className="text-blue-600 hover:text-blue-800"
+                  className="text-[var(--wasel-cyan)] hover:text-[var(--wasel-cyan-bright)]"
                   title={tx('errorBoundary.copy')}
                 >
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,8 +129,8 @@ export class ErrorBoundary extends Component<Props, State> {
             ) : null}
 
             {import.meta.env?.DEV && this.state.error && (
-              <details className="mb-4 p-4 bg-gray-50 rounded border border-gray-200">
-                <summary className="cursor-pointer font-medium text-sm text-gray-700 mb-2">
+              <details className="mb-4 p-4 bg-[var(--wasel-bg)] rounded border border-[var(--wasel-border)]">
+                <summary className="cursor-pointer font-medium text-sm text-[var(--wasel-text)] mb-2">
                   {tx('errorBoundary.error_details_development_only')}
                 </summary>
                 <pre className="text-xs text-red-600 overflow-auto">
@@ -143,14 +143,14 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex gap-3">
               <button
                 onClick={() => window.location.reload()}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex-1 px-4 py-2 bg-[var(--wasel-cyan)] text-[var(--wasel-ink)] rounded-lg hover:bg-[var(--wasel-cyan-bright)] transition-colors"
               >
                 {tx('system.refreshPage')}
               </button>
 
               <button
                 onClick={this.reset}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                className="flex-1 px-4 py-2 bg-[var(--wasel-card)] text-[var(--wasel-text)] rounded-lg hover:bg-[var(--wasel-border)] transition-colors"
               >
                 {tx('errorBoundary.try_again_2')}
               </button>
@@ -178,12 +178,12 @@ export function RouteErrorBoundary({ children }: { children: ReactNode }): JSX.E
   return (
     <ErrorBoundary
       fallback={
-        <div className="min-h-[var(--app-min-height)] flex items-center justify-center bg-gray-50">
+        <div className="min-h-[var(--app-min-height)] flex items-center justify-center bg-[var(--wasel-bg)]">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-[var(--wasel-text)] mb-2">
               {tx('errorBoundary.page_error')}
             </h1>
-            <p className="text-gray-600 mb-4">{tx('errorBoundary.page_error_description')}</p>
+            <p className="text-[var(--wasel-text-muted)] mb-4">{tx('errorBoundary.page_error_description')}</p>
             <button
               onClick={() => (window.location.href = '/app')}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
