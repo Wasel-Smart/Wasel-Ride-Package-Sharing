@@ -11,10 +11,10 @@ import { sanitizeHtml } from '../../utils/sanitization';
 // can be themed and doesn't re-render the field on every focus change.
 const INPUT_STYLE_ID = 'wasel-input-css';
 const INPUT_CSS = `
-  .wasel-input-box { border: 1.5px solid ${ C.borderInput }; background: ${ C.cardSolid }; transition: border-color 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1), background 150ms cubic-bezier(0.4,0,0.2,1); }
-  .wasel-input-box:hover { border-color: ${ C.cyan }99; }
-  .wasel-input-box:focus-within { border-color: ${ C.cyan }; background: ${ C.card2 }; box-shadow: 0 0 0 3px ${ C.cyanGlow }; }
-  .wasel-input-box[data-invalid='true'] { border-color: ${ C.error }; box-shadow: 0 0 0 3px ${ C.errorDim }; }
+  .wasel-input-box { border: 1.5px solid var(--ring, ${ C.borderInput }); background: var(--card, ${ C.cardSolid }); transition: border-color 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1), background 150ms cubic-bezier(0.4,0,0.2,1); }
+  .wasel-input-box:hover { border-color: var(--primary, ${ C.cyan }); opacity: 0.9; }
+  .wasel-input-box:focus-within { border-color: var(--primary, ${ C.cyan }); background: var(--muted, ${ C.card2 }); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary, ${ C.cyan }) 20%, transparent); }
+  .wasel-input-box[data-invalid='true'] { border-color: var(--destructive, ${ C.error }); box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive, ${ C.error }) 14%, transparent); }
 `;
 
 if ( typeof document !== 'undefined' && !document.getElementById( INPUT_STYLE_ID ) ) {
@@ -52,7 +52,7 @@ function PasswordToggle({ showPassword, onToggle }: { showPassword: boolean; onT
         background: 'none',
         border: 'none',
         cursor: 'pointer',
-        color: C.textMuted,
+        color: 'var(--muted-foreground)',
         display: 'inline-flex',
         padding: 0,
         flexShrink: 0,
@@ -103,7 +103,7 @@ export function WaselInput({
               style={{
                 fontSize: TYPE.size.sm,
                 fontWeight: TYPE.weight.bold,
-                color: C.textSub,
+                color: 'var(--foreground)',
                 fontFamily: F,
                 lineHeight: 1.4,
               }}
@@ -112,7 +112,7 @@ export function WaselInput({
             </label>
           )}
           {description && (
-            <span id={descriptionId} style={{ fontSize: TYPE.size.xs, color: C.textMuted, fontFamily: F }}>
+            <span id={descriptionId} style={{ fontSize: TYPE.size.xs, color: 'var(--muted-foreground)', fontFamily: F }}>
               {description}
             </span>
           )}
@@ -158,7 +158,7 @@ export function WaselInput({
             background: 'transparent',
             fontSize: TYPE.size.base,
             fontFamily: F,
-            color: C.text,
+            color: 'var(--foreground)',
             textAlign: dir === 'rtl' ? 'right' : dir === 'ltr' ? 'left' : 'start',
             minWidth: 0,
             ...style,

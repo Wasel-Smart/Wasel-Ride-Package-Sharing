@@ -62,14 +62,14 @@ const variantStyles: Record<
   },
   outline: {
     background: 'transparent',
-    color: C.cyan,
-    border: `1px solid ${ C.border }`,
+    color: 'var(--primary, #00E5FF)',
+    border: `1px solid var(--border, ${ C.border })`,
     boxShadow: 'none',
     hoverShadow: SH.blue,
   },
   ghost: {
     background: 'transparent',
-    color: C.textSub,
+    color: 'var(--foreground, #F8FBFF)',
     border: 'none',
     boxShadow: 'none',
     hoverShadow: 'none',

@@ -66,8 +66,8 @@ export function PageShell({
     <div
       style={{
         minHeight: 'var(--app-min-height)',
-        background: `linear-gradient(180deg, ${C.bgDeep} 0%, ${C.bg} 38%, ${C.bgAlt} 100%)`,
-        color: C.text,
+        background: 'var(--background)',
+        color: 'var(--foreground)',
         fontFamily: dir === 'rtl' ? FA : F,
         direction: dir,
         position: 'relative',
@@ -81,7 +81,7 @@ export function PageShell({
           position: 'fixed',
           inset: 0,
           pointerEvents: 'none',
-          backgroundImage: `linear-gradient(${C.borderFaint} 1px, transparent 1px), linear-gradient(90deg, ${C.borderFaint} 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)`,
           backgroundSize: '80px 80px',
           maskImage:
             'linear-gradient(180deg, transparent 0%, black 14%, black 78%, transparent 100%)',
@@ -125,9 +125,9 @@ export function PageHero({
         borderRadius: R.xxl,
         background: `
           linear-gradient(135deg, ${accent}12, transparent 34%),
-          ${GRAD_HERO}
+          var(--card)
         `,
-        border: `1px solid ${C.border}`,
+        border: `1px solid var(--border)`,
         boxShadow: SH.md,
         marginBottom: SPACE[6],
       }}
@@ -137,7 +137,7 @@ export function PageHero({
         style={{
           position: 'absolute',
           inset: 0,
-          background: `linear-gradient(120deg, ${C.elevated}, transparent 32%, transparent 72%, ${C.borderFaint})`,
+          background: `linear-gradient(120deg, var(--secondary), transparent 32%, transparent 72%, var(--border))`,
           pointerEvents: 'none',
         }}
       />
@@ -172,7 +172,7 @@ export function PageHero({
             lineHeight: TYPE.lineHeight.tight,
             letterSpacing: 0,
             fontWeight: TYPE.weight.ultra,
-            color: C.text,
+            color: 'var(--foreground)',
             maxWidth: 760,
           }}
         >
@@ -183,7 +183,7 @@ export function PageHero({
             style={{
               margin: `${SPACE[4]} 0 0`,
               maxWidth: 760,
-              color: C.textMuted,
+              color: 'var(--muted-foreground)',
               fontSize: TYPE.size.base,
               lineHeight: TYPE.lineHeight.relaxed,
             }}
@@ -203,8 +203,8 @@ export function PageHero({
             position: 'relative',
             minWidth: 0,
             borderRadius: R.xl,
-            background: C.elevated,
-            border: `1px solid ${C.border}`,
+            background: 'var(--secondary)',
+            border: `1px solid var(--border)`,
             boxShadow: SH.sm,
             padding: SPACE[4],
             alignSelf: 'stretch',
@@ -242,7 +242,7 @@ export function SectionCard({
               display: 'flex',
               alignItems: 'center',
               gap: SPACE[2],
-              color: C.text,
+              color: 'var(--foreground)',
               fontSize: TYPE.size.base,
               fontWeight: TYPE.weight.black,
               letterSpacing: 0,
