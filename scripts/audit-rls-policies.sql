@@ -68,3 +68,68 @@ WHERE schemaname = 'public'
 ORDER BY 
     CASE WHEN rowsecurity THEN 1 ELSE 0 END,
     tablename;
+
+-- ============================================================
+-- ANONYMOUS-ROLE EXPOSURE AUDIT
+-- Flags policies that grant the `anon` role access to sensitive
+-- tables. Anonymous (unauthenticated) users should never reach
+-- user-owned or operational data. Any hit here is a production
+-- RLS gap that must be tightened before launch.
+-- ============================================================
+
+-- Policies explicitly granted to the anon role on sensitive tables
+SELECT
+    tablename,
+    policyname,
+    cmd,
+    qual,
+    with_check
+FROM pg_policies
+WHERE schemaname = 'public'
+  AND (roles = '{anon}' OR roles = '{anon,authenticated}' OR 'anon' = ANY(roles))
+  AND tablename IN (
+    'profiles', 'wallets', 'transactions', 'payment_methods',
+    'trips', 'packages', 'drivers', 'vehicles', 'bookings',
+    'user_verification', 'gdpr_requests', 'audit_logs',
+    'driver_withdrawal_requests', 'wallet_ledger', 'idempotency_keys'
+  )
+ORDER BY tablename, policyname;
+
+-- Overly permissive USING clauses (true / 1=1 / role-not-null) on sensitive tables
+SELECT
+    tablename,
+    policyname,
+    cmd,
+    qual,
+    with_check
+FROM pg_policies
+WHERE schemaname = 'public'
+  AND tablename IN (
+    'profiles', 'wallets', 'transactions', 'payment_methods',
+    'trips', 'packages', 'drivers', 'vehicles', 'bookings',
+    'user_verification', 'gdpr_requests', 'audit_logs',
+    'driver_withdrawal_requests', 'wallet_ledger', 'idempotency_keys'
+  )
+  AND (
+    qual IS NULL
+    OR TRIM(qual) IN ('true', '(true)', '1=1', '(1=1)')
+    OR qual ILIKE '%auth.role() IS NOT NULL%'
+  )
+ORDER BY tablename, policyname;
+
+-- Summary: anon exposure count per sensitive table
+SELECT
+    tablename,
+    COUNT(*) AS anon_policy_count,
+    string_agg(DISTINCT cmd, ', ') AS commands_exposed
+FROM pg_policies
+WHERE schemaname = 'public'
+  AND (roles = '{anon}' OR roles = '{anon,authenticated}' OR 'anon' = ANY(roles))
+  AND tablename IN (
+    'profiles', 'wallets', 'transactions', 'payment_methods',
+    'trips', 'packages', 'drivers', 'vehicles', 'bookings',
+    'user_verification', 'gdpr_requests', 'audit_logs',
+    'driver_withdrawal_requests', 'wallet_ledger', 'idempotency_keys'
+  )
+GROUP BY tablename
+ORDER BY anon_policy_count DESC;
