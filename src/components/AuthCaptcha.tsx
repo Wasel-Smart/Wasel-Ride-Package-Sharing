@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { C, F, R, SPACE, TYPE } from '../utils/wasel-ds';
 
 type CaptchaProvider = 'hcaptcha' | 'turnstile';
@@ -83,6 +84,7 @@ export function AuthCaptcha({ onTokenChange, resetSignal }: AuthCaptchaProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | number | null>(null);
   const [loadError, setLoadError] = useState('');
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authCaptchaProvider || !siteKey || !containerRef.current) {return;}
@@ -147,7 +149,15 @@ export function AuthCaptcha({ onTokenChange, resetSignal }: AuthCaptchaProps) {
         minHeight: 84,
       }}
     >
-      <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center' }} />
+      {siteKey && (
+        <HCaptcha
+          sitekey={siteKey}
+          onVerify={(token) => {
+            setCaptchaToken(token);
+            onTokenChange(token);
+          }}
+        />
+      )}
       {loadError && (
         <p
           style={{
