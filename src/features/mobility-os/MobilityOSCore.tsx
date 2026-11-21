@@ -16,6 +16,7 @@ import type { BookingType, CorridorProjection } from './model';
 import { useMobilityOSServerState } from './serverState';
 import { getCurrentLang, tx } from '../../locales/tx';
 import { useLanguage } from '../../contexts/LanguageContext';
+import styles from './MobilityOSCore.module.css';
 
 const INITIAL_MODE: BookingType = 'seat';
 
@@ -267,7 +268,7 @@ export default function MobilityOSCore() {
                 marginTop: 10,
                 fontSize: isMobile ? '1.45rem' : '1.82rem',
                 lineHeight: 1.02,
-                fontWeight: 900,
+                fontWeight: 800,
                 letterSpacing: '-0.04em',
               }}
             >
@@ -304,12 +305,7 @@ export default function MobilityOSCore() {
         </div>
 
         <div
-          style={{
-            marginTop: 14,
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-            gap: 10,
-          }}
+          className={styles.modeGrid}
         >
           {[
             [
@@ -348,7 +344,7 @@ export default function MobilityOSCore() {
               >
                 {label}
               </div>
-              <div style={{ marginTop: 6, fontWeight: 900 }}>{value}</div>
+              <div style={{ marginTop: 6, fontWeight: 800 }}>{value}</div>
             </div>
           ))}
         </div>
@@ -358,14 +354,7 @@ export default function MobilityOSCore() {
         {eyebrow(tx('mobilityOSCore.corridors_label'), 'var(--muted-foreground)')}
         <div
           data-testid="mobility-os-corridor-book"
-          style={{
-            marginTop: 12,
-            display: 'grid',
-            gap: 10,
-            maxHeight: isCompact ? 'none' : 370,
-            overflowY: 'auto',
-            paddingRight: 4,
-          }}
+          className={styles.corridorList}
         >
           {snapshot.corridors.map(projection => {
             const selected = projection.corridor.id === selectedCorridor?.corridor.id;
@@ -452,7 +441,7 @@ export default function MobilityOSCore() {
         >
           <div>
             {eyebrow(tx('mobilityOSCore.execute_label'), 'var(--muted-foreground)')}
-            <div style={{ marginTop: 8, fontSize: '1.05rem', fontWeight: 900 }}>
+            <div style={{ marginTop: 8, fontSize: '1.05rem', fontWeight: 800 }}>
               {tx('mobilityOSCore.capacity_booking')}
             </div>
           </div>
@@ -465,12 +454,7 @@ export default function MobilityOSCore() {
         </div>
 
         <div
-          style={{
-            marginTop: 14,
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-            gap: 10,
-          }}
+          className={styles.modeGrid}
         >
           {(['seat', 'cargo'] as BookingType[]).map(mode => {
             const active = bookingMode === mode;
@@ -510,41 +494,20 @@ export default function MobilityOSCore() {
             {tx('mobilityOSCore.quantity')}
           </div>
           <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '52px minmax(0, 1fr) 52px',
-              gap: 10,
-            }}
+            className={styles.stepper}
           >
             <button
               type="button"
               onClick={() =>
                 setQuantity(current => Math.max(1, current - quantityStep(bookingMode)))
               }
-              style={{
-                height: 52,
-                borderRadius: 16,
-                border: `1px solid ${'var(--border)'}`,
-                background: 'var(--secondary)',
-                color: 'var(--foreground)',
-                fontSize: '1.2rem',
-                cursor: 'pointer',
-              }}
+              className={styles.stepperBtn}
             >
               -
             </button>
             <div
-              style={{
-                height: 52,
-                borderRadius: 16,
-                border: `1px solid ${'var(--border)'}`,
-                background: 'var(--secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontFamily: FM,
-                fontSize: '0.98rem',
-              }}
+              className={styles.stepperDisplay}
+              style={{ fontFamily: FM, fontSize: '0.98rem' }}
             >
               {quantity}
               {tx(bookingMode === 'seat' ? 'mobilityOSCore.seats_unit' : 'mobilityOSCore.kg_unit')}
@@ -556,15 +519,7 @@ export default function MobilityOSCore() {
                   Math.min(selectedAvailability, current + quantityStep(bookingMode)),
                 )
               }
-              style={{
-                height: 52,
-                borderRadius: 16,
-                border: `1px solid ${'var(--border)'}`,
-                background: 'var(--secondary)',
-                color: 'var(--foreground)',
-                fontSize: '1.2rem',
-                cursor: 'pointer',
-              }}
+              className={styles.stepperBtn}
             >
               +
             </button>
@@ -572,12 +527,7 @@ export default function MobilityOSCore() {
         </div>
 
         <div
-          style={{
-            marginTop: 14,
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-            gap: 10,
-          }}
+          className={styles.modeGrid}
         >
           {[
             [tx('mobilityOSCore.unit_label'), money(selectedUnitPrice), C.gold, C.goldDim],
@@ -602,7 +552,7 @@ export default function MobilityOSCore() {
               >
                 {label}
               </div>
-              <div style={{ marginTop: 6, fontWeight: 900, color: accent }}>{value}</div>
+              <div style={{ marginTop: 6, fontWeight: 800, color: accent }}>{value}</div>
             </div>
           ))}
         </div>
@@ -620,7 +570,7 @@ export default function MobilityOSCore() {
             border: 'none',
             background: 'var(--secondary)',
             color: 'var(--muted-foreground)',
-            fontWeight: 900,
+            fontWeight: 800,
             cursor: 'not-allowed',
             boxShadow: 'none',
           }}
@@ -654,7 +604,7 @@ export default function MobilityOSCore() {
           >
             {tx('mobilityOSCore.runtime_mode')}
           </div>
-          <div style={{ marginTop: 6, fontWeight: 900, color: runtimeAccent }}>
+          <div style={{ marginTop: 6, fontWeight: 800, color: runtimeAccent }}>
             {runtimeModeLabel}
             {loading ? ` / ${tx('mobilityOSCore.synchronizing')}` : ''}
           </div>
@@ -681,32 +631,14 @@ export default function MobilityOSCore() {
           />
 
           <div
-            style={{
-              position: 'absolute',
-              bottom: 18,
-              right: 18,
-              zIndex: 3,
-              display: 'grid',
-              gap: 8,
-              pointerEvents: 'none',
-              maxWidth: isMobile ? 190 : 250,
-            }}
+            className={styles.mapOverlay}
           >
             <div
+              className={styles.liveBadge}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                width: 'fit-content',
-                padding: '7px 10px',
-                borderRadius: R.full,
                 border: `1px solid ${runtimeAccent}70`,
                 background: 'var(--background)',
-                backdropFilter: 'blur(14px)',
                 color: runtimeAccent,
-                fontSize: '0.66rem',
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
               }}
             >
               <Sparkles size={14} />
@@ -714,13 +646,8 @@ export default function MobilityOSCore() {
             </div>
 
             <div
-              style={{
-                padding: '13px 14px',
-                borderRadius: R.xl,
-                border: `1px solid ${'var(--border)'}`,
-                background: 'rgba(5, 22, 34, 0.94)',
-                boxShadow: SH.md,
-              }}
+              className={styles.laneCard}
+              style={{ boxShadow: SH.md }}
             >
               <div
                 style={{
@@ -737,7 +664,7 @@ export default function MobilityOSCore() {
                   marginTop: 5,
                   fontSize: isMobile ? '1rem' : '1.16rem',
                   lineHeight: 1.25,
-                  fontWeight: 900,
+                  fontWeight: 800,
                 }}
               >
                 {selectedRoute}
@@ -827,12 +754,7 @@ export default function MobilityOSCore() {
         </div>
 
         <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))',
-            gap: 10,
-            marginTop: 16,
-          }}
+          className={styles.legendGrid}
         >
           {[
             {
@@ -941,12 +863,7 @@ export default function MobilityOSCore() {
       </section>
 
       <section
-        style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : 'repeat(4, minmax(0, 1fr))',
-          gap: 12,
-          alignItems: 'start',
-        }}
+        className={styles.metricsStrip}
       >
         {systemMetrics.map(item => (
           <article
@@ -981,7 +898,7 @@ export default function MobilityOSCore() {
               >
                 <item.icon size={17} color={item.accent} />
               </div>
-              <div style={{ fontSize: '1.12rem', fontWeight: 900, color: item.accent }}>
+              <div style={{ fontSize: '1.12rem', fontWeight: 800, color: item.accent }}>
                 {item.value}
               </div>
             </div>
@@ -1004,15 +921,13 @@ export default function MobilityOSCore() {
 
   return (
     <div
+      className={styles.page}
       style={{
-        minHeight: 'var(--app-min-height)',
-        background: `${GRAD_AURORA}, radial-gradient(circle at 16% 14%, ${C.cyanDim}, transparent 20%), radial-gradient(circle at 84% 18%, ${C.goldDim}, transparent 22%), ${'var(--background)'}`,
-        color: 'var(--foreground)',
+        background: `\, radial-gradient(circle at 16% 14%, \, transparent 20%), radial-gradient(circle at 84% 18%, \, transparent 22%), var(--background)`,
         fontFamily: F,
-        padding: isMobile ? '18px 12px 48px' : '24px 16px 64px',
       }}
     >
-      <div style={{ maxWidth: 1460, margin: '0 auto', display: 'grid', gap: 18 }}>
+      <div className={styles.inner}>
         <section style={panelStyle({ padding: isMobile ? 16 : 20, borderRadius: R['3xl'] })}>
           <div
             style={{
@@ -1070,11 +985,7 @@ export default function MobilityOSCore() {
               }}
             >
               <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, minmax(0, 1fr))',
-                  gap: 12,
-                }}
+                className={styles.signalsGrid}
               >
                 {commandSignals.map(signal => (
                   <article
@@ -1110,7 +1021,7 @@ export default function MobilityOSCore() {
                         <div
                           style={{
                             marginTop: 7,
-                            fontWeight: 900,
+                            fontWeight: 800,
                             fontSize:
                               signal.label === tx('mobilityOSCore.pressure_lane_label')
                                 ? '0.98rem'
@@ -1146,11 +1057,7 @@ export default function MobilityOSCore() {
               </div>
 
               <div
-                style={{
-                  display: 'grid',
-                  gap: 18,
-                  gridTemplateColumns: isCompact ? '1fr' : 'minmax(300px, 340px) minmax(0, 1fr)',
-                }}
+                className={styles.twoCol}
               >
                 {isCompact ? mapStage : controlRail}
                 {isCompact ? controlRail : mapStage}
@@ -1158,39 +1065,16 @@ export default function MobilityOSCore() {
             </div>
 
             <div
-              style={{
-                display: 'flex',
-                gap: 10,
-                flexWrap: 'wrap',
-                alignItems: 'center',
-                color: 'var(--muted-foreground)',
-                fontSize: '0.8rem',
-              }}
+              className={styles.footerPillRow}
             >
               <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 10px',
-                  borderRadius: R.full,
-                  border: `1px solid ${'var(--border)'}`,
-                  background: 'var(--secondary)',
-                }}
+                className={styles.footerPill}
               >
                 <Zap size={14} color={'var(--primary)'} />
                 {tx('mobilityOSCore.pressure_pricing_availability')}
               </div>
               <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 10px',
-                  borderRadius: R.full,
-                  border: `1px solid ${'var(--border)'}`,
-                  background: 'var(--secondary)',
-                }}
+                className={styles.footerPill}
               >
                 <Activity size={14} color={C.green} />
                 {tx('mobilityOSCore.one_surface_live_map_live_booking')}

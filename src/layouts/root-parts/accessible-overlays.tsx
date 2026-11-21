@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Accessible shell overlays: UserMenu (desktop) and MobileDrawer (phones).
  *
  * - Escape closes, focus is restored to the trigger, arrow keys move between items.
@@ -127,7 +127,7 @@ export function UserMenu({
           paddingInlineEnd: 12,
           borderRadius: 9999,
           background: open ? C.cyanDim : 'var(--card)',
-          border: `1px solid ${open ? 'var(--border)' : var(--border)}`,
+          border: `1px solid ${open ? 'var(--border)' : 'var(--border)'}`,
           cursor: 'pointer',
           transition: 'background 0.15s, border-color 0.15s',
         }}
@@ -177,7 +177,7 @@ export function UserMenu({
             insetInlineEnd: 0,
             width: 280,
             background: 'rgba(8,29,57,0.98)',
-            border: `1px solid ${var(--border)}`,
+            border: `1px solid ${'var(--border)'}`,
             borderRadius: 16,
             boxShadow: '0 24px 64px rgba(4,10,18,0.6)',
             overflow: 'hidden',
@@ -189,7 +189,7 @@ export function UserMenu({
             style={{
               padding: '14px 16px',
               background: 'linear-gradient(180deg, rgba(0,229,255,0.08), rgba(8,29,57,0.18))',
-              borderBottom: `1px solid ${var(--border)}`,
+              borderBottom: `1px solid ${'var(--border)'}`,
             }}
           >
             <div style={{ fontWeight: 700, color: 'var(--foreground)', fontSize: '0.9rem', fontFamily: F }}>
@@ -205,10 +205,10 @@ export function UserMenu({
                 background: 'var(--card)',
                 borderRadius: 10,
                 overflow: 'hidden',
-                border: `1px solid ${var(--border)}`,
+                border: `1px solid ${'var(--border)'}`,
               }}
             >
-              <div style={{ flex: 1, padding: '8px 12px', borderInlineEnd: `1px solid ${var(--border)}` }}>
+              <div style={{ flex: 1, padding: '8px 12px', borderInlineEnd: `1px solid ${'var(--border)'}` }}>
                 <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--foreground)', fontFamily: F }}>
                   {user.trips}
                 </div>
@@ -385,7 +385,7 @@ export function MobileDrawer({
           width: 'min(320px, 88vw)',
           height: '100dvh',
           background: 'var(--background)',
-          borderInlineStart: `1px solid ${var(--border)}`,
+          borderInlineStart: `1px solid ${'var(--border)'}`,
           boxShadow: '0 0 60px rgba(4,10,18,0.6)',
           overflowY: 'auto',
           overscrollBehavior: 'contain',
@@ -398,7 +398,7 @@ export function MobileDrawer({
           style={{
             padding: '12px 20px',
             paddingTop: 'max(12px, env(safe-area-inset-top, 0px))',
-            borderBottom: `1px solid ${var(--border)}`,
+            borderBottom: `1px solid ${'var(--border)'}`,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -412,7 +412,7 @@ export function MobileDrawer({
             aria-label={ar ? 'إغلاق القائمة' : 'Close menu'}
             style={{
               background: 'var(--card)',
-              border: `1px solid ${var(--border)}`,
+              border: `1px solid ${'var(--border)'}`,
               borderRadius: R.md,
               width: 44,
               height: 44,
@@ -430,7 +430,7 @@ export function MobileDrawer({
         <div
           style={{
             padding: '12px 20px',
-            borderBottom: `1px solid ${var(--border)}`,
+            borderBottom: `1px solid ${'var(--border)'}`,
             display: 'flex',
             gap: 8,
             alignItems: 'center',
@@ -447,7 +447,7 @@ export function MobileDrawer({
             style={{
               padding: '14px 20px',
               background: 'linear-gradient(180deg, rgba(0,229,255,0.08), rgba(8,29,57,0.18))',
-              borderBottom: `1px solid ${var(--border)}`,
+              borderBottom: `1px solid ${'var(--border)'}`,
             }}
           >
             <div style={{ fontWeight: 700, color: 'var(--foreground)', fontFamily: F, fontSize: '0.95rem' }}>
@@ -459,7 +459,7 @@ export function MobileDrawer({
 
         <div style={{ flex: 1 }}>
           {user && (
-            <div style={{ padding: '12px 20px', borderBottom: `1px solid ${var(--border)}` }}>
+            <div style={{ padding: '12px 20px', borderBottom: `1px solid ${'var(--border)'}` }}>
               <div style={sectionLabelStyle}>{ar ? 'حسابي' : 'Account'}</div>
               {accountLinks.map(link => (
                 <button
@@ -483,7 +483,7 @@ export function MobileDrawer({
           {PRODUCT_NAV_GROUPS.filter(group => isVisibleNavGroup(group, isAuthenticated)).map(group => (
             <div
               key={group.id}
-              style={{ padding: '12px 20px', borderBottom: `1px solid ${var(--border)}` }}
+              style={{ padding: '12px 20px', borderBottom: `1px solid ${'var(--border)'}` }}
             >
               <div style={sectionLabelStyle}>{getDrawerSectionLabel(group.id, ar)}</div>
               {'direct' in group && group.direct ? (
@@ -537,7 +537,7 @@ export function MobileDrawer({
           ))}
         </div>
 
-        <div style={{ padding: '16px 20px', flexShrink: 0, borderTop: `1px solid ${var(--border)}` }}>
+        <div style={{ padding: '16px 20px', flexShrink: 0, borderTop: `1px solid ${'var(--border)'}` }}>
           <SocialLinks ar={ar} variant="drawer" />
           {user ? (
             <button
@@ -570,7 +570,7 @@ export function MobileDrawer({
                   height: 46,
                   borderRadius: R.md,
                   background: 'transparent',
-                  border: `1.5px solid ${var(--border)}`,
+                  border: `1.5px solid ${'var(--border)'}`,
                   color: 'var(--foreground)',
                   fontWeight: 600,
                   fontFamily: F,

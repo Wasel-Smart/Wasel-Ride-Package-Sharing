@@ -307,7 +307,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
                 fontWeight: TYPE.weight.ultra,
                 maxWidth: 760,
               }}
-    
+            >
               {config.title}
             </h1>
             <p
@@ -318,7 +318,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
                 fontSize: TYPE.size.md,
                 lineHeight: TYPE.lineHeight.loose,
               }}
-    
+            >
               {config.description}
             </p>
           </div>
@@ -329,7 +329,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
               gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
               gap: SPACE[3],
             }}
-  
+          >
             {config.highlights.map(highlight => (
               <div
                 key={highlight}
@@ -340,7 +340,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
                   boxShadow: SH.sm,
                   padding: `${SPACE[4]} ${SPACE[4]}`,
                 }}
-      
+              >
                 <div
                   style={{
                     display: 'flex',
@@ -351,7 +351,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
                     fontWeight: TYPE.weight.semibold,
                     lineHeight: TYPE.lineHeight.relaxed,
                   }}
-        
+                >
                   <Sparkles size={14} color={config.accent} />
                   <span>{highlight}</span>
                 </div>
@@ -368,7 +368,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
                 )
               }
               className="bg-primary text-primary-foreground hover:bg-primary/90"
-    
+            >
               {signInLabel}
               <ArrowRight size={16} />
             </Button>
@@ -377,7 +377,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
               variant="outline"
               onClick={() => { void navigate(config.secondaryTarget); }}
               className="border-white/15 bg-white/5 text-white hover:bg-white/10"
-    
+            >
               {config.secondaryLabel}
             </Button>
           </div>
@@ -388,7 +388,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
               fontSize: TYPE.size.sm,
               lineHeight: TYPE.lineHeight.relaxed,
             }}
-  
+          >
             <strong style={{ color: 'var(--muted-foreground)' }}>{unlockLabel}</strong>{' '}
             {ar
               ? 'نُبقي تجربة واصل قابلة للاستكشاف قبل تسجيل الدخول، لكن الحجوزات والبيانات الشخصية والإجراءات الحساسة تبقى خلف الحساب.'

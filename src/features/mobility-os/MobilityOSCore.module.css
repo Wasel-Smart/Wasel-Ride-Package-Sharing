@@ -1,0 +1,334 @@
+/* MobilityOSCore.module.css
+   Structural and responsive layout classes.
+   Dynamic colors (accent, border tints) stay as inline styles — they depend on runtime values.
+   All color surfaces use CSS variables so light/dark theme works automatically.
+*/
+
+/* ---- Page shell ---- */
+.page {
+  min-height: var(--app-min-height);
+  color: var(--foreground);
+  padding: 24px 16px 64px;
+}
+@media (max-width: 719px) {
+  .page { padding: 18px 12px 48px; }
+}
+
+.inner {
+  max-width: 1460px;
+  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+/* ---- Panels ---- */
+.panel {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-3xl, 24px);
+  box-shadow: var(--shadow-lg, 0 24px 64px rgba(8,29,57,0.45));
+  overflow: hidden;
+}
+
+.panelPad {
+  padding: 20px;
+}
+@media (max-width: 719px) {
+  .panelPad { padding: 16px; }
+}
+
+.panelPadSm {
+  padding: 14px;
+}
+
+/* ---- Header area ---- */
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.headerTitle {
+  margin: 0;
+  font-size: clamp(2.4rem, 4vw, 3.6rem);
+  line-height: 0.94;
+  letter-spacing: -0.05em;
+  max-width: 520px;
+}
+@media (max-width: 719px) {
+  .headerTitle { font-size: 2rem; }
+}
+
+/* ---- Command signals ---- */
+.signalsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 719px) {
+  .signalsGrid { grid-template-columns: 1fr; }
+}
+
+/* ---- Two-column layout (control rail + map) ---- */
+.twoCol {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(300px, 340px) minmax(0, 1fr);
+}
+@media (max-width: 1079px) {
+  .twoCol { grid-template-columns: 1fr; }
+}
+
+/* ---- Corridor list ---- */
+.corridorList {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+  max-height: 370px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+@media (max-width: 1079px) {
+  .corridorList { max-height: none; }
+}
+
+/* ---- System metrics strip ---- */
+.metricsStrip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 719px) {
+  .metricsStrip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---- Map legend ---- */
+.legendGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+@media (max-width: 719px) {
+  .legendGrid { grid-template-columns: 1fr; }
+}
+
+/* ---- Quantity stepper ---- */
+.stepper {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  gap: 10px;
+}
+
+.stepperBtn {
+  height: 52px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  color: var(--foreground);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.stepperBtn:hover {
+  background: var(--muted);
+}
+
+.stepperDisplay {
+  height: 52px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- Mode toggle buttons ---- */
+.modeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.modeBtn {
+  height: 48px;
+  border-radius: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+/* ---- Metric card ---- */
+.metricCard {
+  padding: 16px;
+  border-radius: var(--radius-xxl, 20px);
+  min-height: 108px;
+  height: auto;
+  align-self: start;
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+.metricCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 56px rgba(8,29,57,0.5);
+}
+
+.metricIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- Corridor button ---- */
+.corridorBtn {
+  width: 100%;
+  text-align: left;
+  border-radius: var(--radius-xxl, 20px);
+  padding: 14px 15px;
+  color: var(--foreground);
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.corridorBtn:hover {
+  transform: translateY(-1px);
+}
+
+/* ---- Footer pills ---- */
+.footerPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  font-size: 0.8rem;
+  color: var(--muted-foreground);
+}
+
+/* ---- Eyebrow label ---- */
+.eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* ---- Data chip ---- */
+.chip {
+  min-width: 120px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  backdrop-filter: blur(14px);
+}
+
+.chipLabel {
+  color: var(--muted-foreground);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ---- Live badge on map overlay ---- */
+.liveBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 7px 10px;
+  border-radius: 999px;
+  backdrop-filter: blur(14px);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ---- Selected lane overlay card ---- */
+.laneCard {
+  padding: 13px 14px;
+  border-radius: var(--radius-xl, 16px);
+  border: 1px solid var(--border);
+  background: rgba(5, 22, 34, 0.94);
+}
+
+/* ---- Map overlay anchor ---- */
+.mapOverlay {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  z-index: 3;
+  display: grid;
+  gap: 8px;
+  pointer-events: none;
+}
+@media (max-width: 719px) {
+  .mapOverlay { max-width: 190px; }
+}
+
+/* ---- Booking submit button ---- */
+.bookingBtn {
+  margin-top: 16px;
+  width: 100%;
+  height: 54px;
+  border-radius: 18px;
+  border: none;
+  font-weight: 800;
+  cursor: not-allowed;
+}
+
+/* ---- Runtime status tile ---- */
+.runtimeTile {
+  margin-top: 14px;
+  border-radius: 18px;
+  padding: 12px 13px;
+}
+
+/* ---- Chip tag (badge on corridor) ---- */
+.badgeTag {
+  padding: 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--secondary);
+  font-size: 0.72rem;
+  color: var(--foreground);
+  display: inline-flex;
+}
+
+/* ---- Section with two-col metrics ---- */
+.metricsInner {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* ---- Availability / pricing tile ---- */
+.priceTile {
+  border-radius: 18px;
+  padding: 12px 13px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metricCard { transition: none; }
+  .corridorBtn { transition: none; }
+  .stepperBtn { transition: none; }
+}
+/* ---- Footer pill row ---- */
+.footerPillRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+}
