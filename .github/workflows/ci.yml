@@ -69,16 +69,12 @@ jobs:
       - name: Security audit (critical vulnerabilities)
         run: npm audit --audit-level=critical
 
-      - name: License compliance check
-        run: |
-          node -e "
-            const fs = require('fs');
-            const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            const allowedLicenses = ['MIT', 'Apache-2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'ISC'];
-            
-            // This is a basic check - in production you'd use a proper license checker
-            console.log('License compliance check passed (basic)');
-          "
+      - name: Dependency license compliance
+        run: >-
+          npx --yes license-checker@25.0.1
+          --production
+          --onlyAllow
+          "MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD;CC0-1.0;Unlicense;BlueOak-1.0.0;Python-2.0;MPL-2.0;Zlib;WTFPL;Artistic-2.0;OpenSSL;PostgreSQL;Unicode-3.0;CC-BY-4.0;OFL-1.1"
 
       - name: TypeScript strict mode verification
         run: npm run check:ts-strict
