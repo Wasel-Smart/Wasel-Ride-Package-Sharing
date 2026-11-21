@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -9,13 +9,12 @@ import {
   Play,
   RotateCcw,
   ShieldCheck,
-
-
   Users,
 } from 'lucide-react';
 import { WaselButton, WaselLogo } from '../../components/wasel-ui';
-import { C, F, FM, GRAD_AURORA, R, SH } from '../../utils/wasel-ds';
+import { C, F, GRAD_AURORA } from '../../utils/wasel-ds';
 import { tx } from '../../locales/tx';
+import { fetchMobilityPublicSnapshot, type MobilityCorridorSnapshot } from '../../services/mobilityLiveData';
 import styles from './MobilityOSPage.module.css';
 
 type Accent = 'cyan' | 'green' | 'gold' | 'purple';
@@ -23,270 +22,77 @@ type UnitType = 'ride' | 'package' | 'bus';
 type TabKey = 'signal' | 'math' | 'fleet' | 'recovery';
 
 const NODES = [
-  {
-    id: 'amman',
-    name: 'Amman',
-    subtitle: 'Core hub',
-    x: 46,
-    y: 33,
-    accent: 'cyan',
-    resilience: 0.92,
-  },
-  {
-    id: 'irbid',
-    name: 'Irbid',
-    subtitle: 'North demand',
-    x: 59,
-    y: 16,
-    accent: 'gold',
-    resilience: 0.85,
-  },
-  {
-    id: 'zarqa',
-    name: 'Zarqa',
-    subtitle: 'Industrial flow',
-    x: 70,
-    y: 33,
-    accent: 'green',
-    resilience: 0.82,
-  },
-  {
-    id: 'madaba',
-    name: 'Madaba',
-    subtitle: 'Connector lane',
-    x: 50,
-    y: 47,
-    accent: 'cyan',
-    resilience: 0.81,
-  },
-  {
-    id: 'karak',
-    name: 'Karak',
-    subtitle: 'South midpoint',
-    x: 52,
-    y: 66,
-    accent: 'gold',
-    resilience: 0.79,
-  },
-  {
-    id: 'aqaba',
-    name: 'Aqaba',
-    subtitle: 'Port sink',
-    x: 44,
-    y: 95,
-    accent: 'green',
-    resilience: 0.88,
-  },
+  { id: 'amman',  name: 'Amman',  subtitle: 'Core hub',        x: 46, y: 33,  accent: 'cyan'  as Accent, resilience: 0.92 },
+  { id: 'irbid',  name: 'Irbid',  subtitle: 'North demand',    x: 59, y: 16,  accent: 'gold'  as Accent, resilience: 0.85 },
+  { id: 'zarqa',  name: 'Zarqa',  subtitle: 'Industrial flow',  x: 70, y: 33,  accent: 'green' as Accent, resilience: 0.82 },
+  { id: 'madaba', name: 'Madaba', subtitle: 'Connector lane',   x: 50, y: 47,  accent: 'cyan'  as Accent, resilience: 0.81 },
+  { id: 'karak',  name: 'Karak',  subtitle: 'South midpoint',   x: 52, y: 66,  accent: 'gold'  as Accent, resilience: 0.79 },
+  { id: 'aqaba',  name: 'Aqaba',  subtitle: 'Port sink',        x: 44, y: 95,  accent: 'green' as Accent, resilience: 0.88 },
 ] as const;
 
 type NodeDef = (typeof NODES)[number];
-type NodeId = NodeDef['id'];
+type NodeId  = NodeDef['id'];
 
 const ROUTES = [
-  {
-    id: 'r1',
-    from: 'amman',
-    to: 'irbid',
-    distance: 88,
-    eta: 62,
-    demand: 0.82,
-    packageBias: 0.34,
-    importance: 0.84,
-    phase: 0.12,
-    accent: 'cyan',
-  },
-  {
-    id: 'r2',
-    from: 'amman',
-    to: 'zarqa',
-    distance: 26,
-    eta: 28,
-    demand: 0.76,
-    packageBias: 0.42,
-    importance: 0.78,
-    phase: 0.42,
-    accent: 'green',
-  },
-  {
-    id: 'r3',
-    from: 'amman',
-    to: 'madaba',
-    distance: 31,
-    eta: 34,
-    demand: 0.58,
-    packageBias: 0.29,
-    importance: 0.6,
-    phase: 0.68,
-    accent: 'cyan',
-  },
-  {
-    id: 'r4',
-    from: 'madaba',
-    to: 'karak',
-    distance: 111,
-    eta: 73,
-    demand: 0.61,
-    packageBias: 0.38,
-    importance: 0.68,
-    phase: 1.1,
-    accent: 'gold',
-  },
-  {
-    id: 'r5',
-    from: 'karak',
-    to: 'aqaba',
-    distance: 203,
-    eta: 112,
-    demand: 0.72,
-    packageBias: 0.48,
-    importance: 0.74,
-    phase: 1.56,
-    accent: 'green',
-  },
-  {
-    id: 'r6',
-    from: 'amman',
-    to: 'aqaba',
-    distance: 332,
-    eta: 235,
-    demand: 0.93,
-    packageBias: 0.57,
-    importance: 0.95,
-    phase: 2.04,
-    accent: 'gold',
-  },
-  {
-    id: 'r7',
-    from: 'irbid',
-    to: 'zarqa',
-    distance: 79,
-    eta: 67,
-    demand: 0.53,
-    packageBias: 0.31,
-    importance: 0.55,
-    phase: 2.48,
-    accent: 'purple',
-  },
+  { id: 'r1', from: 'amman',  to: 'irbid',  distance: 88,  eta: 62,  demand: 0.82, packageBias: 0.34, importance: 0.84, phase: 0.12,  accent: 'cyan'   as Accent },
+  { id: 'r2', from: 'amman',  to: 'zarqa',  distance: 26,  eta: 28,  demand: 0.76, packageBias: 0.42, importance: 0.78, phase: 0.42,  accent: 'green'  as Accent },
+  { id: 'r3', from: 'amman',  to: 'madaba', distance: 31,  eta: 34,  demand: 0.58, packageBias: 0.29, importance: 0.6,  phase: 0.68,  accent: 'cyan'   as Accent },
+  { id: 'r4', from: 'madaba', to: 'karak',  distance: 111, eta: 73,  demand: 0.61, packageBias: 0.38, importance: 0.68, phase: 1.1,   accent: 'gold'   as Accent },
+  { id: 'r5', from: 'karak',  to: 'aqaba',  distance: 203, eta: 112, demand: 0.72, packageBias: 0.48, importance: 0.74, phase: 1.56,  accent: 'green'  as Accent },
+  { id: 'r6', from: 'amman',  to: 'aqaba',  distance: 332, eta: 235, demand: 0.93, packageBias: 0.57, importance: 0.95, phase: 2.04,  accent: 'gold'   as Accent },
+  { id: 'r7', from: 'irbid',  to: 'zarqa',  distance: 79,  eta: 67,  demand: 0.53, packageBias: 0.31, importance: 0.55, phase: 2.48,  accent: 'purple' as Accent },
 ] as const;
 
 type RouteStat = (typeof ROUTES)[number] & {
-  fromNode: NodeDef;
-  toNode: NodeDef;
-  load: number;
-  reliability: number;
-  speedIndex: number;
-  packageSync: number;
-  etaLive: number;
-  score: number;
+  fromNode: NodeDef; toNode: NodeDef;
+  load: number; reliability: number; speedIndex: number;
+  packageSync: number; etaLive: number; score: number;
 };
 
-const UNITS: {
-  id: string;
-  routeId: string;
-  type: UnitType;
-  accent: Accent;
-  phase: number;
-  lane: number;
-  speed: number;
-  dir: 1 | -1;
-}[] = [
-  {
-    id: 'u1',
-    routeId: 'r1',
-    type: 'ride',
-    accent: 'cyan',
-    phase: 0.08,
-    lane: -4,
-    speed: 0.017,
-    dir: 1,
-  },
-  {
-    id: 'u2',
-    routeId: 'r1',
-    type: 'package',
-    accent: 'gold',
-    phase: 0.66,
-    lane: 4,
-    speed: 0.013,
-    dir: 1,
-  },
-  {
-    id: 'u10',
-    routeId: 'r6',
-    type: 'bus',
-    accent: 'gold',
-    phase: 0.12,
-    lane: 0,
-    speed: 0.008,
-    dir: 1,
-  },
-  {
-    id: 'u11',
-    routeId: 'r4',
-    type: 'bus',
-    accent: 'gold',
-    phase: 0.55,
-    lane: 0,
-    speed: 0.01,
-    dir: 1,
-  },
-  {
-    id: 'u12',
-    routeId: 'r1',
-    type: 'bus',
-    accent: 'cyan',
-    phase: 0.8,
-    lane: 0,
-    speed: 0.009,
-    dir: -1,
-  },
+const UNITS: { id: string; routeId: string; type: UnitType; accent: Accent; phase: number; lane: number; speed: number; dir: 1 | -1; }[] = [
+  { id: 'u1',  routeId: 'r1', type: 'ride',    accent: 'cyan', phase: 0.08, lane: -4, speed: 0.017, dir:  1 },
+  { id: 'u2',  routeId: 'r1', type: 'package', accent: 'gold', phase: 0.66, lane:  4, speed: 0.013, dir:  1 },
+  { id: 'u10', routeId: 'r6', type: 'bus',     accent: 'gold', phase: 0.12, lane:  0, speed: 0.008, dir:  1 },
+  { id: 'u11', routeId: 'r4', type: 'bus',     accent: 'gold', phase: 0.55, lane:  0, speed: 0.01,  dir:  1 },
+  { id: 'u12', routeId: 'r1', type: 'bus',     accent: 'cyan', phase: 0.80, lane:  0, speed: 0.009, dir: -1 },
 ];
 
 const TABS: Record<TabKey, string> = {
-  signal: 'Signal Field',
-  math: 'Corridor Math',
-  fleet: 'Fleet Logic',
+  signal:   'Signal Field',
+  math:     'Corridor Math',
+  fleet:    'Fleet Logic',
   recovery: 'Recovery Mode',
 };
 
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
-const avg = (values: number[]) =>
-  values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1);
-const variance = (values: number[]) => {
-  const mean = avg(values);
-  return avg(values.map(value => (value - mean) ** 2));
-};
+const clamp    = (v: number, mn: number, mx: number) => Math.min(mx, Math.max(mn, v));
+const avg      = (arr: number[]) => arr.reduce((s, v) => s + v, 0) / Math.max(arr.length, 1);
+const variance = (arr: number[]) => { const m = avg(arr); return avg(arr.map(v => (v - m) ** 2)); };
 
-function accentColor(accent: Accent) {
-  return accent === 'green'
-    ? C.green
-    : accent === 'gold'
-      ? C.gold
-      : accent === 'purple'
-        ? C.purple
-        : 'var(--primary)';
+function accentColor(accent: Accent): string {
+  return accent === 'green' ? C.green : accent === 'gold' ? C.gold : accent === 'purple' ? C.purple : 'var(--primary)';
 }
-
-function panelStyle(extra: CSSProperties = {}) {
-  return {
-    position: 'relative',
-    background: 'var(--card)',
-    border: `1px solid ${'var(--border)'}`,
-    borderRadius: 24,
-    boxShadow: SH.lg,
-    overflow: 'hidden',
-    ...extra,
-  } as CSSProperties;
-}
-
 export default function MobilityOSPage() {
-  const [tick, setTick] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const [tab, setTab] = useState<TabKey>('signal');
+  const [tick,         setTick]         = useState(0);
+  const [paused,       setPaused]       = useState(false);
+  const [tab,          setTab]          = useState<TabKey>('signal');
+  const [liveCorridors, setLiveCorridors] = useState<MobilityCorridorSnapshot[] | null>(null);
   const rafRef = useRef<number | null>(null);
 
+  // Poll live corridor data every 30 s
   useEffect(() => {
-    if (paused) {return undefined;}
+    let cancelled = false;
+    const load = async () => {
+      const snap = await fetchMobilityPublicSnapshot();
+      if (!cancelled && snap) setLiveCorridors(snap.corridors);
+    };
+    void load();
+    const id = setInterval(() => { void load(); }, 30_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
+  // Delta-time animation loop (frame-rate independent)
+  useEffect(() => {
+    if (paused) return undefined;
     let lastTime = performance.now();
     const loop = (now: number) => {
       const dt = Math.min(0.1, (now - lastTime) / 1000);
@@ -295,308 +101,133 @@ export default function MobilityOSPage() {
       rafRef.current = requestAnimationFrame(loop);
     };
     rafRef.current = requestAnimationFrame(loop);
-    return () => {
-      if (rafRef.current !== null) {cancelAnimationFrame(rafRef.current);}
-    };
+    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
   }, [paused]);
 
-  const routeStats = useMemo(() => {
-    const nodeMap = Object.fromEntries(NODES.map(node => [node.id, node])) as Record<
-      NodeId,
-      NodeDef
-    >;
-    return ROUTES.map<RouteStat>(route => {
-      const fromNode = nodeMap[route.from];
-      const toNode = nodeMap[route.to];
+  const routeStats = useMemo((): RouteStat[] => {
+    const nodeMap = Object.fromEntries(NODES.map(n => [n.id, n])) as Record<NodeId, NodeDef>;
+    return ROUTES.map(route => {
+      const fromNode = nodeMap[route.from as NodeId];
+      const toNode   = nodeMap[route.to   as NodeId];
       const wave = 0.5 + 0.5 * Math.sin((tick + route.phase) * Math.PI * 2.2);
-      const load = clamp(
-        route.demand * 0.66 +
-          route.importance * 0.22 +
-          route.packageBias * 0.12 +
-          (wave - 0.5) * 0.22,
-        0.12,
-        0.98,
+      const liveRow = liveCorridors?.find(c =>
+        (c.from.toLowerCase() === fromNode.name.toLowerCase() && c.to.toLowerCase() === toNode.name.toLowerCase()) ||
+        (c.from.toLowerCase() === toNode.name.toLowerCase()   && c.to.toLowerCase() === fromNode.name.toLowerCase())
       );
-      const reliability = clamp(
-        ((fromNode.resilience + toNode.resilience) / 2) * 0.76 + (1 - load) * 0.24,
-        0.56,
-        0.99,
-      );
-      const speedIndex = clamp(1.24 - load * 0.48 + reliability * 0.15, 0.58, 1.28);
-      const packageSync = clamp(
-        route.packageBias * 0.58 + wave * 0.22 + reliability * 0.2,
-        0.12,
-        0.98,
-      );
-      const score = Math.round(
-        clamp(load * 0.38 + reliability * 0.34 + (speedIndex / 1.28) * 0.28, 0, 1) * 100,
-      );
-      return {
-        ...route,
-        fromNode,
-        toNode,
-        load,
-        reliability,
-        speedIndex,
-        packageSync,
-        etaLive: Math.round(route.eta / speedIndex),
-        score,
-      };
+      const simLoad   = clamp(route.demand * 0.66 + route.importance * 0.22 + route.packageBias * 0.12 + (wave - 0.5) * 0.22, 0.12, 0.98);
+      const load      = liveRow ? clamp(liveRow.demand_index * 0.6 + simLoad * 0.4, 0.12, 0.98) : simLoad;
+      const simPkg    = clamp(route.packageBias * 0.58 + wave * 0.22, 0.12, 0.98);
+      const cargoFill = liveRow && liveRow.cargo_capacity_kg > 0 ? liveRow.cargo_booked_kg / liveRow.cargo_capacity_kg : null;
+      const packageSync  = cargoFill !== null ? clamp(cargoFill * 0.6 + simPkg * 0.4, 0.12, 0.98) : simPkg;
+      const reliability  = clamp(((fromNode.resilience + toNode.resilience) / 2) * 0.76 + (1 - load) * 0.24, 0.56, 0.99);
+      const speedIndex   = clamp(1.24 - load * 0.48 + reliability * 0.15, 0.58, 1.28);
+      const score        = Math.round(clamp(load * 0.38 + reliability * 0.34 + (speedIndex / 1.28) * 0.28, 0, 1) * 100);
+      return { ...route, fromNode, toNode, load, reliability, speedIndex, packageSync, etaLive: Math.round(route.eta / speedIndex), score };
     }).sort((a, b) => b.score - a.score);
-  }, [tick]);
+  }, [tick, liveCorridors]);
 
   const network = useMemo(() => {
-    const loads = routeStats.map(route => route.load);
-    const reliabilities = routeStats.map(route => route.reliability);
-    const speeds = routeStats.map(route => route.speedIndex / 1.28);
+    const loads         = routeStats.map(r => r.load);
+    const reliabilities = routeStats.map(r => r.reliability);
+    const speeds        = routeStats.map(r => r.speedIndex / 1.28);
     return {
-      dispatchIQ: Math.round(
-        clamp(
-          avg(routeStats.map(route => route.score)) * 0.44 +
-            (100 - Math.sqrt(variance(loads)) * 170) * 0.24 +
-            avg(speeds) * 100 * 0.32,
-          72,
-          99,
-        ),
-      ),
-      balance: Math.round(clamp(100 - Math.sqrt(variance(loads)) * 170, 58, 99)),
-      resilience: Math.round(avg(reliabilities) * 100),
-      throughput: Math.round(
-        routeStats.reduce(
-          (sum, route) => sum + route.distance * route.speedIndex * (0.62 + route.load * 0.54),
-          0,
-        ),
-      ),
-      agentSync: Math.round(
-        clamp(
-          72 +
-            avg(routeStats.map(route => route.packageSync)) * 16 +
-            (1 - Math.sqrt(variance(reliabilities))) * 9,
-          75,
-          98,
-        ),
-      ),
-      carbonGain: Math.round(
-        routeStats.reduce(
-          (sum, route) => sum + route.distance * route.packageSync * route.load * 0.09,
-          0,
-        ),
-      ),
+      dispatchIQ:  Math.round(clamp(avg(routeStats.map(r => r.score)) * 0.44 + (100 - Math.sqrt(variance(loads)) * 170) * 0.24 + avg(speeds) * 100 * 0.32, 72, 99)),
+      balance:     Math.round(clamp(100 - Math.sqrt(variance(loads)) * 170, 58, 99)),
+      resilience:  Math.round(avg(reliabilities) * 100),
+      throughput:  Math.round(routeStats.reduce((s, r) => s + r.distance * r.speedIndex * (0.62 + r.load * 0.54), 0)),
+      agentSync:   Math.round(clamp(72 + avg(routeStats.map(r => r.packageSync)) * 16 + (1 - Math.sqrt(variance(reliabilities))) * 9, 75, 98)),
+      carbonGain:  Math.round(routeStats.reduce((s, r) => s + r.distance * r.packageSync * r.load * 0.09, 0)),
     };
   }, [routeStats]);
 
-  const hottest = routeStats[0];
-  const weakest = [...routeStats].sort((a, b) => a.reliability - b.reliability)[0];
+  const hottest        = routeStats[0];
+  const weakest        = [...routeStats].sort((a, b) => a.reliability - b.reliability)[0];
   const benchmarkRoute = routeStats[0] ?? null;
+  if (!hottest || !weakest || !benchmarkRoute) return null;
 
-  if (!hottest || !weakest || !benchmarkRoute) {
-    return null;
-  }
+  const pageStyle: CSSProperties = {
+    background: ${GRAD_AURORA}, radial-gradient(circle at 82% 18%, , transparent 22%), var(--background),
+    fontFamily: F,
+  };
 
   return (
-    <div
-      style={{
-        minHeight: 'var(--app-min-height)',
-        background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, ${C.goldDim}, transparent 22%), ${'var(--background)'}`,
-        color: 'var(--foreground)',
-        fontFamily: F,
-        padding: '24px 16px 44px',
-      }}
-    >
-      <div style={{ maxWidth: 1320, margin: '0 auto', display: 'grid', gap: 18 }}>
-        <section style={panelStyle({ padding: 26, borderRadius: 32 })}>
-          <div
-            style={{ display: 'flex', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}
-          >
-            <div style={{ maxWidth: 840, display: 'grid', gap: 12 }}>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  padding: '10px 14px',
-                  borderRadius: R.full,
-                  border: `1px solid ${'var(--border)'}`,
-                  background: 'var(--secondary)',
-                  width: 'fit-content',
-                }}
-              >
+    <div className={styles.page} style={pageStyle}>
+      <div className={styles.inner}>
+
+        {/* ── Header ───────────────────────────────────────────── */}
+        <section className={styles.headerPanel}>
+          <div className={styles.headerBody}>
+            <div className={styles.headerText}>
+              <div className={styles.logoWrap}>
                 <WaselLogo size={44} theme="light" variant="full" />
               </div>
-              <div
-                style={{
-                  fontSize: '0.72rem',
-                  letterSpacing: '0.18em',
-                  textTransform: 'uppercase',
-                  color: 'var(--primary)',
-                }}
-              >
+              <div className={styles.eyebrow}>
                 {tx('mobilityOSPage.mobility_os_neural_corridor_engine')}
               </div>
-              <h1
-                style={{
-                  margin: 0,
-                  fontSize: 'clamp(2.2rem, 4vw, 4rem)',
-                  lineHeight: 0.98,
-                  letterSpacing: '-0.04em',
-                }}
-              >
-                {tx(
-                  'mobilityOSPage.a_living_operations_surface_driven_by_corridor_math_visible_trust_and_jordan_first_network_logic',
-                )}
+              <h1 className={styles.headline}>
+                {tx('mobilityOSPage.a_living_operations_surface_driven_by_corridor_math_visible_trust_and_jordan_first_network_logic')}
               </h1>
-              <p
-                style={{
-                  margin: 0,
-                  color: 'var(--foreground)',
-                  lineHeight: 1.75,
-                  fontSize: '1.02rem',
-                  maxWidth: 760,
-                }}
-              >
-                {tx(
-                  'mobilityOSPage.instead_of_generic_dashboard_cards_this_screen_simulates_route_pressure_reliability_package_synchrony_and_recovery_posture_so_users_feel_the_system_is_intelligently_coordinating_movement',
-                )}
+              <p className={styles.subhead}>
+                {tx('mobilityOSPage.instead_of_generic_dashboard_cards_this_screen_simulates_route_pressure_reliability_package_synchrony_and_recovery_posture_so_users_feel_the_system_is_intelligently_coordinating_movement')}
               </p>
             </div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+            <div className={styles.headerActions}>
               <WaselButton
-                onClick={() => { void setPaused(value => !value); }}
+                onClick={() => setPaused(v => !v)}
                 variant={paused ? 'outline' : 'primary'}
                 size="md"
                 icon={paused ? <Play size={16} /> : <Pause size={16} />}
               >
                 {paused ? 'Resume Field' : 'Pause Field'}
               </WaselButton>
-              <WaselButton
-                onClick={() => { void setTick(0); }}
-                variant="outline"
-                size="md"
-                icon={<RotateCcw size={16} />}
-              >
+              <WaselButton onClick={() => setTick(0)} variant="outline" size="md" icon={<RotateCcw size={16} />}>
                 {tx('mobilityOSPage.reset_simulation')}
               </WaselButton>
             </div>
           </div>
         </section>
 
-        <section
-          style={{
-            display: 'grid',
-            gap: 14,
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          }}
-        >
-          {[
-            {
-              label: 'Dispatch IQ',
-              value: `${network.dispatchIQ}`,
-              detail: 'Weighted intelligence score for trust, speed, and balance.',
-              accent: 'cyan' as Accent,
-            },
-            {
-              label: 'Throughput',
-              value: `${network.throughput} km`,
-              detail: 'Predicted movement capacity across live corridors.',
-              accent: 'green' as Accent,
-            },
-            {
-              label: 'Balance Index',
-              value: `${network.balance}%`,
-              detail: 'Lower route variance means a calmer system feel.',
-              accent: 'gold' as Accent,
-            },
-            {
-              label: 'Carbon Gain',
-              value: `${network.carbonGain} kg`,
-              detail: 'Shared ride + parcel efficiency made visible.',
-              accent: 'purple' as Accent,
-            },
-          ].map(card => (
+        {/* ── KPI strip ────────────────────────────────────────── */}
+        <section className={styles.kpiStrip}>
+          {([
+            { label: 'Dispatch IQ',   value: String(network.dispatchIQ),          detail: 'Weighted intelligence score for trust, speed, and balance.', accent: 'cyan'   as Accent },
+            { label: 'Throughput',    value: network.throughput + ' km',           detail: 'Predicted movement capacity across live corridors.',          accent: 'green'  as Accent },
+            { label: 'Balance Index', value: network.balance + '%',                detail: 'Lower route variance means a calmer system feel.',            accent: 'gold'   as Accent },
+            { label: 'Carbon Gain',   value: network.carbonGain + ' kg',           detail: 'Shared ride and parcel efficiency made visible.',             accent: 'purple' as Accent },
+          ] as const).map(card => (
             <div
-              key={card.label} className="wasel-creative-stat-card"
-              style={panelStyle({
-                padding: 18,
-                borderRadius: 22,
-                border: `1px solid ${accentColor(card.accent)}30`,
-                boxShadow: `0 18px 42px ${accentColor(card.accent)}18`,
-                background: 'var(--card)',
-              })}
+              key={card.label}
+              className={styles.kpiCard + ' wasel-creative-stat-card'}
+              style={{ borderColor: accentColor(card.accent) + '30', boxShadow: '0 18px 42px ' + accentColor(card.accent) + '18' }}
             >
-              <div
-                style={{
-                  fontSize: '0.72rem',
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  color: 'var(--muted-foreground)',
-                }}
-              >
-                {card.label}
-              </div>
-              <div
-                style={{
-                  marginTop: 12,
-                  fontSize: '2rem',
-                  lineHeight: 1,
-                  fontWeight: 800,
-                  color: accentColor(card.accent),
-                }}
-              >
-                {card.value}
-              </div>
-              <div style={{ marginTop: 10, color: 'var(--foreground)', lineHeight: 1.5, fontSize: '0.9rem' }}>
-                {card.detail}
-              </div>
+              <div className={styles.kpiLabel}>{card.label}</div>
+              <div className={styles.kpiValue} style={{ color: accentColor(card.accent) }}>{card.value}</div>
+              <div className={styles.kpiDetail}>{card.detail}</div>
             </div>
           ))}
         </section>
 
-        <section
-          style={{
-            display: 'grid',
-            gap: 18,
-            gridTemplateColumns: 'minmax(0, 1.5fr) minmax(320px, 0.9fr)',
-          }}
-        >
-          <div style={panelStyle({ padding: 18, borderRadius: 28, minHeight: 620 })}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                gap: 16,
-                flexWrap: 'wrap',
-                marginBottom: 16,
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontSize: '0.78rem',
-                    letterSpacing: '0.16em',
-                    color: 'var(--muted-foreground)',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {TABS[tab]}
-                </div>
-                <h2 style={{ margin: '10px 0 6px', fontSize: '1.4rem' }}>
-                  {tx('mobilityOSPage.jordan_corridor_constellation')}
-                </h2>
-                <p style={{ margin: 0, color: 'var(--foreground)', maxWidth: 620, lineHeight: 1.65 }}>
-                  {tx(
-                    'mobilityOSPage.signal_view_exposes_route_health_as_a_legible_motion_field_while_math_fleet_and_recovery_modes_shift_the_explanation_layer_without_hiding_the_network',
-                  )}
+        {/* ── Map + sidebar ────────────────────────────────────── */}
+        <section className={styles.mapSection}>
+
+          {/* Map panel */}
+          <div className={styles.mapPanel}>
+            <div className={styles.mapHeader}>
+              <div className={styles.mapMeta}>
+                <div className={styles.mapLens}>{TABS[tab]}</div>
+                <h2 className={styles.mapTitle}>{tx('mobilityOSPage.jordan_corridor_constellation')}</h2>
+                <p className={styles.mapDesc}>
+                  {tx('mobilityOSPage.signal_view_exposes_route_health_as_a_legible_motion_field_while_math_fleet_and_recovery_modes_shift_the_explanation_layer_without_hiding_the_network')}
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div className={styles.tabRow}>
                 {(Object.keys(TABS) as TabKey[]).map(key => (
                   <WaselButton
                     key={key}
-                    onClick={() => { void setTab(key); }}
+                    onClick={() => setTab(key)}
                     variant={tab === key ? 'primary' : 'outline'}
                     size="sm"
-                    style={{
-                      letterSpacing: '0.08em',
-                      textTransform: 'uppercase',
-                    }}
+                    style={{ letterSpacing: '0.08em', textTransform: 'uppercase' }}
                   >
                     {TABS[key]}
                   </WaselButton>
@@ -604,435 +235,88 @@ export default function MobilityOSPage() {
               </div>
             </div>
 
-            <div
-              style={panelStyle({
-                minHeight: 520,
-                padding: 0,
-                borderRadius: 24,
-                border: `1px solid ${'var(--border)'}`,
-              })}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 14,
-                  left: 14,
-                  zIndex: 2,
-                  display: 'grid',
-                  gap: 8,
-                }}
-              >
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '8px 12px',
-                    borderRadius: 14,
-                    background: C.overlay,
-                    border: `1px solid ${'var(--border)'}`,
-                    fontSize: '0.78rem',
-                  }}
-                >
-                  <Activity size={14} color={'var(--primary)'} />
+            <div className={styles.svgWrap}>
+              {/* Overlay badges */}
+              <div className={styles.mapOverlay}>
+                <div className={styles.overlayChip}>
+                  <Activity size={14} color="var(--primary)" />
                   {tx('mobilityOSPage.live_phase')}
                   {(tick * 100).toFixed(1)}%
                 </div>
                 <div
+                  className={styles.liveChip}
                   style={{
-                    padding: '10px 12px',
-                    borderRadius: 16,
-                    background: C.overlay,
-                    border: `1px solid ${'var(--border)'}`,
-                    fontFamily: FM,
-                    color: 'var(--foreground)',
-                    fontSize: '0.78rem',
-                  }}
-                >
-                  {tx('mobilityOSPage.score_0_38_demand_0_34_reliability_0_28_velocity')}
-                </div>
-                {/* Live backend data indicator */}
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '7px 11px',
-                    borderRadius: 14,
-                    background: liveCorridors ? ${C.green}18 : C.overlay,
-                    border: 1px solid ,
-                    fontSize: '0.72rem',
-                    color: liveCorridors ? C.green : C.textMuted,
-                    transition: 'all 0.4s ease',
+                    background:   liveCorridors ? C.green + '18' : C.overlay,
+                    border:       '1px solid ' + (liveCorridors ? C.green + '40' : 'var(--border)'),
+                    color:        liveCorridors ? C.green : C.textMuted,
                   }}
                 >
                   <span
+                    className={styles.liveDot}
                     style={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: '50%',
                       background: liveCorridors ? C.green : C.textDim,
-                      boxShadow: liveCorridors ?   0 6px  : 'none',
-                      flexShrink: 0,
+                      boxShadow:  liveCorridors ? '0 0 6px ' + C.green : 'none',
                     }}
                   />
-                  {liveCorridors ? Live \u2014  corridors : 'Simulation mode'}
+                  {liveCorridors ? 'Live \u2014 ' + String(liveCorridors.length) + ' corridors' : 'Simulation mode'}
                 </div>
               </div>
 
               <svg
                 viewBox="0 0 100 110"
                 role="img"
-                aria-label="Jordan mobility network - live corridor simulation"
-                style={{ width: '100%', height: '100%', display: 'block' }}
+                aria-label="Jordan mobility network \u2014 live corridor simulation"
+                className={styles.svg}
               >
+                {/* Route paths */}
                 {routeStats.map(route => {
                   const from = route.fromNode;
-                  const to = route.toNode;
+                  const to   = route.toNode;
                   const dx = to.x - from.x;
                   const dy = to.y - from.y;
-                  const c1x = from.x + dx * 0.26;
-                  const c1y = from.y + dy * 0.08;
-                  const c2x = from.x + dx * 0.76;
-                  const c2y = from.y + dy * 0.92;
-                  const active =
-                    tab === 'signal' ||
-                    (tab === 'math' && (route.id === hottest.id || route.id === weakest.id)) ||
-                    (tab === 'fleet' && route.packageSync > 0.35) ||
-                    tab === 'recovery';
+                  const c1x = from.x + dx * 0.26; const c1y = from.y + dy * 0.08;
+                  const c2x = from.x + dx * 0.76; const c2y = from.y + dy * 0.92;
+                  const active = tab === 'signal'
+                    || (tab === 'math'     && (route.id === hottest.id || route.id === weakest.id))
+                    || (tab === 'fleet'    && route.packageSync > 0.35)
+                    || tab === 'recovery';
+                  const d = 'M ' + from.x + ' ' + from.y + ' C ' + c1x + ' ' + c1y + ', ' + c2x + ' ' + c2y + ', ' + to.x + ' ' + to.y;
                   return (
                     <g key={route.id}>
+                      <path d={d} fill="none" stroke="var(--border)" strokeWidth={0.85} strokeLinecap="round" />
                       <path
-                        d={`M ${from.x} ${from.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${to.x} ${to.y}`}
-                        fill="none"
-                        stroke={'var(--border)'}
-                        strokeWidth={0.85}
-                        strokeLinecap="round"
-                      />
-                      <path
-                        d={`M ${from.x} ${from.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${to.x} ${to.y}`}
+                        d={d}
                         fill="none"
                         stroke={accentColor(route.accent)}
                         strokeWidth={active ? 1.8 : 1.1}
                         strokeLinecap="round"
-                        strokeOpacity={active ? 0.44 + route.load * 0.3 : 0.14} className="wasel-creative-route-flow"
+                        strokeOpacity={active ? 0.44 + route.load * 0.3 : 0.14}
+                        className="wasel-creative-route-flow"
                       />
                       {(tab === 'math' || tab === 'recovery') && (
                         <g>
                           <rect
-                            x={(from.x + to.x) / 2 - 4.3}
-                            y={(from.y + to.y) / 2 - 10}
-                            width={8.6}
-                            height={4.2}
-                            rx={1.8}
-                            fill={C.overlay}
-                            stroke={`${accentColor(route.accent)}30`}
+                            x={(from.x + to.x) / 2 - 4.3} y={(from.y + to.y) / 2 - 10}
+                            width={8.6} height={4.2} rx={1.8}
+                            fill={C.overlay} stroke={accentColor(route.accent) + '30'}
                           />
                           <text
-                            x={(from.x + to.x) / 2}
-                            y={(from.y + to.y) / 2 - 7.1}
-                            textAnchor="middle"
-                            fill={'var(--foreground)'}
-                            fontSize="1.7"
-                          >
-                            {route.score}
-                          </text>
+                            x={(from.x + to.x) / 2} y={(from.y + to.y) / 2 - 7.1}
+                            textAnchor="middle" fill="var(--foreground)" fontSize="1.7"
+                          >{route.score}</text>
                         </g>
                       )}
                     </g>
                   );
                 })}
+
+                {/* City nodes */}
                 {NODES.map(node => (
                   <g key={node.id}>
-                    <circle cx={node.x} cy={node.y} r={7} fill={`${accentColor(node.accent)}18`} className="wasel-creative-node-glow" />
+                    <circle cx={node.x} cy={node.y} r={7}   fill={accentColor(node.accent) + '18'} className="wasel-creative-node-glow" />
                     <circle cx={node.x} cy={node.y} r={3.2} fill={accentColor(node.accent)} />
-                    <circle cx={node.x} cy={node.y} r={1.1} fill={'var(--foreground)'} />
-                    <text
-                      x={node.x}
-                      y={node.y - 8.4}
-                      textAnchor="middle"
-                      fill={'var(--foreground)'}
-                      fontSize="2.5"
-                    >
-                      {node.name}
-                    </text>
-                    <text
-                      x={node.x}
-                      y={node.y + 10.2}
-                      textAnchor="middle"
-                      fill={'var(--muted-foreground)'}
-                      fontSize="1.45"
-                    >
-                      {node.subtitle}
-                    </text>
+                    <circle cx={node.x} cy={node.y} r={1.1} fill="var(--foreground)" />
+                    <text x={node.x} y={node.y - 8.4}  textAnchor="middle" fill="var(--foreground)"      fontSize="2.5">{node.name}</text>
+                    <text x={node.x} y={node.y + 10.2} textAnchor="middle" fill="var(--muted-foreground)" fontSize="1.45">{node.subtitle}</text>
                   </g>
                 ))}
-                {UNITS.filter(
-                  unit =>
-                    tab === 'signal' ||
-                    (tab === 'fleet' && (unit.type === 'ride' || unit.type === 'bus')) ||
-                    (tab === 'recovery' && unit.type === 'package') ||
-                    tab === 'math',
-                ).map((unit, index) => {
-                  const route = routeStats.find(entry => entry.id === unit.routeId);
-                  if (!route) {return null;}
-                  const from = route.fromNode;
-                  const to = route.toNode;
-                  const dx = to.x - from.x;
-                  const dy = to.y - from.y;
-                  const c1 = { x: from.x + dx * 0.26, y: from.y + dy * 0.08 };
-                  const c2 = { x: from.x + dx * 0.76, y: from.y + dy * 0.92 };
-                  const t = (unit.phase + tick * unit.speed * 100 * unit.dir + 1) % 1;
-                  const mt = 1 - t;
-                  const x =
-                    mt ** 3 * from.x +
-                    3 * mt ** 2 * t * c1.x +
-                    3 * mt * t ** 2 * c2.x +
-                    t ** 3 * to.x;
-                  const y =
-                    mt ** 3 * from.y +
-                    3 * mt ** 2 * t * c1.y +
-                    3 * mt * t ** 2 * c2.y +
-                    t ** 3 * to.y;
-                  const tx =
-                    3 * mt ** 2 * (c1.x - from.x) +
-                    6 * mt * t * (c2.x - c1.x) +
-                    3 * t ** 2 * (to.x - c2.x);
-                  const ty =
-                    3 * mt ** 2 * (c1.y - from.y) +
-                    6 * mt * t * (c2.y - c1.y) +
-                    3 * t ** 2 * (to.y - c2.y);
-                  const length = Math.max(0.001, Math.hypot(tx, ty));
-                  const nx = (-ty / length) * unit.lane;
-                  const ny = (tx / length) * unit.lane;
-                  const rotation = Math.atan2(ty, tx) * (180 / Math.PI);
-                  return (
-                    <g
-                      key={unit.id}
-                      transform={`translate(${x + nx} ${y + ny}) rotate(${rotation})`}
-                      opacity={clamp(0.52 + Math.sin(tick * 14 + index) * 0.22, 0.36, 0.98)}
-                    >
-                      {unit.type === 'ride' ? (
-                        // ride: rounded pill (car silhouette)
-                        <rect
-                          x={-2.8}
-                          y={-1.6}
-                          width={5.6}
-                          height={3.2}
-                          rx={1.2}
-                          fill={accentColor(unit.accent)}
-                        />
-                      ) : unit.type === 'bus' ? (
-                        // bus: wider tall rect with two wheel dots
-                        <g>
-                          <rect x={-3.2} y={-2} width={6.4} height={4} rx={0.8} fill={C.gold} />
-                          <circle cx={-1.6} cy={2.2} r={0.9} fill={'var(--background)'} />
-                          <circle cx={1.6} cy={2.2} r={0.9} fill={'var(--background)'} />
-                        </g>
-                      ) : (
-                        // package: square
-                        <rect x={-2} y={-2} width={4} height={4} rx={1.1} fill={accentColor(unit.accent)} />
-                      )}
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gap: 14 }}>
-            <div style={panelStyle({ padding: 18, borderRadius: 24 })}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Gauge size={18} color={'var(--primary)'} />
-                <h3 style={{ margin: 0, fontSize: '1.02rem' }}>
-                  {tx('mobilityOSPage.corridor_leaderboard')}
-                </h3>
-              </div>
-              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
-                {routeStats.map(route => (
-                  <div
-                    key={route.id}
-                    style={{
-                      padding: '12px 14px',
-                      borderRadius: 18,
-                      border: `1px solid ${accentColor(route.accent)}2a`,
-                      background: 'var(--secondary)',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        gap: 12,
-                        alignItems: 'baseline',
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 800 }}>
-                          {route.fromNode.name} {'->'} {route.toNode.name}
-                        </div>
-                        <div style={{ marginTop: 4, color: 'var(--muted-foreground)', fontSize: '0.82rem' }}>
-                          {route.distance} {tx('mobilityOSPage.km_eta')}
-                          {route.etaLive} {tx('services.publicBus.minutes')}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          fontSize: '1.2rem',
-                          fontWeight: 800,
-                          color: accentColor(route.accent),
-                        }}
-                      >
-                        {route.score}
-                      </div>
-                    </div>
-                    <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
-                      {[
-                        { label: 'Load', value: route.load, color: 'var(--primary)' },
-                        { label: 'Reliability', value: route.reliability, color: C.green },
-                        { label: 'Package sync', value: route.packageSync, color: C.gold },
-                      ].map(metric => (
-                        <div key={metric.label}>
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              fontSize: '0.72rem',
-                              color: 'var(--muted-foreground)',
-                            }}
-                          >
-                            <span>{metric.label}</span>
-                            <span>{Math.round(metric.value * 100)}%</span>
-                          </div>
-                          <div
-                            style={{
-                              marginTop: 6,
-                              height: 6,
-                              borderRadius: 999,
-                              background: 'var(--border)',
-                            }}
-                          >
-                            <div
-                              style={{
-                                width: `${metric.value * 100}%`,
-                                height: '100%',
-                                borderRadius: 999,
-                                background: metric.color,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div style={panelStyle({ padding: 18, borderRadius: 24 })}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Brain size={18} color={C.purple} />
-                <h3 style={{ margin: 0, fontSize: '1.02rem' }}>
-                  {tx('mobilityOSPage.decision_engine')}
-                </h3>
-              </div>
-              <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
-                {[
-                  `${hottest.fromNode.name} -> ${hottest.toNode.name} is carrying the hottest demand wave at ${Math.round(hottest.load * 100)}% load.`,
-                  `${weakest.fromNode.name} -> ${weakest.toNode.name} is the first corridor to protect if reliability slips further.`,
-                  `${benchmarkRoute.fromNode.name} -> ${benchmarkRoute.toNode.name} sets the current corridor benchmark with a score of ${benchmarkRoute.score}.`,
-                ].map((line, index) => (
-                  <article
-                    key={line}
-                    style={{
-                      padding: '14px 16px',
-                      borderRadius: 18,
-                      border: `1px solid ${index === 1 ? C.purpleDim : 'var(--border)'}`,
-                      background: 'var(--secondary)',
-                      color: 'var(--foreground)',
-                      lineHeight: 1.65,
-                    }}
-                  >
-                    {line}
-                  </article>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section
-          style={{
-            display: 'grid',
-            gap: 14,
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-          }}
-        >
-          {[
-            {
-              icon: Users,
-              title: 'Agent synchrony',
-              value: `${network.agentSync}%`,
-              body: 'Ride and package layers are paced to feel orchestrated, not random.',
-              accent: C.green,
-            },
-            {
-              icon: ShieldCheck,
-              title: 'Recovery posture',
-              value: `${network.resilience}%`,
-              body: 'Risk is framed as control logic instead of generic warning noise.',
-              accent: C.gold,
-            },
-            {
-              icon: AlertTriangle,
-              title: 'ETA drift',
-              value: `${Math.max(0, weakest.etaLive - weakest.eta)} min`,
-              body: `${weakest.fromNode.name} -> ${weakest.toNode.name} is the main watch corridor.`,
-              accent: C.purple,
-            },
-            {
-              icon: CarFront,
-              title: 'Fleet pressure',
-              value: `${Math.round(hottest.load * 100)}%`,
-              body: `${hottest.fromNode.name} -> ${hottest.toNode.name} is carrying the highest live demand.`,
-              accent: accentColor(hottest.accent),
-            },
-          ].map(card => (
-            <article key={card.title} className="wasel-creative-stat-card" style={panelStyle({ padding: 18, borderRadius: 22 })}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                }}
-              >
-                <div
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 14,
-                    background: `${card.accent}18`,
-                    border: `1px solid ${card.accent}28`,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <card.icon size={18} color={card.accent} />
-                </div>
-                <div style={{ fontSize: '1.24rem', fontWeight: 800, color: card.accent }}>
-                  {card.value}
-                </div>
-              </div>
-              <h3 style={{ margin: '14px 0 8px', fontSize: '1rem' }}>{card.title}</h3>
-              <p style={{ margin: 0, color: 'var(--foreground)', lineHeight: 1.62, fontSize: '0.92rem' }}>
-                {card.body}
-              </p>
-            </article>
-          ))}
-        </section>
-      </div>
-    </div>
-  );
-}
