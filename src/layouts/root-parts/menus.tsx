@@ -47,7 +47,7 @@ export function NavDropdown({
         top: 'calc(100% + 10px)',
         ...posStyle,
         background: 'rgba(8,22,35,0.98)',
-        border: `1px solid ${var(--border)}`,
+        border: '1px solid var(--border)',
         borderRadius: 18,
         boxShadow: '0 24px 64px rgba(8,29,57,0.65)',
         padding: 12,
@@ -79,8 +79,8 @@ export function NavDropdown({
             gap: 4,
             padding: '11px 13px',
             borderRadius: 12,
-            background: var(--card),
-            border: `1px solid ${var(--border)}`,
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
             cursor: 'pointer',
             textAlign: ar ? 'right' : 'left',
             transition: 'all 0.14s ease',
@@ -209,7 +209,7 @@ export function UserMenu({
             insetInlineEnd: 0,
             width: 272,
             background: 'rgba(8,22,35,0.98)',
-            border: `1px solid ${var(--border)}`,
+            border: '1px solid var(--border)',
             borderRadius: 16,
             boxShadow: '0 24px 64px rgba(8,29,57,0.75)',
             overflow: 'hidden',
@@ -235,10 +235,10 @@ export function UserMenu({
                 display: 'flex',
                 gap: 0,
                 marginTop: 12,
-                background: var(--card),
+                background: 'var(--card)',
                 borderRadius: 10,
                 overflow: 'hidden',
-                border: `1px solid ${var(--border)}`,
+                border: '1px solid var(--border)',
               }}
             >
               <div
@@ -410,8 +410,8 @@ export function MobileDrawer({
             onClick={() => { void onClose(); }}
             aria-label={ar ? 'إغلاق القائمة' : 'Close menu'}
             style={{
-              background: var(--card),
-              border: `1px solid ${var(--border)}`,
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
               borderRadius: R.md,
               width: 32,
               height: 32,

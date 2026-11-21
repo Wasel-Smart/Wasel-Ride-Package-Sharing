@@ -93,8 +93,8 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
             gap: 14,
             padding: '16px 20px',
             borderRadius: R.md,
-            background: var(--secondary),
-            border: `1px solid ${var(--border)}`,
+            background: 'var(--secondary)',
+            border: '1px solid var(--border)',
             boxShadow: `0 10px 24px ${item.statusColor}10`,
             cursor: 'pointer',
             textAlign: 'left',
@@ -129,7 +129,7 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
               <span
                 style={{
                   fontWeight: TYPE.weight.ultra,
-                  color: var(--foreground),
+                  color: 'var(--foreground)',
                   fontFamily: F,
                   fontSize: TYPE.size.base,
                   overflow: 'hidden',
@@ -156,7 +156,7 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
             </div>
             <div
               style={{
-                color: var(--muted-foreground),
+                color: 'var(--muted-foreground)',
                 fontSize: TYPE.size.sm,
                 marginTop: 2,
                 overflow: 'hidden',
@@ -168,7 +168,7 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
             </div>
             <div
               style={{
-                color: var(--muted-foreground),
+                color: 'var(--muted-foreground)',
                 fontSize: TYPE.size.xs,
                 marginTop: 6,
                 display: 'flex',

@@ -250,8 +250,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
 
   return (
     <div style={{ width: '100%', maxWidth: 1040, margin: '32px auto 0', padding: `0 ${SPACE[4]}` }}>
-      <section
-        style={{
+      <section style={{
           position: 'relative',
           overflow: 'hidden',
           borderRadius: R['3xl'],
@@ -261,7 +260,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
           padding: `${SPACE[7]} ${SPACE[6]}`,
           color: C.text,
           fontFamily: F,
-        }}
+        }}>
       >
         <div
           aria-hidden="true"
@@ -390,7 +389,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
               lineHeight: TYPE.lineHeight.relaxed,
             }}
           >
-            <strong style={{ color: var(--muted-foreground) }}>{unlockLabel}</strong>{' '}
+            <strong style={{ color: 'var(--muted-foreground)' }}>{unlockLabel}</strong>{' '}
             {ar
               ? 'نُبقي تجربة واصل قابلة للاستكشاف قبل تسجيل الدخول، لكن الحجوزات والبيانات الشخصية والإجراءات الحساسة تبقى خلف الحساب.'
               : 'Wasel stays explorable before sign-in, but bookings, personal data, and sensitive actions stay behind your account.'}
