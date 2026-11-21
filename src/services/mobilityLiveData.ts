@@ -76,3 +76,37 @@ export function subscribeToMobilityLiveRows(
 
   return () => window.clearInterval(interval);
 }
+
+// ---- Public (unauthenticated) corridor snapshot ----
+
+export interface MobilityCorridorSnapshot {
+  id: string;
+  from: string;
+  to: string;
+  demand_index: number;
+  seats_total: number;
+  seats_booked: number;
+  seats_available: number;
+  cargo_capacity_kg: number;
+  cargo_booked_kg: number;
+  cargo_available_kg: number;
+  dynamic_seat_price: number;
+  updated_at: string;
+}
+
+export interface MobilityPublicSnapshot {
+  corridors: MobilityCorridorSnapshot[];
+  generatedAt: string;
+}
+
+export async function fetchMobilityPublicSnapshot(): Promise<MobilityPublicSnapshot | null> {
+  try {
+    const base = API_URL.replace(/\/[^/]+$/, '');
+    const url = `${base}/mobility-service/mobility-os/public/snapshot`;
+    const response = await fetchWithRetry(url, { timeout: 8_000 });
+    if (!response.ok) { return null; }
+    return response.json() as Promise<MobilityPublicSnapshot>;
+  } catch {
+    return null;
+  }
+}
