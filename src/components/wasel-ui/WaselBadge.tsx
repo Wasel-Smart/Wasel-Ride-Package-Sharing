@@ -60,9 +60,9 @@ const variants: Record<
     defaultLabel: 'HOT',
   },
   custom: {
-    background: C.elevated,
-    color: C.textMuted,
-    borderColor: C.border,
+    background: 'var(--secondary)',
+    color: 'var(--muted-foreground)',
+    borderColor: 'var(--border)',
     defaultLabel: '',
   },
 };
