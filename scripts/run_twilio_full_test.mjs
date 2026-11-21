@@ -20,7 +20,7 @@ async function verifyOtp(phone, token) {
 (async () => {
   try {
     // Use Twilio test number (always works) and known token 123456
-    const testPhone = '+15005550006';
+    const testPhone = '+15551234567';   // replace with a real phone number you control
     await requestOtp(testPhone);
     await verifyOtp(testPhone, '123456');
     console.log('🎉 Full Twilio OTP flow succeeded');
