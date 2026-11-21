@@ -134,7 +134,7 @@ export function WaselInput({
       >
         {icon && (
           <span
-            style={{ flexShrink: 0, color: C.textMuted, display: 'inline-flex', fontSize: TYPE.size.base }}
+            style={{ flexShrink: 0, color: 'var(--muted-foreground)', display: 'inline-flex', fontSize: TYPE.size.base }}
           >
             {icon}
           </span>
@@ -175,7 +175,7 @@ export function WaselInput({
       </div>
 
       {error && (
-        <span id={errorId} role="alert" style={{ fontSize: TYPE.size.xs, color: C.error, fontFamily: F, lineHeight: 1.5 }}>
+        <span id={errorId} role="alert" style={{ fontSize: TYPE.size.xs, color: `var(--destructive)`, fontFamily: F, lineHeight: 1.5 }}>
           {sanitizeHtml(error)}
         </span>
       )}
