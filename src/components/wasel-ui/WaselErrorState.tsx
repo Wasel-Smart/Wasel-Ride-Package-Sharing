@@ -42,9 +42,9 @@ export function WaselErrorState({
           height: 80,
           borderRadius: R['3xl'],
           background: `${C.error}12`,
-          border: `1px solid ${C.error}24`,
+          border: `1px solid color-mix(in srgb, var(--destructive) 24%, transparent)`,
           marginBottom: SPACE[5],
-          color: C.error,
+          color: `var(--destructive)`,
         }}
       >
         {icon}
@@ -54,7 +54,7 @@ export function WaselErrorState({
           margin: `0 0 ${SPACE[2]}`,
           fontSize: TYPE.size.lg,
           fontWeight: TYPE.weight.bold,
-          color: C.text,
+          color: `var(--foreground)`,
           lineHeight: TYPE.lineHeight.tight,
         }}
       >
@@ -65,7 +65,7 @@ export function WaselErrorState({
           style={{
             margin: `0 0 ${SPACE[5]}`,
             fontSize: TYPE.size.base,
-            color: C.textMuted,
+            color: `var(--muted-foreground)`,
             lineHeight: TYPE.lineHeight.relaxed,
             maxWidth: 400,
           }}
