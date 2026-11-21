@@ -33,10 +33,10 @@ interface OutcomesSectionProps extends SectionNavigationProps {
 // Accent policy (BRAND_GUIDELINES.md): cyan = primary, green = trust/success,
 // orange = parcels. Gold/purple/blueLight accents were collapsed into cyan.
 const proofMetrics = [
-  { labelKey: 'homeContent.metric_flows_label', value: '4', detailKey: 'homeContent.metric_flows_detail', accent: C.cyan },
+  { labelKey: 'homeContent.metric_flows_label', value: '4', detailKey: 'homeContent.metric_flows_detail', accent: 'var(--primary)' },
   { labelKey: 'homeContent.metric_trust_label', value: '5', detailKey: 'homeContent.metric_trust_detail', accent: C.green },
-  { labelKey: 'homeContent.metric_ads_label', value: '0', detailKey: 'homeContent.metric_ads_detail', accent: C.cyan },
-  { labelKey: 'homeContent.metric_ux_label', value: 'Live', valueAr: 'مباشر', detailKey: 'homeContent.metric_ux_detail', accent: C.cyan },
+  { labelKey: 'homeContent.metric_ads_label', value: '0', detailKey: 'homeContent.metric_ads_detail', accent: 'var(--primary)' },
+  { labelKey: 'homeContent.metric_ux_label', value: 'Live', valueAr: 'مباشر', detailKey: 'homeContent.metric_ux_detail', accent: 'var(--primary)' },
 ] as const;
 
 const onboardingSteps = [
@@ -53,7 +53,7 @@ const outcomeCards = [
     detailKey: 'homeContent.outcome_riders_detail',
     ctaKey: 'homeContent.outcome_riders_cta',
     path: '/find-ride',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
   {
     labelKey: 'homeContent.outcome_drivers_label',
@@ -61,7 +61,7 @@ const outcomeCards = [
     detailKey: 'homeContent.outcome_drivers_detail',
     ctaKey: 'homeContent.outcome_drivers_cta',
     path: '/offer-ride',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
   {
     labelKey: 'homeContent.outcome_parcels_label',
@@ -74,11 +74,11 @@ const outcomeCards = [
 ] as const;
 
 const trustLinks = [
-  { icon: Lock, titleKey: 'homeContent.trust_privacy_title', detailKey: 'homeContent.trust_privacy_detail', path: '/privacy', accent: C.cyan },
+  { icon: Lock, titleKey: 'homeContent.trust_privacy_title', detailKey: 'homeContent.trust_privacy_detail', path: '/privacy', accent: 'var(--primary)' },
   { icon: ShieldCheck, titleKey: 'homeContent.trust_security_title', detailKey: 'homeContent.trust_security_detail', path: '/security', accent: C.green },
-  { icon: Shield, titleKey: 'homeContent.trust_trust_title', detailKey: 'homeContent.trust_trust_detail', path: '/trust', accent: C.cyan },
-  { icon: BadgeCheck, titleKey: 'homeContent.trust_terms_title', detailKey: 'homeContent.trust_terms_detail', path: '/terms', accent: C.cyan },
-  { icon: Headphones, titleKey: 'homeContent.trust_support_title', detailKey: 'homeContent.trust_support_detail', path: '/support', accent: C.cyan },
+  { icon: Shield, titleKey: 'homeContent.trust_trust_title', detailKey: 'homeContent.trust_trust_detail', path: '/trust', accent: 'var(--primary)' },
+  { icon: BadgeCheck, titleKey: 'homeContent.trust_terms_title', detailKey: 'homeContent.trust_terms_detail', path: '/terms', accent: 'var(--primary)' },
+  { icon: Headphones, titleKey: 'homeContent.trust_support_title', detailKey: 'homeContent.trust_support_detail', path: '/support', accent: 'var(--primary)' },
 ] as const;
 
 function ArrowCta({ label, accent, ar }: { label: string; accent: string; ar?: boolean }) {
@@ -119,14 +119,14 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
         <div
           className="wasel-home-proof-hero-card"
           style={{
-            background: C.card,
-            border: `1px solid ${C.border}`,
+            background: 'var(--card)',
+            border: `1px solid ${'var(--border)'}`,
             boxShadow: SH.sm,
           }}
         >
           <div
             className="wasel-home-proof-hero-badge"
-            style={{ color: C.cyan }}
+            style={{ color: 'var(--primary)' }}
           >
             <ShieldCheck size={14} />
             {tx('homeContent.proof_hero_badge')}
@@ -150,7 +150,7 @@ export function ProofSection({ ar, onNavigate }: SectionNavigationProps) {
               type="button"
               variant="outline"
               onClick={() => { void onNavigate('/app/security', 'proof_security'); }}
-              style={{ background: C.elevated, color: C.text }}
+              style={{ background: 'var(--secondary)', color: 'var(--foreground)' }}
             >
               {tx('homeContent.proof_cta_security')}
             </WaselButton>
@@ -216,8 +216,8 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
                 flexDirection: 'column',
                 borderRadius: R.xl,
                 padding: '18px',
-                background: index === 0 ? C.cyanDim : C.card,
-                border: `1px solid ${index === 0 ? C.borderHov : C.border}`,
+                background: index === 0 ? C.cyanDim : 'var(--card)',
+                border: `1px solid ${index === 0 ? 'var(--border)' : 'var(--border)'}`,
                 boxShadow: index === 0 ? SH.sm : SH.none,
               }}
             >
@@ -236,22 +236,22 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
                     display: 'grid',
                     placeItems: 'center',
                     borderRadius: R.lg,
-                    color: index === 0 ? C.bg : C.cyan,
-                    background: index === 0 ? C.cyan : C.elevated,
-                    border: `1px solid ${C.borderFaint}`,
+                    color: index === 0 ? 'var(--background)' : 'var(--primary)',
+                    background: index === 0 ? 'var(--primary)' : 'var(--secondary)',
+                    border: `1px solid ${'var(--border)'}`,
                   }}
                 >
                   <Icon size={18} />
                 </span>
-                <span style={{ color: C.textDim, fontSize: '0.8125rem', fontWeight: 800 }}>
+                <span style={{ color: 'var(--muted-foreground)', fontSize: '0.8125rem', fontWeight: 800 }}>
                   0{index + 1}
                 </span>
               </div>
-              <div style={{ marginTop: 18, color: C.text, fontSize: '0.98rem', fontWeight: 800 }}>
+              <div style={{ marginTop: 18, color: 'var(--foreground)', fontSize: '0.98rem', fontWeight: 800 }}>
                 {tx(step.titleKey)}
               </div>
               <div
-                style={{ marginTop: 8, color: C.textMuted, fontSize: '0.875rem', lineHeight: 1.62 }}
+                style={{ marginTop: 8, color: 'var(--muted-foreground)', fontSize: '0.875rem', lineHeight: 1.62 }}
               >
                 {tx(step.detailKey)}
               </div>
@@ -259,7 +259,7 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
                 <ArrowCta
                   ar={ar}
                   label={index === 0 ? tx('homeContent.step_begin_here') : tx('homeContent.step_included')}
-                  accent={index === 0 ? C.cyan : C.textDim}
+                  accent={index === 0 ? 'var(--primary)' : 'var(--muted-foreground)'}
                 />
               </div>
             </div>
@@ -276,12 +276,12 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
           justifyContent: 'space-between',
           borderRadius: R.xl,
           padding: '16px 18px',
-          background: C.elevated,
-          border: `1px solid ${C.border}`,
+          background: 'var(--secondary)',
+          border: `1px solid ${'var(--border)'}`,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: C.textMuted }}>
-          <MousePointerClick size={16} color={C.cyan} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--muted-foreground)' }}>
+          <MousePointerClick size={16} color={'var(--primary)'} />
           <span style={{ fontSize: '0.84rem', lineHeight: 1.55 }}>
             {tx('homeContent.demo_footer_note')}
           </span>
@@ -291,7 +291,7 @@ export function OnboardingDemoSection({ ar, onNavigate }: SectionNavigationProps
           variant="outline"
           iconEnd={ar ? <ArrowLeft size={14} /> : <ArrowRight size={14} />}
           onClick={() => { void onNavigate('/find-ride?demo=1', 'demo_start_footer'); }}
-          style={{ background: C.card, color: C.text }}
+          style={{ background: 'var(--card)', color: 'var(--foreground)' }}
         >
           {tx('homeContent.demo_footer_cta')}
         </WaselButton>
@@ -328,7 +328,7 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
               color: 'inherit',
               borderRadius: R.xl,
               padding: '20px',
-              background: `linear-gradient(180deg, ${C.card}, ${C.elevated})`,
+              background: `linear-gradient(180deg, ${'var(--card)'}, ${'var(--secondary)'})`,
               border: `1px solid ${card.accent}24`,
               boxShadow: SH.sm,
               cursor: 'pointer',
@@ -348,7 +348,7 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
             <div
               style={{
                 marginTop: 14,
-                color: C.text,
+                color: 'var(--foreground)',
                 fontSize: '1.08rem',
                 fontWeight: 800,
                 lineHeight: 1.16,
@@ -357,7 +357,7 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
               {tx(card.titleKey)}
             </div>
             <div
-              style={{ marginTop: 10, color: C.textMuted, fontSize: '0.875rem', lineHeight: 1.7 }}
+              style={{ marginTop: 10, color: 'var(--muted-foreground)', fontSize: '0.875rem', lineHeight: 1.7 }}
             >
               {tx(card.detailKey)}
             </div>
@@ -381,8 +381,8 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
           style={{
             borderRadius: R.xl,
             padding: '18px 20px',
-            background: C.elevated,
-            border: `1px solid ${C.border}`,
+            background: 'var(--secondary)',
+            border: `1px solid ${'var(--border)'}`,
           }}
         >
           <div
@@ -390,7 +390,7 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
               display: 'flex',
               alignItems: 'center',
               gap: 8,
-              color: C.cyan,
+              color: 'var(--primary)',
               fontWeight: 850,
             }}
           >
@@ -400,7 +400,7 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
           <p
             style={{
               margin: '10px 0 0',
-              color: C.textMuted,
+              color: 'var(--muted-foreground)',
               lineHeight: 1.65,
               fontSize: '0.84rem',
             }}
@@ -414,8 +414,8 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
           style={{
             borderRadius: R.xl,
             padding: '18px 20px',
-            background: C.elevated,
-            border: `1px solid ${C.border}`,
+            background: 'var(--secondary)',
+            border: `1px solid ${'var(--border)'}`,
           }}
         >
           <div
@@ -449,14 +449,14 @@ export function OutcomesSection({ ar, corridorCards, onNavigate }: OutcomesSecti
                   textDecoration: 'none',
                   borderRadius: R.lg,
                   padding: '10px 12px',
-                  background: C.card2,
-                  border: `1px solid ${C.borderFaint}`,
-                  color: C.text,
+                  background: 'var(--muted)',
+                  border: `1px solid ${'var(--border)'}`,
+                  color: 'var(--foreground)',
                   cursor: 'pointer',
                 }}
               >
                 <div style={{ fontSize: '0.8125rem', fontWeight: 800 }}>{card.title}</div>
-                <div style={{ marginTop: 4, color: C.textMuted, fontSize: '0.8125rem' }}>
+                <div style={{ marginTop: 4, color: 'var(--muted-foreground)', fontSize: '0.8125rem' }}>
                   {card.meta}
                 </div>
               </a>
@@ -494,7 +494,7 @@ export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
                 color: 'inherit',
                 borderRadius: R.xl,
                 padding: '18px',
-                background: C.card,
+                background: 'var(--card)',
                 border: `1px solid ${link.accent}24`,
                 cursor: 'pointer',
               }}
@@ -513,9 +513,9 @@ export function TrustPagesSection({ ar, onNavigate }: SectionNavigationProps) {
               >
                 <Icon size={18} />
               </span>
-              <div style={{ marginTop: 16, color: C.text, fontWeight: 800 }}>{tx(link.titleKey)}</div>
+              <div style={{ marginTop: 16, color: 'var(--foreground)', fontWeight: 800 }}>{tx(link.titleKey)}</div>
               <div
-                style={{ marginTop: 8, color: C.textMuted, fontSize: '0.8125rem', lineHeight: 1.62 }}
+                style={{ marginTop: 8, color: 'var(--muted-foreground)', fontSize: '0.8125rem', lineHeight: 1.62 }}
               >
                 {tx(link.detailKey)}
               </div>

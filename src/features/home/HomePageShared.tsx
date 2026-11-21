@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, ChevronRight, ChevronUp, Info, Phone } from 'lucide-react';
 import { CurrencyService, type SupportedCurrency } from '../../utils/currency';
@@ -16,7 +16,7 @@ export const C = {
 
 export const F = FONT_SANS;
 export { R, SH, TYPE };
-export const glass = (_op = 0.84) => C.glass;
+export const glass = (_op = 0.84) => 'var(--card)';
 
 export const POPULAR_ROUTES = [
   {
@@ -27,7 +27,7 @@ export const POPULAR_ROUTES = [
     dist: 330,
     priceJod: 8,
     icon: 'A',
-    color: C.cyan,
+    color: 'var(--primary)',
   },
   {
     from: 'Amman',
@@ -47,7 +47,7 @@ export const POPULAR_ROUTES = [
     dist: 60,
     priceJod: 5,
     icon: 'D',
-    color: C.cyan,
+    color: 'var(--primary)',
   },
   {
     from: 'Amman',
@@ -96,7 +96,7 @@ export function Skeleton({
         width: w,
         height: h,
         borderRadius: radius,
-        background: `linear-gradient(90deg, ${C.elevated} 0%, ${C.panel} 50%, ${C.elevated} 100%)`,
+        background: `linear-gradient(90deg, ${'var(--secondary)'} 0%, ${'var(--secondary)'} 50%, ${'var(--secondary)'} 100%)`,
         backgroundSize: '200% 100%',
         animation: 'shimmer 1.6s infinite linear',
       }}
@@ -108,8 +108,8 @@ export function CardSkeleton({ lines = 3 }: { lines?: number }) {
   return (
     <div
       style={{
-        background: C.card,
-        border: `1px solid ${C.border}`,
+        background: 'var(--card)',
+        border: `1px solid ${'var(--border)'}`,
         borderRadius: R.lg,
         padding: 18,
         display: 'flex',
@@ -137,8 +137,8 @@ export function ListSkeleton({ count = 3 }: { count?: number }) {
 
 export function cardContainer(overrides: React.CSSProperties = {}): React.CSSProperties {
   return {
-    background: C.card,
-    border: `1px solid ${C.border}`,
+    background: 'var(--card)',
+    border: `1px solid ${'var(--border)'}`,
     borderRadius: R.lg,
     padding: '18px 18px 16px',
     ...overrides,
@@ -178,7 +178,7 @@ export function SectionHeader({
           className="wasel-home-section-action"
         >
           {action}
-          <ChevronRight size={12} color={C.cyan} />
+          <ChevronRight size={12} color={'var(--primary)'} />
         </button>
       ) : null}
     </div>
@@ -218,20 +218,20 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
           height: 36,
           padding: '0 12px',
           borderRadius: R.full,
-          background: open ? C.cyanDim : C.elevated,
-          border: `1px solid ${open ? C.borderHov : C.border}`,
+          background: open ? C.cyanDim : 'var(--secondary)',
+          border: `1px solid ${open ? 'var(--border)' : 'var(--border)'}`,
           cursor: 'pointer',
           fontSize: TYPE.size.sm,
           fontWeight: TYPE.weight.bold,
-          color: open ? C.text : C.textSub,
+          color: open ? 'var(--foreground)' : 'var(--foreground)',
           fontFamily: F,
         }}
       >
-        <span style={{ fontSize: TYPE.size.xs, color: C.textMuted }}>
+        <span style={{ fontSize: TYPE.size.xs, color: 'var(--muted-foreground)' }}>
           {ar ? 'العملة' : 'Currency'}
         </span>
         <span>{cur}</span>
-        <ChevronDown size={12} color={C.cyan} />
+        <ChevronDown size={12} color={'var(--primary)'} />
       </button>
       {open ? (
         <div
@@ -241,7 +241,7 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
             insetInlineStart: 0,
             minWidth: 156,
             background: glass(0.96),
-            border: `1px solid ${C.border}`,
+            border: `1px solid ${'var(--border)'}`,
             borderRadius: 14,
             boxShadow: SH.lg,
             zIndex: 100,
@@ -260,16 +260,16 @@ export function InlineCurrencySwitcher({ ar }: { ar: boolean }) {
                 width: '100%',
                 padding: '9px 12px',
                 border: 'none',
-                background: cur === code ? C.elevated : 'transparent',
+                background: cur === code ? 'var(--secondary)' : 'transparent',
                 cursor: 'pointer',
                 fontSize: TYPE.size.sm,
                 fontWeight: cur === code ? TYPE.weight.bold : TYPE.weight.medium,
-                color: cur === code ? C.text : C.textSub,
+                color: cur === code ? 'var(--foreground)' : 'var(--foreground)',
                 fontFamily: F,
               }}
             >
               <span>{code}</span>
-              <span style={{ color: C.textDim, fontSize: TYPE.size.xs }}>
+              <span style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs }}>
                 {svc.getSymbol(code)}
               </span>
             </button>
@@ -306,17 +306,17 @@ export function SOSButton({ ar }: { ar: boolean }) {
           height: 42,
           padding: '0 16px',
           borderRadius: R.full,
-          background: confirm ? C.error : C.elevated,
-          border: `1px solid ${confirm ? `${C.error}AA` : `${C.error}40`}`,
+          background: confirm ? 'var(--destructive)' : 'var(--secondary)',
+          border: `1px solid ${confirm ? `${'var(--destructive)'}AA` : `${'var(--destructive)'}40`}`,
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
           fontSize: TYPE.size.sm,
           fontWeight: TYPE.weight.bold,
-          color: confirm ? C.text : C.error,
+          color: confirm ? 'var(--foreground)' : 'var(--destructive)',
           fontFamily: F,
-          boxShadow: confirm ? `0 0 0 4px ${C.errorDim}` : 'none',
+          boxShadow: confirm ? `0 0 0 4px ${'color-mix(in srgb, var(--destructive) 14%, transparent)'}` : 'none',
         }}
       >
         <Phone size={14} />
@@ -338,7 +338,7 @@ export function SOSButton({ ar }: { ar: boolean }) {
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            color: C.textDim,
+            color: 'var(--muted-foreground)',
             fontSize: TYPE.size.xs,
             fontFamily: F,
           }}
@@ -376,14 +376,14 @@ export function TrustScoreCard({
   const ratingPoints = Math.max(0, Math.min(5, user?.rating ?? 0)) * 2;
   const basePoints = 45;
   const factors = [
-    { label: ar ? 'المعلومات الأساسية' : 'Base profile', weight: basePoints, yours: basePoints, color: C.cyan },
-    { label: ar ? 'تأكيد البريد الإلكتروني' : 'Email confirmation', weight: 10, yours: emailPoints, color: C.cyan },
+    { label: ar ? 'المعلومات الأساسية' : 'Base profile', weight: basePoints, yours: basePoints, color: 'var(--primary)' },
+    { label: ar ? 'تأكيد البريد الإلكتروني' : 'Email confirmation', weight: 10, yours: emailPoints, color: 'var(--primary)' },
     { label: ar ? 'تأكيد رقم الهاتف' : 'Phone confirmation', weight: 10, yours: phonePoints, color: C.green },
     { label: ar ? 'التحقق من الهوية' : 'ID verification', weight: 15, yours: identityPoints, color: C.gold },
     { label: ar ? 'الرحلات المكتملة' : 'Completed trips', weight: 20, yours: Math.min(tripsPoints, 20), color: C.gold },
     { label: ar ? 'تقييمات المستخدمين' : 'User ratings', weight: 10, yours: Math.min(ratingPoints, 10), color: C.green },
   ];
-  const color = pct >= 80 ? C.green : pct >= 60 ? C.gold : C.error;
+  const color = pct >= 80 ? C.green : pct >= 60 ? C.gold : 'var(--destructive)';
 
   return (
     <div
@@ -391,7 +391,7 @@ export function TrustScoreCard({
         borderRadius: 16,
         padding: '20px 22px',
         background: glass(0.88),
-        border: `1px solid ${C.border}`,
+        border: `1px solid ${'var(--border)'}`,
         boxShadow: SH.sm,
       }}
     >
@@ -429,14 +429,14 @@ export function TrustScoreCard({
             <div
               style={{
                 fontWeight: TYPE.weight.black,
-                color: C.text,
+                color: 'var(--foreground)',
                 fontSize: TYPE.size.lg,
                 fontFamily: F,
               }}
             >
               {ar ? 'مؤشر الثقة' : 'Trust score'}
             </div>
-            <div style={{ fontSize: TYPE.size.sm, color: C.textMuted, fontFamily: F }}>
+            <div style={{ fontSize: TYPE.size.sm, color: 'var(--muted-foreground)', fontFamily: F }}>
               {!resolved
                 ? tx('homeSections.trustScoreLoading')
                 : pct >= 80
@@ -461,24 +461,24 @@ export function TrustScoreCard({
               height: 34,
               padding: '0 12px',
               borderRadius: R.full,
-              background: C.elevated,
-              border: `1px solid ${C.borderFaint}`,
+              background: 'var(--secondary)',
+              border: `1px solid ${'var(--border)'}`,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: 6,
               fontSize: TYPE.size.xs,
-              color: C.textSub,
+              color: 'var(--foreground)',
               fontWeight: TYPE.weight.semibold,
               fontFamily: F,
             }}
           >
-            <Info size={12} color={C.cyan} />
+            <Info size={12} color={'var(--primary)'} />
             {ar ? 'طريقة الحساب' : 'How it works'}
             {expanded ? (
-              <ChevronUp size={12} color={C.textMuted} />
+              <ChevronUp size={12} color={'var(--muted-foreground)'} />
             ) : (
-              <ChevronDown size={12} color={C.textMuted} />
+              <ChevronDown size={12} color={'var(--muted-foreground)'} />
             )}
           </button>
         ) : null}
@@ -488,7 +488,7 @@ export function TrustScoreCard({
           marginTop: 16,
           height: 7,
           borderRadius: 9999,
-          background: C.elevated,
+          background: 'var(--secondary)',
           overflow: 'hidden',
         }}
       >
@@ -497,7 +497,7 @@ export function TrustScoreCard({
             height: '100%',
             width: `${pct}%`,
             borderRadius: 9999,
-            background: `linear-gradient(90deg, ${color}, ${C.cyan})`,
+            background: `linear-gradient(90deg, ${color}, ${'var(--primary)'})`,
             transition: 'width 0.8s ease',
           }}
         />
@@ -511,11 +511,11 @@ export function TrustScoreCard({
             transition={{ duration: 0.22 }}
             style={{ overflow: 'hidden' }}
           >
-            <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${C.borderFaint}` }}>
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: `1px solid ${'var(--border)'}` }}>
               <p
                 style={{
                   fontSize: TYPE.size.sm,
-                  color: C.textMuted,
+                  color: 'var(--muted-foreground)',
                   fontFamily: F,
                   margin: '0 0 14px',
                 }}
@@ -535,7 +535,7 @@ export function TrustScoreCard({
                       gap: 12,
                     }}
                   >
-                    <span style={{ fontSize: TYPE.size.sm, color: C.textSub, fontFamily: F }}>
+                    <span style={{ fontSize: TYPE.size.sm, color: 'var(--foreground)', fontFamily: F }}>
                       {factor.label}
                     </span>
                     <span
@@ -553,7 +553,7 @@ export function TrustScoreCard({
                     style={{
                       height: 5,
                       borderRadius: 9999,
-                      background: C.elevated,
+                      background: 'var(--secondary)',
                       overflow: 'hidden',
                     }}
                   >

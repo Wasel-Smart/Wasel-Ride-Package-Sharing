@@ -288,7 +288,7 @@ export function BusPage() {
 
         <div
           style={{
-            background: C.card,
+            background: 'var(--card)',
             border: `1px solid ${DS.border}`,
             borderRadius: r(22),
             padding: 18,
@@ -307,7 +307,7 @@ export function BusPage() {
             }}
           >
             <div>
-              <div style={{ color: C.text, fontWeight: 900, letterSpacing: 0 }}>
+              <div style={{ color: 'var(--foreground)', fontWeight: 900, letterSpacing: 0 }}>
                 {tx('busPage.trip_details')}
               </div>
               <div style={{ color: DS.sub, fontSize: '0.82rem', marginTop: 4 }}>
@@ -328,7 +328,7 @@ export function BusPage() {
                 borderRadius: '99px',
                 border: `1px solid ${DS.border}`,
                 background: DS.card2,
-                color: C.text,
+                color: 'var(--foreground)',
                 fontWeight: 800,
                 cursor: 'pointer',
                 display: 'inline-flex',
@@ -366,7 +366,7 @@ export function BusPage() {
                   borderRadius: r(14),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: C.text,
+                  color: 'var(--foreground)',
                   padding: '0 14px',
                   fontFamily: DS.F,
                 }}
@@ -399,7 +399,7 @@ export function BusPage() {
                   borderRadius: r(14),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: C.text,
+                  color: 'var(--foreground)',
                   padding: '0 14px',
                   fontFamily: DS.F,
                 }}
@@ -433,7 +433,7 @@ export function BusPage() {
                   borderRadius: r(14),
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: C.text,
+                  color: 'var(--foreground)',
                   padding: '0 14px',
                   fontFamily: DS.F,
                 }}
@@ -458,7 +458,7 @@ export function BusPage() {
                     border: `1px solid ${active ? DS.green : DS.border}`,
                     background: active ? `${DS.green}12` : DS.card2,
                     padding: '10px 14px',
-                    color: C.text,
+                    color: 'var(--foreground)',
                     cursor: 'pointer',
                     fontWeight: 800,
                   }}
@@ -512,7 +512,7 @@ export function BusPage() {
             <div
               key={item.label}
               style={{
-                background: C.card,
+                background: 'var(--card)',
                 border: `1px solid ${DS.border}`,
                 borderRadius: r(18),
                 padding: '18px 18px 16px',
@@ -540,7 +540,7 @@ export function BusPage() {
               >
                 {item.value}
               </div>
-              <div style={{ color: C.text, fontWeight: 700, fontSize: '0.86rem' }}>
+              <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.86rem' }}>
                 {item.label}
               </div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4 }}>

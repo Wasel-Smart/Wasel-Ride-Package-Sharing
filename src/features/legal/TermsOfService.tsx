@@ -16,7 +16,7 @@ function termsCardStyle(accent: string) {
   return {
     borderRadius: R.xxl,
     border: `1px solid ${accent}24`,
-    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${C.card}`,
+    background: `radial-gradient(circle at top left, ${accent}12, transparent 34%), ${'var(--card)'}`,
     boxShadow: SH.md,
     padding: SPACE[5],
   } as const;
@@ -251,7 +251,7 @@ export function TermsOfService() {
                 type="button"
                 variant="outline"
                 onClick={() => { void nav('/app/security'); }}
-                style={{ background: C.elevated, color: C.text }}
+                style={{ background: 'var(--secondary)', color: 'var(--foreground)' }}
               >
                 {ar ? 'راجع الأمان' : 'Review security'}
               </WaselButton>
@@ -279,7 +279,7 @@ export function TermsOfService() {
                   {
                     label: ar ? 'مهلة المطالبة' : 'Claims window',
                     value: ar ? '30 يوم' : '30 days',
-                    accent: C.error,
+                    accent: 'var(--destructive)',
                   },
                 ].map(item => (
                   <div
@@ -293,7 +293,7 @@ export function TermsOfService() {
                   >
                     <div
                       style={{
-                        color: C.text,
+                        color: 'var(--foreground)',
                         fontSize: TYPE.size.lg,
                         fontWeight: TYPE.weight.ultra,
                         lineHeight: TYPE.lineHeight.tight,
@@ -304,7 +304,7 @@ export function TermsOfService() {
                     <div
                       style={{
                         marginTop: 4,
-                        color: C.textMuted,
+                        color: 'var(--muted-foreground)',
                         fontSize: TYPE.size.xs,
                         textTransform: 'uppercase',
                         letterSpacing: TYPE.letterSpacing.wide,
@@ -346,7 +346,7 @@ export function TermsOfService() {
                 ? 'واصل ينسّق الحركة؛ مش مشغّل نقل مباشر.'
                 : 'Wasel coordinates movement; it is not a direct transport operator.'
             }
-            accent={C.cyan}
+            accent={'var(--primary)'}
             icon={<FileText size={18} />}
           />
           <MetricCard
@@ -368,7 +368,7 @@ export function TermsOfService() {
                 ? 'ابدأ بالدعم، بعدها الوساطة، وبعدها التصعيد القانوني الرسمي.'
                 : 'Start with support, then mediation, then formal legal escalation.'
             }
-            accent={C.error}
+            accent={'var(--destructive)'}
             icon={<AlertCircle size={18} />}
           />
         </div>
@@ -419,7 +419,7 @@ export function TermsOfService() {
                     </span>
                     <div
                       style={{
-                        color: C.text,
+                        color: 'var(--foreground)',
                         fontSize: TYPE.size.base,
                         fontWeight: TYPE.weight.black,
                         lineHeight: TYPE.lineHeight.snug,
@@ -434,10 +434,10 @@ export function TermsOfService() {
                         key={item}
                         style={{
                           borderRadius: R.xl,
-                          border: `1px solid ${C.borderFaint}`,
-                          background: C.elevated,
+                          border: `1px solid ${'var(--border)'}`,
+                          background: 'var(--secondary)',
                           padding: `${SPACE[3]} ${SPACE[4]}`,
-                          color: C.text,
+                          color: 'var(--foreground)',
                           fontSize: TYPE.size.sm,
                           lineHeight: TYPE.lineHeight.relaxed,
                         }}
@@ -466,14 +466,14 @@ export function TermsOfService() {
                 ? 'هاي القائمة لازم تكون واضحة وما بتنترك بدون انتباه.'
                 : 'This list should be unmissable and easy to understand.'
             }
-            icon={<AlertCircle size={18} color={C.error} />}
+            icon={<AlertCircle size={18} color={'var(--destructive)'} />}
           >
             <div style={{ display: 'grid', gap: 10 }}>
               {copy.prohibited.items.map(item => (
-                <div key={item} style={termsCardStyle(C.error)}>
+                <div key={item} style={termsCardStyle('var(--destructive)')}>
                   <div
                     style={{
-                      color: C.text,
+                      color: 'var(--foreground)',
                       fontSize: TYPE.size.sm,
                       lineHeight: TYPE.lineHeight.relaxed,
                     }}
@@ -497,7 +497,7 @@ export function TermsOfService() {
             <div style={termsCardStyle(C.gold)}>
               <div
                 style={{
-                  color: C.text,
+                  color: 'var(--foreground)',
                   fontSize: TYPE.size.base,
                   lineHeight: TYPE.lineHeight.relaxed,
                 }}

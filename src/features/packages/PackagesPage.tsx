@@ -340,17 +340,17 @@ export function PackagesPage() {
             <div
               key={s.label}
               style={{
-                background: C.card,
+                background: 'var(--card)',
                 borderRadius: r(16),
-                border: `1px solid ${C.border}`,
+                border: `1px solid ${'var(--border)'}`,
                 padding: '16px 18px',
                 boxShadow: SH.sm,
               }}
             >
               <div style={{ color: s.color, fontWeight: 900, fontSize: '1.25rem', marginBottom: 4 }}>
-                {s.value ?? <span className="pkg-stat-dash" style={{ color: C.textMuted, fontSize: '0.9rem' }}>—</span>}
+                {s.value ?? <span className="pkg-stat-dash" style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem' }}>—</span>}
               </div>
-              <div style={{ color: C.textMuted, fontSize: '0.78rem', fontWeight: 600 }}>
+              <div style={{ color: 'var(--muted-foreground)', fontSize: '0.78rem', fontWeight: 600 }}>
                 {s.label}
               </div>
             </div>
@@ -363,10 +363,10 @@ export function PackagesPage() {
           style={{
             display: 'flex',
             gap: 6,
-            background: C.card2,
+            background: 'var(--muted)',
             borderRadius: r(16),
             padding: 5,
-            border: `1px solid ${C.border}`,
+            border: `1px solid ${'var(--border)'}`,
             marginBottom: 20,
           }}
         >
@@ -385,7 +385,7 @@ export function PackagesPage() {
                 fontWeight: activeTab === tab.key ? 800 : 600,
                 fontSize: '0.85rem',
                 background: activeTab === tab.key ? DS.gradG : 'transparent',
-                color: activeTab === tab.key ? C.text : C.textMuted,
+                color: activeTab === tab.key ? 'var(--foreground)' : 'var(--muted-foreground)',
                 transition: 'all 0.18s',
                 position: 'relative',
               }}
@@ -399,10 +399,10 @@ export function PackagesPage() {
         <div
           className="pkg-panel-shell"
           style={{
-            background: C.card,
+            background: 'var(--card)',
             borderRadius: r(22),
             padding: '28px 24px',
-            border: `1px solid ${C.border}`,
+            border: `1px solid ${'var(--border)'}`,
             boxShadow: SH.card,
             marginBottom: 24,
           }}

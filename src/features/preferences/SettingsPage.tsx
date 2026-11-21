@@ -568,10 +568,10 @@ export default function SettingsPage() {
       <div className={styles.settingsPageShell}>
         <PageHero
           eyebrow={t('settingsExpanded.accountControl')}
-          icon={<StatusBadge label="W" accent={C.cyan} />}
+          icon={<StatusBadge label="W" accent={'var(--primary)'} />}
           title={t('settingsExpanded.waselSettings')}
           description={t('settingsExpanded.notificationsPrivacySecurityAndAccount')}
-          accent={C.cyan}
+          accent={'var(--primary)'}
         />
 
         <Section icon={<Bell size={16} />} title={t('header.notifications')}>
@@ -790,7 +790,7 @@ export default function SettingsPage() {
                   style={{
                     fontSize: '0.82rem',
                     fontWeight: TYPE.weight.bold,
-                    color: C.text,
+                    color: 'var(--foreground)',
                     fontFamily: F,
                   }}
                 >
@@ -823,7 +823,7 @@ export default function SettingsPage() {
                   <div
                     style={{
                       fontSize: '0.72rem',
-                      color: C.textMuted,
+                      color: 'var(--muted-foreground)',
                       fontFamily: F,
                       lineHeight: 1.5,
                     }}
@@ -941,7 +941,7 @@ export default function SettingsPage() {
                     />
                     <div className={styles.settingsSectionCopy}>
                       {t('settingsPage.secret')}
-                      <span style={{ color: C.text }}>{twoFactorSetup.secret}</span>
+                      <span style={{ color: 'var(--foreground)' }}>{twoFactorSetup.secret}</span>
                     </div>
                     <div className={styles.settingsSectionCopyCompact}>
                       {t('settingsPage.backup_codes')}
@@ -958,7 +958,7 @@ export default function SettingsPage() {
                       style={{
                         fontSize: '0.82rem',
                         fontWeight: TYPE.weight.bold,
-                        color: C.text,
+                        color: 'var(--foreground)',
                         fontFamily: F,
                       }}
                     >
@@ -972,15 +972,15 @@ export default function SettingsPage() {
                         gap: 8,
                         padding: '8px 10px',
                         borderRadius: R.md,
-                        background: C.elevated,
-                        border: `1px solid ${C.border}`,
+                        background: 'var(--secondary)',
+                        border: `1px solid ${'var(--border)'}`,
                       }}
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div
                           style={{
                             fontSize: '0.78rem',
-                            color: C.text,
+                            color: 'var(--foreground)',
                             fontFamily: F,
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -992,7 +992,7 @@ export default function SettingsPage() {
                         <div
                           style={{
                             fontSize: '0.7rem',
-                            color: C.textDim,
+                            color: 'var(--muted-foreground)',
                             fontFamily: F,
                           }}
                         >
@@ -1023,7 +1023,7 @@ export default function SettingsPage() {
                   style={{
                     fontSize: '0.82rem',
                     fontWeight: TYPE.weight.bold,
-                    color: C.text,
+                    color: 'var(--foreground)',
                     fontFamily: F,
                   }}
                 >
@@ -1082,14 +1082,14 @@ export default function SettingsPage() {
                 </div>
                </div>
 
-               <div style={{ height: 1, background: C.borderFaint }} />
+               <div style={{ height: 1, background: 'var(--border)' }} />
 
                <div style={{ display: 'grid', gap: 10 }}>
                  <div
                    style={{
                      fontSize: '0.82rem',
                      fontWeight: TYPE.weight.bold,
-                     color: C.text,
+                     color: 'var(--foreground)',
                      fontFamily: F,
                    }}
                  >
@@ -1156,7 +1156,7 @@ export default function SettingsPage() {
                  </div>
                </div>
 
-               <div style={{ height: 1, background: C.borderFaint }} />
+               <div style={{ height: 1, background: 'var(--border)' }} />
 
                <LinkRow
                  label={t('settingsExpanded.privacyPolicy')}
@@ -1201,7 +1201,7 @@ export default function SettingsPage() {
           style={{
             textAlign: 'center',
             fontSize: '0.7rem',
-            color: C.textDim,
+            color: 'var(--muted-foreground)',
             fontFamily: F,
             marginTop: 8,
           }}

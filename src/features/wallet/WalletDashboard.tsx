@@ -211,7 +211,7 @@ export function WalletDashboard() {
           icon={<StatusBadge label={activeLabel} accent={C.green} />}
           title={walletTitle}
           description={heroDescription}
-          accent={C.cyan}
+          accent={'var(--primary)'}
           actions={
             <>
               {displayCapabilities.topUp ? (
@@ -236,7 +236,7 @@ export function WalletDashboard() {
           aside={
             <div style={{ display: 'grid', gap: 12 }}>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <StatusBadge label={currencyCode} accent={C.cyan} />
+                <StatusBadge label={currencyCode} accent={'var(--primary)'} />
                 <StatusBadge
                   label={
                     autoTopUpEnabled
@@ -246,7 +246,7 @@ export function WalletDashboard() {
                   accent={autoTopUpEnabled ? C.green : C.gold}
                 />
               </div>
-              <div style={{ color: C.textMuted, fontSize: '0.88rem', lineHeight: 1.7 }}>
+              <div style={{ color: 'var(--muted-foreground)', fontSize: '0.88rem', lineHeight: 1.7 }}>
                 {heroCopy}
               </div>
             </div>
@@ -260,7 +260,7 @@ export function WalletDashboard() {
               label: t.availableLabel ?? 'Available',
               icon: <Wallet size={18} />,
               sublabel: walletSubtitle,
-              accent: C.cyan,
+              accent: 'var(--primary)',
             },
             {
               value: `${currencyCode} ${balanceVisible ? pending.toFixed(2) : t.maskedShort}`,
@@ -350,9 +350,9 @@ export function WalletDashboard() {
                         width: '100%',
                         padding: '8px 12px',
                         borderRadius: 10,
-                        border: `1px solid ${C.border}`,
-                        background: C.elevated,
-                        color: C.text,
+                        border: `1px solid ${'var(--border)'}`,
+                        background: 'var(--secondary)',
+                        color: 'var(--foreground)',
                         fontSize: '0.84rem',
                         boxSizing: 'border-box',
                       }}
@@ -372,7 +372,7 @@ export function WalletDashboard() {
                             {t.topUp ?? 'Top Up'}
                           </WaselButton>
                         }
-                        accent={C.cyan}
+                        accent={'var(--primary)'}
                       />
                     ) : (
                     walletData.transactions

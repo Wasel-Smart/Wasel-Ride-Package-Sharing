@@ -6,7 +6,7 @@ function statusStyle(status: ReviewHistoryItem['status']) {
     case 'approved':
       return { bg: C.greenDim, color: C.green, border: `${C.green}33` };
     case 'rejected':
-      return { bg: C.errorDim, color: C.error, border: `${C.error}33` };
+      return { bg: 'color-mix(in srgb, var(--destructive) 14%, transparent)', color: 'var(--destructive)', border: `${'var(--destructive)'}33` };
     default:
       return { bg: C.goldDim, color: C.gold, border: `${C.gold}33` };
   }
@@ -32,12 +32,12 @@ export function ReviewTimeline({ items, t }: { items: ReviewHistoryItem[]; t: (k
         style={{
           padding: SPACE[5],
           borderRadius: R.xl,
-          border: `1px solid ${C.border}`,
-          background: C.card,
+          border: `1px solid ${'var(--border)'}`,
+          background: 'var(--card)',
           textAlign: 'center',
         }}
       >
-        <div style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily: F }}>
+        <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, fontFamily: F }}>
           {t('trustCenterExpanded.reviewHistoryEmpty')}
         </div>
       </div>
@@ -59,8 +59,8 @@ export function ReviewTimeline({ items, t }: { items: ReviewHistoryItem[]; t: (k
               alignItems: 'start',
               padding: SPACE[4],
               borderRadius: R.lg,
-              border: `1px solid ${C.border}`,
-              background: C.card,
+              border: `1px solid ${'var(--border)'}`,
+              background: 'var(--card)',
             }}
           >
             <div
@@ -76,7 +76,7 @@ export function ReviewTimeline({ items, t }: { items: ReviewHistoryItem[]; t: (k
             <div style={{ display: 'grid', gap: 4, minWidth: 0 }}>
               <div
                 style={{
-                  color: C.text,
+                  color: 'var(--foreground)',
                   fontWeight: TYPE.weight.bold,
                   fontSize: TYPE.size.sm,
                   fontFamily: F,
@@ -85,14 +85,14 @@ export function ReviewTimeline({ items, t }: { items: ReviewHistoryItem[]; t: (k
                 {t('trustCenterExpanded.driverDocuments')}
               </div>
               {item.documentReference && (
-                <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontFamily: F }}>
+                <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, fontFamily: F }}>
                   {t('trustCenterExpanded.documentReference')}: {item.documentReference}
                 </div>
               )}
               {item.failureReason && (
                 <div
                   style={{
-                    color: C.error,
+                    color: 'var(--destructive)',
                     fontSize: TYPE.size.xs,
                     fontFamily: F,
                     lineHeight: 1.5,
@@ -101,7 +101,7 @@ export function ReviewTimeline({ items, t }: { items: ReviewHistoryItem[]; t: (k
                   {item.failureReason}
                 </div>
               )}
-              <div style={{ color: C.textDim, fontSize: TYPE.size.xs, fontFamily: F }}>
+              <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, fontFamily: F }}>
                 {t('trustCenterExpanded.reviewHistorySubmittedOn')}: {formatDate(item.submittedAt)}
                 {item.reviewedAt && (
                   <>

@@ -26,8 +26,8 @@ function TestimonialCard({ item, index, ar }: { item: TestimonialItem; index: nu
     <div
       className="wasel-home-testimonial"
       style={{
-        background: C.card, backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
-        border: `1px solid ${C.border}`, borderTop: `1px solid ${C.cyanGlow}`,
+        background: 'var(--card)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+        border: `1px solid ${'var(--border)'}`, borderTop: `1px solid ${C.cyanGlow}`,
         boxShadow: '0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 10px 28px rgba(8, 29, 57, 0.35)',
         borderRadius: 18, padding: '22px',
       }}
@@ -38,22 +38,22 @@ function TestimonialCard({ item, index, ar }: { item: TestimonialItem; index: nu
             <Star key={i} size={14} fill={C.brandOrange} color={C.brandOrange} />
           ))}
         </div>
-        <div style={{ fontSize: '0.8125rem', fontWeight: 700, padding: '3px 8px', borderRadius: 9999, background: C.cyanDim, border: `1px solid ${C.cyanGlow}`, color: C.cyan }}>
+        <div style={{ fontSize: '0.8125rem', fontWeight: 700, padding: '3px 8px', borderRadius: 9999, background: C.cyanDim, border: `1px solid ${C.cyanGlow}`, color: 'var(--primary)' }}>
           {ar ? item.routeAr : item.routeEn}
         </div>
       </div>
-      <div className="wasel-home-testimonial-text" style={{ fontSize: '0.94rem', color: C.text, lineHeight: 1.7, marginTop: 10 }}>
+      <div className="wasel-home-testimonial-text" style={{ fontSize: '0.94rem', color: 'var(--foreground)', lineHeight: 1.7, marginTop: 10 }}>
         "{ item.text }"
       </div>
       <div className="wasel-home-testimonial-author" style={{ marginTop: 'auto', paddingTop: 14 }}>
-        <div style={{ width: 42, height: 42, borderRadius: '50%', background: grad, boxShadow: `0 0 0 2px ${C.cardSolid}, 0 0 0 4px ${glow}, 0 4px 14px ${glow}`, display: 'grid', placeItems: 'center', color: C.bgDeep, fontSize: TYPE.size.base, fontWeight: TYPE.weight.ultra, flexShrink: 0, letterSpacing: '-0.01em' }}>
+        <div style={{ width: 42, height: 42, borderRadius: '50%', background: grad, boxShadow: `0 0 0 2px ${'var(--card)'}, 0 0 0 4px ${glow}, 0 4px 14px ${glow}`, display: 'grid', placeItems: 'center', color: 'var(--background)', fontSize: TYPE.size.base, fontWeight: TYPE.weight.ultra, flexShrink: 0, letterSpacing: '-0.01em' }}>
           {item.name.charAt(0)}
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <span className="wasel-home-testimonial-name" style={{ fontSize: '0.92rem', fontWeight: 800 }}>{item.name}</span>
           </div>
-          <div className="wasel-home-testimonial-role" style={{ fontSize: '0.8125rem', color: C.textMuted }}>{item.role}</div>
+          <div className="wasel-home-testimonial-role" style={{ fontSize: '0.8125rem', color: 'var(--muted-foreground)' }}>{item.role}</div>
         </div>
       </div>
     </div>
@@ -85,11 +85,11 @@ export function TestimonialsSection() {
     >
       <div className="wasel-home-section-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div className="wasel-home-section-icon" style={{ color: C.cyan }}>
+          <div className="wasel-home-section-icon" style={{ color: 'var(--primary)' }}>
             <MessageSquareQuote size={16} />
           </div>
           <div>
-            <div style={{ fontSize: '0.8125rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: C.cyan }}>
+            <div style={{ fontSize: '0.8125rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--primary)' }}>
               {ar ? 'تجارب مستخدمي واصل' : 'Jordanian Community Stories'}
             </div>
             <h2 className="wasel-home-section-title" style={{ marginTop: 2 }}>

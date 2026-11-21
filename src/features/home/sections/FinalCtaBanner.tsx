@@ -33,7 +33,7 @@ export function FinalCtaBanner({ ar, onNavigate }: FinalCtaBannerProps) {
                 fontWeight: 850,
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: C.cyan,
+                color: 'var(--primary)',
               } }
             >
               <Globe2 size={ 14 } aria-hidden="true" />
@@ -63,7 +63,7 @@ export function FinalCtaBanner({ ar, onNavigate }: FinalCtaBannerProps) {
                 size="lg"
                 icon={ <Globe2 size={ 17 } /> }
                 onClick={ () => { void onNavigate( '/app/auth?tab=register', 'final_cta_register' ); } }
-                style={ { background: C.elevated, color: C.text, border: `1px solid ${ C.border }` } }
+                style={ { background: 'var(--secondary)', color: 'var(--foreground)', border: `1px solid ${ 'var(--border)' }` } }
               >
                 { t( 'homeSections.finalCtaRegister' ) }
               </WaselButton>

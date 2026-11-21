@@ -1,4 +1,4 @@
-﻿import { motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ArrowRight, Target } from 'lucide-react';
 import type { CorridorBetaPlan } from '../../../services/corridorBeta';
 import { C, R, SH, TYPE } from '../../../utils/wasel-ds';
@@ -30,7 +30,7 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
             <p
               style={{
                 margin: '5px 0 0',
-                color: C.textMuted,
+                color: 'var(--muted-foreground)',
                 fontSize: TYPE.size.sm,
                 lineHeight: 1.5,
               }}
@@ -47,7 +47,7 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
           className="wasel-home-section-action"
         >
           {ar ? 'ابدأ المسار' : 'Start focus'}
-          <ArrowRight size={12} color={C.cyan} />
+          <ArrowRight size={12} color={'var(--primary)'} />
         </button>
       </div>
 
@@ -64,11 +64,11 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
                 textAlign: 'left',
                 borderRadius: R.xxl,
                 padding: 18,
-                background: `linear-gradient(180deg, ${accent}18, ${C.card})`,
+                background: `linear-gradient(180deg, ${accent}18, ${'var(--card)'})`,
                 border: `1px solid ${accent}55`,
                 boxShadow: SH.sm,
                 cursor: 'pointer',
-                color: C.text,
+                color: 'var(--foreground)',
               }}
             >
               <div
@@ -100,7 +100,7 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
                     minWidth: 58,
                     padding: '6px 8px',
                     borderRadius: R.lg,
-                    background: C.elevated,
+                    background: 'var(--secondary)',
                     border: `1px solid ${accent}44`,
                     color: accent,
                     fontWeight: TYPE.weight.black,
@@ -114,10 +114,10 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
               <div
                 style={{ marginTop: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}
               >
-                <div style={{ padding: 10, borderRadius: R.lg, background: C.elevated }}>
+                <div style={{ padding: 10, borderRadius: R.lg, background: 'var(--secondary)' }}>
                   <div
                     style={{
-                      color: C.textMuted,
+                      color: 'var(--muted-foreground)',
                       fontSize: '0.66rem',
                       fontWeight: TYPE.weight.semibold,
                     }}
@@ -128,10 +128,10 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
                     {corridor.weeklyRides}/{corridor.weeklyRideGoal}
                   </div>
                 </div>
-                <div style={{ padding: 10, borderRadius: R.lg, background: C.elevated }}>
+                <div style={{ padding: 10, borderRadius: R.lg, background: 'var(--secondary)' }}>
                   <div
                     style={{
-                      color: C.textMuted,
+                      color: 'var(--muted-foreground)',
                       fontSize: '0.66rem',
                       fontWeight: TYPE.weight.semibold,
                     }}
@@ -147,7 +147,7 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
               <p
                 style={{
                   margin: '14px 0 0',
-                  color: C.textMuted,
+                  color: 'var(--muted-foreground)',
                   fontSize: TYPE.size.sm,
                   lineHeight: 1.55,
                 }}
@@ -159,7 +159,7 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
                 style={{
                   marginTop: 14,
                   paddingTop: 14,
-                  borderTop: `1px solid ${C.borderFaint}`,
+                  borderTop: `1px solid ${'var(--border)'}`,
                   color: accent,
                   fontSize: '0.76rem',
                   fontWeight: TYPE.weight.bold,
@@ -178,8 +178,8 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
           marginTop: 14,
           borderRadius: R.xl,
           padding: '16px 18px',
-          background: C.elevated,
-          border: `1px solid ${C.border}`,
+          background: 'var(--secondary)',
+          border: `1px solid ${'var(--border)'}`,
         }}
       >
         <div
@@ -187,14 +187,14 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
             display: 'flex',
             alignItems: 'center',
             gap: 8,
-            color: C.cyan,
+            color: 'var(--primary)',
             fontWeight: TYPE.weight.black,
           }}
         >
           {ar ? 'بوابة التوسع' : 'Expansion gate'}
         </div>
         <p
-          style={{ margin: '8px 0 0', color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.6 }}
+          style={{ margin: '8px 0 0', color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.6 }}
         >
           {ar
             ? 'لا تنتقل لمسار جديد إلا بعد تحقيق الرحلات الأسبوعية، التكرار، ثبات العرض، وثلاثة أسابيع متتالية. بعد ذلك يتكرر نفس المسار للتوسع اللانهائي داخل شبكة المسارات.'
@@ -214,9 +214,9 @@ export function CorridorBetaFocusSection({ ar, plan, onNavigate }: CorridorBetaF
               style={{
                 padding: '6px 9px',
                 borderRadius: R.full,
-                background: C.card,
-                border: `1px solid ${C.borderFaint}`,
-                color: C.textSub,
+                background: 'var(--card)',
+                border: `1px solid ${'var(--border)'}`,
+                color: 'var(--foreground)',
                 fontSize: '0.72rem',
                 fontWeight: TYPE.weight.semibold,
               }}

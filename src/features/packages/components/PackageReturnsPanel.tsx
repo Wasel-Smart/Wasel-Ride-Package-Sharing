@@ -51,7 +51,7 @@ const fieldStyle = {
   borderRadius: r(10),
   border: `1px solid ${DS.border}`,
   background: DS.card2,
-  color: C.text,
+  color: 'var(--foreground)',
   fontFamily: DS.F,
   fontSize: '0.9rem',
   outline: 'none',
@@ -60,7 +60,7 @@ const fieldStyle = {
 
 const labelStyle = {
   display: 'block',
-  color: C.textMuted,
+  color: 'var(--muted-foreground)',
   fontSize: '0.7rem',
   fontWeight: 700,
   textTransform: 'uppercase' as const,
@@ -101,10 +101,10 @@ export function PackageReturnsPanel({
         >
           <RotateCcw size={24} color={DS.cyan} />
         </div>
-        <h3 style={{ color: C.text, fontWeight: 800, margin: '0 0 8px', fontSize: '1.1rem' }}>
+        <h3 style={{ color: 'var(--foreground)', fontWeight: 800, margin: '0 0 8px', fontSize: '1.1rem' }}>
           {tx('packageReturnsPanel.raje3_returns')}
         </h3>
-        <p style={{ color: C.textMuted, margin: 0, lineHeight: 1.6, fontSize: '0.82rem' }}>
+        <p style={{ color: 'var(--muted-foreground)', margin: 0, lineHeight: 1.6, fontSize: '0.82rem' }}>
           {tx('packageReturnsPanel.return_e_commerce_items_through_the_same_shared_ride_network_create_a_return_request_match_it_to_a_posted_route_and_keep_one_tracking_id_from_pickup_to_dropoff')}
         </p>
       </div>
@@ -115,10 +115,10 @@ export function PackageReturnsPanel({
           <div
             key={step.title}
             style={{
-              background: C.card2,
+              background: 'var(--muted)',
               borderRadius: r(12),
               padding: '14px 12px',
-              border: `1px solid ${C.border}`,
+              border: `1px solid ${'var(--border)'}`,
               textAlign: 'center',
             }}
           >
@@ -139,10 +139,10 @@ export function PackageReturnsPanel({
             >
               {i + 1}
             </div>
-            <div style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem', marginBottom: 4 }}>
+            <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.82rem', marginBottom: 4 }}>
               {step.title}
             </div>
-            <div style={{ color: C.textMuted, fontSize: '0.73rem', lineHeight: 1.5 }}>
+            <div style={{ color: 'var(--muted-foreground)', fontSize: '0.73rem', lineHeight: 1.5 }}>
               {step.desc}
             </div>
           </div>
@@ -153,14 +153,14 @@ export function PackageReturnsPanel({
       {trackingId && (
         <div
           style={{
-            background: C.card2,
+            background: 'var(--muted)',
             borderRadius: r(16),
             padding: '18px 20px',
             border: `1px solid ${DS.cyan}28`,
             marginBottom: 20,
           }}
         >
-          <p style={{ color: C.textMuted, fontSize: '0.72rem', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <p style={{ color: 'var(--muted-foreground)', fontSize: '0.72rem', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             {ar ? 'رقم التتبع' : 'Tracking ID'}
           </p>
           <p
@@ -169,7 +169,7 @@ export function PackageReturnsPanel({
           >
             {trackingId}
           </p>
-          <p style={{ color: C.textMuted, fontSize: '0.8rem', margin: 0, lineHeight: 1.55 }}>
+          <p style={{ color: 'var(--muted-foreground)', fontSize: '0.8rem', margin: 0, lineHeight: 1.55 }}>
             {ar
               ? 'طلب الإرجاع مُنشأ. افتح تبويب "تتبع طرد" لمتابعة الاستلام والتسليم.'
               : 'Return request is live. Open the Track tab to follow pickup and delivery.'}
@@ -207,7 +207,7 @@ export function PackageReturnsPanel({
             style={fieldStyle}
           />
         </div>
-        <p style={{ color: C.textMuted, fontSize: '0.78rem', margin: 0, lineHeight: 1.55 }}>
+        <p style={{ color: 'var(--muted-foreground)', fontSize: '0.78rem', margin: 0, lineHeight: 1.55 }}>
           {ar
             ? `سيتم الإرجاع من ${cityLabel(pkg.from, ar)} إلى ${cityLabel(pkg.to, ar)} بنفس رقم التتبع.`
             : `The return runs on the ${pkg.from} → ${pkg.to} corridor using the same tracking ID.`}
@@ -225,7 +225,7 @@ export function PackageReturnsPanel({
             border: `1px solid ${DS.gold}30`,
             borderRadius: r(12),
             padding: '12px 14px',
-            color: C.text,
+            color: 'var(--foreground)',
             fontSize: '0.84rem',
             marginBottom: 16,
           }}
@@ -244,7 +244,7 @@ export function PackageReturnsPanel({
             width: '100%',
             padding: '13px 0',
             borderRadius: r(14),
-            border: `1px solid ${C.border}`,
+            border: `1px solid ${'var(--border)'}`,
             background: 'transparent',
             color: DS.gold,
             fontWeight: 800,
@@ -265,8 +265,8 @@ export function PackageReturnsPanel({
             padding: '13px 0',
             borderRadius: r(14),
             border: 'none',
-            background: canCreate ? DS.gradG : C.card2,
-            color: canCreate ? C.text : C.textMuted,
+            background: canCreate ? DS.gradG : 'var(--muted)',
+            color: canCreate ? 'var(--foreground)' : 'var(--muted-foreground)',
             fontWeight: 800,
             fontFamily: DS.F,
             fontSize: '0.92rem',

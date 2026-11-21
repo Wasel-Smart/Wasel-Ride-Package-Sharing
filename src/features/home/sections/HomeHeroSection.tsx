@@ -105,7 +105,7 @@ const heroProof = [
     icon: Clock,
     labelKey: 'homeContent.proof_coordination_label',
     detailKey: 'homeContent.proof_coordination_detail',
-    accent: C.cyan,
+    accent: 'var(--primary)',
   },
 ] as const;
 
@@ -141,7 +141,7 @@ function ProductCommandPreview ( { ar }: { ar: boolean } ) {
   const { data: live, isLive } = useLiveRoutePreview();
 
   const liveTimeline = [
-    { labelKey: 'homeHeroSection.timeline_seat_price_label', value: live.priceJod, accent: C.cyan },
+    { labelKey: 'homeHeroSection.timeline_seat_price_label', value: live.priceJod, accent: 'var(--primary)' },
     { labelKey: 'homeHeroSection.timeline_driver_trust_label', value: ar ? `تقييم ${live.rating}` : `${live.rating} rating`, accent: C.green },
     { labelKey: 'homeHeroSection.timeline_parcel_option_label', value: ar ? `${live.parcelSlots} مكان` : `${live.parcelSlots} slot`, accent: C.gold },
     { labelKey: 'homeHeroSection.timeline_bus_fallback_label', value: live.nextDeparture, accent: C.blueLight },
@@ -204,10 +204,10 @@ function ProductCommandPreview ( { ar }: { ar: boolean } ) {
           </div>
           <div className="wasel-home-window-route">
             <span>
-              <MapPinned size={ 16 } color={ C.cyan } />
+              <MapPinned size={ 16 } color={ 'var(--primary)' } />
               { tx( 'homeHeroSection.window_origin' ) }
             </span>
-            { ar ? <ArrowLeft size={ 14 } color={ C.textDim } /> : <ArrowRight size={ 14 } color={ C.textDim } /> }
+            { ar ? <ArrowLeft size={ 14 } color={ 'var(--muted-foreground)' } /> : <ArrowRight size={ 14 } color={ 'var(--muted-foreground)' } /> }
             <span>{ tx( 'homeHeroSection.window_destination' ) }</span>
           </div>
           <div className="wasel-home-window-grid">
@@ -281,7 +281,7 @@ export function HomeHeroSection ( {
           <div className="wasel-home-nav-left">
             <div className="wasel-home-brand-stack">
               <div className="wasel-home-eyebrow">
-                <Shield size={ 13 } color={ C.cyan } />
+                <Shield size={ 13 } color={ 'var(--primary)' } />
                 { tx( 'homeHeroSection.eyebrow_network' ) }
               </div>
               <WaselLogo size={ 44 } theme="light" variant="full" />
@@ -298,7 +298,7 @@ export function HomeHeroSection ( {
           <span className="wasel-first-only-badge">
             <span className="wasel-first-only-badge-dot" aria-hidden="true" />
             <span className="wasel-first-only-badge-label">
-              <ShieldCheck size={ 14 } color={ C.cyan } aria-hidden="true" />
+              <ShieldCheck size={ 14 } color={ 'var(--primary)' } aria-hidden="true" />
               <strong>{ tx( 'homeHeroSection.first_only_badge' ) }</strong>
             </span>
           </span>
@@ -323,8 +323,8 @@ export function HomeHeroSection ( {
                   <Icon size={ 16 } />
                 </span>
                 <div>
-                  <strong style={ { color: C.text } }>{ tx( item.labelKey ) }</strong>
-                  <small style={ { color: C.textMuted } }>{ tx( item.detailKey ) }</small>
+                  <strong style={ { color: 'var(--foreground)' } }>{ tx( item.labelKey ) }</strong>
+                  <small style={ { color: 'var(--muted-foreground)' } }>{ tx( item.detailKey ) }</small>
                 </div>
               </div>
             );
@@ -348,7 +348,7 @@ export function HomeHeroSection ( {
             variant="outline"
             size="lg"
             icon={ <CircleDollarSign size={ 17 } /> }
-            style={ { background: C.elevated, color: C.text } }
+            style={ { background: 'var(--secondary)', color: 'var(--foreground)' } }
           >
             { tx( 'homeHeroSection.cta_offer_seats' ) }
           </WaselButton>

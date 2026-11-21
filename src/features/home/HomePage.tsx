@@ -261,7 +261,7 @@ function RoleBanner ( { role, t }: RoleBannerProps ) {
         padding: '14px 18px',
         borderRadius: 16,
         background: C.cyanDim,
-        border: `1px solid ${ C.borderHov }`,
+        border: `1px solid ${ 'var(--border)' }`,
       } }
     >
       <div
@@ -270,7 +270,7 @@ function RoleBanner ( { role, t }: RoleBannerProps ) {
           height: 36,
           borderRadius: 10,
           background: C.brandBlue,
-          color: C.text,
+          color: 'var(--foreground)',
           display: 'grid',
           placeItems: 'center',
           fontWeight: TYPE.weight.black,
@@ -280,10 +280,10 @@ function RoleBanner ( { role, t }: RoleBannerProps ) {
         { roleLetter }
       </div>
       <div style={ { flex: 1 } }>
-        <div style={ { fontWeight: TYPE.weight.black, fontSize: TYPE.size.base, color: C.text } }>
+        <div style={ { fontWeight: TYPE.weight.black, fontSize: TYPE.size.base, color: 'var(--foreground)' } }>
           { t( roleTitleKey ) }
         </div>
-        <div style={ { fontSize: TYPE.size.xs, color: C.textMuted, marginTop: 2 } }>
+        <div style={ { fontSize: TYPE.size.xs, color: 'var(--muted-foreground)', marginTop: 2 } }>
           { t( roleDescKey ) }
         </div>
       </div>
@@ -300,9 +300,9 @@ function useHomeQuickActions ( role: string | undefined, t: ( key: string ) => s
         title: t( 'homeSections.findRideTitle' ),
         desc: t( 'homeSections.findRideDesc' ),
         outcome: t( 'homeSections.findRideOutcome' ),
-        color: C.cyan,
+        color: 'var(--primary)',
         dim: C.cyanDim,
-        border: C.borderHov,
+        border: 'var(--border)',
         path: '/find-ride',
       },
       {
@@ -311,9 +311,9 @@ function useHomeQuickActions ( role: string | undefined, t: ( key: string ) => s
         title: t( 'homeSections.offerRideTitle' ),
         desc: t( 'homeSections.offerRideDesc' ),
         outcome: t( 'homeSections.offerRideOutcome' ),
-        color: C.cyan,
+        color: 'var(--primary)',
         dim: C.cyanDim,
-        border: C.borderHov,
+        border: 'var(--border)',
         path: '/offer-ride',
       },
       {
@@ -344,9 +344,9 @@ function useHomeQuickActions ( role: string | undefined, t: ( key: string ) => s
         title: t( 'homeSections.scheduleTitle' ),
         desc: t( 'homeSections.scheduleDesc' ),
         outcome: t( 'homeSections.scheduleOutcome' ),
-        color: C.cyan,
+        color: 'var(--primary)',
         dim: C.cyanDim,
-        border: C.borderHov,
+        border: 'var(--border)',
         path: '/schedule',
       },
     ];
@@ -417,7 +417,7 @@ function useCorridorCards ( ar: boolean, svc: CurrencyService, t: ( key: string 
             : ( ar ? 'حركة واضحة على هذا المسار الآن' : 'Visible live movement on this corridor' ),
           featured: index === 0,
           path: `/find-ride?from=${ encodeURIComponent( from ) }&to=${ encodeURIComponent( to ) }&search=1`,
-          accent: C.cyan,
+          accent: 'var(--primary)',
         };
       } );
     }
@@ -577,7 +577,7 @@ export function HomePage () {
 
   return (
     <WaselErrorBoundary>
-      <div className="wasel-home-shell" dir={ dir } style={ { color: C.text, fontFamily: F } }>
+      <div className="wasel-home-shell" dir={ dir } style={ { color: 'var(--foreground)', fontFamily: F } }>
         <HomePageStyles />
         <StructuredData ar={ ar } />
         <SkipToContent targetId="main-content" />

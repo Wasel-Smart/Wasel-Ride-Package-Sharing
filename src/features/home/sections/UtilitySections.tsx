@@ -1,4 +1,4 @@
-﻿import { motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Wallet } from 'lucide-react';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
 import { R, SH } from '../../../utils/wasel-ds';
@@ -49,7 +49,7 @@ export function SignedInUtilitySection({
               borderRadius: R.xl,
               padding: '20px 20px 18px',
               background: C.cyanDim,
-              border: `1px solid ${C.borderHov}`,
+              border: `1px solid ${'var(--border)'}`,
               boxShadow: SH.sm,
             }}
           >
@@ -62,7 +62,7 @@ export function SignedInUtilitySection({
                 fontWeight: 800,
                 textTransform: 'uppercase',
                 letterSpacing: 0,
-                color: C.textDim,
+                color: 'var(--muted-foreground)',
               }}
             >
               <Wallet size={14} color={C.gold} />
@@ -73,7 +73,7 @@ export function SignedInUtilitySection({
                 marginTop: 12,
                 fontSize: '1.6rem',
                 fontWeight: 950,
-                color: C.text,
+                color: 'var(--foreground)',
                 letterSpacing: 0,
               }}
             >
@@ -83,7 +83,7 @@ export function SignedInUtilitySection({
               style={{
                 marginTop: 8,
                 fontSize: '0.8rem',
-                color: C.textMuted,
+                color: 'var(--muted-foreground)',
                 lineHeight: 1.65,
               }}
             >
@@ -95,8 +95,8 @@ export function SignedInUtilitySection({
             style={{
               borderRadius: R.xl,
               padding: '20px 20px 18px',
-              background: C.elevated,
-              border: `1px solid ${C.border}`,
+              background: 'var(--secondary)',
+              border: `1px solid ${'var(--border)'}`,
             }}
           >
             <div
@@ -105,14 +105,14 @@ export function SignedInUtilitySection({
                 fontWeight: 800,
                 textTransform: 'uppercase',
                 letterSpacing: 0,
-                color: C.textDim,
+                color: 'var(--muted-foreground)',
                 marginBottom: 10,
               }}
             >
               {tx('homeSections.fastEscalation')}
             </div>
             <div
-              style={{ fontSize: '0.82rem', color: C.textMuted, lineHeight: 1.6, marginBottom: 14 }}
+              style={{ fontSize: '0.82rem', color: 'var(--muted-foreground)', lineHeight: 1.6, marginBottom: 14 }}
             >
               {tx('homeSections.fastEscalationDesc')}
             </div>
@@ -134,8 +134,8 @@ export function SignedOutCtaSection({ onNavigate }: SignedOutCtaSectionProps) {
           borderRadius: R.xxl,
           padding: '30px 26px',
           textAlign: 'center',
-          background: C.card,
-          border: `1px solid ${C.borderHov}`,
+          background: 'var(--card)',
+          border: `1px solid ${'var(--border)'}`,
           boxShadow: SH.lg,
         }}
       >
@@ -145,7 +145,7 @@ export function SignedOutCtaSection({ onNavigate }: SignedOutCtaSectionProps) {
             fontWeight: 800,
             letterSpacing: 0,
             textTransform: 'uppercase',
-            color: C.cyan,
+            color: 'var(--primary)',
           }}
         >
           {tx('homeSections.startFast')}
@@ -164,7 +164,7 @@ export function SignedOutCtaSection({ onNavigate }: SignedOutCtaSectionProps) {
           style={{
             margin: '0 auto',
             maxWidth: 580,
-            color: C.textMuted,
+            color: 'var(--muted-foreground)',
             lineHeight: 1.8,
             fontSize: '0.94rem',
           }}
@@ -203,8 +203,8 @@ export function SignedOutCtaSection({ onNavigate }: SignedOutCtaSectionProps) {
               height: 50,
               padding: '0 22px',
               borderRadius: R.lg,
-              background: C.elevated,
-              color: C.text,
+              background: 'var(--secondary)',
+              color: 'var(--foreground)',
             }}
           >
             {tx('homeSections.browseRidesAction')}

@@ -116,7 +116,7 @@ function getActionBarStrings(ar: boolean, soldOut: boolean, hasBooking: boolean,
     return {
       statusText: ar ? 'بديل الباص متاح' : 'Bus fallback available',
       btnText: ar ? 'ممتلئ' : 'Sold out',
-      statusColor: DS.gold, btnBg: C.elevated, btnShadow: C.elevated,
+      statusColor: DS.gold, btnBg: 'var(--secondary)', btnShadow: 'var(--secondary)',
     };
   }
   return {
@@ -144,7 +144,7 @@ function RideActionBar({ ar, soldOut, hasBooking, bookingStatus, signal, onOpen,
         disabled={soldOut}
         style={{
           height: 44, padding: '0 18px', borderRadius: '99px', border: 'none',
-          background: btnBg, color: C.text, fontWeight: 800, fontSize: '0.82rem',
+          background: btnBg, color: 'var(--foreground)', fontWeight: 800, fontSize: '0.82rem',
           boxShadow: `0 4px 16px ${btnShadow}30`,
           cursor: soldOut ? 'not-allowed' : 'pointer',
           opacity: soldOut ? 0.88 : 1,
@@ -163,18 +163,18 @@ function DriverHeader({ ride, ar, priceQuote }: DriverHeaderProps) {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ position: 'relative', flexShrink: 0 }}>
-          <div style={{ width: 44, height: 44, borderRadius: r(12), background: DS.gradC, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: C.text, fontSize: '0.95rem' }}>
+          <div style={{ width: 44, height: 44, borderRadius: r(12), background: DS.gradC, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: 'var(--foreground)', fontSize: '0.95rem' }}>
             {ride.driver.avatar}
           </div>
           {ride.driver.verified && (
             <div style={{ position: 'absolute', bottom: -2, right: -2, width: 16, height: 16, borderRadius: '50%', background: DS.cyan, border: `2px solid ${DS.card}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CheckCircle2 size={9} color={C.text} />
+              <CheckCircle2 size={9} color={'var(--foreground)'} />
             </div>
           )}
         </div>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontWeight: 800, color: C.text, fontSize: '0.92rem' }}>{ride.driver.name}</span>
+            <span style={{ fontWeight: 800, color: 'var(--foreground)', fontSize: '0.92rem' }}>{ride.driver.name}</span>
             {ride.driver.verified && (
               <span style={{ ...pill(DS.green), fontSize: '0.8125rem' }}>{tx('verification.verified')}</span>
             )}
@@ -209,7 +209,7 @@ function RouteRow({ ride }: RouteRowProps) {
   return (
     <div style={{ background: C.overlay, borderRadius: r(14), padding: '14px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 800, color: C.text, fontSize: '0.92rem' }}>{cityLabel(ride.from)}</div>
+        <div style={{ fontWeight: 800, color: 'var(--foreground)', fontSize: '0.92rem' }}>{cityLabel(ride.from)}</div>
         <div style={{ color: DS.muted, fontSize: '0.8125rem', marginTop: 1 }}>
           <Clock size={10} style={{ display: 'inline', marginRight: 3 }} />{ride.time}
         </div>
@@ -221,7 +221,7 @@ function RouteRow({ ride }: RouteRowProps) {
         <span style={{ color: DS.muted, fontSize: '0.8125rem', fontWeight: 600, marginTop: 2 }}>{durationLabel(ride.duration)}</span>
       </div>
       <div style={{ flex: 1, textAlign: 'end' }}>
-        <div style={{ fontWeight: 800, color: C.text, fontSize: '0.92rem' }}>{cityLabel(ride.to)}</div>
+        <div style={{ fontWeight: 800, color: 'var(--foreground)', fontSize: '0.92rem' }}>{cityLabel(ride.to)}</div>
         <div style={{ color: DS.muted, fontSize: '0.8125rem', marginTop: 1 }}>{ride.distance} {tx('findRideCard.km')}</div>
       </div>
     </div>
@@ -241,13 +241,13 @@ function CorridorBlock({ ar, ride, signal, corridorPlan }: CorridorBlockProps) {
     <div
       style={{
         marginBottom: 14, borderRadius: r(14), padding: '12px 14px',
-        background: `linear-gradient(135deg, ${C.cyanDim}, ${C.elevated})`,
+        background: `linear-gradient(135deg, ${C.cyanDim}, ${'var(--secondary)'})`,
         border: `1px solid ${DS.border}`,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <Brain size={14} color={DS.cyan} />
-        <span style={{ color: C.text, fontWeight: 800, fontSize: '0.8rem' }}>
+        <span style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.8rem' }}>
           {tx('findRideCard.wasel_brain')}</span>
       </div>
       <div style={{ color: DS.sub, fontSize: '0.76rem', lineHeight: 1.6 }}>

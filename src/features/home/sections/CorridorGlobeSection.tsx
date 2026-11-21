@@ -68,7 +68,7 @@ export function CorridorGlobeSection({ ar }: CorridorGlobeSectionProps) {
 
       <div
         className="wasel-home-globe-panel"
-        style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: 20 }}
+        style={{ background: 'var(--card)', border: `1px solid ${'var(--border)'}`, borderRadius: 20, padding: 20 }}
       >
         <div className="wasel-home-globe-canvas">
           {canRender3D ? (
@@ -83,7 +83,7 @@ export function CorridorGlobeSection({ ar }: CorridorGlobeSectionProps) {
         </div>
 
         <div style={{ display: 'grid', gap: 10 }}>
-          <p style={{ fontSize: TYPE.size.sm, color: C.textMuted, margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: TYPE.size.sm, color: 'var(--muted-foreground)', margin: 0, lineHeight: 1.6 }}>
             {ar
               ? 'استكشف المسارات الشائعة من عمّان إلى وجهات في أنحاء الأردن.'
               : 'Explore popular routes from Amman to destinations across Jordan.'}
@@ -98,7 +98,7 @@ export function CorridorGlobeSection({ ar }: CorridorGlobeSectionProps) {
                   justifyContent: 'space-between',
                   gap: 8,
                   fontSize: TYPE.size.xs,
-                  color: C.textSub,
+                  color: 'var(--foreground)',
                 }}
               >
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
@@ -115,7 +115,7 @@ export function CorridorGlobeSection({ ar }: CorridorGlobeSectionProps) {
                   />
                   {ar ? `${route.fromAr} ← ${route.toAr}` : `${route.from} → ${route.to}`}
                 </span>
-                <span style={{ color: C.textMuted, fontWeight: TYPE.weight.semibold, flexShrink: 0 }}>
+                <span style={{ color: 'var(--muted-foreground)', fontWeight: TYPE.weight.semibold, flexShrink: 0 }}>
                   {route.priceJod} {ar ? 'د.أ' : 'JOD'}
                 </span>
               </div>
@@ -150,8 +150,8 @@ function StaticMapFallback({
         width: '100%',
         aspectRatio: '16 / 9',
         borderRadius: 16,
-        background: C.elevated,
-        border: `1px solid ${C.border}`,
+        background: 'var(--secondary)',
+        border: `1px solid ${'var(--border)'}`,
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -179,8 +179,8 @@ function StaticMapFallback({
           textAlign: 'center',
         }}
       >
-        <MapPin size={48} color={C.cyan} style={{ opacity: 0.8 }} />
-        <p style={{ margin: 0, color: C.textMuted, fontSize: TYPE.size.sm, lineHeight: 1.6 }}>
+        <MapPin size={48} color={'var(--primary)'} style={{ opacity: 0.8 }} />
+        <p style={{ margin: 0, color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, lineHeight: 1.6 }}>
           {unavailable
             ? (ar ? 'العرض ثلاثي الأبعاد غير متاح في هذا المتصفح.' : '3D view is not available in this browser.')
             : onActivate
@@ -196,7 +196,7 @@ function StaticMapFallback({
               borderRadius: 9999,
               padding: '10px 16px',
               background: C.teal,
-              color: C.navy,
+              color: 'var(--background)',
               fontWeight: TYPE.weight.semibold,
               cursor: 'pointer',
             }}
@@ -204,7 +204,7 @@ function StaticMapFallback({
             {ar ? 'تحميل العرض ثلاثي الأبعاد' : 'Load the 3D view'}
           </button>
         )}
-        <p style={{ margin: 0, color: C.textSub, fontSize: TYPE.size.xs }}>
+        <p style={{ margin: 0, color: 'var(--foreground)', fontSize: TYPE.size.xs }}>
           {ar
             ? 'مسارات من عمّان إلى العقبة وإربد والبحر الميت والبتراء ووادي رم والزرقاء'
             : 'Routes from Amman to Aqaba, Irbid, the Dead Sea, Petra, Wadi Rum, and Zarqa'}

@@ -106,13 +106,13 @@ export function ActionButton({
   variant?: 'primary' | 'secondary' | 'danger';
 }) {
   const buttonVariantStyles = {
-    primary: { background: C.cyan, color: C.bgDeep, border: 'none' },
+    primary: { background: 'var(--primary)', color: 'var(--background)', border: 'none' },
     secondary: {
-      background: C.elevated,
-      color: C.text,
-      border: `1px solid ${C.border}`,
+      background: 'var(--secondary)',
+      color: 'var(--foreground)',
+      border: `1px solid ${'var(--border)'}`,
     },
-    danger: { background: C.errorDim, color: C.error, border: `1px solid ${C.error}33` },
+    danger: { background: 'color-mix(in srgb, var(--destructive) 14%, transparent)', color: 'var(--destructive)', border: `1px solid ${'var(--destructive)'}33` },
   } as const;
 
   return (

@@ -6,10 +6,10 @@ export function FailureNotice({ message }: { message: string }) {
       role="alert"
       style={{
         borderRadius: R.lg,
-        border: `1px solid ${C.error}33`,
-        background: C.errorDim,
+        border: `1px solid ${'var(--destructive)'}33`,
+        background: 'color-mix(in srgb, var(--destructive) 14%, transparent)',
         padding: '12px 14px',
-        color: C.error,
+        color: 'var(--destructive)',
         fontSize: TYPE.size.sm,
         fontFamily: F,
         lineHeight: 1.6,

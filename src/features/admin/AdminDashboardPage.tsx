@@ -111,9 +111,9 @@ useEffect(() => {
   if (!isAdmin) {
     return (
       <PageShell>
-        <div style={{ padding: SPACE[6], textAlign: 'center', color: C.text }}>
-          <h2 style={{ color: C.error }}>{tx('adminDashboardPage.access_denied')}</h2>
-          <p style={{ color: C.textMuted }}>
+        <div style={{ padding: SPACE[6], textAlign: 'center', color: 'var(--foreground)' }}>
+          <h2 style={{ color: 'var(--destructive)' }}>{tx('adminDashboardPage.access_denied')}</h2>
+          <p style={{ color: 'var(--muted-foreground)' }}>
             {tx('adminDashboardPage.you_do_not_have_permission_to_view_this_page')}
           </p>
         </div>
@@ -140,10 +140,10 @@ useEffect(() => {
                 alignItems: 'center',
                 gap: SPACE[2],
                 borderRadius: R.full,
-                border: `1px solid ${C.borderHov}`,
+                border: `1px solid ${'var(--border)'}`,
                 background: C.cyanDim,
                 padding: '4px 12px',
-                color: C.cyan,
+                color: 'var(--primary)',
                 fontSize: TYPE.size.xs,
                 fontWeight: TYPE.weight.bold,
                 textTransform: 'uppercase',
@@ -155,7 +155,7 @@ useEffect(() => {
             <h1
               style={{
                 margin: 0,
-                color: C.text,
+                color: 'var(--foreground)',
                 fontSize: TYPE.size['3xl'],
                 fontWeight: TYPE.weight.ultra,
               }}
@@ -163,7 +163,7 @@ useEffect(() => {
               {tx('admin.title')}
             </h1>
             {lastUpdated && (
-              <p style={{ margin: `${SPACE[1]} 0 0`, color: C.textDim, fontSize: TYPE.size.xs }}>
+              <p style={{ margin: `${SPACE[1]} 0 0`, color: 'var(--muted-foreground)', fontSize: TYPE.size.xs }}>
                 {tx('adminDashboardPage.updated')}
                 {lastUpdated.toLocaleTimeString()}
               </p>
@@ -176,7 +176,7 @@ useEffect(() => {
               style={{
                 display: 'flex',
                 borderRadius: R.lg,
-                border: `1px solid ${C.border}`,
+                border: `1px solid ${'var(--border)'}`,
                 overflow: 'hidden',
               }}
             >
@@ -186,8 +186,8 @@ useEffect(() => {
                   onClick={() => { void setRange(r); }}
                   style={{
                     padding: `${SPACE[2]} ${SPACE[4]}`,
-                    background: range === r ? C.cyan : 'transparent',
-                    color: range === r ? C.bg : C.textMuted,
+                    background: range === r ? 'var(--primary)' : 'transparent',
+                    color: range === r ? 'var(--background)' : 'var(--muted-foreground)',
                     border: 'none',
                     cursor: 'pointer',
                     fontSize: TYPE.size.sm,
@@ -208,10 +208,10 @@ useEffect(() => {
                 alignItems: 'center',
                 gap: SPACE[2],
                 padding: `${SPACE[2]} ${SPACE[4]}`,
-                background: C.elevated,
-                border: `1px solid ${C.border}`,
+                background: 'var(--secondary)',
+                border: `1px solid ${'var(--border)'}`,
                 borderRadius: R.lg,
-                color: C.textSub,
+                color: 'var(--foreground)',
                 fontSize: TYPE.size.sm,
                 cursor: 'pointer',
               }}
@@ -286,8 +286,8 @@ useEffect(() => {
             <MetricCard
               title={tx('statsUsers')}
               value={metrics.activeUsers}
-              icon={<Users size={18} color={C.cyan} />}
-              accent={C.cyan}
+              icon={<Users size={18} color={'var(--primary)'} />}
+              accent={'var(--primary)'}
               href="/app/admin/users"
             />
             <MetricCard
@@ -306,9 +306,9 @@ useEffect(() => {
               title={tx('admin.pendingDisputes')}
               value={metrics.pendingDisputes}
               icon={
-                <AlertTriangle size={18} color={metrics.pendingDisputes > 0 ? C.gold : C.textDim} />
+                <AlertTriangle size={18} color={metrics.pendingDisputes > 0 ? C.gold : 'var(--muted-foreground)'} />
               }
-              accent={metrics.pendingDisputes > 0 ? C.gold : C.textDim}
+              accent={metrics.pendingDisputes > 0 ? C.gold : 'var(--muted-foreground)'}
               href="/app/admin/disputes"
             />
           </div>
@@ -347,13 +347,13 @@ function MetricCard({
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <span
-          style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontWeight: TYPE.weight.medium }}
+          style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, fontWeight: TYPE.weight.medium }}
         >
           {title}
         </span>
         {icon}
       </div>
-      <div style={{ fontSize: TYPE.size['3xl'], fontWeight: TYPE.weight.ultra, color: C.text }}>
+      <div style={{ fontSize: TYPE.size['3xl'], fontWeight: TYPE.weight.ultra, color: 'var(--foreground)' }}>
         {typeof value === 'number' ? value.toLocaleString() : value}
       </div>
       {href && (

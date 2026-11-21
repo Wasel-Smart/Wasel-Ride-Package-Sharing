@@ -52,9 +52,9 @@ function showToast(message: string) {
     bottom: '24px',
     left: '50%',
     transform: 'translateX(-50%)',
-    background: C.cardSolid,
-    border: `1px solid ${C.borderHov}`,
-    color: C.text,
+    background: 'var(--card)',
+    border: `1px solid ${'var(--border)'}`,
+    color: 'var(--foreground)',
     padding: '10px 20px',
     borderRadius: '10px',
     fontSize: '0.85rem',
@@ -232,7 +232,7 @@ function ProfilePageContent({
                     justifyContent: 'center',
                     fontSize: '1.9rem',
                     fontWeight: 900,
-                    color: C.bgDeep,
+                    color: 'var(--background)',
                     boxShadow: SH.blueL,
                     overflow: 'hidden',
                   }}
@@ -259,7 +259,7 @@ function ProfilePageContent({
                     width: 30,
                     height: 30,
                     borderRadius: R.full,
-                    background: C.cardSolid,
+                    background: 'var(--card)',
                     border: `2px solid ${BG}`,
                     display: 'flex',
                     alignItems: 'center',
@@ -310,7 +310,7 @@ function ProfilePageContent({
                   borderRadius: 10,
                   border: `1.5px solid ${CYAN}`,
                   background: C.cyanDim,
-                  color: C.text,
+                  color: 'var(--foreground)',
                   fontSize: '0.9rem',
                   fontFamily: FONT,
                   outline: 'none',
@@ -329,7 +329,7 @@ function ProfilePageContent({
                   borderRadius: 10,
                   background: CYAN,
                   border: 'none',
-                  color: C.bgDeep,
+                  color: 'var(--background)',
                   fontWeight: 700,
                   cursor: 'pointer',
                   fontSize: '0.8rem',
@@ -343,9 +343,9 @@ function ProfilePageContent({
                 style={{
                   padding: '10px 12px',
                   borderRadius: 10,
-                  background: C.elevated,
+                  background: 'var(--secondary)',
                   border: `1px solid ${BORD}`,
-                  color: C.textMuted,
+                  color: 'var(--muted-foreground)',
                   cursor: 'pointer',
                   fontSize: '0.8rem',
                   fontFamily: FONT,
@@ -488,7 +488,7 @@ function ProfilePageContent({
               <div
                 style={{
                   fontSize: '0.72rem',
-                  color: C.textMuted,
+                  color: 'var(--muted-foreground)',
                   fontFamily: FONT,
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
@@ -513,7 +513,7 @@ function ProfilePageContent({
                     borderRadius: 10,
                     border: `1px solid ${editingField === 'phone' ? CYAN : BORD}`,
                     background: C.cyanDim,
-                    color: C.text,
+                    color: 'var(--foreground)',
                     fontSize: '0.88rem',
                     fontFamily: FONT,
                     outline: 'none',
@@ -527,7 +527,7 @@ function ProfilePageContent({
                     borderRadius: 10,
                     background: CYAN,
                     border: 'none',
-                    color: C.bgDeep,
+                    color: 'var(--background)',
                     fontWeight: 700,
                     cursor: 'pointer',
                     fontSize: '0.8rem',
@@ -537,7 +537,7 @@ function ProfilePageContent({
                   {savingField === 'phone' ? '...' : t('profileExpanded.savePhone')}
                 </button>
               </div>
-              <div style={{ fontSize: '0.74rem', color: C.textMuted, fontFamily: FONT }}>
+              <div style={{ fontSize: '0.74rem', color: 'var(--muted-foreground)', fontFamily: FONT }}>
                 {t('profileExpanded.usedForAlertsVerificationAndCoordination')}
               </div>
             </div>
@@ -667,7 +667,7 @@ function ProfilePageContent({
           style={{
             textAlign: 'center',
             fontSize: '0.72rem',
-            color: C.textDim,
+            color: 'var(--muted-foreground)',
             fontFamily: FONT,
           }}
         >
@@ -691,8 +691,8 @@ function ProfilePageContent({
         >
           <div
             style={{
-              background: C.cardSolid,
-              border: `1px solid ${C.errorDim}`,
+              background: 'var(--card)',
+              border: `1px solid ${'color-mix(in srgb, var(--destructive) 14%, transparent)'}`,
               borderRadius: 16,
               padding: 28,
               maxWidth: 360,
@@ -701,7 +701,7 @@ function ProfilePageContent({
           >
             <h3
               style={{
-                color: C.error,
+                color: 'var(--destructive)',
                 fontFamily: FONT,
                 fontWeight: 800,
                 fontSize: '1.1rem',
@@ -712,7 +712,7 @@ function ProfilePageContent({
             </h3>
             <p
               style={{
-                color: C.textMuted,
+                color: 'var(--muted-foreground)',
                 fontFamily: FONT,
                 fontSize: '0.85rem',
                 marginBottom: 20,
@@ -728,8 +728,8 @@ function ProfilePageContent({
                   height: 40,
                   borderRadius: 10,
                   background: 'transparent',
-                  border: `1px solid ${C.border}`,
-                  color: C.textMuted,
+                  border: `1px solid ${'var(--border)'}`,
+                  color: 'var(--muted-foreground)',
                   fontFamily: FONT,
                   cursor: 'pointer',
                 }}
@@ -742,9 +742,9 @@ function ProfilePageContent({
                   flex: 1,
                   height: 40,
                   borderRadius: 10,
-                  background: C.errorDim,
-                  border: `1px solid ${C.errorDim}`,
-                  color: C.error,
+                  background: 'color-mix(in srgb, var(--destructive) 14%, transparent)',
+                  border: `1px solid ${'color-mix(in srgb, var(--destructive) 14%, transparent)'}`,
+                  color: 'var(--destructive)',
                   fontFamily: FONT,
                   fontWeight: 700,
                   cursor: 'pointer',

@@ -33,7 +33,7 @@ interface MobilityOSLandingMapProps {
   minimalText?: boolean;
 }
 
-const FLOW = C.cyan;
+const FLOW = 'var(--primary)';
 const GHOST = C.cyanDark;
 const PULSE = C.blueLight;
 const BUS_GREEN = C.green;
@@ -179,43 +179,43 @@ function clamp(value: number, min: number, max: number) {
 const MAP_LAYER = {
   focus: C.gold,
   focusGhost: withAlpha(C.gold, 0.58),
-  panelStart: C.bgDeep,
-  panelEnd: C.bg,
-  transparent: withAlpha(C.text, 0),
-  innerGlow: withAlpha(C.cyan, 0.12),
+  panelStart: 'var(--background)',
+  panelEnd: 'var(--background)',
+  transparent: withAlpha('var(--foreground)', 0),
+  innerGlow: withAlpha('var(--primary)', 0.12),
   land: withAlpha(C.green, 0.18),
-  landEdge: withAlpha(C.cyan, 0.14),
-  radarCore: withAlpha(C.cyan, 0.38),
-  radarShell: withAlpha(C.bg, 0.96),
-  radarStroke: withAlpha(C.text, 0.06),
-  radarSweep: withAlpha(C.cyan, 0.28),
-  radarBlip: withAlpha(C.text, 0.9),
+  landEdge: withAlpha('var(--primary)', 0.14),
+  radarCore: withAlpha('var(--primary)', 0.38),
+  radarShell: withAlpha('var(--background)', 0.96),
+  radarStroke: withAlpha('var(--foreground)', 0.06),
+  radarSweep: withAlpha('var(--primary)', 0.28),
+  radarBlip: withAlpha('var(--foreground)', 0.9),
   hubGlow: withAlpha(C.green, 0.14),
   topoBase: C.blueLight,
   topoGrid: withAlpha(C.blueLight, 0.05),
-  corridorRail: withAlpha(C.cyan, 0.06),
-  corridorRailDim: withAlpha(C.cyan, 0.04),
-  routeHalo: withAlpha(C.text, 0.015),
-  routeBorder: withAlpha(C.cyan, 0.12),
+  corridorRail: withAlpha('var(--primary)', 0.06),
+  corridorRailDim: withAlpha('var(--primary)', 0.04),
+  routeHalo: withAlpha('var(--foreground)', 0.015),
+  routeBorder: withAlpha('var(--primary)', 0.12),
   routeLabelActive: withAlpha(C.overlay, 0.2),
   routeLabel: withAlpha(C.overlay, 0.12),
-  routeRail: withAlpha(C.text, 0.04),
+  routeRail: withAlpha('var(--foreground)', 0.04),
   routeNameActive: C.gold,
-  routeName: withAlpha(C.text, 0.9),
+  routeName: withAlpha('var(--foreground)', 0.9),
   routeMetaActive: C.gold,
-  routeMeta: C.cyan,
-  flowActive: withAlpha(C.cyan, 0.24),
-  flow: withAlpha(C.text, 0.14),
+  routeMeta: 'var(--primary)',
+  flowActive: withAlpha('var(--primary)', 0.24),
+  flow: withAlpha('var(--foreground)', 0.14),
   cityLabelBackdrop: withAlpha(C.overlay, 0.14),
   cityLabelActive: C.gold,
-  cityLabel: withAlpha(C.text, 0.92),
-  footerPrimary: withAlpha(C.text, 0.95),
-  footerSecondary: withAlpha(C.textSub, 0.78),
-  nodeRing: withAlpha(C.cyan, 0.18),
-  nodeCore: C.cyan,
-  pulseCore: withAlpha(C.cyan, 0.5),
-  ambientDot: withAlpha(C.cyan, 0.06),
-  connectionGlow: withAlpha(C.cyan, 0.08),
+  cityLabel: withAlpha('var(--foreground)', 0.92),
+  footerPrimary: withAlpha('var(--foreground)', 0.95),
+  footerSecondary: withAlpha('var(--foreground)', 0.78),
+  nodeRing: withAlpha('var(--primary)', 0.18),
+  nodeCore: 'var(--primary)',
+  pulseCore: withAlpha('var(--primary)', 0.5),
+  ambientDot: withAlpha('var(--primary)', 0.06),
+  connectionGlow: withAlpha('var(--primary)', 0.08),
   dataFlow: withAlpha(C.blueLight, 0.12),
 } as const;
 
@@ -628,7 +628,7 @@ export function MobilityOSLandingMap({
             const radius = 1.8 + intensity * (3.8 + focusStrength * 1.6);
             ctx.beginPath();
             ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = withAlpha(C.text, 0.14 + intensity * 0.76);
+            ctx.fillStyle = withAlpha('var(--foreground)', 0.14 + intensity * 0.76);
             ctx.shadowBlur = 10 + intensity * 18;
             ctx.shadowColor = withAlpha(focusStroke, 0.24 + intensity * 0.68);
             ctx.fill();
@@ -841,8 +841,8 @@ export function MobilityOSLandingMap({
         borderRadius: R.xxl,
         overflow: 'hidden',
         background: GRAD_HERO,
-        border: `1px solid ${C.borderHov}`,
-        boxShadow: `${SH.xl}, inset 0 0 0 1px ${C.borderFaint}`,
+        border: `1px solid ${'var(--border)'}`,
+        boxShadow: `${SH.xl}, inset 0 0 0 1px ${'var(--border)'}`,
       }}
     >
       {showOverlay && (focusLabel || runtimeMode || demandPressure !== undefined || utilization !== undefined) && (
@@ -863,8 +863,8 @@ export function MobilityOSLandingMap({
               style={{
                 borderRadius: R.xl,
                 padding: '10px 12px',
-                background: C.glass,
-                border: `1px solid ${runtimeMode === 'fallback' ? C.goldDim : C.borderHov}`,
+                background: 'var(--card)',
+                border: `1px solid ${runtimeMode === 'fallback' ? C.goldDim : 'var(--border)'}`,
                 boxShadow: SH.sm,
                 backdropFilter: 'blur(12px)',
               }}
@@ -885,7 +885,7 @@ export function MobilityOSLandingMap({
               <div
                 style={{
                   marginTop: 6,
-                  color: C.text,
+                  color: 'var(--foreground)',
                   fontSize: '0.92rem',
                   fontWeight: 800,
                   lineHeight: 1.35,
@@ -900,7 +900,7 @@ export function MobilityOSLandingMap({
                     height: 5,
                     borderRadius: 999,
                     overflow: 'hidden',
-                    background: C.elevated,
+                    background: 'var(--secondary)',
                   }}
                 >
                   <div
@@ -911,7 +911,7 @@ export function MobilityOSLandingMap({
                       background:
                         runtimeMode === 'fallback'
                           ? `linear-gradient(90deg, ${C.gold}, ${C.goldDim})`
-                          : `linear-gradient(90deg, ${C.cyan}, ${C.blueLight})`,
+                          : `linear-gradient(90deg, ${'var(--primary)'}, ${C.blueLight})`,
                       boxShadow: `0 0 18px ${withAlpha(uiFocusStroke, 0.42)}`,
                     }}
                   />
@@ -933,14 +933,14 @@ export function MobilityOSLandingMap({
                   style={{
                     borderRadius: R.lg,
                     padding: '9px 10px',
-                    background: C.glass,
-                    border: `1px solid ${runtimeMode === 'fallback' ? C.goldDim : C.borderHov}`,
+                    background: 'var(--card)',
+                    border: `1px solid ${runtimeMode === 'fallback' ? C.goldDim : 'var(--border)'}`,
                     backdropFilter: 'blur(12px)',
                   }}
                 >
                   <div
                     style={{
-                      color: C.textMuted,
+                      color: 'var(--muted-foreground)',
                       fontSize: '0.6rem',
                       letterSpacing: '0.12em',
                       textTransform: 'uppercase',
@@ -950,7 +950,7 @@ export function MobilityOSLandingMap({
                     {tx('mobilityOSLandingMap.pressure')}
                   </div>
                   <div
-                    style={{ marginTop: 4, color: C.text, fontWeight: 900, fontSize: '0.82rem' }}
+                    style={{ marginTop: 4, color: 'var(--foreground)', fontWeight: 900, fontSize: '0.82rem' }}
                   >
                     {demandPressure.toFixed(2)}
                     {tx('mobilityOSLandingMap.x')}
@@ -962,14 +962,14 @@ export function MobilityOSLandingMap({
                   style={{
                     borderRadius: R.lg,
                     padding: '9px 10px',
-                    background: C.glass,
+                    background: 'var(--card)',
                     border: `1px solid ${C.greenDim}`,
                     backdropFilter: 'blur(12px)',
                   }}
                 >
                   <div
                     style={{
-                      color: C.textMuted,
+                      color: 'var(--muted-foreground)',
                       fontSize: '0.6rem',
                       letterSpacing: '0.12em',
                       textTransform: 'uppercase',
@@ -979,7 +979,7 @@ export function MobilityOSLandingMap({
                     {tx('mobilityOSLandingMap.utilization')}
                   </div>
                   <div
-                    style={{ marginTop: 4, color: C.text, fontWeight: 900, fontSize: '0.82rem' }}
+                    style={{ marginTop: 4, color: 'var(--foreground)', fontWeight: 900, fontSize: '0.82rem' }}
                   >
                     {Math.round(utilization * 100)}%
                   </div>
@@ -996,7 +996,7 @@ export function MobilityOSLandingMap({
           position: 'absolute',
           inset: 14,
           borderRadius: R.xxl,
-          border: `1px solid ${C.borderHov}`,
+          border: `1px solid ${'var(--border)'}`,
           pointerEvents: 'none',
           zIndex: 1,
         }}

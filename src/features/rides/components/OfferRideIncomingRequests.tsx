@@ -26,7 +26,7 @@ export function OfferRideIncomingRequests({
         marginBottom: 18,
       }}
     >
-      <div style={{ color: C.text, fontWeight: 800, marginBottom: 12 }}>
+      <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 12 }}>
         {tx('offerRideIncomingRequests.incoming_booking_requests')}
       </div>
       <div style={{ display: 'grid', gap: 10 }}>
@@ -50,7 +50,7 @@ export function OfferRideIncomingRequests({
               }}
             >
               <div>
-                <div style={{ color: C.text, fontWeight: 700, fontSize: '0.84rem' }}>
+                <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.84rem' }}>
                   {request.from} {tx('offerRideIncomingRequests.to')}
                   {request.to}
                 </div>
@@ -95,7 +95,7 @@ export function OfferRideIncomingRequests({
                     borderRadius: '99px',
                     border: 'none',
                     background: DS.gradG,
-                    color: C.text,
+                    color: 'var(--foreground)',
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}
@@ -129,7 +129,7 @@ export function OfferRideIncomingRequests({
                     borderRadius: '99px',
                     border: `1px solid ${DS.border}`,
                     background: DS.card2,
-                    color: C.text,
+                    color: 'var(--foreground)',
                     fontWeight: 700,
                     cursor: 'pointer',
                   }}

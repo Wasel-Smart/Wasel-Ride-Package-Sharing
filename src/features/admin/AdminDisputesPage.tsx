@@ -57,13 +57,13 @@ function statusAccent(status: string | null): string {
     case 'resolved':
       return C.green;
     case 'closed':
-      return C.textDim;
+      return 'var(--muted-foreground)';
     case 'investigating':
-      return C.cyan;
+      return 'var(--primary)';
     case 'pending':
       return C.gold;
     default:
-      return C.textDim;
+      return 'var(--muted-foreground)';
   }
 }
 
@@ -194,7 +194,7 @@ export function AdminDisputesPage() {
                 alignItems: 'center',
                 gap: SPACE[2],
                 borderRadius: R.full,
-                border: `1px solid ${C.borderHov}`,
+                border: `1px solid ${'var(--border)'}`,
                 background: C.goldDim,
                 padding: '4px 12px',
                 color: C.gold,
@@ -210,14 +210,14 @@ export function AdminDisputesPage() {
             <h1
               style={{
                 margin: 0,
-                color: C.text,
+                color: 'var(--foreground)',
                 fontSize: TYPE.size['2xl'],
                 fontWeight: TYPE.weight.ultra,
               }}
             >
               {tx('adminDisputesPage.title')}
             </h1>
-            <p style={{ margin: `${SPACE[2]} 0 0`, color: C.textMuted, fontSize: TYPE.size.sm }}>
+            <p style={{ margin: `${SPACE[2]} 0 0`, color: 'var(--muted-foreground)', fontSize: TYPE.size.sm }}>
               {tx('adminDisputesPage.subtitle')}
             </p>
           </div>
@@ -231,10 +231,10 @@ export function AdminDisputesPage() {
               alignItems: 'center',
               gap: SPACE[2],
               padding: `${SPACE[2]} ${SPACE[4]}`,
-              background: C.elevated,
-              border: `1px solid ${C.border}`,
+              background: 'var(--secondary)',
+              border: `1px solid ${'var(--border)'}`,
               borderRadius: R.lg,
-              color: C.textSub,
+              color: 'var(--foreground)',
               fontSize: TYPE.size.sm,
               cursor: loading || !canRead ? 'not-allowed' : 'pointer',
             }}
@@ -260,7 +260,7 @@ export function AdminDisputesPage() {
           <SummaryTile
             label={tx('adminDisputesPage.total_disputes')}
             value={meta.total}
-            accent={C.cyan}
+            accent={'var(--primary)'}
           />
           <SummaryTile label={tx('adminDisputesPage.open_count')} value={openCount} accent={C.gold} />
           <SummaryTile
@@ -272,7 +272,7 @@ export function AdminDisputesPage() {
 
         <div style={{ ...card({ padding: SPACE[2], radius: R.xxl }), overflowX: 'auto' }}>
           {loading && rows.length === 0 ? (
-            <div style={{ padding: SPACE[8], textAlign: 'center', color: C.textMuted }}>
+            <div style={{ padding: SPACE[8], textAlign: 'center', color: 'var(--muted-foreground)' }}>
               {tx('adminDisputesPage.loading')}
             </div>
           ) : rows.length === 0 ? (
@@ -296,15 +296,15 @@ export function AdminDisputesPage() {
                 {rows.map(row => (
                   <tr key={row.id}>
                     <td style={tableStyles.cell}>
-                      <div style={{ color: C.text, fontWeight: TYPE.weight.semibold }}>
+                      <div style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.semibold }}>
                         {row.type ?? '—'}
                       </div>
-                      <div style={{ color: C.textDim, fontSize: TYPE.size.xs, marginTop: 2 }}>
+                      <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, marginTop: 2 }}>
                         {shortId(row.id)}
                       </div>
                       <div
                         style={{
-                          color: C.textMuted,
+                          color: 'var(--muted-foreground)',
                           fontSize: TYPE.size.xs,
                           marginTop: SPACE[2],
                           maxWidth: 280,
@@ -314,10 +314,10 @@ export function AdminDisputesPage() {
                       </div>
                     </td>
                     <td style={tableStyles.cell}>
-                      <div style={{ color: C.textSub, fontSize: TYPE.size.xs }}>
+                      <div style={{ color: 'var(--foreground)', fontSize: TYPE.size.xs }}>
                         {shortId(row.complainant_id)}
                       </div>
-                      <div style={{ color: C.textDim, fontSize: TYPE.size.xs, marginTop: 2 }}>
+                      <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, marginTop: 2 }}>
                         {shortId(row.respondent_id)}
                       </div>
                     </td>
@@ -327,7 +327,7 @@ export function AdminDisputesPage() {
                     <td style={tableStyles.cell}>{formatDate(row.created_at)}</td>
                     <td style={{ ...tableStyles.cell, minWidth: 280 }}>
                       {row.resolution ? (
-                        <div style={{ color: C.textSub, fontSize: TYPE.size.xs }}>{row.resolution}</div>
+                        <div style={{ color: 'var(--foreground)', fontSize: TYPE.size.xs }}>{row.resolution}</div>
                       ) : isOpen(row.status) ? (
                         <ResolutionEditor
                           value={drafts[row.id] ?? ''}
@@ -339,7 +339,7 @@ export function AdminDisputesPage() {
                           onResolve={() => { void handleResolve(row); }}
                         />
                       ) : (
-                        <span style={{ color: C.textDim, fontSize: TYPE.size.xs }}>—</span>
+                        <span style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs }}>—</span>
                       )}
                     </td>
                   </tr>
@@ -390,9 +390,9 @@ function ResolutionEditor({
           resize: 'vertical',
           padding: SPACE[2],
           borderRadius: R.md,
-          border: `1px solid ${C.border}`,
-          background: C.bgAlt,
-          color: C.text,
+          border: `1px solid ${'var(--border)'}`,
+          background: 'var(--background)',
+          color: 'var(--foreground)',
           fontSize: TYPE.size.xs,
           fontFamily: 'inherit',
         }}
@@ -421,10 +421,10 @@ function SummaryTile({ label, value, accent }: { label: string; value: number; a
         gap: SPACE[2],
       }}
     >
-      <span style={{ color: C.textMuted, fontSize: TYPE.size.xs, fontWeight: TYPE.weight.medium }}>
+      <span style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, fontWeight: TYPE.weight.medium }}>
         {label}
       </span>
-      <span style={{ color: C.text, fontSize: TYPE.size['2xl'], fontWeight: TYPE.weight.ultra }}>
+      <span style={{ color: 'var(--foreground)', fontSize: TYPE.size['2xl'], fontWeight: TYPE.weight.ultra }}>
         {value.toLocaleString()}
       </span>
     </div>

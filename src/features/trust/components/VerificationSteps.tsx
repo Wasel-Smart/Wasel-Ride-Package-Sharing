@@ -15,9 +15,9 @@ export function stateAccent(state: TrustStepState): string {
     case 'completed':
       return C.green;
     case 'in_progress':
-      return C.cyan;
+      return 'var(--primary)';
     case 'failed':
-      return C.error;
+      return 'var(--destructive)';
     default:
       return C.gold;
   }
@@ -45,18 +45,18 @@ export function VerificationSteps({
         marginBottom: SPACE[6],
         padding: SPACE[5],
         borderRadius: R.xl,
-        border: `1px solid ${C.border}`,
-        background: `linear-gradient(180deg, ${C.card}, rgba(9,22,34,0.92))`,
+        border: `1px solid ${'var(--border)'}`,
+        background: `linear-gradient(180deg, ${'var(--card)'}, rgba(9,22,34,0.92))`,
         boxShadow: '0 1px 0 rgba(0,229,255,0.06)',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span style={{ color: C.textMuted, fontSize: TYPE.size.sm, fontFamily }}>
+        <span style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm, fontFamily }}>
           {t('trustCenterExpanded.checksDone')}
         </span>
         <span
           style={{
-            color: C.textSub,
+            color: 'var(--foreground)',
             fontSize: TYPE.size.sm,
             fontWeight: TYPE.weight.bold,
             fontFamily,
@@ -93,13 +93,13 @@ export function VerificationSteps({
                     height: 3,
                     borderRadius: 999,
                     background: isComplete
-                      ? `linear-gradient(90deg, ${C.green}, ${C.cyan})`
+                      ? `linear-gradient(90deg, ${C.green}, ${'var(--primary)'})`
                       : isActive
-                        ? `linear-gradient(90deg, ${C.cyan}66, ${C.border})`
-                        : C.borderFaint,
+                        ? `linear-gradient(90deg, ${'var(--primary)'}66, ${'var(--border)'})`
+                        : 'var(--border)',
                     opacity: isComplete || isActive ? 1 : 0.35,
                     transition: 'all 300ms',
-                    boxShadow: isActive ? `0 0 8px ${C.cyan}40` : 'none',
+                    boxShadow: isActive ? `0 0 8px ${'var(--primary)'}40` : 'none',
                   }}
                 />
                 {!isLast && (
@@ -111,14 +111,14 @@ export function VerificationSteps({
                       background: isComplete
                         ? accent
                         : isFailed
-                          ? C.error
+                          ? 'var(--destructive)'
                           : isActive
-                            ? C.cyan
-                            : C.border,
+                            ? 'var(--primary)'
+                            : 'var(--border)',
                       margin: '0 -5px',
                       flexShrink: 0,
-                      boxShadow: isComplete || isActive ? `0 0 0 3px ${C.bgDeep}` : 'none',
-                      border: isComplete || isActive ? `2px solid ${C.bgDeep}` : 'none',
+                      boxShadow: isComplete || isActive ? `0 0 0 3px ${'var(--background)'}` : 'none',
+                      border: isComplete || isActive ? `2px solid ${'var(--background)'}` : 'none',
                       transition: 'all 300ms',
                     }}
                   />
@@ -129,7 +129,7 @@ export function VerificationSteps({
                       flex: 1,
                       height: 3,
                       borderRadius: 999,
-                      background: C.borderFaint,
+                      background: 'var(--border)',
                       opacity: 0.25,
                     }}
                   />
@@ -139,7 +139,7 @@ export function VerificationSteps({
                 style={{
                   marginTop: SPACE[2],
                   fontSize: TYPE.size.xs,
-                  color: isComplete ? C.textSub : isActive ? C.cyan : C.textDim,
+                  color: isComplete ? 'var(--foreground)' : isActive ? 'var(--primary)' : 'var(--muted-foreground)',
                   fontWeight: isComplete ? TYPE.weight.bold : TYPE.weight.regular,
                   fontFamily,
                   textAlign: 'center',

@@ -23,17 +23,17 @@ export function CorporatePage() {
           style={{
             textAlign: 'center',
             padding: '48px 24px',
-            background: 'linear-gradient(135deg, ' + C.bg + ' 0%, ' + C.card2 + ' 100%)',
+            background: 'linear-gradient(135deg, ' + 'var(--background)' + ' 0%, ' + 'var(--muted)' + ' 100%)',
             borderRadius: 16,
-            border: '1px solid ' + C.border,
+            border: '1px solid ' + 'var(--border)',
             marginBottom: 32,
           }}
         >
-          <Briefcase size={48} color={C.cyan} style={{ margin: '0 auto 16px' }} />
+          <Briefcase size={48} color={'var(--primary)'} style={{ margin: '0 auto 16px' }} />
           <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 12 }}>
             {ar ? 'حلول النقل للشركات والمؤسسات' : 'Corporate Mobility & Fleet Solutions'}
           </h1>
-          <p style={{ color: C.textMuted, maxWidth: 600, margin: '0 auto', fontSize: 16 }}>
+          <p style={{ color: 'var(--muted-foreground)', maxWidth: 600, margin: '0 auto', fontSize: 16 }}>
             {ar
               ? 'خدمات نقل مخصصة للموظفين، فوترة مركزية، إدارة مسارات ذكية، وحجز أساطيل كاملة للشركات في الأردن.'
               : 'Dedicated fleet dispatch, recurring routes, centralized billing, and custom logistics portals for companies in Jordan.'}
@@ -56,7 +56,7 @@ export function CorporatePage() {
                 ? 'تجميع الموظفين المقيمين في نفس المناطق وتوفير مسار رحلة يومي موحد لتقليل التكاليف.'
                 : 'Group workers by geographic corridor to build automated, cost-efficient shared shuttles.'
             }
-            icon={<Users color={C.cyan} />}
+            icon={<Users color={'var(--primary)'} />}
           />
           <FeatureCard
             title={ar ? 'فوترة مركزية وتقارير' : 'Unified Monthly Billing'}
@@ -65,7 +65,7 @@ export function CorporatePage() {
                 ? 'حساب ائتماني موحد للشركة مع فواتير شهرية مفصلة وتقارير استخدام كاملة للمشرفين.'
                 : 'Corporate postpaid accounts with detailed usage logs, SLA tracking, and single monthly invoices.'
             }
-            icon={<Building color={C.cyan} />}
+            icon={<Building color={'var(--primary)'} />}
           />
           <FeatureCard
             title={ar ? 'تتبع حي لوحة التحكم' : 'Live Dashboard Telemetry'}
@@ -74,17 +74,17 @@ export function CorporatePage() {
                 ? 'لوحة تحكم خاصة بالشركة لمشاهدة حركة المركبات وأوقات الوصول وتقييمات السائقين.'
                 : 'Company admin portals to monitor vehicles in real-time, override routes, and audit arrival schedules.'
             }
-            icon={<MapPin color={C.cyan} />}
+            icon={<MapPin color={'var(--primary)'} />}
           />
         </div>
 
         {/* Inquiry Form */}
         <div
           style={{
-            backgroundColor: C.cardSolid,
+            backgroundColor: 'var(--card)',
             padding: 32,
             borderRadius: 12,
-            border: '1px solid ' + C.border,
+            border: '1px solid ' + 'var(--border)',
           }}
         >
           {submitted ? (
@@ -93,7 +93,7 @@ export function CorporatePage() {
               <h3 style={{ fontSize: 20, fontWeight: 600 }}>
                 {ar ? 'تم إرسال الطلب بنجاح' : 'Inquiry Submitted'}
               </h3>
-              <p style={{ color: C.textMuted, marginTop: 8 }}>
+              <p style={{ color: 'var(--muted-foreground)', marginTop: 8 }}>
                 {ar
                   ? 'سيتواصل معك فريق مبيعات واصل خلال 24 ساعة عمل.'
                   : 'Our corporate logistics team will contact you within 24 business hours.'}
@@ -115,7 +115,7 @@ export function CorporatePage() {
                 <div>
                   <label
                     htmlFor="corporate-company-name"
-                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: C.textMuted }}
+                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: 'var(--muted-foreground)' }}
                   >
                     {ar ? 'اسم الشركة' : 'Company Name'}
                   </label>
@@ -125,8 +125,8 @@ export function CorporatePage() {
                     style={{
                       width: '100%',
                       padding: 12,
-                      backgroundColor: C.bgAlt,
-                      border: '1px solid ' + C.borderHov,
+                      backgroundColor: 'var(--background)',
+                      border: '1px solid ' + 'var(--border)',
                       borderRadius: 8,
                       color: '#fff',
                     }}
@@ -135,7 +135,7 @@ export function CorporatePage() {
                 <div>
                   <label
                     htmlFor="corporate-work-email"
-                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: C.textMuted }}
+                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: 'var(--muted-foreground)' }}
                   >
                     {ar ? 'البريد الإلكتروني للعمل' : 'Work Email'}
                   </label>
@@ -146,8 +146,8 @@ export function CorporatePage() {
                     style={{
                       width: '100%',
                       padding: 12,
-                      backgroundColor: C.bgAlt,
-                      border: '1px solid ' + C.borderHov,
+                      backgroundColor: 'var(--background)',
+                      border: '1px solid ' + 'var(--border)',
                       borderRadius: 8,
                       color: '#fff',
                     }}
@@ -165,7 +165,7 @@ export function CorporatePage() {
                 <div>
                   <label
                     htmlFor="corporate-passenger-count"
-                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: C.textMuted }}
+                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: 'var(--muted-foreground)' }}
                   >
                     {ar ? 'عدد الموظفين المتوقع نقلهم' : 'Estimated Passengers'}
                   </label>
@@ -174,8 +174,8 @@ export function CorporatePage() {
                     style={{
                       width: '100%',
                       padding: 12,
-                      backgroundColor: C.bgAlt,
-                      border: '1px solid ' + C.borderHov,
+                      backgroundColor: 'var(--background)',
+                      border: '1px solid ' + 'var(--border)',
                       borderRadius: 8,
                       color: '#fff',
                     }}
@@ -189,7 +189,7 @@ export function CorporatePage() {
                 <div>
                   <label
                     htmlFor="corporate-schedule-mode"
-                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: C.textMuted }}
+                    style={{ display: 'block', marginBottom: 8, fontSize: 13, color: 'var(--muted-foreground)' }}
                   >
                     {ar ? 'الجدول الزمني المطلوب' : 'Schedule Mode'}
                   </label>
@@ -198,8 +198,8 @@ export function CorporatePage() {
                     style={{
                       width: '100%',
                       padding: 12,
-                      backgroundColor: C.bgAlt,
-                      border: '1px solid ' + C.borderHov,
+                      backgroundColor: 'var(--background)',
+                      border: '1px solid ' + 'var(--border)',
                       borderRadius: 8,
                       color: '#fff',
                     }}
@@ -214,8 +214,8 @@ export function CorporatePage() {
                 style={{
                   width: '100%',
                   padding: 14,
-                  backgroundColor: C.cyan,
-                  color: C.brandInk,
+                  backgroundColor: 'var(--primary)',
+                  color: 'var(--background)',
                   border: 'none',
                   borderRadius: 8,
                   fontWeight: 600,
@@ -245,15 +245,15 @@ function FeatureCard({
   return (
     <div
       style={{
-        backgroundColor: C.cardSolid,
-        border: '1px solid ' + C.border,
+        backgroundColor: 'var(--card)',
+        border: '1px solid ' + 'var(--border)',
         borderRadius: 12,
         padding: 24,
       }}
     >
       <div
         style={{
-          backgroundColor: C.panel,
+          backgroundColor: 'var(--secondary)',
           width: 44,
           height: 44,
           display: 'flex',
@@ -266,7 +266,7 @@ function FeatureCard({
         {icon}
       </div>
       <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: '#fff' }}>{title}</h3>
-      <p style={{ color: C.textMuted, fontSize: 14, lineHeight: 1.5 }}>{description}</p>
+      <p style={{ color: 'var(--muted-foreground)', fontSize: 14, lineHeight: 1.5 }}>{description}</p>
     </div>
   );
 }

@@ -12,7 +12,7 @@ function statusStyle(status: ReviewItem['status']) {
     case 'approved':
       return { bg: C.greenDim, color: C.green };
     case 'rejected':
-      return { bg: C.errorDim, color: C.error };
+      return { bg: 'color-mix(in srgb, var(--destructive) 14%, transparent)', color: 'var(--destructive)' };
     default:
       return { bg: C.goldDim, color: C.gold };
   }
@@ -33,13 +33,13 @@ export function ReviewQueue({ items }: { items: ReviewItem[] }) {
               gap: 12,
               padding: '12px 14px',
               borderRadius: R.lg,
-              border: `1px solid ${C.border}`,
-              background: C.cardSolid,
+              border: `1px solid ${'var(--border)'}`,
+              background: 'var(--card)',
             }}
           >
             <div>
-              <div style={{ fontWeight: TYPE.weight.bold, color: C.text, fontFamily: F }}>{item.subject}</div>
-              <div style={{ fontSize: TYPE.size.xs, color: C.textDim, fontFamily: F, lineHeight: 1.4 }}>
+              <div style={{ fontWeight: TYPE.weight.bold, color: 'var(--foreground)', fontFamily: F }}>{item.subject}</div>
+              <div style={{ fontSize: TYPE.size.xs, color: 'var(--muted-foreground)', fontFamily: F, lineHeight: 1.4 }}>
                 {item.updatedAt}
               </div>
             </div>

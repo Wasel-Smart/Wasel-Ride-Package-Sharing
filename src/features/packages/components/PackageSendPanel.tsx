@@ -90,7 +90,7 @@ export function PackageSendPanel({
         border: `1px solid ${DS.gold}30`,
         borderRadius: r(14),
         padding: '12px 14px',
-        color: C.text,
+        color: 'var(--foreground)',
         fontSize: '0.84rem',
         marginBottom: 16,
       }}
@@ -134,7 +134,7 @@ export function PackageSendPanel({
           style={{
             margin: '20px auto',
             maxWidth: 360,
-            background: C.elevated,
+            background: 'var(--secondary)',
             borderRadius: r(16),
             padding: '16px 20px',
             border: `1px solid ${DS.border}`,
@@ -183,7 +183,7 @@ export function PackageSendPanel({
               borderRadius: '99px',
               border: 'none',
               background: DS.gradC,
-              color: C.text,
+              color: 'var(--foreground)',
               cursor: 'pointer',
               fontFamily: DS.F,
               fontWeight: 700,
@@ -221,7 +221,7 @@ export function PackageSendPanel({
       }}
     >
       <div className="pkg-form-grid" style={{ display: 'grid', gap: 14, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
-        <h3 style={{ color: C.text, fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>
+        <h3 style={{ color: 'var(--foreground)', fontWeight: 800, gridColumn: '1/-1', margin: '0 0 4px' }}>
           {tx('packageSendPanel.send_through_the_shared_network')}
         </h3>
         {[
@@ -255,7 +255,7 @@ export function PackageSendPanel({
                 borderRadius: r(10),
                 border: `1px solid ${DS.border}`,
                 background: DS.card2,
-                color: C.text,
+                color: 'var(--foreground)',
                 fontFamily: DS.F,
                 fontSize: '0.9rem',
                 outline: 'none',
@@ -295,7 +295,7 @@ export function PackageSendPanel({
               borderRadius: r(10),
               border: `1px solid ${DS.border}`,
               background: DS.card2,
-              color: C.text,
+              color: 'var(--foreground)',
               fontFamily: DS.F,
               fontSize: '0.9rem',
               outline: 'none',
@@ -338,7 +338,7 @@ export function PackageSendPanel({
               borderRadius: r(10),
               border: `1px solid ${DS.border}`,
               background: DS.card2,
-              color: C.text,
+              color: 'var(--foreground)',
               fontFamily: DS.F,
               fontSize: '0.9rem',
               outline: 'none',
@@ -375,7 +375,7 @@ export function PackageSendPanel({
               borderRadius: r(10),
               border: `1px solid ${DS.border}`,
               background: DS.card2,
-              color: C.text,
+              color: 'var(--foreground)',
               fontFamily: DS.F,
               fontSize: '0.9rem',
               outline: 'none',
@@ -409,7 +409,7 @@ export function PackageSendPanel({
               borderRadius: r(10),
               border: `1px solid ${DS.border}`,
               background: DS.card2,
-              color: C.text,
+              color: 'var(--foreground)',
               fontFamily: DS.F,
               fontSize: '0.9rem',
               outline: 'none',
@@ -420,13 +420,13 @@ export function PackageSendPanel({
         <div
           style={{
             gridColumn: '1/-1',
-            background: C.elevated,
+            background: 'var(--secondary)',
             borderRadius: r(14),
             padding: '16px 18px',
             border: `1px solid ${DS.border}`,
           }}
         >
-          <div style={{ color: C.text, fontWeight: 800, marginBottom: 6 }}>
+          <div style={{ color: 'var(--foreground)', fontWeight: 800, marginBottom: 6 }}>
             {tx('packageSendPanel.connected_flow')}
           </div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.6 }}>
@@ -451,10 +451,10 @@ export function PackageSendPanel({
                 borderRadius: r(12),
                 border: `1px solid ${DS.border}`,
                 padding: '12px 13px',
-                background: C.elevated,
+                background: 'var(--secondary)',
               }}
             >
-              <div style={{ color: C.text, fontSize: '0.82rem', fontWeight: 700 }}>
+              <div style={{ color: 'var(--foreground)', fontSize: '0.82rem', fontWeight: 700 }}>
                 {item.title}
               </div>
               <div style={{ color: DS.muted, fontSize: '0.74rem', marginTop: 4, lineHeight: 1.5 }}>
@@ -474,7 +474,7 @@ export function PackageSendPanel({
             borderRadius: r(14),
             border: 'none',
             background: DS.gradG,
-            color: C.text,
+            color: 'var(--foreground)',
             fontWeight: 800,
             fontFamily: DS.F,
             fontSize: '0.95rem',
@@ -496,7 +496,7 @@ export function PackageSendPanel({
       <div style={{ display: 'grid', gap: 14 }}>
         <div
           style={{
-            background: C.elevated,
+            background: 'var(--secondary)',
             borderRadius: r(16),
             padding: '18px 18px 16px',
             border: `1px solid ${DS.border}`,
@@ -513,7 +513,7 @@ export function PackageSendPanel({
             }}
           >
             <div>
-              <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem' }}>
+              <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.95rem' }}>
                 {tx('packageSendPanel.route_readiness')}
               </div>
               <div style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 4 }}>
@@ -544,14 +544,14 @@ export function PackageSendPanel({
         </div>
         <div
           style={{
-            background: C.elevated,
+            background: 'var(--secondary)',
             borderRadius: r(16),
             padding: '18px 18px 16px',
             border: `1px solid ${DS.border}`,
             boxShadow: SH.card,
           }}
         >
-          <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>
+          <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.95rem', marginBottom: 12 }}>
             {tx('packageSendPanel.what_great_looks_like')}
           </div>
           <div style={{ display: 'grid', gap: 10 }}>
@@ -562,10 +562,10 @@ export function PackageSendPanel({
                   borderRadius: r(12),
                   border: `1px solid ${DS.border}`,
                   padding: '12px 13px',
-                  background: C.elevated,
+                  background: 'var(--secondary)',
                 }}
               >
-                <div style={{ color: C.text, fontSize: '0.84rem', fontWeight: 700 }}>
+                <div style={{ color: 'var(--foreground)', fontSize: '0.84rem', fontWeight: 700 }}>
                   {item.title}
                 </div>
                 <div style={{ color: DS.muted, fontSize: '0.75rem', marginTop: 4 }}>
@@ -577,14 +577,14 @@ export function PackageSendPanel({
         </div>
         <div
           style={{
-            background: C.elevated,
+            background: 'var(--secondary)',
             borderRadius: r(16),
             padding: '18px 18px 16px',
             border: `1px solid ${DS.border}`,
             boxShadow: SH.card,
           }}
         >
-          <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem', marginBottom: 10 }}>
+          <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.95rem', marginBottom: 10 }}>
             {tx('packageSendPanel.recent_requests')}
           </div>
           {recentPackages.length > 0 ? (
@@ -598,7 +598,7 @@ export function PackageSendPanel({
                     borderRadius: r(12),
                     border: `1px solid ${DS.border}`,
                     padding: '12px 13px',
-                    background: C.elevated,
+                    background: 'var(--secondary)',
                     cursor: 'pointer',
                   }}
                 >
@@ -610,7 +610,7 @@ export function PackageSendPanel({
                       flexWrap: 'wrap',
                     }}
                   >
-                    <span style={{ color: C.text, fontWeight: 700, fontSize: '0.82rem' }}>
+                    <span style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.82rem' }}>
                       {cityLabel(item.from, ar)} {tx('packageSendPanel.to_2')}
                       {cityLabel(item.to, ar)}
                     </span>

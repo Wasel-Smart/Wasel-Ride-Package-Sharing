@@ -44,10 +44,10 @@ const LOCAL_KEY = 'wasel-scheduled-items-v1';
 type ScheduleDataSource = 'server' | 'local';
 
 const STATUS_LABEL: Record<string, { en: string; ar: string; color: string }> = {
-  scheduled: { en: 'Scheduled', ar: 'مجدول', color: C.cyan },
+  scheduled: { en: 'Scheduled', ar: 'مجدول', color: 'var(--primary)' },
   confirmed: { en: 'Confirmed', ar: 'مؤكد', color: C.green },
   completed: { en: 'Completed', ar: 'مكتمل', color: C.green },
-  cancelled: { en: 'Cancelled', ar: 'ملغي', color: C.error },
+  cancelled: { en: 'Cancelled', ar: 'ملغي', color: 'var(--destructive)' },
   missed: { en: 'Missed', ar: 'فائت', color: C.gold },
 };
 
@@ -88,16 +88,16 @@ const inputStyle = {
   width: '100%',
   padding: '10px 14px',
   borderRadius: R.sm,
-  background: C.elevated,
-  border: `1px solid ${C.border}`,
-  color: C.text,
+  background: 'var(--secondary)',
+  border: `1px solid ${'var(--border)'}`,
+  color: 'var(--foreground)',
   fontFamily: F,
   fontSize: TYPE.size.base,
   boxSizing: 'border-box' as const,
 };
 
 const labelStyle = {
-  color: C.textMuted,
+  color: 'var(--muted-foreground)',
   fontSize: TYPE.size.xs,
   fontWeight: TYPE.weight.bold,
   textTransform: 'uppercase' as const,
@@ -305,7 +305,7 @@ export function SchedulePage() {
   };
 
   const typeColor = (t: ScheduleItem['item_type']) => {
-    if (t === 'ride') {return C.cyan;}
+    if (t === 'ride') {return 'var(--primary)';}
     if (t === 'package_delivery') {return C.gold;}
     return C.green;
   };
@@ -327,9 +327,9 @@ export function SchedulePage() {
                 gap: 6,
                 padding: '10px 14px',
                 borderRadius: R.md,
-                background: C.elevated,
-                border: `1px solid ${C.border}`,
-                color: C.text,
+                background: 'var(--secondary)',
+                border: `1px solid ${'var(--border)'}`,
+                color: 'var(--foreground)',
                 cursor: 'pointer',
               }}
             >
@@ -343,14 +343,14 @@ export function SchedulePage() {
                 gap: 8,
                 padding: '10px 18px',
                 borderRadius: R.md,
-                background: C.cyan,
+                background: 'var(--primary)',
                 border: 'none',
-                color: C.bg,
+                color: 'var(--background)',
                 fontWeight: TYPE.weight.bold,
                 fontFamily: F,
                 fontSize: TYPE.size.sm,
                 cursor: 'pointer',
-                boxShadow: `0 10px 24px ${C.cyan}24`,
+                boxShadow: `0 10px 24px ${'var(--primary)'}24`,
               }}
             >
               <Plus size={16} />
@@ -374,9 +374,9 @@ export function SchedulePage() {
             padding: '12px 16px',
             marginBottom: 16,
             borderRadius: R.md,
-            border: `1px solid ${C.error}44`,
-            background: `${C.error}12`,
-            color: C.error,
+            border: `1px solid ${'var(--destructive)'}44`,
+            background: `${'var(--destructive)'}12`,
+            color: 'var(--destructive)',
             fontSize: TYPE.size.xs,
             fontFamily: F,
             lineHeight: 1.6,
@@ -425,7 +425,7 @@ export function SchedulePage() {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: C.textMuted,
+                color: 'var(--muted-foreground)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -474,9 +474,9 @@ export function SchedulePage() {
                     gap: 6,
                     padding: '6px 12px',
                     borderRadius: R.sm,
-                    background: C.elevated,
-                    border: `1px solid ${C.border}`,
-                    color: locating ? C.textMuted : C.cyan,
+                    background: 'var(--secondary)',
+                    border: `1px solid ${'var(--border)'}`,
+                    color: locating ? 'var(--muted-foreground)' : 'var(--primary)',
                     cursor: locating ? 'not-allowed' : 'pointer',
                     fontFamily: F,
                     fontSize: TYPE.size.xs,
@@ -567,15 +567,15 @@ export function SchedulePage() {
               style={{
                 padding: '12px',
                 borderRadius: R.md,
-                background: C.cyan,
+                background: 'var(--primary)',
                 border: 'none',
-                color: C.bg,
+                color: 'var(--background)',
                 fontWeight: TYPE.weight.ultra,
                 fontFamily: F,
                 fontSize: TYPE.size.base,
                 cursor: !form.pickup_location || !form.scheduled_at ? 'not-allowed' : 'pointer',
                 opacity: !form.pickup_location || !form.scheduled_at ? 0.5 : 1,
-                boxShadow: `0 10px 24px ${C.cyan}24`,
+                boxShadow: `0 10px 24px ${'var(--primary)'}24`,
               }}
             >
               {t('scheduleExpanded.confirmSchedule')}
@@ -626,7 +626,7 @@ export function SchedulePage() {
             {visiblePast.map(item => {
               const typeCol = typeColor(item.item_type);
               const statusEntry = STATUS_LABEL[item.status];
-              const statusColor = statusEntry?.color ?? C.textDim;
+              const statusColor = statusEntry?.color ?? 'var(--muted-foreground)';
               return (
                 <div
                   key={item.id}
@@ -635,7 +635,7 @@ export function SchedulePage() {
                     alignItems: 'center',
                     gap: 14,
                     padding: '12px 16px',
-                    borderBottom: `1px solid ${C.borderFaint}`,
+                    borderBottom: `1px solid ${'var(--border)'}`,
                     opacity: 0.7,
                   }}
                 >
@@ -647,7 +647,7 @@ export function SchedulePage() {
                       background: `${typeCol}10`,
                       display: 'grid',
                       placeItems: 'center',
-                      color: C.textDim,
+                      color: 'var(--muted-foreground)',
                       flexShrink: 0,
                     }}
                   >
@@ -657,7 +657,7 @@ export function SchedulePage() {
                     <div
                       style={{
                         fontWeight: TYPE.weight.bold,
-                        color: C.textSub,
+                        color: 'var(--foreground)',
                         fontFamily: F,
                         fontSize: TYPE.size.sm,
                       }}
@@ -666,7 +666,7 @@ export function SchedulePage() {
                     </div>
                     <div
                       style={{
-                        color: C.textDim,
+                        color: 'var(--muted-foreground)',
                         fontSize: TYPE.size.xs,
                         marginTop: 2,
                         display: 'flex',
@@ -695,13 +695,13 @@ export function SchedulePage() {
             })}
           </div>
           {past.length > 5 && (
-            <div style={{ padding: '12px 16px', borderTop: `1px solid ${C.borderFaint}` }}>
+            <div style={{ padding: '12px 16px', borderTop: `1px solid ${'var(--border)'}` }}>
               <button
                 onClick={() => { void setShowAllPast(v => !v); }}
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: C.cyan,
+                  color: 'var(--primary)',
                   fontSize: TYPE.size.sm,
                   fontWeight: TYPE.weight.bold,
                   cursor: 'pointer',

@@ -45,7 +45,7 @@ export function BookingStatusBanners({
             border: `1px solid ${C.greenDim}`,
             borderRadius: r(14),
             padding: '12px 14px',
-            color: C.text,
+            color: 'var(--foreground)',
             fontSize: '0.84rem',
           }}
         >
@@ -75,7 +75,7 @@ export function BookingStatusBanners({
             }}
           >
             <div>
-              <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem' }}>
+              <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.95rem' }}>
                 {bookingSuccess.status === 'pending_driver'
                   ? 'Request sent'
                   : 'Seat confirmed'}
@@ -125,7 +125,7 @@ export function BookingStatusBanners({
             border: `1px solid ${DS.cyan}30`,
             borderRadius: r(14),
             padding: '12px 14px',
-            color: C.text,
+            color: 'var(--foreground)',
             fontSize: '0.84rem',
           }}
         >

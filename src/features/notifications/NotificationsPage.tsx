@@ -18,16 +18,16 @@ export function NotificationsPage() {
         >
           <Bell
             size={22}
-            color={unreadCount > 0 ? C.cyan : C.textMuted}
+            color={unreadCount > 0 ? 'var(--primary)' : 'var(--muted-foreground)'}
             style={{
-              filter: unreadCount > 0 ? `drop-shadow(0 0 6px ${C.cyan})` : 'none',
+              filter: unreadCount > 0 ? `drop-shadow(0 0 6px ${'var(--primary)'})` : 'none',
               transition: 'filter 300ms',
             }}
           />
           <h1
             style={{
               margin: 0,
-              color: C.text,
+              color: 'var(--foreground)',
               fontSize: TYPE.size['2xl'],
               fontWeight: TYPE.weight.bold,
             }}
@@ -42,8 +42,8 @@ export function NotificationsPage() {
                 padding: '2px 10px',
                 borderRadius: R.full,
                 background: C.cyanDim,
-                border: `1px solid ${C.borderHov}`,
-                color: C.cyan,
+                border: `1px solid ${'var(--border)'}`,
+                color: 'var(--primary)',
                 fontSize: TYPE.size.xs,
                 fontWeight: TYPE.weight.bold,
                 animation: 'scale-in 200ms ease',

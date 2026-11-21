@@ -25,7 +25,7 @@ export default function SafetyPage() {
       title: t('safetyExpanded.emergencyHelp'),
       detail: t('safetyExpanded.emergencyDetail'),
       stat: t('safetyExpanded.seconds'),
-      accent: C.error,
+      accent: 'var(--destructive)',
     },
     {
       icon: Shield,
@@ -39,7 +39,7 @@ export default function SafetyPage() {
       title: t('safetyExpanded.comfortControls'),
       detail: t('safetyExpanded.comfortDetail'),
       stat: t('safetyExpanded.rails'),
-      accent: C.cyan,
+      accent: 'var(--primary)',
     },
   ];
 
@@ -52,7 +52,7 @@ export default function SafetyPage() {
     {
       label: t('safetyExpanded.duringTrip'),
       detail: t('safetyExpanded.duringTripDetail'),
-      accent: C.cyan,
+      accent: 'var(--primary)',
     },
     {
       label: t('safetyExpanded.afterTrip'),
@@ -68,8 +68,8 @@ export default function SafetyPage() {
         <div
           style={{
             ...card({ padding: SPACE[4], radius: R.xxl }),
-            borderColor: `${C.error}40`,
-            background: `${C.error}12`,
+            borderColor: `${'var(--destructive)'}40`,
+            background: `${'var(--destructive)'}12`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -79,14 +79,14 @@ export default function SafetyPage() {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: SPACE[3] }}>
-            <Siren size={20} color={C.error} />
+            <Siren size={20} color={'var(--destructive)'} />
             <div>
               <div
-                style={{ color: C.text, fontWeight: TYPE.weight.bold, fontSize: TYPE.size.base }}
+                style={{ color: 'var(--foreground)', fontWeight: TYPE.weight.bold, fontSize: TYPE.size.base }}
               >
                 {t('safetyExpanded.needHelpNow')}
               </div>
-              <div style={{ color: C.textMuted, fontSize: TYPE.size.xs, marginTop: 2 }}>
+              <div style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs, marginTop: 2 }}>
                 {t('safetyExpanded.supportAvailable247')}
               </div>
             </div>
@@ -103,11 +103,11 @@ export default function SafetyPage() {
             <a
               href="/app/support?urgent=1"
               style={{
-                ...pillStyle(C.error),
+                ...pillStyle('var(--destructive)'),
                 textDecoration: 'none',
                 whiteSpace: 'nowrap',
                 padding: '10px 18px',
-                background: C.error,
+                background: 'var(--destructive)',
                 color: '#fff',
                 fontWeight: 800,
                 display: 'inline-flex',
@@ -154,9 +154,9 @@ export default function SafetyPage() {
               >
                 {[
                   { label: t('safetyExpanded.trustGates'), value: '4', accent: C.green },
-                  { label: t('safetyExpanded.responsePath'), value: '1 tap', accent: C.cyan },
+                  { label: t('safetyExpanded.responsePath'), value: '1 tap', accent: 'var(--primary)' },
                   { label: t('safetyExpanded.tripProof'), value: 'Live', accent: C.gold },
-                  { label: t('safetyExpanded.supportState'), value: 'Tracked', accent: C.error },
+                  { label: t('safetyExpanded.supportState'), value: 'Tracked', accent: 'var(--destructive)' },
                 ].map(item => (
                   <div
                     key={item.label}
@@ -169,7 +169,7 @@ export default function SafetyPage() {
                   >
                     <div
                       style={{
-                        color: C.text,
+                        color: 'var(--foreground)',
                         fontSize: TYPE.size.xl,
                         fontWeight: TYPE.weight.ultra,
                         lineHeight: TYPE.lineHeight.tight,
@@ -180,7 +180,7 @@ export default function SafetyPage() {
                     <div
                       style={{
                         marginTop: 4,
-                        color: C.textMuted,
+                        color: 'var(--muted-foreground)',
                         fontSize: TYPE.size.xs,
                         textTransform: 'uppercase',
                       }}
@@ -215,7 +215,7 @@ export default function SafetyPage() {
                   style={{
                     borderRadius: R.xxl,
                     border: `1px solid ${item.accent}24`,
-                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${C.card}`,
+                    background: `radial-gradient(circle at top left, ${item.accent}12, transparent 34%), ${'var(--card)'}`,
                     boxShadow: SH.md,
                     padding: SPACE[5],
                   }}
@@ -255,14 +255,14 @@ export default function SafetyPage() {
                     </span>
                   </div>
                   <div
-                    style={{ color: C.text, fontSize: TYPE.size.lg, fontWeight: TYPE.weight.black }}
+                    style={{ color: 'var(--foreground)', fontSize: TYPE.size.lg, fontWeight: TYPE.weight.black }}
                   >
                     {item.title}
                   </div>
                   <div
                     style={{
                       marginTop: SPACE[2],
-                      color: C.textMuted,
+                      color: 'var(--muted-foreground)',
                       fontSize: TYPE.size.sm,
                       lineHeight: TYPE.lineHeight.relaxed,
                     }}
@@ -279,7 +279,7 @@ export default function SafetyPage() {
         <SectionCard
           title={t('safetyExpanded.emergencyFlowTitle')}
           subtitle={t('safetyExpanded.emergencyFlowSubtitle')}
-          icon={<Siren size={18} color={C.error} />}
+          icon={<Siren size={18} color={'var(--destructive)'} />}
         >
           <div
             style={{
@@ -294,7 +294,7 @@ export default function SafetyPage() {
                 style={{
                   borderRadius: R.xxl,
                   border: `1px solid ${step.accent}24`,
-                  background: `radial-gradient(circle at top left, ${step.accent}12, transparent 34%), ${C.card}`,
+                  background: `radial-gradient(circle at top left, ${step.accent}12, transparent 34%), ${'var(--card)'}`,
                   boxShadow: SH.md,
                   padding: SPACE[5],
                 }}
@@ -311,14 +311,14 @@ export default function SafetyPage() {
                   {`${t('safetyExpanded.step')} ${index + 1}`}
                 </div>
                 <div
-                  style={{ color: C.text, fontSize: TYPE.size.base, fontWeight: TYPE.weight.black }}
+                  style={{ color: 'var(--foreground)', fontSize: TYPE.size.base, fontWeight: TYPE.weight.black }}
                 >
                   {step.label}
                 </div>
                 <div
                   style={{
                     marginTop: SPACE[2],
-                    color: C.textMuted,
+                    color: 'var(--muted-foreground)',
                     fontSize: TYPE.size.sm,
                     lineHeight: TYPE.lineHeight.relaxed,
                   }}

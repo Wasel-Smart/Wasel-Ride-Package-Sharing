@@ -50,27 +50,27 @@ function normalizePhoneInput ( value: string ): string {
 
 // ─── Feature list for the brand panel ────────────────────────────────────────
 const BRAND_FEATURES = [
-  { icon: <Zap size={ 14 } />, text: 'Live route graph', color: C.cyan },
+  { icon: <Zap size={ 14 } />, text: 'Live route graph', color: 'var(--primary)' },
   { icon: <Package size={ 14 } />, text: 'Parcels on route', color: C.gold },
   { icon: <Bus size={ 14 } />, text: 'Scheduled lanes', color: C.green },
   { icon: <Shield size={ 14 } />, text: 'Trust by default', color: C.purple },
 ] as const;
 
 const BRAND_FEATURES_AR = [
-  { icon: <Zap size={ 14 } />, text: 'رسم المسارات المباشر', color: C.cyan },
+  { icon: <Zap size={ 14 } />, text: 'رسم المسارات المباشر', color: 'var(--primary)' },
   { icon: <Package size={ 14 } />, text: 'طرود على نفس المسار', color: C.gold },
   { icon: <Bus size={ 14 } />, text: 'خطوط مجدولة', color: C.green },
   { icon: <Shield size={ 14 } />, text: 'الثقة من البداية', color: C.purple },
 ] as const;
 
 const BRAND_METRICS = [
-  { value: '3', label: 'mobility surfaces', accent: C.cyan },
+  { value: '3', label: 'mobility surfaces', accent: 'var(--primary)' },
   { value: '1', label: 'trusted account', accent: C.gold },
   { value: 'Live', label: 'route intelligence', accent: C.green },
 ];
 
 const BRAND_METRICS_AR = [
-  { value: '٣', label: 'أسطح تنقل', accent: C.cyan },
+  { value: '٣', label: 'أسطح تنقل', accent: 'var(--primary)' },
   { value: '١', label: 'حساب موثوق', accent: C.gold },
   { value: 'مباشر', label: 'ذكاء المسار', accent: C.green },
 ];
@@ -93,7 +93,7 @@ function BrandPanel () {
     <div
       className="auth-brand-panel"
       style={ {
-        background: `linear-gradient(145deg, ${ C.navy } 0%, ${ C.navyMid } 48%, ${ C.cardSolid } 100%)`,
+        background: `linear-gradient(145deg, ${ 'var(--background)' } 0%, ${ 'var(--muted)' } 48%, ${ 'var(--card)' } 100%)`,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -120,8 +120,8 @@ function BrandPanel () {
             gap: SPACE[ 2 ],
             padding: '6px 14px',
             borderRadius: R.full,
-            background: `${ C.cyan }12`,
-            border: `1px solid ${ C.cyan }30`,
+            background: `${ 'var(--primary)' }12`,
+            border: `1px solid ${ 'var(--primary)' }30`,
             marginBottom: SPACE[ 5 ],
           } }
         >
@@ -130,8 +130,8 @@ function BrandPanel () {
               width: 6,
               height: 6,
               borderRadius: '50%',
-              background: C.cyan,
-              boxShadow: `0 0 8px ${ C.cyan }`,
+              background: 'var(--primary)',
+              boxShadow: `0 0 8px ${ 'var(--primary)' }`,
               animation: 'pulse-dot 2s ease-in-out infinite',
               flexShrink: 0,
             } }
@@ -140,7 +140,7 @@ function BrandPanel () {
             style={ {
               fontSize: TYPE.size.xs,
               fontWeight: TYPE.weight.bold,
-              color: C.cyan,
+              color: 'var(--primary)',
               textTransform: 'uppercase',
               letterSpacing: TYPE.letterSpacing.widest,
             } }
@@ -153,7 +153,7 @@ function BrandPanel () {
           style={ {
             fontSize: TYPE.size[ '3xl' ],
             fontWeight: TYPE.weight.ultra,
-            color: C.text,
+            color: 'var(--foreground)',
             letterSpacing: '-0.04em',
             margin: `0 0 ${ SPACE[ 3 ] }`,
             lineHeight: 1.12,
@@ -175,7 +175,7 @@ function BrandPanel () {
         <p
           style={ {
             fontSize: TYPE.size.base,
-            color: C.textMuted,
+            color: 'var(--muted-foreground)',
             lineHeight: TYPE.lineHeight.loose,
             marginBottom: SPACE[ 6 ],
           } }
@@ -204,7 +204,7 @@ function BrandPanel () {
               >
                 { item.icon }
               </div>
-              <span style={ { fontSize: TYPE.size.sm, color: `${ C.text }99` } }>{ item.text }</span>
+              <span style={ { fontSize: TYPE.size.sm, color: `${ 'var(--foreground)' }99` } }>{ item.text }</span>
             </div>
           ) ) }
         </div>
@@ -227,9 +227,9 @@ function BrandPanel () {
                 gap: 5,
                 fontSize: TYPE.size.xs,
                 fontWeight: TYPE.weight.semibold,
-                color: `${ C.text }99`,
-                background: `${ C.text }0a`,
-                border: `1px solid ${ C.text }18`,
+                color: `${ 'var(--foreground)' }99`,
+                background: `${ 'var(--foreground)' }0a`,
+                border: `1px solid ${ 'var(--foreground)' }18`,
                 borderRadius: R.full,
                 padding: '4px 12px 4px 8px',
               } }
@@ -258,7 +258,7 @@ function StrengthBar ( { password }: { password: string } ) {
               flex: 1,
               height: 3,
               borderRadius: R.full,
-              background: n <= strength.score ? strength.color : `${ C.text }14`,
+              background: n <= strength.score ? strength.color : `${ 'var(--foreground)' }14`,
               transition: 'background 200ms ease',
             } }
           />
@@ -282,11 +282,11 @@ function TabSwitcher ( { tab, onChange }: { tab: Tab; onChange: ( t: Tab ) => vo
     <div
       style={ {
         display: 'flex',
-        background: C.cardSolid,
+        background: 'var(--card)',
         borderRadius: R.xl,
         padding: 4,
         marginBottom: SPACE[ 7 ],
-        border: `1px solid ${ C.border }`,
+        border: `1px solid ${ 'var(--border)' }`,
       } }
     >
       { ( [ 'signin', 'signup' ] as Tab[] ).map( value => {
@@ -317,7 +317,7 @@ function TabSwitcher ( { tab, onChange }: { tab: Tab; onChange: ( t: Tab ) => vo
               background: active
                 ? 'linear-gradient(135deg, #00E5FF 0%, #0e5cb0 100%)'
                 : 'transparent',
-              color: active ? C.bg : C.textMuted,
+              color: active ? 'var(--background)' : 'var(--muted-foreground)',
               boxShadow: active ? `0 2px 12px ${ C.cyanGlow }` : 'none',
               transition: 'all 150ms ease',
             } }
@@ -783,7 +783,7 @@ export default function WaselAuth () {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: C.bg,
+          background: 'var(--background)',
           gap: 16,
         } }
       >
@@ -807,8 +807,8 @@ export default function WaselAuth () {
       className="auth-grid"
       style={ {
         minHeight: '100vh',
-        background: C.bg,
-        color: C.text,
+        background: 'var(--background)',
+        color: 'var(--foreground)',
         fontFamily: F,
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
@@ -830,7 +830,7 @@ export default function WaselAuth () {
       <div
         className="auth-form-panel"
         style={ {
-          background: `linear-gradient(180deg, ${ C.bg } 0%, ${ C.bgAlt } 100%)`,
+          background: `linear-gradient(180deg, ${ 'var(--background)' } 0%, ${ 'var(--background)' } 100%)`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -849,7 +849,7 @@ export default function WaselAuth () {
               textAlign: 'center',
               marginBottom: SPACE[ 7 ],
               paddingBottom: SPACE[ 6 ],
-              borderBottom: `1px solid ${ C.border }`,
+              borderBottom: `1px solid ${ 'var(--border)' }`,
             } }
           >
             <WaselLogo size={ 44 } theme="light" variant="full" />
@@ -857,15 +857,15 @@ export default function WaselAuth () {
               style={ {
                 fontSize: TYPE.size.xl,
                 fontWeight: TYPE.weight.ultra,
-                color: C.text,
+                color: 'var(--foreground)',
                 marginTop: SPACE[ 4 ],
                 marginBottom: SPACE[ 2 ],
                 letterSpacing: '-0.03em',
               } }
             >
-              <span style={ { color: C.cyan } }>{ tx( 'waselAuth.one_identity_2' ) }</span>
+              <span style={ { color: 'var(--primary)' } }>{ tx( 'waselAuth.one_identity_2' ) }</span>
             </h2>
-            <p style={ { fontSize: TYPE.size.sm, color: C.textMuted, marginBottom: SPACE[ 3 ] } }>
+            <p style={ { fontSize: TYPE.size.sm, color: 'var(--muted-foreground)', marginBottom: SPACE[ 3 ] } }>
               { tx( 'waselAuth.sign_in_once_for_rides_parcels_buses_and_trust' ) }
             </p>
           </div>
@@ -878,7 +878,7 @@ export default function WaselAuth () {
               style={ {
                 fontSize: TYPE.size[ '2xl' ],
                 fontWeight: TYPE.weight.ultra,
-                color: C.text,
+                color: 'var(--foreground)',
                 margin: `0 0 ${ SPACE[ 2 ] }`,
                 letterSpacing: '-0.02em',
               } }
@@ -894,7 +894,7 @@ export default function WaselAuth () {
             <p
               style={ {
                 fontSize: TYPE.size.sm,
-                color: C.textMuted,
+                color: 'var(--muted-foreground)',
                 margin: 0,
                 lineHeight: TYPE.lineHeight.relaxed,
               } }
@@ -965,17 +965,17 @@ export default function WaselAuth () {
                   variant="solid"
                   padding={ `${ SPACE[ 3 ] } ${ SPACE[ 4 ] }` }
                   radius={ R.lg }
-                  style={ { background: C.errorDim, border: `1px solid ${ C.error }40` } }
+                  style={ { background: 'color-mix(in srgb, var(--destructive) 14%, transparent)', border: `1px solid ${ 'var(--destructive)' }40` } }
                 >
                   <div style={ { display: 'flex', alignItems: 'flex-start', gap: SPACE[ 2 ] } }>
                     { error.includes( '\n' ) && (
-                      <AlertCircle size={ 16 } color={ C.error } style={ { flexShrink: 0, marginTop: 2 } } />
+                      <AlertCircle size={ 16 } color={ 'var(--destructive)' } style={ { flexShrink: 0, marginTop: 2 } } />
                     ) }
                     <span
                       role="alert"
                       style={ {
                         fontSize: TYPE.size.sm,
-                        color: C.error,
+                        color: 'var(--destructive)',
                         fontFamily: F,
                         whiteSpace: 'pre-line',
                         lineHeight: TYPE.lineHeight.relaxed,
@@ -998,7 +998,7 @@ export default function WaselAuth () {
                 style={ {
                   background: 'none',
                   border: 'none',
-                  color: C.cyan,
+                  color: 'var(--primary)',
                   fontSize: TYPE.size.sm,
                   fontFamily: F,
                   cursor: resending || busy ? 'not-allowed' : 'pointer',
@@ -1064,7 +1064,7 @@ export default function WaselAuth () {
                       icon={ <UserRound size={ 16 } /> }
                     />
                     { nameError && (
-                      <span style={ { color: C.error, fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
+                      <span style={ { color: 'var(--destructive)', fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
                         { nameError }
                       </span>
                     ) }
@@ -1083,7 +1083,7 @@ export default function WaselAuth () {
                     icon={ <Mail size={ 16 } /> }
                   />
                   { emailError && (
-                    <span style={ { color: C.error, fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
+                    <span style={ { color: 'var(--destructive)', fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
                       { emailError }
                     </span>
                   ) }
@@ -1114,7 +1114,7 @@ export default function WaselAuth () {
                     }
                   />
                   { passwordError && (
-                    <span style={ { color: C.error, fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
+                    <span style={ { color: 'var(--destructive)', fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
                       { passwordError }
                     </span>
                   ) }
@@ -1133,7 +1133,7 @@ export default function WaselAuth () {
                       icon={ <Phone size={ 16 } /> }
                     />
                     { phoneError && (
-                      <span style={ { color: C.error, fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
+                      <span style={ { color: 'var(--destructive)', fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
                         { phoneError }
                       </span>
                     ) }
@@ -1148,7 +1148,7 @@ export default function WaselAuth () {
                       style={ {
                         background: 'none',
                         border: 'none',
-                        color: C.cyan,
+                        color: 'var(--primary)',
                         fontSize: TYPE.size.xs,
                         cursor: 'pointer',
                         fontFamily: F,
@@ -1175,11 +1175,11 @@ export default function WaselAuth () {
 
                 {/* Divider */ }
                 <div style={ { display: 'flex', alignItems: 'center', gap: SPACE[ 3 ] } }>
-                  <div style={ { flex: 1, height: 1, background: C.border } } />
-                  <span style={ { fontSize: TYPE.size.xs, color: C.textMuted } }>
+                  <div style={ { flex: 1, height: 1, background: 'var(--border)' } } />
+                  <span style={ { fontSize: TYPE.size.xs, color: 'var(--muted-foreground)' } }>
                     { tx( 'waselAuth.or_continue_with' ) }
                   </span>
-                  <div style={ { flex: 1, height: 1, background: C.border } } />
+                  <div style={ { flex: 1, height: 1, background: 'var(--border)' } } />
                 </div>
 
                 {/* Social buttons */ }
@@ -1250,7 +1250,7 @@ export default function WaselAuth () {
                       style={ {
                         background: 'none',
                         border: 'none',
-                        color: C.textMuted,
+                        color: 'var(--muted-foreground)',
                         fontSize: TYPE.size.xs,
                         fontFamily: F,
                         cursor: 'pointer',
@@ -1270,7 +1270,7 @@ export default function WaselAuth () {
           <p
             style={ {
               fontSize: TYPE.size.xs,
-              color: C.textMuted,
+              color: 'var(--muted-foreground)',
               textAlign: 'center',
               marginTop: SPACE[ 6 ],
               lineHeight: TYPE.lineHeight.relaxed,
@@ -1281,7 +1281,7 @@ export default function WaselAuth () {
               type="button"
               onClick={ () => nav( '/terms' ) }
               style={ {
-                color: C.cyan,
+                color: 'var(--primary)',
                 cursor: 'pointer',
                 background: 'none',
                 border: 'none',
@@ -1296,7 +1296,7 @@ export default function WaselAuth () {
               type="button"
               onClick={ () => nav( '/privacy' ) }
               style={ {
-                color: C.cyan,
+                color: 'var(--primary)',
                 cursor: 'pointer',
                 background: 'none',
                 border: 'none',

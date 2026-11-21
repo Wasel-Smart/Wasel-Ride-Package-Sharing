@@ -15,16 +15,16 @@ import {
 } from '../../services/journeyLogistics';
 
 const D = {
-  bg: C.bg,
-  card: C.cardSolid,
-  card2: C.card2,
-  border: C.border,
+  bg: 'var(--background)',
+  card: 'var(--card)',
+  card2: 'var(--muted)',
+  border: 'var(--border)',
   gold: C.gold,
-  cyan: C.cyan,
+  cyan: 'var(--primary)',
   green: C.green,
-  text: C.text,
-  sub: C.textSub,
-  muted: C.textMuted,
+  text: 'var(--foreground)',
+  sub: 'var(--foreground)',
+  muted: 'var(--muted-foreground)',
   F,
   MONO: FM,
 } as const;
@@ -188,7 +188,7 @@ export function ReturnMatching() {
             borderRadius: R.xxl,
             padding: '26px 28px',
             marginBottom: 18,
-            border: `1px solid ${C.borderHov}`,
+            border: `1px solid ${'var(--border)'}`,
             boxShadow: SH.lg,
           }}
         >
@@ -231,7 +231,7 @@ export function ReturnMatching() {
             </div>
             <div
               style={{
-                background: C.elevated,
+                background: 'var(--secondary)',
                 border: `1px solid ${D.border}`,
                 borderRadius: R.xl,
                 padding: '14px 16px',
@@ -351,7 +351,7 @@ export function ReturnMatching() {
                             width: 36,
                             height: 36,
                             borderRadius: 12,
-                            background: C.elevated,
+                            background: 'var(--secondary)',
                             display: 'grid',
                             placeItems: 'center',
                             fontWeight: 900,
@@ -406,8 +406,8 @@ export function ReturnMatching() {
                       border: 'none',
                       background: retailer
                         ? `linear-gradient(135deg,${D.gold},${C.orange})`
-                        : C.elevated,
-                      color: retailer ? C.bgDeep : D.muted,
+                        : 'var(--secondary)',
+                      color: retailer ? 'var(--background)' : D.muted,
                       fontWeight: 900,
                       fontSize: '0.92rem',
                       fontFamily: D.F,
@@ -570,8 +570,8 @@ export function ReturnMatching() {
                         background:
                           item && reason
                             ? `linear-gradient(135deg,${D.gold},${C.orange})`
-                            : C.elevated,
-                        color: item && reason ? C.bgDeep : D.muted,
+                            : 'var(--secondary)',
+                        color: item && reason ? 'var(--background)' : D.muted,
                         fontWeight: 900,
                         cursor: item && reason ? 'pointer' : 'not-allowed',
                         display: 'flex',
@@ -715,9 +715,9 @@ export function ReturnMatching() {
                         background:
                           !creating && (matches.length === 0 || selectedMatch)
                             ? `linear-gradient(135deg,${D.gold},${C.orange})`
-                            : C.elevated,
+                            : 'var(--secondary)',
                         color:
-                          !creating && (matches.length === 0 || selectedMatch) ? C.bgDeep : D.muted,
+                          !creating && (matches.length === 0 || selectedMatch) ? 'var(--background)' : D.muted,
                         fontWeight: 900,
                         cursor:
                           !creating && (matches.length === 0 || selectedMatch)
@@ -729,7 +729,7 @@ export function ReturnMatching() {
                     </button>
                   </div>
                   {error ? (
-                    <div style={{ marginTop: 14, color: C.error, fontSize: '0.8rem' }}>{error}</div>
+                    <div style={{ marginTop: 14, color: 'var(--destructive)', fontSize: '0.8rem' }}>{error}</div>
                   ) : null}
                 </motion.div>
               )}
@@ -844,7 +844,7 @@ export function ReturnMatching() {
                           borderRadius: 12,
                           border: 'none',
                           background: `linear-gradient(135deg,${D.gold},${C.orange})`,
-                          color: C.bgDeep,
+                          color: 'var(--background)',
                           fontWeight: 900,
                           cursor: 'pointer',
                         }}
@@ -861,7 +861,7 @@ export function ReturnMatching() {
           <div style={{ display: 'grid', gap: 16 }}>
             <div
               style={{
-                background: `linear-gradient(135deg, ${C.goldDim}, ${C.cardSolid} 68%, ${C.cyanDim})`,
+                background: `linear-gradient(135deg, ${C.goldDim}, ${'var(--card)'} 68%, ${C.cyanDim})`,
                 borderRadius: R.xxl,
                 padding: '20px',
                 border: `1px solid ${D.border}`,
@@ -888,7 +888,7 @@ export function ReturnMatching() {
                   <div
                     key={line}
                     style={{
-                      background: C.elevated,
+                      background: 'var(--secondary)',
                       borderRadius: R.lg,
                       border: `1px solid ${D.border}`,
                       padding: '12px 14px',
@@ -920,7 +920,7 @@ export function ReturnMatching() {
                   <div
                     key={item.label}
                     style={{
-                      background: C.elevated,
+                      background: 'var(--secondary)',
                       borderRadius: R.lg,
                       border: `1px solid ${D.border}`,
                       padding: '12px 12px 10px',
@@ -1004,7 +1004,7 @@ export function ReturnMatching() {
                     borderRadius: R.md,
                     border: 'none',
                     background: `linear-gradient(135deg,${D.gold},${C.orange})`,
-                    color: C.bgDeep,
+                    color: 'var(--background)',
                     fontWeight: 900,
                     cursor: 'pointer',
                   }}

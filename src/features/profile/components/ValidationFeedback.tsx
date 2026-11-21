@@ -15,7 +15,7 @@ export function ValidationFeedback({ error, success, warning, ar }: ValidationFe
 
   const styles = {
     error: {
-      color: C.error,
+      color: 'var(--destructive)',
       icon: '✕',
     },
     success: {
@@ -88,7 +88,7 @@ export function InputWithValidation({
   const hasError = Boolean(error);
   const hasSuccess = Boolean(success);
 
-  const borderColor = hasError ? C.error : hasSuccess ? C.green : C.cyan;
+  const borderColor = hasError ? 'var(--destructive)' : hasSuccess ? C.green : 'var(--primary)';
 
   return (
     <div style={{ display: 'grid', gap: '4px', flex: 1 }}>
@@ -110,8 +110,8 @@ export function InputWithValidation({
           padding: '10px 12px',
           borderRadius: 10,
           border: `1.5px solid ${borderColor}`,
-          background: hasError ? C.errorDim : hasSuccess ? C.green + '0A' : C.cyanDim,
-          color: C.text,
+          background: hasError ? 'color-mix(in srgb, var(--destructive) 14%, transparent)' : hasSuccess ? C.green + '0A' : C.cyanDim,
+          color: 'var(--foreground)',
           fontSize: '0.9rem',
           fontFamily: F,
           outline: 'none',
@@ -144,9 +144,9 @@ export function SaveButton({
       style={{
         padding: '10px 16px',
         borderRadius: 10,
-        background: disabled || loading ? C.borderHov : C.cyan,
+        background: disabled || loading ? 'var(--border)' : 'var(--primary)',
         border: 'none',
-        color: C.bgDeep,
+        color: 'var(--background)',
         fontWeight: 700,
         cursor: disabled || loading ? 'not-allowed' : 'pointer',
         fontSize: '0.85rem',
@@ -163,7 +163,7 @@ export function SaveButton({
             style={{
               width: '12px',
               height: '12px',
-              border: `2px solid ${C.bgDeep}`,
+              border: `2px solid ${'var(--background)'}`,
               borderTopColor: 'transparent',
               borderRadius: '50%',
               animation: 'spin 0.6s linear infinite',

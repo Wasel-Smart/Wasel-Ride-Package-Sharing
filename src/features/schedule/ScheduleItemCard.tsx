@@ -19,16 +19,16 @@ function typeLabel(type: ScheduleItem['item_type'], t: (key: string) => string):
 }
 
 function typeColor(type: ScheduleItem['item_type']): string {
-  if (type === 'ride') { return C.cyan; }
+  if (type === 'ride') { return 'var(--primary)'; }
   if (type === 'package_delivery') { return C.gold; }
   return C.green;
 }
 
 const STATUS_LABEL: Record<string, { en: string; ar: string; color: string }> = {
-  scheduled: { en: 'Scheduled', ar: 'مجدول', color: C.cyan },
+  scheduled: { en: 'Scheduled', ar: 'مجدول', color: 'var(--primary)' },
   confirmed: { en: 'Confirmed', ar: 'مؤكد', color: C.green },
   completed: { en: 'Completed', ar: 'مكتمل', color: C.green },
-  cancelled: { en: 'Cancelled', ar: 'ملغي', color: C.error },
+  cancelled: { en: 'Cancelled', ar: 'ملغي', color: 'var(--destructive)' },
   missed: { en: 'Missed', ar: 'فائت', color: C.gold },
 };
 
@@ -46,7 +46,7 @@ export function ScheduleItemCard ({
   const statusLabel = statusEntry
     ? (ar ? statusEntry.ar : statusEntry.en)
     : item.status;
-  const statusColor = statusEntry?.color ?? C.cyan;
+  const statusColor = statusEntry?.color ?? 'var(--primary)';
   const Icon = item.item_type === 'ride' ? Car : Package;
 
   return (
@@ -57,7 +57,7 @@ export function ScheduleItemCard ({
           alignItems: 'center',
           gap: 14,
           padding: '14px 16px',
-          borderBottom: isCancelling ? 'none' : `1px solid ${C.borderFaint}`,
+          borderBottom: isCancelling ? 'none' : `1px solid ${'var(--border)'}`,
         }}
       >
         <div
@@ -88,7 +88,7 @@ export function ScheduleItemCard ({
             <span
               style={{
                 fontWeight: TYPE.weight.bold,
-                color: C.text,
+                color: 'var(--foreground)',
                 fontFamily: F,
                 fontSize: TYPE.size.base,
               }}
@@ -111,7 +111,7 @@ export function ScheduleItemCard ({
           </div>
           <div
             style={{
-              color: C.textMuted,
+              color: 'var(--muted-foreground)',
               fontSize: TYPE.size.sm,
               marginTop: 2,
               display: 'flex',
@@ -136,7 +136,7 @@ export function ScheduleItemCard ({
           </div>
           <div
             style={{
-              color: C.textDim,
+              color: 'var(--muted-foreground)',
               fontSize: TYPE.size.xs,
               marginTop: 4,
               display: 'flex',
@@ -163,9 +163,9 @@ export function ScheduleItemCard ({
           aria-label={ar ? 'إلغاء الرحلة' : 'Cancel trip'}
           style={{
             background: 'transparent',
-            border: `1px solid ${isCancelling ? C.error : `${C.error}40`}`,
+            border: `1px solid ${isCancelling ? 'var(--destructive)' : `${'var(--destructive)'}40`}`,
             borderRadius: R.sm,
-            color: C.error,
+            color: 'var(--destructive)',
             cursor: 'pointer',
             padding: '8px',
             display: 'flex',
@@ -183,12 +183,12 @@ export function ScheduleItemCard ({
             alignItems: 'center',
             justifyContent: 'space-between',
             padding: '10px 16px',
-            background: `${C.error}0a`,
-            borderBottom: `1px solid ${C.borderFaint}`,
+            background: `${'var(--destructive)'}0a`,
+            borderBottom: `1px solid ${'var(--border)'}`,
             gap: 12,
           }}
         >
-          <span style={{ color: C.textMuted, fontSize: TYPE.size.sm }}>
+          <span style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.sm }}>
             {t('scheduleExpanded.cancelThisScheduledItem')}
           </span>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -197,7 +197,7 @@ export function ScheduleItemCard ({
               style={{
                 padding: '6px 14px',
                 borderRadius: R.sm,
-                background: C.error,
+                background: 'var(--destructive)',
                 border: 'none',
                 color: '#fff',
                 fontWeight: TYPE.weight.bold,
@@ -212,9 +212,9 @@ export function ScheduleItemCard ({
               style={{
                 padding: '6px 14px',
                 borderRadius: R.sm,
-                background: C.elevated,
-                border: `1px solid ${C.border}`,
-                color: C.text,
+                background: 'var(--secondary)',
+                border: `1px solid ${'var(--border)'}`,
+                color: 'var(--foreground)',
                 fontWeight: TYPE.weight.bold,
                 fontSize: TYPE.size.xs,
                 cursor: 'pointer',

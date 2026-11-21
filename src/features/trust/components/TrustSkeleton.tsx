@@ -14,8 +14,8 @@ export function TrustSkeleton () {
           gap: SPACE[ 4 ],
           padding: SPACE[ 5 ],
           borderRadius: R.xxl,
-          border: `1px solid ${ C.border }`,
-          background: `linear-gradient(180deg, ${ C.card }, rgba(9,22,34,0.92))`,
+          border: `1px solid ${ 'var(--border)' }`,
+          background: `linear-gradient(180deg, ${ 'var(--card)' }, rgba(9,22,34,0.92))`,
           boxShadow: '0 1px 0 rgba(0,229,255,0.06)',
         } }
       >

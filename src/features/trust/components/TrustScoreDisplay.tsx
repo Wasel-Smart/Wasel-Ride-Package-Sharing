@@ -8,7 +8,7 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 function scoreColor(score: number): string {
   if (score >= 80) {return C.green;}
   if (score >= 50) {return C.gold;}
-  return C.error;
+  return 'var(--destructive)';
 }
 
 export function TrustScoreDisplay({
@@ -49,8 +49,8 @@ export function TrustScoreDisplay({
         gap: 8,
         padding: '24px 24px 20px',
         borderRadius: R.xl,
-        border: `1px solid ${C.border}`,
-        background: C.elevated,
+        border: `1px solid ${'var(--border)'}`,
+        background: 'var(--secondary)',
       }}
     >
       <svg width={RING_SIZE} height={RING_SIZE} viewBox="0 0 130 130">
@@ -64,7 +64,7 @@ export function TrustScoreDisplay({
           cy="65"
           r={RADIUS}
           fill="none"
-          stroke={C.border}
+          stroke={'var(--border)'}
           strokeWidth={STROKE - 2}
           opacity={0.3}
         />
@@ -90,7 +90,7 @@ export function TrustScoreDisplay({
           y="50%"
           textAnchor="middle"
           dominantBaseline="middle"
-          fill={C.text}
+          fill={'var(--foreground)'}
           fontFamily={fontFamily}
           fontSize={32}
           fontWeight={TYPE.weight.ultra}
@@ -98,7 +98,7 @@ export function TrustScoreDisplay({
           {clamped}
         </text>
       </svg>
-      <div style={{ fontWeight: TYPE.weight.bold, fontFamily, color: C.textMuted, fontSize: TYPE.size.sm }}>
+      <div style={{ fontWeight: TYPE.weight.bold, fontFamily, color: 'var(--muted-foreground)', fontSize: TYPE.size.sm }}>
         {label}
       </div>
       <div

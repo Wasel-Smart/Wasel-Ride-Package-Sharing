@@ -342,7 +342,7 @@ export function ServiceFlowPlaybook({
     <section
       style={{
         marginTop: 24,
-        background: C.card,
+        background: 'var(--card)',
         border: `1px solid ${DS.border}`,
         borderRadius: R.xxl,
         padding: 22,
@@ -370,7 +370,7 @@ export function ServiceFlowPlaybook({
       >
         <div style={{ maxWidth: 720, textAlign: isArabic ? 'right' : 'left' }}>
           <div style={{ ...pill(active.accent), marginBottom: 10 }}>{active.label}</div>
-          <div style={{ color: C.text, fontWeight: 900, fontSize: '1.04rem', marginBottom: 8 }}>
+          <div style={{ color: 'var(--foreground)', fontWeight: 900, fontSize: '1.04rem', marginBottom: 8 }}>
             {resolvedTitle}
           </div>
           <div style={{ color: DS.sub, fontSize: '0.82rem', lineHeight: 1.65 }}>
@@ -380,7 +380,7 @@ export function ServiceFlowPlaybook({
         <div
           style={{
             maxWidth: 340,
-            color: C.textSub,
+            color: 'var(--foreground)',
             fontSize: '0.84rem',
             lineHeight: 1.65,
             textAlign: isArabic ? 'right' : 'left',
@@ -405,8 +405,8 @@ export function ServiceFlowPlaybook({
                 padding: '0 14px',
                 borderRadius: R.full,
                 border: `1px solid ${selected ? service.accent : DS.border}`,
-                background: selected ? `${service.accent}16` : C.elevated,
-                color: C.text,
+                background: selected ? `${service.accent}16` : 'var(--secondary)',
+                color: 'var(--foreground)',
                 fontWeight: 800,
                 cursor: 'pointer',
               }}
@@ -452,7 +452,7 @@ export function ServiceFlowPlaybook({
             >
               {index + 1}
             </div>
-            <div style={{ color: C.text, fontWeight: 800, fontSize: '0.84rem', marginBottom: 6 }}>
+            <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.84rem', marginBottom: 6 }}>
               {step.title}
             </div>
             <div style={{ color: DS.sub, fontSize: '0.78rem', lineHeight: 1.6 }}>{step.detail}</div>
@@ -486,7 +486,7 @@ export function ServiceFlowPlaybook({
             >
               {tx('serviceFlowPlaybook.keep_clear')}
             </div>
-            <div style={{ color: C.textSub, fontSize: '0.79rem', lineHeight: 1.65 }}>{note}</div>
+            <div style={{ color: 'var(--foreground)', fontSize: '0.79rem', lineHeight: 1.65 }}>{note}</div>
           </div>
         ))}
       </div>

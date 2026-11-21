@@ -98,7 +98,7 @@ export function BusBookingForm({
           }}
         >
           <div>
-            <div style={{ color: C.text, fontWeight: 900, fontSize: '1.15rem' }}>
+            <div style={{ color: 'var(--foreground)', fontWeight: 900, fontSize: '1.15rem' }}>
               {tx('busPage.reserve_your_seat')}
             </div>
             <div style={{ color: DS.sub, fontSize: '0.8rem', marginTop: 4 }}>
@@ -126,8 +126,8 @@ export function BusBookingForm({
                     ? mode === 'depart-now'
                       ? DS.gradC
                       : DS.gradG
-                    : C.elevated,
-                color: C.text,
+                    : 'var(--secondary)',
+                color: 'var(--foreground)',
                 fontWeight: 700,
               }}
             >
@@ -157,7 +157,7 @@ export function BusBookingForm({
           >
             {tx('busPage.departure_plan_2')}
           </div>
-          <div style={{ color: C.text, fontWeight: 800, fontSize: '0.95rem' }}>
+          <div style={{ color: 'var(--foreground)', fontWeight: 800, fontSize: '0.95rem' }}>
             {selectedDeparture}
           </div>
           <div style={{ color: DS.sub, fontSize: '0.78rem', marginTop: 4 }}>
@@ -194,7 +194,7 @@ export function BusBookingForm({
                     selectedDeparture === time
                       ? `${activeBus.color ?? DS.cyan}18`
                       : DS.card2,
-                  color: C.text,
+                  color: 'var(--foreground)',
                   fontWeight: 700,
                   cursor: 'pointer',
                 }}
@@ -211,7 +211,7 @@ export function BusBookingForm({
               border: `1px solid ${C.goldDim}`,
               borderRadius: r(16),
               padding: '14px 16px',
-              color: C.text,
+              color: 'var(--foreground)',
               fontSize: '0.84rem',
               lineHeight: 1.5,
             }}
@@ -246,7 +246,7 @@ export function BusBookingForm({
                 borderRadius: r(14),
                 border: `1px ${DS.border}`,
                 background: DS.card2,
-                color: C.text,
+                color: 'var(--foreground)',
                 padding: '0 14px',
                 fontFamily: DS.F,
               }}
@@ -287,14 +287,14 @@ export function BusBookingForm({
                   height: 46,
                   border: 'none',
                   background: 'transparent',
-                  color: C.text,
+                  color: 'var(--foreground)',
                   fontSize: '1.1rem',
                   cursor: 'pointer',
                 }}
               >
                 -
               </button>
-              <div style={{ flex: 1, textAlign: 'center', color: C.text, fontWeight: 800 }}>
+              <div style={{ flex: 1, textAlign: 'center', color: 'var(--foreground)', fontWeight: 800 }}>
                 <output aria-live="polite">{passengers}</output>
               </div>
               <button
@@ -311,7 +311,7 @@ export function BusBookingForm({
                   height: 46,
                   border: 'none',
                   background: 'transparent',
-                  color: C.text,
+                  color: 'var(--foreground)',
                   fontSize: '1.1rem',
                   cursor:
                     activeBus.seats === 0 || passengers >= activeBus.seats
@@ -349,7 +349,7 @@ export function BusBookingForm({
                 borderRadius: r(14),
                 border: `1px solid ${DS.border}`,
                 background: DS.card2,
-                color: C.text,
+                color: 'var(--foreground)',
                 padding: '0 14px',
                 fontFamily: DS.F,
               }}
@@ -392,7 +392,7 @@ export function BusBookingForm({
               }}
             >
               <span style={{ color: DS.sub, fontSize: '0.78rem' }}>{row.label}</span>
-              <span style={{ color: C.text, fontWeight: 700 }}>{row.value}</span>
+              <span style={{ color: 'var(--foreground)', fontWeight: 700 }}>{row.value}</span>
             </div>
           ))}
           <div
@@ -404,7 +404,7 @@ export function BusBookingForm({
               borderTop: `1px solid ${DS.border}`,
             }}
           >
-            <span style={{ color: C.text, fontWeight: 800 }}>{tx('common.total')}</span>
+            <span style={{ color: 'var(--foreground)', fontWeight: 800 }}>{tx('common.total')}</span>
             <span
               style={{
                 color: activeBus.color ?? DS.cyan,
@@ -427,9 +427,9 @@ export function BusBookingForm({
             borderRadius: r(16),
             border: 'none',
             background: bookingDisabled
-              ? C.elevated
+              ? 'var(--secondary)'
               : `linear-gradient(135deg,${activeBus.color ?? DS.cyan},${DS.blue})`,
-            color: C.text,
+            color: 'var(--foreground)',
             fontWeight: 900,
             fontFamily: DS.F,
             cursor: bookingDisabled ? 'not-allowed' : 'pointer',
@@ -490,7 +490,7 @@ export function BusBookingForm({
               <CheckCircle2 size={16} />
               {tx('busPage.seat_confirmed')}
             </div>
-            <div style={{ color: C.text, fontSize: '0.86rem', lineHeight: 1.5 }}>
+            <div style={{ color: 'var(--foreground)', fontSize: '0.86rem', lineHeight: 1.5 }}>
               {passengers} {tx('busPage.seat')}
               {tx('busPage.reserved_for')}
               {selectedDeparture}
@@ -511,7 +511,7 @@ export function BusBookingForm({
                   borderRadius: '99px',
                   border: `1px solid ${DS.border}`,
                   background: DS.card2,
-                  color: C.text,
+                  color: 'var(--foreground)',
                   fontWeight: 700,
                   cursor: 'pointer',
                 }}

@@ -87,17 +87,17 @@ export const tableStyles: Record<string, CSSProperties> = {
   headCell: {
     textAlign: 'left',
     padding: `${SPACE[3]} ${SPACE[4]}`,
-    color: C.textDim,
+    color: 'var(--muted-foreground)',
     fontSize: TYPE.size.xs,
     fontWeight: TYPE.weight.bold,
     textTransform: 'uppercase',
-    borderBottom: `1px solid ${C.border}`,
+    borderBottom: `1px solid ${'var(--border)'}`,
     whiteSpace: 'nowrap',
   },
   cell: {
     padding: `${SPACE[4]}`,
-    borderBottom: `1px solid ${C.borderFaint}`,
-    color: C.textSub,
+    borderBottom: `1px solid ${'var(--border)'}`,
+    color: 'var(--foreground)',
     verticalAlign: 'top',
   },
 };
@@ -113,10 +113,10 @@ export function AdminAccessDenied({ title, description }: { title: string; descr
         gap: SPACE[2],
       }}
     >
-      <h2 style={{ margin: 0, color: C.error, fontSize: TYPE.size.xl, fontWeight: TYPE.weight.ultra }}>
+      <h2 style={{ margin: 0, color: 'var(--destructive)', fontSize: TYPE.size.xl, fontWeight: TYPE.weight.ultra }}>
         {title}
       </h2>
-      <p style={{ margin: 0, color: C.textMuted, fontSize: TYPE.size.base }}>{description}</p>
+      <p style={{ margin: 0, color: 'var(--muted-foreground)', fontSize: TYPE.size.base }}>{description}</p>
     </div>
   );
 }
@@ -128,7 +128,7 @@ export function AdminNotice({
   tone: 'info' | 'error' | 'success';
   children: ReactNode;
 }) {
-  const accent = tone === 'error' ? C.error : tone === 'success' ? C.green : C.gold;
+  const accent = tone === 'error' ? 'var(--destructive)' : tone === 'success' ? C.green : C.gold;
   return (
     <div
       role={tone === 'error' ? 'alert' : 'status'}
@@ -171,7 +171,7 @@ export function AdminPager({
         marginTop: SPACE[4],
       }}
     >
-      <span style={{ color: C.textDim, fontSize: TYPE.size.xs }}>{label}</span>
+      <span style={{ color: 'var(--muted-foreground)', fontSize: TYPE.size.xs }}>{label}</span>
       <PagerButton label={previousLabel} disabled={page <= 1} onClick={() => { onPage(page - 1); }} />
       <PagerButton
         label={nextLabel}
@@ -199,9 +199,9 @@ function PagerButton({
       style={{
         padding: `${SPACE[2]} ${SPACE[4]}`,
         borderRadius: R.lg,
-        border: `1px solid ${C.border}`,
-        background: disabled ? 'transparent' : C.elevated,
-        color: disabled ? C.textDim : C.textSub,
+        border: `1px solid ${'var(--border)'}`,
+        background: disabled ? 'transparent' : 'var(--secondary)',
+        color: disabled ? 'var(--muted-foreground)' : 'var(--foreground)',
         fontSize: TYPE.size.sm,
         fontWeight: TYPE.weight.semibold,
         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -257,7 +257,7 @@ export function AdminActionButton({
         borderRadius: R.lg,
         border: `1px solid ${accent}44`,
         background: `${accent}14`,
-        color: disabled ? C.textDim : accent,
+        color: disabled ? 'var(--muted-foreground)' : accent,
         fontSize: TYPE.size.xs,
         fontWeight: TYPE.weight.bold,
         cursor: disabled || busy ? 'not-allowed' : 'pointer',

@@ -6,9 +6,9 @@ import { sanitizeText } from '../../utils/sanitize';
 import { C, F } from '../../utils/wasel-ds';
 import { buildProfileExportPayload, normalizeProfilePhone } from './profileUtils';
 
-export const PROFILE_BG = C.bg;
-export const PROFILE_BORDER = C.border;
-export const PROFILE_CYAN = C.cyan;
+export const PROFILE_BG = 'var(--background)';
+export const PROFILE_BORDER = 'var(--border)';
+export const PROFILE_CYAN = 'var(--primary)';
 export const PROFILE_FONT = F;
 
 export type SavingField = 'name' | 'phone' | 'photo' | null;
@@ -67,16 +67,16 @@ async function readAvatarFile(file: File): Promise<string> {
 }
 
 function getWalletStatus(user: WaselUser, ar: boolean): ProfileStatusChip {
-  if (user.walletStatus === 'closed') {return { label: ar ? 'مغلقة' : 'Closed', color: C.error };}
-  if (user.walletStatus === 'frozen') {return { label: ar ? 'مجمّد' : 'Frozen', color: C.error };}
+  if (user.walletStatus === 'closed') {return { label: ar ? 'مغلقة' : 'Closed', color: 'var(--destructive)' };}
+  if (user.walletStatus === 'frozen') {return { label: ar ? 'مجمّد' : 'Frozen', color: 'var(--destructive)' };}
   if (user.walletStatus === 'limited') {return { label: ar ? 'محدود' : 'Limited', color: C.gold };}
   return { label: ar ? 'نشط' : 'Active', color: C.green };
 }
 
 function getPermissionStatus(support: NotificationSupport, ar: boolean): ProfileStatusChip {
-  if (!support.isSupported) {return { label: ar ? 'غير مدعوم' : 'Unsupported', color: C.textDim };}
+  if (!support.isSupported) {return { label: ar ? 'غير مدعوم' : 'Unsupported', color: 'var(--muted-foreground)' };}
   if (support.permission === 'granted') {return { label: ar ? 'مفعل' : 'Enabled', color: C.green };}
-  if (support.permission === 'denied') {return { label: ar ? 'محظور' : 'Blocked', color: C.error };}
+  if (support.permission === 'denied') {return { label: ar ? 'محظور' : 'Blocked', color: 'var(--destructive)' };}
   return { label: ar ? 'غير مفعل' : 'Not enabled', color: C.gold };
 }
 

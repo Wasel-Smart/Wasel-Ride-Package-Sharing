@@ -172,7 +172,7 @@ export function AppCommandCenter() {
     };
   } else if (totalActive > 0) {
     nextAction = {
-      accent: C.cyan,
+      accent: 'var(--primary)',
       title: ar ? 'Ø­Ø±ÙƒØªÙƒ Ø§Ù„Ø­Ø§Ù„ÙŠØ© Ù…Ø§ Ø²Ø§Ù„Øª Ø¬Ø§Ø±ÙŠØ©' : 'Your current movement is still live',
       detail: ar
         ? `${totalActive} Ø¹Ù†Ø§ØµØ± Ù†Ø´Ø·Ø© Ø¨ÙŠÙ† Ø§Ù„Ø±Ø­Ù„Ø§Øª ÙˆØ§Ù„Ø·Ø±ÙˆØ¯ ÙˆØ§Ù„Ø¨Ø§Øµ.`
@@ -201,7 +201,7 @@ export function AppCommandCenter() {
       ar ? 'Ø­Ø±ÙƒØ© Ù†Ø´Ø·Ø©' : 'Active movement',
       `${totalActive}`,
       ar ? 'Ø±Ø­Ù„Ø§Øª ÙˆØ·Ø±ÙˆØ¯ ÙˆØ¨Ø§ØµØ§Øª Ø¬Ø§Ø±ÙŠØ© Ø§Ù„Ø¢Ù†.' : 'Trips, parcels, and buses currently in motion.',
-      C.cyan,
+      'var(--primary)',
       Clock3,
     ),
     metricCard(
@@ -239,7 +239,7 @@ export function AppCommandCenter() {
     {
       label: ar ? 'Ø§Ø¨Ø­Ø« Ø¹Ù† Ø±Ø­Ù„Ø©' : 'Book',
       detail: ar ? 'Ø§Ø¨Ø¯Ø£ Ù…Ù† Ø§Ù„Ù…Ø³Ø§Ø±' : 'Route, seats, fare',
-      accent: C.cyan,
+      accent: 'var(--primary)',
     },
     {
       label: ar ? 'Ø§Ø¹Ø±Ø¶ Ø±Ø­Ù„Ø©' : 'Request',
@@ -254,7 +254,7 @@ export function AppCommandCenter() {
     {
       label: ar ? 'Ø§ÙØªØ­ Ø§Ù„Ù…Ø­ÙØ¸Ø©' : 'Manage',
       detail: ar ? 'ØªØªØ¨Ø¹ Ø§Ù„Ø­Ø±ÙƒØ©' : 'Trips and supply',
-      accent: C.cyan,
+      accent: 'var(--primary)',
     },
   ];
 
@@ -271,7 +271,7 @@ export function AppCommandCenter() {
         style={{
           borderRadius: 20,
           border: `1px solid ${nextAction.accent}22`,
-          background: `linear-gradient(180deg, ${C.card}, rgba(8,29,57,0.94))`,
+          background: `linear-gradient(180deg, ${'var(--card)'}, rgba(8,29,57,0.94))`,
           boxShadow: SH.sm,
           padding: '24px 24px 20px',
           display: 'grid',
@@ -310,7 +310,7 @@ export function AppCommandCenter() {
             <h2
               style={{
                 margin: '14px 0 8px',
-                color: C.textFull,
+                color: 'var(--foreground)',
                 fontSize: '2rem',
                 lineHeight: TYPE.lineHeight.tight,
                 fontWeight: TYPE.weight.ultra,
@@ -322,7 +322,7 @@ export function AppCommandCenter() {
             <p
               style={{
                 margin: 0,
-                color: C.muted,
+                color: 'var(--muted)',
                 fontSize: TYPE.size.base,
                 lineHeight: 1.75,
                 maxWidth: 720,
@@ -341,7 +341,7 @@ export function AppCommandCenter() {
               borderRadius: 18,
               border: 'none',
               background: nextAction.accent,
-              color: C.bg,
+              color: 'var(--background)',
               fontWeight: TYPE.weight.ultra,
               fontFamily: F,
               fontSize: TYPE.size.sm,
@@ -377,7 +377,7 @@ export function AppCommandCenter() {
                 style={{
                   borderRadius: 16,
                   border: `1px solid ${item.accent}24`,
-                  background: C.elevated,
+                  background: 'var(--secondary)',
                   padding: '16px 16px 14px',
                 }}
               >
@@ -398,7 +398,7 @@ export function AppCommandCenter() {
                 <div
                   style={{
                     marginTop: 14,
-                    color: C.textFull,
+                    color: 'var(--foreground)',
                     fontSize: '1.2rem',
                     fontWeight: TYPE.weight.ultra,
                     fontFamily: F,
@@ -421,7 +421,7 @@ export function AppCommandCenter() {
                 <div
                   style={{
                     marginTop: 6,
-                    color: C.soft,
+                    color: 'var(--secondary)',
                     fontSize: TYPE.size.sm,
                     lineHeight: 1.6,
                   }}
@@ -435,8 +435,8 @@ export function AppCommandCenter() {
           <div
             style={{
               borderRadius: 16,
-              border: `1px solid ${C.borderSoft}`,
-              background: `linear-gradient(180deg, ${C.elevated}, ${C.card})`,
+              border: `1px solid ${'var(--border)'}`,
+              background: `linear-gradient(180deg, ${'var(--secondary)'}, ${'var(--card)'})`,
               padding: '18px 18px 16px',
               display: 'grid',
               gap: 14,
@@ -445,7 +445,7 @@ export function AppCommandCenter() {
             <div>
               <div
                 style={{
-                  color: C.cyan,
+                  color: 'var(--primary)',
                   fontSize: TYPE.size.xs,
                   fontWeight: TYPE.weight.bold,
                   textTransform: 'uppercase',
@@ -457,7 +457,7 @@ export function AppCommandCenter() {
               <div
                 style={{
                   marginTop: 8,
-                  color: C.textFull,
+                  color: 'var(--foreground)',
                   fontSize: '1rem',
                   fontWeight: TYPE.weight.ultra,
                   fontFamily: F,
@@ -469,7 +469,7 @@ export function AppCommandCenter() {
               <div
                 style={{
                   marginTop: 6,
-                  color: C.muted,
+                  color: 'var(--muted)',
                   fontSize: TYPE.size.sm,
                   lineHeight: 1.7,
                 }}
@@ -504,10 +504,10 @@ export function AppCommandCenter() {
                 >
                   {ar ? 'Ø§Ù„Ø±ØµÙŠØ¯ ÙˆØ§Ù„ØªØ¬Ø¯ÙŠØ¯' : 'Balance and continuity'}
                 </div>
-                <div style={{ marginTop: 6, color: C.textFull, fontWeight: TYPE.weight.ultra }}>
+                <div style={{ marginTop: 6, color: 'var(--foreground)', fontWeight: TYPE.weight.ultra }}>
                   {formatJod(user.balance ?? 0)}
                 </div>
-                <div style={{ marginTop: 6, color: C.soft, fontSize: TYPE.size.sm }}>
+                <div style={{ marginTop: 6, color: 'var(--secondary)', fontSize: TYPE.size.sm }}>
                   {membership.plusActive
                     ? ar
                       ? 'ÙˆØ§ØµÙ„ Ø¨Ù„Ø³ ÙØ¹Ø§Ù„Ø© Ø¹Ù„Ù‰ Ù‡Ø°Ø§ Ø§Ù„Ø­Ø³Ø§Ø¨.'
@@ -534,14 +534,14 @@ export function AppCommandCenter() {
                 >
                   {ar ? 'Ø§Ù„Ø«Ù‚Ø© Ø§Ù„ØªØ´ØºÙŠÙ„ÙŠØ©' : 'Operational trust'}
                 </div>
-                <div style={{ marginTop: 6, color: C.textFull, fontWeight: TYPE.weight.ultra }}>
+                <div style={{ marginTop: 6, color: 'var(--foreground)', fontWeight: TYPE.weight.ultra }}>
                   {trustStatus?.nextStepId
                     ? nextStepLabel(trustStatus.nextStepId, ar)
                     : ar
                       ? 'Ø¬Ø§Ù‡Ø²'
                       : 'Ready'}
                 </div>
-                <div style={{ marginTop: 6, color: C.soft, fontSize: TYPE.size.sm }}>
+                <div style={{ marginTop: 6, color: 'var(--secondary)', fontSize: TYPE.size.sm }}>
                   {trustNeedsAction
                     ? ar
                       ? 'Ø£ÙƒÙ…Ù„ Ù‡Ø°Ù‡ Ø§Ù„Ø®Ø·ÙˆØ© Ù‚Ø¨Ù„ ØªÙˆØ³ÙŠØ¹ Ø§Ù„Ø¹Ø±Ø¶ Ø£Ùˆ Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø§Øª.'
@@ -566,9 +566,9 @@ export function AppCommandCenter() {
                   style={{
                     minHeight: 48,
                     borderRadius: 16,
-                    border: `1px solid ${index === 0 ? `${action.accent}30` : C.borderSoft}`,
-                    background: index === 0 ? `${action.accent}10` : C.elevated,
-                    color: C.textFull,
+                    border: `1px solid ${index === 0 ? `${action.accent}30` : 'var(--border)'}`,
+                    background: index === 0 ? `${action.accent}10` : 'var(--secondary)',
+                    color: 'var(--foreground)',
                     fontWeight: TYPE.weight.bold,
                     fontFamily: F,
                     fontSize: TYPE.size.sm,
@@ -577,10 +577,10 @@ export function AppCommandCenter() {
                     padding: '12px 14px',
                   }}
                 >
-                  <span style={{ color: index === 0 ? action.accent : C.textFull }}>
+                  <span style={{ color: index === 0 ? action.accent : 'var(--foreground)' }}>
                     {action.label}
                   </span>
-                  <span style={{ color: C.soft, fontSize: TYPE.size.xs, lineHeight: 1.4 }}>
+                  <span style={{ color: 'var(--secondary)', fontSize: TYPE.size.xs, lineHeight: 1.4 }}>
                     {action.detail}
                   </span>
                 </div>

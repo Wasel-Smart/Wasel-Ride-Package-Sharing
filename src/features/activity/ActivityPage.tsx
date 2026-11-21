@@ -136,9 +136,9 @@ export function ActivityPage() {
           b.status === 'completed'
             ? C.green
             : b.status === 'cancelled' || b.status === 'rejected'
-              ? C.error
+              ? 'var(--destructive)'
               : b.status === 'confirmed'
-                ? C.cyan
+                ? 'var(--primary)'
                 : C.gold,
         Icon: Car,
         path: isActive ? `/app/live-trip?id=${b.id}` : '/app/my-trips',
@@ -155,7 +155,7 @@ export function ActivityPage() {
         time: p.createdAt?.split('T')[1]?.slice(0, 5) ?? '',
         status: p.status,
         statusColor:
-          p.status === 'delivered' ? C.green : p.status === 'in_transit' ? C.cyan : C.gold,
+          p.status === 'delivered' ? C.green : p.status === 'in_transit' ? 'var(--primary)' : C.gold,
         Icon: Package,
         path: '/app/packages',
       });
@@ -175,7 +175,7 @@ export function ActivityPage() {
           b.status === 'confirmed' || b.status === 'completed'
             ? C.green
             : b.status === 'cancelled'
-              ? C.error
+              ? 'var(--destructive)'
               : C.gold,
         Icon: Bus,
         path: '/app/bus',
@@ -184,7 +184,7 @@ export function ActivityPage() {
 
     scheduledItems.forEach(s => {
       const typeCol =
-        s.item_type === 'ride' ? C.cyan : s.item_type === 'package_delivery' ? C.gold : C.green;
+        s.item_type === 'ride' ? 'var(--primary)' : s.item_type === 'package_delivery' ? C.gold : C.green;
       const typeLabel =
         s.item_type === 'ride'
           ? t('activity.scheduledRide')
@@ -253,7 +253,7 @@ export function ActivityPage() {
       <SectionCard
         title={t('activity.pageTitle')}
         subtitle={t('activity.pageSubtitle')}
-        icon={<Car size={18} color={C.cyan} />}
+        icon={<Car size={18} color={'var(--primary)'} />}
       >
         {/* Filter pills with counts */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -264,9 +264,9 @@ export function ActivityPage() {
               style={{
                 padding: '6px 14px',
                 borderRadius: R.sm,
-                border: `1px solid ${filter === f.key ? C.cyan : C.border}`,
-                background: filter === f.key ? C.cyan : C.elevated,
-                color: filter === f.key ? C.bg : C.text,
+                border: `1px solid ${filter === f.key ? 'var(--primary)' : 'var(--border)'}`,
+                background: filter === f.key ? 'var(--primary)' : 'var(--secondary)',
+                color: filter === f.key ? 'var(--background)' : 'var(--foreground)',
                 fontWeight: TYPE.weight.bold,
                 fontFamily: F,
                 fontSize: TYPE.size.sm,
@@ -309,7 +309,7 @@ export function ActivityPage() {
                 <div
                   style={{
                     padding: '10px 0 6px',
-                    color: C.textDim,
+                    color: 'var(--muted-foreground)',
                     fontSize: TYPE.size.xs,
                     fontWeight: TYPE.weight.bold,
                     textTransform: 'uppercase',
@@ -336,7 +336,7 @@ export function ActivityPage() {
                         gap: 14,
                         padding: '14px 16px',
                         border: 'none',
-                        borderBottom: `1px solid ${C.borderFaint}`,
+                        borderBottom: `1px solid ${'var(--border)'}`,
                         background: 'transparent',
                         cursor: 'pointer',
                         textAlign: 'left',
@@ -372,7 +372,7 @@ export function ActivityPage() {
                           <span
                             style={{
                               fontWeight: TYPE.weight.bold,
-                              color: C.text,
+                              color: 'var(--foreground)',
                               fontFamily: F,
                               fontSize: TYPE.size.base,
                               overflow: 'hidden',
@@ -386,7 +386,7 @@ export function ActivityPage() {
                         </div>
                         <div
                           style={{
-                            color: C.textMuted,
+                            color: 'var(--muted-foreground)',
                             fontSize: TYPE.size.sm,
                             marginTop: 2,
                             overflow: 'hidden',
@@ -398,7 +398,7 @@ export function ActivityPage() {
                         </div>
                         <div
                           style={{
-                            color: C.textDim,
+                            color: 'var(--muted-foreground)',
                             fontSize: TYPE.size.xs,
                             marginTop: 4,
                             display: 'flex',
@@ -409,7 +409,7 @@ export function ActivityPage() {
                             {item.date} {item.time}
                           </span>
                           {item.amount !== undefined && item.amount > 0 && (
-                            <span style={{ fontWeight: TYPE.weight.bold, color: C.text }}>
+                            <span style={{ fontWeight: TYPE.weight.bold, color: 'var(--foreground)' }}>
                               JOD {item.amount.toFixed(2)}
                             </span>
                           )}
@@ -418,7 +418,7 @@ export function ActivityPage() {
 
                       <ArrowRight
                         size={16}
-                        color={C.textMuted}
+                        color={'var(--muted-foreground)'}
                         style={{ flexShrink: 0, transform: ar ? 'rotate(180deg)' : 'none' }}
                       />
                     </button>

@@ -30,7 +30,7 @@ function panelStyle(extra: CSSProperties = {}): CSSProperties {
   return {
     position: 'relative',
     background: GRAD_HERO,
-    border: `1px solid ${C.border}`,
+    border: `1px solid ${'var(--border)'}`,
     borderRadius: R['3xl'],
     boxShadow: SH.lg,
     overflow: 'hidden',
@@ -78,7 +78,7 @@ function routeLabel(projection: CorridorProjection | null): string {
     : tx('mobilityOSCore.no_active_pressure');
 }
 
-function eyebrow(text: string, color: string = C.cyan) {
+function eyebrow(text: string, color: string = 'var(--primary)') {
   return (
     <div
       style={{
@@ -93,21 +93,21 @@ function eyebrow(text: string, color: string = C.cyan) {
   );
 }
 
-function chip(label: string, value: string, accent: string = C.textSub): JSX.Element {
+function chip(label: string, value: string, accent: string = 'var(--foreground)'): JSX.Element {
   return (
     <div
       style={{
         minWidth: 120,
         padding: '10px 12px',
         borderRadius: 18,
-        border: `1px solid ${C.border}`,
-        background: C.elevated,
+        border: `1px solid ${'var(--border)'}`,
+        background: 'var(--secondary)',
         backdropFilter: 'blur(14px)',
       }}
     >
       <div
         style={{
-          color: C.textMuted,
+          color: 'var(--muted-foreground)',
           fontSize: '0.66rem',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
@@ -196,7 +196,7 @@ export default function MobilityOSCore() {
     {
       label: tx('mobilityOSCore.seats_label'),
       value: String(snapshot.metrics.total_seats_available),
-      accent: C.cyan,
+      accent: 'var(--primary)',
       icon: Users,
     },
     {
@@ -233,7 +233,7 @@ export default function MobilityOSCore() {
       detail: tx('mobilityOSCore.pressure_lane_detail', {
         count: constrainedCorridors,
       }),
-      accent: C.cyan,
+      accent: 'var(--primary)',
       icon: Activity,
     },
     {
@@ -253,7 +253,7 @@ export default function MobilityOSCore() {
         style={panelStyle({
           padding: 18,
           borderRadius: R['3xl'],
-          background: `linear-gradient(180deg, ${C.cyanDim}, ${C.card})`,
+          background: `linear-gradient(180deg, ${C.cyanDim}, ${'var(--card)'})`,
         })}
       >
         <div
@@ -293,7 +293,7 @@ export default function MobilityOSCore() {
 
         <div
           data-testid="mobility-os-selected-availability"
-          style={{ marginTop: 14, color: C.textSub, fontSize: '0.92rem' }}
+          style={{ marginTop: 14, color: 'var(--foreground)', fontSize: '0.92rem' }}
         >
           {selectedCorridor
             ? tx('mobilityOSCore.availability_remain', {
@@ -333,14 +333,14 @@ export default function MobilityOSCore() {
               key={label}
               style={{
                 borderRadius: R.xl,
-                border: `1px solid ${index < 2 ? `${C.cyan}20` : `${C.gold}20`}`,
-                background: C.elevated,
+                border: `1px solid ${index < 2 ? `${'var(--primary)'}20` : `${C.gold}20`}`,
+                background: 'var(--secondary)',
                 padding: '12px 13px',
               }}
             >
               <div
                 style={{
-                  color: C.textMuted,
+                  color: 'var(--muted-foreground)',
                   fontSize: '0.66rem',
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
@@ -355,7 +355,7 @@ export default function MobilityOSCore() {
       </section>
 
       <section style={panelStyle({ padding: 14, borderRadius: R['3xl'] })}>
-        {eyebrow(tx('mobilityOSCore.corridors_label'), C.textMuted)}
+        {eyebrow(tx('mobilityOSCore.corridors_label'), 'var(--muted-foreground)')}
         <div
           data-testid="mobility-os-corridor-book"
           style={{
@@ -379,13 +379,13 @@ export default function MobilityOSCore() {
                   width: '100%',
                   textAlign: 'left',
                   borderRadius: R.xxl,
-                  border: `1px solid ${selected ? C.cyan : C.border}`,
+                  border: `1px solid ${selected ? 'var(--primary)' : 'var(--border)'}`,
                   background: selected
-                    ? `linear-gradient(180deg, ${C.cyanDim}, ${C.card})`
-                    : C.card,
+                    ? `linear-gradient(180deg, ${C.cyanDim}, ${'var(--card)'})`
+                    : 'var(--card)',
                   boxShadow: selected ? SH.blueL : SH.card,
                   padding: '14px 15px',
-                  color: C.text,
+                  color: 'var(--foreground)',
                   cursor: 'pointer',
                   display: 'grid',
                   gap: 8,
@@ -408,7 +408,7 @@ export default function MobilityOSCore() {
                   </div>
                 </div>
 
-                <div style={{ color: C.textMuted, fontSize: '0.78rem' }}>
+                <div style={{ color: 'var(--muted-foreground)', fontSize: '0.78rem' }}>
                   {projection.corridor.distance_km} {tx('mobilityOSCore.km')}
                   {projection.corridor.travel_time_min} {tx('services.publicBus.minutes')}
                 </div>
@@ -424,10 +424,10 @@ export default function MobilityOSCore() {
                       style={{
                         padding: '5px 8px',
                         borderRadius: R.full,
-                        border: `1px solid ${selected ? C.borderHov : C.border}`,
-                        background: C.elevated,
+                        border: `1px solid ${selected ? 'var(--border)' : 'var(--border)'}`,
+                        background: 'var(--secondary)',
                         fontSize: '0.72rem',
-                        color: C.textSub,
+                        color: 'var(--foreground)',
                       }}
                     >
                       {value}
@@ -451,7 +451,7 @@ export default function MobilityOSCore() {
           }}
         >
           <div>
-            {eyebrow(tx('mobilityOSCore.execute_label'), C.textMuted)}
+            {eyebrow(tx('mobilityOSCore.execute_label'), 'var(--muted-foreground)')}
             <div style={{ marginTop: 8, fontSize: '1.05rem', fontWeight: 900 }}>
               {tx('mobilityOSCore.capacity_booking')}
             </div>
@@ -485,9 +485,9 @@ export default function MobilityOSCore() {
                 style={{
                   height: 48,
                   borderRadius: 18,
-                  border: `1px solid ${active ? C.cyan : C.border}`,
-                  background: active ? C.cyanDim : C.elevated,
-                  color: active ? C.cyan : C.text,
+                  border: `1px solid ${active ? 'var(--primary)' : 'var(--border)'}`,
+                  background: active ? C.cyanDim : 'var(--secondary)',
+                  color: active ? 'var(--primary)' : 'var(--foreground)',
                   fontWeight: 800,
                   cursor: 'pointer',
                 }}
@@ -501,7 +501,7 @@ export default function MobilityOSCore() {
         <div style={{ marginTop: 14, display: 'grid', gap: 10 }}>
           <div
             style={{
-              color: C.textMuted,
+              color: 'var(--muted-foreground)',
               fontSize: '0.66rem',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
@@ -524,9 +524,9 @@ export default function MobilityOSCore() {
               style={{
                 height: 52,
                 borderRadius: 16,
-                border: `1px solid ${C.border}`,
-                background: C.elevated,
-                color: C.text,
+                border: `1px solid ${'var(--border)'}`,
+                background: 'var(--secondary)',
+                color: 'var(--foreground)',
                 fontSize: '1.2rem',
                 cursor: 'pointer',
               }}
@@ -537,8 +537,8 @@ export default function MobilityOSCore() {
               style={{
                 height: 52,
                 borderRadius: 16,
-                border: `1px solid ${C.border}`,
-                background: C.elevated,
+                border: `1px solid ${'var(--border)'}`,
+                background: 'var(--secondary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -559,9 +559,9 @@ export default function MobilityOSCore() {
               style={{
                 height: 52,
                 borderRadius: 16,
-                border: `1px solid ${C.border}`,
-                background: C.elevated,
-                color: C.text,
+                border: `1px solid ${'var(--border)'}`,
+                background: 'var(--secondary)',
+                color: 'var(--foreground)',
                 fontSize: '1.2rem',
                 cursor: 'pointer',
               }}
@@ -594,7 +594,7 @@ export default function MobilityOSCore() {
             >
               <div
                 style={{
-                  color: C.textMuted,
+                  color: 'var(--muted-foreground)',
                   fontSize: '0.66rem',
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
@@ -618,8 +618,8 @@ export default function MobilityOSCore() {
             height: 54,
             borderRadius: 18,
             border: 'none',
-            background: C.elevated,
-            color: C.textMuted,
+            background: 'var(--secondary)',
+            color: 'var(--muted-foreground)',
             fontWeight: 900,
             cursor: 'not-allowed',
             boxShadow: 'none',
@@ -629,7 +629,7 @@ export default function MobilityOSCore() {
         </button>
         <p
           id="mobility-os-booking-payment-note"
-          style={{ margin: '8px 2px 0', color: C.textMuted, fontSize: '0.82rem', lineHeight: 1.5 }}
+          style={{ margin: '8px 2px 0', color: 'var(--muted-foreground)', fontSize: '0.82rem', lineHeight: 1.5 }}
         >
           {tx('mobilityOSCore.booking_requires_payment')}
         </p>
@@ -646,7 +646,7 @@ export default function MobilityOSCore() {
         >
           <div
             style={{
-              color: C.textMuted,
+              color: 'var(--muted-foreground)',
               fontSize: '0.66rem',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
@@ -701,7 +701,7 @@ export default function MobilityOSCore() {
                 padding: '7px 10px',
                 borderRadius: R.full,
                 border: `1px solid ${runtimeAccent}70`,
-                background: C.bgDeep,
+                background: 'var(--background)',
                 backdropFilter: 'blur(14px)',
                 color: runtimeAccent,
                 fontSize: '0.66rem',
@@ -717,7 +717,7 @@ export default function MobilityOSCore() {
               style={{
                 padding: '13px 14px',
                 borderRadius: R.xl,
-                border: `1px solid ${C.borderHov}`,
+                border: `1px solid ${'var(--border)'}`,
                 background: 'rgba(5, 22, 34, 0.94)',
                 boxShadow: SH.md,
               }}
@@ -743,7 +743,7 @@ export default function MobilityOSCore() {
                 {selectedRoute}
               </div>
               {selectedCorridor ? (
-                <div style={{ marginTop: 6, color: C.textSub, fontSize: '0.78rem', lineHeight: 1.35 }}>
+                <div style={{ marginTop: 6, color: 'var(--foreground)', fontSize: '0.78rem', lineHeight: 1.35 }}>
                   {tx('mobilityOSCore.seats_and_cargo', {
                     seats: selectedCorridor.seats_available,
                     kg: selectedCorridor.cargo_available_kg,
@@ -760,7 +760,7 @@ export default function MobilityOSCore() {
         style={panelStyle({
           padding: isMobile ? 16 : 18,
           borderRadius: R['3xl'],
-          background: `linear-gradient(135deg, ${C.cyanDim}, ${C.card})`,
+          background: `linear-gradient(135deg, ${C.cyanDim}, ${'var(--card)'})`,
         })}
       >
         <div
@@ -775,7 +775,7 @@ export default function MobilityOSCore() {
           <div style={{ maxWidth: 680 }}>
             <div
               style={{
-                color: C.cyan,
+                color: 'var(--primary)',
                 fontSize: '0.66rem',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
@@ -790,7 +790,7 @@ export default function MobilityOSCore() {
             >
               {tx('mobilityOSCore.map_guide_title')}
             </h2>
-            <p style={{ margin: '8px 0 0', color: C.textSub, fontSize: '0.9rem', lineHeight: 1.55 }}>
+            <p style={{ margin: '8px 0 0', color: 'var(--foreground)', fontSize: '0.9rem', lineHeight: 1.55 }}>
               {tx('mobilityOSCore.map_guide_overview')}
             </p>
           </div>
@@ -812,9 +812,9 @@ export default function MobilityOSCore() {
                 key={benefit}
                 style={{
                   borderRadius: R.full,
-                  border: `1px solid ${C.borderHov}`,
-                  background: C.elevated,
-                  color: C.textSub,
+                  border: `1px solid ${'var(--border)'}`,
+                  background: 'var(--secondary)',
+                  color: 'var(--foreground)',
                   padding: '6px 9px',
                   fontSize: '0.72rem',
                   lineHeight: 1.25,
@@ -841,8 +841,8 @@ export default function MobilityOSCore() {
               detail: tx('mobilityOSCore.map_legend_rider_detail'),
               sample: (
                 <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ width: 30, height: 4, borderRadius: R.full, background: C.cyan, boxShadow: SH.blue }} />
-                  <span style={{ width: 7, height: 7, borderRadius: R.full, background: C.text }} />
+                  <span style={{ width: 30, height: 4, borderRadius: R.full, background: 'var(--primary)', boxShadow: SH.blue }} />
+                  <span style={{ width: 7, height: 7, borderRadius: R.full, background: 'var(--foreground)' }} />
                 </span>
               ),
             },
@@ -879,8 +879,8 @@ export default function MobilityOSCore() {
                     width: 17,
                     height: 17,
                     borderRadius: R.full,
-                    border: `2px solid ${C.cyan}`,
-                    background: C.text,
+                    border: `2px solid ${'var(--primary)'}`,
+                    background: 'var(--foreground)',
                     boxShadow: `0 0 0 5px ${C.cyanDim}`,
                   }}
                 />
@@ -903,9 +903,9 @@ export default function MobilityOSCore() {
               detail: tx('mobilityOSCore.map_legend_intensity_detail'),
               sample: (
                 <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'end', gap: 3 }}>
-                  <span style={{ width: 5, height: 5, borderRadius: R.full, background: C.cyan }} />
-                  <span style={{ width: 7, height: 7, borderRadius: R.full, background: C.cyan }} />
-                  <span style={{ width: 10, height: 10, borderRadius: R.full, background: C.cyan }} />
+                  <span style={{ width: 5, height: 5, borderRadius: R.full, background: 'var(--primary)' }} />
+                  <span style={{ width: 7, height: 7, borderRadius: R.full, background: 'var(--primary)' }} />
+                  <span style={{ width: 10, height: 10, borderRadius: R.full, background: 'var(--primary)' }} />
                 </span>
               ),
             },
@@ -920,14 +920,14 @@ export default function MobilityOSCore() {
                 minHeight: 76,
                 padding: '11px 12px',
                 borderRadius: R.xl,
-                border: `1px solid ${C.border}`,
-                background: C.card,
+                border: `1px solid ${'var(--border)'}`,
+                background: 'var(--card)',
               }}
             >
               <div style={{ minWidth: 36, paddingTop: 5 }}>{item.sample}</div>
               <div>
-                <div style={{ color: C.text, fontSize: '0.78rem', fontWeight: 800 }}>{item.label}</div>
-                <div style={{ marginTop: 4, color: C.textMuted, fontSize: '0.72rem', lineHeight: 1.45 }}>
+                <div style={{ color: 'var(--foreground)', fontSize: '0.78rem', fontWeight: 800 }}>{item.label}</div>
+                <div style={{ marginTop: 4, color: 'var(--muted-foreground)', fontSize: '0.72rem', lineHeight: 1.45 }}>
                   {item.detail}
                 </div>
               </div>
@@ -935,7 +935,7 @@ export default function MobilityOSCore() {
           ))}
         </div>
 
-        <p style={{ margin: '13px 0 0', color: C.textMuted, fontSize: '0.75rem', lineHeight: 1.5 }}>
+        <p style={{ margin: '13px 0 0', color: 'var(--muted-foreground)', fontSize: '0.75rem', lineHeight: 1.5 }}>
           {tx('mobilityOSCore.map_guide_note')}
         </p>
       </section>
@@ -988,7 +988,7 @@ export default function MobilityOSCore() {
             <div
               style={{
                 marginTop: 12,
-                color: C.textMuted,
+                color: 'var(--muted-foreground)',
                 fontSize: '0.7rem',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
@@ -1006,8 +1006,8 @@ export default function MobilityOSCore() {
     <div
       style={{
         minHeight: 'var(--app-min-height)',
-        background: `${GRAD_AURORA}, radial-gradient(circle at 16% 14%, ${C.cyanDim}, transparent 20%), radial-gradient(circle at 84% 18%, ${C.goldDim}, transparent 22%), ${C.bg}`,
-        color: C.text,
+        background: `${GRAD_AURORA}, radial-gradient(circle at 16% 14%, ${C.cyanDim}, transparent 20%), radial-gradient(circle at 84% 18%, ${C.goldDim}, transparent 22%), ${'var(--background)'}`,
+        color: 'var(--foreground)',
         fontFamily: F,
         padding: isMobile ? '18px 12px 48px' : '24px 16px 64px',
       }}
@@ -1046,7 +1046,7 @@ export default function MobilityOSCore() {
                 >
                   {tx('mobilityOSCore.corridor_capacity_exchange_for_jordan')}
                 </h1>
-                <div style={{ color: C.textSub, fontSize: '0.96rem', lineHeight: 1.6 }}>
+                <div style={{ color: 'var(--foreground)', fontSize: '0.96rem', lineHeight: 1.6 }}>
                   {tx('mobilityOSCore.map_first_ride_and_cargo_orchestration')}
                 </div>
               </div>
@@ -1083,7 +1083,7 @@ export default function MobilityOSCore() {
                       ...panelStyle({
                         padding: 16,
                         borderRadius: R.xxl,
-                        background: `linear-gradient(145deg, ${C.card}, ${C.elevated})`,
+                        background: `linear-gradient(145deg, ${'var(--card)'}, ${'var(--secondary)'})`,
                         boxShadow: SH.card,
                       }),
                     }}
@@ -1099,7 +1099,7 @@ export default function MobilityOSCore() {
                       <div>
                         <div
                           style={{
-                            color: C.textMuted,
+                            color: 'var(--muted-foreground)',
                             fontSize: '0.66rem',
                             letterSpacing: '0.12em',
                             textTransform: 'uppercase',
@@ -1121,7 +1121,7 @@ export default function MobilityOSCore() {
                         >
                           {signal.value}
                         </div>
-                        <div style={{ marginTop: 7, color: C.textMuted, fontSize: '0.76rem' }}>
+                        <div style={{ marginTop: 7, color: 'var(--muted-foreground)', fontSize: '0.76rem' }}>
                           {signal.detail}
                         </div>
                       </div>
@@ -1163,7 +1163,7 @@ export default function MobilityOSCore() {
                 gap: 10,
                 flexWrap: 'wrap',
                 alignItems: 'center',
-                color: C.textMuted,
+                color: 'var(--muted-foreground)',
                 fontSize: '0.8rem',
               }}
             >
@@ -1174,11 +1174,11 @@ export default function MobilityOSCore() {
                   gap: 8,
                   padding: '8px 10px',
                   borderRadius: R.full,
-                  border: `1px solid ${C.border}`,
-                  background: C.elevated,
+                  border: `1px solid ${'var(--border)'}`,
+                  background: 'var(--secondary)',
                 }}
               >
-                <Zap size={14} color={C.cyan} />
+                <Zap size={14} color={'var(--primary)'} />
                 {tx('mobilityOSCore.pressure_pricing_availability')}
               </div>
               <div
@@ -1188,8 +1188,8 @@ export default function MobilityOSCore() {
                   gap: 8,
                   padding: '8px 10px',
                   borderRadius: R.full,
-                  border: `1px solid ${C.border}`,
-                  background: C.elevated,
+                  border: `1px solid ${'var(--border)'}`,
+                  background: 'var(--secondary)',
                 }}
               >
                 <Activity size={14} color={C.green} />

@@ -124,10 +124,10 @@ export function PageShell({ children }: { children: ReactNode }) {
     <div
       style={{
         minHeight: 'var(--app-min-height)',
-        background: `linear-gradient(180deg, ${C.bgDeep} 0%, ${DS.bg} 42%, ${C.bgAlt} 100%)`,
+        background: `linear-gradient(180deg, ${'var(--background)'} 0%, ${DS.bg} 42%, ${'var(--background)'} 100%)`,
         fontFamily: DS.F,
         direction: ar ? 'rtl' : 'ltr',
-        color: C.text,
+        color: 'var(--foreground)',
         position: 'relative',
         overflow: 'hidden',
       }}
@@ -177,7 +177,7 @@ export function PageShell({ children }: { children: ReactNode }) {
         style={{
           position: 'fixed',
           inset: 0,
-          backgroundImage: `linear-gradient(${C.borderFaint} 1px, transparent 1px), linear-gradient(90deg, ${C.borderFaint} 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(${'var(--border)'} 1px, transparent 1px), linear-gradient(90deg, ${'var(--border)'} 1px, transparent 1px)`,
           backgroundSize: '72px 72px',
           maskImage:
             'linear-gradient(180deg, transparent 0%, black 12%, black 78%, transparent 100%)',
@@ -241,7 +241,7 @@ export function SectionHead({
         style={{
           position: 'absolute',
           inset: 0,
-          background: `linear-gradient(120deg, ${color}12, transparent 36%, ${C.elevated})`,
+          background: `linear-gradient(120deg, ${color}12, transparent 36%, ${'var(--secondary)'})`,
           pointerEvents: 'none',
         }}
       />
@@ -277,7 +277,7 @@ export function SectionHead({
                 style={{
                   fontSize: '1.62rem',
                   fontWeight: 950,
-                  color: C.text,
+                  color: 'var(--foreground)',
                   margin: 0,
                   letterSpacing: 0,
                 }}
@@ -287,7 +287,7 @@ export function SectionHead({
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
               {displaySub && (
-                <span style={{ color: C.textMuted, fontSize: '0.78rem' }}>{displaySub}</span>
+                <span style={{ color: 'var(--muted-foreground)', fontSize: '0.78rem' }}>{displaySub}</span>
               )}
             </div>
           </div>
@@ -302,7 +302,7 @@ export function SectionHead({
               borderRadius: R.full,
               border: 'none',
               background: GRAD,
-              color: C.bgDeep,
+              color: 'var(--background)',
               fontWeight: 900,
               fontSize: '0.875rem',
               boxShadow: SH.blueL,
@@ -335,7 +335,7 @@ export function CoreExperienceBanner({
         display: 'flex',
         gap: 10,
         alignItems: 'flex-start',
-        background: `linear-gradient(135deg, ${tone}0f, ${C.elevated})`,
+        background: `linear-gradient(135deg, ${tone}0f, ${'var(--secondary)'})`,
         border: `1px solid ${tone}24`,
         borderRadius: R.xl,
         padding: '13px 14px',
