@@ -2,7 +2,7 @@ import { ArrowRight, Lock, Sparkles } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { C, F, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { F, R, SH, SPACE, TYPE  } from '../../utils/wasel-ds';
 import { Button } from '../ui/button';
 
 type PreviewConfig = {
@@ -401,3 +401,4 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
 }
 
 export default ProtectedPagePreview;
+

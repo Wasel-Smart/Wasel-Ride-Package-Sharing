@@ -1,6 +1,6 @@
 import { ArrowRight, Calendar, Car, Clock, MapPin, Package, Trash2 } from 'lucide-react';
 import type { ScheduleItem } from './SchedulePage';
-import { C, F, R, TYPE } from '@/utils/wasel-ds';
+import { F, R, TYPE  } from '@/utils/wasel-ds';
 
 interface ScheduleItemCardProps {
   item: ScheduleItem;
@@ -228,3 +228,4 @@ export function ScheduleItemCard ({
     </div>
   );
 }
+

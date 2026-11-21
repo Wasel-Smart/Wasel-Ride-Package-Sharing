@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { CheckCircle2, ExternalLink } from 'lucide-react';
 import type { BusRoute } from '../../../services/bus';
-import { C, SH } from '../../../utils/wasel-ds';
+import { SH  } from '../../../utils/wasel-ds';
 import { DS, r } from '../../shared/pageShared';
 import { tx } from '../../../locales/tx';
 
@@ -525,3 +525,4 @@ export function BusBookingForm({
     </div>
   );
 }
+

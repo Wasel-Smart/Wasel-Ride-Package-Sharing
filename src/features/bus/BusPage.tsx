@@ -28,7 +28,7 @@ import {
   SectionHead,
 } from '../shared/pageShared';
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
-import { C, SH } from '../../utils/wasel-ds';
+import { SH  } from '../../utils/wasel-ds';
 import { tx } from '../../locales/tx';
 import { useLanguage } from '../../contexts/LanguageContext';
 import {
@@ -644,3 +644,4 @@ export function BusPage() {
     </Protected>
   );
 }
+

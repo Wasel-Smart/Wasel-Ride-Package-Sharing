@@ -6,7 +6,7 @@
  */
 
 import { sanitizeLogMessage } from './sanitization';
-import { C } from './wasel-ds';
+import { } from './wasel-ds';
 
 export const SMS_TOKENS = {
   brandName: 'Wasel',
@@ -177,3 +177,4 @@ export function renderSmsTemplate(id: string, variables: Record<string, string>)
 export function getTemplatesByCategory(category: SmsTemplate['category']): SmsTemplate[] {
   return smsTemplates.filter(t => t.category === category);
 }
+

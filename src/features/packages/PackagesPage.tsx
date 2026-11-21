@@ -28,7 +28,7 @@ import { createSupportTicket } from '../../services/supportInbox';
 import { walletApi } from '../../services/wallet/walletApi';
 import { calculateDirectPrice } from '../../shared/pricing/priceCalculator';
 import { getCorridorOpportunity } from '../../config/wasel-movement-network';
-import { C, SH } from '../../utils/wasel-ds';
+import { SH  } from '../../utils/wasel-ds';
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
 import { PackageReturnsPanel } from './components/PackageReturnsPanel';
 import { PackageSendPanel } from './components/PackageSendPanel';
@@ -465,3 +465,4 @@ export function PackagesPage() {
 }
 
 export default PackagesPage;
+

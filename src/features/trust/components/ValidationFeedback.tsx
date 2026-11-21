@@ -1,4 +1,4 @@
-import { C, F, SPACE, TYPE } from '../../../utils/wasel-ds';
+import { F, SPACE, TYPE  } from '../../../utils/wasel-ds';
 
 export function FieldError({ message }: { message: string | null }) {
   if (!message) {return null;}
@@ -118,3 +118,4 @@ export function ValidationRules({
     </div>
   );
 }
+

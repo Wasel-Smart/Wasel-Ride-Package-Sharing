@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { C, F, GRAD, R } from '../../utils/wasel-ds';
+import { F, GRAD, R  } from '../../utils/wasel-ds';
 
 interface ToolbarButtonOptions {
   background: string;
@@ -280,3 +280,4 @@ export const rootPartStyles = {
       flexShrink: 0,
     }) satisfies CSSProperties,
 };
+

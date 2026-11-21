@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import type { CorridorBetaPlan } from '../../../services/corridorBeta';
-import { C, R, SH, TYPE } from '../../../utils/wasel-ds';
+import { R, SH, TYPE  } from '../../../utils/wasel-ds';
 import { corridorLabel, corridorNextAction, corridorReason, stageColor, stageLabel } from './corridorBetaHelpers';
 
 interface CorridorBetaCardProps {
@@ -128,3 +128,4 @@ export function CorridorBetaCard({ corridor, ar, onNavigate }: CorridorBetaCardP
     </motion.button>
   );
 }
+

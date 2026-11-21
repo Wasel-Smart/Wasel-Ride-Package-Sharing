@@ -5,7 +5,7 @@ import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { DS, PageShell, Protected, r, SectionHead } from '../../pages/waselServiceShared';
-import { C, GRAD_HERO, R, SH } from '../../utils/wasel-ds';
+import { GRAD_HERO, R, SH  } from '../../utils/wasel-ds';
 import { getDriverReadinessSummary } from '../../services/driverOnboarding';
 import { getMovementMembershipSnapshot } from '../../services/movementMembership';
 import { buildDriverRoutePlan, getMarketplaceNodes } from '../../config/wasel-movement-network';
@@ -527,3 +527,4 @@ export default function DriverPage() {
     </Protected>
   );
 }
+

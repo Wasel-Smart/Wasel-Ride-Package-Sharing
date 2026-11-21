@@ -30,7 +30,7 @@ import {
   getSupportPhoneUrl,
   getWhatsAppSupportUrl,
 } from '../../utils/env';
-import { C, F, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { F, R, SH, SPACE, TYPE  } from '../../utils/wasel-ds';
 
 const supportTopics = [
   {
@@ -681,3 +681,4 @@ export function SupportPage() {
 }
 
 export default SupportPage;
+

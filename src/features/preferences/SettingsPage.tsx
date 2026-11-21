@@ -45,7 +45,7 @@ import {
   verify2FACode,
   type TwoFactorSetup,
 } from '../../utils/security';
-import { C, F, R, TYPE } from '../../utils/wasel-ds';
+import { F, R, TYPE  } from '../../utils/wasel-ds';
 import { hasAnalyticsConsent, setAnalyticsConsent } from '../../utils/analyticsConsent';
 import { supabase } from '../../utils/supabase/client';
 import styles from '../../styles/app-shell.module.css';
@@ -1236,4 +1236,5 @@ export default function SettingsPage() {
     </PageShell>
   );
 }
+
 

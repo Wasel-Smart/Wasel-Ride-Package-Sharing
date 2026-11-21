@@ -1,7 +1,7 @@
 import React from 'react';
 import { Brain, CheckCircle2, Clock, Package, Star, Users } from 'lucide-react';
 import { DS, pill, r } from '../../../pages/waselServiceShared';
-import { C } from '../../../utils/wasel-ds';
+import { } from '../../../utils/wasel-ds';
 import { getCorridorOpportunity } from '../../../config/wasel-movement-network';
 import { getMovementPriceQuote } from '../../../services/movementPricing';
 import type { LiveCorridorSignal } from '../../../services/routeDemandIntelligence';
@@ -207,7 +207,7 @@ type RouteRowProps = { ride: Ride };
 
 function RouteRow({ ride }: RouteRowProps) {
   return (
-    <div style={{ background: rgba(0,0,0,0.5), borderRadius: r(14), padding: '14px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: r(14), padding: '14px 18px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
       <div style={{ flex: 1 }}>
         <div style={{ fontWeight: 800, color: 'var(--foreground)', fontSize: '0.92rem' }}>{cityLabel(ride.from)}</div>
         <div style={{ color: DS.muted, fontSize: '0.8125rem', marginTop: 1 }}>
@@ -371,3 +371,4 @@ export const FindRideCard = React.memo(({
      </div>
    );
 });
+

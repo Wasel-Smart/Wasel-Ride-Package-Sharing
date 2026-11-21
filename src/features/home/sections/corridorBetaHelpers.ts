@@ -1,4 +1,4 @@
-﻿import { C } from '../../../utils/wasel-ds';
+import { } from '../../../utils/wasel-ds';
 import type { CorridorBetaPlan } from '../../../services/corridorBeta';
 
 const CITY_LABELS_AR: Record<string, string> = {

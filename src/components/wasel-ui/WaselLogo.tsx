@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { C } from '@/utils/wasel-ds';
+import { } from '@/utils/wasel-ds';
 
 interface WaselLogoProps {
   size?: number;
@@ -125,3 +125,4 @@ export function WaselHeroMark({ size = 120 }: { size?: number }) {
 export function WaselIcon({ size = 20 }: { size?: number }) {
   return <WaselLogo size={size} showWordmark={false} />;
 }
+

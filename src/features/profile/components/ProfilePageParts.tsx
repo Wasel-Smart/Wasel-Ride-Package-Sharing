@@ -6,7 +6,7 @@ import {
   SectionCard,
   StatusBadge,
 } from '../../../components/wasel-ui/WaselPagePrimitives';
-import { C, F, R, SH, SPACE, TYPE } from '../../../utils/wasel-ds';
+import { F, R, SH, SPACE, TYPE  } from '../../../utils/wasel-ds';
 
 export interface StatCardProps {
   label: string;
@@ -147,3 +147,4 @@ export interface QuickActionCardProps {
 export function QuickActionCard({ label, detail, icon, color, onClick }: QuickActionCardProps) {
   return <ActionTile label={label} detail={detail} icon={icon} accent={color} onClick={() => { void onClick(); }} />;
 }
+

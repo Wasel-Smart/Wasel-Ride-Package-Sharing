@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { WaselStatCard } from './WaselStatCard';
-import { C, SPACE } from '@/utils/wasel-ds';
+import { SPACE  } from '@/utils/wasel-ds';
 
 interface WaselStatsGridProps {
   stats: Array<{
@@ -48,3 +48,4 @@ export function WaselStatsGrid ({
     </div>
   );
 }
+

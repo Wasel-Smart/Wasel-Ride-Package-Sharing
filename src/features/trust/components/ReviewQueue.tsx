@@ -1,4 +1,4 @@
-import { C, F, R, TYPE } from '../../../utils/wasel-ds';
+import { F, R, TYPE  } from '../../../utils/wasel-ds';
 
 export interface ReviewItem {
   id: string;
@@ -63,3 +63,4 @@ export function ReviewQueue({ items }: { items: ReviewItem[] }) {
     </div>
   );
 }
+

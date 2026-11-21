@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { RotateCcw, Shield } from 'lucide-react';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { DS, r } from '../../../pages/waselServiceShared';
-import { C } from '../../../utils/wasel-ds';
+import { } from '../../../utils/wasel-ds';
 import { PACKAGE_RETURN_STEPS, PACKAGE_RETURN_STEPS_AR } from '../packagesContent';
 import { tx } from '../../../locales/tx';
 
@@ -288,3 +288,4 @@ export function PackageReturnsPanel({
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { C, F, FA, GRAD, GRAD_GOLD, GRAD_GREEN, GRAD_HERO, GRAD_NAVY, R } from '../utils/wasel-ds';
+import { F, FA, GRAD, GRAD_GOLD, GRAD_GREEN, GRAD_HERO, GRAD_NAVY, R  } from '../utils/wasel-ds';
 
 export const PAGE_DS = {
   bg: C.bg,
@@ -44,3 +44,4 @@ export const PAGE_RADIUS = {
   xxl: Number.parseInt(R.xxl, 10),
   full: 9999,
 } as const;
+

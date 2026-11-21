@@ -1,4 +1,4 @@
-import { C } from '../utils/wasel-ds';
+import { } from '../utils/wasel-ds';
 
 export type NavItem = {
   emoji: string;
@@ -131,3 +131,4 @@ export function getVisibleNavItems(group: NavGroup, isAuthenticated: boolean) {
       !HIDDEN_NAV_PATHS.has(item.path) && (isAuthenticated || !USER_ONLY_NAV_PATHS.has(item.path)),
   );
 }
+

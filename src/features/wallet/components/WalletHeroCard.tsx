@@ -1,7 +1,7 @@
 import { ArrowUpRight, Clock, Eye, EyeOff, Gift, Plus, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WaselButton } from '../../../components/wasel-ui/WaselButton';
-import { C, GRAD, TYPE, R } from '../../../utils/wasel-ds';
+import { GRAD, TYPE, R  } from '../../../utils/wasel-ds';
 
 type WalletHeroCardProps = {
   balance: number;
@@ -146,3 +146,4 @@ export function WalletHeroCard({
     </motion.div>
   );
 }
+

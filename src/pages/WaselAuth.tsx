@@ -33,7 +33,7 @@ import { friendlyAuthError, getPasswordRuleIssue, pwStrength } from '../utils/au
 import { fetchEnabledOAuthProviders, getProviderSetupInstructions } from '../utils/oauthValidator';
 import { supabase } from '../utils/supabase/client';
 
-import { C, R, TYPE, F, SPACE } from '../utils/wasel-ds';
+import { R, TYPE, F, SPACE  } from '../utils/wasel-ds';
 import { tx } from '../locales/tx';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1313,5 +1313,6 @@ export default function WaselAuth () {
     </div>
   );
 }
+
 
 

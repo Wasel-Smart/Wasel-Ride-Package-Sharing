@@ -3,7 +3,7 @@
  * Shows OAuth provider connection status in settings
  */
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { C, F, R, SPACE, TYPE } from '../../utils/wasel-ds';
+import { F, R, SPACE, TYPE  } from '../../utils/wasel-ds';
 import { tx } from '../../locales/tx';
 
 export type OAuthProviderStatus = {
@@ -163,3 +163,4 @@ export function OAuthStatusSection({
     </div>
   );
 }
+

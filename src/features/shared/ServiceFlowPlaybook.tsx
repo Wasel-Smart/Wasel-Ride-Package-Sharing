@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DS, pill, r } from './pageShared';
-import { C, R, SH } from '../../utils/wasel-ds';
+import { R, SH  } from '../../utils/wasel-ds';
 import { tx } from '../../locales/tx';
 import { useLanguage } from '../../contexts/LanguageContext';
 
@@ -495,3 +495,4 @@ export function ServiceFlowPlaybook({
 }
 
 export default ServiceFlowPlaybook;
+

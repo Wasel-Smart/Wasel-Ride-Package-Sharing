@@ -3,7 +3,7 @@ import { Bell, Car, CreditCard, Settings } from 'lucide-react';
 import { useLocalAuth, type WaselUser } from '../../contexts/LocalAuth';
 import { createSupportTicket } from '../../services/supportInbox';
 import { sanitizeText } from '../../utils/sanitize';
-import { C, F } from '../../utils/wasel-ds';
+import { F  } from '../../utils/wasel-ds';
 import { buildProfileExportPayload, normalizeProfilePhone } from './profileUtils';
 
 export const PROFILE_BG = 'var(--background)';
@@ -356,3 +356,4 @@ export function useProfilePageController({
     walletStatus: getWalletStatus(user, ar),
   };
 }
+

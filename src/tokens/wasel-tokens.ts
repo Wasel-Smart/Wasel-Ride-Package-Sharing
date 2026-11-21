@@ -1,4 +1,4 @@
-import { C, F, GRAD, GRAD_GOLD, GRAD_GREEN, R, SH } from '../utils/wasel-ds';
+import { F, GRAD, GRAD_GOLD, GRAD_GREEN, R, SH  } from '../utils/wasel-ds';
 
 export const WaselColors = {
   spaceDeep: C.bg,
@@ -130,3 +130,4 @@ export const WaselGradients = {
   heroCard: 'linear-gradient(135deg, rgba(0,229,255,0.10) 0%, rgba(114,199,13,0.06) 100%)',
   constellation: GRAD,
 } as const;
+

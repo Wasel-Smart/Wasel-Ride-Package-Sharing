@@ -9,7 +9,7 @@ import { Button } from '../../../components/ui/button';
 import { WaselColors } from '../../../tokens/wasel-tokens';
 import { PIE_COLORS } from './WalletShared';
 import type { InsightsData } from '../../../services/wallet/walletTypes';
-import { C } from '../../../utils/wasel-ds';
+import { } from '../../../utils/wasel-ds';
 import { tx } from '../../../locales/tx';
 
 interface InsightsTabProps {
@@ -327,3 +327,4 @@ export function InsightsTab({
     </div>
   );
 }
+

@@ -16,7 +16,7 @@
  */
 
 import { type CSSProperties, type ReactNode } from 'react';
-import { C, R, SH, GRAD_GREEN, GRAD_GOLD } from '../../utils/wasel-ds';
+import { R, SH, GRAD_GREEN, GRAD_GOLD  } from '../../utils/wasel-ds';
 
 // ─── Re-export DS tokens used everywhere ────────────────────────────────────
 export { C, R, SH };
@@ -819,3 +819,4 @@ export function injectWaselStandard() {
   el.textContent = WASEL_GLOBAL_CSS;
   document.head.appendChild(el);
 }
+

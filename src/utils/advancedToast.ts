@@ -1,4 +1,4 @@
-import { C, SH, R, F } from './wasel-ds';
+import { SH, R, F  } from './wasel-ds';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 export type ToastPosition = 'top' | 'bottom';
@@ -264,3 +264,4 @@ export function showInfoToast(message: string, action?: ToastAction): string {
 export function dismissAllToasts(): void {
   activeToasts.forEach((_, id) => dismissToast(id));
 }
+

@@ -2,7 +2,7 @@
  * Design tokens re-exported from the canonical wasel-ds source.
  * WaselMap and other components import from here.
  */
-import { C, TYPE, R, SH, GRAD } from '../utils/wasel-ds';
+import { TYPE, R, SH, GRAD  } from '../utils/wasel-ds';
 
 export const colors = {
   background: {
@@ -80,3 +80,4 @@ export const gradients = {
   primary: GRAD,
   primaryActive: 'linear-gradient(135deg, #38beff 0%, #34d8a7 100%)',
 } as const;
+

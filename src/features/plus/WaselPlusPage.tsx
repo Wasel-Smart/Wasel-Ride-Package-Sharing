@@ -22,7 +22,7 @@ import {
 } from '../../services/movementRetention';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 import { getFeaturedCorridors, getHabitLoopPrograms } from '../../config/wasel-movement-network';
-import { C } from '../../utils/wasel-ds';
+import { } from '../../utils/wasel-ds';
 import { tx } from '../../locales/tx';
 
 function tierLabel(tier: MovementMembershipSnapshot['loyaltyTier']) {
@@ -644,3 +644,4 @@ export default function WaselPlusPage() {
     </Protected>
   );
 }
+

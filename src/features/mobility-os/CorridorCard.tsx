@@ -1,5 +1,5 @@
 import { ArrowDownRight, ArrowUpRight, MoveRight } from 'lucide-react';
-import { C, FM, R, SH } from '../../utils/wasel-ds';
+import { FM, R, SH  } from '../../utils/wasel-ds';
 import type { CorridorProjection, PriceDirection } from './model';
 import { tx } from '../../locales/tx';
 
@@ -199,3 +199,4 @@ export function CorridorCard({ projection, selected, onSelect }: CorridorCardPro
     </button>
   );
 }
+

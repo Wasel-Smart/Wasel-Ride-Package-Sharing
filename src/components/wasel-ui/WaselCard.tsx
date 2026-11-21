@@ -4,7 +4,7 @@
  */
 
 import type { CSSProperties, HTMLAttributes, ReactNode } from 'react';
-import { C, F, R, SH } from '../../utils/wasel-ds';
+import { F, R, SH  } from '../../utils/wasel-ds';
 
 const CARD_STYLE_ID = 'wasel-card-css';
 if (typeof document !== 'undefined' && !document.getElementById(CARD_STYLE_ID)) {
@@ -95,3 +95,4 @@ export function WaselCard({
     </div>
   );
 }
+

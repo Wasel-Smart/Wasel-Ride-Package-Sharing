@@ -10,7 +10,7 @@ import {
   type NavGroup,
 } from '../waselRootConfig';
 import { CurrencyService } from '../../utils/currency';
-import { C, F, GRAD, R } from '../../utils/wasel-ds';
+import { F, GRAD, R  } from '../../utils/wasel-ds';
 import { CurrencySwitcher, LangToggle } from './controls';
 import { Badge, SocialLinks, getDrawerSectionLabel } from './shared';
 
@@ -661,5 +661,6 @@ export function MobileDrawer({
     </div>
   );
 }
+
 
 

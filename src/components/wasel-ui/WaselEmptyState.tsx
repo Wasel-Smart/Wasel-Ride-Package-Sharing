@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { C, R, TYPE, SPACE } from '@/utils/wasel-ds';
+import { R, TYPE, SPACE  } from '@/utils/wasel-ds';
 
 interface WaselEmptyStateProps {
   icon: ReactNode;
@@ -108,3 +108,4 @@ export function EmptySearchIcon () {
     </svg>
   );
 }
+

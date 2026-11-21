@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { PageShell } from '../../components/wasel-ui/WaselPagePrimitives';
-import { C, R, SPACE, TYPE, card, pillStyle } from '../../utils/wasel-ds';
+import { R, SPACE, TYPE, card, pillStyle  } from '../../utils/wasel-ds';
 import { RefreshCw, AlertTriangle, Users, Package, Car, DollarSign } from 'lucide-react';
 import { tx } from '../../locales/tx';
 import { getAdminMetrics } from '../../services/adminApi';
@@ -373,3 +373,4 @@ function MetricCard({
   }
   return inner;
 }
+

@@ -9,7 +9,7 @@ import {
 import { WaselButton } from '../../components/wasel-ui/WaselButton';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
-import { C, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
+import { R, SH, SPACE, TYPE  } from '../../utils/wasel-ds';
 
 const controls = [
   {
@@ -884,3 +884,4 @@ export function TrustCenterPage() {
     </PageShell>
   );
 }
+

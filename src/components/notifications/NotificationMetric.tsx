@@ -1,5 +1,5 @@
 import { WaselCard } from '../wasel-ui';
-import { C, R, SPACE, TYPE } from '../../utils/wasel-ds';
+import { R, SPACE, TYPE  } from '../../utils/wasel-ds';
 
 type NotificationMetricTone = 'neutral' | 'attention' | 'urgent' | 'archived';
 
@@ -68,3 +68,4 @@ export function NotificationMetric({ label, value, tone }: NotificationMetricPro
     </WaselCard>
   );
 }
+

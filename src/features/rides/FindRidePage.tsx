@@ -9,7 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Brain, CheckCircle2, Network, Search, Sparkles, TrendingUp } from 'lucide-react';
 import { MapWrapper } from '../../components/MapWrapper';
 import { PageShell, Protected, SectionHead, midpoint } from '../../pages/waselServiceShared';
-import { C } from '../../utils/wasel-ds';
+import { } from '../../utils/wasel-ds';
 import { WaselButton, WaselInput, WaselSelect } from '../../components/wasel-ui';
 import { CITIES } from '../../pages/waselCoreRideData';
 import { getMovementPriceQuote } from '../../services/movementPricing';
@@ -602,3 +602,4 @@ export function FindRidePage() {
 }
 
 export default FindRidePage;
+

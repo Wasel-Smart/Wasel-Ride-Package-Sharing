@@ -1,4 +1,4 @@
-import { C, F, R, SPACE, TYPE } from '../../../utils/wasel-ds';
+import { F, R, SPACE, TYPE  } from '../../../utils/wasel-ds';
 import type { ReviewHistoryItem } from '../../../services/trustCenterModel';
 
 function statusStyle(status: ReviewHistoryItem['status']) {
@@ -136,3 +136,4 @@ export function ReviewTimeline({ items, t }: { items: ReviewHistoryItem[]; t: (k
     </div>
   );
 }
+
