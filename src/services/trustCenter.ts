@@ -114,6 +114,8 @@ export async function startTrustPhoneVerification ( payload: StartPhoneVerificat
     started: boolean;
     phoneNumber: string;
     expiresAt: string;
+    devCode?: string;
+    provider?: string;
   }>( {
     operation: 'Phone verification start',
     authMode: 'required',

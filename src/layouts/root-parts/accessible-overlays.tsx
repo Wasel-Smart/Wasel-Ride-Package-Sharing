@@ -126,7 +126,7 @@ export function UserMenu({
           paddingInlineStart: 5,
           paddingInlineEnd: 12,
           borderRadius: 9999,
-          background: open ? C.cyanDim : var(--card),
+          background: open ? C.cyanDim : 'var(--card)',
           border: `1px solid ${open ? var(--border) : var(--border)}`,
           cursor: 'pointer',
           transition: 'background 0.15s, border-color 0.15s',

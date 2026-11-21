@@ -182,7 +182,7 @@ export function ActiveTripsBanner({ onNavigate }: { onNavigate: (path: string) =
                 {item.eta}
               </span>
               {item.timeLeftMinutes > 0 && (
-                <span style={{ fontWeight: TYPE.weight.bold, color: var(--muted-foreground) }}>
+                <span style={{ fontWeight: TYPE.weight.bold, color: 'var(--muted-foreground)' }}>
                   {item.timeLeftMinutes}
                   {tx('tripProgressCard.m_left')}
                 </span>

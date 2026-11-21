@@ -99,10 +99,10 @@ export function NavDropdown({
             />
             {item.badge && <Badge label={ar && item.badge === 'LIVE' ? 'مباشر' : item.badge} color={item.color} />}
           </div>
-          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: var(--foreground), fontFamily: F }}>
+          <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--foreground)', fontFamily: F }}>
             {ar ? item.labelAr : item.label}
           </div>
-          <div style={{ fontSize: '0.7rem', color: var(--muted-foreground), fontFamily: F, lineHeight: 1.4 }}>
+          <div style={{ fontSize: '0.7rem', color: 'var(--muted-foreground)', fontFamily: F, lineHeight: 1.4 }}>
             {ar ? item.descAr : item.desc}
           </div>
         </button>
@@ -161,7 +161,7 @@ export function UserMenu({
           gap: 8,
           padding: '5px 12px 5px 5px',
           borderRadius: 9999,
-          background: open ? C.cyanDim : var(--card),
+          background: open ? C.cyanDim : 'var(--card)',
           border: `1px solid ${open ? var(--border) : var(--border)}`,
           cursor: 'pointer',
           transition: 'all 0.15s',
@@ -189,7 +189,7 @@ export function UserMenu({
           style={{
             fontSize: '0.82rem',
             fontWeight: 600,
-            color: var(--foreground),
+            color: 'var(--foreground)',
             fontFamily: F,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -224,10 +224,10 @@ export function UserMenu({
               borderBottom: `1px solid ${var(--border)}`,
             }}
           >
-            <div style={{ fontWeight: 700, color: var(--foreground), fontSize: '0.875rem', fontFamily: F }}>
+            <div style={{ fontWeight: 700, color: 'var(--foreground)', fontSize: '0.875rem', fontFamily: F }}>
               {user.name}
             </div>
-            <div style={{ fontSize: '0.68rem', color: var(--muted-foreground), fontFamily: F, marginTop: 1 }}>
+            <div style={{ fontSize: '0.68rem', color: 'var(--muted-foreground)', fontFamily: F, marginTop: 1 }}>
               {user.email}
             </div>
             <div
@@ -248,13 +248,13 @@ export function UserMenu({
                   borderInlineEnd: `1px solid ${var(--border)}`,
                 }}
               >
-                <div style={{ fontSize: '1rem', fontWeight: 900, color: var(--foreground), fontFamily: F }}>
+                <div style={{ fontSize: '1rem', fontWeight: 900, color: 'var(--foreground)', fontFamily: F }}>
                   {user.trips}
                 </div>
                 <div
                   style={{
                     fontSize: '0.58rem',
-                    color: var(--muted-foreground),
+                    color: 'var(--muted-foreground)',
                     fontFamily: F,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
@@ -270,7 +270,7 @@ export function UserMenu({
                 <div
                   style={{
                     fontSize: '0.58rem',
-                    color: var(--muted-foreground),
+                    color: 'var(--muted-foreground)',
                     fontFamily: F,
                     textTransform: 'uppercase',
                     letterSpacing: '0.06em',
@@ -300,7 +300,7 @@ export function UserMenu({
                 textAlign: ar ? 'right' : 'left',
                 fontSize: '0.82rem',
                 fontWeight: 500,
-                color: var(--muted-foreground),
+                color: 'var(--muted-foreground)',
                 fontFamily: F,
                 cursor: 'pointer',
               }}
@@ -416,7 +416,7 @@ export function MobileDrawer({
               width: 32,
               height: 32,
               cursor: 'pointer',
-              color: var(--muted-foreground),
+              color: 'var(--muted-foreground)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -445,10 +445,10 @@ export function MobileDrawer({
               borderBottom: `1px solid ${var(--border)}`,
             }}
           >
-            <div style={{ fontWeight: 700, color: var(--foreground), fontFamily: F, fontSize: '0.9rem' }}>
+            <div style={{ fontWeight: 700, color: 'var(--foreground)', fontFamily: F, fontSize: '0.9rem' }}>
               {user.name}
             </div>
-            <div style={{ fontSize: '0.72rem', color: var(--muted-foreground), fontFamily: F }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)', fontFamily: F }}>
               {user.email}
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
@@ -468,7 +468,7 @@ export function MobileDrawer({
                   style={{
                     fontSize: '0.6rem',
                     fontWeight: 700,
-                    color: var(--muted-foreground),
+                    color: 'var(--muted-foreground)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
                     marginBottom: 8,
@@ -512,7 +512,7 @@ export function MobileDrawer({
                         style={{
                           fontSize: '0.875rem',
                           fontWeight: 700,
-                          color: var(--foreground),
+                          color: 'var(--foreground)',
                           fontFamily: F,
                         }}
                       >
@@ -521,7 +521,7 @@ export function MobileDrawer({
                       <span
                         style={{
                           fontSize: '0.72rem',
-                          color: var(--muted-foreground),
+                          color: 'var(--muted-foreground)',
                           fontFamily: F,
                           lineHeight: 1.5,
                         }}
@@ -575,7 +575,7 @@ export function MobileDrawer({
                         style={{
                           fontSize: '0.84rem',
                           fontWeight: 500,
-                          color: var(--muted-foreground),
+                          color: 'var(--muted-foreground)',
                           fontFamily: F,
                         }}
                       >
@@ -626,7 +626,7 @@ export function MobileDrawer({
                   borderRadius: R.md,
                   background: 'transparent',
                   border: `1.5px solid ${var(--border)}`,
-                  color: var(--foreground),
+                  color: 'var(--foreground)',
                   fontWeight: 600,
                   fontFamily: F,
                   fontSize: '0.875rem',

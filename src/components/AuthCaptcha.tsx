@@ -84,7 +84,7 @@ export function AuthCaptcha({ onTokenChange, resetSignal }: AuthCaptchaProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | number | null>(null);
   const [loadError, setLoadError] = useState('');
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [_captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authCaptchaProvider || !siteKey || !containerRef.current) {return;}

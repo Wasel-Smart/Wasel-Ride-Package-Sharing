@@ -1,4 +1,4 @@
-﻿import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -146,7 +146,7 @@ export default function MobilityOSPage() {
   if (!hottest || !weakest || !benchmarkRoute) return null;
 
   const pageStyle: CSSProperties = {
-    background: ${GRAD_AURORA}, radial-gradient(circle at 82% 18%, , transparent 22%), var(--background),
+    background: `${GRAD_AURORA}, radial-gradient(circle at 82% 18%, transparent 22%), var(--background)`,
     fontFamily: F,
   };
 
