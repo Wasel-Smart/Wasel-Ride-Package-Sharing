@@ -37,7 +37,7 @@ const events = new RegExp(
     `(?<create>create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?${tbl}\\s*\\()`,
     `(?<drop>drop\\s+table\\s+(?:if\\s+exists\\s+)?${tbl})`,
     `(?<rls>alter\\s+table\\s+(?:if\\s+exists\\s+)?(?:only\\s+)?${tbl}\\s+enable\\s+row\\s+level\\s+security)`,
-    `(?<pol>create\\s+policy\\s+${polName}\\s+on\\s+${tbl})`,
+    `(?<pol>create\\s+policy\\s+(?:if\\s+not\\s+exists\\s+)?${polName}\\s+on\\s+${tbl})`,
     `(?<dpol>drop\\s+policy\\s+(?:if\\s+exists\\s+)?${polName}\\s+on\\s+${tbl})`,
   ].join('|'),
   'gi',
