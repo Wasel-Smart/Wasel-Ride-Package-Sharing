@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { BadgeDollarSign, Brain, Route, Sparkles, CheckCircle } from 'lucide-react';
 import { useLocalAuth } from '../../contexts/LocalAuth';
 import { useIframeSafeNavigate } from '../../hooks/useIframeSafeNavigate';
@@ -22,7 +22,6 @@ import {
 } from '../../services/movementRetention';
 import { useLiveRouteIntelligence } from '../../services/routeDemandIntelligence';
 import { getFeaturedCorridors, getHabitLoopPrograms } from '../../config/wasel-movement-network';
-import { C,  } from '../../utils/wasel-ds';
 import { tx } from '../../locales/tx';
 
 function tierLabel(tier: MovementMembershipSnapshot['loyaltyTier']) {
@@ -167,7 +166,7 @@ export default function WaselPlusPage() {
                 borderRadius: r(18),
                 padding: '18px 18px 16px',
                 border: `1px solid ${DS.border}`,
-                boxShadow: `0 12px 28px ${var(--overlay, rgba(0,0,0,0.6))}`,
+                boxShadow: "0 12px 28px var(--overlay, rgba(0,0,0,0.6))",
               }}
             >
               <div

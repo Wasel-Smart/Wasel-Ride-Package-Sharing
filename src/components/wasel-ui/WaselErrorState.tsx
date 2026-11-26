@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { C,  R, TYPE, SPACE  } from '../../utils/wasel-ds';
+﻿import type { ReactNode } from 'react';
+import { R, TYPE, SPACE  } from '../../utils/wasel-ds';
 
 interface WaselErrorStateProps {
   icon?: ReactNode;
@@ -41,8 +41,8 @@ export function WaselErrorState({
           width: 80,
           height: 80,
           borderRadius: R['3xl'],
-          background: `${var(--destructive)}12`,
-          border: `1px solid color-mix(in srgb, var(--destructive) 24%, transparent)`,
+          background: 'var(--destructive)12',
+          border: `1px solid color-mix(in srgb, 'var(--destructive)' 24%, transparent)`,
           marginBottom: SPACE[5],
           color: `var(--destructive)`,
         }}

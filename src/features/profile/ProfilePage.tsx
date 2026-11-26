@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ProfilePage - /app/profile
  */
 import { useEffect, useRef, useState } from 'react';
@@ -682,7 +682,7 @@ function ProfilePageContent({
             position: 'fixed',
             inset: 0,
             zIndex: 2000,
-            background: var(--overlay, rgba(0,0,0,0.6)),
+            background: 'var(--overlay, rgba(0,0,0,0.6))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -692,7 +692,7 @@ function ProfilePageContent({
           <div
             style={{
               background: 'var(--card)',
-              border: `1px solid ${'color-mix(in srgb, var(--destructive) 14%, transparent)'}`,
+              border: `1px solid ${"color-mix(in srgb, var(--destructive) 14%, transparent)"}`,
               borderRadius: 16,
               padding: 28,
               maxWidth: 360,
@@ -742,8 +742,8 @@ function ProfilePageContent({
                   flex: 1,
                   height: 40,
                   borderRadius: 10,
-                  background: 'color-mix(in srgb, var(--destructive) 14%, transparent)',
-                  border: `1px solid ${'color-mix(in srgb, var(--destructive) 14%, transparent)'}`,
+                  background: "color-mix(in srgb, var(--destructive) 14%, transparent)",
+                  border: `1px solid ${"color-mix(in srgb, var(--destructive) 14%, transparent)"}`,
                   color: 'var(--destructive)',
                   fontFamily: FONT,
                   fontWeight: 700,

@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+﻿import type { CSSProperties } from 'react';
 import { C,  F, GRAD, R  } from '../../utils/wasel-ds';
 
 interface ToolbarButtonOptions {
@@ -68,7 +68,7 @@ export function popoverStyle({
     width,
     background,
     backdropFilter: 'blur(28px)',
-    border: `1px solid ${var(--border)}`,
+    border: '1px solid var(--border)',
     borderRadius,
     boxShadow,
     ...(padding === undefined ? null : { padding }),
@@ -139,7 +139,7 @@ export const rootPartStyles = {
     padding: '8px 12px 4px',
     fontSize: '0.6rem',
     fontWeight: 700,
-    color: var(--muted-foreground),
+    color: 'var(--muted-foreground)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
     fontFamily: F,
@@ -151,8 +151,8 @@ export const rootPartStyles = {
     gap: 4,
     padding: '11px 13px',
     borderRadius: 12,
-    background: var(--card),
-    border: `1px solid ${var(--border)}`,
+    background: 'var(--card)',
+    border: '1px solid var(--border)',
     cursor: 'pointer',
     transition: 'all 0.14s ease',
   } satisfies CSSProperties,
@@ -164,12 +164,12 @@ export const rootPartStyles = {
   cardTitle: {
     fontSize: '0.82rem',
     fontWeight: 700,
-    color: var(--foreground),
+    color: 'var(--foreground)',
     fontFamily: F,
   } satisfies CSSProperties,
   cardCopy: {
     fontSize: '0.7rem',
-    color: var(--muted-foreground),
+    color: 'var(--muted-foreground)',
     fontFamily: F,
     lineHeight: 1.4,
   } satisfies CSSProperties,
@@ -184,13 +184,13 @@ export const rootPartStyles = {
     justifyContent: 'center',
     fontSize: '0.68rem',
     fontWeight: 800,
-    color: var(--background),
+    color: 'var(--background)',
     flexShrink: 0,
   } satisfies CSSProperties,
   userName: {
     fontSize: '0.82rem',
     fontWeight: 600,
-    color: var(--foreground),
+    color: 'var(--foreground)',
     fontFamily: F,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -200,7 +200,7 @@ export const rootPartStyles = {
   sectionHeader: {
     fontSize: '0.6rem',
     fontWeight: 700,
-    color: var(--muted-foreground),
+    color: 'var(--muted-foreground)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
     marginBottom: 8,
@@ -220,8 +220,8 @@ export const rootPartStyles = {
       insetInlineEnd: 0,
       width: 300,
       height: '100%',
-      background: var(--background),
-      borderInlineStart: `1px solid ${var(--border)}`,
+      background: 'var(--background)',
+      borderInlineStart: '1px solid var(--border)',
       boxShadow: ar ? '20px 0 60px rgba(8,29,57,0.7)' : '-20px 0 60px rgba(8,29,57,0.7)',
       overflowY: 'auto',
       display: 'flex',
@@ -229,7 +229,7 @@ export const rootPartStyles = {
     }) satisfies CSSProperties,
   drawerHeader: {
     padding: '16px 20px',
-    borderBottom: `1px solid ${var(--border)}`,
+    borderBottom: '1px solid var(--border)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -237,7 +237,7 @@ export const rootPartStyles = {
   } satisfies CSSProperties,
   drawerToolbar: {
     padding: '10px 20px',
-    borderBottom: `1px solid ${var(--border)}`,
+    borderBottom: '1px solid var(--border)',
     display: 'flex',
     gap: 8,
     alignItems: 'center',
@@ -245,7 +245,7 @@ export const rootPartStyles = {
   drawerFooter: {
     padding: '16px 20px',
     flexShrink: 0,
-    borderTop: `1px solid ${var(--border)}`,
+    borderTop: '1px solid var(--border)',
   } satisfies CSSProperties,
   actionStack: {
     display: 'flex',
@@ -260,8 +260,8 @@ export const rootPartStyles = {
     padding: '0 12px',
     borderRadius: R.full,
     background: C.cyanDim,
-    border: `1px solid ${var(--border)}`,
-    color: var(--muted-foreground),
+    border: '1px solid var(--border)',
+    color: 'var(--muted-foreground)',
     fontSize: '0.72rem',
     fontWeight: 700,
     fontFamily: F,

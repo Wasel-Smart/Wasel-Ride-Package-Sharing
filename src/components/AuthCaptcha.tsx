@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import HCaptcha from '@hcaptcha/react-hcaptcha';
-import { C,  F, R, SPACE, TYPE  } from '../utils/wasel-ds';
+import { F, R, SPACE, TYPE  } from '../utils/wasel-ds';
 
 type CaptchaProvider = 'hcaptcha' | 'turnstile';
 

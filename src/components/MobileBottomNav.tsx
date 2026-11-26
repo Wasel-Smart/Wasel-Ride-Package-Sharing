@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Mobile Bottom Navigation
  * Shared with the app's core navigation model for consistent UX.
  */
@@ -13,8 +13,8 @@ import { C,  F, GRAD_GOLD, TYPE, Z  } from '../utils/wasel-ds';
 const BG = 'rgba(8,29,57,0.96)';
 const CYAN = C.cyan;
 const GOLD = C.gold;
-const INACTIVE = var(--muted-foreground);
-const BORDER = var(--border);
+const INACTIVE = 'var(--muted-foreground)';
+const BORDER = 'var(--border)';
 
 const ICONS = {
   find: Search,
@@ -105,7 +105,7 @@ function NavItem({ item, isActive, isArabic, navigate }: {
           <Icon
             size={22}
             strokeWidth={isActive ? 2.5 : 2}
-            color={isActive ? var(--background) : GOLD}
+            color={isActive ? 'var(--background)' : GOLD}
           />
         </div>
       ) : (

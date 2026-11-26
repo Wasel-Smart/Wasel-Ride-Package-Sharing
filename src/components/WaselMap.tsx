@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WaselMap — Interactive map for Wasel | واصل
  *
  * ✅ Leaflet + OpenStreetMap/CartoDB (NO API key required)
@@ -132,9 +132,9 @@ function loadLeaflet(): Promise<LeafletNamespace> {
     _leafletPromise = import('leaflet')
         .then(mod => {
           console.log('[WaselMap] Leaflet loaded');
+          ensureLeafletCSS();
           return mod.default ?? mod;
         })
-      .then(mod => mod.default ?? mod)
       .catch(err => {
         console.error('[WaselMap] Failed to import Leaflet:', err);
         // Rethrow to let the caller handle it (Map will show fallback UI).

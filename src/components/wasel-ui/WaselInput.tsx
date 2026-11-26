@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WaselInput - design-system text field.
  */
 
@@ -11,10 +11,10 @@ import { sanitizeHtml } from '../../utils/sanitization';
 // can be themed and doesn't re-render the field on every focus change.
 const INPUT_STYLE_ID = 'wasel-input-css';
 const INPUT_CSS = `
-  .wasel-input-box { border: 1.5px solid var(--ring, ${ C.borderInput }); background: var(--card, ${ var(--card) }); transition: border-color 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1), background 150ms cubic-bezier(0.4,0,0.2,1); }
+  .wasel-input-box { border: 1.5px solid var(--ring, ${ C.borderInput }); background: var(--card, ${ 'var(--card)' }); transition: border-color 150ms cubic-bezier(0.4,0,0.2,1), box-shadow 150ms cubic-bezier(0.4,0,0.2,1), background 150ms cubic-bezier(0.4,0,0.2,1); }
   .wasel-input-box:hover { border-color: var(--primary, ${ C.cyan }); opacity: 0.9; }
-  .wasel-input-box:focus-within { border-color: var(--primary, ${ C.cyan }); background: var(--muted, ${ var(--card) }); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary, ${ C.cyan }) 20%, transparent); }
-  .wasel-input-box[data-invalid='true'] { border-color: var(--destructive, ${ var(--destructive) }); box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive, ${ var(--destructive) }) 14%, transparent); }
+  .wasel-input-box:focus-within { border-color: var(--primary, ${ C.cyan }); background: var(--muted, ${ 'var(--card)' }); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary, ${ C.cyan }) 20%, transparent); }
+  .wasel-input-box[data-invalid='true'] { border-color: var(--destructive, ${ 'var(--destructive)' }); box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive, ${ 'var(--destructive)' }) 14%, transparent); }
 `;
 
 if ( typeof document !== 'undefined' && !document.getElementById( INPUT_STYLE_ID ) ) {

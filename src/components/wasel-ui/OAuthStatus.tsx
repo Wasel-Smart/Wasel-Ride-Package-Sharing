@@ -1,4 +1,4 @@
-/**
+﻿/**
  * OAuth Status Component
  * Shows OAuth provider connection status in settings
  */
@@ -30,7 +30,7 @@ export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatus
         padding: SPACE[4],
         borderRadius: R.lg,
         border: `1px solid ${status.connected ? `${providerColor}30` : `var(--border)`}`,
-        background: status.connected ? `${providerColor}08` : var(--secondary),
+        background: status.connected ? `${providerColor}08` : 'var(--secondary)',
         display: 'flex',
         alignItems: 'center',
         gap: SPACE[3],
@@ -52,7 +52,7 @@ export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatus
         {status.connected ? (
           <CheckCircle size={20} color={providerColor} />
         ) : (
-          <XCircle size={20} color={var(--muted-foreground)} />
+          <XCircle size={20} color={'var(--muted-foreground)'} />
         )}
       </div>
 
@@ -93,8 +93,8 @@ export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatus
         style={{
           padding: '8px 14px',
           borderRadius: R.md,
-          border: status.connected ? `1px solid color-mix(in srgb, var(--destructive) 40%, transparent)` : `1px solid ${providerColor}40`,
-          background: status.connected ? `color-mix(in srgb, var(--destructive) 15%, transparent)` : `${providerColor}15`,
+          border: status.connected ? `1px solid color-mix(in srgb, 'var(--destructive)' 40%, transparent)` : `1px solid ${providerColor}40`,
+          background: status.connected ? `color-mix(in srgb, 'var(--destructive)' 15%, transparent)` : `${providerColor}15`,
           color: status.connected ? `var(--destructive)` : providerColor,
           fontFamily: F,
           fontSize: TYPE.size.sm,

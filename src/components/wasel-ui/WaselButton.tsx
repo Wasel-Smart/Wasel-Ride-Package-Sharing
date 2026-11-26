@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WaselButton - primary interactive element.
  * Hover/active states are driven by CSS classes injected once into the document,
  * eliminating the fragile e.currentTarget.style mutation pattern.
@@ -6,7 +6,7 @@
 
 import { Loader2 } from 'lucide-react';
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
-import { C,  GRAD, GRAD_GOLD, R, SH, TYPE  } from '../../utils/wasel-ds';
+import { GRAD, GRAD_GOLD, R, SH, TYPE  } from '../../utils/wasel-ds';
 
 const STYLE_ID = 'wasel-btn-css';
 const BTN_CSS = `

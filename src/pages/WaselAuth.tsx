@@ -621,7 +621,7 @@ export default function WaselAuth () {
     }
     if ( registration.requiresEmailConfirmation ) {
       setNeedsConfirmation( true );
-      setPassword( '' );
+      signInForm.resetField( 'password' );
       setNotice(
         tx( 'waselAuth.confirm_email_notice', { email: registration.email ?? email } ),
       );

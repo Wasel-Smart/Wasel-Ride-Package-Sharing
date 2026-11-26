@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+﻿import type { CSSProperties, ReactNode } from 'react';
 import { ChevronRight, type LucideIcon } from 'lucide-react';
 import { ANIM, C, F, FA, R, SH, SPACE, TYPE } from '../../utils/wasel-ds';
 
@@ -81,7 +81,7 @@ export function PageShell({
           position: 'fixed',
           inset: 0,
           pointerEvents: 'none',
-          backgroundImage: `linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient('var(--border)' 1px, transparent 1px), linear-gradient(90deg, 'var(--border)' 1px, transparent 1px)`,
           backgroundSize: '80px 80px',
           maskImage:
             'linear-gradient(180deg, transparent 0%, black 14%, black 78%, transparent 100%)',
@@ -125,7 +125,7 @@ export function PageHero({
         borderRadius: R.xxl,
         background: `
           linear-gradient(135deg, ${accent}12, transparent 34%),
-          var(--card)
+          'var(--card)'
         `,
         border: `1px solid var(--border)`,
         boxShadow: SH.md,
@@ -137,7 +137,7 @@ export function PageHero({
         style={{
           position: 'absolute',
           inset: 0,
-          background: `linear-gradient(120deg, var(--secondary), transparent 32%, transparent 72%, var(--border))`,
+          background: `linear-gradient(120deg, 'var(--secondary)', transparent 32%, transparent 72%, 'var(--border)')`,
           pointerEvents: 'none',
         }}
       />
@@ -414,7 +414,7 @@ export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: Ac
         >
           {icon}
         </span>
-        <ChevronRight size={16} color={var(--muted-foreground)} />
+        <ChevronRight size={16} color={'var(--muted-foreground)'} />
       </div>
       <div
         style={{
@@ -443,7 +443,7 @@ export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: Ac
 }
 
 export function DataRow({ label, value, sub, icon, badge, onClick, danger = false }: DataRowProps) {
-  const accent = danger ? var(--destructive) : C.cyan;
+  const accent = danger ? 'var(--destructive)' : C.cyan;
   return (
     <button
       type="button"
@@ -514,7 +514,7 @@ export function DataRow({ label, value, sub, icon, badge, onClick, danger = fals
         ) : null}
       </div>
       {badge}
-      {onClick ? <ChevronRight size={16} color={var(--muted-foreground)} style={{ flexShrink: 0 }} /> : null}
+      {onClick ? <ChevronRight size={16} color={'var(--muted-foreground)'} style={{ flexShrink: 0 }} /> : null}
     </button>
   );
 }

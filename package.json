@@ -19,7 +19,7 @@
     "undici": "^7.29.0",
     "ws": "^8.20.1",
     "protobufjs": "^8.8.0",
-    "postcss": "^8.5.26",
+    "postcss": "^8.4.38",
     "brace-expansion": "^2.0.1",
     "ip-address": "^10.7.0"
   },
@@ -37,6 +37,7 @@
     ]
   },
   "scripts": {
+    "full-check": "npm run lint && npm run type-check && npm run test:unit && npm run test:e2e && npm run test:accessibility",
     "predev": "node scripts/generate-locale-assets.mjs",
     "dev": "vite",
     "prebuild": "node scripts/verify-supabase-key.mjs && node scripts/generate-locale-assets.mjs",
@@ -106,6 +107,7 @@
   "dependencies": {
     "@google/genai": "^2.19.0",
     "@hcaptcha/react-hcaptcha": "^2.2.0",
+    "@hookform/resolvers": "^7.0.9",
     "@microsoft/applicationinsights-web": "^3.4.4",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",

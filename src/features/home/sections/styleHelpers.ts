@@ -1,5 +1,5 @@
-import type { CSSProperties } from 'react';
-import { C, glass } from '../HomePageShared';
+﻿import type { CSSProperties } from 'react';
+import { glass } from '../HomePageShared';
 
 interface HomeCardOptions {
   background?: string;
@@ -41,7 +41,7 @@ export function homeGrid(
 
 export function homeCardShell({
   background = glass(0.44),
-  border = `1px solid ${var(--border)}`,
+  border = '1px solid var(--border)',
   borderRadius = 22,
   padding = '18px 16px 16px',
   boxShadow,
@@ -79,8 +79,8 @@ export function homeBadgeBubble(color: string): CSSProperties {
     borderRadius: 999,
     display: 'grid',
     placeItems: 'center',
-    background: var(--secondary),
-    border: `1px solid ${var(--border)}`,
+    background: 'var(--secondary)',
+    border: '1px solid var(--border)',
     color,
     fontSize: '0.68rem',
     fontWeight: 900,
@@ -150,7 +150,7 @@ export const homeSurfaceStyles = {
   } satisfies CSSProperties,
   mutedBody: {
     marginTop: 7,
-    color: var(--muted-foreground),
+    color: 'var(--muted-foreground)',
     fontSize: '0.74rem',
     lineHeight: 1.6,
   } satisfies CSSProperties,
@@ -162,7 +162,7 @@ export const homeSurfaceStyles = {
   } satisfies CSSProperties,
   bodyCopy: {
     marginTop: 8,
-    color: var(--muted-foreground),
+    color: 'var(--muted-foreground)',
     lineHeight: 1.65,
     fontSize: '0.8rem',
   } satisfies CSSProperties,
@@ -191,6 +191,6 @@ export const homeSurfaceStyles = {
     fontWeight: 800,
     textTransform: 'uppercase',
     letterSpacing: '0.08em',
-    color: var(--muted-foreground),
+    color: 'var(--muted-foreground)',
   } satisfies CSSProperties,
 };

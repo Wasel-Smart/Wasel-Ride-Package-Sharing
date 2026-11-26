@@ -1,4 +1,4 @@
-/**
+﻿/**
  * WaselBadge - compact status indicator.
  */
 
@@ -53,9 +53,9 @@ const variants: Record<
     defaultLabel: 'NEW',
   },
   hot: {
-    background: color-mix(in srgb, var(--destructive) 20%, transparent),
-    color: var(--destructive),
-    borderColor: color-mix(in srgb, var(--destructive) 20%, transparent),
+    background: "color-mix(in srgb, var(--destructive) 20%, transparent)",
+    color: 'var(--destructive)',
+    borderColor: "color-mix(in srgb, var(--destructive) 20%, transparent)",
     defaultIcon: <Zap size={iconSize} />,
     defaultLabel: 'HOT',
   },
