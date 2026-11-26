@@ -38,13 +38,13 @@ export default function VehicleFormScreen() {
       apiClient
         .get(`vehicles/${vehicleId}`)
         .then(res => {
-          const v = res.data;
-          setMake(v.make ?? '');
-          setModel(v.model ?? '');
-          setYear(String(v.year ?? ''));
-          setColor(v.color ?? '');
-          setPlate(v.plate ?? '');
-          setRegistrationStatus(v.registration_status ?? 'pending');
+          const v = res.data as { make?: unknown; model?: unknown; year?: unknown; color?: unknown; plate?: unknown; registration_status?: unknown };
+          setMake(typeof v.make === 'string' ? v.make : '');
+          setModel(typeof v.model === 'string' ? v.model : '');
+          setYear(v.year != null ? String(v.year) : '');
+          setColor(typeof v.color === 'string' ? v.color : '');
+          setPlate(typeof v.plate === 'string' ? v.plate : '');
+          setRegistrationStatus(typeof v.registration_status === 'string' ? v.registration_status : 'pending');
         })
         .catch(() => {
           Alert.alert('خطأ', 'تعذر جلب معلومات المركبة');
@@ -117,5 +117,5 @@ const styles = StyleSheet.create({
   field: { marginBottom: spacing.md },
   label: { fontSize: 15, color: colors.muted, marginBottom: 4 },
   input: { borderWidth: 1, borderColor: colors.line, borderRadius: 6, padding: spacing.sm, fontSize: 15, color: colors.text },
-  saveButton: { backgroundColor: colors.teal, color: colors.white, textAlign: 'center', padding: spacing.md, borderRadius: 6, marginTop: spacing.lg },
+  saveButton: { backgroundColor: colors.teal, color: '#FFFFFF', textAlign: 'center', padding: spacing.md, borderRadius: 6, marginTop: spacing.lg },
 });

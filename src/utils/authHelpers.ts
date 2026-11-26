@@ -81,7 +81,7 @@ export function getPasswordRuleIssue(password: string): PasswordRuleIssue {
 import { C } from '../utils/wasel-ds';
 
 export function pwStrength(password: string): { score: number; label: string; color: string } {
-  if (!password) {return { score: 0, label: '', color: var(--muted-foreground) };}
+  if (!password) {return { score: 0, label: '', color: 'var(--muted-foreground)' };}
 
   const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter(rule => rule.test(password)).length;
   let score = classes + (password.length >= 12 ? 1 : 0);
@@ -92,14 +92,14 @@ export function pwStrength(password: string): { score: number; label: string; co
   }
 
   const map = [
-    { score: 0, label: '', color: var(--muted-foreground) },
-    { score: 1, label: 'Weak', color: var(--destructive) },
+    { score: 0, label: '', color: 'var(--muted-foreground)' },
+    { score: 1, label: 'Weak', color: 'var(--destructive)' },
     { score: 2, label: 'Fair', color: C.gold },
     { score: 3, label: 'Good', color: C.cyan },
     { score: 4, label: 'Strong', color: C.green },
     { score: 5, label: 'Excellent', color: C.green },
   ];
 
-  return map[Math.min(score, 5)] ?? { score: 0, label: '', color: var(--muted-foreground) };
+  return map[Math.min(score, 5)] ?? { score: 0, label: '', color: 'var(--muted-foreground)' };
 }
 
