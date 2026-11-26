@@ -25,8 +25,6 @@ import {
 import { notificationsAPI } from '../../services/notifications.js';
 import { recordMovementActivity } from '../../services/movementMembership';
 import { createSupportTicket } from '../../services/supportInbox';
-import { walletApi } from '../../services/wallet/walletApi';
-import { calculateDirectPrice } from '../../shared/pricing/priceCalculator';
 import { getCorridorOpportunity } from '../../config/wasel-movement-network';
 import { SH  } from '../../utils/wasel-ds';
 import { ServiceFlowPlaybook } from '../shared/ServiceFlowPlaybook';
@@ -114,9 +112,6 @@ export function PackagesPage() {
     setCreateError(null);
 
     try {
-      const weightKg = parseFloat(pkg.weight.match(/\d+(?:\.\d+)?/)?.[0] || '0.5');
-      const priceResult = calculateDirectPrice('package', weightKg, 8);
-
       const created = await createConnectedPackage({
         from: pkg.from,
         to: pkg.to,
@@ -139,21 +134,10 @@ export function PackagesPage() {
       refreshPackageSnapshot();
       void recordMovementActivity('package_created', corridorPlan?.id ?? null);
 
-      if (user?.id) {
-        try {
-          await walletApi.pay(user.id, priceResult.price, 'package_delivery', {
-            referenceId: created.id,
-            metadata: { trackingId: created.trackingId, from: created.from, to: created.to, weight: pkg.weight },
-          });
-        } catch (paymentError) {
-          console.error('[Wallet] package payment failed:', paymentError);
-          setTrackingMessage(
-            ar
-              ? `تم إنشاء طلب الطرد لكن الدفع لم يكتمل. لا تسلّم الطرد قبل تأكيد الدفع.`
-              : `Package request created, but payment did not complete. Do not hand over the package until payment is confirmed.`,
-          );
-        }
-      }
+      // Payment is NOT charged at creation. The fee is held in escrow and
+      // released to the carrier only after delivery is confirmed by the receiver.
+      // Charging here (before any driver picks up the package) would debit the
+      // sender for a service that may never be rendered.
 
       notificationsAPI.createNotification({
         title: packageType === 'return'
@@ -218,6 +202,29 @@ export function PackagesPage() {
       setTrackId(updated.trackingId);
       setTrackingMessage(packageStatusMessage(action, updated.trackingId, ar));
       refreshPackageSnapshot();
+
+      // Escrow release: charge the sender's wallet only after the receiver
+      // confirms delivery. This prevents charging for packages that are never
+      // picked up or never arrive.
+      if (action === 'confirm_delivery' && user?.id) {
+        const weightKg = parseFloat(updated.weight.match(/\d+(?:\.\d+)?/)?.[0] || '0.5');
+        const { calculateDirectPrice } = await import('../../shared/pricing/priceCalculator');
+        const priceResult = calculateDirectPrice('package', weightKg, 8);
+        const { walletApi } = await import('../../services/wallet/walletApi');
+        try {
+          await walletApi.pay(user.id, priceResult.price, 'package_delivery', {
+            referenceId: updated.id,
+            metadata: { trackingId: updated.trackingId, from: updated.from, to: updated.to, weight: updated.weight },
+          });
+        } catch (paymentError) {
+          console.error('[Wallet] package escrow release failed:', paymentError);
+          setTrackingMessage(
+            ar
+              ? `تم التسليم لكن عملية الدفع لم تكتمل. يرجى مراجعة الدعم.`
+              : `Delivery confirmed, but payment could not be released. Please contact support.`,
+          );
+        }
+      }
     } catch (error) {
       setTrackingMessage(
         error instanceof Error

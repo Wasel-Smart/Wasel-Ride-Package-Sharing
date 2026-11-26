@@ -17,6 +17,7 @@ import { MobileErrorBoundary } from './components/MobileErrorBoundary';
 import { RTLProvider } from './utils/rtl';
 import { colors } from './theme';
 import * as SplashScreen from 'expo-splash-screen';
+import { biometricAuth } from './services/biometricAuth';
 import {
   useFonts,
   Cairo_400Regular,
@@ -68,6 +69,10 @@ const App = () => {
   });
 
   useEffect(() => {
+    // Prime the biometric service before any screen renders so the sign-in
+    // screen never shows the biometric button in a stale state.
+    void biometricAuth.initialize().catch(() => undefined);
+
     // On a font error we still continue (system font fallback) rather than block the app.
     if (fontsLoaded || fontError) {
       void SplashScreen.hideAsync().catch(() => undefined);

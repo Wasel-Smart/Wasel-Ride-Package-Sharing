@@ -43,7 +43,7 @@ export async function handlePackageRequest ( request: Request, path: string ) {
   if ( request.method === 'POST' && path === '/packages' ) {
     const body = await request.json().catch( () => ( {} ) );
     const packageFee = calculatePackageDeliveryFee( body.weight );
-    const trackingNumber = `WSL-PKG-${ crypto.randomUUID().split( '-' )[ 0 ].slice( 0, 8 ).toUpperCase() }`;
+    const trackingNumber = `PKG-${ crypto.randomUUID().replace( /-/g, '' ).slice( 0, 8 ).toUpperCase() }`;
     const pickupCode = randomVerificationCode();
     const deliveryCode = randomVerificationCode();
     const { data, error } = await auth.admin

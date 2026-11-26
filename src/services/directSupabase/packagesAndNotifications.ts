@@ -44,8 +44,8 @@ export async function createDirectPackage(input: {
       description: input.description,
       fee_amount: deliveryFee,
       delivery_fee: deliveryFee,
-      package_status: 'created',
-      status: 'requested',
+      package_status: 'posted',
+      status: 'posted',
     })
     .select('*')
     .single();

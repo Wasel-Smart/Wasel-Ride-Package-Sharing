@@ -26,9 +26,14 @@ if (!fs.existsSync(indexPath)) {
 const indexHtml = fs.readFileSync(indexPath, 'utf-8');
 
 // 2. Extract referenced script/css/asset URLs.
+// Only collect paths that are actual static assets (have a file extension or live under /assets/).
+// Plain SPA route hrefs like /app, /app/auth, /trust are React router paths, not disk files.
 const referencedUrls = new Set();
 for (const m of indexHtml.matchAll(/(?:src|href)="(\/[^"#?]+)"/g)) {
-  referencedUrls.add(m[1]);
+  const url = m[1];
+  if (url.startsWith('/assets/') || /\.[a-zA-Z0-9]{1,6}(\?|$)/.test(url)) {
+    referencedUrls.add(url.replace(/\?.*$/, ''));
+  }
 }
 
 // 3. Find the main entry index-*.js (script type=module) and walk dynamic imports.
