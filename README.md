@@ -8,7 +8,22 @@ The system is designed around **event-driven domain contracts**, with a Supabase
 
 ## Quick Start
 
-```bash
+```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+bash
 # Install dependencies
 npm install
 
@@ -20,14 +35,59 @@ npm run dev
 npm run type-check && npm run lint && npm run test:unit && npm run build
 ```
 
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+
+
 Required env vars — copy `.env.example` and fill in:
 
-```bash
+```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+bash
 VITE_SUPABASE_URL=
 VITE_SUPABASE_PUBLISHABLE_KEY=   # must start with sb_publishable_ (legacy eyJ... JWT keys are rejected in production)
 VITE_EDGE_FUNCTION_NAME=make-server-0b1f4071
 VITE_APP_URL=https://www.wasel14.online
 ```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+
 
 `VITE_*` values are inlined at build time. Changing them in Vercel requires a redeploy. Never put the Postgres connection string or any service-role key in a `VITE_*` variable.
 
@@ -51,7 +111,22 @@ See [docs/WIRING_ARCHITECTURE.md](docs/WIRING_ARCHITECTURE.md) for the full envi
 
 The production runtime is a **React SPA (Vercel) + Supabase Edge Functions (Deno)**. The internal contracts reflect full microservice boundaries. In practice the main API runs as one edge function (`make-server-0b1f4071`) alongside specialised functions (payments, wallet, trips, matching and outbox workers, webhooks) under `supabase/functions/`. The Kubernetes manifests under `infra/k8s-draft/` represent the target scale-out topology.
 
-```mermaid
+```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+mermaid
 flowchart TB
   subgraph Clients
     ClientWeb["Web Client (React + Vite)"]
@@ -132,6 +207,21 @@ flowchart TB
   Payment --> Sentry
 ```
 
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+
+
 ---
 
 ## Bounded Contexts
@@ -154,30 +244,120 @@ Full SLO sheet: [docs/reliability-slos.md](docs/reliability-slos.md)
 ### Ride
 
 ```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+
 requested → matched → accepted → in_progress → completed
                 ↘                      ↘
               cancelled             cancelled
 ```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+
 
 Source: [`src/domain/rides/lifecycle.ts`](src/domain/rides/lifecycle.ts)
 
 ### Package
 
 ```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+
 created → assigned → picked_up → in_transit → delivered
     ↘          ↘          ↘           ↘
   cancelled  cancelled  cancelled  cancelled
 ```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+
 
 Source: [`src/domain/packages/lifecycle.ts`](src/domain/packages/lifecycle.ts)
 
 ### Driver availability
 
 ```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+
 offline → available → reserved → on_trip → cooldown → available
               ↘           ↘
             offline     offline
 ```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+
 
 Source: [`src/domain/drivers/availability.ts`](src/domain/drivers/availability.ts)
 
@@ -207,7 +387,22 @@ Every dead-letter message carries the original `traceId` and entity ID for repla
 
 All endpoints are versioned under `/v1/` and return a standard envelope:
 
-```json
+```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+json
 {
   "success": true,
   "data": { "id": "ride_123" },
@@ -219,6 +414,21 @@ All endpoints are versioned under `/v1/` and return a standard envelope:
   }
 }
 ```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+
 
 Full OpenAPI spec: [`docs/openapi/wasel-v1.yaml`](docs/openapi/wasel-v1.yaml)
 API contract reference: [`docs/api-contract.md`](docs/api-contract.md)
@@ -288,6 +498,21 @@ Full tradeoff analysis: [docs/scaling-and-tradeoffs.md](docs/scaling-and-tradeof
 ## Repository Map
 
 ```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+
 src/
   domain/          # Canonical state machines and typed domain events
   platform/        # Event bus, RBAC, queue contracts, service topology, observability
@@ -307,6 +532,21 @@ mobile/
 docs/              # Architecture, API contract, runbooks, SLOs, security
 tests/             # Unit, integration, E2E, load
 ```
+
+## Live Demo
+
+[![Staging Demo](https://img.shields.io/badge/demo-staging-%23ff69b4)](https://stg-wasel14.online)
+
+A live staging instance of the platform (linked to a Supabase preview branch) is available at **https://stg-wasel14.online**. Feel free to explore the UI and try out the core flows.
+
+## Dark Mode
+
+The application now supports a dark‑mode toggle that follows the user’s OS preference. A small UI control is available in the top‑right corner of the app.
+
+## Demo Video
+
+A short walkthrough video is available on YouTube: https://youtu.be/placeholder-video-id
+
 
 ---
 

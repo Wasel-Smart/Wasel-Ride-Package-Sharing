@@ -1,0 +1,45 @@
+name: Migration Preview
+
+on:
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    name: Preview migrations on Supabase preview branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Create preview branch (if not exists)
+        run: |
+          supabase branches create dev-preview --persistent || echo "branch may already exist"
+      - name: Push migrations to preview
+        run: supabase db push --remote dev-preview
+      - name: Dump preview schema
+        run: supabase db dump --remote dev-preview > preview_schema.sql
+      - name: Dump production schema
+        run: supabase db dump > prod_schema.sql
+      - name: Compare schemas
+        run: |
+          diff_output=$(git diff --no-index prod_schema.sql preview_schema.sql || true)
+          echo "$diff_output" > schema_diff.patch
+          if [ -s schema_diff.patch ]; then
+            echo "::error::Schema differences detected. See attached diff."
+            exit 1
+          else
+            echo "Schemas match – migration preview passed."
+          fi
+      - name: Upload schema diff (if any)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-diff
+          path: schema_diff.patch
