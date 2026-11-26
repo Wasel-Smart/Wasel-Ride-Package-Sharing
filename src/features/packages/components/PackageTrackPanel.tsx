@@ -287,10 +287,20 @@ export function PackageTrackPanel({
             }}
           >
             {[
-              { label: ar ? 'رمز التسليم' : 'Handoff code', value: trackedPackage.handoffCode },
+              {
+                label: ar ? 'رمز الاستلام (للسائق)' : 'Pickup code (driver)',
+                value: trackedPackage.pickupCode || (ar ? 'عُرض عند الإنشاء' : 'Shown at creation'),
+                tone: trackedPackage.pickupCode ? DS.gold : DS.muted,
+              },
+              {
+                label: ar ? 'رمز التسليم (للمستلم)' : 'Delivery code (receiver)',
+                value: trackedPackage.deliveryCode || (ar ? 'عُرض عند الإنشاء' : 'Shown at creation'),
+                tone: trackedPackage.deliveryCode ? DS.cyan : DS.muted,
+              },
               {
                 label: ar ? 'تسليم المستلم' : 'Recipient handoff',
                 value: trackedPackage.recipientName || (ar ? 'الاسم قيد الانتظار' : 'Name pending'),
+                tone: 'var(--foreground)',
               },
             ].map(item => (
               <div
@@ -312,7 +322,7 @@ export function PackageTrackPanel({
                 >
                   {item.label}
                 </div>
-                <div style={{ color: 'var(--foreground)', fontWeight: 700, fontSize: '0.82rem', marginTop: 6 }}>
+                <div style={{ color: item.tone, fontWeight: 700, fontSize: '0.95rem', marginTop: 6, letterSpacing: item.tone === DS.gold || item.tone === DS.cyan ? '0.12em' : 0 }}>
                   {item.value}
                 </div>
               </div>

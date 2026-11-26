@@ -148,17 +148,30 @@ export function PackageSendPanel({
             {pkg.trackingId}
           </p>
           <p style={{ color: DS.muted, fontSize: '0.75rem', margin: '14px 0 4px' }}>
-            {tx('packageSendPanel.handoff_code')}
+            {ar ? 'رمز الاستلام (أعطه للسائق)' : 'Pickup code (give to driver)'}
           </p>
           <p
             style={{
               color: DS.gold,
               fontWeight: 800,
-              fontSize: '1.05rem',
-              letterSpacing: 0,
+              fontSize: '1.4rem',
+              letterSpacing: '0.18em',
             }}
           >
-            {trackedPackage?.handoffCode || (ar ? 'بانتظار التعيين' : 'Pending assignment')}
+            {trackedPackage?.pickupCode || (ar ? 'بانتظار الإنشاء' : 'Pending creation')}
+          </p>
+          <p style={{ color: DS.muted, fontSize: '0.75rem', margin: '14px 0 4px' }}>
+            {ar ? 'رمز التسليم (أعطه للمستلم)' : 'Delivery code (give to receiver)'}
+          </p>
+          <p
+            style={{
+              color: DS.cyan,
+              fontWeight: 800,
+              fontSize: '1.4rem',
+              letterSpacing: '0.18em',
+            }}
+          >
+            {trackedPackage?.deliveryCode || (ar ? 'بانتظار الإنشاء' : 'Pending creation')}
           </p>
           <p style={{ color: DS.sub, fontSize: '0.8rem', marginTop: 8 }}>
             {trackedPackage?.matchedDriver
@@ -170,9 +183,9 @@ export function PackageSendPanel({
                 : 'Waiting for route assignment'}
           </p>
           <p style={{ color: DS.muted, fontSize: '0.76rem', marginTop: 10 }}>
-            {tx(
-              'packageSendPanel.share_this_otp_with_the_rider_at_pickup_then_confirm_pickup_and_delivery_from_tracking',
-            )}
+            {ar
+              ? 'أعط رمز الاستلام للسائق عند الاستلام. أعط رمز التسليم للمستلم ليقدمه للسائق عند التسليم. الرموز تُعرض مرة واحدة فقط.'
+              : 'Give the pickup code to the driver at collection. Give the delivery code to the receiver to present at handoff. Each code is shown only once.'}
           </p>
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>

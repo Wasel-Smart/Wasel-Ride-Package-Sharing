@@ -41,6 +41,12 @@ export interface PackageRequest {
   id: string;
   trackingId: string;
   handoffCode: string;
+  /** Single-use 6-digit code the sender gives the driver at pickup.
+   *  Returned once by the edge at creation; never sent again. */
+  pickupCode?: string;
+  /** Single-use 6-digit code the sender gives the receiver for delivery.
+   *  Returned once by the edge at creation; never sent again. */
+  deliveryCode?: string;
   from: string;
   to: string;
   weight: string;
@@ -654,21 +660,31 @@ export async function createConnectedPackage ( input: {
         const created = applyRequestedRide(
           normalizeServerPackage( server.package as Record<string, unknown>, pkg ),
         );
-        savePackages( [ created ], getConnectedPackages() );
+        // The edge returns the single-use verification codes at the top level
+        // of the creation response (never again). Persist them into the local
+        // package record so the sender can share them with the driver/receiver.
+        const pickupCode = typeof server.pickup_verification_code === 'string'
+          ? server.pickup_verification_code
+          : undefined;
+        const deliveryCode = typeof server.delivery_verification_code === 'string'
+          ? server.delivery_verification_code
+          : undefined;
+        const createdWithCodes: PackageRequest = { ...created, pickupCode, deliveryCode };
+        savePackages( [ createdWithCodes ], getConnectedPackages() );
         void trackGrowthEvent( {
           userId,
           eventName: 'package_request_created',
-          funnelStage: created.matchedRideId ? 'selected' : 'searched',
+          funnelStage: createdWithCodes.matchedRideId ? 'selected' : 'searched',
           serviceType: 'package',
-          from: created.from,
-          to: created.to,
+          from: createdWithCodes.from,
+          to: createdWithCodes.to,
           valueJod: 5,
           metadata: {
-            trackingId: created.trackingId,
-            packageType: created.packageType,
+            trackingId: createdWithCodes.trackingId,
+            packageType: createdWithCodes.packageType,
           },
         } );
-        return created;
+        return createdWithCodes;
       }
     } else {
       const createdDirect = await createDirectPackage( {

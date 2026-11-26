@@ -1,0 +1,35 @@
+﻿-- SECURITY ACTION REQUIRED — Credential Rotation
+--
+-- .env.production and .env.production.local were previously committed to git
+-- history (now removed from HEAD and covered by .gitignore). Any credentials
+-- that existed in those files at the time of their last committed version are
+-- considered compromised and MUST be rotated before this database or the
+-- associated cloud services are used in production.
+--
+-- Checklist (complete each before go-live):
+--
+--   [ ] Supabase JWT secret — regenerate at:
+--       Supabase Dashboard > Project Settings > API > JWT Secret
+--
+--   [ ] Supabase anon + service_role keys — regenerate at:
+--       Supabase Dashboard > Project Settings > API > API Keys > Roll Keys
+--
+--   [ ] Stripe secret key (sk_live_* / sk_test_*) — rotate at:
+--       Stripe Dashboard > Developers > API Keys > Roll secret key
+--
+--   [ ] Stripe webhook signing secret — rotate by deleting and re-creating
+--       the webhook endpoint at:
+--       Stripe Dashboard > Developers > Webhooks
+--
+--   [ ] Any other secrets in the committed .env files (e.g. CLIQ alias,
+--       third-party API keys) — rotate with each respective provider.
+--
+-- This migration file is a documentation record only; it contains no SQL.
+-- Mark each item above as done and commit this file when rotation is complete.
+--
+-- References:
+--   git log --all --diff-filter=A -- .env.production .env.production.local
+--   https://supabase.com/docs/guides/platform/secret-management
+--   https://stripe.com/docs/keys#keeping-your-keys-safe
+
+-- (intentionally empty — documentation only)
