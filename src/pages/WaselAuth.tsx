@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { AnimatePresence, motion } from 'framer-motion';
 import { toast } from 'sonner';
 import {
@@ -32,6 +34,7 @@ import { getAuthCallbackUrl, getWhatsAppSupportUrl, normalizeReturnToPath, resol
 import { friendlyAuthError, getPasswordRuleIssue, pwStrength } from '../utils/authHelpers';
 import { fetchEnabledOAuthProviders, getProviderSetupInstructions } from '../utils/oauthValidator';
 import { supabase } from '../utils/supabase/client';
+import { signInSchema, type SignInFields } from '../utils/validation';
 
 import { C,  R, TYPE, F, SPACE  } from '../utils/wasel-ds';
 import { tx } from '../locales/tx';
@@ -366,8 +369,16 @@ export default function WaselAuth () {
   const ar = language === 'ar';
 
   const [ tab, setTab ] = useState<Tab>( initialTab );
-  const [ email, setEmail ] = useState( '' );
-  const [ password, setPassword ] = useState( '' );
+  // Sign-in fields are managed by react-hook-form + zodResolver (Gap 10 fix).
+  // Sign-up still uses local state pending a follow-up migration.
+  const signInForm = useForm<SignInFields>({
+    resolver: zodResolver( signInSchema ),
+    defaultValues: { email: '', password: '' },
+  });
+  // Convenience aliases so the rest of the component (sign-up path, shared
+  // handleFormSubmit) can still reference email/password by name.
+  const email = signInForm.watch( 'email' );
+  const password = signInForm.watch( 'password' );
   const [ name, setName ] = useState( '' );
   const [ phone, setPhone ] = useState( '' );
   const [ error, setError ] = useState( '' );
@@ -528,7 +539,9 @@ export default function WaselAuth () {
   const handleFormSubmit = async ( e: React.FormEvent ) => {
     e.preventDefault();
     if ( tab === 'signin' ) {
-      await handleSignIn();
+      // handleSignIn is already a react-hook-form handleSubmit wrapper that
+      // expects a React.FormEvent; pass the event through.
+      await handleSignIn( e as React.BaseSyntheticEvent );
     } else {
       await handleSignUp();
     }
@@ -543,36 +556,28 @@ export default function WaselAuth () {
     }
   };
 
-  const handleSignIn = async () => {
+  /**
+   * Sign-in submit — validated by react-hook-form + zodResolver(signInSchema).
+   * This is the proof-of-pattern for Gap 10; sign-up will migrate next.
+   */
+  const handleSignIn = signInForm.handleSubmit( async ( data: SignInFields ) => {
     setError( '' );
     if ( !passwordResetCompleted ) {
       setNotice( '' );
     }
-    if ( !email.trim() ) {
-      setError( tx( 'waselAuth.error_enter_email' ) );
-      return;
-    }
-    if ( !validateEmail( email ) ) {
-      setError( tx( 'waselAuth.error_enter_valid_email' ) );
-      return;
-    }
-    if ( !password ) {
-      setError( tx( 'waselAuth.error_enter_password' ) );
-      return;
-    }
-    if ( !checkRateLimit( `signin:${ email }`, { maxRequests: 5, windowMs: 60_000 } ) ) {
+    if ( !checkRateLimit( `signin:${ data.email }`, { maxRequests: 5, windowMs: 60_000 } ) ) {
       setError( tx( 'waselAuth.error_too_many_attempts' ) );
       return;
     }
-    const { error: signInError } = await signIn( email, password );
+    const { error: signInError } = await signIn( data.email, data.password );
     if ( signInError ) {
       setError( friendlyAuthError( signInError, tx( 'waselAuth.error_signin_failed' ) ) );
       setNeedsConfirmation( signInError.toLowerCase().includes( 'confirm your email' ) );
       return;
     }
-    resetRateLimit( `signin:${ email }` );
+    resetRateLimit( `signin:${ data.email }` );
     pushSuccessRedirect();
-  };
+  } );
 
   const handleSignUp = async () => {
     setError( '' );
@@ -1072,17 +1077,44 @@ export default function WaselAuth () {
                 ) }
 
                 <div>
-                  <WaselInput
-                    id="auth-email"
-                    label={ tx( 'common.email' ) }
-                    description={ tx( 'waselAuth.used_for_sign_in' ) }
-                    type="email"
-                    value={ email }
-                    onChange={ value => { const next = value.trim(); setEmail( next ); validateEmailRealtime( next ); } }
-                    placeholder={ tx( 'waselAuth.you_example_com' ) }
-                    icon={ <Mail size={ 16 } /> }
-                  />
-                  { emailError && (
+                  { tab === 'signin' ? (
+                    // Sign-in email -- react-hook-form Controller (Gap 10 proof-of-pattern)
+                    <Controller
+                      name="email"
+                      control={ signInForm.control }
+                      render={ ( { field, fieldState } ) => (
+                        <>
+                          <WaselInput
+                            id="auth-email"
+                            label={ tx( 'common.email' ) }
+                            description={ tx( 'waselAuth.used_for_sign_in' ) }
+                            type="email"
+                            value={ field.value }
+                            onChange={ field.onChange }
+                            placeholder={ tx( 'waselAuth.you_example_com' ) }
+                            icon={ <Mail size={ 16 } /> }
+                          />
+                          { fieldState.error && (
+                            <span style={ { color: 'var(--destructive)', fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
+                              { fieldState.error.message }
+                            </span>
+                          ) }
+                        </>
+                      ) }
+                    />
+                  ) : (
+                    <WaselInput
+                      id="auth-email"
+                      label={ tx( 'common.email' ) }
+                      description={ tx( 'waselAuth.used_for_sign_in' ) }
+                      type="email"
+                      value={ email }
+                      onChange={ value => { const next = value.trim(); signInForm.setValue( 'email', next ); validateEmailRealtime( next ); } }
+                      placeholder={ tx( 'waselAuth.you_example_com' ) }
+                      icon={ <Mail size={ 16 } /> }
+                    />
+                  ) }
+                  { tab === 'signup' && emailError && (
                     <span style={ { color: 'var(--destructive)', fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
                       { emailError }
                     </span>
@@ -1090,30 +1122,49 @@ export default function WaselAuth () {
                 </div>
 
                 <div>
-                  <WaselInput
-                    id="auth-password"
-                    label={ tx( 'auth.password' ) }
-                    description={
-                      tab === 'signin'
-                        ? tx( 'waselAuth.your_account_password' )
-                        : tx( 'waselAuth.minimum_8_characters' )
-                    }
-                    type="password"
-                    value={ password }
-                    onChange={ value => { setPassword( value ); validatePasswordRealtime( value ); } }
-                    placeholder={
-                      tab === 'signin'
-                        ? tx( 'waselAuth.enter_your_password' )
-                        : tx( 'waselAuth.create_a_secure_password' )
-                    }
-                    icon={ <Lock size={ 16 } /> }
-                    hint={
-                      tab === 'signup' && password.length > 0 ? (
-                        <StrengthBar password={ password } />
-                      ) : undefined
-                    }
-                  />
-                  { passwordError && (
+                  { tab === 'signin' ? (
+                    // Sign-in password -- react-hook-form Controller
+                    <Controller
+                      name="password"
+                      control={ signInForm.control }
+                      render={ ( { field, fieldState } ) => (
+                        <>
+                          <WaselInput
+                            id="auth-password"
+                            label={ tx( 'auth.password' ) }
+                            description={ tx( 'waselAuth.your_account_password' ) }
+                            type="password"
+                            value={ field.value }
+                            onChange={ field.onChange }
+                            placeholder={ tx( 'waselAuth.enter_your_password' ) }
+                            icon={ <Lock size={ 16 } /> }
+                          />
+                          { fieldState.error && (
+                            <span style={ { color: 'var(--destructive)', fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
+                              { fieldState.error.message }
+                            </span>
+                          ) }
+                        </>
+                      ) }
+                    />
+                  ) : (
+                    <WaselInput
+                      id="auth-password"
+                      label={ tx( 'auth.password' ) }
+                      description={ tx( 'waselAuth.minimum_8_characters' ) }
+                      type="password"
+                      value={ password }
+                      onChange={ value => { signInForm.setValue( 'password', value ); validatePasswordRealtime( value ); } }
+                      placeholder={ tx( 'waselAuth.create_a_secure_password' ) }
+                      icon={ <Lock size={ 16 } /> }
+                      hint={
+                        password.length > 0 ? (
+                          <StrengthBar password={ password } />
+                        ) : undefined
+                      }
+                    />
+                  ) }
+                  { tab === 'signup' && passwordError && (
                     <span style={ { color: 'var(--destructive)', fontSize: TYPE.size.xs, marginTop: 4, display: 'block' } }>
                       { passwordError }
                     </span>
