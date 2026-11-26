@@ -1337,6 +1337,7 @@
   "aisle": "ممر",
   "front_zone": "المنطقة الأمامية",
   "official_schedule_verified": "جدول رسمي، موثّق",
+  "official_schedule_disclaimer": "آخر توثيق للجدول بتاريخ {{date}}. تأكد من المواعيد مع شركة النقل قبل السفر.",
   "seat_confirmed": "تم تأكيد المقعد",
   "seat": "مقعد",
   "reserved_for": "محجوز لـ",
