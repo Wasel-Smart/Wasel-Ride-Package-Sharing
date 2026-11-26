@@ -213,19 +213,14 @@ DO $$ BEGIN
 END $$;
 
 -- driver_payouts: drivers view their own payout records (read-only).
+-- In the baseline schema, drivers.id IS the user UUID (FK to profiles.id),
+-- so driver_payouts.driver_id = auth.uid() is the correct check.
 DO $$ BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='driver_payouts') THEN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='driver_payouts' AND policyname='driver_payouts_select_own') THEN
       CREATE POLICY driver_payouts_select_own ON public.driver_payouts
         FOR SELECT
-        USING (
-          auth.uid() = (
-            SELECT p.id FROM public.profiles p
-            JOIN public.drivers d ON d.profile_id = p.id
-            WHERE d.id = driver_payouts.driver_id
-            LIMIT 1
-          )
-        );
+        USING (auth.uid() = driver_id);
     END IF;
   END IF;
 END $$;
@@ -236,14 +231,7 @@ DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='driver_status_history' AND policyname='driver_status_history_select_own') THEN
       CREATE POLICY driver_status_history_select_own ON public.driver_status_history
         FOR SELECT
-        USING (
-          auth.uid() = (
-            SELECT p.id FROM public.profiles p
-            JOIN public.drivers d ON d.profile_id = p.id
-            WHERE d.id = driver_status_history.driver_id
-            LIMIT 1
-          )
-        );
+        USING (auth.uid() = driver_id);
     END IF;
   END IF;
 END $$;
