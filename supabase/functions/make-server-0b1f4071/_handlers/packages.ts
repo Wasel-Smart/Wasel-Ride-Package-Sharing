@@ -392,9 +392,20 @@ export async function handlePackageRequest ( request: Request, path: string ) {
       { windowSeconds: 600, failClosed: true },
     );
     if ( limited ) {return limited;}
-    if ( !pkg.pickup_verification_code || !constantTimeEquals( code, pkg.pickup_verification_code ) ) {
+    // Hash the entered code and compare to the stored digest.
+    const codeHash = await hashCode( code );
+    if ( !pkg.pickup_verification_code || !constantTimeEquals( codeHash, pkg.pickup_verification_code ) ) {
       return json( { error: 'Incorrect pickup code.' }, 403 );
     }
+    const photo = typeof body.photo === 'string' ? body.photo.slice( 0, 1000 ) : null;
+    const { data, error } = await auth.admin
+      .from( 'packages' )
+      .update( {
+        pickup_verified: true,
+        pickup_verified_at: new Date().toISOString(),
+        pickup_photo: photo,
+        status: 'in_transit',
+      } )
       .eq( 'package_id', packageRoute.id )
       .select( '*' )
       .single();
@@ -445,7 +456,9 @@ export async function handlePackageRequest ( request: Request, path: string ) {
       { windowSeconds: 600, failClosed: true },
     );
     if ( limited ) {return limited;}
-    if ( !pkg.delivery_verification_code || !constantTimeEquals( code, pkg.delivery_verification_code ) ) {
+    // Hash the entered code and compare to the stored digest.
+    const codeHash = await hashCode( code );
+    if ( !pkg.delivery_verification_code || !constantTimeEquals( codeHash, pkg.delivery_verification_code ) ) {
       return json( { error: 'Incorrect delivery code.' }, 403 );
     }
     const photo = typeof body.photo === 'string' ? body.photo.slice( 0, 1000 ) : null;
