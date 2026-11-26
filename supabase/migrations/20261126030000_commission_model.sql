@@ -27,46 +27,57 @@
 -- ---------------------------------------------------------------------------
 -- 1. trips: add configurable commission rate
 -- ---------------------------------------------------------------------------
-ALTER TABLE public.trips
-  ADD COLUMN IF NOT EXISTS commission_rate_pct NUMERIC(5,2)
-    NOT NULL DEFAULT 12.00
-    CHECK (commission_rate_pct >= 0 AND commission_rate_pct <= 100);
-
-COMMENT ON COLUMN public.trips.commission_rate_pct IS
-  'Platform take-rate for this trip, in percent (e.g. 12.00 = 12%). '
-  'Captured at trip creation; not changed after a booking is confirmed.';
+-- 1. trips: add configurable commission rate
+-- ---------------------------------------------------------------------------
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='trips') THEN
+    ALTER TABLE public.trips
+      ADD COLUMN IF NOT EXISTS commission_rate_pct NUMERIC(5,2)
+        NOT NULL DEFAULT 12.00
+        CHECK (commission_rate_pct >= 0 AND commission_rate_pct <= 100);
+    COMMENT ON COLUMN public.trips.commission_rate_pct IS
+      'Platform take-rate for this trip, in percent (e.g. 12.00 = 12%). '
+      'Captured at trip creation; not changed after a booking is confirmed.';
+  END IF;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- 2. bookings: add fee split columns
 -- ---------------------------------------------------------------------------
-ALTER TABLE public.bookings
-  ADD COLUMN IF NOT EXISTS platform_fee NUMERIC(14,3)
-    NOT NULL DEFAULT 0.000
-    CHECK (platform_fee >= 0),
-  ADD COLUMN IF NOT EXISTS driver_earning NUMERIC(14,3)
-    NOT NULL DEFAULT 0.000
-    CHECK (driver_earning >= 0);
-
-COMMENT ON COLUMN public.bookings.platform_fee IS
-  'Wasel revenue portion of this booking: amount * commission_rate_pct / 100.';
-COMMENT ON COLUMN public.bookings.driver_earning IS
-  'Amount remitted to the driver: amount - platform_fee.';
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='bookings') THEN
+    ALTER TABLE public.bookings
+      ADD COLUMN IF NOT EXISTS platform_fee NUMERIC(14,3)
+        NOT NULL DEFAULT 0.000
+        CHECK (platform_fee >= 0),
+      ADD COLUMN IF NOT EXISTS driver_earning NUMERIC(14,3)
+        NOT NULL DEFAULT 0.000
+        CHECK (driver_earning >= 0);
+    COMMENT ON COLUMN public.bookings.platform_fee IS
+      'Wasel revenue portion of this booking: amount * commission_rate_pct / 100.';
+    COMMENT ON COLUMN public.bookings.driver_earning IS
+      'Amount remitted to the driver: amount - platform_fee.';
+  END IF;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- 3. packages: add fee split columns
 -- ---------------------------------------------------------------------------
-ALTER TABLE public.packages
-  ADD COLUMN IF NOT EXISTS platform_fee NUMERIC(14,3)
-    NOT NULL DEFAULT 0.000
-    CHECK (platform_fee >= 0),
-  ADD COLUMN IF NOT EXISTS driver_earning NUMERIC(14,3)
-    NOT NULL DEFAULT 0.000
-    CHECK (driver_earning >= 0);
-
-COMMENT ON COLUMN public.packages.platform_fee IS
-  'Wasel revenue portion of this parcel delivery fee.';
-COMMENT ON COLUMN public.packages.driver_earning IS
-  'Amount remitted to the driver for carrying this parcel.';
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='packages') THEN
+    ALTER TABLE public.packages
+      ADD COLUMN IF NOT EXISTS platform_fee NUMERIC(14,3)
+        NOT NULL DEFAULT 0.000
+        CHECK (platform_fee >= 0),
+      ADD COLUMN IF NOT EXISTS driver_earning NUMERIC(14,3)
+        NOT NULL DEFAULT 0.000
+        CHECK (driver_earning >= 0);
+    COMMENT ON COLUMN public.packages.platform_fee IS
+      'Wasel revenue portion of this parcel delivery fee.';
+    COMMENT ON COLUMN public.packages.driver_earning IS
+      'Amount remitted to the driver for carrying this parcel.';
+  END IF;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- 4. commission_config: central rate table (admin-editable, auditable)
@@ -77,7 +88,7 @@ CREATE TABLE IF NOT EXISTS public.commission_config (
   rate_pct      NUMERIC(5,2) NOT NULL DEFAULT 12.00
                   CHECK (rate_pct >= 0 AND rate_pct <= 100),
   effective_from timestamptz NOT NULL DEFAULT timezone('utc', now()),
-  set_by        uuid        REFERENCES public.users(id) ON DELETE SET NULL,
+  set_by        uuid        REFERENCES auth.users(id) ON DELETE SET NULL,
   note          text,
   created_at    timestamptz NOT NULL DEFAULT timezone('utc', now())
 );
@@ -101,26 +112,30 @@ CREATE INDEX IF NOT EXISTS idx_commission_config_route_key
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.commission_config ENABLE ROW LEVEL SECURITY;
 
--- Admins can read and insert; no UPDATE/DELETE (append-only audit trail)
-CREATE POLICY IF NOT EXISTS "admin_select_commission_config"
-  ON public.commission_config FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users u
-      WHERE u.auth_user_id = auth.uid()
-        AND u.role = 'admin'
-    )
-  );
-
-CREATE POLICY IF NOT EXISTS "admin_insert_commission_config"
-  ON public.commission_config FOR INSERT
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.users u
-      WHERE u.auth_user_id = auth.uid()
-        AND u.role = 'admin'
-    )
-  );
+-- Admins can read and insert; no UPDATE/DELETE (append-only audit trail).
+-- Using auth.uid() check on profiles.role (service-role reads bypass RLS).
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='commission_config' AND policyname='admin_select_commission_config') THEN
+    CREATE POLICY "admin_select_commission_config"
+      ON public.commission_config FOR SELECT
+      USING (
+        EXISTS (
+          SELECT 1 FROM public.profiles p
+          WHERE p.id = auth.uid() AND p.role = 'admin'
+        )
+      );
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='commission_config' AND policyname='admin_insert_commission_config') THEN
+    CREATE POLICY "admin_insert_commission_config"
+      ON public.commission_config FOR INSERT
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM public.profiles p
+          WHERE p.id = auth.uid() AND p.role = 'admin'
+        )
+      );
+  END IF;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- 6. Helper function: calculate_commission(amount, rate_pct)
@@ -147,10 +162,19 @@ COMMENT ON FUNCTION public.calculate_commission IS
 -- ---------------------------------------------------------------------------
 -- 7. Indexes on the new columns (support reconciliation queries)
 -- ---------------------------------------------------------------------------
-CREATE INDEX IF NOT EXISTS idx_bookings_platform_fee
-  ON public.bookings (platform_fee)
-  WHERE booking_status IN ('confirmed', 'completed');
-
-CREATE INDEX IF NOT EXISTS idx_packages_platform_fee
-  ON public.packages (platform_fee)
-  WHERE package_status IN ('in_transit', 'delivered');
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='bookings' AND column_name='platform_fee') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname='public' AND tablename='bookings' AND indexname='idx_bookings_platform_fee') THEN
+      CREATE INDEX idx_bookings_platform_fee
+        ON public.bookings (platform_fee)
+        WHERE booking_status IN ('confirmed', 'completed');
+    END IF;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='packages' AND column_name='platform_fee') THEN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname='public' AND tablename='packages' AND indexname='idx_packages_platform_fee') THEN
+      CREATE INDEX idx_packages_platform_fee
+        ON public.packages (platform_fee)
+        WHERE package_status IN ('in_transit', 'delivered');
+    END IF;
+  END IF;
+END $$;
