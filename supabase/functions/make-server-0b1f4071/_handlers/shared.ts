@@ -693,7 +693,15 @@ export async function authenticateRequest ( request: Request ): Promise<AuthResu
   }
 
   if ( userError || !canonicalUser ) {
-    return { error: json( { error: 'Canonical user profile was not found' }, 404 ) };
+    // New users may not have a profile row yet (trigger delay or failure).
+    // Attempt to create it on the fly before returning an error.
+    try {
+      const created = await ensureCanonicalUserForAuth( admin, authData.user as Record<string, unknown> );
+      canonicalUser = created as unknown as CanonicalUserRow;
+    } catch ( ensureError ) {
+      console.error( '[auth] failed to auto-create canonical user', ( ensureError as Error ).message );
+      return { error: json( { error: 'Canonical user profile was not found' }, 404 ) };
+    }
   }
 
   const role = resolveAccessRole(canonicalUser.role);

@@ -670,6 +670,20 @@ export async function createConnectedPackage ( input: {
         } );
         return created;
       }
+
+      // Surface the server's actual error message instead of swallowing it.
+      let serverMessage: string | undefined;
+      try {
+        const errBody = await response.json() as { error?: string; message?: string };
+        serverMessage = errBody.error ?? errBody.message;
+      } catch {
+        // response body was not JSON — ignore
+      }
+      throw new Error(
+        serverMessage
+          ? `Package request failed: ${ serverMessage }`
+          : `Package request failed (HTTP ${ response.status }).`,
+      );
     } else {
       const createdDirect = await createDirectPackage( {
         userId,
