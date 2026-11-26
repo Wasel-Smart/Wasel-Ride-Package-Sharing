@@ -552,11 +552,14 @@ function buildServerPackagePayload (
   return {
     from: pkg.from,
     to: pkg.to,
+    origin_name: pkg.from,
+    destination_name: pkg.to,
     weight: parseWeight( pkg.weight ),
+    weight_kg: parseWeight( pkg.weight ),
     description: pkg.note,
     handoffCode: pkg.handoffCode,
-    ...( pkg.recipientName ? { recipientName: pkg.recipientName } : {} ),
-    ...( pkg.recipientPhone ? { recipientPhone: pkg.recipientPhone } : {} ),
+    ...( pkg.recipientName ? { recipientName: pkg.recipientName, receiver_name: pkg.recipientName } : {} ),
+    ...( pkg.recipientPhone ? { recipientPhone: pkg.recipientPhone, receiver_phone: pkg.recipientPhone } : {} ),
     ...( pkg.packageType === 'return' ? { packageType: pkg.packageType } : {} ),
     ...( rideId ? { trip_id: rideId } : {} ),
   };

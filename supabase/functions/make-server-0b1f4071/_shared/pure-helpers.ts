@@ -120,9 +120,13 @@ export function mapPackageRow ( row: Record<string, unknown> ) {
     id: String( row.package_id ?? row.id ?? '' ),
     package_id: String( row.package_id ?? row.id ?? '' ),
     tracking_number: String( row.tracking_number ?? '' ),
+    tracking_code: String( row.tracking_number ?? '' ),
     status: String( row.status ?? 'posted' ),
     delivery_fee: toNumber( row.delivery_fee ?? row.fee_amount, 0 ),
     fee_amount: toNumber( row.fee_amount ?? row.delivery_fee, 0 ),
+    from: String( row.origin_name ?? row.origin_location ?? '' ),
+    to: String( row.destination_name ?? row.destination_location ?? '' ),
+    weight: toNumber( row.weight_kg, 0 ),
   };
 }
 

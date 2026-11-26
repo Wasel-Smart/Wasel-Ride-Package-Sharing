@@ -467,6 +467,11 @@ export function BusBookingForm({
             {tx('busPage.official_schedule_verified')}
             {activeBus.lastVerifiedAt}
           </a>
+          {activeBus.dataSource === 'official' && (
+            <p style={{ margin: '6px 0 0', fontSize: '0.72rem', color: DS.muted, lineHeight: 1.4 }}>
+              {tx('busPage.official_schedule_disclaimer').replace('{{date}}', activeBus.lastVerifiedAt ?? '')}
+            </p>
+          )}
         )}
         {bookingComplete && (
           <div

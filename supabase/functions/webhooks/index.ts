@@ -43,6 +43,18 @@ Deno.serve(async (request: Request) => {
   const path = getWebhookRequestPath(url.pathname);
 
   try {
+    if (request.method === 'GET' && path === '/health') {
+      // Used to verify that the webhooks function is deployed and reachable.
+      // After deploying, register the Stripe webhook endpoint at:
+      //   Stripe Dashboard > Developers > Webhooks > Add endpoint
+      //   URL: <SUPABASE_URL>/functions/v1/webhooks/payments/webhooks/stripe
+      //   Events: payment_intent.succeeded, payment_intent.payment_failed,
+      //            charge.refunded, customer.subscription.created,
+      //            customer.subscription.deleted
+      // Then copy the signing secret into STRIPE_WEBHOOK_SECRET env var.
+      return json({ status: 'ok', service: 'webhooks', timestamp: new Date().toISOString() });
+    }
+
     if (request.method === 'POST') {
       if (path === '/payments/webhooks/stripe') {return await handleStripeWebhook(request);}
       if (path === '/payments/webhooks/cliq')   {return await handleCliqWebhook(request);}

@@ -154,6 +154,9 @@ function matchOfficialRoute(route: BusRoute, query: BusRouteQuery): boolean {
 }
 
 export function getOfficialBusRoutes(query: BusRouteQuery = {}): BusRoute[] {
+  // These routes were last verified against JETT's public schedule on 2026-03-30.
+  // They may be outdated. The UI must display a staleness disclaimer when
+  // dataSource === 'official' so passengers verify times before travelling.
   const exact = OFFICIAL_JORDAN_BUS_ROUTES.filter(route => matchOfficialRoute(route, query));
   if (exact.length > 0) {return exact;}
 

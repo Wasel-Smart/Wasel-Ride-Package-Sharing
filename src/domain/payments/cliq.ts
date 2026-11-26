@@ -43,6 +43,16 @@ export function isValidJordanIban ( iban: string ): boolean {
 
 /**
  * Generates an EMVCo-compatible QR string or deep link for Jordanian banking applications.
+ *
+ * AMOUNT FORMAT: JoPACC expects `amount` as a JOD decimal string with exactly 3 decimal
+ * places (e.g. "1.000" for one dinar). This is NOT fils/minor units — do not multiply by
+ * 1000. The deeplink passes amountJod directly via `.toFixed(3)`.
+ *
+ * SANDBOX VERIFICATION REQUIRED: before go-live, run a 1.000 JOD test deposit in the
+ * JoPACC sandbox and confirm the receiver ledger shows exactly 1 JOD (not 1000).
+ * Log the sandbox receipt transactionId here once verified.
+ *
+ * Ref: CBJ JoPACC Instant Payment Scheme Specifications v3.x, Section 4.2.1 (Amount Field).
  */
 export function generateJordanCliqDeeplink ( req: CliqPaymentRequest ): string {
   const amountFormatted = req.amountJod.toFixed( 3 );

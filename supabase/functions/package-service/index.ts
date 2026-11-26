@@ -277,6 +277,25 @@ async function handlePackageRequest(request: Request, path: string) {
     return json(mapPackageRow(data));
   }
 
+  // GET /packages/track/:trackingNumber — public-ish lookup by tracking code
+  // (auth still required; a future step can relax this for recipient polling).
+  if (request.method === 'GET' && path.startsWith('/packages/track/')) {
+    const trackingNumber = decodeURIComponent(path.split('/packages/track/')[1] ?? '').trim().toUpperCase();
+    if (!trackingNumber) {return json({ error: 'Tracking number required' }, 400);}
+    const { data, error } = await auth.admin
+      .from('packages')
+      .select('*')
+      .eq('tracking_number', trackingNumber)
+      .maybeSingle();
+    if (error) {return json({ error: error.message }, 500);}
+    if (!data) {return json({ error: 'Package not found' }, 404);}
+    const isOwner =
+      data.sender_id === auth.canonicalUser.id ||
+      data.carrier_id === auth.canonicalUser.id;
+    if (!isOwner) {return json({ error: 'Not authorized to view this package.' }, 403);}
+    return json(mapPackageRow(data));
+  }
+
   if (request.method === 'GET' && path.startsWith('/packages/sender/')) {
     const userId = path.split('/packages/sender/')[1]?.split('/')[0];
     if (!userId) {return json({ error: 'User ID required' }, 400);}
@@ -288,16 +307,101 @@ async function handlePackageRequest(request: Request, path: string) {
     return json((Array.isArray(data) ? data : []).map(mapPackageRow));
   }
 
+  // POST /packages/:id/pickup — carrier confirms collection; escrow moves to 'escrowed'
+  if (request.method === 'POST' && packageRoute?.id && packageRoute.action === 'pickup') {
+    const { data: pkg, error: pkgErr } = await auth.admin
+      .from('packages')
+      .select('package_id, sender_id, carrier_id, escrow_status, pickup_verification_code')
+      .eq('package_id', packageRoute.id)
+      .maybeSingle();
+    if (pkgErr) {return json({ error: pkgErr.message }, 500);}
+    if (!pkg) {return json({ error: 'Package not found' }, 404);}
+    if (pkg.carrier_id !== auth.canonicalUser.id) {return json({ error: 'Only the carrier can confirm pickup.' }, 403);}
+
+    const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+    const code = typeof body.verification_code === 'string' ? body.verification_code.trim() : '';
+    if (!code || code !== String(pkg.pickup_verification_code ?? '')) {
+      return json({ error: 'Invalid pickup verification code.' }, 422);
+    }
+
+    const now = new Date().toISOString();
+    const { data, error } = await auth.admin
+      .from('packages')
+      .update({
+        status: 'picked_up',
+        pickup_verified: true,
+        pickup_verified_at: now,
+        // Sender has been charged at booking time; mark funds as held in escrow.
+        escrow_status: 'escrowed',
+        updated_at: now,
+      })
+      .eq('package_id', packageRoute.id)
+      // Guard: only transition from a pre-pickup state to avoid double-escrowing.
+      .in('escrow_status', ['pending'])
+      .select('*')
+      .single();
+
+    if (error) {return json({ error: error.message }, 500);}
+    if (!data) {return json({ error: 'Pickup already confirmed or package in wrong state.' }, 409);}
+
+    await auth.admin.from('package_events').insert({
+      package_id: packageRoute.id,
+      event_type: 'pickup',
+      event_status: 'picked_up',
+      notes: JSON.stringify({ carrier_id: auth.canonicalUser.id, escrow_status: 'escrowed' }),
+    });
+
+    return json({ package: mapPackageRow(data), escrow_status: 'escrowed' });
+  }
+
+  // POST /packages/:id/deliver — delivery confirmed; escrow released to driver
   if (request.method === 'POST' && packageRoute?.id && packageRoute.action === 'deliver') {
-    const { data: pkg, error: pkgErr } = await auth.admin.from('packages').select('package_id, sender_id, carrier_id').eq('package_id', packageRoute.id).maybeSingle();
+    const { data: pkg, error: pkgErr } = await auth.admin
+      .from('packages')
+      .select('package_id, sender_id, carrier_id, escrow_status, delivery_verification_code')
+      .eq('package_id', packageRoute.id)
+      .maybeSingle();
     if (pkgErr) {return json({ error: pkgErr.message }, 500);}
     if (!pkg) {return json({ error: 'Package not found' }, 404);}
     const isCarrier = pkg.carrier_id === auth.canonicalUser.id;
     const isSender = pkg.sender_id === auth.canonicalUser.id;
-    if (!isCarrier && !isSender) {return json({ error: 'Not authorized to deliver this package.' }, 403);}
-    const { data, error } = await auth.admin.from('packages').update({ status: 'delivered', delivered_at: new Date().toISOString() }).eq('package_id', packageRoute.id).select('*').single();
+    if (!isCarrier && !isSender) {return json({ error: 'Not authorized to confirm delivery.' }, 403);}
+
+    const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+    const code = typeof body.verification_code === 'string' ? body.verification_code.trim() : '';
+    if (!code || code !== String(pkg.delivery_verification_code ?? '')) {
+      return json({ error: 'Invalid delivery verification code.' }, 422);
+    }
+
+    const now = new Date().toISOString();
+    const { data, error } = await auth.admin
+      .from('packages')
+      .update({
+        status: 'delivered',
+        delivered_at: now,
+        delivery_verified: true,
+        delivery_verified_at: now,
+        // Release escrow to carrier only after delivery is verified.
+        escrow_status: 'released',
+        updated_at: now,
+      })
+      .eq('package_id', packageRoute.id)
+      // Guard: only release from escrowed state; prevent double-release.
+      .in('escrow_status', ['escrowed'])
+      .select('*')
+      .single();
+
     if (error) {return json({ error: error.message }, 500);}
-    return json(mapPackageRow(data));
+    if (!data) {return json({ error: 'Delivery already confirmed or escrow not in escrowed state.' }, 409);}
+
+    await auth.admin.from('package_events').insert({
+      package_id: packageRoute.id,
+      event_type: 'delivery',
+      event_status: 'delivered',
+      notes: JSON.stringify({ confirmed_by: auth.canonicalUser.id, escrow_status: 'released' }),
+    });
+
+    return json({ package: mapPackageRow(data), escrow_status: 'released' });
   }
 
   return undefined;

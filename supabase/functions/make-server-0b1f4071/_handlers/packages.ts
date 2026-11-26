@@ -161,6 +161,25 @@ export async function handlePackageRequest ( request: Request, path: string ) {
     } );
   }
 
+  // Track by tracking_number — called by the frontend's getPackageByTrackingId.
+  if ( request.method === 'GET' && path.startsWith( '/packages/track/' ) ) {
+    const trackingNumber = decodeURIComponent( path.split( '/packages/track/' )[ 1 ]?.split( '/' )[ 0 ] ?? '' ).toUpperCase();
+    if ( !trackingNumber ) { return json( { error: 'Tracking number required' }, 400 ); }
+    const { data, error } = await auth.admin
+      .from( 'packages' )
+      .select( '*' )
+      .eq( 'tracking_number', trackingNumber )
+      .maybeSingle();
+    if ( error ) { return json( { error: error.message }, 500 ); }
+    if ( !data ) { return json( { error: 'Package not found' }, 404 ); }
+    const isOwner = data.sender_id === auth.canonicalUser.id || data.carrier_id === auth.canonicalUser.id;
+    const isStaff = hasPermission( resolveAccessRole( auth.canonicalUser.role ), 'packages:read' );
+    if ( !isOwner && !isStaff ) {
+      return json( { error: 'Not authorized to view this package.' }, 403 );
+    }
+    return json( mapPackageRow( data ) );
+  }
+
   const packageRoute = parseEntityRoute( path, 'packages' );
   if ( request.method === 'GET' && packageRoute?.id ) {
     const { data, error } = await auth.admin
