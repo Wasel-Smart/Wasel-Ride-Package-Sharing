@@ -123,6 +123,22 @@ function ensureLeafletCSS() {
 /* ─── Singleton Leaflet loader ───────────────────────────────────────── */
 let _leafletPromise: Promise<LeafletNamespace> | null = null;
 function loadLeaflet(): Promise<LeafletNamespace> {
+  // Load Leaflet dynamically. The CSS is already imported statically at the top of the file,
+  // so we no longer call `ensureLeafletCSS()` here. This avoids duplicate <link> elements
+  // and resolves the blank‑map issue caused by a race condition between CSS injection
+  // and map initialization.
+  if (!_leafletPromise) {
+    // Dynamic import with safe fallback – if Leaflet fails to load we surface a clear error.
+    _leafletPromise = import('leaflet')
+      .then(mod => mod.default ?? mod)
+      .catch(err => {
+        console.error('[WaselMap] Failed to import Leaflet:', err);
+        // Rethrow to let the caller handle it (Map will show fallback UI).
+        throw err;
+      });
+  }
+  return _leafletPromise;
+}
   if (!_leafletPromise) {
     ensureLeafletCSS();
     _leafletPromise = import('leaflet').then(mod => mod.default ?? mod);

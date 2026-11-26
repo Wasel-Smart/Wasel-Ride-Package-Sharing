@@ -26,6 +26,8 @@ import {
   Cairo_800ExtraBold,
 } from '@expo-google-fonts/cairo';
 
+import { biometricAuth } from './services/biometricAuth';
+
 // Keep the native splash visible until the brand font is ready (no flash of system font).
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -68,6 +70,10 @@ const App = () => {
   });
 
   useEffect(() => {
+    // Initialize biometric auth capability detection at startup so the sign-in
+    // screen never flickers the biometric button on/off after first render.
+    void biometricAuth.initialize().catch(() => undefined);
+
     // On a font error we still continue (system font fallback) rather than block the app.
     if (fontsLoaded || fontError) {
       void SplashScreen.hideAsync().catch(() => undefined);

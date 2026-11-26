@@ -3,6 +3,21 @@ import type { BusRoute } from '../services/bus';
 const SOURCE_URL = 'https://www.jett.com.jo/en/schedule';
 const LAST_VERIFIED_AT = '2026-03-30';
 
+/**
+ * DATA CURRENCY WARNING
+ * This schedule was last verified against the JETT website on 2026-03-30.
+ * Times, prices and routes may have changed. Before going live:
+ *   1. Cross-check each route at https://www.jett.com.jo/en/schedule
+ *   2. Update LAST_VERIFIED_AT above.
+ *   3. OR connect to the JETT API / scraper so data refreshes automatically.
+ *
+ * The UI reads BUS_SCHEDULE_IS_STALE and shows a disclaimer banner when true.
+ */
+
+/** True when the schedule data is older than 60 days. Used by the UI to show a disclaimer. */
+export const BUS_SCHEDULE_IS_STALE =
+  Date.now() - new Date(LAST_VERIFIED_AT).getTime() > 60 * 24 * 60 * 60 * 1000;
+
 type Seed = Omit<BusRoute, 'dataSource' | 'sourceUrl' | 'lastVerifiedAt'>;
 
 function official(seed: Seed): BusRoute {
