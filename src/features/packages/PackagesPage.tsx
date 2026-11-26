@@ -67,6 +67,8 @@ export function PackagesPage() {
   const [trackingMessage, setTrackingMessage] = useState<string | null>(null);
   const [busyState, setBusyState] = useState<'idle' | 'creating' | 'tracking'>('idle');
   const [returnTrackingId, setReturnTrackingId] = useState<string | null>(null);
+  // Verification code entered by the user for pickup/delivery confirmation.
+  const [verificationCodeInput, setVerificationCodeInput] = useState('');
 
   const corridorPlan = useMemo(() => getCorridorOpportunity(pkg.from, pkg.to), [pkg.from, pkg.to]);
 
@@ -196,10 +198,17 @@ export function PackagesPage() {
     if (!trackedPackage) { return; }
     setBusyState('tracking');
     try {
-      const updated = await updatePackageVerification(trackedPackage.trackingId, action);
+      // For pickup/delivery the code is required; share_code is local-only.
+      const code = (action === 'share_code') ? undefined : verificationCodeInput.trim();
+      if ((action === 'confirm_pickup' || action === 'confirm_delivery') && !code) {
+        setTrackingMessage(ar ? 'أدخل رمز التحقق أولاً.' : 'Enter the verification code first.');
+        return;
+      }
+      const updated = await updatePackageVerification(trackedPackage.trackingId, action, code);
       if (!updated) { return; }
       setTrackedPackage(updated);
       setTrackId(updated.trackingId);
+      setVerificationCodeInput('');
       setTrackingMessage(packageStatusMessage(action, updated.trackingId, ar));
       refreshPackageSnapshot();
 
@@ -207,13 +216,20 @@ export function PackagesPage() {
       // confirms delivery. This prevents charging for packages that are never
       // picked up or never arrive.
       if (action === 'confirm_delivery' && user?.id) {
-        const weightKg = parseFloat(updated.weight.match(/\d+(?:\.\d+)?/)?.[0] || '0.5');
+        // Parse weight from the sanitized string, e.g. "<1 kg", "2.5 kg", "5 kg".
+        // The numeric portion is optional (e.g. "<1 kg"); fall back to 0.5 kg.
+        const weightMatch = updated.weight.match(/(\d+(?:\.\d+)?)/);
+        const weightKg = weightMatch ? parseFloat(weightMatch[1]) : 0.5;
         const { calculateDirectPrice } = await import('../../shared/pricing/priceCalculator');
-        const priceResult = calculateDirectPrice('package', weightKg, 8);
+        const priceResult = calculateDirectPrice('package', weightKg > 0 ? weightKg : 0.5, 8);
         const { walletApi } = await import('../../services/wallet/walletApi');
+        // Use the DB package_id (returned by the edge as `updated.id` after
+        // normalizeServerPackage maps `package_id` -> `id`). This is what the
+        // wallet edge looks up in `packages.eq('id', referenceId)`.
+        const packageDbId = updated.id;
         try {
           await walletApi.pay(user.id, priceResult.price, 'package_delivery', {
-            referenceId: updated.id,
+            referenceId: packageDbId,
             metadata: { trackingId: updated.trackingId, from: updated.from, to: updated.to, weight: updated.weight },
           });
         } catch (paymentError) {
@@ -438,6 +454,8 @@ export function PackagesPage() {
               busyState={busyState}
               trackedStatusColor={trackedStatusColor}
               recentPackages={recentPackages}
+              verificationCodeInput={verificationCodeInput}
+              setVerificationCodeInput={setVerificationCodeInput}
               onSearch={handleTrackingSearch}
               onVerificationAction={handleVerificationAction}
               onOpenSupport={handleOpenSupport}

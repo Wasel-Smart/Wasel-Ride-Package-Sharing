@@ -25,28 +25,43 @@ export interface CreatePackageInput {
 }
 
 export async function createPackage(input: CreatePackageInput) {
-  const response = await api.post('/v1/packages', input);
+  const response = await api.post('/packages', input);
   return response as { data: Package };
 }
 
 export async function getPackage(id: string) {
-  const response = await api.get(`/v1/packages/${id}`);
+  const response = await api.get(`/packages/${id}`);
   return response as { data: Package };
 }
 
 export async function getMyPackages() {
   const userId = await getSessionUserId();
   if (!userId) {throw new Error('Not authenticated');}
-  const response = await api.get(`/v1/packages/sender/${userId}`);
+  const response = await api.get(`/packages/sender/${userId}`);
   return response as { data: Package[] };
 }
 
 export async function updatePackageStatus(id: string, status: string, carrierId?: string) {
-  const response = await api.post(`/v1/packages/${id}/status`, { status, carrierId });
+  const response = await api.post(`/packages/${id}/status`, { status, carrierId });
   return response as { data: Package };
 }
 
 export async function assignToTrip(packageId: string, tripId: string) {
-  const response = await api.post(`/v1/packages/${packageId}/assign-to-trip`, { tripId });
+  const response = await api.post(`/packages/${packageId}/assign-to-trip`, { tripId });
+  return response as { data: Package };
+}
+
+export async function verifyPickup(packageId: string, code: string, photo?: string) {
+  const response = await api.post(`/packages/${packageId}/verify-pickup`, { code, photo });
+  return response as { data: Package };
+}
+
+export async function verifyDelivery(packageId: string, code: string, photo?: string) {
+  const response = await api.post(`/packages/${packageId}/verify-delivery`, { code, photo });
+  return response as { data: Package };
+}
+
+export async function getPackageByTracking(trackingNumber: string) {
+  const response = await api.get(`/packages/track/${encodeURIComponent(trackingNumber)}`);
   return response as { data: Package };
 }

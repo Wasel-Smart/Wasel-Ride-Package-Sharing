@@ -15,6 +15,8 @@ type PackageTrackPanelProps = {
   busyState: 'idle' | 'creating' | 'tracking';
   trackedStatusColor: string;
   recentPackages: PackageRequest[];
+  verificationCodeInput: string;
+  setVerificationCodeInput: (value: string) => void;
   onSearch: () => void;
   onVerificationAction: (action: 'share_code' | 'confirm_pickup' | 'confirm_delivery') => void;
   onOpenSupport: () => void;
@@ -73,6 +75,8 @@ export function PackageTrackPanel({
   busyState,
   trackedStatusColor,
   recentPackages,
+  verificationCodeInput,
+  setVerificationCodeInput,
   onSearch,
   onVerificationAction,
   onOpenSupport,
@@ -374,6 +378,30 @@ export function PackageTrackPanel({
             ))}
           </div>
           <div className="pkg-track-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 18 }}>
+            {/* Code entry for pickup/delivery confirmation */}
+            {(trackedPackage.status === 'matched' || trackedPackage.status === 'in_transit') && (
+              <input
+                aria-label={ar ? 'رمز التحقق' : 'Verification code'}
+                placeholder={ar ? 'أدخل رمز التحقق (6 أرقام)' : 'Enter 6-digit verification code'}
+                value={verificationCodeInput}
+                onChange={event => setVerificationCodeInput(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                inputMode="numeric"
+                maxLength={6}
+                style={{
+                  flex: '1 1 160px',
+                  padding: '10px 14px',
+                  borderRadius: r(10),
+                  border: `1px solid ${DS.border}`,
+                  background: DS.card2,
+                  color: 'var(--foreground)',
+                  fontFamily: DS.F,
+                  fontSize: '1.05rem',
+                  letterSpacing: '0.15em',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+            )}
             <button
               onClick={() => { onVerificationAction('share_code'); }}
               disabled={Boolean(trackedPackage.verification.senderCodeSharedAt)}

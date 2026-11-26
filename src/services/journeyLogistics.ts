@@ -838,10 +838,19 @@ export function getConnectedStats () {
 
 export type PackageVerificationAction = 'share_code' | 'confirm_pickup' | 'confirm_delivery';
 
-export function updatePackageVerification (
+/**
+ * Update the local package verification state AND, for pickup/delivery
+ * confirmations, POST the entered verification code to the edge so the server
+ * can hash-compare it, rate-limit it, and transition the DB record. The
+ * `share_code` action is local-only (no code entry needed).
+ *
+ * Returns the updated PackageRequest on success, or throws on a server error.
+ */
+export async function updatePackageVerification (
   trackingId: string,
   action: PackageVerificationAction,
-): PackageRequest | null {
+  verificationCode?: string,
+): Promise<PackageRequest | null> {
   const normalizedTrackingId = trackingId.trim().toUpperCase();
   if ( !normalizedTrackingId ) { return null; }
 
@@ -849,6 +858,57 @@ export function updatePackageVerification (
   const target = packages.find( item => item.trackingId === normalizedTrackingId );
   if ( !target ) { return null; }
 
+  // For pickup/delivery, POST the code to the edge first. The edge is the
+  // source of truth: if it rejects the code (wrong code, rate-limited, wrong
+  // status), we surface the error and do NOT update local state.
+  if ( action === 'confirm_pickup' || action === 'confirm_delivery' ) {
+    if ( target.id && API_URL && verificationCode ) {
+      const edgeAction = action === 'confirm_pickup' ? 'verify-pickup' : 'verify-delivery';
+      try {
+        const { token } = await getAuthDetails();
+        const response = await fetchWithRetry( `${ API_URL }/packages/${ target.id }/${ edgeAction }`, {
+          method: 'POST',
+          headers: createEdgeHeaders( { 'Content-Type': 'application/json' }, token ),
+          body: JSON.stringify( { code: verificationCode } ),
+        } );
+        if ( !response.ok ) {
+          let serverMessage: string | undefined;
+          try {
+            const errBody = await response.json() as { error?: string; message?: string };
+            serverMessage = errBody.error ?? errBody.message;
+          } catch { /* non-JSON error body */ }
+          throw new Error(
+            serverMessage
+              ? `Verification failed: ${ serverMessage }`
+              : `Verification failed (HTTP ${ response.status }).`,
+          );
+        }
+        // Edge confirmed — merge the server response back into local state so
+        // status transitions match the DB record exactly.
+        const serverPkg = await response.json() as Record<string, unknown>;
+        const remoteUpdated = normalizeServerPackage( serverPkg, target );
+        savePackages( packages.map( item =>
+          item.trackingId === normalizedTrackingId ? remoteUpdated : item,
+        ) );
+        void trackGrowthEvent( {
+          eventName: 'package_verification_updated',
+          funnelStage: remoteUpdated.status === 'delivered' ? 'completed' : 'booked',
+          serviceType: 'package',
+          from: remoteUpdated.from,
+          to: remoteUpdated.to,
+          metadata: { trackingId: remoteUpdated.trackingId, action, status: remoteUpdated.status },
+        } );
+        return remoteUpdated;
+      } catch ( err ) {
+        // If the error is a verification failure, re-throw so the UI can display it.
+        // Network errors also bubble up — do not silently fall back to local state
+        // for verification actions (that would let an incorrect code appear to succeed).
+        throw err;
+      }
+    }
+  }
+
+  // share_code and fallback (no API_URL / no id yet): update local state only.
   const now = new Date().toISOString();
   const verification: PackageVerification = { ...target.verification };
   let status = target.status;
@@ -892,11 +952,7 @@ export function updatePackageVerification (
     serviceType: 'package',
     from: updated.from,
     to: updated.to,
-    metadata: {
-      trackingId: updated.trackingId,
-      action,
-      status,
-    },
+    metadata: { trackingId: updated.trackingId, action, status },
   } );
 
   return updated;
