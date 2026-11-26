@@ -35,9 +35,9 @@ function getToastStyles(type: ToastType) {
       icon: '✓',
     },
     error: {
-      background: C.error + '1A',
-      border: `1px solid ${C.error}`,
-      color: C.error,
+      background: var(--destructive) + '1A',
+      border: `1px solid ${var(--destructive)}`,
+      color: var(--destructive),
       icon: '✕',
     },
     warning: {
@@ -110,7 +110,7 @@ function createToastElement(options: ToastOptions): HTMLDivElement {
       borderRadius: R.md,
       border: 'none',
       background: style.color,
-      color: C.bgDeep,
+      color: var(--background),
       fontWeight: '700',
       fontSize: '0.8rem',
       cursor: 'pointer',

@@ -7,7 +7,7 @@ type WaselStateTone = 'default' | 'warning' | 'danger' | 'success';
 const TONE_STYLES: Record<WaselStateTone, { accent: string; border: string; glow: string }> = {
   default: {
     accent: C.cyan,
-    border: C.border,
+    border: var(--border),
     glow: 'rgba(88,221,255,0.16)',
   },
   warning: {
@@ -16,7 +16,7 @@ const TONE_STYLES: Record<WaselStateTone, { accent: string; border: string; glow
     glow: 'rgba(255,190,92,0.16)',
   },
   danger: {
-    accent: C.error,
+    accent: var(--destructive),
     border: 'rgba(255,124,139,0.22)',
     glow: 'rgba(255,124,139,0.16)',
   },
@@ -73,7 +73,7 @@ export const WaselStateCard = memo(({
           background: `linear-gradient(180deg, rgba(15,35,51,0.96), rgba(6,17,27,0.98))`,
           border: `1px solid ${theme.border}`,
           boxShadow: `${SH.lg}, inset 0 1px 0 rgba(255,255,255,0.04)`,
-          color: C.text,
+          color: var(--foreground),
           fontFamily: F,
           textAlign: 'center',
         }}
@@ -159,7 +159,7 @@ export const WaselStateCard = memo(({
             style={{
               margin: '12px auto 0',
               maxWidth: 480,
-              color: C.textMuted,
+              color: var(--muted-foreground),
               fontSize: '0.96rem',
               lineHeight: 1.8,
             }}
@@ -185,7 +185,7 @@ export const WaselStateCard = memo(({
             <div
               style={{
                 marginTop: 20,
-                color: C.textDim,
+                color: var(--muted-foreground),
                 fontSize: '0.78rem',
                 lineHeight: 1.7,
               }}

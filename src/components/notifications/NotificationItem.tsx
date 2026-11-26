@@ -48,40 +48,40 @@ const categoryTone: Record<
   { background: string; border: string; icon: string; badge: string }
 > = {
   rides: {
-    background: `linear-gradient(135deg, ${C.cyanDim}, ${C.elevated})`,
+    background: `linear-gradient(135deg, ${C.cyanDim}, ${var(--secondary)})`,
     border: C.cyanDim,
     icon: C.cyan,
     badge: C.cyanDim,
   },
   messages: {
-    background: `linear-gradient(135deg, ${C.blueDim}, ${C.elevated})`,
+    background: `linear-gradient(135deg, ${C.blueDim}, ${var(--secondary)})`,
     border: C.blueDim,
     icon: C.blueLight,
     badge: C.blueDim,
   },
   wallet: {
-    background: `linear-gradient(135deg, ${C.goldDim}, ${C.elevated})`,
+    background: `linear-gradient(135deg, ${C.goldDim}, ${var(--secondary)})`,
     border: C.goldDim,
     icon: C.gold,
     badge: C.goldDim,
   },
   trust: {
-    background: `linear-gradient(135deg, ${C.greenDim}, ${C.elevated})`,
+    background: `linear-gradient(135deg, ${C.greenDim}, ${var(--secondary)})`,
     border: C.greenDim,
     icon: C.green,
     badge: C.greenDim,
   },
   support: {
-    background: `linear-gradient(135deg, ${C.errorDim}, ${C.elevated})`,
-    border: C.errorDim,
-    icon: C.error,
-    badge: C.errorDim,
+    background: `linear-gradient(135deg, ${color-mix(in srgb, var(--destructive) 20%, transparent)}, ${var(--secondary)})`,
+    border: color-mix(in srgb, var(--destructive) 20%, transparent),
+    icon: var(--destructive),
+    badge: color-mix(in srgb, var(--destructive) 20%, transparent),
   },
   system: {
-    background: `linear-gradient(135deg, ${C.cardSolid}, ${C.elevated})`,
-    border: C.border,
-    icon: C.textSub,
-    badge: C.elevated,
+    background: `linear-gradient(135deg, ${var(--card)}, ${var(--secondary)})`,
+    border: var(--border),
+    icon: var(--muted-foreground),
+    badge: var(--secondary),
   },
 };
 
@@ -126,8 +126,8 @@ export const NotificationItem = React.memo(({
             <div
               style={{
                 borderRadius: R.xl,
-                border: `1px solid ${C.borderFaint}`,
-                background: C.overlay,
+                border: `1px solid ${var(--border)}`,
+                background: var(--overlay, rgba(0,0,0,0.6)),
                 padding: SPACE[3],
                 boxShadow: SH.sm,
               }}
@@ -150,7 +150,7 @@ export const NotificationItem = React.memo(({
                       margin: 0,
                       fontSize: TYPE.size.base,
                       fontWeight: TYPE.weight.bold,
-                      color: C.text,
+                      color: var(--foreground),
                     }}
                   >
                     {notification.title}
@@ -189,7 +189,7 @@ export const NotificationItem = React.memo(({
                     maxWidth: 760,
                     fontSize: TYPE.size.sm,
                     lineHeight: 1.65,
-                    color: C.textSub,
+                    color: var(--muted-foreground),
                   }}
                 >
                   {notification.message}
@@ -205,7 +205,7 @@ export const NotificationItem = React.memo(({
                 alignItems: 'center',
                 gap: SPACE[2],
                 fontSize: TYPE.size.xs,
-                color: C.textMuted,
+                color: var(--muted-foreground),
               }}
             >
               <WaselBadge

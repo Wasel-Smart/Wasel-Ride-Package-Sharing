@@ -30,7 +30,7 @@ export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatus
         padding: SPACE[4],
         borderRadius: R.lg,
         border: `1px solid ${status.connected ? `${providerColor}30` : `var(--border)`}`,
-        background: status.connected ? `${providerColor}08` : C.elevated,
+        background: status.connected ? `${providerColor}08` : var(--secondary),
         display: 'flex',
         alignItems: 'center',
         gap: SPACE[3],
@@ -52,7 +52,7 @@ export function OAuthStatusCard({ status, onDisconnect, onConnect }: OAuthStatus
         {status.connected ? (
           <CheckCircle size={20} color={providerColor} />
         ) : (
-          <XCircle size={20} color={C.textMuted} />
+          <XCircle size={20} color={var(--muted-foreground)} />
         )}
       </div>
 

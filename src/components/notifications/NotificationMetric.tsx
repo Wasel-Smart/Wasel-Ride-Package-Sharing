@@ -14,24 +14,24 @@ const toneStyle: Record<
   { background: string; border: string; value: string }
 > = {
   neutral: {
-    background: `linear-gradient(135deg, ${C.cardSolid}, ${C.elevated})`,
-    border: C.border,
-    value: C.text,
+    background: `linear-gradient(135deg, ${var(--card)}, ${var(--secondary)})`,
+    border: var(--border),
+    value: var(--foreground),
   },
   attention: {
-    background: `linear-gradient(135deg, ${C.cyanDim}, ${C.elevated})`,
+    background: `linear-gradient(135deg, ${C.cyanDim}, ${var(--secondary)})`,
     border: C.cyanDim,
     value: C.cyan,
   },
   urgent: {
-    background: `linear-gradient(135deg, ${C.goldDim}, ${C.elevated})`,
+    background: `linear-gradient(135deg, ${C.goldDim}, ${var(--secondary)})`,
     border: C.goldDim,
     value: C.gold,
   },
   archived: {
-    background: `linear-gradient(135deg, ${C.elevated}, ${C.cardSolid})`,
-    border: C.borderFaint,
-    value: C.textSub,
+    background: `linear-gradient(135deg, ${var(--secondary)}, ${var(--card)})`,
+    border: var(--border),
+    value: var(--muted-foreground),
   },
 };
 
@@ -50,7 +50,7 @@ export function NotificationMetric({ label, value, tone }: NotificationMetricPro
           fontSize: 11,
           textTransform: 'uppercase',
           letterSpacing: TYPE.letterSpacing.widest,
-          color: C.textMuted,
+          color: var(--muted-foreground),
         }}
       >
         {label}

@@ -143,8 +143,8 @@ export function AuthCaptcha({ onTokenChange, resetSignal }: AuthCaptchaProps) {
     <div
       style={{
         borderRadius: R.lg,
-        border: `1px solid ${C.border}`,
-        background: `${C.text}05`,
+        border: `1px solid ${var(--border)}`,
+        background: `${var(--foreground)}05`,
         padding: SPACE[3],
         minHeight: 84,
       }}
@@ -162,7 +162,7 @@ export function AuthCaptcha({ onTokenChange, resetSignal }: AuthCaptchaProps) {
         <p
           style={{
             margin: `${SPACE[2]} 0 0`,
-            color: C.error,
+            color: var(--destructive),
             fontFamily: F,
             fontSize: TYPE.size.xs,
             textAlign: 'center',

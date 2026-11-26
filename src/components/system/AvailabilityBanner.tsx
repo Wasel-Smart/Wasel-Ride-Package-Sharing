@@ -53,7 +53,7 @@ export function AvailabilityBanner({ ar = false }: AvailabilityBannerProps) {
       ? {
           border: 'rgba(255,124,139,0.28)',
           background: 'linear-gradient(90deg, rgba(255,124,139,0.14), rgba(6,19,31,0.84))',
-          accent: C.error,
+          accent: var(--destructive),
         }
       : {
           border: 'rgba(255,190,92,0.28)',
@@ -105,7 +105,7 @@ export function AvailabilityBanner({ ar = false }: AvailabilityBannerProps) {
           </div>
           <div
             style={{
-              color: C.textMuted,
+              color: var(--muted-foreground),
               fontSize: '0.78rem',
               fontFamily: F,
             }}
@@ -124,7 +124,7 @@ export function AvailabilityBanner({ ar = false }: AvailabilityBannerProps) {
             borderRadius: 999,
             border: `1px solid ${theme.border}`,
             background: 'rgba(6,19,31,0.72)',
-            color: C.text,
+            color: var(--foreground),
             fontWeight: 700,
             fontFamily: F,
             cursor: checking ? 'wait' : 'pointer',

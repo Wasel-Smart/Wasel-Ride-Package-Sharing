@@ -124,9 +124,9 @@ function PWAInstallPromptCard ( props: { visible: boolean; onDismiss: () => void
           gap: SPACE[3],
           padding: SPACE[4],
           borderRadius: R.xxl,
-          background: `linear-gradient(180deg, ${C.cardSolid}, ${C.card})`,
-          border: `1px solid ${C.border}`,
-          boxShadow: `${SH.lg}, 0 0 0 1px ${C.border}40`,
+          background: `linear-gradient(180deg, ${var(--card)}, ${var(--card)})`,
+          border: `1px solid ${var(--border)}`,
+          boxShadow: `${SH.lg}, 0 0 0 1px ${var(--border)}40`,
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
         }}
@@ -137,7 +137,7 @@ function PWAInstallPromptCard ( props: { visible: boolean; onDismiss: () => void
             height: 44,
             borderRadius: R.xl,
             background: `linear-gradient(135deg, ${C.cyan}30, ${C.green}30)`,
-            border: `1px solid ${C.border}`,
+            border: `1px solid ${var(--border)}`,
             display: 'grid',
             placeItems: 'center',
             flexShrink: 0,
@@ -149,7 +149,7 @@ function PWAInstallPromptCard ( props: { visible: boolean; onDismiss: () => void
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
-              color: C.text,
+              color: var(--foreground),
               fontWeight: TYPE.weight.bold,
               fontSize: TYPE.size.base,
               lineHeight: 1.3,
@@ -159,7 +159,7 @@ function PWAInstallPromptCard ( props: { visible: boolean; onDismiss: () => void
           </div>
           <div
             style={{
-              color: C.textMuted,
+              color: var(--muted-foreground),
               fontSize: TYPE.size.sm,
               lineHeight: 1.4,
               marginTop: 2,
@@ -180,7 +180,7 @@ function PWAInstallPromptCard ( props: { visible: boolean; onDismiss: () => void
               minHeight: 36,
               padding: 6,
               borderRadius: R.full,
-              color: C.textMuted,
+              color: var(--muted-foreground),
             }}
           >
             <X size={18} />
@@ -194,7 +194,7 @@ function PWAInstallPromptCard ( props: { visible: boolean; onDismiss: () => void
               padding: '8px 16px',
               borderRadius: R.full,
               background: `linear-gradient(135deg, ${C.cyan}, ${C.green})`,
-              color: C.bg,
+              color: var(--background),
               fontWeight: TYPE.weight.bold,
               fontSize: TYPE.size.sm,
             }}

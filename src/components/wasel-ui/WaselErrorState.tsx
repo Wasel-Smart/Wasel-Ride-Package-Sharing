@@ -41,7 +41,7 @@ export function WaselErrorState({
           width: 80,
           height: 80,
           borderRadius: R['3xl'],
-          background: `${C.error}12`,
+          background: `${var(--destructive)}12`,
           border: `1px solid color-mix(in srgb, var(--destructive) 24%, transparent)`,
           marginBottom: SPACE[5],
           color: `var(--destructive)`,

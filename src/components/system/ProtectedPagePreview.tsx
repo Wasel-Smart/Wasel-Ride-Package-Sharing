@@ -258,7 +258,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
           background: `radial-gradient(circle at top left, ${config.accent}14, transparent 34%), linear-gradient(145deg, rgba(16,37,58,0.96) 0%, rgba(11,29,45,0.94) 62%, rgba(4,11,18,0.96) 100%)`,
           boxShadow: SH.lg,
           padding: `${SPACE[7]} ${SPACE[6]}`,
-          color: C.text,
+          color: var(--foreground),
           fontFamily: F,
         }}
       >
@@ -314,7 +314,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
               style={{
                 margin: 0,
                 maxWidth: 760,
-                color: C.textMuted,
+                color: var(--muted-foreground),
                 fontSize: TYPE.size.md,
                 lineHeight: TYPE.lineHeight.loose,
               }}
@@ -384,7 +384,7 @@ export function ProtectedPagePreview({ pathname }: ProtectedPagePreviewProps) {
 
           <div
             style={{
-              color: C.textDim,
+              color: var(--muted-foreground),
               fontSize: TYPE.size.sm,
               lineHeight: TYPE.lineHeight.relaxed,
             }}

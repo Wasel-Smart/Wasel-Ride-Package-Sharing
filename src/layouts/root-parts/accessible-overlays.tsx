@@ -551,7 +551,7 @@ export function MobileDrawer({
                 height: 46,
                 borderRadius: R.md,
                 background: 'var(--destructive)',
-                border: `1px solid ${C.error}55`,
+                border: `1px solid ${var(--destructive)}55`,
                 color: 'var(--destructive)',
                 fontWeight: 700,
                 fontFamily: F,

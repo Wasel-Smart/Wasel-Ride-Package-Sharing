@@ -167,7 +167,7 @@ export default function WaselPlusPage() {
                 borderRadius: r(18),
                 padding: '18px 18px 16px',
                 border: `1px solid ${DS.border}`,
-                boxShadow: `0 12px 28px ${C.overlay}`,
+                boxShadow: `0 12px 28px ${var(--overlay, rgba(0,0,0,0.6))}`,
               }}
             >
               <div

@@ -414,7 +414,7 @@ export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: Ac
         >
           {icon}
         </span>
-        <ChevronRight size={16} color={C.textDim} />
+        <ChevronRight size={16} color={var(--muted-foreground)} />
       </div>
       <div
         style={{
@@ -443,7 +443,7 @@ export function ActionTile({ label, detail, icon, accent = C.cyan, onClick }: Ac
 }
 
 export function DataRow({ label, value, sub, icon, badge, onClick, danger = false }: DataRowProps) {
-  const accent = danger ? C.error : C.cyan;
+  const accent = danger ? var(--destructive) : C.cyan;
   return (
     <button
       type="button"
@@ -514,7 +514,7 @@ export function DataRow({ label, value, sub, icon, badge, onClick, danger = fals
         ) : null}
       </div>
       {badge}
-      {onClick ? <ChevronRight size={16} color={C.textDim} style={{ flexShrink: 0 }} /> : null}
+      {onClick ? <ChevronRight size={16} color={var(--muted-foreground)} style={{ flexShrink: 0 }} /> : null}
     </button>
   );
 }

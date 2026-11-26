@@ -682,7 +682,7 @@ function ProfilePageContent({
             position: 'fixed',
             inset: 0,
             zIndex: 2000,
-            background: C.overlay,
+            background: var(--overlay, rgba(0,0,0,0.6)),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

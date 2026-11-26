@@ -27,6 +27,7 @@
   /* Semantic surfaces */
   --background: #081d39;
   --foreground: #f8fbff;
+  --overlay: rgba(0, 0, 0, 0.72);
   --card: #0e2240;
   --card-foreground: #f8fbff;
   --popover: #0a1f3a;
@@ -337,6 +338,7 @@ input[type='submit'] {
 [data-theme="light"] {
   --background: #f5fbff;
   --foreground: #081523;
+  --overlay: rgba(0, 0, 0, 0.5);
   --card: #ffffff;
   --card-foreground: #0c2132;
   --popover: #ffffff;

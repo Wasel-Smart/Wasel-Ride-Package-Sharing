@@ -629,7 +629,7 @@ export default function MobilityOSPage() {
                     gap: 8,
                     padding: '8px 12px',
                     borderRadius: 14,
-                    background: C.overlay,
+                    background: var(--overlay, rgba(0,0,0,0.6)),
                     border: `1px solid ${'var(--border)'}`,
                     fontSize: '0.78rem',
                   }}
@@ -642,7 +642,7 @@ export default function MobilityOSPage() {
                   style={{
                     padding: '10px 12px',
                     borderRadius: 16,
-                    background: C.overlay,
+                    background: var(--overlay, rgba(0,0,0,0.6)),
                     border: `1px solid ${'var(--border)'}`,
                     fontFamily: FM,
                     color: 'var(--foreground)',
@@ -698,7 +698,7 @@ export default function MobilityOSPage() {
                             width={8.6}
                             height={4.2}
                             rx={1.8}
-                            fill={C.overlay}
+                            fill={var(--overlay, rgba(0,0,0,0.6))}
                             stroke={`${accentColor(route.accent)}30`}
                           />
                           <text
