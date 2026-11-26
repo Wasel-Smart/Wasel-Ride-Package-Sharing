@@ -25,6 +25,15 @@ function randomVerificationCode (): string {
   return String( 100000 + ( v % span ) );
 }
 
+/** SHA-256 hex digest of a verification code for safe storage in the DB.
+ * The plain code is sent to the user; only the hash is persisted so a full
+ * DB read cannot expose a live hand-off secret. */
+async function hashCode ( plain: string ): Promise<string> {
+  const bytes = new TextEncoder().encode( plain );
+  const digest = await crypto.subtle.digest( 'SHA-256', bytes );
+  return Array.from( new Uint8Array( digest ) ).map( b => b.toString( 16 ).padStart( 2, '0' ) ).join( '' );
+}
+
 /** Constant-time string compare so a wrong code leaks no per-position timing
  * signal. Both inputs are already trimmed; the code length is fixed and not a secret. */
 function constantTimeEquals ( a: string, b: string ): boolean {
@@ -46,6 +55,7 @@ export async function handlePackageRequest ( request: Request, path: string ) {
     const trackingNumber = `PKG-${ crypto.randomUUID().replace( /-/g, '' ).slice( 0, 8 ).toUpperCase() }`;
     const pickupCode = randomVerificationCode();
     const deliveryCode = randomVerificationCode();
+    const [ pickupHash, deliveryHash ] = await Promise.all( [ hashCode( pickupCode ), hashCode( deliveryCode ) ] );
     const { data, error } = await auth.admin
       .from( 'packages' )
       .insert( {
@@ -66,8 +76,8 @@ export async function handlePackageRequest ( request: Request, path: string ) {
         delivery_fee: packageFee,
         fee_amount: packageFee,
         status: 'posted',
-        pickup_verification_code: pickupCode,
-        delivery_verification_code: deliveryCode,
+        pickup_verification_code: pickupHash,
+        delivery_verification_code: deliveryHash,
         escrow_status: 'pending',
       } )
       .select( '*' )
@@ -385,15 +395,6 @@ export async function handlePackageRequest ( request: Request, path: string ) {
     if ( !pkg.pickup_verification_code || !constantTimeEquals( code, pkg.pickup_verification_code ) ) {
       return json( { error: 'Incorrect pickup code.' }, 403 );
     }
-    const photo = typeof body.photo === 'string' ? body.photo.slice( 0, 1000 ) : null;
-    const { data, error } = await auth.admin
-      .from( 'packages' )
-      .update( {
-        pickup_verified: true,
-        pickup_verified_at: new Date().toISOString(),
-        pickup_photo: photo,
-        status: 'in_transit',
-      } )
       .eq( 'package_id', packageRoute.id )
       .select( '*' )
       .single();

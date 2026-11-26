@@ -450,28 +450,30 @@ export function BusBookingForm({
             : tx('busPage.seat_boarding_stop_and_alerts_stay_linked')}
         </div>
         {activeBus.sourceUrl && (
-          <a
-            href={activeBus.sourceUrl}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              color: DS.cyan,
-              fontSize: '0.78rem',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              textDecoration: 'none',
-            }}
-          >
-            <ExternalLink size={14} />
-            {tx('busPage.official_schedule_verified')}
-            {activeBus.lastVerifiedAt}
-          </a>
-          {activeBus.dataSource === 'official' && (
-            <p style={{ margin: '6px 0 0', fontSize: '0.72rem', color: DS.muted, lineHeight: 1.4 }}>
-              {tx('busPage.official_schedule_disclaimer').replace('{{date}}', activeBus.lastVerifiedAt ?? '')}
-            </p>
-          )}
+          <>
+            <a
+              href={activeBus.sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                color: DS.cyan,
+                fontSize: '0.78rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                textDecoration: 'none',
+              }}
+            >
+              <ExternalLink size={14} />
+              {tx('busPage.official_schedule_verified')}
+              {activeBus.lastVerifiedAt}
+            </a>
+            {activeBus.dataSource === 'official' && (
+              <p style={{ margin: '6px 0 0', fontSize: '0.72rem', color: DS.muted, lineHeight: 1.4 }}>
+                {tx('busPage.official_schedule_disclaimer').replace('{{date}}', activeBus.lastVerifiedAt ?? '')}
+              </p>
+            )}
+          </>
         )}
         {bookingComplete && (
           <div
