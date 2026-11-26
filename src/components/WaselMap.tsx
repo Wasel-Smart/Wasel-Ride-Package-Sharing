@@ -130,18 +130,16 @@ function loadLeaflet(): Promise<LeafletNamespace> {
   if (!_leafletPromise) {
     // Dynamic import with safe fallback – if Leaflet fails to load we surface a clear error.
     _leafletPromise = import('leaflet')
+        .then(mod => {
+          console.log('[WaselMap] Leaflet loaded');
+          return mod.default ?? mod;
+        })
       .then(mod => mod.default ?? mod)
       .catch(err => {
         console.error('[WaselMap] Failed to import Leaflet:', err);
         // Rethrow to let the caller handle it (Map will show fallback UI).
         throw err;
       });
-  }
-  return _leafletPromise;
-}
-  if (!_leafletPromise) {
-    ensureLeafletCSS();
-    _leafletPromise = import('leaflet').then(mod => mod.default ?? mod);
   }
   return _leafletPromise;
 }

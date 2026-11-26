@@ -23,6 +23,7 @@ import TripsScreen from '../screens/TripsScreen';
 import BusScreen from '../screens/BusScreen';
 import DriverScreen from '../screens/DriverScreen';
 import DriverProfileScreen from '../screens/DriverProfileScreen';
+import VehicleFormScreen from '../screens/VehicleFormScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import LiveTrackingScreen from '../screens/LiveTrackingScreen';
 import ChatScreen from '../screens/ChatScreen';

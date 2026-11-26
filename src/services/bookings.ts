@@ -3,6 +3,7 @@ import {
   getDirectTripBookings,
   getDirectUserBookings,
 } from './directSupabase';
+import { trackUserAction } from '../platform/telemetry';
 
 export interface BookingRecord {
   booking_id: string;
