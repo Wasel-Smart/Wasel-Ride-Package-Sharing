@@ -334,3 +334,6 @@ vitest.config.mjs
 
 .vercel
 .env*
+
+# Source maps moved out of dist before publishing
+dist-sourcemaps/
