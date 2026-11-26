@@ -1,6 +1,8 @@
 import type { Driver } from '../services/ride';
 
 export type RootStackParamList = {
+  VehicleForm: { vehicleId?: string };
+
   SignIn: undefined;
   SignUp: undefined;
   ForgotPassword: undefined;

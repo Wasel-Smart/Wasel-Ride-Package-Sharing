@@ -15,7 +15,13 @@
     "@puppeteer/browsers": "^3.2.4",
     "puppeteer-core": "^25.13.0",
     "lighthouse": "^13.5.0",
-    "js-yaml": "^5.4.3"
+    "js-yaml": "^5.4.3",
+    "undici": "^7.29.0",
+    "ws": "^8.20.1",
+    "protobufjs": "^8.8.0",
+    "postcss": "^8.5.26",
+    "brace-expansion": "^2.0.1",
+    "ip-address": "^10.7.0"
   },
   "version": "1.0.0",
   "type": "module",
