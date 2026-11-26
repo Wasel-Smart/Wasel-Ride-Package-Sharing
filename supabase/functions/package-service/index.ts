@@ -53,6 +53,13 @@ function constantTimeEqual(a: string, b: string): boolean {
   return result === 0;
 }
 
+/** SHA-256 hex digest — mirrors the hash stored in the DB by packages.ts */
+async function hashCode(plain: string): Promise<string> {
+  const bytes = new TextEncoder().encode(plain);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 /**
  * outbox-worker authenticates with `Authorization: Bearer <service role key>`.
  * The key is compared rather than merely decoded so an ordinary user JWT cannot
@@ -320,7 +327,8 @@ async function handlePackageRequest(request: Request, path: string) {
 
     const body = await request.json().catch(() => ({})) as Record<string, unknown>;
     const code = typeof body.verification_code === 'string' ? body.verification_code.trim() : '';
-    if (!code || code !== String(pkg.pickup_verification_code ?? '')) {
+    const codeHash = code ? await hashCode(code) : '';
+    if (!codeHash || !constantTimeEqual(codeHash, String(pkg.pickup_verification_code ?? ''))) {
       return json({ error: 'Invalid pickup verification code.' }, 422);
     }
 
@@ -369,7 +377,8 @@ async function handlePackageRequest(request: Request, path: string) {
 
     const body = await request.json().catch(() => ({})) as Record<string, unknown>;
     const code = typeof body.verification_code === 'string' ? body.verification_code.trim() : '';
-    if (!code || code !== String(pkg.delivery_verification_code ?? '')) {
+    const codeHash = code ? await hashCode(code) : '';
+    if (!codeHash || !constantTimeEqual(codeHash, String(pkg.delivery_verification_code ?? ''))) {
       return json({ error: 'Invalid delivery verification code.' }, 422);
     }
 
