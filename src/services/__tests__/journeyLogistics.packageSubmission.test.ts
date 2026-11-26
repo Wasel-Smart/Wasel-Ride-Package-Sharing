@@ -4,7 +4,7 @@ const { fetchWithRetryMock } = vi.hoisted(() => ({ fetchWithRetryMock: vi.fn() }
 
 vi.mock('../core', () => ({
   API_URL: 'https://edge.example.test/functions/v1',
-  createEdgeHeaders: vi.fn(),
+  createEdgeHeaders: vi.fn(() => new Headers()),
   fetchWithRetry: fetchWithRetryMock,
   getAuthDetails: vi.fn(async () => ({ token: 'test-token', userId: 'test-user' })),
 }));
@@ -18,14 +18,18 @@ describe('createConnectedPackage submission failures', () => {
   });
 
   it('does not create a local matched package when the server rejects submission', async () => {
-    fetchWithRetryMock.mockResolvedValue({ ok: false, status: 503 });
+    fetchWithRetryMock.mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: async () => ({ error: 'Service unavailable' }),
+    });
 
     await expect(createConnectedPackage({
       from: 'Amman',
       to: 'Aqaba',
       weight: '<1 kg',
       note: '',
-    })).rejects.toThrow('Package request could not be submitted.');
+    })).rejects.toThrow('Package request failed: Service unavailable');
 
     expect(getConnectedPackages()).toEqual([]);
   });
@@ -38,7 +42,7 @@ describe('createConnectedPackage submission failures', () => {
       to: 'Aqaba',
       weight: '<1 kg',
       note: '',
-    })).rejects.toThrow('Package request could not be submitted.');
+    })).rejects.toThrow('Network unavailable');
 
     expect(getConnectedPackages()).toEqual([]);
   });
