@@ -1,4 +1,4 @@
-﻿-- =============================================================================
+-- =============================================================================
 -- Migration: Commission & Platform Fee Model
 -- Date:      2026-11-26
 -- Purpose:   Add the take-rate columns that allow Wasel to earn revenue
