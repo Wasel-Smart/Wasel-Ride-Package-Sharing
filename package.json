@@ -23,7 +23,7 @@
     "brace-expansion": "^2.0.1",
     "ip-address": "^10.7.0"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "engines": {
     "node": "22.x"
