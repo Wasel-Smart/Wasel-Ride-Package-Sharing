@@ -108,34 +108,12 @@ CREATE INDEX IF NOT EXISTS idx_commission_config_route_key
   ON public.commission_config (route_key, effective_from DESC);
 
 -- ---------------------------------------------------------------------------
--- 5. RLS: commission_config is admin-read-only for everyone else
+-- 5. RLS: commission_config is service-role only (deny all end users).
+-- Admins access it exclusively through the edge function which uses
+-- service_role; service_role bypasses RLS so no policy is needed.
+-- End-user access is completely blocked by the deny-all default.
 -- ---------------------------------------------------------------------------
 ALTER TABLE public.commission_config ENABLE ROW LEVEL SECURITY;
-
--- Admins can read and insert; no UPDATE/DELETE (append-only audit trail).
--- Using auth.uid() check on profiles.role (service-role reads bypass RLS).
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='commission_config' AND policyname='admin_select_commission_config') THEN
-    CREATE POLICY "admin_select_commission_config"
-      ON public.commission_config FOR SELECT
-      USING (
-        EXISTS (
-          SELECT 1 FROM public.profiles p
-          WHERE p.id = auth.uid() AND p.role = 'admin'
-        )
-      );
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='commission_config' AND policyname='admin_insert_commission_config') THEN
-    CREATE POLICY "admin_insert_commission_config"
-      ON public.commission_config FOR INSERT
-      WITH CHECK (
-        EXISTS (
-          SELECT 1 FROM public.profiles p
-          WHERE p.id = auth.uid() AND p.role = 'admin'
-        )
-      );
-  END IF;
-END $$;
 
 -- ---------------------------------------------------------------------------
 -- 6. Helper function: calculate_commission(amount, rate_pct)
