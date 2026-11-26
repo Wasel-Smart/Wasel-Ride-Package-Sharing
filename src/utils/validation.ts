@@ -7,6 +7,11 @@
  * Usage:
  *   import { signInSchema, type SignInFields } from '@/utils/validation';
  *   const form = useForm<SignInFields>({ resolver: zodResolver(signInSchema) });
+ *
+ * MIGRATION STATUS: Schemas are defined but web forms still use ad-hoc useState.
+ * react-hook-form + zodResolver are installed (package.json) and ready.
+ * Wire each form by replacing useState pairs with useForm<T>({ resolver: zodResolver(schema) }).
+ * Priority order: WaselAuth (sign-in/sign-up) -> OfferRide -> Packages -> Profile.
  */
 import { z } from 'zod';
 import { normalizePhone, isValidE164Phone } from '../shared/validation/phone';

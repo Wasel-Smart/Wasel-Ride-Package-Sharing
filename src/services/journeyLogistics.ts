@@ -645,10 +645,7 @@ export async function createConnectedPackage ( input: {
     if ( API_URL ) {
       const response = await fetchWithRetry( `${ API_URL }/packages`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${ token }`,
-        },
+        headers: createEdgeHeaders( { 'Content-Type': 'application/json' }, token ),
         body: JSON.stringify( buildServerPackagePayload( pkg, requestedRide?.id ) ),
       } );
 
@@ -724,6 +721,12 @@ export async function createConnectedPackage ( input: {
       return created;
     }
   } catch (error) {
+    // Re-throw the error as-is when it already carries a specific message
+    // (e.g. the server's "Canonical user profile was not found" or a
+    // constraint error). Only wrap truly unknown errors.
+    if (error instanceof Error && error.message !== 'Package request could not be submitted. Please check your connection and try again.') {
+      throw error;
+    }
     throw new Error(
       'Package request could not be submitted. Please check your connection and try again.',
       { cause: error },
