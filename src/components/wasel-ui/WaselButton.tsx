@@ -55,7 +55,7 @@ const variantStyles: Record<
 > = {
   primary: {
     background: GRAD,
-    color: var(--background),
+    color: 'var(--background)',
     border: 'none',
     boxShadow: SH.blue,
     hoverShadow: SH.blueL,
@@ -63,7 +63,7 @@ const variantStyles: Record<
   outline: {
     background: 'transparent',
     color: 'var(--primary, #00E5FF)',
-    border: `1px solid var(--border, ${ var(--border) })`,
+    border: `1px solid var(--border, #334155)`,
     boxShadow: 'none',
     hoverShadow: SH.blue,
   },
@@ -76,7 +76,7 @@ const variantStyles: Record<
   },
   gold: {
     background: GRAD_GOLD,
-    color: var(--background),
+    color: 'var(--background)',
     border: 'none',
     boxShadow: SH.gold,
     hoverShadow: SH.gold,
