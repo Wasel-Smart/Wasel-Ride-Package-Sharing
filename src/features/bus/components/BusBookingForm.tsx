@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { CheckCircle2, ExternalLink } from 'lucide-react';
+import { CheckCircle2, ExternalLink, AlertTriangle } from 'lucide-react';
 import type { BusRoute } from '../../../services/bus';
+import { BUS_SCHEDULE_IS_STALE } from '../../../data/jordanBusNetwork';
 import { C,  SH  } from '../../../utils/wasel-ds';
 import { DS, r } from '../../shared/pageShared';
 import { tx } from '../../../locales/tx';
@@ -137,6 +138,30 @@ export function BusBookingForm({
         </div>
       </div>
       <div style={{ padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {BUS_SCHEDULE_IS_STALE && (
+          <div
+            role="alert"
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 10,
+              background: '#78350f22',
+              border: '1px solid #d9770655',
+              borderRadius: r(12),
+              padding: '12px 14px',
+            }}
+          >
+            <AlertTriangle size={16} style={{ color: '#fb923c', flexShrink: 0, marginTop: 2 }} />
+            <div style={{ fontSize: '0.78rem', color: '#fb923c', lineHeight: 1.5 }}>
+              {tx('busPage.schedule_may_have_changed') ?? 'مواعيد هذا الجدول مؤرخة بـ 2026-03-30 — تحقق من المواعيد مع الناقل قبل السفر. / Schedule last verified 30 Mar 2026 — confirm times with the carrier before travelling.'}
+              {' '}
+              <a href="https://www.jett.com.jo/en/schedule" target="_blank" rel="noopener noreferrer"
+                style={{ color: '#fb923c', textDecoration: 'underline' }}>
+                jett.com.jo
+              </a>
+            </div>
+          </div>
+        )}
         <div
           style={{
             background: DS.card2,

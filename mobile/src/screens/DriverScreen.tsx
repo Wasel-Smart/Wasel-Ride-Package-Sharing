@@ -120,7 +120,7 @@ const DriverScreen = React.memo(function DriverScreen() {
               label={`كمّل: ${step.label}`}
               icon="arrow-forward"
               tone={colors.blue}
-              onPress={() => toggleStep(step.id)}
+              onPress={() => step.id === 'vehicle' ? navigation.navigate('VehicleForm' as any) : toggleStep(step.id)}
               testID={`complete-step-${step.id}`}
             />
           ))}
